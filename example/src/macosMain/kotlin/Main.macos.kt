@@ -20,7 +20,7 @@ fun main() {
             override fun applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication): Boolean = true
         }
     Window(
-        title = "Miuix",
+        title = "COUI",
         size = DpSize(420.dp, 840.dp),
     ) {
         window.minSize = CGSizeMake(300.0, 600.0)
