@@ -15,12 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.ListPopup
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.extra.DropdownImpl
+import com.suqi8.coui.kmp.basic.ListPopup
+import com.suqi8.coui.kmp.basic.ListPopupColumn
+import com.suqi8.coui.kmp.basic.PopupPositionProvider
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.extra.DropdownImpl
 
 @Composable
 fun ListPopupDemo() {

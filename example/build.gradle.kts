@@ -19,9 +19,9 @@ plugins {
     alias(libs.plugins.spotless)
 }
 
-val appName = "Miuix"
-val pkgName = "top.yukonga.miuix.uitest"
-val verName = "1.0.6"
+val appName = "COUI"
+val pkgName = "com.suqi8.coui.uitest"
+val verName = "1.0.0"
 val verCode = getVersionCode()
 val generatedSrcDir = layout.buildDirectory.dir("generated").get().asFile.resolve("miuix-example")
 
@@ -99,7 +99,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation(project(":miuix"))
+            implementation(project(":coui"))
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

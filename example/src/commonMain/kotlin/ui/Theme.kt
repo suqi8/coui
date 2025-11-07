@@ -5,9 +5,9 @@ package ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.darkColorScheme
+import com.suqi8.coui.kmp.theme.lightColorScheme
 
 @Composable
 fun AppTheme(
@@ -15,7 +15,7 @@ fun AppTheme(
     content: @Composable () -> Unit
 ) {
     val darkTheme = isSystemInDarkTheme()
-    return MiuixTheme(
+    return COUITheme(
         colors = when (colorMode) {
             1 -> lightColorScheme()
             2 -> darkColorScheme()

@@ -18,17 +18,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Delete
-import top.yukonga.miuix.kmp.icon.icons.useful.Edit
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.ToolbarPosition
+import com.suqi8.coui.kmp.extra.SuperArrow
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Delete
+import com.suqi8.coui.kmp.icon.icons.useful.Edit
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun FloatingToolbarDemo() {
@@ -63,14 +63,14 @@ fun FloatingToolbarDemo() {
                                         Icon(
                                             imageVector = MiuixIcons.Useful.Edit,
                                             contentDescription = "Edit",
-                                            tint = MiuixTheme.colorScheme.onBackground
+                                            tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                     IconButton(onClick = { /* Action 2 */ }) {
                                         Icon(
                                             imageVector = MiuixIcons.Useful.Delete,
                                             contentDescription = "Delete",
-                                            tint = MiuixTheme.colorScheme.onBackground
+                                            tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                 }
@@ -102,14 +102,14 @@ fun FloatingToolbarDemo() {
                                         Icon(
                                             imageVector =  MiuixIcons.Useful.Edit,
                                             contentDescription = "Edit",
-                                            tint = MiuixTheme.colorScheme.onBackground
+                                            tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                     IconButton(onClick = { /* Action 2 */ }) {
                                         Icon(
                                             imageVector = MiuixIcons.Useful.Delete,
                                             contentDescription = "Delete",
-                                            tint = MiuixTheme.colorScheme.onBackground
+                                            tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                 }

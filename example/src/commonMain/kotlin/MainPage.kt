@@ -20,59 +20,59 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.SearchBar
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.AddSecret
+import com.suqi8.coui.kmp.icon.icons.useful.Back
+import com.suqi8.coui.kmp.icon.icons.useful.Blocklist
+import com.suqi8.coui.kmp.icon.icons.useful.Cancel
+import com.suqi8.coui.kmp.icon.icons.useful.Confirm
+import com.suqi8.coui.kmp.icon.icons.useful.Copy
+import com.suqi8.coui.kmp.icon.icons.useful.Cut
+import com.suqi8.coui.kmp.icon.icons.useful.Delete
+import com.suqi8.coui.kmp.icon.icons.useful.Edit
+import com.suqi8.coui.kmp.icon.icons.useful.ImmersionMore
+import com.suqi8.coui.kmp.icon.icons.useful.Info
+import com.suqi8.coui.kmp.icon.icons.useful.Like
+import com.suqi8.coui.kmp.icon.icons.useful.More
+import com.suqi8.coui.kmp.icon.icons.useful.Move
+import com.suqi8.coui.kmp.icon.icons.useful.NavigatorSwitch
+import com.suqi8.coui.kmp.icon.icons.useful.New
+import com.suqi8.coui.kmp.icon.icons.useful.Order
+import com.suqi8.coui.kmp.icon.icons.useful.Paste
+import com.suqi8.coui.kmp.icon.icons.useful.Pause
+import com.suqi8.coui.kmp.icon.icons.useful.Personal
+import com.suqi8.coui.kmp.icon.icons.useful.Play
+import com.suqi8.coui.kmp.icon.icons.useful.Reboot
+import com.suqi8.coui.kmp.icon.icons.useful.Redo
+import com.suqi8.coui.kmp.icon.icons.useful.Refresh
+import com.suqi8.coui.kmp.icon.icons.useful.Remove
+import com.suqi8.coui.kmp.icon.icons.useful.RemoveBlocklist
+import com.suqi8.coui.kmp.icon.icons.useful.RemoveSecret
+import com.suqi8.coui.kmp.icon.icons.useful.Rename
+import com.suqi8.coui.kmp.icon.icons.useful.Restore
+import com.suqi8.coui.kmp.icon.icons.useful.Save
+import com.suqi8.coui.kmp.icon.icons.useful.Scan
+import com.suqi8.coui.kmp.icon.icons.useful.Search
+import com.suqi8.coui.kmp.icon.icons.useful.SelectAll
+import com.suqi8.coui.kmp.icon.icons.useful.Settings
+import com.suqi8.coui.kmp.icon.icons.useful.Share
+import com.suqi8.coui.kmp.icon.icons.useful.Stick
+import com.suqi8.coui.kmp.icon.icons.useful.Undo
+import com.suqi8.coui.kmp.icon.icons.useful.Unlike
+import com.suqi8.coui.kmp.icon.icons.useful.Unstick
+import com.suqi8.coui.kmp.icon.icons.useful.Update
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.getWindowSize
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import component.TextComponent
 import component.otherComponent
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.AddSecret
-import top.yukonga.miuix.kmp.icon.icons.useful.Back
-import top.yukonga.miuix.kmp.icon.icons.useful.Blocklist
-import top.yukonga.miuix.kmp.icon.icons.useful.Cancel
-import top.yukonga.miuix.kmp.icon.icons.useful.Confirm
-import top.yukonga.miuix.kmp.icon.icons.useful.Copy
-import top.yukonga.miuix.kmp.icon.icons.useful.Cut
-import top.yukonga.miuix.kmp.icon.icons.useful.Delete
-import top.yukonga.miuix.kmp.icon.icons.useful.Edit
-import top.yukonga.miuix.kmp.icon.icons.useful.ImmersionMore
-import top.yukonga.miuix.kmp.icon.icons.useful.Info
-import top.yukonga.miuix.kmp.icon.icons.useful.Like
-import top.yukonga.miuix.kmp.icon.icons.useful.More
-import top.yukonga.miuix.kmp.icon.icons.useful.Move
-import top.yukonga.miuix.kmp.icon.icons.useful.NavigatorSwitch
-import top.yukonga.miuix.kmp.icon.icons.useful.New
-import top.yukonga.miuix.kmp.icon.icons.useful.Order
-import top.yukonga.miuix.kmp.icon.icons.useful.Paste
-import top.yukonga.miuix.kmp.icon.icons.useful.Pause
-import top.yukonga.miuix.kmp.icon.icons.useful.Personal
-import top.yukonga.miuix.kmp.icon.icons.useful.Play
-import top.yukonga.miuix.kmp.icon.icons.useful.Reboot
-import top.yukonga.miuix.kmp.icon.icons.useful.Redo
-import top.yukonga.miuix.kmp.icon.icons.useful.Refresh
-import top.yukonga.miuix.kmp.icon.icons.useful.Remove
-import top.yukonga.miuix.kmp.icon.icons.useful.RemoveBlocklist
-import top.yukonga.miuix.kmp.icon.icons.useful.RemoveSecret
-import top.yukonga.miuix.kmp.icon.icons.useful.Rename
-import top.yukonga.miuix.kmp.icon.icons.useful.Restore
-import top.yukonga.miuix.kmp.icon.icons.useful.Save
-import top.yukonga.miuix.kmp.icon.icons.useful.Scan
-import top.yukonga.miuix.kmp.icon.icons.useful.Search
-import top.yukonga.miuix.kmp.icon.icons.useful.SelectAll
-import top.yukonga.miuix.kmp.icon.icons.useful.Settings
-import top.yukonga.miuix.kmp.icon.icons.useful.Share
-import top.yukonga.miuix.kmp.icon.icons.useful.Stick
-import top.yukonga.miuix.kmp.icon.icons.useful.Undo
-import top.yukonga.miuix.kmp.icon.icons.useful.Unlike
-import top.yukonga.miuix.kmp.icon.icons.useful.Unstick
-import top.yukonga.miuix.kmp.icon.icons.useful.Update
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.getWindowSize
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun MainPage(
@@ -214,7 +214,7 @@ fun MainPage(
                             },
                         text = "Cancel",
                         style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Bold),
-                        color = MiuixTheme.colorScheme.primary
+                        color = COUITheme.colorScheme.primary
                     )
                 },
                 expanded = expanded,

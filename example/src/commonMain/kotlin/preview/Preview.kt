@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import com.suqi8.coui.kmp.basic.MiuixScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
 import ui.AppTheme
 
 @Composable

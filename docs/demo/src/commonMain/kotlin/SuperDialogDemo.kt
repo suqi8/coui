@@ -17,10 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.extra.SuperDialog
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.extra.SuperDialog
 
 @Composable
 fun SuperDialogDemo() {

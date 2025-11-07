@@ -17,13 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.ImmersionMore
-import top.yukonga.miuix.kmp.icon.icons.useful.Like
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.ImmersionMore
+import com.suqi8.coui.kmp.icon.icons.useful.Like
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun IconButtonDemo() {
@@ -53,7 +53,7 @@ fun IconButtonDemo() {
                     ) {
                         Icon(
                             imageVector = MiuixIcons.Useful.ImmersionMore,
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = COUITheme.colorScheme.onBackground,
                             contentDescription = "More"
                         )
                     }
@@ -73,7 +73,7 @@ fun IconButtonDemo() {
                     ) {
                         Icon(
                             imageVector = MiuixIcons.Useful.ImmersionMore,
-                            tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                            tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                             contentDescription = "More"
                         )
                     }
@@ -84,7 +84,7 @@ fun IconButtonDemo() {
                     ) {
                         Icon(
                             imageVector = MiuixIcons.Useful.Like,
-                            tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                            tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                             contentDescription = "Like"
                         )
                     }

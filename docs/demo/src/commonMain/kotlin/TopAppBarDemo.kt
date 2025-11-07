@@ -21,17 +21,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Back
-import top.yukonga.miuix.kmp.icon.icons.useful.More
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.MiuixScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.TopAppBar
+import com.suqi8.coui.kmp.extra.SuperArrow
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Back
+import com.suqi8.coui.kmp.icon.icons.useful.More
 
 @Composable
 fun TopAppBarDemo() {

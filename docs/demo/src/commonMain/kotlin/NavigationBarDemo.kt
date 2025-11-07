@@ -20,18 +20,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarMode
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.NavigatorSwitch
-import top.yukonga.miuix.kmp.icon.icons.useful.Personal
-import top.yukonga.miuix.kmp.icon.icons.useful.Settings
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarMode
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.NavigatorSwitch
+import com.suqi8.coui.kmp.icon.icons.useful.Personal
+import com.suqi8.coui.kmp.icon.icons.useful.Settings
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun NavigationBarDemo() {
@@ -80,7 +80,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex1]}",
-                                style = MiuixTheme.textStyles.title1
+                                style = COUITheme.textStyles.title1
                             )
                         }
                     }
@@ -106,7 +106,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex2]}",
-                                style = MiuixTheme.textStyles.title1
+                                style = COUITheme.textStyles.title1
                             )
                         }
                     }

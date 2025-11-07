@@ -19,15 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.darkColorScheme
+import com.suqi8.coui.kmp.theme.lightColorScheme
 
 @Composable
 fun Demo(demoId: String? = null) {
-    MiuixTheme(
+    COUITheme(
         colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
     ) {
         if (demoId == null) {
@@ -86,7 +86,7 @@ private fun DemoSelection() {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MiuixTheme.colorScheme.background),
+                    .background(COUITheme.colorScheme.background),
                 contentAlignment = Alignment.Center
             ) {
                 Column(

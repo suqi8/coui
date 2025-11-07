@@ -18,14 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FabPosition
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.SelectAll
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FabPosition
+import com.suqi8.coui.kmp.basic.FloatingActionButton
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.extra.SuperArrow
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.SelectAll
 
 @Composable
 fun FloatingActionButtonDemo() {

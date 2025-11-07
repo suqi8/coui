@@ -3,4 +3,4 @@
 
 import androidx.compose.ui.window.ComposeUIViewController
 
-fun main() = ComposeUIViewController { App() }
+fun main(): kotlin.Unit = ComposeUIViewController { App() }

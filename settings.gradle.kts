@@ -43,9 +43,9 @@ android {
     buildToolsVersion = "36.1.0"
 }
 
-rootProject.name = "miuix"
+rootProject.name = "coui"
 
-include(":miuix")
+include(":coui")
 include(":example")
 include(":docs:demo")
 include(":docs:iconGen")

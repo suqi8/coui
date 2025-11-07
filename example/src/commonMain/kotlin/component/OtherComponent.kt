@@ -39,30 +39,30 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.ColorPalette
-import top.yukonga.miuix.kmp.basic.ColorPicker
-import top.yukonga.miuix.kmp.basic.ColorSpace
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.basic.RangeSlider
-import top.yukonga.miuix.kmp.basic.Slider
-import top.yukonga.miuix.kmp.basic.SliderDefaults
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TabRow
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.basic.VerticalSlider
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Like
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.CircularProgressIndicator
+import com.suqi8.coui.kmp.basic.ColorPalette
+import com.suqi8.coui.kmp.basic.ColorPicker
+import com.suqi8.coui.kmp.basic.ColorSpace
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator
+import com.suqi8.coui.kmp.basic.LinearProgressIndicator
+import com.suqi8.coui.kmp.basic.RangeSlider
+import com.suqi8.coui.kmp.basic.Slider
+import com.suqi8.coui.kmp.basic.SliderDefaults
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.TabRow
+import com.suqi8.coui.kmp.basic.TabRowWithContour
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.basic.TextField
+import com.suqi8.coui.kmp.basic.VerticalSlider
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Like
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.PressFeedbackType
 import kotlin.math.round
 
 fun LazyListScope.otherComponent(
@@ -79,7 +79,7 @@ fun LazyListScope.otherComponent(
         SmallTitle(text = "Button")
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -104,7 +104,7 @@ fun LazyListScope.otherComponent(
         }
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -154,7 +154,7 @@ fun LazyListScope.otherComponent(
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
@@ -184,7 +184,7 @@ fun LazyListScope.otherComponent(
             value = text1,
             onValueChange = { text1 = it },
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
@@ -194,7 +194,7 @@ fun LazyListScope.otherComponent(
             onValueChange = { text2 = it },
             label = "With title",
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
@@ -203,7 +203,7 @@ fun LazyListScope.otherComponent(
             state = text3,
             label = "State-based",
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             onKeyboardAction = { focusManager.clearFocus() },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -215,7 +215,7 @@ fun LazyListScope.otherComponent(
             useLabelAsPlaceholder = true,
             singleLine = true,
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
@@ -226,7 +226,7 @@ fun LazyListScope.otherComponent(
         SmallTitle(text = "Slider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp)
         ) {
             var sliderValue by remember { mutableStateOf(0.3f) }
@@ -234,14 +234,14 @@ fun LazyListScope.otherComponent(
                 text = "Normal: ${(sliderValue * 100).toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
             )
             Slider(
                 value = sliderValue,
                 onValueChange = { sliderValue = it },
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var stepsValue by remember { mutableStateOf(5f) }
@@ -249,7 +249,7 @@ fun LazyListScope.otherComponent(
                 text = "Steps: ${stepsValue.toInt()}/8",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             Slider(
@@ -259,7 +259,7 @@ fun LazyListScope.otherComponent(
                 steps = 7,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var stepsWithKeyPointsValue by remember { mutableStateOf(5f) }
@@ -267,7 +267,7 @@ fun LazyListScope.otherComponent(
                 text = "Steps with Key Points: ${stepsWithKeyPointsValue.toInt()}/8",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             Slider(
@@ -278,7 +278,7 @@ fun LazyListScope.otherComponent(
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 showKeyPoints = true,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var customKeyPointsValue by remember { mutableStateOf(25f) }
@@ -286,7 +286,7 @@ fun LazyListScope.otherComponent(
                 text = "Custom Key Points: ${customKeyPointsValue.toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             Slider(
@@ -297,7 +297,7 @@ fun LazyListScope.otherComponent(
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 keyPoints = listOf(0f, 25f, 50f, 75f, 100f),
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             val disabledValue by remember { mutableStateOf(0.7f) }
@@ -305,7 +305,7 @@ fun LazyListScope.otherComponent(
                 text = "Disabled: ${(disabledValue * 100).toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             Slider(
@@ -313,7 +313,7 @@ fun LazyListScope.otherComponent(
                 onValueChange = {},
                 enabled = false,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
         }
@@ -322,7 +322,7 @@ fun LazyListScope.otherComponent(
         SmallTitle(text = "RangeSlider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp)
         ) {
             var rangeValue by remember { mutableStateOf(0.2f..0.8f) }
@@ -330,14 +330,14 @@ fun LazyListScope.otherComponent(
                 text = "Range: ${(rangeValue.start * 100).toInt()}% - ${(rangeValue.endInclusive * 100).toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
             )
             RangeSlider(
                 value = rangeValue,
                 onValueChange = { rangeValue = it },
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var rangeStepsValue by remember { mutableStateOf(2f..8f) }
@@ -345,7 +345,7 @@ fun LazyListScope.otherComponent(
                 text = "Range with Key Points: ${rangeStepsValue.start.toInt()} - ${rangeStepsValue.endInclusive.toInt()}",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             RangeSlider(
@@ -356,7 +356,7 @@ fun LazyListScope.otherComponent(
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 showKeyPoints = true,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var customRangeValue by remember { mutableStateOf(20f..80f) }
@@ -364,7 +364,7 @@ fun LazyListScope.otherComponent(
                 text = "Custom Range Points: ${customRangeValue.start.toInt()}% - ${customRangeValue.endInclusive.toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             RangeSlider(
@@ -375,7 +375,7 @@ fun LazyListScope.otherComponent(
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 keyPoints = listOf(0f, 20f, 40f, 60f, 80f, 100f),
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
             var disabledRangeValue by remember { mutableStateOf(0.3f..0.7f) }
@@ -383,7 +383,7 @@ fun LazyListScope.otherComponent(
                 text = "Disabled: ${(disabledRangeValue.start * 100).toInt()}% - ${(disabledRangeValue.endInclusive * 100).toInt()}%",
                 fontSize = 14.sp,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 4.dp)
             )
             RangeSlider(
@@ -391,7 +391,7 @@ fun LazyListScope.otherComponent(
                 onValueChange = {},
                 enabled = false,
                 modifier = Modifier
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp)
             )
         }
@@ -400,13 +400,13 @@ fun LazyListScope.otherComponent(
         SmallTitle(text = "VerticalSlider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 16.dp)
                     .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
@@ -522,7 +522,7 @@ fun LazyListScope.otherComponent(
             tabs = tabTexts,
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp)
         ) {
             selectedTabIndex = it
@@ -530,7 +530,7 @@ fun LazyListScope.otherComponent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
@@ -555,7 +555,7 @@ fun LazyListScope.otherComponent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
@@ -564,7 +564,7 @@ fun LazyListScope.otherComponent(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (icon != MiuixIcons.Useful.Like) MiuixTheme.colorScheme.onBackground else Color.Unspecified,
+                        tint = if (icon != MiuixIcons.Useful.Like) COUITheme.colorScheme.onBackground else Color.Unspecified,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -574,13 +574,13 @@ fun LazyListScope.otherComponent(
 
     item(key = "colorPicker-HSV") {
         SmallTitle(text = "ColorPicker (HSV)")
-        val miuixColor = MiuixTheme.colorScheme.primary
+        val miuixColor = COUITheme.colorScheme.primary
         var selectedColor by remember { mutableStateOf(miuixColor) }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
@@ -607,13 +607,13 @@ fun LazyListScope.otherComponent(
 
     item(key = "colorPicker-OKHSV") {
         SmallTitle(text = "ColorPicker (OKHSV)")
-        val miuixColor = MiuixTheme.colorScheme.primary
+        val miuixColor = COUITheme.colorScheme.primary
         var selectedColor by remember { mutableStateOf(miuixColor) }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
 
             insideMargin = PaddingValues(16.dp)
@@ -642,13 +642,13 @@ fun LazyListScope.otherComponent(
 
     item(key = "colorPicker-OKLAB") {
         SmallTitle(text = "ColorPicker (OKLAB)")
-        val miuixColor = MiuixTheme.colorScheme.primary
+        val miuixColor = COUITheme.colorScheme.primary
         var selectedColor by remember { mutableStateOf(miuixColor) }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
@@ -676,13 +676,13 @@ fun LazyListScope.otherComponent(
 
     item(key = "colorPicker-OKLCH") {
         SmallTitle(text = "ColorPicker (OKLCH)")
-        val miuixColor = MiuixTheme.colorScheme.primary
+        val miuixColor = COUITheme.colorScheme.primary
         var selectedColor by remember { mutableStateOf(miuixColor) }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
 
             insideMargin = PaddingValues(16.dp)
@@ -711,13 +711,13 @@ fun LazyListScope.otherComponent(
 
     item(key = "colorPalette") {
         SmallTitle(text = "ColorPalette")
-        val miuixColor = MiuixTheme.colorScheme.primary
+        val miuixColor = COUITheme.colorScheme.primary
         var selectedColor by remember { mutableStateOf(miuixColor) }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
@@ -747,23 +747,23 @@ fun LazyListScope.otherComponent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
             colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.primaryVariant
+                color = COUITheme.colorScheme.primaryVariant
             ),
             insideMargin = PaddingValues(16.dp),
             pressFeedbackType = PressFeedbackType.None,
             showIndication = true
         ) {
             Text(
-                color = MiuixTheme.colorScheme.onPrimary,
+                color = COUITheme.colorScheme.onPrimary,
                 text = "Card",
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                color = MiuixTheme.colorScheme.onPrimaryVariant,
+                color = COUITheme.colorScheme.onPrimaryVariant,
                 text = "ShowIndication: true",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Normal
@@ -772,7 +772,7 @@ fun LazyListScope.otherComponent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp + padding.calculateBottomPadding()),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -784,15 +784,15 @@ fun LazyListScope.otherComponent(
                 onClick = { println("Card click") },
                 content = {
                     Text(
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.onSurface,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Sink",
-                        style = MiuixTheme.textStyles.paragraph
+                        style = COUITheme.textStyles.paragraph
                     )
                 }
             )
@@ -803,15 +803,15 @@ fun LazyListScope.otherComponent(
                 onLongPress = { println("Card long press") },
                 content = {
                     Text(
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.onSurface,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Tilt",
-                        style = MiuixTheme.textStyles.paragraph
+                        style = COUITheme.textStyles.paragraph
                     )
                 }
             )

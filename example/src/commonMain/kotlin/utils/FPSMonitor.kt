@@ -12,8 +12,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.suqi8.coui.kmp.basic.Text
 import kotlinx.coroutines.coroutineScope
-import top.yukonga.miuix.kmp.basic.Text
 
 /**
  * A simple FPS monitor that displays the current frames per second.

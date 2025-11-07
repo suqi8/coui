@@ -57,44 +57,44 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FabPosition
+import com.suqi8.coui.kmp.basic.FloatingActionButton
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarMode
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.ListPopup
+import com.suqi8.coui.kmp.basic.ListPopupColumn
+import com.suqi8.coui.kmp.basic.ListPopupDefaults
+import com.suqi8.coui.kmp.basic.MiuixScrollBehavior
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.PopupPositionProvider
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.ToolbarPosition
+import com.suqi8.coui.kmp.basic.TopAppBar
+import com.suqi8.coui.kmp.basic.VerticalDivider
+import com.suqi8.coui.kmp.extra.DropdownImpl
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.other.GitHub
+import com.suqi8.coui.kmp.icon.icons.useful.Delete
+import com.suqi8.coui.kmp.icon.icons.useful.Edit
+import com.suqi8.coui.kmp.icon.icons.useful.ImmersionMore
+import com.suqi8.coui.kmp.icon.icons.useful.NavigatorSwitch
+import com.suqi8.coui.kmp.icon.icons.useful.Order
+import com.suqi8.coui.kmp.icon.icons.useful.Scan
+import com.suqi8.coui.kmp.icon.icons.useful.Settings
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.WindowSize
+import com.suqi8.coui.kmp.utils.getWindowSize
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FabPosition
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarMode
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.ListPopup
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.ListPopupDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.VerticalDivider
-import top.yukonga.miuix.kmp.extra.DropdownImpl
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.other.GitHub
-import top.yukonga.miuix.kmp.icon.icons.useful.Delete
-import top.yukonga.miuix.kmp.icon.icons.useful.Edit
-import top.yukonga.miuix.kmp.icon.icons.useful.ImmersionMore
-import top.yukonga.miuix.kmp.icon.icons.useful.NavigatorSwitch
-import top.yukonga.miuix.kmp.icon.icons.useful.Order
-import top.yukonga.miuix.kmp.icon.icons.useful.Scan
-import top.yukonga.miuix.kmp.icon.icons.useful.Settings
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.WindowSize
-import top.yukonga.miuix.kmp.utils.getWindowSize
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import utils.FPSMonitor
 
 private object UIConstants {
@@ -298,7 +298,7 @@ private fun WideScreenPanel(
             .fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = "Miuix",
+                title = "COUI",
                 horizontalPadding = 12.dp,
                 scrollBehavior = barScrollBehavior
             )
@@ -422,7 +422,7 @@ private fun CompactScreenLayout(
                 exit = fadeOut() + shrinkVertically()
             ) {
                 TopAppBar(
-                    title = "Miuix",
+                    title = "COUI",
                     scrollBehavior = currentScrollBehavior,
                     actions = {
                         TopAppBarActions(
@@ -534,7 +534,7 @@ private fun FloatingToolbar(
         exit = fadeOut()
     ) {
         FloatingToolbar(
-            color = MiuixTheme.colorScheme.primaryVariant,
+            color = COUITheme.colorScheme.primaryVariant,
             cornerRadius = 20.dp
         ) {
             AnimatedContent(
@@ -561,7 +561,7 @@ private fun FloatingToolbar(
 
 @Composable
 private fun FloatingToolbarActions() {
-    val iconTint = MiuixTheme.colorScheme.onPrimaryContainer
+    val iconTint = COUITheme.colorScheme.onPrimaryContainer
 
     IconButton(onClick = { /* Action 1 */ }) {
         Icon(
@@ -660,7 +660,7 @@ private fun TopAppBarActions(
     ) {
         Icon(
             imageVector = MiuixIcons.Useful.ImmersionMore,
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             contentDescription = "More"
         )
     }

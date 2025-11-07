@@ -34,34 +34,35 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.ColorPalette
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Slider
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Switch
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.extra.CheckboxLocation
-import top.yukonga.miuix.kmp.extra.SpinnerEntry
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperBottomSheet
-import top.yukonga.miuix.kmp.extra.SuperCheckbox
-import top.yukonga.miuix.kmp.extra.SuperDialog
-import top.yukonga.miuix.kmp.extra.SuperDropdown
-import top.yukonga.miuix.kmp.extra.SuperSpinner
-import top.yukonga.miuix.kmp.extra.SuperSwitch
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Cancel
-import top.yukonga.miuix.kmp.icon.icons.useful.Confirm
-import top.yukonga.miuix.kmp.icon.icons.useful.Personal
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.Checkbox
+import com.suqi8.coui.kmp.basic.ColorPalette
+import com.suqi8.coui.kmp.basic.CouiListItemPosition
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.Slider
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Switch
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.basic.TextField
+import com.suqi8.coui.kmp.extra.CheckboxLocation
+import com.suqi8.coui.kmp.extra.SpinnerEntry
+import com.suqi8.coui.kmp.extra.SuperArrow
+import com.suqi8.coui.kmp.extra.SuperBottomSheet
+import com.suqi8.coui.kmp.extra.SuperCheckbox
+import com.suqi8.coui.kmp.extra.SuperDialog
+import com.suqi8.coui.kmp.extra.SuperDropdown
+import com.suqi8.coui.kmp.extra.SuperSpinner
+import com.suqi8.coui.kmp.extra.SuperSwitch
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Cancel
+import com.suqi8.coui.kmp.icon.icons.useful.Confirm
+import com.suqi8.coui.kmp.icon.icons.useful.Personal
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun TextComponent(
@@ -114,7 +115,7 @@ fun TextComponent(
     SmallTitle(text = "Basic Component")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         BasicComponent(
@@ -141,18 +142,18 @@ fun TextComponent(
                 Text(
                     text = "Left",
                     modifier = Modifier.padding(end = 8.dp),
-                    color = MiuixTheme.colorScheme.disabledOnSecondaryVariant
+                    color = COUITheme.colorScheme.disabledOnSecondaryVariant
                 )
             },
             rightActions = {
                 Text(
                     text = "Right1",
-                    color = MiuixTheme.colorScheme.disabledOnSecondaryVariant
+                    color = COUITheme.colorScheme.disabledOnSecondaryVariant
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = "Right2",
-                    color = MiuixTheme.colorScheme.disabledOnSecondaryVariant
+                    color = COUITheme.colorScheme.disabledOnSecondaryVariant
                 )
             },
             enabled = false
@@ -162,7 +163,7 @@ fun TextComponent(
     SmallTitle(text = "Arrow & Dialog & BottomSheet")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         SuperArrow(
@@ -173,7 +174,7 @@ fun TextComponent(
                     Icon(
                         imageVector = MiuixIcons.Useful.Personal,
                         contentDescription = "Personal",
-                        tint = MiuixTheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.onBackground
                     )
                 }
             },
@@ -204,7 +205,7 @@ fun TextComponent(
     SmallTitle(text = "Checkbox")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         Row(
@@ -244,7 +245,7 @@ fun TextComponent(
                 Text(
                     modifier = Modifier.padding(end = 6.dp),
                     text = miuixSuperRightCheckbox.value,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                    color = COUITheme.colorScheme.onSurfaceVariantActions
                 )
             },
             onCheckedChange = {
@@ -274,7 +275,7 @@ fun TextComponent(
     SmallTitle(text = "Switch")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         Row(
@@ -327,7 +328,7 @@ fun TextComponent(
                     Text(
                         modifier = Modifier.padding(end = 6.dp),
                         text = miuixSuperSwitch.value,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        color = COUITheme.colorScheme.onSurfaceVariantActions
                     )
                 },
                 onCheckedChange = {
@@ -341,6 +342,7 @@ fun TextComponent(
             title = "Disabled Switch",
             checked = true,
             enabled = false,
+            position = CouiListItemPosition.Bottom,
             onCheckedChange = {},
         )
     }
@@ -348,7 +350,7 @@ fun TextComponent(
     SmallTitle(text = "Dropdown")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         SuperDropdown(
@@ -370,7 +372,7 @@ fun TextComponent(
     SmallTitle(text = "Spinner")
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
         SuperSpinner(
@@ -461,7 +463,7 @@ fun BottomSheet(
                 Icon(
                     imageVector = MiuixIcons.Useful.Cancel,
                     contentDescription = "Cancel",
-                    tint = MiuixTheme.colorScheme.onBackground
+                    tint = COUITheme.colorScheme.onBackground
                 )
             }
         },
@@ -472,7 +474,7 @@ fun BottomSheet(
                 Icon(
                     imageVector = MiuixIcons.Useful.Confirm,
                     contentDescription = "Confirm",
-                    tint = MiuixTheme.colorScheme.onBackground
+                    tint = COUITheme.colorScheme.onBackground
                 )
             }
         }
@@ -488,7 +490,7 @@ fun BottomSheet(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = COUITheme.colorScheme.secondaryContainer,
                     )
                 ) {
                     SuperDropdown(
@@ -510,7 +512,7 @@ fun BottomSheet(
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
                 ) {
-                    val miuixColor = MiuixTheme.colorScheme.primary
+                    val miuixColor = COUITheme.colorScheme.primary
                     var selectedColor by remember { mutableStateOf(miuixColor) }
                     ColorPalette(
                         modifier = Modifier.padding(bottom = 12.dp),

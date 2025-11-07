@@ -17,14 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Edit
-import top.yukonga.miuix.kmp.icon.icons.useful.Personal
-import top.yukonga.miuix.kmp.icon.icons.useful.Rename
-import top.yukonga.miuix.kmp.icon.icons.useful.Settings
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Edit
+import com.suqi8.coui.kmp.icon.icons.useful.Personal
+import com.suqi8.coui.kmp.icon.icons.useful.Rename
+import com.suqi8.coui.kmp.icon.icons.useful.Settings
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun IconDemo() {
@@ -51,12 +51,12 @@ fun IconDemo() {
                     Icon(
                         imageVector = MiuixIcons.Useful.Personal,
                         contentDescription = "Personal",
-                        tint = MiuixTheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.onBackground
                     )
                     Icon(
                         imageVector = MiuixIcons.Useful.Settings,
                         contentDescription = "Settings",
-                        tint = MiuixTheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.onBackground
                     )
                     Icon(
                         imageVector = MiuixIcons.Useful.Edit,

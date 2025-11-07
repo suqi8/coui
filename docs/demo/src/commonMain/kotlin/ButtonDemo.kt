@@ -21,15 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Like
-import top.yukonga.miuix.kmp.icon.icons.useful.Personal
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Button
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Like
+import com.suqi8.coui.kmp.icon.icons.useful.Personal
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun ButtonDemo() {
@@ -69,7 +69,7 @@ fun ButtonDemo() {
                     )
                     Text(
                         text = buttonText1,
-                        style = MiuixTheme.textStyles.button,
+                        style = COUITheme.textStyles.button,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -94,13 +94,13 @@ fun ButtonDemo() {
                     Icon(
                         imageVector = MiuixIcons.Useful.Personal,
                         contentDescription = null,
-                        tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                        tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
                         text = "Disabled Button",
-                        style = MiuixTheme.textStyles.button,
-                        color = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                        style = COUITheme.textStyles.button,
+                        color = COUITheme.colorScheme.disabledOnSecondaryVariant,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }

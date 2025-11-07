@@ -21,18 +21,18 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.Colors
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
-import top.yukonga.miuix.kmp.utils.getWindowSize
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Surface
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.Colors
+import com.suqi8.coui.kmp.theme.darkColorScheme
+import com.suqi8.coui.kmp.theme.lightColorScheme
+import com.suqi8.coui.kmp.utils.getWindowSize
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 
 @Composable
 fun ThirdPage(

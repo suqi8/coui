@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.ColorPalette
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.ColorPalette
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun ColorPaletteDemo() {
@@ -38,7 +38,7 @@ fun ColorPaletteDemo() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val miuixColor = MiuixTheme.colorScheme.primary
+            val miuixColor = COUITheme.colorScheme.primary
             var selectedColor by remember { mutableStateOf(miuixColor) }
             ColorPalette(
                 initialColor = selectedColor,

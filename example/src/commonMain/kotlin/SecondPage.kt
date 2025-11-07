@@ -17,19 +17,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CouiListItemPosition
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.PullToRefresh
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
+import com.suqi8.coui.kmp.extra.SuperDropdown
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Scan
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.getWindowSize
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import kotlinx.coroutines.delay
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.extra.SuperDropdown
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.icons.useful.Scan
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.getWindowSize
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun SecondPage(
@@ -84,6 +85,11 @@ fun SecondPage(
                                 onSelectedIndexChange = { newOption ->
                                     dropdownSelectedOption = newOption
                                 },
+                                position = when (i) {
+                                    0 -> CouiListItemPosition.Top      // 第一个
+                                    ii - 1 -> CouiListItemPosition.Bottom // 最后一个
+                                    else -> CouiListItemPosition.Middle  // 中间
+                                },
                                 leftAction = {
                                     Box(
                                         modifier = Modifier.padding(end = 8.dp)
@@ -91,7 +97,7 @@ fun SecondPage(
                                         Icon(
                                             imageVector = MiuixIcons.Useful.Scan,
                                             contentDescription = "Share",
-                                            tint = MiuixTheme.colorScheme.onBackground
+                                            tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                 }

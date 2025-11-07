@@ -18,9 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Surface
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun SurfaceDemo() {
@@ -42,7 +42,7 @@ fun SurfaceDemo() {
                 modifier = Modifier
                     .size(height = 200.dp, width = 400.dp)
                     .padding(16.dp),
-                color = MiuixTheme.colorScheme.background,
+                color = COUITheme.colorScheme.background,
                 shape = RoundedCornerShape(16.dp),
                 shadowElevation = 4.dp
             ) {

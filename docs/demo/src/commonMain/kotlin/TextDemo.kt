@@ -17,9 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun TextDemo() {
@@ -47,32 +47,32 @@ fun TextDemo() {
                 ) {
                     Text(
                         text = "Title Text",
-                        style = MiuixTheme.textStyles.headline1,
+                        style = COUITheme.textStyles.headline1,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
                         text = "Subtitle Text",
-                        style = MiuixTheme.textStyles.subtitle,
+                        style = COUITheme.textStyles.subtitle,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
                         text = "Summary Text",
-                        style = MiuixTheme.textStyles.body2,
+                        style = COUITheme.textStyles.body2,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
                         text = "Main Text",
-                        style = MiuixTheme.textStyles.main,
+                        style = COUITheme.textStyles.main,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
                         text = "Primary Color Text",
-                        color = MiuixTheme.colorScheme.primary,
+                        color = COUITheme.colorScheme.primary,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     Text(
                         text = "Secondary Text",
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant
+                        color = COUITheme.colorScheme.onSurfaceContainerVariant
                     )
                 }
                 Card(

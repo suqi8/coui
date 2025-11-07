@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.TextField
+import com.suqi8.coui.kmp.basic.TextField
 
 @Composable
 fun TextFieldDemo() {

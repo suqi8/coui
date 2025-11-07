@@ -16,19 +16,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.CouiListItemPosition
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.extra.SuperArrow
+import com.suqi8.coui.kmp.extra.SuperDialog
+import com.suqi8.coui.kmp.extra.SuperDropdown
+import com.suqi8.coui.kmp.extra.SuperSwitch
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.getWindowSize
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import misc.VersionInfo
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.extra.SuperArrow
-import top.yukonga.miuix.kmp.extra.SuperDialog
-import top.yukonga.miuix.kmp.extra.SuperDropdown
-import top.yukonga.miuix.kmp.extra.SuperSwitch
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.getWindowSize
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun FourthPage(
@@ -95,6 +96,7 @@ fun FourthPage(
                 SuperSwitch(
                     title = "Show FPS Monitor",
                     checked = showFPSMonitor,
+                    position = CouiListItemPosition.Top,
                     onCheckedChange = onShowFPSMonitorChange
                 )
                 SuperSwitch(
@@ -191,6 +193,7 @@ fun FourthPage(
                     title = "Color Mode",
                     items = colorModeOptions,
                     selectedIndex = colorMode.value,
+                    position = CouiListItemPosition.Bottom,
                     onSelectedIndexChange = { colorMode.value = it }
                 )
             }
@@ -202,6 +205,7 @@ fun FourthPage(
                 SuperArrow(
                     title = "About",
                     summary = "About this app",
+                    position = CouiListItemPosition.Single,
                     onClick = {
                         showDialog.value = true
                     }
@@ -230,7 +234,7 @@ fun Dialog(showDialog: MutableState<Boolean>) {
             )
             Card(
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer,
+                    color = COUITheme.colorScheme.secondaryContainer,
                 )
             ) {
                 SuperArrow(
