@@ -1,20 +1,17 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package top.yukonga.miuix.kmp.utils
+package com.suqi8.coui.kmp.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.utils.BackEventCompat
-import com.suqi8.coui.kmp.utils.Platform
-import com.suqi8.coui.kmp.utils.PredictiveBackHandler
-import com.suqi8.coui.kmp.utils.WindowSize
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import platform.UIKit.UIScreen
@@ -46,7 +43,7 @@ actual fun BackHandler(
     enabled: Boolean,
     onBack: () -> Unit
 ) {
-    androidx.compose.ui.backhandler.BackHandler(enabled = enabled, onBack = onBack)
+    BackHandler(enabled = enabled, onBack = onBack)
 }
 
 @Composable

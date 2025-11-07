@@ -1,7 +1,7 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package top.yukonga.miuix.kmp.utils
+package com.suqi8.coui.kmp.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -13,12 +13,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.utils.BackEventCompat
-import com.suqi8.coui.kmp.utils.BackHandler
-import com.suqi8.coui.kmp.utils.Platform
-import com.suqi8.coui.kmp.utils.WindowSize
-import platform.AppKit.NSEvent
-import platform.AppKit.NSEventMaskKeyDown
+import kotlinx.browser.window
+import org.w3c.dom.events.Event
+import org.w3c.dom.events.KeyboardEvent
 
 @Composable
 @OptIn(ExperimentalComposeUiApi::class)
@@ -35,7 +32,7 @@ actual fun getWindowSize(): WindowSize {
     return windowSize
 }
 
-actual fun platform(): Platform = Platform.MacOS
+actual fun platform(): Platform = Platform.WasmJs
 
 @Composable
 actual fun getRoundedCorner(): Dp = 0.dp
@@ -48,19 +45,14 @@ actual fun BackHandler(
     val currentOnBack by rememberUpdatedState(onBack)
     DisposableEffect(enabled) {
         if (!enabled) return@DisposableEffect onDispose { }
-        val monitor = NSEvent.addLocalMonitorForEventsMatchingMask(NSEventMaskKeyDown) { event ->
-            if (event?.keyCode == 53.toUShort()) {
+        val handler: (Event) -> Unit = { event ->
+            if ((event as KeyboardEvent).key == "Escape") {
                 currentOnBack()
-                null
-            } else {
-                event
             }
         }
-
+        window.addEventListener("keydown", handler)
         onDispose {
-            if (monitor != null) {
-                NSEvent.removeMonitor(monitor)
-            }
+            window.removeEventListener("keydown", handler)
         }
     }
 }
@@ -73,6 +65,6 @@ actual fun PredictiveBackHandler(
     onBackCancelled: (() -> Unit)?,
     onBack: () -> Unit
 ) {
-    // macOS doesn't support predictive back gesture, fallback to simple BackHandler
+    // WasmJs doesn't support predictive back gesture, fallback to simple BackHandler
     BackHandler(enabled = enabled, onBack = onBack)
 }
