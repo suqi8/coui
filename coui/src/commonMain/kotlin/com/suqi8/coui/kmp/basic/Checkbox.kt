@@ -5,15 +5,16 @@ package com.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.requiredSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,159 +24,184 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.mocharealm.gaze.capsule.ContinuousCapsule
 import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.utils.pressable
-import kotlinx.coroutines.launch
+
+// 假设您已经定义了 COUITheme，如果未定义，请替换为 MaterialTheme 或硬编码颜色
+// import com.yourpackage.ui.theme.COUITheme
 
 /**
- * A [Checkbox] component with Miuix style.
+ * COUI-style Checkbox component.
  *
- * @param checked The current state of the [Checkbox].
- * @param onCheckedChange The callback to be called when the state of the [Checkbox] changes.
- * @param modifier The modifier to be applied to the [Checkbox].
- * @param colors The [CheckboxColors] of the [Checkbox].
- * @param enabled Whether the [Checkbox] is enabled.
+ * This component implements a circular COUI-style checkbox
+ * with smooth animations, color transitions, and haptic feedback.
+ * It supports enabled/disabled states and animated checkmark drawing.
+ *
+ * ### Animation behavior
+ * - When checked: background fills smoothly, and the checkmark is drawn progressively.
+ * - When unchecked: the checkmark fades out and the background returns to outline.
+ *
+ * @param checked Whether the checkbox is currently checked.
+ * @param onCheckedChange Callback triggered when the checked state changes.
+ *   If null, the checkbox is displayed as non-interactive.
+ * @param modifier Modifier to be applied to the checkbox.
+ * @param enabled Whether the checkbox is interactive. Default is `true`.
+ * @param colors Defines colors for different checkbox states (see [CheckboxDefaults.checkboxColors]).
+ * @param interactionSource Optional interaction source for ripple and gesture tracking.
  */
 @Composable
 fun Checkbox(
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
-    colors: CheckboxColors = CheckboxDefaults.checkboxColors(),
     enabled: Boolean = true,
+    colors: CheckboxColors = CheckboxDefaults.checkboxColors(),
+    interactionSource: MutableInteractionSource? = null
 ) {
     val hapticFeedback = LocalHapticFeedback.current
 
+    // 1. 定义过渡动画
+    val animationSpec = tween<Float>(durationMillis = 200, easing = FastOutSlowInEasing)
+
+    // 选中状态的动画进度 (0f = 未选中, 1f = 选中)
+    val checkProgress = remember { Animatable(if (checked) 1f else 0f) }
+    LaunchedEffect(checked) {
+        checkProgress.animateTo(
+            targetValue = if (checked) 1f else 0f,
+            animationSpec = animationSpec
+        )
+    }
+
+    // 颜色过渡
+    val borderColor by animateColorAsState(
+        targetValue = colors.borderColor(enabled, checked),
+        animationSpec = tween(durationMillis = 200)
+    )
     val backgroundColor by animateColorAsState(
-        targetValue = if (checked) colors.checkedBackgroundColor(enabled) else colors.uncheckedBackgroundColor(enabled),
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+        targetValue = colors.backgroundColor(enabled, checked),
+        animationSpec = tween(durationMillis = 200)
+    )
+    val checkmarkColor by animateColorAsState(
+        targetValue = colors.checkmarkColor(enabled, checked),
+        animationSpec = tween(durationMillis = 200)
     )
 
-    val foregroundColor by animateColorAsState(
-        targetValue = if (checked) colors.checkedForegroundColor(enabled) else colors.uncheckedForegroundColor(enabled),
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
-    )
-
+    // 对勾动画状态
     val checkmarkAnim = rememberCheckmarkAnimationState(checked)
 
-    val finalModifier = if (onCheckedChange != null) {
+    // 2. 构建点击修饰符
+    val toggleableModifier = if (onCheckedChange != null) {
         Modifier.toggleable(
             value = checked,
             onValueChange = {
                 onCheckedChange(it)
                 hapticFeedback.performHapticFeedback(
-                    if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff
+                    if (it) HapticFeedbackType.LongPress else HapticFeedbackType.TextHandleMove // COUI 通常使用较轻的触感
                 )
             },
             enabled = enabled,
             role = Role.Checkbox,
-            indication = null,
-            interactionSource = null
+            interactionSource = interactionSource,
+            indication = null // 如果需要点击波纹，这里可以传入 LocalIndication.current
         )
     } else {
-        modifier
+        Modifier
     }
 
+    // 3. 绘制组件
+    // 使用固定 24dp 尺寸
     Box(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
-            .requiredSize(25.5.dp)
-            .pressable(enabled = enabled, delay = null)
-            .clip(ContinuousCapsule)
-            .drawBehind {
-                drawCircle(backgroundColor)
-            }
-            .then(finalModifier),
+            .requiredSize(24.dp)
+            .clip(CircleShape)
+            .then(toggleableModifier),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.size(25.5.dp)) {
-            drawTrimmedCheckmark(
-                color = foregroundColor,
-                alpha = checkmarkAnim.alpha.value,
-                trimStart = checkmarkAnim.startTrim.value,
-                trimEnd = checkmarkAnim.endTrim.value
-            )
+        Canvas(modifier = Modifier.requiredSize(24.dp)) {
+            val strokeWidthPx = 1.5.dp.toPx() // 未选中时的描边宽度
+            val radius = size.minDimension / 2f
+
+            // 绘制背景和描边
+            // 通过 checkProgress 控制从空心到实心的过渡
+            val currentStrokeWidth = strokeWidthPx * (1f - checkProgress.value)
+            // 当 progress 接近 1 时，完全填充；接近 0 时，只有描边
+            val isFilled = checkProgress.value > 0.95f
+
+            if (!isFilled) {
+                // 绘制未选中时的描边圆环
+                drawCircle(
+                    color = borderColor,
+                    radius = radius - strokeWidthPx / 2,
+                    style = Stroke(width = strokeWidthPx)
+                )
+            }
+
+            // 绘制选中时的实心背景 (带有缩放过渡效果)
+            if (checkProgress.value > 0f) {
+                drawCircle(
+                    color = backgroundColor,
+                    radius = radius * checkProgress.value, // 简单的缩放进入效果
+                    style = Fill
+                )
+            }
+
+            // 绘制对勾
+            if (checkProgress.value > 0f) {
+                drawTrimmedCheckmark(
+                    color = checkmarkColor,
+                    // 仅在选中动画时显示对勾，淡入淡出
+                    alpha = checkmarkAnim.alpha.value * checkProgress.value,
+                    trimStart = checkmarkAnim.startTrim.value,
+                    trimEnd = checkmarkAnim.endTrim.value
+                )
+            }
         }
     }
 }
 
+/**
+ * Remembers and controls the checkmark animation state.
+ *
+ * Uses `Animatable` to smoothly animate the checkmark’s drawing path.
+ *
+ * - When `checked = true`, the checkmark is drawn progressively from start to end.
+ * - When `checked = false`, the checkmark fades out and resets.
+ *
+ * @param checked Current checked state.
+ * @return [CheckmarkAnimationState] instance containing animation values.
+ */
 @Composable
 private fun rememberCheckmarkAnimationState(checked: Boolean): CheckmarkAnimationState {
     val checkAlpha = remember { Animatable(if (checked) 1f else 0f) }
-    val checkStartTrim = remember { Animatable(0.0f) }
-    val checkEndTrim = remember { Animatable(if (checked) 0.803f else 0.1f) }
+    val checkStartTrim = remember { Animatable(if (checked) 0f else 0f) }
+    val checkEndTrim = remember { Animatable(if (checked) 1f else 0f) }
 
     LaunchedEffect(checked) {
         if (checked) {
-            launch {
-                checkAlpha.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(
-                        durationMillis = 10,
-                        easing = FastOutSlowInEasing
-                    )
-                )
-            }
-            launch {
-                checkStartTrim.animateTo(
-                    targetValue = 0.186f,
-                    animationSpec = keyframes {
-                        durationMillis = 100
-                        0.186f at 100
-                    }
-                )
-            }
-            launch {
-                checkEndTrim.animateTo(
-                    targetValue = 0.803f,
-                    animationSpec = keyframes {
-                        durationMillis = 300
-                        0.845f at 200
-                        0.803f at 300
-                    }
-                )
-            }
+            // 选中动画：对勾快速画出
+            checkAlpha.snapTo(1f)
+            checkStartTrim.snapTo(0f)
+            checkEndTrim.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing)
+            )
         } else {
-            launch {
-                checkAlpha.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(
-                        durationMillis = 150,
-                        easing = FastOutSlowInEasing
-                    )
-                )
-            }
-            launch {
-                checkStartTrim.animateTo(
-                    targetValue = 0.0f,
-                    animationSpec = keyframes {
-                        durationMillis = 300
-                        0.0f at 300
-                    }
-                )
-            }
-            launch {
-                checkEndTrim.animateTo(
-                    targetValue = 0.1f,
-                    animationSpec = keyframes {
-                        durationMillis = 300
-                        0.1f at 300
-                    }
-                )
-            }
+            // 取消选中动画：对勾快速淡出或收回
+            checkAlpha.animateTo(0f, tween(durationMillis = 100))
+            checkStartTrim.snapTo(0f)
+            checkEndTrim.snapTo(0f)
         }
     }
     return remember(checkAlpha, checkStartTrim, checkEndTrim) {
@@ -183,84 +209,87 @@ private fun rememberCheckmarkAnimationState(checked: Boolean): CheckmarkAnimatio
     }
 }
 
+/**
+ * Holds animation states for the checkmark.
+ *
+ * Contains three animated properties:
+ * - [alpha]: Opacity of the checkmark.
+ * - [startTrim]: Start fraction of the drawn path.
+ * - [endTrim]: End fraction of the drawn path.
+ */
+@Stable
 private class CheckmarkAnimationState(
-    val alpha: Animatable<Float, *>,
-    val startTrim: Animatable<Float, *>,
-    val endTrim: Animatable<Float, *>
+    val alpha: Animatable<Float, AnimationVector1D>,
+    val startTrim: Animatable<Float, AnimationVector1D>,
+    val endTrim: Animatable<Float, AnimationVector1D>
 )
 
+/**
+ * Draws a trimmed checkmark path.
+ *
+ * This function draws a two-segment checkmark and supports partial rendering
+ * through the `trimStart` and `trimEnd` parameters, enabling smooth
+ * drawing animations (like progress-based reveal).
+ *
+ * @param color The color of the checkmark stroke.
+ * @param alpha The transparency of the checkmark (0f–1f).
+ * @param trimStart Start fraction of the visible path (0f–1f).
+ * @param trimEnd End fraction of the visible path (0f–1f).
+ */
 private fun DrawScope.drawTrimmedCheckmark(
     color: Color,
-    alpha: Float = 1f,
+    alpha: Float,
     trimStart: Float,
     trimEnd: Float
 ) {
-    val viewportSize = 23f
-    val strokeWidth = size.width * 0.09f
+    if (alpha <= 0f) return
 
-    val centerX = size.width / 2
-    val centerY = size.height / 2
-    val viewportCenterX = viewportSize / 2
-    val viewportCenterY = viewportSize / 2
+    val strokeWidth = 2.dp.toPx()
+    // 标准化视口大小，方便计算坐标
+    val viewportSize = 24f
 
-    val leftPoint = Offset(
-        centerX + ((5f - viewportCenterX) / viewportSize * size.width),
-        centerY + ((9.4f - viewportCenterY) / viewportSize * size.height)
-    )
-    val middlePoint = Offset(
-        centerX + ((10.3f - viewportCenterX) / viewportSize * size.width),
-        centerY + ((14.9f - viewportCenterY) / viewportSize * size.height)
-    )
-    val rightPoint = Offset(
-        centerX + ((17.9f - viewportCenterX) / viewportSize * size.width),
-        centerY + ((5.1f - viewportCenterY) / viewportSize * size.height)
-    )
+    val startX = 6.5f
+    val startY = 12f
+    val midX = 10.5f
+    val midY = 16f
+    val endX = 17.5f
+    val endY = 8.5f
 
-    val firstSegmentLength = (middlePoint - leftPoint).getDistance()
-    val secondSegmentLength = (rightPoint - middlePoint).getDistance()
-    val totalLength = firstSegmentLength + secondSegmentLength
+    // 将相对坐标转换为实际画布坐标
+    val p1 = Offset(startX / viewportSize * size.width, startY / viewportSize * size.height)
+    val p2 = Offset(midX / viewportSize * size.width, midY / viewportSize * size.height)
+    val p3 = Offset(endX / viewportSize * size.width, endY / viewportSize * size.height)
 
-    val startDistance = totalLength * trimStart
-    val endDistance = totalLength * trimEnd
+    // 计算总路径长度用于 trim
+    val len1 = (p2 - p1).getDistance()
+    val len2 = (p3 - p2).getDistance()
+    val totalLen = len1 + len2
+
+    val startLen = totalLen * trimStart
+    val endLen = totalLen * trimEnd
 
     val path = Path()
 
-    if (startDistance < firstSegmentLength && endDistance > 0) {
-        val segStartRatio = (startDistance / firstSegmentLength).coerceIn(0f, 1f)
-        val segEndRatio = (endDistance / firstSegmentLength).coerceIn(0f, 1f)
-
-        val start = Offset(
-            leftPoint.x + (middlePoint.x - leftPoint.x) * segStartRatio,
-            leftPoint.y + (middlePoint.y - leftPoint.y) * segStartRatio
-        )
-        val end = Offset(
-            leftPoint.x + (middlePoint.x - leftPoint.x) * segEndRatio,
-            leftPoint.y + (middlePoint.y - leftPoint.y) * segEndRatio
-        )
-
-        path.moveTo(start.x, start.y)
-        path.lineTo(end.x, end.y)
+    // 第一段 (短边)
+    if (startLen < len1 && endLen > 0) {
+        val s = (startLen / len1).coerceIn(0f, 1f)
+        val e = (endLen / len1).coerceIn(0f, 1f)
+        path.moveTo(lerp(p1.x, p2.x, s), lerp(p1.y, p2.y, s))
+        path.lineTo(lerp(p1.x, p2.x, e), lerp(p1.y, p2.y, e))
     }
 
-    if (endDistance > firstSegmentLength) {
-        val segStartRatio = ((startDistance - firstSegmentLength) / secondSegmentLength).coerceIn(0f, 1f)
-        val segEndRatio = ((endDistance - firstSegmentLength) / secondSegmentLength).coerceIn(0f, 1f)
-
-        val start = Offset(
-            middlePoint.x + (rightPoint.x - middlePoint.x) * segStartRatio,
-            middlePoint.y + (rightPoint.y - middlePoint.y) * segStartRatio
-        )
-        val end = Offset(
-            middlePoint.x + (rightPoint.x - middlePoint.x) * segEndRatio,
-            middlePoint.y + (rightPoint.y - middlePoint.y) * segEndRatio
-        )
-
-        if (startDistance < firstSegmentLength) {
-            path.lineTo(end.x, end.y)
+    // 第二段 (长边)
+    if (endLen > len1) {
+        val s = ((startLen - len1) / len2).coerceIn(0f, 1f)
+        val e = ((endLen - len1) / len2).coerceIn(0f, 1f)
+        if (startLen < len1) {
+            // 如果第一段已经画了，直接连线
+            path.lineTo(lerp(p2.x, p3.x, e), lerp(p2.y, p3.y, e))
         } else {
-            path.moveTo(start.x, start.y)
+            // 否则移动到第二段起点
+            path.moveTo(lerp(p2.x, p3.x, s), lerp(p2.y, p3.y, s))
+            path.lineTo(lerp(p2.x, p3.x, e), lerp(p2.y, p3.y, e))
         }
-        path.lineTo(end.x, end.y)
     }
 
     drawPath(
@@ -270,59 +299,77 @@ private fun DrawScope.drawTrimmedCheckmark(
         style = Stroke(
             width = strokeWidth,
             cap = StrokeCap.Round,
-            join = StrokeJoin.Round,
-            miter = 10.0f,
+            join = StrokeJoin.Round
         )
     )
 }
 
+/**
+ * Simple linear interpolation helper function.
+ */
+private fun lerp(start: Float, stop: Float, fraction: Float): Float {
+    return (1 - fraction) * start + fraction * stop
+}
+
 object CheckboxDefaults {
+    /**
+     * Creates color configuration for the COUI-style checkbox.
+     */
     @Composable
     fun checkboxColors(
-        checkedForegroundColor: Color = COUITheme.colorScheme.onPrimary,
-        uncheckedForegroundColor: Color = COUITheme.colorScheme.secondary,
-        disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimary,
-        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimary,
-        checkedBackgroundColor: Color = COUITheme.colorScheme.primary,
-        uncheckedBackgroundColor: Color = COUITheme.colorScheme.secondary,
-        disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disabledPrimary,
-        disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.disabledSecondary
+        // 选中时的填充色 (通常是主色)
+        checkedContainerColor: Color = COUITheme.colorScheme.primary,
+        // 选中时的对勾颜色 (通常是白色)
+        checkedCheckmarkColor: Color = COUITheme.colorScheme.onPrimary,
+        // 未选中时的边框颜色 (通常是灰色)
+        uncheckedBorderColor: Color = COUITheme.colorScheme.outline,
+        // 禁用状态颜色
+        disabledCheckedContainerColor: Color = COUITheme.colorScheme.primary.copy(alpha = 0.5f),
+        disabledCheckedCheckmarkColor: Color = COUITheme.colorScheme.onPrimary.copy(alpha = 0.5f),
+        disabledUncheckedBorderColor: Color = COUITheme.colorScheme.outline.copy(alpha = 0.3f)
     ): CheckboxColors = CheckboxColors(
-        checkedForegroundColor = checkedForegroundColor,
-        uncheckedForegroundColor = uncheckedForegroundColor,
-        disabledCheckedForegroundColor = disabledCheckedForegroundColor,
-        disabledUncheckedForegroundColor = disabledUncheckedForegroundColor,
-        checkedBackgroundColor = checkedBackgroundColor,
-        uncheckedBackgroundColor = uncheckedBackgroundColor,
-        disabledCheckedBackgroundColor = disabledCheckedBackgroundColor,
-        disabledUncheckedBackgroundColor = disabledUncheckedBackgroundColor
+        checkedContainerColor = checkedContainerColor,
+        checkedCheckmarkColor = checkedCheckmarkColor,
+        uncheckedBorderColor = uncheckedBorderColor,
+        disabledCheckedContainerColor = disabledCheckedContainerColor,
+        disabledCheckedCheckmarkColor = disabledCheckedCheckmarkColor,
+        disabledUncheckedBorderColor = disabledUncheckedBorderColor
     )
 }
 
 @Immutable
-class CheckboxColors(
-    private val checkedForegroundColor: Color,
-    private val uncheckedForegroundColor: Color,
-    private val disabledCheckedForegroundColor: Color,
-    private val disabledUncheckedForegroundColor: Color,
-    private val checkedBackgroundColor: Color,
-    private val uncheckedBackgroundColor: Color,
-    private val disabledCheckedBackgroundColor: Color,
-    private val disabledUncheckedBackgroundColor: Color
+class CheckboxColors internal constructor(
+    private val checkedContainerColor: Color,
+    private val checkedCheckmarkColor: Color,
+    private val uncheckedBorderColor: Color,
+    private val disabledCheckedContainerColor: Color,
+    private val disabledCheckedCheckmarkColor: Color,
+    private val disabledUncheckedBorderColor: Color
 ) {
-    @Stable
-    internal fun checkedForegroundColor(enabled: Boolean): Color =
-        if (enabled) checkedForegroundColor else disabledCheckedForegroundColor
+    @Composable
+    internal fun backgroundColor(enabled: Boolean, checked: Boolean): Color {
+        return if (enabled) {
+            if (checked) checkedContainerColor else Color.Transparent
+        } else {
+            if (checked) disabledCheckedContainerColor else Color.Transparent
+        }
+    }
 
-    @Stable
-    internal fun uncheckedForegroundColor(enabled: Boolean): Color =
-        if (enabled) uncheckedForegroundColor else disabledUncheckedForegroundColor
+    @Composable
+    internal fun borderColor(enabled: Boolean, checked: Boolean): Color {
+        return if (enabled) {
+            if (checked) Color.Transparent else uncheckedBorderColor
+        } else {
+            if (checked) Color.Transparent else disabledUncheckedBorderColor
+        }
+    }
 
-    @Stable
-    internal fun checkedBackgroundColor(enabled: Boolean): Color =
-        if (enabled) checkedBackgroundColor else disabledCheckedBackgroundColor
-
-    @Stable
-    internal fun uncheckedBackgroundColor(enabled: Boolean): Color =
-        if (enabled) uncheckedBackgroundColor else disabledUncheckedBackgroundColor
+    @Composable
+    internal fun checkmarkColor(enabled: Boolean, checked: Boolean): Color {
+        return if (enabled) {
+            if (checked) checkedCheckmarkColor else Color.Transparent
+        } else {
+            if (checked) disabledCheckedCheckmarkColor else Color.Transparent
+        }
+    }
 }
