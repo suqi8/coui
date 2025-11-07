@@ -133,9 +133,6 @@ fun Checkbox(
             val strokeWidthPx = 1.5.dp.toPx() // 未选中时的描边宽度
             val radius = size.minDimension / 2f
 
-            // 绘制背景和描边
-            // 通过 checkProgress 控制从空心到实心的过渡
-            val currentStrokeWidth = strokeWidthPx * (1f - checkProgress.value)
             // 当 progress 接近 1 时，完全填充；接近 0 时，只有描边
             val isFilled = checkProgress.value > 0.95f
 
