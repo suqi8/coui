@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -34,7 +35,7 @@ import com.suqi8.coui.kmp.utils.TiltFeedback
 import com.suqi8.coui.kmp.utils.pressable
 
 /**
- * A [Card] component with Miuix style.
+ * A [Card] component with COUI style.
  * Card contain contain content and actions that relate information about a subject.
  *
  * This [Card] does not handle input events
@@ -66,7 +67,7 @@ fun Card(
 }
 
 /**
- * A [Card] component with Miuix style.
+ * A [Card] component with COUI style.
  * Card contain contain content and actions that relate information about a subject.
  *
  * This [Card] handles input events
@@ -149,10 +150,11 @@ private fun BasicCard(
     ) {
         Box(
             modifier = modifier
+                .fillMaxWidth()
                 .semantics(mergeDescendants = false) {
                     isTraversalGroup = true
                 }
-                .clip(clipShape)  // For touch feedback, there is a problem when using G2Continuity.
+                .clip(clipShape)
                 .background(color = colors.color, shape = shape),
             propagateMinConstraints = true,
         ) {

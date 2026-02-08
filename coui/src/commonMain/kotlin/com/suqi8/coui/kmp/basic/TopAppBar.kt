@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -7,269 +7,478 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.DecayAnimationSpec
 import androidx.compose.animation.core.animateDecay
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.captionBar
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirst
-import androidx.compose.ui.util.lerp
-import com.suqi8.coui.kmp.basic.TopAppBarState.Companion.Saver
 import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.roundToInt
 
+private object COUIDimens {
+    val GapNavTitle = 4.dp
+    val GapTitleMenu = 8.dp
+    val MenuItemMinWidth = 48.dp
+
+    val PaddingNormalLeftCompat = 16.dp
+    val PaddingNormalRightCompat = 16.dp
+    val PaddingMenuLeftCompat = 4.dp
+    val PaddingMenuRightCompat = 4.dp
+    val PaddingCenterCompat = 4.dp
+
+    val PaddingNormalLeftMedium = 24.dp
+    val PaddingNormalRightMedium = 24.dp
+    val PaddingMenuLeftMedium = 12.dp
+    val PaddingMenuRightMedium = 12.dp
+    val PaddingCenterMedium = 12.dp
+
+    val PaddingNormalLeftExpanded = 40.dp
+    val PaddingNormalRightExpanded = 40.dp
+    val PaddingMenuLeftExpanded = 28.dp
+    val PaddingMenuRightExpanded = 31.dp
+    val PaddingCenterExpanded = 28.dp
+}
+
 /**
- * A [TopAppBar] with Miuix style that can collapse and expand based on the
- * scroll position of the content below it.
+ * A top app bar that displays information and actions at the top of a screen.
  *
- * The [TopAppBar] can be configured with a title, a navigation icon, and action icons.
- * The large title will collapse when the content is scrolled up and expand when
- * the content is scrolled down.
+ * This implementation features responsive padding adaptation based on the available width
+ * and precise positioning logic for navigation icons, titles, and menu actions.
  *
- * @param title The title of the [TopAppBar].
- * @param modifier The modifier to be applied to the  [TopAppBar].
- * @param color The background color of the [TopAppBar].
- * @param largeTitle The large title of the [TopAppBar], If not specified, it will be the same as title.
- * @param navigationIcon The [Composable] content that represents the navigation icon.
- * @param actions The [Composable] content that represents the action icons.
- * @param scrollBehavior The [ScrollBehavior] that controls the behavior of the [TopAppBar].
- * @param defaultWindowInsetsPadding Whether to apply default window insets padding to the [TopAppBar].
- * @param horizontalPadding The horizontal padding of the [TopAppBar]'s title & large title.
+ * @param title The title text to be displayed.
+ * @param modifier The modifier to be applied to the top app bar.
+ * @param subtitle The optional subtitle text to be displayed below the title.
+ * @param navigationIcon The navigation icon displayed at the start of the top app bar.
+ * @param actions The actions displayed at the end of the top app bar.
+ * @param windowInsets The window insets to be applied to the top app bar.
+ * @param colors The color configuration for the top app bar.
+ * @param scrollBehavior The scroll behavior that defines how the top app bar reacts to scrolling.
+ * @param isCenterTitle Whether the title should be centered horizontally.
  */
 @Composable
 fun TopAppBar(
     title: String,
     modifier: Modifier = Modifier,
-    color: Color = COUITheme.colorScheme.background,
+    subtitle: String? = null,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    windowInsets: WindowInsets = COUITopAppBarDefaults.windowInsets,
+    colors: COUITopAppBarColors = COUITopAppBarDefaults.topAppBarColors(),
+    scrollBehavior: ScrollBehavior? = null,
+    isCenterTitle: Boolean = false
+) {
+    val actionsRow = @Composable {
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            actions()
+        }
+    }
+
+    val heightOffsetLimit = 0f
+    SideEffect {
+        if (scrollBehavior?.state?.heightOffsetLimit != heightOffsetLimit) {
+            scrollBehavior?.state?.heightOffsetLimit = heightOffsetLimit
+        }
+    }
+
+    val height = LocalDensity.current.run { COUITopAppBarDefaults.ContainerHeight.toPx() }
+
+    Surface(modifier = modifier, color = colors.containerColor(0f)) {
+        Column {
+            TopAppBarLayout(
+                modifier = Modifier
+                    .windowInsetsPadding(windowInsets)
+                    .height(COUITopAppBarDefaults.ContainerHeight)
+                    .clipToBounds(),
+                heightPx = height,
+                navigationIconContentColor = colors.navigationIconContentColor,
+                titleContentColor = colors.titleContentColor,
+                actionIconContentColor = colors.actionIconContentColor,
+                title = title,
+                subtitle = subtitle,
+                titleTextStyle = COUITheme.textStyles.title3,
+                subtitleTextStyle = COUITheme.textStyles.subtitle,
+                titleAlpha = 1f,
+                titleVerticalArrangement = Arrangement.Center,
+                isCenterTitle = isCenterTitle,
+                titleBottomPadding = 0,
+                navigationIcon = navigationIcon,
+                actions = actionsRow,
+            )
+
+            DividerAnimation(scrollBehavior)
+        }
+    }
+}
+
+/**
+ * A top app bar that expands to display a large title when scrolled to the top.
+ *
+ * @param title The title text displayed in the pinned state or as a fallback for the large title.
+ * @param modifier The modifier to be applied to the top app bar.
+ * @param subtitle The optional subtitle text displayed in the pinned state.
+ * @param largeTitle The custom text to be displayed when expanded. Defaults to [title] if null.
+ * @param navigationIcon The navigation icon displayed at the start of the top app bar.
+ * @param actions The actions displayed at the end of the top app bar.
+ * @param windowInsets The window insets to be applied to the top app bar.
+ * @param colors The color configuration for the top app bar.
+ * @param scrollBehavior The scroll behavior that defines the expansion and collapse logic.
+ */
+@Composable
+fun LargeTopAppBar(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
     largeTitle: String? = null,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    scrollBehavior: ScrollBehavior? = null,
-    defaultWindowInsetsPadding: Boolean = true,
-    horizontalPadding: Dp = 26.dp
+    windowInsets: WindowInsets = COUITopAppBarDefaults.windowInsets,
+    colors: COUITopAppBarColors = COUITopAppBarDefaults.topAppBarColors(),
+    scrollBehavior: ScrollBehavior? = null
 ) {
-    val largeTitleHeight = remember { mutableStateOf(0) }
-    val expandedHeightPx by rememberUpdatedState(
-        remember(largeTitleHeight.value) {
-            largeTitleHeight.value.toFloat().coerceAtLeast(0f)
-        }
-    )
-
-    SideEffect {
-        // Sets the app bar's height offset to collapse the entire bar's height when content is
-        // scrolled.
-        if (scrollBehavior?.state?.heightOffsetLimit != -expandedHeightPx) {
-            scrollBehavior?.state?.heightOffsetLimit = -expandedHeightPx
+    val density = LocalDensity.current
+    val actionsRow = @Composable {
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            actions()
         }
     }
 
-    // Wrap the given actions in a Row.
-    val actionsRow =
-        @Composable {
-            Row(
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions
-            )
-        }
+    val pinnedHeightPx = with(density) { COUITopAppBarDefaults.ContainerHeight.toPx() }
+    val maxHeightPx = with(density) { COUITopAppBarDefaults.LargeContainerHeight.toPx() }
 
-    // Compose a Surface with a TopAppBarLayout content.
-    // The surface's background color is animated as specified above.
-    // The height of the app bar is determined by subtracting the bar's height offset from the
-    // app bar's defined constant height value (i.e. the ContainerHeight token).
-    Surface(
-        color = color
-    ) {
-        TopAppBarLayout(
-            modifier = modifier,
-            title = title,
-            largeTitle = largeTitle ?: title,
-            navigationIcon = navigationIcon,
-            actions = actionsRow,
-            scrolledOffset = { scrollBehavior?.state?.heightOffset ?: 0f },
-            expandedHeightPx = expandedHeightPx,
-            horizontalPadding = horizontalPadding,
-            largeTitleHeight = largeTitleHeight,
-            defaultWindowInsetsPadding = defaultWindowInsetsPadding
-        )
+    SideEffect {
+        val limit = pinnedHeightPx - maxHeightPx
+        if (scrollBehavior?.state?.heightOffsetLimit != limit) {
+            scrollBehavior?.state?.heightOffsetLimit = limit
+        }
+    }
+
+    val collapsedFraction = scrollBehavior?.state?.collapsedFraction ?: 0f
+    val appBarContainerColor = colors.containerColor(collapsedFraction)
+
+    Surface(modifier = modifier, color = appBarContainerColor) {
+        Column {
+            TopAppBarLayout(
+                modifier = Modifier
+                    .windowInsetsPadding(windowInsets)
+                    .height(COUITopAppBarDefaults.ContainerHeight)
+                    .clipToBounds(),
+                heightPx = pinnedHeightPx,
+                navigationIconContentColor = colors.navigationIconContentColor,
+                titleContentColor = colors.titleContentColor,
+                actionIconContentColor = colors.actionIconContentColor,
+                title = title,
+                subtitle = subtitle,
+                titleTextStyle = COUITheme.textStyles.title3,
+                subtitleTextStyle = COUITheme.textStyles.subtitle,
+                titleAlpha = collapsedFraction,
+                titleVerticalArrangement = Arrangement.Center,
+                isCenterTitle = false,
+                titleBottomPadding = 0,
+                navigationIcon = navigationIcon,
+                actions = actionsRow,
+            )
+
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clipToBounds()
+            ) {
+                val screenWidth = maxWidth
+                val startPadding = when {
+                    screenWidth < 600.dp -> COUIDimens.PaddingNormalLeftCompat
+                    screenWidth < 840.dp -> COUIDimens.PaddingNormalLeftMedium
+                    else -> COUIDimens.PaddingNormalLeftExpanded
+                }
+
+                Layout(
+                    content = {
+                        Box(
+                            Modifier
+                                .padding(horizontal = startPadding)
+                                .graphicsLayer {
+                                    alpha = (1f - (collapsedFraction * 1.5f)).coerceIn(0f, 1f)
+                                    translationY = -(scrollBehavior?.state?.heightOffset ?: 0f) * 0.2f
+                                }
+                        ) {
+                            BasicText(
+                                text = largeTitle ?: title,
+                                style = COUITheme.textStyles.title1.copy(
+                                    color = colors.titleContentColor,
+                                    fontWeight = FontWeight.Normal
+                                )
+                            )
+                        }
+                    }
+                ) { measurables, constraints ->
+                    val placeable = measurables.first().measure(constraints)
+                    val offset = scrollBehavior?.state?.heightOffset ?: 0f
+                    val currentHeight = (maxHeightPx - pinnedHeightPx + offset).coerceAtLeast(0f).roundToInt()
+
+                    layout(constraints.maxWidth, currentHeight) {
+                        val y = currentHeight - placeable.height - 16.dp.roundToPx()
+                        placeable.placeRelative(0, y)
+                    }
+                }
+            }
+
+            DividerAnimation(scrollBehavior, startAlpha = 0.8f)
+        }
     }
 }
 
-/**
- * A [SmallTopAppBar] with Miuix style.
- *
- * The [SmallTopAppBar] can be configured with a title, a navigation icon, and action icons.
- *
- * @param title The title of the [SmallTopAppBar].
- * @param modifier The modifier to be applied to the  [SmallTopAppBar].
- * @param color The background color of the [SmallTopAppBar].
- * @param navigationIcon The [Composable] content that represents the navigation icon.
- * @param actions The [Composable] content that represents the action icons.
- * @param scrollBehavior The [ScrollBehavior] that controls the behavior of the [SmallTopAppBar].
- * @param defaultWindowInsetsPadding Whether to apply default window insets padding to the [SmallTopAppBar].
- * @param horizontalPadding The horizontal padding of the [SmallTopAppBar]'s title.
- */
 @Composable
-fun SmallTopAppBar(
+private fun DividerAnimation(scrollBehavior: ScrollBehavior?, startAlpha: Float = 0f) {
+    if (scrollBehavior != null) {
+        val contentOffset = scrollBehavior.state.contentOffset
+        val threshold = LocalDensity.current.run { 24.dp.toPx() }
+        val rawProgress = if (startAlpha > 0) {
+            val collapsed = scrollBehavior.state.collapsedFraction
+            (collapsed - startAlpha).coerceIn(0f, 0.2f) * 5f
+        } else {
+            (abs(contentOffset) / threshold).coerceIn(0f, 1f)
+        }
+
+        val progress = rawProgress.coerceIn(0f, 1f)
+
+        if (progress > 0) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .graphicsLayer {
+                        alpha = progress
+                        scaleX = 0.9f + (0.1f * progress)
+                    }
+                    .background(COUITheme.colorScheme.outline.copy(alpha = 0.1f))
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopAppBarLayout(
+    modifier: Modifier,
+    heightPx: Float,
+    navigationIconContentColor: Color,
+    titleContentColor: Color,
+    actionIconContentColor: Color,
     title: String,
-    modifier: Modifier = Modifier,
-    color: Color = COUITheme.colorScheme.background,
-    navigationIcon: @Composable () -> Unit = {},
-    actions: @Composable RowScope.() -> Unit = {},
-    scrollBehavior: ScrollBehavior? = null,
-    defaultWindowInsetsPadding: Boolean = true,
-    horizontalPadding: Dp = 26.dp
+    subtitle: String?,
+    titleTextStyle: TextStyle,
+    subtitleTextStyle: TextStyle,
+    titleAlpha: Float,
+    titleVerticalArrangement: Arrangement.Vertical,
+    isCenterTitle: Boolean,
+    titleBottomPadding: Int,
+    navigationIcon: @Composable () -> Unit,
+    actions: @Composable () -> Unit,
 ) {
-    SideEffect {
-        // Sets the height offset limit of the SmallTopAppBar to 0f
-        // To ensure that the content can still scroll normally even when scrollBehavior is passed.
-        scrollBehavior?.state?.heightOffsetLimit = 0f
-    }
+    BoxWithConstraints(modifier = modifier) {
+        val maxWidthDp = maxWidth
 
-    // Wrap the given actions in a Row.
-    val actionsRow =
-        @Composable {
-            Row(
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions
-            )
+        Layout(
+            {
+                Box(Modifier.layoutId("navigationIcon")) {
+                    CompositionLocalProvider(LocalContentColor provides navigationIconContentColor) {
+                        navigationIcon()
+                    }
+                }
+                Box(
+                    Modifier
+                        .layoutId("title")
+                        .graphicsLayer(alpha = titleAlpha)
+                ) {
+                    Column(
+                        verticalArrangement = titleVerticalArrangement,
+                        horizontalAlignment = if (isCenterTitle) Alignment.CenterHorizontally else Alignment.Start
+                    ) {
+                        BasicText(
+                            text = title,
+                            style = titleTextStyle.copy(color = titleContentColor),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (subtitle != null) {
+                            BasicText(
+                                text = subtitle,
+                                style = subtitleTextStyle.copy(
+                                    color = titleContentColor.copy(alpha = 0.6f),
+                                    fontSize = 12.sp
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+                Box(Modifier.layoutId("actionIcons")) {
+                    CompositionLocalProvider(LocalContentColor provides actionIconContentColor) {
+                        actions()
+                    }
+                }
+            }
+        ) { measurables, constraints ->
+            val navPlaceable = measurables.fastFirst { it.layoutId == "navigationIcon" }
+                .measure(constraints.copy(minWidth = 0))
+            val actionsPlaceable = measurables.fastFirst { it.layoutId == "actionIcons" }
+                .measure(constraints.copy(minWidth = 0))
+
+            val hasNav = navPlaceable.width > 0
+            val hasActions = actionsPlaceable.width > 0
+
+            var paddingStartPx = 0
+            var paddingEndPx = 0
+
+            if (maxWidthDp < 600.dp) {
+                paddingStartPx =
+                    (if (hasNav) COUIDimens.PaddingMenuLeftCompat else COUIDimens.PaddingNormalLeftCompat).roundToPx()
+                paddingEndPx =
+                    (if (hasActions) COUIDimens.PaddingMenuRightCompat else COUIDimens.PaddingNormalRightCompat).roundToPx()
+                if (isCenterTitle) {
+                    val centerPadding = COUIDimens.PaddingCenterCompat.roundToPx()
+                    paddingStartPx = centerPadding
+                    paddingEndPx = centerPadding
+                }
+            } else if (maxWidthDp < 840.dp) {
+                paddingStartPx =
+                    (if (hasNav) COUIDimens.PaddingMenuLeftMedium else COUIDimens.PaddingNormalLeftMedium).roundToPx()
+                paddingEndPx =
+                    (if (hasActions) COUIDimens.PaddingMenuRightMedium else COUIDimens.PaddingNormalRightMedium).roundToPx()
+                if (isCenterTitle) {
+                    val centerPadding = COUIDimens.PaddingCenterMedium.roundToPx()
+                    paddingStartPx = centerPadding
+                    paddingEndPx = centerPadding
+                }
+            } else {
+                paddingStartPx =
+                    (if (hasNav) COUIDimens.PaddingMenuLeftExpanded else COUIDimens.PaddingNormalLeftExpanded).roundToPx()
+                paddingEndPx =
+                    (if (hasActions) COUIDimens.PaddingMenuRightExpanded else COUIDimens.PaddingNormalRightExpanded).roundToPx()
+                if (isCenterTitle) {
+                    val centerPadding = COUIDimens.PaddingCenterExpanded.roundToPx()
+                    paddingStartPx = centerPadding
+                    paddingEndPx = centerPadding
+                }
+            }
+
+            val gapNavTitle = if (hasNav) COUIDimens.GapNavTitle.roundToPx() else 0
+            val gapTitleActions = if (hasActions) COUIDimens.GapTitleMenu.roundToPx() else 0
+
+            val maxTitleWidth = (constraints.maxWidth
+                    - paddingStartPx
+                    - navPlaceable.width
+                    - gapNavTitle
+                    - gapTitleActions
+                    - actionsPlaceable.width
+                    - paddingEndPx).coerceAtLeast(0)
+
+            val titlePlaceable = measurables.fastFirst { it.layoutId == "title" }
+                .measure(constraints.copy(minWidth = 0, maxWidth = maxTitleWidth))
+
+            val layoutHeight = heightPx.roundToInt()
+
+            layout(constraints.maxWidth, layoutHeight) {
+                val navY = (layoutHeight - navPlaceable.height) / 2
+                navPlaceable.placeRelative(x = paddingStartPx, y = navY)
+
+                val actionsY = (layoutHeight - actionsPlaceable.height) / 2
+                val actionsX = constraints.maxWidth - paddingEndPx - actionsPlaceable.width
+                actionsPlaceable.placeRelative(x = actionsX, y = actionsY)
+
+                val titleY = (layoutHeight - titlePlaceable.height) / 2 - titleBottomPadding
+                var titleX: Int
+
+                val navEndLimit = paddingStartPx + navPlaceable.width + gapNavTitle
+                val actionsStartLimit = actionsX - gapTitleActions
+
+                if (isCenterTitle) {
+                    titleX = (constraints.maxWidth - titlePlaceable.width) / 2
+
+                    if (titleX < navEndLimit) {
+                        titleX = navEndLimit
+                    }
+                    if (titleX + titlePlaceable.width > actionsStartLimit) {
+                        titleX = actionsStartLimit - titlePlaceable.width
+                    }
+                    if (titleX < navEndLimit) {
+                        titleX = navEndLimit
+                    }
+                } else {
+                    titleX = navEndLimit
+                }
+
+                titlePlaceable.placeRelative(x = titleX, y = titleY)
+            }
         }
-
-    // Compose a Surface with a SmallTopAppBarLayout content.
-    // The surface's background color is animated as specified above.
-    // The height of the app bar is determined by subtracting the bar's height offset from the
-    // app bar's defined constant height value (i.e. the ContainerHeight token).
-    Surface(
-        color = color
-    ) {
-        SmallTopAppBarLayout(
-            modifier = modifier,
-            title = title,
-            navigationIcon = navigationIcon,
-            actions = actionsRow,
-            horizontalPadding = horizontalPadding,
-            defaultWindowInsetsPadding = defaultWindowInsetsPadding
-        )
     }
 }
 
 /**
- * Returns a [ScrollBehavior] that adjusts its properties to affect the colors and
- * height of the top app bar.
- *
- * A top app bar that is set up with this [ScrollBehavior] will immediately collapse
- * when the nested content is pulled up, and will expand back the collapsed area when the
- * content is pulled all the way down.
- *
- * @param state the state object to be used to control or observe the top app bar's scroll
- *   state. See [rememberTopAppBarState] for a state that is remembered across compositions.
- * @param canScroll a callback used to determine whether scroll events are to be handled by this
- *   [ExitUntilCollapsedScrollBehavior]
- * @param snapAnimationSpec an optional [AnimationSpec] that defines how the top app bar snaps
- *   to either fully collapsed or fully extended state when a fling or a drag scrolled it into
- *   an intermediate position
- * @param flingAnimationSpec an optional [DecayAnimationSpec] that defined how to fling the top
- *   app bar when the user flings the app bar itself, or the content below it
+ * A behavior that defines how the top app bar should react to scrolling.
  */
-@Suppress("ComposableNaming")
-@Composable
-fun MiuixScrollBehavior(
-    state: TopAppBarState = rememberTopAppBarState(),
-    canScroll: () -> Boolean = { true },
-    snapAnimationSpec: AnimationSpec<Float>? = spring(stiffness = 2500f),
-    flingAnimationSpec: DecayAnimationSpec<Float>? = rememberSplineBasedDecay()
-): ScrollBehavior =
-    remember(state, canScroll, snapAnimationSpec, flingAnimationSpec) {
-        ExitUntilCollapsedScrollBehavior(
-            state = state,
-            snapAnimationSpec = snapAnimationSpec,
-            flingAnimationSpec = flingAnimationSpec,
-            canScroll = canScroll
-        )
-    }
-
-/**
- * Creates a [TopAppBarState] that is remembered across compositions.
- *
- * @param initialHeightOffsetLimit the initial value for [TopAppBarState.heightOffsetLimit], which
- *   represents the pixel limit that a top app bar is allowed to collapse when the scrollable
- *   content is scrolled
- * @param initialHeightOffset the initial value for [TopAppBarState.heightOffset]. The initial
- *   offset height offset should be between zero and [initialHeightOffsetLimit].
- * @param initialContentOffset the initial value for [TopAppBarState.contentOffset]
- */
-@Composable
-fun rememberTopAppBarState(
-    initialHeightOffsetLimit: Float = -Float.MAX_VALUE,
-    initialHeightOffset: Float = 0f,
-    initialContentOffset: Float = 0f
-): TopAppBarState {
-    return rememberSaveable(saver = Saver) {
-        TopAppBarState(initialHeightOffsetLimit, initialHeightOffset, initialContentOffset)
-    }
+@Stable
+interface ScrollBehavior {
+    val state: TopAppBarState
+    val snapAnimationSpec: AnimationSpec<Float>?
+    val flingAnimationSpec: DecayAnimationSpec<Float>?
+    val nestedScrollConnection: NestedScrollConnection
 }
 
 /**
- * A state object that can be hoisted to control and observe the top app bar state. The state is
- * read and updated by a [ScrollBehavior] implementation.
- *
- * In most cases, this state will be created via [rememberTopAppBarState].
- *
- * @param initialHeightOffsetLimit the initial value for [TopAppBarState.heightOffsetLimit]
- * @param initialHeightOffset the initial value for [TopAppBarState.heightOffset]
- * @param initialContentOffset the initial value for [TopAppBarState.contentOffset]
+ * A state object to be hoisted to control and observe the top app bar state.
  */
 @Stable
 class TopAppBarState(
@@ -277,262 +486,150 @@ class TopAppBarState(
     initialHeightOffset: Float,
     initialContentOffset: Float
 ) {
+    var heightOffsetLimit by mutableFloatStateOf(initialHeightOffsetLimit)
 
-    /**
-     * The top app bar's height offset limit in pixels, which represents the limit that a top app
-     * bar is allowed to collapse to.
-     *
-     * Use this limit to coerce the [heightOffset] value when it's updated.
-     */
-    var heightOffsetLimit = initialHeightOffsetLimit
-
-    /**
-     * The top app bar's current height offset in pixels. This height offset is applied to the fixed
-     * height of the app bar to control the displayed height when content is being scrolled.
-     *
-     * Updates to the [heightOffset] value are coerced between zero and [heightOffsetLimit].
-     */
     var heightOffset: Float
         get() = _heightOffset.floatValue
         set(newOffset) {
-            _heightOffset.floatValue =
-                newOffset.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
+            _heightOffset.floatValue = newOffset.coerceIn(
+                minimumValue = heightOffsetLimit,
+                maximumValue = 0f
+            )
         }
 
-    /**
-     * The total offset of the content scrolled under the top app bar.
-     *
-     * The content offset is used to compute the [overlappedFraction], which can later be read by an
-     * implementation.
-     *
-     * This value is updated by a [ScrollBehavior] whenever a nested scroll connection
-     * consumes scroll events. A common implementation would update the value to be the sum of all
-     * [NestedScrollConnection.onPostScroll] `consumed.y` values.
-     */
     var contentOffset by mutableFloatStateOf(initialContentOffset)
 
-    /**
-     * A value that represents the collapsed height percentage of the app bar.
-     *
-     * A `0.0` represents a fully expanded bar, and `1.0` represents a fully collapsed bar (computed
-     * as [heightOffset] / [heightOffsetLimit]).
-     */
     val collapsedFraction: Float
-        get() =
-            if (heightOffsetLimit != 0f) {
-                heightOffset / heightOffsetLimit
-            } else {
-                0f
-            }
-
-    /**
-     * A value that represents the percentage of the app bar area that is overlapping with the
-     * content scrolled behind it.
-     *
-     * A `0.0` indicates that the app bar does not overlap any content, while `1.0` indicates that
-     * the entire visible app bar area overlaps the scrolled content.
-     */
-    val overlappedFraction: Float
-        get() =
-            if (heightOffsetLimit != 0f) {
-                1 -
-                        ((heightOffsetLimit - contentOffset).coerceIn(
-                            minimumValue = heightOffsetLimit,
-                            maximumValue = 0f,
-                        ) / heightOffsetLimit)
-            } else {
-                0f
-            }
+        get() = if (heightOffsetLimit != 0f) {
+            heightOffset / heightOffsetLimit
+        } else {
+            0f
+        }
 
     companion object {
-        /** The default [Saver] implementation for [TopAppBarState]. */
-        val Saver: Saver<TopAppBarState, *> =
-            listSaver(
-                save = { listOf(it.heightOffsetLimit, it.heightOffset, it.contentOffset) },
-                restore = {
-                    TopAppBarState(
-                        initialHeightOffsetLimit = it[0],
-                        initialHeightOffset = it[1],
-                        initialContentOffset = it[2],
-                    )
-                },
-            )
+        val Saver: Saver<TopAppBarState, *> = listSaver(
+            save = { listOf(it.heightOffsetLimit, it.heightOffset, it.contentOffset) },
+            restore = {
+                TopAppBarState(
+                    initialHeightOffsetLimit = it[0],
+                    initialHeightOffset = it[1],
+                    initialContentOffset = it[2]
+                )
+            }
+        )
     }
 
     private var _heightOffset = mutableFloatStateOf(initialHeightOffset)
 }
 
-@Stable
-interface ScrollBehavior {
-
-    /**
-     * A [TopAppBarState] that is attached to this behavior and is read and updated when scrolling
-     * happens.
-     */
-    val state: TopAppBarState
-
-    /**
-     * Indicates whether the top app bar is pinned.
-     *
-     * A pinned app bar will stay fixed in place when content is scrolled and will not react to any
-     * drag gestures.
-     */
-    val isPinned: Boolean
-
-    /**
-     * An optional [AnimationSpec] that defines how the top app bar snaps to either fully collapsed
-     * or fully extended state when a fling or a drag scrolled it into an intermediate position.
-     */
-    val snapAnimationSpec: AnimationSpec<Float>?
-
-    /**
-     * An optional [DecayAnimationSpec] that defined how to fling the top app bar when the user
-     * flings the app bar itself, or the content below it.
-     */
-    val flingAnimationSpec: DecayAnimationSpec<Float>?
-
-    /**
-     * A [NestedScrollConnection] that should be attached to a [Modifier.nestedScroll] in order to
-     * keep track of the scroll events.
-     */
-    val nestedScrollConnection: NestedScrollConnection
+/**
+ * Remembers the [TopAppBarState] for the top app bar.
+ */
+@Composable
+fun rememberTopAppBarState(
+    initialHeightOffsetLimit: Float = -Float.MAX_VALUE,
+    initialHeightOffset: Float = 0f,
+    initialContentOffset: Float = 0f
+): TopAppBarState {
+    return rememberSaveable(saver = TopAppBarState.Saver) {
+        TopAppBarState(initialHeightOffsetLimit, initialHeightOffset, initialContentOffset)
+    }
 }
 
 /**
- * A [ScrollBehavior] that adjusts its properties to affect the colors and height of a top
- * app bar.
- *
- * A top app bar that is set up with this [ScrollBehavior] will immediately collapse when
- * the nested content is pulled up, and will expand back the collapsed area when the content is
- * pulled all the way down.
- *
- * @param state a [TopAppBarState]
- * @param snapAnimationSpec an optional [AnimationSpec] that defines how the top app bar snaps to
- *   either fully collapsed or fully extended state when a fling or a drag scrolled it into an
- *   intermediate position
- * @param flingAnimationSpec an optional [DecayAnimationSpec] that defined how to fling the top app
- *   bar when the user flings the app bar itself, or the content below it
- * @param canScroll a callback used to determine whether scroll events are to be handled by this
- *   [ExitUntilCollapsedScrollBehavior]
+ * Returns a [ScrollBehavior] that adjusts the top app bar's height and alpha based on scroll events.
  */
+@Composable
+fun topAppBarScrollBehavior(
+    state: TopAppBarState = rememberTopAppBarState(),
+    canScroll: () -> Boolean = { true },
+    snapAnimationSpec: AnimationSpec<Float>? = spring(stiffness = 2500f),
+    flingAnimationSpec: DecayAnimationSpec<Float>? = rememberSplineBasedDecay()
+): ScrollBehavior = remember(state, canScroll, snapAnimationSpec, flingAnimationSpec) {
+    ExitUntilCollapsedScrollBehavior(
+        state = state,
+        snapAnimationSpec = snapAnimationSpec,
+        flingAnimationSpec = flingAnimationSpec,
+        canScroll = canScroll
+    )
+}
+
 private class ExitUntilCollapsedScrollBehavior(
     override val state: TopAppBarState,
     override val snapAnimationSpec: AnimationSpec<Float>?,
     override val flingAnimationSpec: DecayAnimationSpec<Float>?,
-    val canScroll: () -> Boolean = { true },
+    val canScroll: () -> Boolean
 ) : ScrollBehavior {
-    override val isPinned: Boolean = false
-    override var nestedScrollConnection =
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                // Don't intercept if scrolling down.
-                if (!canScroll() || available.y > 0) return Offset.Zero
-                val prevHeightOffset = state.heightOffset
-                state.heightOffset = state.heightOffset + available.y
-                return if (prevHeightOffset != state.heightOffset) {
-                    // We're in the middle of top app bar collapse or expand.
-                    // Consume only the scroll on the Y axis.
-                    available.copy(x = 0f)
-                } else {
-                    Offset.Zero
-                }
-            }
+    override val nestedScrollConnection = object : NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+            if (!canScroll()) return Offset.Zero
 
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource,
-            ): Offset {
-                if (!canScroll()) return Offset.Zero
-                state.contentOffset += consumed.y
+            val prevHeightOffset = state.heightOffset
+            state.heightOffset = state.heightOffset + available.y
 
-                if (available.y < 0f || consumed.y < 0f) {
-                    // When scrolling up, just update the state's height offset.
-                    val oldHeightOffset = state.heightOffset
-                    state.heightOffset = state.heightOffset + consumed.y
-                    return Offset(0f, state.heightOffset - oldHeightOffset)
-                }
-
-                if (available.y > 0f) {
-                    // Adjust the height offset in case the consumed delta Y is less than what was
-                    // recorded as available delta Y in the pre-scroll.
-                    val oldHeightOffset = state.heightOffset
-                    state.heightOffset = state.heightOffset + available.y
-                    return Offset(0f, state.heightOffset - oldHeightOffset)
-                }
-                return Offset.Zero
-            }
-
-            override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                if (available.y > 0) {
-                    // Reset the total content offset to zero when scrolling all the way down. This
-                    // will eliminate some float precision inaccuracies.
-                    state.contentOffset = 0f
-                }
-                val superConsumed = super.onPostFling(consumed, available)
-                return superConsumed +
-                        settleAppBar(state, available.y, flingAnimationSpec, snapAnimationSpec)
+            return if (prevHeightOffset != state.heightOffset) {
+                available.copy(x = 0f)
+            } else {
+                Offset.Zero
             }
         }
+
+        override fun onPostScroll(
+            consumed: Offset,
+            available: Offset,
+            source: NestedScrollSource
+        ): Offset {
+            if (!canScroll()) return Offset.Zero
+            state.contentOffset += consumed.y
+
+            if (available.y < 0f || consumed.y < 0f) {
+                val oldHeightOffset = state.heightOffset
+                state.heightOffset = state.heightOffset + consumed.y
+                return Offset(0f, state.heightOffset - oldHeightOffset)
+            }
+            if (available.y > 0f) {
+                val oldHeightOffset = state.heightOffset
+                state.heightOffset = state.heightOffset + available.y
+                return Offset(0f, state.heightOffset - oldHeightOffset)
+            }
+            return Offset.Zero
+        }
+
+        override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+            val superConsumed = super.onPostFling(consumed, available)
+            return superConsumed + settleAppBar(state, available.y, flingAnimationSpec, snapAnimationSpec)
+        }
+    }
 }
 
-/**
- * Settles the app bar to a stable state (fully expanded or collapsed) by animating
- * its height offset.
- *
- * This function is invoked after a drag or fling gesture, using the provided velocity
- * to drive a decay animation, followed by a snap animation if the bar is left in an
- * intermediate state.
- *
- * @param state The [TopAppBarState] that holds the current and target height offsets.
- * @param velocity The velocity from the fling gesture to be consumed.
- * @param flingAnimationSpec The [DecayAnimationSpec] for the fling animation.
- * @param snapAnimationSpec The [AnimationSpec] for the final snap to a stable state.
- * @return The [Velocity] that was actually consumed by the fling decay animation. This
- * ensures accurate reporting within the nested scroll system, allowing any unconsumed
- * velocity to be propagated to parent consumers.
- */
 private suspend fun settleAppBar(
     state: TopAppBarState,
     velocity: Float,
     flingAnimationSpec: DecayAnimationSpec<Float>?,
-    snapAnimationSpec: AnimationSpec<Float>?,
+    snapAnimationSpec: AnimationSpec<Float>?
 ): Velocity {
-    // Check if the app bar is completely collapsed/expanded. If so, no need to settle the app bar,
-    // and just return Zero Velocity.
-    // Note that we don't check for 0f due to float precision with the collapsedFraction
-    // calculation.
     if (state.collapsedFraction < 0.01f || state.collapsedFraction == 1f) {
         return Velocity.Zero
     }
     var remainingVelocity = velocity
-    // In case there is an initial velocity that was left after a previous user fling, animate to
-    // continue the motion to expand or collapse the app bar.
     if (flingAnimationSpec != null && abs(velocity) > 1f) {
         var lastValue = 0f
-        AnimationState(initialValue = 0f, initialVelocity = velocity).animateDecay(
-            flingAnimationSpec
-        ) {
-            val delta = value - lastValue
-            val initialHeightOffset = state.heightOffset
-            state.heightOffset = initialHeightOffset + delta
-            val consumed = abs(initialHeightOffset - state.heightOffset)
-            lastValue = value
-            remainingVelocity = this.velocity
-            // avoid rounding errors and stop if anything is unconsumed
-            if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
-        }
+        AnimationState(initialValue = 0f, initialVelocity = velocity)
+            .animateDecay(flingAnimationSpec) {
+                val delta = value - lastValue
+                val initialHeightOffset = state.heightOffset
+                state.heightOffset = initialHeightOffset + delta
+                val consumed = abs(initialHeightOffset - state.heightOffset)
+                lastValue = value
+                remainingVelocity = this.velocity
+                if (abs(delta - consumed) > 0.5f) this.cancelAnimation()
+            }
     }
-    // Snap if animation specs were provided.
     if (snapAnimationSpec != null) {
         if (state.heightOffset < 0 && state.heightOffset > state.heightOffsetLimit) {
             AnimationState(initialValue = state.heightOffset).animateTo(
-                if (state.collapsedFraction < 0.5f) {
-                    0f
-                } else {
-                    state.heightOffsetLimit
-                },
-                animationSpec = snapAnimationSpec,
+                if (state.collapsedFraction < 0.5f) 0f else state.heightOffsetLimit,
+                animationSpec = snapAnimationSpec
             ) {
                 state.heightOffset = value
             }
@@ -541,345 +638,73 @@ private suspend fun settleAppBar(
     return Velocity(0f, velocity - remainingVelocity)
 }
 
-/** A functional interface for providing an app-bar scroll offset. */
-private fun interface ScrolledOffset {
-    fun offset(): Float
-}
-
-/**
- * The base [Layout] for [TopAppBar]. This function lays out a top app bar navigation icon
- * (leading icon), a title (header), and action icons (trailing icons). Note that the navigation and
- * the actions are optional.
- *
- * @param modifier the modifier to be applied to the [TopAppBar].
- * @param title the top app bar title (header).
- * @param largeTitle the large title of the top app bar, if not specified, it will be the same as title.
- * @param navigationIcon a navigation icon [Composable].
- * @param actions actions [Composable].
- * @param scrolledOffset a function that provides the scroll offset of the top app bar.
- * @param expandedHeightPx the expanded height of the top app bar in pixels.
- * @param horizontalPadding the horizontal padding of the [TopAppBar]'s title & large title.
- * @param largeTitleHeight a mutable state that holds the height of the large title.
- */
 @Composable
-private fun TopAppBarLayout(
+fun Surface(
     modifier: Modifier = Modifier,
-    title: String,
-    largeTitle: String,
-    navigationIcon: @Composable () -> Unit,
-    actions: @Composable () -> Unit,
-    scrolledOffset: ScrolledOffset,
-    expandedHeightPx: Float,
-    horizontalPadding: Dp,
-    largeTitleHeight: MutableState<Int>,
-    defaultWindowInsetsPadding: Boolean
+    color: Color = Color.Unspecified,
+    content: @Composable () -> Unit
 ) {
-    // Subtract the scrolledOffset from the maxHeight. The scrolledOffset is expected to be
-    // equal or smaller than zero.
-    val heightOffset by remember(scrolledOffset) {
-        derivedStateOf {
-            val offset = scrolledOffset.offset()
-            if (offset.isNaN()) 0 else offset.roundToInt()
-        }
-    }
-
-    // Small Title Animation
-    val extOffset by remember(heightOffset) {
-        derivedStateOf {
-            abs(heightOffset) / expandedHeightPx * 2
-        }
-    }
-
-    println("extOffset: ${extOffset.coerceIn(0f, 1f)}")
-
-    // Large Title Alpha Animation
-    val largeTitleAlpha by remember(heightOffset, expandedHeightPx) {
-        derivedStateOf {
-            1f - (abs(heightOffset) / expandedHeightPx * 2).coerceIn(0f, 1f)
-        }
-    }
-
-    val alpha by animateFloatAsState(
-        targetValue = if (1 - extOffset.coerceIn(0f, 1f) == 0f) 1f else 0f,
-        animationSpec = tween(durationMillis = 250)
-    )
-    val translationY by animateFloatAsState(
-        targetValue = if (extOffset > 1f) 0f else 12f,
-        animationSpec = tween(durationMillis = 250)
-    )
-
-    val statusBarsInsets = WindowInsets.statusBars
-    val captionBarInsets = WindowInsets.captionBar
-    val displayCutoutInsets = WindowInsets.displayCutout
-    val navigationBarsInsets = WindowInsets.navigationBars
-
-    Layout(
-        {
-            Box(
-                Modifier
-                    .layoutId("navigationIcon")
-            ) {
-                navigationIcon()
-            }
-            Box(
-                Modifier
-                    .layoutId("title")
-                    .padding(horizontal = horizontalPadding)
-                    .graphicsLayer(
-                        alpha = alpha,
-                        translationY = translationY
-                    )
-            ) {
-                Text(
-                    text = title,
-                    fontSize = COUITheme.textStyles.title3.fontSize,
-                    fontWeight = FontWeight.Medium,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false
-                )
-            }
-            Box(
-                Modifier
-                    .layoutId("actionIcons")
-            ) {
-                actions()
-            }
-            Box(
-                Modifier
-                    .layoutId("largeTitle")
-                    .padding(top = 56.dp)
-                    .padding(horizontal = horizontalPadding)
-                    .alpha(largeTitleAlpha)
-            ) {
-                Text(
-                    modifier = Modifier.offset { IntOffset(0, heightOffset) },
-                    text = largeTitle,
-                    fontSize = COUITheme.textStyles.title1.fontSize,
-                    fontWeight = FontWeight.Normal,
-                    onTextLayout = {
-                        largeTitleHeight.value = it.size.height
-                    },
-                )
-            }
-        },
-        modifier = modifier
-            .windowInsetsPadding(statusBarsInsets.only(WindowInsetsSides.Top))
-            .windowInsetsPadding(captionBarInsets.only(WindowInsetsSides.Top))
-            .then(
-                if (defaultWindowInsetsPadding) {
-                    Modifier
-                        .windowInsetsPadding(displayCutoutInsets.only(WindowInsetsSides.Horizontal))
-                        .windowInsetsPadding(navigationBarsInsets.only(WindowInsetsSides.Horizontal))
-                } else Modifier
-            )
-            .clipToBounds()
-            .pointerInput(Unit) { detectVerticalDragGestures { _, _ -> } }
-    ) { measurables, constraints ->
-        val navigationIconPlaceable =
-            measurables
-                .fastFirst { it.layoutId == "navigationIcon" }
-                .measure(constraints.copy(minWidth = 0, minHeight = 0))
-
-        val actionIconsPlaceable =
-            measurables
-                .fastFirst { it.layoutId == "actionIcons" }
-                .measure(constraints.copy(minWidth = 0, minHeight = 0))
-
-        val maxTitleWidth = constraints.maxWidth - navigationIconPlaceable.width - actionIconsPlaceable.width
-
-        val titlePlaceable =
-            measurables
-                .fastFirst { it.layoutId == "title" }
-                .measure(constraints.copy(minWidth = 0, maxWidth = (maxTitleWidth * 0.9).roundToInt(), minHeight = 0))
-
-        val largeTitlePlaceable =
-            measurables
-                .fastFirst { it.layoutId == "largeTitle" }
-                .measure(
-                    constraints.copy(
-                        minWidth = 0,
-                        minHeight = 0,
-                        maxHeight = Constraints.Infinity
-                    )
-                )
-
-        val collapsedHeight = 56.dp.roundToPx()
-        val expandedHeight = maxOf(
-            collapsedHeight,
-            largeTitlePlaceable.height
-        )
-
-        val layoutHeight = lerp(
-            start = collapsedHeight,
-            stop = expandedHeight,
-            fraction = if (expandedHeightPx > 0f) {
-                val offset = scrolledOffset.offset()
-                if (offset.isNaN()) 1f else (1f - (abs(offset) / expandedHeightPx).coerceIn(0f, 1f))
-            } else 1f
-        ).toFloat().roundToInt()
-
-        layout(constraints.maxWidth, layoutHeight) {
-            val verticalCenter = collapsedHeight / 2
-
-            // Navigation icon
-            navigationIconPlaceable.placeRelative(
-                x = 0,
-                y = verticalCenter - navigationIconPlaceable.height / 2
-            )
-
-            // Title
-            var baseX = (constraints.maxWidth - titlePlaceable.width) / 2
-            if (baseX < navigationIconPlaceable.width) {
-                baseX += (navigationIconPlaceable.width - baseX)
-            } else if (baseX + titlePlaceable.width > constraints.maxWidth - actionIconsPlaceable.width) {
-                baseX += ((constraints.maxWidth - actionIconsPlaceable.width) - (baseX + titlePlaceable.width))
-            }
-            titlePlaceable.placeRelative(
-                x = baseX,
-                y = verticalCenter - titlePlaceable.height / 2
-            )
-
-            // Action icons
-            actionIconsPlaceable.placeRelative(
-                x = constraints.maxWidth - actionIconsPlaceable.width,
-                y = verticalCenter - actionIconsPlaceable.height / 2
-            )
-
-            // Large title
-            largeTitlePlaceable.placeRelative(
-                x = 0,
-                y = 0
-            )
-        }
+    Box(
+        modifier = modifier.background(color = color)
+    ) {
+        content()
     }
 }
 
+val LocalContentColor = compositionLocalOf { Color.Black }
 
-/**
- * The base [Layout] for [SmallTopAppBar]. This function lays out a top app bar navigation icon
- * (leading icon), a title (header), and action icons (trailing icons). Note that the navigation and
- * the actions are optional.
- *
- * @param modifier the modifier to be applied to the [SmallTopAppBar].
- * @param title the top app bar title (header).
- * @param navigationIcon a navigation icon [Composable].
- * @param actions actions [Composable].
- * @param horizontalPadding the horizontal padding of the [SmallTopAppBar]'s title.
- * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [SmallTopAppBar].
- */
-@Composable
-private fun SmallTopAppBarLayout(
-    modifier: Modifier,
-    title: String,
-    navigationIcon: @Composable () -> Unit,
-    actions: @Composable () -> Unit,
-    horizontalPadding: Dp,
-    defaultWindowInsetsPadding: Boolean
+@Stable
+class COUITopAppBarColors(
+    val containerColor: Color,
+    val scrolledContainerColor: Color,
+    val navigationIconContentColor: Color,
+    val titleContentColor: Color,
+    val actionIconContentColor: Color,
 ) {
-    val titleModifier = remember(horizontalPadding) {
-        Modifier
-            .layoutId("title")
-            .padding(horizontal = horizontalPadding)
+    @Composable
+    fun containerColor(colorTransitionFraction: Float): Color {
+        return lerp(
+            containerColor,
+            scrolledContainerColor,
+            colorTransitionFraction.coerceIn(0f, 1f)
+        )
     }
 
-    val statusBarsInsets = WindowInsets.statusBars
-    val captionBarInsets = WindowInsets.captionBar
-    val displayCutoutInsets = WindowInsets.displayCutout
-    val navigationBarsInsets = WindowInsets.navigationBars
-
-    val layoutModifier = remember(defaultWindowInsetsPadding, statusBarsInsets, captionBarInsets) {
-        Modifier
-            .windowInsetsPadding(statusBarsInsets.only(WindowInsetsSides.Top))
-            .windowInsetsPadding(captionBarInsets.only(WindowInsetsSides.Top))
-            .then(
-                if (defaultWindowInsetsPadding) {
-                    Modifier
-                        .windowInsetsPadding(displayCutoutInsets.only(WindowInsetsSides.Horizontal))
-                        .windowInsetsPadding(navigationBarsInsets.only(WindowInsetsSides.Horizontal))
-                } else Modifier
-            )
+    private fun lerp(start: Color, stop: Color, fraction: Float): Color {
+        return androidx.compose.ui.graphics.lerp(start, stop, fraction)
     }
+}
 
-    Layout(
-        {
-            Box(
-                Modifier
-                    .layoutId("navigationIcon")
-            ) {
-                navigationIcon()
-            }
-            Box(titleModifier) {
-                Text(
-                    text = title,
-                    maxLines = 1,
-                    fontSize = COUITheme.textStyles.title3.fontSize,
-                    fontWeight = FontWeight.Medium,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false
-                )
-            }
-            Box(
-                Modifier
-                    .layoutId("actionIcons")
-            ) {
-                actions()
-            }
-        },
-        modifier = modifier
-            .then(layoutModifier)
-            .heightIn(max = 56.dp)
-            .pointerInput(Unit) { detectVerticalDragGestures { _, _ -> } }
-    ) { measurables, constraints ->
-        val navigationIconPlaceable =
-            measurables
-                .fastFirst { it.layoutId == "navigationIcon" }
-                .measure(constraints.copy(minWidth = 0, minHeight = 0))
+object COUITopAppBarDefaults {
+    val ContainerHeight = 56.dp
+    val LargeContainerHeight = 116.dp
 
-        val actionIconsPlaceable =
-            measurables
-                .fastFirst { it.layoutId == "actionIcons" }
-                .measure(constraints.copy(minWidth = 0, minHeight = 0))
-
-        val maxTitleWidth = constraints.maxWidth - navigationIconPlaceable.width - actionIconsPlaceable.width
-
-        val titlePlaceable =
-            measurables
-                .fastFirst { it.layoutId == "title" }
-                .measure(constraints.copy(minWidth = 0, maxWidth = (maxTitleWidth * 0.9).roundToInt(), minHeight = 0))
-
-        val layoutHeight =
-            if (constraints.maxHeight == Constraints.Infinity) {
-                constraints.maxHeight
-            } else {
-                constraints.maxHeight
-            }
-
-        layout(constraints.maxWidth, layoutHeight) {
-            val verticalCenter = 60.dp.roundToPx() / 2
-
-            // Navigation icon
-            navigationIconPlaceable.placeRelative(
-                x = 0,
-                y = verticalCenter - navigationIconPlaceable.height / 2
-            )
-
-            // Title
-            var baseX = (constraints.maxWidth - titlePlaceable.width) / 2
-            if (baseX < navigationIconPlaceable.width) {
-                baseX += (navigationIconPlaceable.width - baseX)
-            } else if (baseX + titlePlaceable.width > constraints.maxWidth - actionIconsPlaceable.width) {
-                baseX += ((constraints.maxWidth - actionIconsPlaceable.width) - (baseX + titlePlaceable.width))
-            }
-            titlePlaceable.placeRelative(
-                x = baseX,
-                y = verticalCenter - titlePlaceable.height / 2
-            )
-
-            // Action icons
-            actionIconsPlaceable.placeRelative(
-                x = constraints.maxWidth - actionIconsPlaceable.width,
-                y = verticalCenter - actionIconsPlaceable.height / 2
+    val windowInsets: WindowInsets
+        @Composable
+        get() {
+            val density = LocalDensity.current
+            val topPx = WindowInsets.statusBars.getTop(density)
+            return WindowInsets(
+                left = 0,
+                top = topPx,
+                right = 0,
+                bottom = 0
             )
         }
-    }
+
+    @Composable
+    fun topAppBarColors(
+        containerColor: Color = COUITheme.colorScheme.background,
+        scrolledContainerColor: Color = COUITheme.colorScheme.surface,
+        navigationIconContentColor: Color = COUITheme.colorScheme.onBackground,
+        titleContentColor: Color = COUITheme.colorScheme.onBackground,
+        actionIconContentColor: Color = COUITheme.colorScheme.onBackground
+    ): COUITopAppBarColors =
+        COUITopAppBarColors(
+            containerColor,
+            scrolledContainerColor,
+            navigationIconContentColor,
+            titleContentColor,
+            actionIconContentColor
+        )
 }

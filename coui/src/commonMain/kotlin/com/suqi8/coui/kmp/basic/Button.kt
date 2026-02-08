@@ -3,64 +3,62 @@
 
 package com.suqi8.coui.kmp.basic
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocharealm.gaze.capsule.ContinuousRoundedRectangle
+import androidx.compose.ui.unit.sp
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalContentColor
 
-/**
- * A [Button] component with Miuix style.
- *
- * @param onClick The callback when the [Button] is clicked.
- * @param modifier The modifier to be applied to the [Button].
- * @param enabled Whether the [Button] is enabled.
- * @param cornerRadius The corner radius of the [Button].
- * @param minWidth The minimum width of the [Button].
- * @param minHeight The minimum height of the [Button].
- * @param colors The [ButtonColors] of the [Button].
- * @param insideMargin The margin inside the [Button].
- * @param content The [Composable] content of the [Button].
- */
 @Composable
 fun Button(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    cornerRadius: Dp = ButtonDefaults.CornerRadius,
-    minWidth: Dp = ButtonDefaults.MinWidth,
+    shape: Shape = ButtonDefaults.shape,
+    minWidth: Dp = ButtonDefaults.MediumWidth,
     minHeight: Dp = ButtonDefaults.MinHeight,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit
 ) {
-    val shape = remember(cornerRadius) { ContinuousRoundedRectangle(cornerRadius) }
-    val color = if (enabled) colors.color else colors.disabledColor
+    val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
+    val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
     Surface(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.semantics { role = Role.Button },
         shape = shape,
-        color = color,
+        color = containerColor,
+        contentColor = contentColor
     ) {
         Row(
             modifier = Modifier
                 .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
-                .padding(insideMargin),
+                .padding(contentPadding),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             content = content
@@ -68,19 +66,41 @@ fun Button(
     }
 }
 
-/**
- * A [TextButton] component with Miuix style.
- *
- * @param text The text of the [TextButton].
- * @param onClick The callback when the [TextButton] is clicked.
- * @param modifier The modifier to be applied to the [TextButton].
- * @param enabled Whether the [TextButton] is enabled.
- * @param colors The [TextButtonColors] of the [TextButton].
- * @param cornerRadius The corner radius of the [TextButton].
- * @param minWidth The minimum width of the [TextButton].
- * @param minHeight The minimum height of the [TextButton].
- * @param insideMargin The margin inside the [TextButton].
- */
+@Composable
+fun OutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = ButtonDefaults.shape,
+    minWidth: Dp = ButtonDefaults.MediumWidth,
+    minHeight: Dp = ButtonDefaults.MinHeight,
+    colors: ButtonColors = ButtonDefaults.outlinedButtonColors(),
+    border: BorderStroke? = ButtonDefaults.outlinedButtonBorder(enabled),
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit
+) {
+    val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
+    val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
+    Surface(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.semantics { role = Role.Button },
+        shape = shape,
+        color = containerColor,
+        contentColor = contentColor,
+        border = border
+    ) {
+        Row(
+            modifier = Modifier
+                .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+                .padding(contentPadding),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            content = content
+        )
+    }
+}
+
 @Composable
 fun TextButton(
     text: String,
@@ -88,143 +108,162 @@ fun TextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: TextButtonColors = ButtonDefaults.textButtonColors(),
-    cornerRadius: Dp = ButtonDefaults.CornerRadius,
-    minWidth: Dp = ButtonDefaults.MinWidth,
+    shape: Shape = ButtonDefaults.shape,
+    minWidth: Dp = ButtonDefaults.MediumWidth,
     minHeight: Dp = ButtonDefaults.MinHeight,
-    insideMargin: PaddingValues = ButtonDefaults.InsideMargin
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    textStyle: TextStyle = COUITheme.textStyles.button
 ) {
-    val shape = remember(cornerRadius) { ContinuousRoundedRectangle(cornerRadius) }
-    val color = if (enabled) colors.color else colors.disabledColor
-    val textColor = if (enabled) colors.textColor else colors.disabledTextColor
+    val containerColor = if (enabled) colors.containerColor else colors.disabledContainerColor
+    val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
     Surface(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.semantics { role = Role.Button },
         shape = shape,
-        color = color,
+        color = containerColor,
+        contentColor = contentColor,
     ) {
         Row(
             modifier = Modifier
                 .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
-                .padding(insideMargin),
+                .padding(contentPadding),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             content = {
                 Text(
                     text = text,
-                    color = textColor,
-                    style = COUITheme.textStyles.button
+                    color = contentColor, // 使用计算后的颜色
+                    style = textStyle
                 )
             }
         )
     }
 }
 
-object ButtonDefaults {
-
-    /**
-     * The default min width applied for all buttons. Note that you can override it by applying
-     * Modifier.widthIn directly on the button composable.
-     */
-    val MinWidth = 58.dp
-
-    /**
-     * The default min height applied for all buttons. Note that you can override it by applying
-     * Modifier.heightIn directly on the button composable.
-     */
-    val MinHeight = 40.dp
-
-    /**
-     * The default corner radius applied for all buttons.
-     */
-    val CornerRadius = 16.dp
-
-    /**
-     * The default inside margin applied for all buttons.
-     */
-    val InsideMargin = PaddingValues(16.dp)
-
-    /**
-     * The default [ButtonColors] for all buttons.
-     */
-    @Composable
-    fun buttonColors(
-        color: Color = COUITheme.colorScheme.secondaryVariant,
-        disabledColor: Color = COUITheme.colorScheme.disabledSecondaryVariant
-    ): ButtonColors {
-        return ButtonColors(
-            color = color,
-            disabledColor = disabledColor
+@Composable
+fun DescriptionButtonContent(
+    text: String,
+    description: String,
+    // 默认使用当前环境的 contentColor (已被 Surface 设置好)
+    textColor: Color = LocalContentColor.current,
+    descriptionColor: Color = textColor.copy(alpha = 0.7f) // 副标题稍微淡一点
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            // 使用传入的排版样式，或者硬编码为 16sp Medium
+            style = COUITheme.textStyles.button.copy(textAlign = TextAlign.Center)
+        )
+        Spacer(modifier = Modifier.height(1.dp))
+        Text(
+            text = description,
+            color = descriptionColor,
+            // 副标题使用 10sp Normal
+            style = COUITheme.textStyles.overline.copy(
+                fontWeight = FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                letterSpacing = 0.sp // 按钮内的副标题通常不需要额外的字间距
+            )
         )
     }
+}
 
-    /**
-     * The [ButtonColors] for primary buttons.
-     */
+object ButtonDefaults {
+    val MinHeight = 44.dp
+    val MediumWidth = 152.dp
+    val LargeWidth = 174.dp
+    val CornerRadius = 21.dp
+    val ContentPadding = PaddingValues(horizontal = 12.dp)
+
+    val shape: Shape
+        @Composable
+        get() = remember { RoundedCornerShape(CornerRadius) }
+
     @Composable
-    fun buttonColorsPrimary() = ButtonColors(
-        color = COUITheme.colorScheme.primary,
-        disabledColor = COUITheme.colorScheme.disabledPrimaryButton
+    fun buttonColors(
+        containerColor: Color = COUITheme.colorScheme.primary,
+        contentColor: Color = COUITheme.colorScheme.onPrimary,
+        // [精调] 禁用时保持色相，透明度降为 50%
+        disabledContainerColor: Color = containerColor.copy(alpha = 0.5f),
+        disabledContentColor: Color = contentColor.copy(alpha = 0.5f)
+    ): ButtonColors = ButtonColors(
+        containerColor = containerColor,
+        contentColor = contentColor,
+        disabledContainerColor = disabledContainerColor,
+        disabledContentColor = disabledContentColor
     )
 
-    /**
-     * The default [TextButtonColors] for all text buttons.
-     */
+    @Composable
+    fun outlinedButtonColors(
+        containerColor: Color = Color.Transparent,
+        contentColor: Color = COUITheme.colorScheme.primary,
+        disabledContainerColor: Color = Color.Transparent,
+        // [精调] 禁用时文字透明度降为 40%
+        disabledContentColor: Color = contentColor.copy(alpha = 0.4f)
+    ): ButtonColors = ButtonColors(
+        containerColor = containerColor,
+        contentColor = contentColor,
+        disabledContainerColor = disabledContainerColor,
+        disabledContentColor = disabledContentColor
+    )
+
+    @Composable
+    fun outlinedButtonBorder(
+        enabled: Boolean,
+        borderColor: Color = COUITheme.colorScheme.outline,
+        // [精调] 禁用边框透明度降为 30%
+        disabledBorderColor: Color = borderColor.copy(alpha = 0.3f)
+    ): BorderStroke {
+        val color = if (enabled) borderColor else disabledBorderColor
+        return remember(color) { BorderStroke(1.dp, color) }
+    }
+
     @Composable
     fun textButtonColors(
-        color: Color = COUITheme.colorScheme.secondaryVariant,
-        disabledColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
-        textColor: Color = COUITheme.colorScheme.onSecondaryVariant,
-        disabledTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant
+        containerColor: Color = Color.Transparent,
+        contentColor: Color = COUITheme.colorScheme.primary,
+        disabledContainerColor: Color = Color.Transparent,
+        // [精调] 禁用时文字透明度降为 40%
+        disabledContentColor: Color = contentColor.copy(alpha = 0.4f)
     ): TextButtonColors = TextButtonColors(
-        color = color,
-        disabledColor = disabledColor,
-        textColor = textColor,
-        disabledTextColor = disabledTextColor
+        containerColor = containerColor,
+        contentColor = contentColor,
+        disabledContainerColor = disabledContainerColor,
+        disabledContentColor = disabledContentColor
     )
 
-    /**
-     * The [TextButtonColors] for primary text buttons.
-     */
     @Composable
-    fun textButtonColorsPrimary() = TextButtonColors(
-        color = COUITheme.colorScheme.primary,
-        disabledColor = COUITheme.colorScheme.disabledPrimaryButton,
-        textColor = COUITheme.colorScheme.onPrimary,
-        disabledTextColor = COUITheme.colorScheme.disabledOnPrimaryButton
-    )
-}
-
-@Immutable
-class ButtonColors(
-    val color: Color,
-    val disabledColor: Color
-) {
-    fun copy(
-        color: Color = this.color,
-        disabledColor: Color = this.disabledColor
-    ): ButtonColors = ButtonColors(
-        color = color,
-        disabledColor = disabledColor
-    )
-}
-
-@Immutable
-class TextButtonColors(
-    val color: Color,
-    val disabledColor: Color,
-    val textColor: Color,
-    val disabledTextColor: Color
-) {
-    fun copy(
-        color: Color = this.color,
-        disabledColor: Color = this.disabledColor,
-        textColor: Color = this.textColor,
-        disabledTextColor: Color = this.disabledTextColor
+    fun textButtonColorsNeutral(
+        containerColor: Color = Color.Transparent,
+        // 次要操作使用次级文本色 (灰色)
+        contentColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        disabledContainerColor: Color = Color.Transparent,
+        disabledContentColor: Color = contentColor.copy(alpha = 0.4f)
     ): TextButtonColors = TextButtonColors(
-        color = color,
-        disabledColor = disabledColor,
-        textColor = textColor,
-        disabledTextColor = disabledTextColor
+        containerColor = containerColor,
+        contentColor = contentColor,
+        disabledContainerColor = disabledContainerColor,
+        disabledContentColor = disabledContentColor
     )
 }
+
+@Immutable
+data class ButtonColors(
+    val containerColor: Color,
+    val contentColor: Color,
+    val disabledContainerColor: Color,
+    val disabledContentColor: Color
+)
+
+@Immutable
+data class TextButtonColors(
+    val containerColor: Color,
+    val contentColor: Color,
+    val disabledContainerColor: Color,
+    val disabledContentColor: Color
+)

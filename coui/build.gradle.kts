@@ -66,7 +66,6 @@ kotlin {
 
             implementation(libs.jetbrains.compose.ui.backhandler)
             implementation(libs.jetbrains.compose.window.size)
-
             implementation(libs.gaze.capsule) // Capsule for Multiplatform
         }
     }

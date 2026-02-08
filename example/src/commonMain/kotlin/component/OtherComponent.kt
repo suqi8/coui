@@ -8,22 +8,22 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,20 +35,25 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.suqi8.coui.kmp.basic.Button
 import com.suqi8.coui.kmp.basic.ButtonDefaults
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.Checkbox
 import com.suqi8.coui.kmp.basic.CircularProgressIndicator
 import com.suqi8.coui.kmp.basic.ColorPalette
 import com.suqi8.coui.kmp.basic.ColorPicker
 import com.suqi8.coui.kmp.basic.ColorSpace
+import com.suqi8.coui.kmp.basic.CouiClearButton
+import com.suqi8.coui.kmp.basic.CouiTextFieldMode
+import com.suqi8.coui.kmp.basic.DescriptionButtonContent
 import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator
 import com.suqi8.coui.kmp.basic.LinearProgressIndicator
+import com.suqi8.coui.kmp.basic.LoadingView
+import com.suqi8.coui.kmp.basic.OutlinedButton
 import com.suqi8.coui.kmp.basic.RangeSlider
 import com.suqi8.coui.kmp.basic.Slider
 import com.suqi8.coui.kmp.basic.SliderDefaults
@@ -61,6 +66,7 @@ import com.suqi8.coui.kmp.basic.TextField
 import com.suqi8.coui.kmp.basic.VerticalSlider
 import com.suqi8.coui.kmp.icon.MiuixIcons
 import com.suqi8.coui.kmp.icon.icons.useful.Like
+import com.suqi8.coui.kmp.icon.icons.useful.Scan
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.PressFeedbackType
 import kotlin.math.round
@@ -71,57 +77,120 @@ fun LazyListScope.otherComponent(
     padding: PaddingValues
 ) {
     item(key = "button") {
-        var buttonText by remember { mutableStateOf("Cancel") }
-        var submitButtonText by remember { mutableStateOf("Submit") }
-        var clickCount by remember { mutableStateOf(0) }
-        var submitClickCount by remember { mutableStateOf(0) }
+        var clickCount by remember { mutableIntStateOf(0) }
 
-        SmallTitle(text = "Button")
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            TextButton(
-                text = buttonText,
-                onClick = {
-                    clickCount++
-                    buttonText = "Click: $clickCount"
-                },
+            Button(
+                onClick = { clickCount++ },
                 modifier = Modifier.weight(1f)
-            )
-            Spacer(Modifier.width(12.dp))
-            TextButton(
-                text = submitButtonText,
-                onClick = {
-                    submitClickCount++
-                    submitButtonText = "Click: $submitClickCount"
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsPrimary()
-            )
-        }
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(
-                text = "Disabled",
-                onClick = {},
-                modifier = Modifier.weight(1f),
-                enabled = false
-            )
-            Spacer(Modifier.width(12.dp))
-            TextButton(
-                text = "Disabled",
+            ) {
+                Text("Click: $clickCount")
+            }
+            Button(
                 onClick = {},
                 enabled = false,
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsPrimary()
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Disabled")
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = { clickCount++ },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Normal")
+            }
+            OutlinedButton(
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Disabled")
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            TextButton(
+                text = "Submit",
+                onClick = { clickCount++ },
+                modifier = Modifier.weight(1f)
             )
+            TextButton(
+                text = "Cancel",
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = {},
+                minWidth = ButtonDefaults.LargeWidth // [精确数值] 使用 174dp 宽度
+            ) {
+                Text("Primary Large Action")
+            }
+            OutlinedButton(
+                onClick = {},
+                minWidth = ButtonDefaults.LargeWidth
+            ) {
+                Text("Secondary Large Action")
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 实心带描述
+            Button(
+                onClick = {},
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 54.dp) // 稍微增高以容纳两行文字
+            ) {
+                DescriptionButtonContent(
+                    text = "Auto Boost",
+                    description = "Recommended"
+                )
+            }
+            // 边框带描述
+            OutlinedButton(
+                onClick = {},
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 54.dp)
+            ) {
+                DescriptionButtonContent(
+                    text = "Manual Mode",
+                    description = "Advanced"
+                )
+            }
         }
     }
 
@@ -166,60 +235,127 @@ fun LazyListScope.otherComponent(
                     progress = progressValue
                 )
             }
-            InfiniteProgressIndicator(
-                modifier = Modifier
-                    .align(alignment = Alignment.CenterVertically)
-            )
+            LoadingView()
         }
     }
 
     item(key = "textField") {
         var text1 by remember { mutableStateOf("") }
-        var text2 by remember { mutableStateOf(TextFieldValue("")) }
-        val text3 = rememberTextFieldState(initialText = "")
+        var text2 by remember { mutableStateOf("") }
+        var text3 by remember { mutableStateOf("") }
         var text4 by remember { mutableStateOf("") }
+        var text5 by remember { mutableStateOf("") }
+        var isErrorChecked by remember { mutableStateOf(false) }
 
         SmallTitle(text = "TextField")
-        TextField(
-            value = text1,
-            onValueChange = { text1 = it },
+        Card(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-        )
-        TextField(
-            value = text2,
-            onValueChange = { text2 = it },
-            label = "With title",
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-        )
-        TextField(
-            state = text3,
-            label = "State-based",
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            onKeyboardAction = { focusManager.clearFocus() },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-        )
-        TextField(
-            value = text4,
-            onValueChange = { text4 = it },
-            label = "Placeholder & SingleLine",
-            useLabelAsPlaceholder = true,
-            singleLine = true,
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
-            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-        )
+                .padding(bottom = 12.dp)
+        ) {
+            // --- 示例 1: 默认 Line 模式，带 Placeholder ---
+            // 这个示例现在正确地只使用 placeholder，没有 label
+            TextField(
+                value = text1,
+                onValueChange = { text1 = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                placeholder = { Text("Line Mode with Placeholder") },
+                trailingIcon = {
+                    if (text1.isNotEmpty()) {
+                        CouiClearButton(onClick = { text1 = "" })
+                    }
+                },
+                mode = CouiTextFieldMode.Line,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { /* focusManager.clearFocus() */ })
+            )
+
+            // --- 示例 2: Rect 模式，带 Label 和 Leading Icon ---
+            TextField(
+                value = text2,
+                onValueChange = { text2 = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                label = { Text("Rect Mode with Label") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = MiuixIcons.Useful.Scan,
+                        contentDescription = "User"
+                    )
+                },
+                mode = CouiTextFieldMode.Rect,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { /* focusManager.clearFocus() */ })
+            )
+
+            // --- [修正] 示例 3: Line 模式，只带 Label ---
+            // 演示 Label 的浮动效果
+            TextField(
+                value = text3,
+                onValueChange = { text3 = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                label = { Text("Floating Label only") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { /* focusManager.clearFocus() */ })
+            )
+
+            // --- [新增] 示例 4: Rect 模式，只带 Placeholder ---
+            // 演示无 Label 时的 Rect 模式
+            TextField(
+                value = text4,
+                onValueChange = { text4 = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                placeholder = { Text("Rect Mode with Placeholder only") },
+                mode = CouiTextFieldMode.Rect,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { /* focusManager.clearFocus() */ })
+            )
+
+
+            // --- 示例 5: 错误状态演示 (带交互) ---
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+                TextField(
+                    value = text5,
+                    onValueChange = { text5 = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    label = { Text("Error State Demo") },
+                    isError = isErrorChecked, // 由 Checkbox 控制
+                    trailingIcon = {
+                        if (text5.isNotEmpty()) {
+                            CouiClearButton(onClick = { text5 = "" })
+                        }
+                    }
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clickable { isErrorChecked = !isErrorChecked }
+                        .padding(vertical = 4.dp)
+                ) {
+                    Checkbox(
+                        checked = isErrorChecked,
+                        onCheckedChange = { isErrorChecked = it }
+                    )
+                    Text("Toggle Error State", modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        }
     }
 
     item(key = "slider") {
@@ -792,7 +928,7 @@ fun LazyListScope.otherComponent(
                     Text(
                         color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Sink",
-                        style = COUITheme.textStyles.paragraph
+                        style = COUITheme.textStyles.body
                     )
                 }
             )
@@ -811,7 +947,7 @@ fun LazyListScope.otherComponent(
                     Text(
                         color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Tilt",
-                        style = COUITheme.textStyles.paragraph
+                        style = COUITheme.textStyles.body
                     )
                 }
             )

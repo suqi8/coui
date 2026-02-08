@@ -20,22 +20,22 @@ import com.suqi8.coui.kmp.utils.MiuixIndication
 @Composable
 fun COUITheme(
     colors: Colors = COUITheme.colorScheme,
-    textStyles: TextStyles = COUITheme.textStyles,
+    textTypography: Typography = COUITheme.textStyles,
     content: @Composable () -> Unit
 ) {
-    val miuixColors = remember(colors) {
+    val COUIColors = remember(colors) {
         colors.copy().apply { updateColorsFrom(colors) }
     }
-    val miuixTextStyles = remember(textStyles, colors.onBackground) {
-        textStyles.copy().apply { updateColorsFrom(colors.onBackground) }
-    }
-    val miuixIndication = remember(colors.onBackground) {
+    val COUITypography = remember(textTypography) { textTypography }
+
+
+    val COUIIndication = remember(colors.onBackground) {
         MiuixIndication(color = colors.onBackground)
     }
     CompositionLocalProvider(
-        LocalColors provides miuixColors,
-        LocalTextStyles provides miuixTextStyles,
-        LocalIndication provides miuixIndication
+        LocalColors provides COUIColors,
+        LocalTypography provides COUITypography,
+        LocalIndication provides COUIIndication
     ) {
         content()
     }
@@ -45,6 +45,6 @@ object COUITheme {
     val colorScheme: Colors
         @Composable @ReadOnlyComposable get() = LocalColors.current
 
-    val textStyles: TextStyles
-        @Composable @ReadOnlyComposable get() = LocalTextStyles.current
+    val textStyles: Typography
+        @Composable @ReadOnlyComposable get() = LocalTypography.current
 }

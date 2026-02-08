@@ -3,6 +3,7 @@
 
 package com.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -26,228 +27,209 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.basic.ProgressIndicatorDefaults.ProgressIndicatorColors
 import com.suqi8.coui.kmp.theme.COUITheme
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
- * A [LinearProgressIndicator] with Miuix style.
+ * COUI 风格的线性进度条 (LinearProgressIndicator)。
  *
- * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
- * @param modifier The modifier to be applied to the indicator.
- * @param colors The colors used for the indicator.
- * @param height The height of the indicator.
+ * @param progress 当前进度 (0.0f - 1.0f)，传 null 则为无限加载状态。
+ * @param modifier 修饰符。
+ * @param colors 颜色配置。
+ * @param height 高度，默认为 4dp。
  */
 @Composable
 fun LinearProgressIndicator(
     progress: Float? = null,
     modifier: Modifier = Modifier,
     colors: ProgressIndicatorColors = ProgressIndicatorDefaults.progressIndicatorColors(),
-    height: Dp = ProgressIndicatorDefaults.DefaultLinearProgressIndicatorHeight
+    height: Dp = ProgressIndicatorDefaults.DefaultLinearHeight
 ) {
+    val trackColor = colors.trackColor()
+    val indicatorColor = colors.indicatorColor(true)
+
     if (progress == null) {
-        val transition = rememberInfiniteTransition()
-        val animatedValue by transition.animateFloat(
+        // 无限加载动画
+        val infiniteTransition = rememberInfiniteTransition()
+        // COUI 的线性无限加载通常是一个较短的滑块来回移动，或者渐隐渐显
+        // 这里实现一个经典的来回移动效果
+        val animation by infiniteTransition.animateFloat(
             initialValue = 0f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 1250, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            )
-        )
-
-        Canvas(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(height)
-        ) {
-            val currentBackgroundColor = colors.backgroundColor()
-            val currentForegroundColor = colors.foregroundColor(true)
-
-            drawRoundRect(
-                color = currentBackgroundColor,
-                size = Size(size.width, size.height),
-                cornerRadius = CornerRadius(size.height / 2)
-            )
-
-            val value = animatedValue
-            val segmentWidth = 0.45f
-            val gap = 0.55f
-
-            val positions = listOf(
-                value,
-                value - (segmentWidth + gap),
-                value - 2 * (segmentWidth + gap)
-            )
-
-            positions.forEach { position ->
-                val adjustedPos = (position % 1f + 1f) % 1f
-
-                if (adjustedPos < 1f - segmentWidth) {
-                    val startX = size.width * adjustedPos
-                    val width = size.width * segmentWidth
-
-                    drawRoundRect(
-                        color = currentForegroundColor,
-                        topLeft = Offset(startX, 0f),
-                        size = Size(width, size.height),
-                        cornerRadius = CornerRadius(size.height / 2)
-                    )
-                } else {
-                    val startX = size.width * adjustedPos
-                    val width = size.width * (1f - adjustedPos)
-
-                    drawRoundRect(
-                        color = currentForegroundColor,
-                        topLeft = Offset(startX, 0f),
-                        size = Size(width, size.height),
-                        cornerRadius = CornerRadius(size.height / 2)
-                    )
-
-                    val remainingWidth = adjustedPos + segmentWidth - 1f
-                    if (remainingWidth > 0) {
-                        drawRoundRect(
-                            color = currentForegroundColor,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(size.width * remainingWidth, size.height),
-                            cornerRadius = CornerRadius(size.height / 2)
-                        )
-                    }
-                }
-            }
-        }
-    } else {
-        val progressValue = progress.coerceIn(0f, 1f)
-        val currentBackgroundColor = colors.backgroundColor()
-        val currentForegroundColor = colors.foregroundColor(true)
-
-        Canvas(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(height)
-        ) {
-            val cornerRadius = size.height / 2
-
-            drawRoundRect(
-                color = currentBackgroundColor,
-                size = Size(size.width, size.height),
-                cornerRadius = CornerRadius(cornerRadius)
-            )
-
-            val minWidth = cornerRadius * 2
-            val progressWidth = minWidth + (size.width - minWidth) * progressValue
-
-            drawRoundRect(
-                color = currentForegroundColor,
-                topLeft = Offset(0f, 0f),
-                size = Size(progressWidth, size.height),
-                cornerRadius = CornerRadius(cornerRadius)
-            )
-        }
-    }
-}
-
-/**
- * A [CircularProgressIndicator] with Miuix style.
- *
- * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
- * @param modifier The modifier to be applied to the indicator.
- * @param colors The colors used for the indicator.
- * @param strokeWidth The width of the circular stroke.
- * @param size The size (diameter) of the circular indicator.
- */
-@Composable
-fun CircularProgressIndicator(
-    progress: Float? = null,
-    modifier: Modifier = Modifier,
-    colors: ProgressIndicatorColors = ProgressIndicatorDefaults.progressIndicatorColors(),
-    strokeWidth: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth,
-    size: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize
-) {
-    if (progress == null) {
-        val transition = rememberInfiniteTransition()
-
-        val rotationAnim by transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            )
-        )
-        val sweepAnim by transition.animateFloat(
-            initialValue = 30f,
-            targetValue = 120f,
-            animationSpec = infiniteRepeatable(
                 animation = keyframes {
-                    durationMillis = 1600
-                    120f at 800 using LinearEasing
-                    30f at 1600 using LinearEasing
+                    durationMillis = 2000
+                    0f at 0 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+                    1f at 1000 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+                    0f at 2000 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
                 },
                 repeatMode = RepeatMode.Restart
             )
         )
 
         Canvas(
-            modifier = modifier.size(size)
+            modifier = modifier
+                .fillMaxWidth()
+                .height(height)
         ) {
-            val currentBackgroundColor = colors.backgroundColor()
-            val currentForegroundColor = colors.foregroundColor(true) // Assuming enabled
+            val trackHeight = size.height
+            val cornerRadius = CornerRadius(trackHeight / 2)
 
-            val strokeWidthPx = strokeWidth.toPx()
-            val radius = (size.toPx() - strokeWidthPx) / 2
-            val center = Offset(size.toPx() / 2, size.toPx() / 2)
-
-            drawCircle(
-                color = currentBackgroundColor,
-                radius = radius,
-                center = center,
-                style = Stroke(width = strokeWidthPx)
+            // 绘制轨道
+            drawRoundRect(
+                color = trackColor,
+                size = size,
+                cornerRadius = cornerRadius
             )
 
-            drawArc(
-                color = currentForegroundColor,
-                startAngle = rotationAnim,
-                sweepAngle = sweepAnim,
-                useCenter = false,
-                topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2),
-                size = Size(2 * radius, 2 * radius),
-                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+            // 绘制滑块 (占总宽度的 30%)
+            val indicatorWidth = size.width * 0.3f
+            // 计算滑块左边缘位置
+            val indicatorLeft = (size.width - indicatorWidth) * animation
+
+            drawRoundRect(
+                color = indicatorColor,
+                topLeft = Offset(indicatorLeft, 0f),
+                size = Size(indicatorWidth, trackHeight),
+                cornerRadius = cornerRadius
             )
         }
     } else {
-        val progressValue by rememberUpdatedState(progress.coerceIn(0f, 1f))
-        val currentBackgroundColor = colors.backgroundColor()
-        val currentForegroundColor = colors.foregroundColor(true)
-
+        // 确定性进度条
+        val progressValue = progress.coerceIn(0f, 1f)
         Canvas(
-            modifier = modifier.size(size)
+            modifier = modifier
+                .fillMaxWidth()
+                .height(height)
         ) {
-            val strokeWidthPx = strokeWidth.toPx()
-            val radius = (size.toPx() - strokeWidthPx) / 2
-            val center = Offset(size.toPx() / 2, size.toPx() / 2)
+            val trackHeight = size.height
+            val cornerRadius = CornerRadius(trackHeight / 2)
 
-            drawCircle(
-                color = currentBackgroundColor,
-                radius = radius,
-                center = center,
+            // 绘制轨道
+            drawRoundRect(
+                color = trackColor,
+                size = size,
+                cornerRadius = cornerRadius
+            )
+
+            // 绘制进度
+            drawRoundRect(
+                color = indicatorColor,
+                size = Size(size.width * progressValue, trackHeight),
+                cornerRadius = cornerRadius
+            )
+        }
+    }
+}
+
+/**
+ * COUI 风格的圆形进度条 (CircularProgressIndicator)。
+ * 通常用于显示具体的进度百分比。
+ *
+ * @param progress 当前进度 (0.0f - 1.0f)，传 null 则为无限加载状态。
+ * @param modifier 修饰符。
+ * @param colors 颜色配置。
+ * @param strokeWidth 描边宽度，默认为大号 5dp。
+ * @param size 尺寸，默认为大号 40dp。
+ */
+@Composable
+fun CircularProgressIndicator(
+    progress: Float? = null,
+    modifier: Modifier = Modifier,
+    colors: ProgressIndicatorColors = ProgressIndicatorDefaults.progressIndicatorColors(),
+    strokeWidth: Dp = ProgressIndicatorDefaults.LargeStrokeWidth,
+    size: Dp = ProgressIndicatorDefaults.LargeSize
+) {
+    val trackColor = colors.trackColor()
+    val indicatorColor = colors.indicatorColor(true)
+
+    if (progress == null) {
+        // 无限加载状态：使用标准的旋转+伸缩动画
+        val transition = rememberInfiniteTransition()
+        val currentRotation by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 1332, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            )
+        )
+        val currentSweep by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = keyframes {
+                    durationMillis = 1332
+                    // 模拟 Material/COUI 的快慢交替效果
+                    10f at 0 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+                    280f at 666 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+                    10f at 1332 using CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+                },
+                repeatMode = RepeatMode.Restart
+            )
+        )
+
+        Canvas(modifier = modifier.size(size)) {
+            val strokeWidthPx = strokeWidth.toPx()
+            val diameter = this.size.minDimension - strokeWidthPx
+            val topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2)
+            val arcSize = Size(diameter, diameter)
+
+            // 绘制轨道 (可选，有些无限加载不显示轨道)
+            drawArc(
+                color = trackColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
                 style = Stroke(width = strokeWidthPx)
             )
 
-            val minSweepAngle = 0.1f
-            val sweepAngle = minSweepAngle + (360f - minSweepAngle) * progressValue
+            // 绘制动态进度
+            rotate(degrees = currentRotation) {
+                drawArc(
+                    color = indicatorColor,
+                    startAngle = -90f, // 从顶部开始
+                    sweepAngle = currentSweep,
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+                )
+            }
+        }
+    } else {
+        // 确定性进度条
+        val progressValue by rememberUpdatedState(progress.coerceIn(0f, 1f))
+        Canvas(modifier = modifier.size(size)) {
+            val strokeWidthPx = strokeWidth.toPx()
+            val diameter = this.size.minDimension - strokeWidthPx
+            val topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2)
+            val arcSize = Size(diameter, diameter)
 
+            // 绘制轨道
             drawArc(
-                color = currentForegroundColor,
-                startAngle = -90f,
-                sweepAngle = sweepAngle,
+                color = trackColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
                 useCenter = false,
-                topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2),
-                size = Size(2 * radius, 2 * radius),
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx)
+            )
+
+            // 绘制进度
+            drawArc(
+                color = indicatorColor,
+                startAngle = -90f,
+                sweepAngle = 360f * progressValue,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
                 style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
             )
         }
@@ -255,109 +237,97 @@ fun CircularProgressIndicator(
 }
 
 /**
- * A [InfiniteProgressIndicator] with Miuix style.
- * The indicator is a circular indicator with an orbiting dot.
+ * COUI 风格的小型无限加载指示器 (Loading View)。
+ * 对应原生的 18dp LoadingView，通常用于行内加载。
  *
- * @param modifier The modifier to be applied to the indicator.
- * @param color The color of the indicator.
- * @param size The size (diameter) of the circular indicator.
- * @param strokeWidth The width of the circular stroke.
- * @param orbitingDotSize The size of the orbiting dot.
+ * @param modifier 修饰符。
+ * @param color 指示器颜色，默认为主色。
+ * @param size 尺寸，默认为 18dp。
+ * @param strokeWidth 描边宽度，默认为 2.67dp。
  */
 @Composable
-fun InfiniteProgressIndicator(
+fun LoadingView(
     modifier: Modifier = Modifier,
-    color: Color = Color.Gray,
-    size: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorSize,
-    strokeWidth: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth,
-    orbitingDotSize: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorOrbitingDotSize
+    color: Color = COUITheme.colorScheme.primary,
+    size: Dp = ProgressIndicatorDefaults.LoadingViewSize,
+    strokeWidth: Dp = ProgressIndicatorDefaults.LoadingViewStrokeWidth
 ) {
-    val currentColor by rememberUpdatedState(color)
-
     val transition = rememberInfiniteTransition()
-    val rotation by transition.animateFloat(
+    // COUI 的小加载动画通常是一个快速旋转的圆弧，可能带有轻微的长度变化
+    val currentRotation by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = LinearEasing),
+            animation = tween(durationMillis = 800, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         )
     )
 
-    Canvas(
-        modifier = modifier.size(size)
-    ) {
-        val center = Offset(this.size.width / 2, this.size.height / 2)
-        val radius = (size.toPx() - strokeWidth.toPx()) / 2
+    Canvas(modifier = modifier.size(size)) {
+        val strokeWidthPx = strokeWidth.toPx()
+        val diameter = this.size.minDimension - strokeWidthPx
+        val topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2)
+        val arcSize = Size(diameter, diameter)
 
-        drawCircle(
-            color = currentColor,
-            radius = radius,
-            center = center,
-            style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-        )
-
-        val orbitRadius = radius - 2 * orbitingDotSize.toPx()
-        val angle = rotation * PI.toFloat() / 180f
-        val dotCenter = center + Offset(
-            x = orbitRadius * cos(angle),
-            y = orbitRadius * sin(angle)
-        )
-
-        drawCircle(
-            color = currentColor,
-            radius = orbitingDotSize.toPx(),
-            center = dotCenter
-        )
+        rotate(degrees = currentRotation) {
+            // 绘制一个约 270 度的圆弧 (3/4 圆)
+            drawArc(
+                color = color,
+                startAngle = 0f,
+                sweepAngle = 270f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+            )
+        }
     }
 }
 
 object ProgressIndicatorDefaults {
-    /** The default height of [LinearProgressIndicator]. */
-    val DefaultLinearProgressIndicatorHeight = 6.dp
+    // --- Linear ---
+    val DefaultLinearHeight = 4.dp // 现代化 COUI 风格通常较细
 
-    /** The default stroke width of [CircularProgressIndicator]. */
-    val DefaultCircularProgressIndicatorStrokeWidth = 4.dp
+    // --- Circular (ProgressBar) ---
+    // [精确数值] Large: 40dp size, 5dp stroke
+    val LargeSize = 40.dp
+    val LargeStrokeWidth = 5.dp
+    // [精确数值] Medium: 30dp size, 3dp stroke
+    val MediumSize = 30.dp
+    val MediumStrokeWidth = 3.dp
 
-    /** The default size of [CircularProgressIndicator]. */
-    val DefaultCircularProgressIndicatorSize = 30.dp
+    // --- Loading View (Small Infinite) ---
+    // [精确数值] 18dp size, 2.67dp stroke
+    val LoadingViewSize = 18.dp
+    val LoadingViewStrokeWidth = 2.67.dp
 
-    /** The default stroke width of [InfiniteProgressIndicator]. */
-    val DefaultInfiniteProgressIndicatorStrokeWidth = 2.dp
-
-    /** The default radius width of the orbiting dot in [InfiniteProgressIndicator]. */
-    val DefaultInfiniteProgressIndicatorOrbitingDotSize = 2.dp
-
-    /** The default size of [InfiniteProgressIndicator]. */
-    val DefaultInfiniteProgressIndicatorSize = 20.dp
-
-    /**
-     * The default [ProgressIndicatorColors] used by [LinearProgressIndicator] and [CircularProgressIndicator].
-     */
     @Composable
     fun progressIndicatorColors(
-        foregroundColor: Color = COUITheme.colorScheme.primary,
-        disabledForegroundColor: Color = COUITheme.colorScheme.disabledPrimarySlider,
-        backgroundColor: Color = COUITheme.colorScheme.tertiaryContainerVariant
+        indicatorColor: Color = COUITheme.colorScheme.primary,
+        trackColor: Color = COUITheme.colorScheme.tertiaryContainerVariant, // 通常是一个较淡的颜色
+        disabledIndicatorColor: Color = COUITheme.colorScheme.disabledPrimarySlider,
+        disabledTrackColor: Color = COUITheme.colorScheme.tertiaryContainerVariant.copy(alpha = 0.5f)
     ): ProgressIndicatorColors {
         return ProgressIndicatorColors(
-            foregroundColor = foregroundColor,
-            disabledForegroundColor = disabledForegroundColor,
-            backgroundColor = backgroundColor
+            indicatorColor = indicatorColor,
+            trackColor = trackColor,
+            disabledIndicatorColor = disabledIndicatorColor,
+            disabledTrackColor = disabledTrackColor
         )
     }
 
     @Immutable
     class ProgressIndicatorColors(
-        private val foregroundColor: Color,
-        private val disabledForegroundColor: Color,
-        private val backgroundColor: Color
+        private val indicatorColor: Color,
+        private val trackColor: Color,
+        private val disabledIndicatorColor: Color,
+        private val disabledTrackColor: Color
     ) {
         @Stable
-        internal fun foregroundColor(enabled: Boolean): Color =
-            if (enabled) foregroundColor else disabledForegroundColor
+        internal fun indicatorColor(enabled: Boolean): Color =
+            if (enabled) indicatorColor else disabledIndicatorColor
 
         @Stable
-        internal fun backgroundColor(): Color = backgroundColor
+        internal fun trackColor(): Color = trackColor // 暂不区分启用/禁用轨道的颜色，可按需添加
     }
 }

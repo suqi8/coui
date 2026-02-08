@@ -36,39 +36,26 @@ import com.suqi8.coui.kmp.interfaces.HoldDownInteraction
 import com.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * 列表项在卡片组中的位置。
+ * The position of the list item within a group of cards.
  */
 enum class CouiListItemPosition {
     Top, Middle, Bottom, Single
 }
 
-private enum class SlotsEnum { Start, Center, End }
-
 /**
- * A base list item component following **COUI** design language.
- *
- * This composable is used to build structured list items inside cards or sections.
- * It supports title, summary, optional left and right content areas, click behavior,
- * and layout position awareness (top/middle/bottom/single).
+ * A base list item component following COUI design language.
  *
  * @param title The main title text.
  * @param titleModifier Modifier applied to the title text.
  * @param titleColor The color configuration for the title text.
- *        Use [BasicComponentDefaults.titleColor] to get default colors.
  * @param summary The summary (secondary text) below the title.
  * @param summaryColor The color configuration for the summary text.
- *        Use [BasicComponentDefaults.summaryColor] to get default colors.
- * @param leftAction Optional composable content displayed at the start of the row
- *        (e.g., an icon or switch).
- * @param rightActions Optional composable content displayed at the end of the row
- *        (e.g., arrow, toggle, or additional actions).
+ * @param leftAction Optional composable content displayed at the start of the row.
+ * @param rightActions Optional composable content displayed at the end of the row.
  * @param modifier The modifier applied to the entire component.
  * @param insideMargin The internal padding of the component.
- *        Defaults to [BasicComponentDefaults.InsideMargin].
  * @param onClick The callback invoked when the component is clicked.
- *        If null, the component will not be clickable.
  * @param position The position of this item in a list or group.
- *        Used to adjust rounded corners and padding.
  * @param holdDownState Whether the component is currently in a pressed (hold-down) state.
  * @param enabled Whether the component is enabled for interaction and color updates.
  * @param interactionSource The [MutableInteractionSource] controlling interaction states.
@@ -93,8 +80,15 @@ fun BasicComponent(
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val indication = LocalIndication.current
-    val extraTopDp = if (position == CouiListItemPosition.Top || position == CouiListItemPosition.Single) 2.dp else 0.dp
-    val extraBottomDp = if (position == CouiListItemPosition.Bottom || position == CouiListItemPosition.Single) 2.dp else 0.dp
+
+    val extraTopDp = if (position == CouiListItemPosition.Top || position == CouiListItemPosition.Single) {
+        BasicComponentDefaults.HeadOrTailPadding
+    } else 0.dp
+
+    val extraBottomDp = if (position == CouiListItemPosition.Bottom || position == CouiListItemPosition.Single) {
+        BasicComponentDefaults.HeadOrTailPadding
+    } else 0.dp
+
     val minHeight = 48.dp
     val density = LocalDensity.current
     val horizontalGapPx = with(density) { 16.dp.roundToPx() }
@@ -139,14 +133,12 @@ fun BasicComponent(
     ) { constraints ->
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
 
-        // Left action
         val leftPlaceables = leftAction?.let {
             subcompose("leftAction") { it() }.map { it.measure(looseConstraints) }
         } ?: emptyList()
         val leftWidth = leftPlaceables.maxOfOrNull { it.width } ?: 0
         val leftHeight = leftPlaceables.maxOfOrNull { it.height } ?: 0
 
-        // Right actions
         val rightPlaceables = subcompose("rightActions") {
             Row(
                 horizontalArrangement = Arrangement.End,
@@ -157,7 +149,6 @@ fun BasicComponent(
         val rightWidth = rightPlaceables.maxOfOrNull { it.width } ?: 0
         val rightHeight = rightPlaceables.maxOfOrNull { it.height } ?: 0
 
-        // Content area
         val leftGap = if (leftWidth > 0) horizontalGapPx else 0
         val rightGap = if (rightWidth > 0) horizontalGapPx else 0
         val contentMaxWidth = maxOf(0, constraints.maxWidth - leftWidth - leftGap - rightWidth - rightGap)
@@ -229,7 +220,10 @@ fun BasicComponent(
 object BasicComponentDefaults {
 
     /** Default inner padding for the component. */
-    val InsideMargin = PaddingValues(vertical = 8.dp, horizontal = 16.dp)
+    val InsideMargin = PaddingValues(vertical = 14.dp, horizontal = 16.dp)
+
+    /** Extra padding added to the top or bottom when the item is at the start or end of a group. */
+    val HeadOrTailPadding = 2.dp
 
     /** Default title color scheme. */
     @Composable

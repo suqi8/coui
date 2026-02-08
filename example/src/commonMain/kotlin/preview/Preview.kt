@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import com.suqi8.coui.kmp.basic.MiuixScrollBehavior
 import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.topAppBarScrollBehavior
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import ui.AppTheme
 
@@ -32,7 +32,7 @@ fun UITestPreview() {
 fun MainPagePreview() {
     AppTheme {
         Scaffold {
-            MainPage(MiuixScrollBehavior(), PaddingValues(), true)
+            MainPage(topAppBarScrollBehavior(), PaddingValues(), true)
         }
     }
 }
@@ -43,7 +43,7 @@ fun SecondPagePreview() {
     AppTheme {
         Scaffold {
             SecondPage(
-                MiuixScrollBehavior(),
+                topAppBarScrollBehavior(),
                 PaddingValues(),
                 true
             )
@@ -57,7 +57,7 @@ fun ThirdPagePreview() {
     AppTheme {
         Scaffold {
             ThirdPage(
-                MiuixScrollBehavior(),
+                topAppBarScrollBehavior(),
                 PaddingValues(),
                 true
             )
@@ -71,7 +71,7 @@ fun FourthPagePreview() {
     AppTheme {
         Scaffold {
             FourthPage(
-                MiuixScrollBehavior(),
+                topAppBarScrollBehavior(),
                 PaddingValues(),
                 false,
                 {},

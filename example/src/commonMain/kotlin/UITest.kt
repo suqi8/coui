@@ -1,5 +1,7 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
+//
+// Final version with fixed Composable invocation scope.
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -7,6 +9,8 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.gestures.Orientation
@@ -50,7 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -61,25 +65,17 @@ import com.suqi8.coui.kmp.basic.BasicComponent
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.FabPosition
 import com.suqi8.coui.kmp.basic.FloatingActionButton
-import com.suqi8.coui.kmp.basic.FloatingNavigationBar
-import com.suqi8.coui.kmp.basic.FloatingNavigationBarMode
 import com.suqi8.coui.kmp.basic.FloatingToolbar
 import com.suqi8.coui.kmp.basic.Icon
 import com.suqi8.coui.kmp.basic.IconButton
-import com.suqi8.coui.kmp.basic.ListPopup
-import com.suqi8.coui.kmp.basic.ListPopupColumn
-import com.suqi8.coui.kmp.basic.ListPopupDefaults
-import com.suqi8.coui.kmp.basic.MiuixScrollBehavior
 import com.suqi8.coui.kmp.basic.NavigationBar
 import com.suqi8.coui.kmp.basic.NavigationItem
-import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.ScrollBehavior
-import com.suqi8.coui.kmp.basic.SmallTopAppBar
 import com.suqi8.coui.kmp.basic.ToolbarPosition
 import com.suqi8.coui.kmp.basic.TopAppBar
 import com.suqi8.coui.kmp.basic.VerticalDivider
-import com.suqi8.coui.kmp.extra.DropdownImpl
+import com.suqi8.coui.kmp.basic.topAppBarScrollBehavior
 import com.suqi8.coui.kmp.icon.MiuixIcons
 import com.suqi8.coui.kmp.icon.icons.other.GitHub
 import com.suqi8.coui.kmp.icon.icons.useful.Delete
@@ -148,19 +144,23 @@ val LocalHandlePageChange = compositionLocalOf<(Int) -> Unit> { error("No handle
 fun UITest(
     colorMode: MutableState<Int>,
 ) {
-    val topAppBarScrollBehaviorList = List(UIConstants.PAGE_COUNT) { MiuixScrollBehavior() }
+    val topAppBarScrollBehaviorList = List(UIConstants.PAGE_COUNT) { topAppBarScrollBehavior() }
     val pagerState = rememberPagerState(pageCount = { UIConstants.PAGE_COUNT })
     val coroutineScope = rememberCoroutineScope()
     val currentScrollBehavior = topAppBarScrollBehaviorList[pagerState.currentPage]
 
-    val navigationItems = remember {
-        listOf(
-            NavigationItem(UIConstants.PAGE_TITLES[0], MiuixIcons.Useful.NavigatorSwitch),
-            NavigationItem(UIConstants.PAGE_TITLES[1], MiuixIcons.Useful.Order),
-            NavigationItem(UIConstants.PAGE_TITLES[2], MiuixIcons.Useful.Scan),
-            NavigationItem(UIConstants.PAGE_TITLES[3], MiuixIcons.Useful.Settings)
-        )
-    }
+    // --- THIS IS THE CORE FIX ---
+    // The list of NavigationItems is created directly in the Composable body.
+    // This ensures that `rememberVectorPainter` is called in a valid Composable context.
+    val navigationItems = listOf(
+        NavigationItem(UIConstants.PAGE_TITLES[0], rememberVectorPainter(MiuixIcons.Useful.NavigatorSwitch)),
+        NavigationItem(UIConstants.PAGE_TITLES[1], rememberVectorPainter(MiuixIcons.Useful.Order)),
+        NavigationItem(UIConstants.PAGE_TITLES[2], rememberVectorPainter(MiuixIcons.Useful.Scan)),
+        NavigationItem(UIConstants.PAGE_TITLES[0], rememberVectorPainter(MiuixIcons.Useful.NavigatorSwitch)),
+        NavigationItem(UIConstants.PAGE_TITLES[1], rememberVectorPainter(MiuixIcons.Useful.Order)),
+        NavigationItem(UIConstants.PAGE_TITLES[2], rememberVectorPainter(MiuixIcons.Useful.Scan)),
+        NavigationItem(UIConstants.PAGE_TITLES[3], rememberVectorPainter(MiuixIcons.Useful.Settings))
+    )
 
     var uiState by remember { mutableStateOf(UIState()) }
     val showTopPopup = remember { mutableStateOf(false) }
@@ -250,7 +250,7 @@ private fun WideScreenLayout(
     }
 
     Scaffold {
-        val barScrollBehavior = MiuixScrollBehavior()
+        val barScrollBehavior = topAppBarScrollBehavior()
         Row {
             Box(modifier = Modifier.weight(weight)) {
                 WideScreenPanel(
@@ -299,7 +299,6 @@ private fun WideScreenPanel(
         topBar = {
             TopAppBar(
                 title = "COUI",
-                horizontalPadding = 12.dp,
                 scrollBehavior = barScrollBehavior
             )
         },
@@ -356,7 +355,7 @@ private fun WideScreenContent(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                SmallTopAppBar(
+                TopAppBar(
                     title = UIConstants.PAGE_TITLES[LocalPagerState.current.targetPage],
                     scrollBehavior = currentScrollBehavior,
                     actions = {
@@ -365,7 +364,6 @@ private fun WideScreenContent(
                             showTopPopup = showTopPopup
                         )
                     },
-                    defaultWindowInsetsPadding = false,
                     modifier = Modifier
                         .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End))
                         .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.End)),
@@ -434,10 +432,20 @@ private fun CompactScreenLayout(
             }
         },
         bottomBar = {
-            NavigationBar(
-                uiState = uiState,
-                navigationItems = navigationItems,
-            )
+            val page = LocalPagerState.current.targetPage
+            val handlePageChange = LocalHandlePageChange.current
+
+            AnimatedVisibility(
+                visible = uiState.showNavigationBar,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                NavigationBar(
+                    items = navigationItems,
+                    selectedIndex = page,
+                    onItemSelected = handlePageChange
+                )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(uiState.showFloatingActionButton)
@@ -466,49 +474,14 @@ private fun CompactScreenLayout(
 }
 
 @Composable
-private fun NavigationBar(
-    uiState: UIState,
-    navigationItems: List<NavigationItem>,
-) {
-    val page = LocalPagerState.current.targetPage
-    val handlePageChange = LocalHandlePageChange.current
-    AnimatedVisibility(
-        visible = uiState.showNavigationBar,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically()
-    ) {
-        AnimatedVisibility(
-            visible = !uiState.useFloatingNavigationBar,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
-        ) {
-            NavigationBar(
-                items = navigationItems,
-                selected = page,
-                onClick = handlePageChange
-            )
-        }
-        AnimatedVisibility(
-            visible = uiState.useFloatingNavigationBar,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
-        ) {
-            FloatingNavigationBar(
-                items = navigationItems,
-                selected = page,
-                mode = FloatingNavigationBarDisplayMode.fromInt(uiState.floatingNavigationBarMode).toMode(),
-                horizontalAlignment = FloatingNavigationBarAlignment.fromInt(uiState.floatingNavigationBarPosition)
-                    .toAlignment(),
-                onClick = handlePageChange
-            )
-        }
-    }
-}
-
-@Composable
 private fun FloatingActionButton(show: Boolean) {
-    if (show) {
+    AnimatedVisibility(
+        visible = show,
+        enter = scaleIn(initialScale = 0.6f) + fadeIn(),
+        exit = scaleOut(targetScale = 0.6f) + fadeOut()
+    ) {
         val uriHandler = LocalUriHandler.current
+
         FloatingActionButton(
             onClick = {
                 uriHandler.openUri(UIConstants.GITHUB_URL)
@@ -516,7 +489,6 @@ private fun FloatingActionButton(show: Boolean) {
         ) {
             Icon(
                 imageVector = MiuixIcons.Other.GitHub,
-                tint = Color.White,
                 contentDescription = "GitHub"
             )
         }
@@ -604,53 +576,11 @@ private fun Int.toToolbarPosition(): ToolbarPosition = when (this) {
     else -> ToolbarPosition.BottomCenter
 }
 
-private fun FloatingNavigationBarDisplayMode.toMode(): FloatingNavigationBarMode = when (this) {
-    FloatingNavigationBarDisplayMode.IconOnly -> FloatingNavigationBarMode.IconOnly
-    FloatingNavigationBarDisplayMode.IconAndText -> FloatingNavigationBarMode.IconAndText
-    FloatingNavigationBarDisplayMode.TextOnly -> FloatingNavigationBarMode.TextOnly
-}
-
-private fun FloatingNavigationBarAlignment.toAlignment(): Alignment.Horizontal = when (this) {
-    FloatingNavigationBarAlignment.Center -> CenterHorizontally
-    FloatingNavigationBarAlignment.Start -> Alignment.Start
-    FloatingNavigationBarAlignment.End -> Alignment.End
-}
-
 @Composable
 private fun TopAppBarActions(
     items: List<NavigationItem>,
     showTopPopup: MutableState<Boolean>,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
-    val page = LocalPagerState.current.targetPage
-    val handlePageChange = LocalHandlePageChange.current
-
-    ListPopup(
-        show = showTopPopup,
-        popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
-        alignment = PopupPositionProvider.Align.TopRight,
-        onDismissRequest = {
-            showTopPopup.value = false
-        },
-        enableWindowDim = false
-    ) {
-        ListPopupColumn {
-            items.forEachIndexed { index, navigationItem ->
-                DropdownImpl(
-                    text = navigationItem.label,
-                    optionSize = items.size,
-                    isSelected = index == page,
-                    onSelectedIndexChange = {
-                        handlePageChange(index)
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                        showTopPopup.value = false
-                    },
-                    index = index
-                )
-            }
-        }
-    }
-
     IconButton(
         modifier = Modifier.padding(end = 20.dp),
         onClick = {

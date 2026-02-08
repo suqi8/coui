@@ -1,33 +1,44 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,12 +47,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocharealm.gaze.capsule.ContinuousCapsule
@@ -52,197 +61,247 @@ import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.BackHandler
 import kotlinx.coroutines.delay
 
+private object COUISearchBarDimens {
+    val Height = 40.dp
+    val InnerIconSize = 36.dp
+    val InnerIconStartGap = 4.dp
+    val EditTextEndGap = 4.dp
+    val FunctionalButtonStartGap = 8.dp
+    val FunctionalButtonMaxWidth = 152.dp
+    val InputTextSize = 16.sp
+    val HintTextSize = 12.sp // coui_search_view_text_hint_size
+
+    val ResponsivePaddingCompat = 16.dp
+    val ResponsivePaddingMedium = 24.dp
+    val ResponsivePaddingExpanded = 40.dp
+}
+
 /**
- * A [SearchBar] component with Miuix style.
+ * A comprehensive SearchBar component that replicates the COUI behavior.
  *
- * @param inputField the input field to input a query in the [SearchBar].
- * @param onExpandedChange the callback to be invoked when the [SearchBar]'s expanded state is
- *   changed.
- * @param insideMargin The margin inside the [SearchBar].
- * @param modifier the [Modifier] to be applied to the [SearchBar].
- * @param expanded whether the [SearchBar] is expanded and showing search results.
- * @param outsideRightAction the action to be shown at the right side of the [SearchBar] when it is
- *   expanded.
- * @param content the content to be shown when the [SearchBar] is expanded.
+ * This component includes:
+ * 1. Rolling hint animation when the query is empty (COUIHintAnimationLayout).
+ * 2. Smooth expansion animation where the Cancel button slides in and the search box shrinks.
+ * 3. Responsive horizontal padding based on screen width.
+ *
+ * @param query The current text in the search field.
+ * @param onQueryChange Callback when the query text changes.
+ * @param onSearch Callback when the user triggers the search action.
+ * @param onCancel Callback when the user clicks the Cancel button.
+ * @param active Whether the search bar is currently active (expanded).
+ * @param onActiveChange Callback when the active state changes.
+ * @param modifier Modifier to be applied to the layout.
+ * @param enabled Controls the enabled state of the search bar.
+ * @param hintTexts A list of strings to be displayed as rolling hints.
+ * @param content The content to be displayed below the search bar when active.
  */
 @Composable
 fun SearchBar(
-    inputField: @Composable () -> Unit,
-    onExpandedChange: (Boolean) -> Unit,
-    insideMargin: DpSize = DpSize(12.dp, 0.dp),
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onCancel: () -> Unit,
+    active: Boolean,
+    onActiveChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    expanded: Boolean = false,
-    outsideRightAction: @Composable (() -> Unit)? = null,
-    content: @Composable ColumnScope.() -> Unit
+    enabled: Boolean = true,
+    hintTexts: List<String> = listOf("Search..."),
+    content: @Composable () -> Unit
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = insideMargin.height, horizontal = insideMargin.width)
-            ) {
-                inputField()
-            }
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandHorizontally() + slideInHorizontally(initialOffsetX = { it }),
-                exit = shrinkHorizontally() + slideOutHorizontally(targetOffsetX = { it })
-            ) {
-                outsideRightAction?.invoke()
-            }
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val screenWidth = maxWidth
+        val horizontalPadding = when {
+            screenWidth < 600.dp -> COUISearchBarDimens.ResponsivePaddingCompat
+            screenWidth < 840.dp -> COUISearchBarDimens.ResponsivePaddingMedium
+            else -> COUISearchBarDimens.ResponsivePaddingExpanded
         }
 
-        AnimatedVisibility(
-            visible = expanded
-        ) {
-            content()
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = horizontalPadding, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Search Input Box
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(COUISearchBarDimens.Height)
+                        .background(
+                            color = COUITheme.colorScheme.surfaceContainerHigh,
+                            shape = ContinuousCapsule
+                        )
+                        .clip(ContinuousCapsule)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Spacer(Modifier.width(COUISearchBarDimens.InnerIconStartGap))
+
+                        // Search Icon
+                        Box(
+                            modifier = Modifier.size(COUISearchBarDimens.InnerIconSize),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Basic.Search,
+                                tint = COUITheme.colorScheme.onSurfaceContainerHighest,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        // Input Field & Rolling Hint
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = COUISearchBarDimens.EditTextEndGap),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (query.isEmpty()) {
+                                RollingHint(
+                                    texts = hintTexts,
+                                    textStyle = TextStyle(
+                                        fontSize = COUISearchBarDimens.HintTextSize,
+                                        color = COUITheme.colorScheme.onSurfaceContainerHighest
+                                    )
+                                )
+                            }
+
+                            BasicTextField(
+                                value = query,
+                                onValueChange = onQueryChange,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester)
+                                    .onFocusChanged { if (it.isFocused) onActiveChange(true) },
+                                enabled = enabled,
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    fontSize = COUISearchBarDimens.InputTextSize,
+                                    color = COUITheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Normal
+                                ),
+                                cursorBrush = SolidColor(COUITheme.colorScheme.primary),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                                keyboardActions = KeyboardActions(onSearch = { onSearch(query) })
+                            )
+                        }
+
+                        // Clear Button
+                        AnimatedVisibility(
+                            visible = query.isNotEmpty(),
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(COUISearchBarDimens.InnerIconSize)
+                                    .clickable { onQueryChange("") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = MiuixIcons.Basic.SearchCleanup,
+                                    tint = COUITheme.colorScheme.onSurfaceContainerHighest,
+                                    contentDescription = "Clear",
+                                    modifier = Modifier.size(16.dp) // Inner icon visual size
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Functional Button (Cancel)
+                // Simulates COUISearchViewAnimate logic: slides in + fades in
+                AnimatedVisibility(
+                    visible = active,
+                    enter = slideInHorizontally { it / 2 } + expandHorizontally() + fadeIn(),
+                    exit = slideOutHorizontally { it / 2 } + shrinkHorizontally() + fadeOut()
+                ) {
+                    Row {
+                        Spacer(Modifier.width(COUISearchBarDimens.FunctionalButtonStartGap))
+                        Box(
+                            modifier = Modifier
+                                .height(COUISearchBarDimens.Height)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    onCancel()
+                                    onActiveChange(false)
+                                    focusManager.clearFocus()
+                                    onQueryChange("")
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BasicText(
+                                text = "Cancel",
+                                style = COUITheme.textStyles.headline.copy(
+                                    color = COUITheme.colorScheme.primary,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
+            AnimatedVisibility(visible = active) {
+                content()
+            }
         }
     }
 
-    BackHandler(enabled = expanded) {
-        onExpandedChange(false)
+    BackHandler(enabled = active) {
+        onCancel()
+        onActiveChange(false)
+        focusManager.clearFocus()
     }
 }
 
 /**
- * A text field to input a query in a search bar with Miuix style.
- *
- * @param query the query text to be shown in the input field.
- * @param onQueryChange the callback to be invoked when the input service updates the query. An
- *   updated text comes as a parameter of the callback.
- * @param label the label to be shown when the input field is not focused.
- * @param onSearch the callback to be invoked when the input service triggers the
- *   [ImeAction.Search] action. The current [query] comes as a parameter of the callback.
- * @param expanded whether the search bar is expanded and showing search results.
- * @param onExpandedChange the callback to be invoked when the search bar's expanded state is
- *   changed.
- * @param modifier the [Modifier] to be applied to this input field.
- * @param enabled the enabled state of this input field. When `false`, this component will not
- *   respond to user input, and it will appear visually disabled and disabled to accessibility
- *   services.
- * @param leadingIcon the leading icon to be displayed at the start of the input field.
- * @param trailingIcon the trailing icon to be displayed at the end of the input field.
- * @param interactionSource an optional hoisted [MutableInteractionSource] for observing and
- *   emitting [Interaction]s for this input field. You can use this to change the search bar's
- *   appearance or preview the search bar in different states. Note that if `null` is provided,
- *   interactions will still happen internally.
+ * Implements the vertical rolling hint animation found in COUIHintAnimationLayout.
  */
 @Composable
-fun InputField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    label: String = "",
-    onSearch: (String) -> Unit,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    leadingIcon: @Composable (() -> Unit)? = null,
-    trailingIcon: @Composable (() -> Unit)? = null,
-    interactionSource: MutableInteractionSource? = null,
+private fun RollingHint(
+    texts: List<String>,
+    textStyle: TextStyle,
+    modifier: Modifier = Modifier
 ) {
-    val internalInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    if (texts.isEmpty()) return
 
-    val actualLeadingIcon = leadingIcon ?: {
-        Icon(
-            modifier = Modifier.padding(start = 16.dp, end = 8.dp),
-            imageVector = MiuixIcons.Basic.Search,
-            tint = COUITheme.colorScheme.onSurfaceContainerHigh,
-            contentDescription = "Search"
-        )
+    var currentIndex by remember { mutableStateOf(0) }
+
+    LaunchedEffect(texts) {
+        while (true) {
+            delay(3000) // INTERVAL_TIME
+            currentIndex = (currentIndex + 1) % texts.size
+        }
     }
 
-    val actualTrailingIcon = trailingIcon ?: {
-        AnimatedVisibility(
-            visible = query.isNotEmpty(),
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Box(
-                modifier = Modifier.padding(start = 8.dp, end = 16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .clip(ContinuousCapsule)
-                        .clickable { onQueryChange("") },
-                    imageVector = MiuixIcons.Basic.SearchCleanup,
-                    tint = COUITheme.colorScheme.onSurfaceContainerHighest,
-                    contentDescription = "Search Cleanup"
+    AnimatedContent(
+        targetState = currentIndex,
+        transitionSpec = {
+            // COUI uses TranslationY + Alpha.
+            // Slide In from Bottom + Fade In
+            (slideInVertically { height -> height } + fadeIn(animationSpec = tween(600)))
+                .togetherWith(
+                    // Slide Out to Top + Fade Out
+                    slideOutVertically { height -> -height } + fadeOut(animationSpec = tween(600))
                 )
-            }
-        }
-    }
-
-    val focused = internalInteractionSource.collectIsFocusedAsState().value
-    val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
-
-    val inputTextStyle = COUITheme.textStyles.main.copy(fontWeight = FontWeight.Bold)
-    val cursorBrush = SolidColor(COUITheme.colorScheme.primary)
-
-    BasicTextField(
-        value = query,
-        onValueChange = onQueryChange,
+        },
         modifier = modifier
-            .focusRequester(focusRequester)
-            .onFocusChanged { if (it.isFocused) onExpandedChange(true) }
-            .semantics {
-                onClick {
-                    focusRequester.requestFocus()
-                    true
-                }
-            },
-        enabled = enabled,
-        singleLine = true,
-        textStyle = inputTextStyle,
-        cursorBrush = cursorBrush,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        keyboardActions = KeyboardActions(onSearch = { onSearch(query) }),
-        interactionSource = internalInteractionSource,
-        decorationBox = { innerTextField ->
-            Box(
-                modifier = Modifier
-                    .background(
-                        color = COUITheme.colorScheme.surfaceContainerHigh,
-                        shape = ContinuousCapsule
-                    ),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    actualLeadingIcon()
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 45.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text(
-                            text = if (!(query.isNotEmpty() || expanded)) label else "",
-                            style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Bold),
-                            color = COUITheme.colorScheme.onSurfaceContainerHigh
-                        )
-                        innerTextField()
-                    }
-                    actualTrailingIcon()
-                }
-            }
-        }
-    )
-
-    LaunchedEffect(expanded) {
-        if (!expanded && focused) {
-            delay(100)
-            focusManager.clearFocus()
-        }
+    ) { index ->
+        BasicText(
+            text = texts[index],
+            style = textStyle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

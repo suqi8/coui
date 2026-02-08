@@ -15,6 +15,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -35,12 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * A [Switch] component with Miuix style.
+ * A [Switch] component with COUI style.
  *
  * @param checked The checked state of the [Switch].
  * @param onCheckedChange The callback to be called when the state of the [Switch] changes.
@@ -56,6 +59,8 @@ fun Switch(
     colors: SwitchColors = SwitchDefaults.switchColors(),
     enabled: Boolean = true
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+
     val trackWidth = 38.dp
     val trackHeight = 24.dp
     val thumbSize = 18.dp
@@ -70,7 +75,7 @@ fun Switch(
 
     val trackColor by animateColorAsState(
         targetValue = if (checked) colors.checkedTrackColor(enabled) else colors.uncheckedTrackColor(enabled),
-        animationSpec = tween(durationMillis = 450),
+        animationSpec = tween(durationMillis = toggleDuration),
         label = "TrackColor"
     )
 
@@ -111,7 +116,13 @@ fun Switch(
     val toggleableModifier = if (onCheckedChange != null) {
         Modifier.toggleable(
             value = checked,
-            onValueChange = onCheckedChange,
+            onValueChange = {
+                onCheckedChange(it)
+                // [新增] 震动反馈，保持与 Checkbox 一致
+                hapticFeedback.performHapticFeedback(
+                    if (it) HapticFeedbackType.LongPress else HapticFeedbackType.TextHandleMove
+                )
+            },
             enabled = enabled,
             role = Role.Switch,
             interactionSource = interactionSource,
@@ -152,17 +163,26 @@ object SwitchDefaults {
 
     /**
      * The default colors for the [Switch].
+     *
+     * @param checkedThumbColor The color of the thumb when the switch is checked.
+     * @param uncheckedThumbColor The color of the thumb when the switch is unchecked.
+     * @param disabledCheckedThumbColor The color of the thumb when the switch is disabled and checked.
+     * @param disabledUncheckedThumbColor The color of the thumb when the switch is disabled and unchecked.
+     * @param checkedTrackColor The color of the track when the switch is checked.
+     * @param uncheckedTrackColor The color of the track when the switch is unchecked.
+     * @param disabledCheckedTrackColor The color of the track when the switch is disabled and checked.
+     * @param disabledUncheckedTrackColor The color of the track when the switch is disabled and unchecked.
      */
     @Composable
     fun switchColors(
-        checkedThumbColor: Color = COUITheme.colorScheme.onPrimary,
-        uncheckedThumbColor: Color = COUITheme.colorScheme.onSecondary,
-        disabledCheckedThumbColor: Color = COUITheme.colorScheme.disabledOnPrimary,
-        disabledUncheckedThumbColor: Color = COUITheme.colorScheme.disabledOnSecondary,
+        checkedThumbColor: Color = Color.White,
+        uncheckedThumbColor: Color = Color.White,
+        disabledCheckedThumbColor: Color = Color.White,
+        disabledUncheckedThumbColor: Color = Color.White,
         checkedTrackColor: Color = COUITheme.colorScheme.primary,
-        uncheckedTrackColor: Color = COUITheme.colorScheme.secondary,
+        uncheckedTrackColor: Color = COUITheme.colorScheme.controls,
         disabledCheckedTrackColor: Color = COUITheme.colorScheme.disabledPrimary,
-        disabledUncheckedTrackColor: Color = COUITheme.colorScheme.disabledSecondary
+        disabledUncheckedTrackColor: Color = COUITheme.colorScheme.disabledControls
     ): SwitchColors = SwitchColors(
         checkedThumbColor = checkedThumbColor,
         uncheckedThumbColor = uncheckedThumbColor,

@@ -4,6 +4,7 @@
 package com.suqi8.coui.kmp.theme
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,240 +12,117 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.structuralEqualityPolicy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
 /**
- * The default text styles for the Miuix components.
- *
- * @param main The main text style.
- * @param paragraph The paragraph text style.
- * @param body1 The body1 text style.
- * @param body2 The body2 text style.
- * @param button The button text style.
- * @param footnote1 The footnote1 text style.
- * @param footnote2 The footnote2 text style.
- * @param headline1 The headline1 text style.
- * @param headline2 The headline2 text style.
- * @param subtitle The subtitle text style.
- * @param title1 The title1 text style.
- * @param title2 The title2 text style.
- * @param title3 The title3 text style.
- * @param title4 The title4 text style.
+ * COUI 风格的排版系统。
+ * 包含了精确复刻的核心样式，以及为了兼容旧代码而保留的映射样式。
  */
 @Immutable
-class TextStyles(
-    main: TextStyle,
-    paragraph: TextStyle,
-    body1: TextStyle,
-    body2: TextStyle,
-    button: TextStyle,
-    footnote1: TextStyle,
-    footnote2: TextStyle,
-    headline1: TextStyle,
-    headline2: TextStyle,
-    subtitle: TextStyle,
-    title1: TextStyle,
-    title2: TextStyle,
-    title3: TextStyle,
-    title4: TextStyle,
+data class Typography(
+    // ========================================================================
+    // 1. COUI 核心标准样式 (Core Standard Styles) - 基于原生 XML 精确复刻
+    // ========================================================================
+    /** 列表项主标题 (Native: couiTextAppearanceHeadline6) - 16sp Medium */
+    val headline: TextStyle = DefaultHeadline,
+    /** 正文/摘要 (Native: couiTextAppearanceBody) - 14sp Normal */
+    val body: TextStyle = DefaultBody,
+    /** 分类小标题 (Native: couiTextAppearanceSmallButton) - 12sp Medium */
+    val subtitle: TextStyle = DefaultSubtitle,
+    /** 辅助说明/页脚 (Native: Footnote/Caption) - 11sp Normal */
+    val caption: TextStyle = DefaultCaption,
+    /** 微标/角标 (Native: couiTextAppearanceTag) - 10sp Medium */
+    val overline: TextStyle = DefaultOverline,
+
+    // ========================================================================
+    // 2. 兼容性样式映射 (Compatibility Styles) - 保持旧代码兼容性
+    // ========================================================================
+    val main: TextStyle = DefaultHeadline,      // 旧 17sp -> 映射到标准 16sp Headline
+    val paragraph: TextStyle = DefaultBody,     // 旧 Paragraph -> 映射到标准 Body
+    val body1: TextStyle = DefaultHeadline,     // 旧 16sp -> 映射到标准 16sp Headline
+    val body2: TextStyle = DefaultBody,         // 旧 14sp -> 映射到标准 14sp Body (完美匹配)
+    val button: TextStyle = DefaultHeadline,    // COUI 按钮文字与 Headline 规格一致 (16sp Medium)
+    val footnote1: TextStyle = DefaultSubtitle, // 旧 13sp -> 映射到相近的 12sp Medium Subtitle
+    val footnote2: TextStyle = DefaultCaption,  // 旧 11sp -> 映射到标准 11sp Caption (完美匹配)
+    val headline1: TextStyle = DefaultHeadline,
+    val headline2: TextStyle = DefaultHeadline,
+    // 大标题系列 (保留结构，数值微调以更符合现代标准)
+    val displayLarge: TextStyle = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.Normal, lineHeight = 1.1.em),
+    val displayMedium: TextStyle = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Medium, lineHeight = 1.2.em),
+    val title1: TextStyle = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Medium, lineHeight = 1.2.em),
+    val title2: TextStyle = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Medium, lineHeight = 1.2.em),
+    val title3: TextStyle = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium, lineHeight = 1.2.em),
+    val title4: TextStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium, lineHeight = 1.2.em)
 ) {
-    var main by mutableStateOf(main, structuralEqualityPolicy())
-        internal set
-    var paragraph by mutableStateOf(paragraph, structuralEqualityPolicy())
-        internal set
-    var body1 by mutableStateOf(body1, structuralEqualityPolicy())
-        internal set
-    var body2 by mutableStateOf(body2, structuralEqualityPolicy())
-        internal set
-    var button by mutableStateOf(button, structuralEqualityPolicy())
-        internal set
-    var footnote1 by mutableStateOf(footnote1, structuralEqualityPolicy())
-        internal set
-    var footnote2 by mutableStateOf(footnote2, structuralEqualityPolicy())
-        internal set
-    var headline1 by mutableStateOf(headline1, structuralEqualityPolicy())
-        internal set
-    var headline2 by mutableStateOf(headline2, structuralEqualityPolicy())
-        internal set
-    var subtitle by mutableStateOf(subtitle, structuralEqualityPolicy())
-        internal set
-    var title1 by mutableStateOf(title1, structuralEqualityPolicy())
-        internal set
-    var title2 by mutableStateOf(title2, structuralEqualityPolicy())
-        internal set
-    var title3 by mutableStateOf(title3, structuralEqualityPolicy())
-        internal set
-    var title4 by mutableStateOf(title4, structuralEqualityPolicy())
-        internal set
-
-    fun copy(
-        main: TextStyle = Main,
-        paragraph: TextStyle = Paragraph,
-        body1: TextStyle = Body1,
-        body2: TextStyle = Body2,
-        button: TextStyle = Button,
-        footnote1: TextStyle = Footnote1,
-        footnote2: TextStyle = Footnote2,
-        headline1: TextStyle = Headline1,
-        headline2: TextStyle = Headline2,
-        subtitle: TextStyle = Subtitle,
-        title1: TextStyle = Title1,
-        title2: TextStyle = Title2,
-        title3: TextStyle = Title3,
-        title4: TextStyle = Title4,
-    ): TextStyles =
-        TextStyles(
-            main,
-            paragraph,
-            body1,
-            body2,
-            button,
-            footnote1,
-            footnote2,
-            headline1,
-            headline2,
-            subtitle,
-            title1,
-            title2,
-            title3,
-            title4,
+    /**
+     * 返回一个新的 Typography，其中所有没有指定颜色的样式都将使用给定的 [defaultColor]。
+     * 这对于根据背景色自动调整文本颜色非常有用。
+     */
+    fun withDefaultColor(defaultColor: Color): Typography {
+        return this.copy(
+            headline = headline.merge(TextStyle(color = defaultColor)),
+            body = body.merge(TextStyle(color = defaultColor)),
+            subtitle = subtitle.merge(TextStyle(color = defaultColor)),
+            caption = caption.merge(TextStyle(color = defaultColor)),
+            overline = overline.merge(TextStyle(color = defaultColor)),
+            main = main.merge(TextStyle(color = defaultColor)),
+            paragraph = paragraph.merge(TextStyle(color = defaultColor)),
+            body1 = body1.merge(TextStyle(color = defaultColor)),
+            body2 = body2.merge(TextStyle(color = defaultColor)),
+            button = button.merge(TextStyle(color = defaultColor)),
+            footnote1 = footnote1.merge(TextStyle(color = defaultColor)),
+            footnote2 = footnote2.merge(TextStyle(color = defaultColor)),
+            headline1 = headline1.merge(TextStyle(color = defaultColor)),
+            headline2 = headline2.merge(TextStyle(color = defaultColor)),
+            displayLarge = displayLarge.merge(TextStyle(color = defaultColor)),
+            displayMedium = displayMedium.merge(TextStyle(color = defaultColor)),
+            title1 = title1.merge(TextStyle(color = defaultColor)),
+            title2 = title2.merge(TextStyle(color = defaultColor)),
+            title3 = title3.merge(TextStyle(color = defaultColor)),
+            title4 = title4.merge(TextStyle(color = defaultColor))
         )
+    }
 }
 
-fun defaultTextStyles(
-    main: TextStyle = Main,
-    paragraph: TextStyle = Paragraph,
-    body1: TextStyle = Body1,
-    body2: TextStyle = Body2,
-    button: TextStyle = Button,
-    footnote1: TextStyle = Footnote1,
-    footnote2: TextStyle = Footnote2,
-    headline1: TextStyle = Headline1,
-    headline2: TextStyle = Headline2,
-    subtitle: TextStyle = Subtitle,
-    title1: TextStyle = Title1,
-    title2: TextStyle = Title2,
-    title3: TextStyle = Title3,
-    title4: TextStyle = Title4,
-): TextStyles =
-    TextStyles(
-        main,
-        paragraph,
-        body1,
-        body2,
-        button,
-        footnote1,
-        footnote2,
-        headline1,
-        headline2,
-        subtitle,
-        title1,
-        title2,
-        title3,
-        title4,
-    )
+// ========================================================================
+// COUI 原生核心样式定义 (Private Base Styles)
+// ========================================================================
 
-private val Main: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-        )
+// [精确数值] 16sp Medium, 行高约 1.2倍
+private val DefaultHeadline = TextStyle(
+    fontSize = 16.sp,
+    fontWeight = FontWeight.Medium,
+    lineHeight = 1.2.em
+)
 
-private val Paragraph: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-            lineHeight = 1.2f.em,
-        )
+// [精确数值] 14sp Normal, 行高约 1.3倍
+private val DefaultBody = TextStyle(
+    fontSize = 14.sp,
+    fontWeight = FontWeight.Normal,
+    lineHeight = 1.3.em
+)
 
-private val Body1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-        )
+// [精确数值] 12sp Medium
+private val DefaultSubtitle = TextStyle(
+    fontSize = 12.sp,
+    fontWeight = FontWeight.Medium,
+    lineHeight = 1.4.em
+)
 
-private val Body2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 14.sp,
-        )
+// [精确数值] 11sp Normal
+private val DefaultCaption = TextStyle(
+    fontSize = 11.sp,
+    fontWeight = FontWeight.Normal,
+    lineHeight = 1.4.em
+)
 
-private val Button: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-        )
+// [精确数值] 10sp Medium (用于角标等)
+private val DefaultOverline = TextStyle(
+    fontSize = 10.sp,
+    fontWeight = FontWeight.Medium,
+    letterSpacing = 0.5.sp
+)
 
-private val Footnote1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 13.sp,
-        )
-
-private val Footnote2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 11.sp,
-        )
-
-private val Headline1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-        )
-
-private val Headline2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-        )
-
-private val Subtitle: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 14.sp,
-        )
-
-private val Title1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 32.sp,
-        )
-
-private val Title2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 24.sp,
-        )
-
-private val Title3: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 20.sp,
-        )
-
-private val Title4: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 18.sp,
-        )
-
-internal fun TextStyles.updateColorsFrom(color: Color) {
-    main = main.copy(color = color)
-    paragraph = paragraph.copy(color = color)
-    body1 = body1.copy(color = color)
-    body2 = body2.copy(color = color)
-    button = button.copy(color = color)
-    footnote1 = footnote1.copy(color = color)
-    footnote2 = footnote2.copy(color = color)
-    headline1 = headline1.copy(color = color)
-    headline2 = headline2.copy(color = color)
-    subtitle = subtitle.copy(color = color)
-    title1 = title1.copy(color = color)
-    title2 = title2.copy(color = color)
-    title3 = title3.copy(color = color)
-    title4 = title4.copy(color = color)
-}
-
-internal val LocalTextStyles = staticCompositionLocalOf { defaultTextStyles() }
+internal val LocalTypography = staticCompositionLocalOf { Typography() }

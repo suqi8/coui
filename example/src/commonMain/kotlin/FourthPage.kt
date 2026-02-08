@@ -23,7 +23,6 @@ import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.extra.SuperArrow
 import com.suqi8.coui.kmp.extra.SuperDialog
-import com.suqi8.coui.kmp.extra.SuperDropdown
 import com.suqi8.coui.kmp.extra.SuperSwitch
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.getWindowSize
@@ -123,7 +122,7 @@ fun FourthPage(
                             visible = useFloatingNavigationBar
                         ) {
                             Column {
-                                SuperDropdown(
+                                /*SuperDropdown(
                                     title = "FloatingNavigationBar Mode",
                                     items = floatingNavigationBarModeOptions,
                                     selectedIndex = floatingNavigationBarMode,
@@ -134,7 +133,7 @@ fun FourthPage(
                                     items = floatingNavigationBarPositionOptions,
                                     selectedIndex = floatingNavigationBarPosition,
                                     onSelectedIndexChange = onFloatingNavigationBarPositionChange
-                                )
+                                )*/
                             }
                         }
                     }
@@ -148,7 +147,7 @@ fun FourthPage(
                     visible = showFloatingToolbar
                 ) {
                     Column {
-                        SuperDropdown(
+                        /*SuperDropdown(
                             title = "FloatingToolbar Position",
                             items = floatingToolbarPositionOptions,
                             selectedIndex = floatingToolbarPosition,
@@ -159,7 +158,7 @@ fun FourthPage(
                             items = floatingToolbarOrientationOptions,
                             selectedIndex = floatingToolbarOrientation,
                             onSelectedIndexChange = onFloatingToolbarOrientationChange
-                        )
+                        )*/
                     }
                 }
                 SuperSwitch(
@@ -170,14 +169,14 @@ fun FourthPage(
                 AnimatedVisibility(
                     visible = showFloatingActionButton
                 ) {
-                    SuperDropdown(
+                    /*SuperDropdown(
                         title = "FloatingActionButton Position",
                         items = fabPositionOptions,
                         selectedIndex = fabPosition,
                         onSelectedIndexChange = { fabPosition ->
                             onFabPositionChange(fabPosition)
                         }
-                    )
+                    )*/
                 }
                 SuperSwitch(
                     title = "Enable Scroll End Haptic",
@@ -189,13 +188,13 @@ fun FourthPage(
                     checked = enablePageUserScroll,
                     onCheckedChange = onEnablePageUserScrollChange
                 )
-                SuperDropdown(
+                /*SuperDropdown(
                     title = "Color Mode",
                     items = colorModeOptions,
                     selectedIndex = colorMode.value,
                     position = CouiListItemPosition.Bottom,
                     onSelectedIndexChange = { colorMode.value = it }
-                )
+                )*/
             }
             Card(
                 modifier = Modifier

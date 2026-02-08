@@ -1,7 +1,6 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
@@ -16,16 +15,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.suqi8.coui.kmp.basic.BasicComponent
-import com.suqi8.coui.kmp.basic.InputField
 import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.SearchBar
 import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.icon.MiuixIcons
 import com.suqi8.coui.kmp.icon.icons.useful.AddSecret
 import com.suqi8.coui.kmp.icon.icons.useful.Back
@@ -67,7 +61,6 @@ import com.suqi8.coui.kmp.icon.icons.useful.Undo
 import com.suqi8.coui.kmp.icon.icons.useful.Unlike
 import com.suqi8.coui.kmp.icon.icons.useful.Unstick
 import com.suqi8.coui.kmp.icon.icons.useful.Update
-import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.getWindowSize
 import com.suqi8.coui.kmp.utils.overScrollVertical
 import com.suqi8.coui.kmp.utils.scrollEndHaptic
@@ -85,7 +78,7 @@ fun MainPage(
     val showDialog = remember { mutableStateOf(false) }
     val dialogTextFieldValue = remember { mutableStateOf("") }
     val showBottomSheet = remember { mutableStateOf(false) }
-    val bottomSheetDropdownSelectedOption = remember { mutableStateOf(0) }
+    val bottomSheetDropdownSelectedOption = remember { mutableStateOf("bs_opt1") }
     val bottomSheetSuperSwitchState = remember { mutableStateOf(true) }
     val checkbox = remember { mutableStateOf(false) }
     val checkboxTrue = remember { mutableStateOf(true) }
@@ -191,48 +184,37 @@ fun MainPage(
             SmallTitle(text = "SearchBar")
             SearchBar(
                 modifier = Modifier.padding(bottom = 12.dp),
-                inputField = {
-                    InputField(
-                        query = searchValue,
-                        onQueryChange = { searchValue = it },
-                        onSearch = { expanded = false },
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        label = "Search"
-                    )
+                query = searchValue,
+                onQueryChange = { searchValue = it },
+                onSearch = {
+                    // 处理点击搜索键
+                    expanded = false
                 },
-                outsideRightAction = {
-                    Text(
-                        modifier = Modifier
-                            .padding(end = 12.dp)
-                            .clickable(
-                                interactionSource = null,
-                                indication = null
-                            ) {
-                                expanded = false
-                                searchValue = ""
-                            },
-                        text = "Cancel",
-                        style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Bold),
-                        color = COUITheme.colorScheme.primary
-                    )
+                onCancel = {
+                    // 处理点击取消按钮
+                    expanded = false
+                    searchValue = ""
                 },
-                expanded = expanded,
-                onExpandedChange = { expanded = it }
-            ) {
-                Column {
-                    repeat(4) { idx ->
-                        val resultText = "Suggestion $idx"
-                        BasicComponent(
-                            title = resultText,
-                            onClick = {
-                                searchValue = resultText
-                                expanded = false
-                            }
-                        )
+                active = expanded,
+                onActiveChange = { expanded = it },
+                hintTexts = listOf("Search"), // 对应旧代码的 label
+                content = {
+                    // 搜索结果/建议内容区域
+                    Column {
+                        repeat(4) { idx ->
+                            val resultText = "Suggestion $idx"
+                            // 这里的 BasicComponent 是你原来的组件
+                            BasicComponent(
+                                title = resultText,
+                                onClick = {
+                                    searchValue = resultText
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
+            )
         }
         if (notExpanded) {
             item(key = "textComponent") {
