@@ -3,7 +3,6 @@
 
 package com.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -45,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mocharealm.gaze.capsule.ContinuousRoundedRectangle
 import com.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -69,55 +68,68 @@ fun NavigationBar(
     if (items.isEmpty()) return
 
     val visibleItems = items.take(maxVisibleItems.coerceAtLeast(1))
-    val shape = remember(NavigationBarTokens.ContainerCornerRadius) {
-        ContinuousRoundedRectangle(
-            topStart = NavigationBarTokens.ContainerCornerRadius,
-            topEnd = NavigationBarTokens.ContainerCornerRadius
-        )
-    }
-    val border = remember(colors.containerBorderColor) {
-        BorderStroke(NavigationBarTokens.ContainerBorderWidth, colors.containerBorderColor)
-    }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(colors.containerColor)
     ) {
-        Surface(
+        NavigationBarContainer(
+            colors = colors,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(NavigationBarTokens.ContainerHeight),
-            shape = shape,
-            color = colors.containerColor,
-            contentColor = colors.itemColors.contentColor(enabled = true, selected = false).value,
-            border = border
+                .height(NavigationBarTokens.ContainerHeight)
         ) {
-            Column {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(NavigationBarTokens.DividerHeight)
-                        .background(colors.dividerColor)
-                )
-                Row(modifier = Modifier.fillMaxSize()) {
-                    visibleItems.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            item = item,
-                            isSelected = index == selectedIndex,
-                            onClick = { onItemSelected(index) },
-                            colors = colors.itemColors,
-                        )
-                    }
+            Row(modifier = Modifier.fillMaxSize()) {
+                visibleItems.forEachIndexed { index, item ->
+                    NavigationBarItem(
+                        item = item,
+                        isSelected = index == selectedIndex,
+                        onClick = { onItemSelected(index) },
+                        colors = colors.itemColors,
+                    )
                 }
             }
         }
 
-        Spacer(
-            modifier = Modifier.windowInsetsPadding(
-                WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
-            )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(NavigationBarTokens.BottomFillerHeight)
+                .background(colors.containerColor)
         )
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.containerColor)
+                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+        )
+    }
+}
+
+@Composable
+private fun NavigationBarContainer(
+    colors: NavigationColors,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = modifier,
+        color = colors.containerColor,
+        contentColor = colors.itemColors.contentColor(enabled = true, selected = false).value,
+    ) {
+        Column {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(NavigationBarTokens.DividerHeight)
+                    .background(colors.dividerColor)
+            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                content()
+            }
+        }
     }
 }
 
@@ -193,12 +205,14 @@ private fun NavigationItemLayout(
     val contentColor by colors.contentColor(enabled = item.enabled, selected = isSelected)
 
     Box(
-        modifier = modifier.clickable(
-            enabled = item.enabled,
-            interactionSource = interactionSource,
-            indication = rememberCouiMaskIndication(),
-            onClick = onClick
-        ),
+        modifier = modifier
+            .padding(horizontal = NavigationSharedTokens.ItemHorizontalInset, vertical = NavigationSharedTokens.ItemVerticalInset)
+            .clickable(
+                enabled = item.enabled,
+                interactionSource = interactionSource,
+                indication = rememberCouiMaskIndication(),
+                onClick = onClick
+            ),
         contentAlignment = contentAlignment
     ) {
         Column(
@@ -263,14 +277,15 @@ private class CouiMaskIndicationNode(
     }
 
     override fun ContentDrawScope.draw() {
-        val radius = 8.dp.toPx() * animatedProgress.value
-        val alpha = animatedProgress.value * 0.1f
+        val alpha = animatedProgress.value * NavigationSharedTokens.PressedOverlayAlpha
         drawContent()
         if (animatedProgress.value > 0f) {
-            drawCircle(
+            drawRoundRect(
                 color = Color.Black.copy(alpha = alpha),
-                radius = radius,
-                center = pressPosition
+                cornerRadius = CornerRadius(
+                    NavigationSharedTokens.ItemBackgroundRadius.toPx(),
+                    NavigationSharedTokens.ItemBackgroundRadius.toPx()
+                )
             )
         }
     }
@@ -307,8 +322,8 @@ data class NavigationColors(
 object CouiNavigationDefaults {
     @Composable
     fun itemColors(
-        selectedColor: Color = COUITheme.colorScheme.onSurface,
-        unselectedColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        selectedColor: Color = if (COUITheme.colorScheme.isDark) Color(0xE6FFFFFF) else Color(0xE6000000),
+        unselectedColor: Color = if (COUITheme.colorScheme.isDark) Color(0x8AFFFFFF) else Color(0x8A000000),
         disabledColor: Color = COUITheme.colorScheme.disabledOnSurface
     ): NavigationItemColors = NavigationItemColors(selectedColor, unselectedColor, disabledColor)
 
@@ -323,12 +338,15 @@ object CouiNavigationDefaults {
 
 internal object NavigationSharedTokens {
     val LabelTextSize = 10.sp
+    val ItemBackgroundRadius = 8.dp
+    val ItemHorizontalInset = 4.dp
+    val ItemVerticalInset = 0.dp
+    const val PressedOverlayAlpha = 0.08f
 }
 
 private object NavigationBarTokens {
     val ContainerHeight = 56.dp
-    val ContainerCornerRadius = 18.dp
-    val ContainerBorderWidth = 0.5.dp
+    val BottomFillerHeight = 0.dp
     val DividerHeight = 0.33.dp
     val IconTopPadding = 8.dp
     val IconSize = 24.dp
