@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -42,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -206,7 +208,10 @@ fun LargeTopAppBar(
     }
 
     val collapsedFraction = scrollBehavior?.state?.collapsedFraction ?: 0f
-    val appBarContainerColor = colors.containerColor(collapsedFraction)
+    val heightOffset = scrollBehavior?.state?.heightOffset ?: 0f
+    val expandedTitleHeightPx = maxHeightPx - pinnedHeightPx
+    val appBarContainerColor = colors.containerColor(0f)
+    val collapseMetrics = rememberLargeTopAppBarCollapseMetrics(collapsedFraction)
 
     Surface(modifier = modifier, color = appBarContainerColor) {
         Column {
@@ -223,7 +228,9 @@ fun LargeTopAppBar(
                 subtitle = subtitle,
                 titleTextStyle = COUITheme.textStyles.title3,
                 subtitleTextStyle = COUITheme.textStyles.subtitle,
-                titleAlpha = collapsedFraction,
+                titleAlpha = collapseMetrics.pinnedTitleAlpha,
+                titleScale = collapseMetrics.pinnedTitleScale,
+                titleTranslationY = collapseMetrics.pinnedTitleTranslationY,
                 titleVerticalArrangement = Arrangement.Center,
                 isCenterTitle = false,
                 titleBottomPadding = 0,
@@ -231,50 +238,121 @@ fun LargeTopAppBar(
                 actions = actionsRow,
             )
 
-            BoxWithConstraints(
+            LargeTitleSection(
+                title = largeTitle ?: title,
+                titleContentColor = colors.titleContentColor,
+                expandedHeightPx = expandedTitleHeightPx,
+                heightOffset = heightOffset,
+                metrics = collapseMetrics,
+            )
+
+            DividerAnimation(scrollBehavior, startAlpha = 0.78f)
+        }
+    }
+}
+
+@Composable
+fun LargeTopAppBarWithSearch(
+    title: String,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onCancel: () -> Unit,
+    active: Boolean,
+    onActiveChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    largeTitle: String? = null,
+    navigationIcon: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    windowInsets: WindowInsets = COUITopAppBarDefaults.windowInsets,
+    colors: COUITopAppBarColors = COUITopAppBarDefaults.topAppBarColors(),
+    scrollBehavior: ScrollBehavior? = null,
+    hintTexts: List<String> = listOf("City, country, or region"),
+) {
+    val density = LocalDensity.current
+    val actionsRow = @Composable {
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            actions()
+        }
+    }
+
+    val pinnedHeightPx = with(density) { COUITopAppBarDefaults.ContainerHeight.toPx() }
+    val maxHeightPx = with(density) { COUITopAppBarDefaults.SearchContainerHeight.toPx() }
+
+    SideEffect {
+        val limit = pinnedHeightPx - maxHeightPx
+        if (scrollBehavior?.state?.heightOffsetLimit != limit) {
+            scrollBehavior?.state?.heightOffsetLimit = limit
+        }
+    }
+
+    val collapsedFraction = scrollBehavior?.state?.collapsedFraction ?: 0f
+    val heightOffset = scrollBehavior?.state?.heightOffset ?: 0f
+    val expandedTitleHeightPx = maxHeightPx - pinnedHeightPx - with(density) { COUITopAppBarDefaults.SearchBarLayoutHeight.toPx() }
+    val appBarContainerColor = colors.containerColor(0f)
+    val collapseMetrics = rememberLargeTopAppBarCollapseMetrics(collapsedFraction)
+
+    Surface(modifier = modifier, color = appBarContainerColor) {
+        Column {
+            TopAppBarLayout(
+                modifier = Modifier
+                    .windowInsetsPadding(windowInsets)
+                    .height(COUITopAppBarDefaults.ContainerHeight)
+                    .clipToBounds(),
+                heightPx = pinnedHeightPx,
+                navigationIconContentColor = colors.navigationIconContentColor,
+                titleContentColor = colors.titleContentColor,
+                actionIconContentColor = colors.actionIconContentColor,
+                title = title,
+                subtitle = subtitle,
+                titleTextStyle = COUITheme.textStyles.title3,
+                subtitleTextStyle = COUITheme.textStyles.subtitle,
+                titleAlpha = collapseMetrics.pinnedTitleAlpha,
+                titleScale = collapseMetrics.pinnedTitleScale,
+                titleTranslationY = collapseMetrics.pinnedTitleTranslationY,
+                titleVerticalArrangement = Arrangement.Center,
+                isCenterTitle = false,
+                titleBottomPadding = 0,
+                navigationIcon = navigationIcon,
+                actions = actionsRow,
+            )
+
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clipToBounds()
+                    .wrapContentHeight()
+                    .graphicsLayer {
+                        alpha = 1f - (collapsedFraction * 0.08f)
+                    }
             ) {
-                val screenWidth = maxWidth
-                val startPadding = when {
-                    screenWidth < 600.dp -> COUIDimens.PaddingNormalLeftCompat
-                    screenWidth < 840.dp -> COUIDimens.PaddingNormalLeftMedium
-                    else -> COUIDimens.PaddingNormalLeftExpanded
-                }
+                SearchHeaderField(
+                    query = query,
+                    onQueryChange = onQueryChange,
+                    onSearch = onSearch,
+                    onCancel = onCancel,
+                    active = active,
+                    onActiveChange = onActiveChange,
+                    enabled = true,
+                    hintTexts = hintTexts,
+                    collapsedFraction = collapsedFraction,
+                    inactiveHeight = COUITopAppBarDefaults.SearchBarHeight,
+                    collapsePaddingToZero = true,
+                )
 
-                Layout(
-                    content = {
-                        Box(
-                            Modifier
-                                .padding(horizontal = startPadding)
-                                .graphicsLayer {
-                                    alpha = (1f - (collapsedFraction * 1.5f)).coerceIn(0f, 1f)
-                                    translationY = -(scrollBehavior?.state?.heightOffset ?: 0f) * 0.2f
-                                }
-                        ) {
-                            BasicText(
-                                text = largeTitle ?: title,
-                                style = COUITheme.textStyles.title1.copy(
-                                    color = colors.titleContentColor,
-                                    fontWeight = FontWeight.Normal
-                                )
-                            )
-                        }
-                    }
-                ) { measurables, constraints ->
-                    val placeable = measurables.first().measure(constraints)
-                    val offset = scrollBehavior?.state?.heightOffset ?: 0f
-                    val currentHeight = (maxHeightPx - pinnedHeightPx + offset).coerceAtLeast(0f).roundToInt()
-
-                    layout(constraints.maxWidth, currentHeight) {
-                        val y = currentHeight - placeable.height - 16.dp.roundToPx()
-                        placeable.placeRelative(0, y)
-                    }
-                }
+                LargeTitleSection(
+                    title = largeTitle ?: title,
+                    titleContentColor = colors.titleContentColor,
+                    expandedHeightPx = expandedTitleHeightPx,
+                    heightOffset = heightOffset,
+                    metrics = collapseMetrics,
+                )
             }
 
-            DividerAnimation(scrollBehavior, startAlpha = 0.8f)
+            DividerAnimation(scrollBehavior, startAlpha = 0.78f)
         }
     }
 }
@@ -286,26 +364,108 @@ private fun DividerAnimation(scrollBehavior: ScrollBehavior?, startAlpha: Float 
         val threshold = LocalDensity.current.run { 24.dp.toPx() }
         val rawProgress = if (startAlpha > 0) {
             val collapsed = scrollBehavior.state.collapsedFraction
-            (collapsed - startAlpha).coerceIn(0f, 0.2f) * 5f
+            ((collapsed - startAlpha) / (1f - startAlpha)).coerceIn(0f, 1f)
         } else {
             (abs(contentOffset) / threshold).coerceIn(0f, 1f)
         }
 
         val progress = rawProgress.coerceIn(0f, 1f)
 
-        if (progress > 0) {
+        if (progress > 0f) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(1.dp)
                     .graphicsLayer {
                         alpha = progress
-                        scaleX = 0.9f + (0.1f * progress)
                     }
-                    .background(COUITheme.colorScheme.outline.copy(alpha = 0.1f))
+                    .background(COUITheme.colorScheme.dividerLine)
             )
         }
     }
+}
+
+private data class LargeTopAppBarCollapseMetrics(
+    val pinnedTitleAlpha: Float,
+    val pinnedTitleScale: Float,
+    val pinnedTitleTranslationY: Float,
+    val largeTitleAlpha: Float,
+    val largeTitleScale: Float,
+    val largeTitleTranslationY: Float,
+)
+
+@Composable
+private fun rememberLargeTopAppBarCollapseMetrics(collapsedFraction: Float): LargeTopAppBarCollapseMetrics {
+    val density = LocalDensity.current
+    return remember(collapsedFraction, density) {
+        val pinnedTitleProgress = ((collapsedFraction - 0.34f) / 0.5f).coerceIn(0f, 1f)
+        LargeTopAppBarCollapseMetrics(
+            pinnedTitleAlpha = pinnedTitleProgress,
+            pinnedTitleScale = lerpFloat(0.94f, 1f, pinnedTitleProgress),
+            pinnedTitleTranslationY = with(density) { lerpFloat(8.dp.toPx(), 0f, pinnedTitleProgress) },
+            largeTitleAlpha = (1f - (collapsedFraction / 0.72f)).coerceIn(0f, 1f),
+            largeTitleScale = lerpFloat(1f, 0.84f, collapsedFraction),
+            largeTitleTranslationY = with(density) { lerpFloat(0f, -10.dp.toPx(), collapsedFraction) },
+        )
+    }
+}
+
+@Composable
+private fun LargeTitleSection(
+    title: String,
+    titleContentColor: Color,
+    expandedHeightPx: Float,
+    heightOffset: Float,
+    metrics: LargeTopAppBarCollapseMetrics,
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clipToBounds()
+    ) {
+        val screenWidth = maxWidth
+        val startPadding = when {
+            screenWidth < 600.dp -> COUIDimens.PaddingNormalLeftCompat
+            screenWidth < 840.dp -> COUIDimens.PaddingNormalLeftMedium
+            else -> COUIDimens.PaddingNormalLeftExpanded
+        }
+
+        Layout(
+            content = {
+                Box(
+                    Modifier
+                        .padding(horizontal = startPadding)
+                        .graphicsLayer {
+                            alpha = metrics.largeTitleAlpha
+                            translationY = metrics.largeTitleTranslationY
+                            scaleX = metrics.largeTitleScale
+                            scaleY = metrics.largeTitleScale
+                            transformOrigin = TransformOrigin(0f, 0.5f)
+                        }
+                ) {
+                    BasicText(
+                        text = title,
+                        style = COUITheme.textStyles.title1.copy(
+                            color = titleContentColor,
+                            fontWeight = FontWeight.Normal
+                        )
+                    )
+                }
+            }
+        ) { measurables, constraints ->
+            val placeable = measurables.first().measure(constraints)
+            val currentHeight = (expandedHeightPx + heightOffset).coerceAtLeast(0f).roundToInt()
+
+            layout(constraints.maxWidth, currentHeight) {
+                val y = currentHeight - placeable.height - 16.dp.roundToPx()
+                placeable.placeRelative(0, y)
+            }
+        }
+    }
+}
+
+private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
+    return start + (stop - start) * fraction
 }
 
 @Composable
@@ -320,6 +480,8 @@ private fun TopAppBarLayout(
     titleTextStyle: TextStyle,
     subtitleTextStyle: TextStyle,
     titleAlpha: Float,
+    titleScale: Float = 1f,
+    titleTranslationY: Float = 0f,
     titleVerticalArrangement: Arrangement.Vertical,
     isCenterTitle: Boolean,
     titleBottomPadding: Int,
@@ -339,7 +501,13 @@ private fun TopAppBarLayout(
                 Box(
                     Modifier
                         .layoutId("title")
-                        .graphicsLayer(alpha = titleAlpha)
+                        .graphicsLayer {
+                            alpha = titleAlpha
+                            translationY = titleTranslationY
+                            scaleX = titleScale
+                            scaleY = titleScale
+                            transformOrigin = if (isCenterTitle) TransformOrigin.Center else TransformOrigin(0f, 0.5f)
+                        }
                 ) {
                     Column(
                         verticalArrangement = titleVerticalArrangement,
@@ -678,6 +846,9 @@ class COUITopAppBarColors(
 object COUITopAppBarDefaults {
     val ContainerHeight = 56.dp
     val LargeContainerHeight = 116.dp
+    val SearchBarHeight = 48.dp
+    val SearchContainerHeight = 164.dp
+    val SearchBarLayoutHeight = 64.dp
 
     val windowInsets: WindowInsets
         @Composable

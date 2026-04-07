@@ -1,10 +1,12 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -46,11 +48,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocharealm.gaze.capsule.ContinuousCapsule
@@ -63,6 +67,8 @@ import kotlinx.coroutines.delay
 
 private object COUISearchBarDimens {
     val Height = 40.dp
+    val HeaderHeight = 48.dp
+    val HeaderMinHeight = 33.dp
     val InnerIconSize = 36.dp
     val InnerIconStartGap = 4.dp
     val EditTextEndGap = 4.dp
@@ -74,6 +80,8 @@ private object COUISearchBarDimens {
     val ResponsivePaddingCompat = 16.dp
     val ResponsivePaddingMedium = 24.dp
     val ResponsivePaddingExpanded = 40.dp
+    val CollapsePaddingStartThreshold = 10.dp
+    val OrnamentFadeThreshold = 20.dp
 }
 
 /**
@@ -108,151 +116,212 @@ fun SearchBar(
     hintTexts: List<String> = listOf("Search..."),
     content: @Composable () -> Unit
 ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        SearchHeaderField(
+            query = query,
+            onQueryChange = onQueryChange,
+            onSearch = onSearch,
+            onCancel = onCancel,
+            active = active,
+            onActiveChange = onActiveChange,
+            enabled = enabled,
+            hintTexts = hintTexts,
+            inactiveHeight = COUISearchBarDimens.Height,
+            collapsedFraction = 0f,
+        )
+
+        AnimatedVisibility(visible = active) {
+            content()
+        }
+    }
+}
+
+@Composable
+fun SearchHeaderField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
+    onCancel: () -> Unit,
+    active: Boolean,
+    onActiveChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    hintTexts: List<String> = listOf("Search..."),
+    collapsedFraction: Float = 0f,
+    inactiveHeight: Dp = COUISearchBarDimens.HeaderHeight,
+    collapsePaddingToZero: Boolean = false,
+) {
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
+    val collapseProgress = if (active) 0f else collapsedFraction.coerceIn(0f, 1f)
+    val collapseDistance = (inactiveHeight - COUISearchBarDimens.HeaderMinHeight).coerceAtLeast(0.dp)
+    val currentHeight = inactiveHeight - (collapseDistance * collapseProgress)
+    val collapsedAmount = (inactiveHeight - currentHeight).coerceAtLeast(0.dp)
+    val paddingProgress = when {
+        !collapsePaddingToZero -> 0f
+        collapseDistance == 0.dp -> 0f
+        else -> ((collapsedAmount - COUISearchBarDimens.CollapsePaddingStartThreshold).value / collapseDistance.value)
+            .coerceIn(0f, 1f)
+    }
+    val ornamentFadeProgress = when {
+        collapseDistance == 0.dp -> collapseProgress
+        else -> (collapsedAmount.value / COUISearchBarDimens.OrnamentFadeThreshold.value)
+            .coerceIn(0f, 1f)
+    }
+
+    LaunchedEffect(active) {
+        if (active) {
+            focusRequester.requestFocus()
+        }
+    }
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val screenWidth = maxWidth
-        val horizontalPadding = when {
-            screenWidth < 600.dp -> COUISearchBarDimens.ResponsivePaddingCompat
-            screenWidth < 840.dp -> COUISearchBarDimens.ResponsivePaddingMedium
-            else -> COUISearchBarDimens.ResponsivePaddingExpanded
-        }
+        val baseHorizontalPadding = responsiveSearchPadding(maxWidth)
+        val horizontalPadding by animateDpAsState(
+            targetValue = when {
+                active -> baseHorizontalPadding
+                collapsePaddingToZero -> baseHorizontalPadding * (1f - paddingProgress)
+                else -> baseHorizontalPadding
+            },
+            animationSpec = tween(220)
+        )
+        val fieldHeight by animateDpAsState(
+            targetValue = currentHeight.coerceAtLeast(COUISearchBarDimens.HeaderMinHeight),
+            animationSpec = tween(220)
+        )
+        val ornamentAlpha by animateFloatAsState(
+            targetValue = if (active) 1f else 1f - ornamentFadeProgress,
+            animationSpec = tween(220)
+        )
 
-        Column {
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1f)
+                    .height(fieldHeight)
+                    .background(
+                        color = COUITheme.colorScheme.surfaceContainerHigh,
+                        shape = ContinuousCapsule
+                    )
+                    .clip(ContinuousCapsule)
+                    .graphicsLayer {
+                        translationY = -collapsedAmount.toPx() / 4f
+                    }
             ) {
-                // Search Input Box
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(COUISearchBarDimens.Height)
-                        .background(
-                            color = COUITheme.colorScheme.surfaceContainerHigh,
-                            shape = ContinuousCapsule
-                        )
-                        .clip(ContinuousCapsule)
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Spacer(Modifier.width(COUISearchBarDimens.InnerIconStartGap))
+                    Spacer(Modifier.width(COUISearchBarDimens.InnerIconStartGap))
 
-                        // Search Icon
+                    Box(
+                        modifier = Modifier
+                            .size(COUISearchBarDimens.InnerIconSize)
+                            .graphicsLayer(alpha = ornamentAlpha),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Basic.Search,
+                            tint = COUITheme.colorScheme.onSurfaceContainerHighest,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = COUISearchBarDimens.EditTextEndGap),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (query.isEmpty()) {
+                            RollingHint(
+                                texts = hintTexts,
+                                textStyle = TextStyle(
+                                    fontSize = COUISearchBarDimens.HintTextSize,
+                                    color = COUITheme.colorScheme.onSurfaceContainerHighest
+                                ),
+                                modifier = Modifier.graphicsLayer(alpha = ornamentAlpha)
+                            )
+                        }
+
+                        BasicTextField(
+                            value = query,
+                            onValueChange = onQueryChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester)
+                                .onFocusChanged { if (it.isFocused) onActiveChange(true) },
+                            enabled = enabled,
+                            singleLine = true,
+                            textStyle = TextStyle(
+                                fontSize = COUISearchBarDimens.InputTextSize,
+                                color = COUITheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Normal
+                            ),
+                            cursorBrush = SolidColor(COUITheme.colorScheme.primary),
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                            keyboardActions = KeyboardActions(onSearch = { onSearch(query) })
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = query.isNotEmpty(),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
                         Box(
-                            modifier = Modifier.size(COUISearchBarDimens.InnerIconSize),
+                            modifier = Modifier
+                                .size(COUISearchBarDimens.InnerIconSize)
+                                .clickable { onQueryChange("") },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = MiuixIcons.Basic.Search,
+                                imageVector = MiuixIcons.Basic.SearchCleanup,
                                 tint = COUITheme.colorScheme.onSurfaceContainerHighest,
-                                contentDescription = null,
+                                contentDescription = "Clear",
                                 modifier = Modifier.size(16.dp)
-                            )
-                        }
-
-                        // Input Field & Rolling Hint
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = COUISearchBarDimens.EditTextEndGap),
-                            contentAlignment = Alignment.CenterStart
-                        ) {
-                            if (query.isEmpty()) {
-                                RollingHint(
-                                    texts = hintTexts,
-                                    textStyle = TextStyle(
-                                        fontSize = COUISearchBarDimens.HintTextSize,
-                                        color = COUITheme.colorScheme.onSurfaceContainerHighest
-                                    )
-                                )
-                            }
-
-                            BasicTextField(
-                                value = query,
-                                onValueChange = onQueryChange,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .focusRequester(focusRequester)
-                                    .onFocusChanged { if (it.isFocused) onActiveChange(true) },
-                                enabled = enabled,
-                                singleLine = true,
-                                textStyle = TextStyle(
-                                    fontSize = COUISearchBarDimens.InputTextSize,
-                                    color = COUITheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Normal
-                                ),
-                                cursorBrush = SolidColor(COUITheme.colorScheme.primary),
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                                keyboardActions = KeyboardActions(onSearch = { onSearch(query) })
-                            )
-                        }
-
-                        // Clear Button
-                        AnimatedVisibility(
-                            visible = query.isNotEmpty(),
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(COUISearchBarDimens.InnerIconSize)
-                                    .clickable { onQueryChange("") },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = MiuixIcons.Basic.SearchCleanup,
-                                    tint = COUITheme.colorScheme.onSurfaceContainerHighest,
-                                    contentDescription = "Clear",
-                                    modifier = Modifier.size(16.dp) // Inner icon visual size
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Functional Button (Cancel)
-                // Simulates COUISearchViewAnimate logic: slides in + fades in
-                AnimatedVisibility(
-                    visible = active,
-                    enter = slideInHorizontally { it / 2 } + expandHorizontally() + fadeIn(),
-                    exit = slideOutHorizontally { it / 2 } + shrinkHorizontally() + fadeOut()
-                ) {
-                    Row {
-                        Spacer(Modifier.width(COUISearchBarDimens.FunctionalButtonStartGap))
-                        Box(
-                            modifier = Modifier
-                                .height(COUISearchBarDimens.Height)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    onCancel()
-                                    onActiveChange(false)
-                                    focusManager.clearFocus()
-                                    onQueryChange("")
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            BasicText(
-                                text = "Cancel",
-                                style = COUITheme.textStyles.headline.copy(
-                                    color = COUITheme.colorScheme.primary,
-                                    fontSize = 16.sp
-                                )
                             )
                         }
                     }
                 }
             }
 
-            AnimatedVisibility(visible = active) {
-                content()
+            AnimatedVisibility(
+                visible = active,
+                enter = slideInHorizontally { it / 2 } + expandHorizontally() + fadeIn(),
+                exit = slideOutHorizontally { it / 2 } + shrinkHorizontally() + fadeOut()
+            ) {
+                Row {
+                    Spacer(Modifier.width(COUISearchBarDimens.FunctionalButtonStartGap))
+                    Box(
+                        modifier = Modifier
+                            .height(inactiveHeight)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onCancel()
+                                onActiveChange(false)
+                                focusManager.clearFocus()
+                                onQueryChange("")
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BasicText(
+                            text = "Cancel",
+                            style = COUITheme.textStyles.headline.copy(
+                                color = COUITheme.colorScheme.primary,
+                                fontSize = 16.sp
+                            )
+                        )
+                    }
+                }
             }
         }
     }
@@ -262,6 +331,13 @@ fun SearchBar(
         onActiveChange(false)
         focusManager.clearFocus()
     }
+}
+
+@Composable
+private fun responsiveSearchPadding(width: Dp): Dp = when {
+    width < 600.dp -> COUISearchBarDimens.ResponsivePaddingCompat
+    width < 840.dp -> COUISearchBarDimens.ResponsivePaddingMedium
+    else -> COUISearchBarDimens.ResponsivePaddingExpanded
 }
 
 /**

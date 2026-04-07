@@ -38,6 +38,7 @@ import com.suqi8.coui.kmp.basic.NavigationBar
 import com.suqi8.coui.kmp.basic.NavigationItem
 import com.suqi8.coui.kmp.basic.NavigationRail
 import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.LargeTopAppBar
 import com.suqi8.coui.kmp.basic.TopAppBar
 import com.suqi8.coui.kmp.basic.topAppBarScrollBehavior
 import com.suqi8.coui.kmp.icon.MiuixIcons
@@ -57,7 +58,8 @@ private object UIConstants {
     val WIDE_SCREEN_THRESHOLD = 840.dp
     const val PAGE_COUNT = 4
     const val GITHUB_URL = "https://github.com/compose-miuix-ui/miuix"
-    val PAGE_TITLES = listOf("Alarm", "World Clock", "Stopwatch", "Timer")
+    val PAGE_TITLES = listOf("Components", "Dropdowns", "Colors", "Settings")
+    val PAGE_SUBTITLES = listOf("Basic controls", "Selection lists", "Theme palette", "Demo options")
 }
 
 data class UIState(
@@ -147,11 +149,21 @@ private fun ClockNavigationDemo(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                TopAppBar(
-                    title = UIConstants.PAGE_TITLES[currentPage],
-                    scrollBehavior = currentScrollBehavior,
-                    actions = { TopAppBarActions() }
-                )
+                when (currentPage) {
+                    1, 2 -> LargeTopAppBar(
+                        title = UIConstants.PAGE_TITLES[currentPage],
+                        subtitle = UIConstants.PAGE_SUBTITLES[currentPage],
+                        largeTitle = UIConstants.PAGE_TITLES[currentPage],
+                        scrollBehavior = currentScrollBehavior,
+                        actions = { TopAppBarActions() }
+                    )
+                    else -> TopAppBar(
+                        title = UIConstants.PAGE_TITLES[currentPage],
+                        subtitle = UIConstants.PAGE_SUBTITLES[currentPage],
+                        scrollBehavior = currentScrollBehavior,
+                        actions = { TopAppBarActions() }
+                    )
+                }
             }
         },
         navigationBar = {

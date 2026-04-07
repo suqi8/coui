@@ -1,7 +1,6 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -16,10 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.BasicComponent
 import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.SearchBar
-import com.suqi8.coui.kmp.basic.SmallTitle
 import com.suqi8.coui.kmp.icon.MiuixIcons
 import com.suqi8.coui.kmp.icon.icons.useful.AddSecret
 import com.suqi8.coui.kmp.icon.icons.useful.Back
@@ -181,39 +178,19 @@ fun MainPage(
         overscrollEffect = null,
     ) {
         item(key = "searchbar") {
-            SmallTitle(text = "SearchBar")
             SearchBar(
                 modifier = Modifier.padding(bottom = 12.dp),
                 query = searchValue,
                 onQueryChange = { searchValue = it },
-                onSearch = {
-                    // 处理点击搜索键
-                    expanded = false
-                },
+                onSearch = { expanded = false },
                 onCancel = {
-                    // 处理点击取消按钮
                     expanded = false
                     searchValue = ""
                 },
                 active = expanded,
                 onActiveChange = { expanded = it },
-                hintTexts = listOf("Search"), // 对应旧代码的 label
-                content = {
-                    // 搜索结果/建议内容区域
-                    Column {
-                        repeat(4) { idx ->
-                            val resultText = "Suggestion $idx"
-                            // 这里的 BasicComponent 是你原来的组件
-                            BasicComponent(
-                                title = resultText,
-                                onClick = {
-                                    searchValue = resultText
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
+                hintTexts = listOf("City, country, or region"),
+                content = {}
             )
         }
         if (notExpanded) {

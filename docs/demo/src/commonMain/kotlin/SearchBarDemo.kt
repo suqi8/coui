@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.basic.BasicComponent
 import com.suqi8.coui.kmp.basic.BasicComponentDefaults
-import com.suqi8.coui.kmp.basic.InputField
 import com.suqi8.coui.kmp.basic.SearchBar
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun SearchBarDemo() {
@@ -44,48 +40,38 @@ fun SearchBarDemo() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             var searchValue by remember { mutableStateOf("") }
-            var expanded by remember { mutableStateOf(false) }
+            var active by remember { mutableStateOf(false) }
+            val suggestions = remember {
+                listOf("Beijing", "Tokyo", "Shanghai", "Singapore", "Shenzhen", "Seoul")
+            }
+            val filteredSuggestions = remember(searchValue) {
+                suggestions.filter { it.contains(searchValue, ignoreCase = true) }
+            }
+
             SearchBar(
-                inputField = {
-                    InputField(
-                        query = searchValue,
-                        onQueryChange = { searchValue = it },
-                        onSearch = { expanded = false },
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                        label = "Search"
-                    )
+                query = searchValue,
+                onQueryChange = { searchValue = it },
+                onSearch = { active = false },
+                onCancel = {
+                    active = false
+                    searchValue = ""
                 },
-                outsideRightAction = {
-                    Text(
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = null,
-                                indication = null
-                            ) {
-                                expanded = false
-                                searchValue = ""
-                            },
-                        text = "Cancel",
-                        color = COUITheme.colorScheme.primary
-                    )
-                },
-                expanded = expanded,
-                onExpandedChange = { expanded = it }
+                active = active,
+                onActiveChange = { active = it },
+                hintTexts = listOf("Search city", "Search country", "Search region")
             ) {
                 Column(
-                    Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    repeat(4) { idx ->
-                        val resultText = "Suggestion $idx"
+                    filteredSuggestions.forEach { resultText ->
                         BasicComponent(
                             title = resultText,
                             titleColor = BasicComponentDefaults.titleColor(Color.White),
-                            modifier = Modifier
-                                .fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             onClick = {
                                 searchValue = resultText
-                                expanded = false
+                                active = false
                             }
                         )
                     }

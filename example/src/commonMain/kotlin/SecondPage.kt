@@ -1,6 +1,7 @@
 // Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -16,9 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CouiListItemPosition
+import com.suqi8.coui.kmp.basic.Icon
 import com.suqi8.coui.kmp.basic.PullToRefresh
 import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
+import com.suqi8.coui.kmp.extra.SuperDropdown
+import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.useful.Scan
+import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.getWindowSize
 import com.suqi8.coui.kmp.utils.overScrollVertical
 import com.suqi8.coui.kmp.utils.scrollEndHaptic
@@ -68,7 +76,7 @@ fun SecondPage(
                 Card(
                     modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
                 ) {
-                    /*for (i in 0 until ii) {
+                    for (i in 0 until ii) {
                         key(i) {
                             SuperDropdown(
                                 title = "Dropdown ${i + 1}",
@@ -78,9 +86,9 @@ fun SecondPage(
                                     dropdownSelectedOption = newOption
                                 },
                                 position = when (i) {
-                                    0 -> CouiListItemPosition.Top      // 第一个
-                                    ii - 1 -> CouiListItemPosition.Bottom // 最后一个
-                                    else -> CouiListItemPosition.Middle  // 中间
+                                    0 -> CouiListItemPosition.Top
+                                    ii - 1 -> CouiListItemPosition.Bottom
+                                    else -> CouiListItemPosition.Middle
                                 },
                                 leftAction = {
                                     Box(
@@ -88,14 +96,14 @@ fun SecondPage(
                                     ) {
                                         Icon(
                                             imageVector = MiuixIcons.Useful.Scan,
-                                            contentDescription = "Share",
+                                            contentDescription = "Scan",
                                             tint = COUITheme.colorScheme.onBackground
                                         )
                                     }
                                 }
                             )
                         }
-                    }*/
+                    }
                 }
                 Spacer(modifier = Modifier.height(padding.calculateBottomPadding()))
             }
