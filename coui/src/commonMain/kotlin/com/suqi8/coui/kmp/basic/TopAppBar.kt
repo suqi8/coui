@@ -225,7 +225,7 @@ fun LargeTopAppBar(
                 titleContentColor = colors.titleContentColor,
                 actionIconContentColor = colors.actionIconContentColor,
                 title = title,
-                subtitle = subtitle,
+                subtitle = null,
                 titleTextStyle = COUITheme.textStyles.title3,
                 subtitleTextStyle = COUITheme.textStyles.subtitle,
                 titleAlpha = collapseMetrics.pinnedTitleAlpha,
@@ -240,6 +240,7 @@ fun LargeTopAppBar(
 
             LargeTitleSection(
                 title = largeTitle ?: title,
+                subtitle = subtitle,
                 titleContentColor = colors.titleContentColor,
                 expandedHeightPx = expandedTitleHeightPx,
                 heightOffset = heightOffset,
@@ -308,7 +309,7 @@ fun LargeTopAppBarWithSearch(
                 titleContentColor = colors.titleContentColor,
                 actionIconContentColor = colors.actionIconContentColor,
                 title = title,
-                subtitle = subtitle,
+                subtitle = null,
                 titleTextStyle = COUITheme.textStyles.title3,
                 subtitleTextStyle = COUITheme.textStyles.subtitle,
                 titleAlpha = collapseMetrics.pinnedTitleAlpha,
@@ -345,6 +346,7 @@ fun LargeTopAppBarWithSearch(
 
                 LargeTitleSection(
                     title = largeTitle ?: title,
+                    subtitle = subtitle,
                     titleContentColor = colors.titleContentColor,
                     expandedHeightPx = expandedTitleHeightPx,
                     heightOffset = heightOffset,
@@ -392,6 +394,8 @@ private data class LargeTopAppBarCollapseMetrics(
     val largeTitleAlpha: Float,
     val largeTitleScale: Float,
     val largeTitleTranslationY: Float,
+    val largeSubtitleAlpha: Float,
+    val largeSubtitleTranslationY: Float,
 )
 
 @Composable
@@ -406,6 +410,8 @@ private fun rememberLargeTopAppBarCollapseMetrics(collapsedFraction: Float): Lar
             largeTitleAlpha = (1f - (collapsedFraction / 0.72f)).coerceIn(0f, 1f),
             largeTitleScale = lerpFloat(1f, 0.84f, collapsedFraction),
             largeTitleTranslationY = with(density) { lerpFloat(0f, -10.dp.toPx(), collapsedFraction) },
+            largeSubtitleAlpha = (1f - collapsedFraction).coerceIn(0f, 1f),
+            largeSubtitleTranslationY = with(density) { lerpFloat(-12.dp.toPx(), 0f, collapsedFraction) },
         )
     }
 }
@@ -413,6 +419,7 @@ private fun rememberLargeTopAppBarCollapseMetrics(collapsedFraction: Float): Lar
 @Composable
 private fun LargeTitleSection(
     title: String,
+    subtitle: String?,
     titleContentColor: Color,
     expandedHeightPx: Float,
     heightOffset: Float,
@@ -432,24 +439,42 @@ private fun LargeTitleSection(
 
         Layout(
             content = {
-                Box(
+                Column(
                     Modifier
                         .padding(horizontal = startPadding)
-                        .graphicsLayer {
+                ) {
+                    Box(
+                        modifier = Modifier.graphicsLayer {
                             alpha = metrics.largeTitleAlpha
                             translationY = metrics.largeTitleTranslationY
                             scaleX = metrics.largeTitleScale
                             scaleY = metrics.largeTitleScale
                             transformOrigin = TransformOrigin(0f, 0.5f)
                         }
-                ) {
-                    BasicText(
-                        text = title,
-                        style = COUITheme.textStyles.title1.copy(
-                            color = titleContentColor,
-                            fontWeight = FontWeight.Normal
+                    ) {
+                        BasicText(
+                            text = title,
+                            style = COUITheme.textStyles.title1.copy(
+                                color = titleContentColor,
+                                fontWeight = FontWeight.Normal
+                            )
                         )
-                    )
+                    }
+                    if (subtitle != null) {
+                        BasicText(
+                            text = subtitle,
+                            modifier = Modifier.graphicsLayer {
+                                alpha = metrics.largeSubtitleAlpha
+                                translationY = metrics.largeSubtitleTranslationY
+                            },
+                            style = COUITheme.textStyles.subtitle.copy(
+                                color = titleContentColor.copy(alpha = 0.6f),
+                                fontSize = 12.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         ) { measurables, constraints ->
