@@ -78,7 +78,7 @@ fun MainPage(
     val showDialog = remember { mutableStateOf(false) }
     val dialogTextFieldValue = remember { mutableStateOf("") }
     val showBottomSheet = remember { mutableStateOf(false) }
-    val bottomSheetDropdownSelectedOption = remember { mutableStateOf("bs_opt1") }
+    val bottomSheetDropdownSelectedOption = remember { mutableStateOf(0) }
     val bottomSheetSuperSwitchState = remember { mutableStateOf(true) }
     val checkbox = remember { mutableStateOf(false) }
     val checkboxTrue = remember { mutableStateOf(true) }

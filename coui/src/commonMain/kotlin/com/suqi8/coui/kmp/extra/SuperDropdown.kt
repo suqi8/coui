@@ -1,95 +1,116 @@
-// Copyright 2025, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
-//
-// Final version with updated APIs to resolve deprecation warnings.
-
 package com.suqi8.coui.kmp.extra
 
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.BlendModeColorFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.node.DelegatingNode
-import androidx.compose.ui.node.DrawModifierNode
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.platform.InspectorInfo
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.BasicComponentColors
+import com.suqi8.coui.kmp.basic.BasicComponentDefaults
 import com.suqi8.coui.kmp.basic.CouiListItemPosition
+import com.suqi8.coui.kmp.basic.ListPopup
 import com.suqi8.coui.kmp.basic.ListPopupColumn
+import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.icon.MiuixIcons
+import com.suqi8.coui.kmp.icon.icons.basic.ArrowUpDownIntegrated
 import com.suqi8.coui.kmp.icon.icons.basic.Check
 import com.suqi8.coui.kmp.theme.COUITheme
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 
-@Immutable
-data class DropdownOption(
-    val text: String,
-    val value: String
-)
+enum class DropDownMode {
+    Normal,
+    AlwaysOnRight
+}
 
 @Composable
 fun SuperDropdown(
-    items: List<DropdownOption>,
-    selectedValue: String,
+    items: List<String>,
+    selectedIndex: Int,
     title: String,
-    modifier: Modifier = Modifier,
+    titleColor: BasicComponentColors = BasicComponentDefaults.titleColor(),
     summary: String? = null,
+    summaryColor: BasicComponentColors = BasicComponentDefaults.summaryColor(),
+    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
+    mode: DropDownMode = DropDownMode.Normal,
+    modifier: Modifier = Modifier,
+    insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
     position: CouiListItemPosition = CouiListItemPosition.Middle,
-    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
-    maxHeight: Dp? = null,
     onClick: (() -> Unit)? = null,
-    onValueChange: ((String) -> Unit)?,
+    onSelectedIndexChange: ((Int) -> Unit)?,
+    onDismissRequest: (() -> Unit)? = null,
+    leftAction: @Composable (() -> Unit)? = null
 ) {
-    val selectedOptionText = items.find { it.value == selectedValue }?.text ?: ""
-    val effectiveSummary = if (showValue) selectedOptionText else summary
-
+    val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    val handleClick = {
-        onClick?.invoke()
-        if (enabled && items.isNotEmpty()) {
+    val itemsNotEmpty = items.isNotEmpty()
+    val actualEnabled = enabled && itemsNotEmpty
+
+    val actionColor = if (actualEnabled) {
+        COUITheme.colorScheme.onSurfaceVariantActions
+    } else {
+        COUITheme.colorScheme.disabledOnSecondaryVariant
+    }
+
+    var alignLeft by remember { mutableStateOf(true) }
+
+    val componentModifier = modifier.pointerInput(actualEnabled) {
+        if (!actualEnabled) return@pointerInput
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent()
+                if (event.type != PointerEventType.Move) {
+                    val eventChange = event.changes.first()
+                    if (eventChange.pressed) {
+                        alignLeft = eventChange.position.x < (size.width / 2)
+                    }
+                }
+            }
+        }
+    }
+
+    val handleClick: () -> Unit = {
+        if (actualEnabled) {
+            onClick?.invoke()
             isDropdownExpanded.value = !isDropdownExpanded.value
             if (isDropdownExpanded.value) {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
@@ -97,192 +118,139 @@ fun SuperDropdown(
         }
     }
 
-    CouiDropdownPreferenceImpl(
-        modifier = modifier,
+    val popupContent: @Composable () -> Unit = {
+        SuperDropdownPopup(
+            items = items,
+            selectedIndex = selectedIndex,
+            isDropdownExpanded = isDropdownExpanded,
+            mode = mode,
+            alignLeft = alignLeft,
+            maxHeight = maxHeight,
+            dropdownColors = dropdownColors,
+            hapticFeedback = hapticFeedback,
+            onSelectedIndexChange = onSelectedIndexChange,
+            onDismissRequest = onDismissRequest
+        )
+    }
+
+    BasicComponent(
+        modifier = componentModifier,
+        interactionSource = interactionSource,
+        insideMargin = insideMargin,
         title = title,
-        summary = effectiveSummary,
-        enabled = enabled,
-        isDropdownExpanded = isDropdownExpanded,
-        onClick = handleClick
-    ) {
-        if (items.isNotEmpty()) {
-            CouiDropdownMenuWithGestures(
-                expanded = isDropdownExpanded.value,
-                onDismissRequest = { isDropdownExpanded.value = false },
-                options = items,
-                selectedValue = selectedValue,
-                onOptionSelected = { newValue ->
-                    onValueChange?.invoke(newValue)
-                    isDropdownExpanded.value = false
-                },
-                colors = dropdownColors,
-                hapticFeedback = hapticFeedback
-            )
-        }
-    }
-}
-
-@Composable
-private fun CouiDropdownPreferenceImpl(
-    modifier: Modifier = Modifier,
-    title: String,
-    summary: String?,
-    enabled: Boolean,
-    isDropdownExpanded: State<Boolean>,
-    onClick: () -> Unit,
-    popupContent: @Composable () -> Unit
-) {
-    Box {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .heightIn(min = 48.dp)
-                .clickable(enabled = enabled, onClick = onClick)
-                .padding(horizontal = 32.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                val titleColor = if (enabled) COUITheme.colorScheme.onSurface else COUITheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                val summaryColor = if (enabled) COUITheme.colorScheme.onSurfaceVariantActions else COUITheme.colorScheme.onSurfaceVariantActions.copy(alpha = 0.4f)
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = titleColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (!summary.isNullOrEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = summary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = summaryColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
+        titleColor = titleColor,
+        summary = summary,
+        summaryColor = summaryColor,
+        position = position,
+        leftAction = leftAction ?: if (itemsNotEmpty) {
+            {
+                popupContent()
             }
-        }
-        popupContent()
-    }
+        } else null,
+        rightActions = {
+            SuperDropdownRightActions(
+                showValue = showValue,
+                itemsNotEmpty = itemsNotEmpty,
+                items = items,
+                selectedIndex = selectedIndex,
+                actionColor = actionColor
+            )
+            if (leftAction != null && itemsNotEmpty) {
+                popupContent()
+            }
+        },
+        onClick = handleClick,
+        holdDownState = isDropdownExpanded.value,
+        enabled = actualEnabled
+    )
 }
 
 @Composable
-private fun CouiDropdownMenuWithGestures(
-    expanded: Boolean,
-    onDismissRequest: () -> Unit,
-    options: List<DropdownOption>,
-    selectedValue: String,
-    onOptionSelected: (String) -> Unit,
-    colors: DropdownColors,
-    hapticFeedback: HapticFeedback
+private fun SuperDropdownPopup(
+    items: List<String>,
+    selectedIndex: Int,
+    isDropdownExpanded: MutableState<Boolean>,
+    mode: DropDownMode,
+    alignLeft: Boolean,
+    maxHeight: Dp?,
+    dropdownColors: DropdownColors,
+    hapticFeedback: HapticFeedback,
+    onSelectedIndexChange: ((Int) -> Unit)?,
+    onDismissRequest: (() -> Unit)? = null
 ) {
-    val expandedStates = remember { MutableTransitionState(false) }
-    expandedStates.targetState = expanded
+    var hoveredIndex by remember { mutableStateOf(-1) }
+    var pressedIndex by remember { mutableStateOf(-1) }
 
-    if (expandedStates.currentState || expandedStates.targetState) {
-        val density = LocalDensity.current
-
-        Popup(
-            onDismissRequest = onDismissRequest,
-            alignment = Alignment.TopEnd,
-            offset = IntOffset(
-                x = with(density) { -16.dp.roundToPx() },
-                y = with(density) { 8.dp.roundToPx() }
-            ),
-            properties = PopupProperties(focusable = true)
+    ListPopup(
+        show = isDropdownExpanded,
+        alignment = if (mode == DropDownMode.AlwaysOnRight || !alignLeft) {
+            PopupPositionProvider.Align.Right
+        } else {
+            PopupPositionProvider.Align.Left
+        },
+        onDismissRequest = {
+            isDropdownExpanded.value = false
+            hoveredIndex = -1
+            pressedIndex = -1
+            onDismissRequest?.invoke()
+        },
+        maxHeight = maxHeight
+    ) {
+        ListPopupColumn(
+            onPressedIndexChange = { pressedIndex = it },
+            onDragHover = {
+                hoveredIndex = it
+            },
+            onTap = { index ->
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                onSelectedIndexChange?.invoke(index)
+                isDropdownExpanded.value = false
+                pressedIndex = -1
+                hoveredIndex = -1
+            },
+            onDragEnd = {
+                if (hoveredIndex != -1) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                    onSelectedIndexChange?.invoke(hoveredIndex)
+                    isDropdownExpanded.value = false
+                }
+                pressedIndex = -1
+                hoveredIndex = -1
+            },
+            onDragCancel = {
+                pressedIndex = -1
+                hoveredIndex = -1
+            }
         ) {
-            val transition = updateTransition(expandedStates, "CouiDropdownMenu")
-            val scale by transition.animateFloat(
-                transitionSpec = { tween(durationMillis = 150) },
-                label = "scale"
-            ) { if (it) 1f else 0.8f }
-            val alpha by transition.animateFloat(
-                transitionSpec = { tween(durationMillis = 150) },
-                label = "alpha"
-            ) { if (it) 1f else 0f }
+            items.forEachIndexed { index, string ->
+                key(index) {
+                    val dividerColor = COUITheme.colorScheme.dividerLine
 
-            Box(
-                modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        this.alpha = alpha
-                        transformOrigin = TransformOrigin(1f, 0f)
-                    }
-                    .widthIn(min = 178.dp, max = 232.dp)
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(12.dp))
-            ) {
-                val currentlyPressedIndex = remember { mutableStateOf<Int?>(null) }
-                var itemHeightPx by remember { mutableStateOf(0f) }
-
-                Column(
-                    modifier = Modifier
-                        .onSizeChanged {
-                            if (options.isNotEmpty()) {
-                                itemHeightPx = it.height.toFloat() / options.size
-                            }
-                        }
-                        .couiDragGesture(
-                            itemHeightPx = itemHeightPx,
-                            itemCount = options.size,
-                            onPress = { index -> currentlyPressedIndex.value = index },
-                            onDrag = { index -> currentlyPressedIndex.value = index },
-                            onRelease = { index ->
-                                if (index != null) {
-                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                                    onOptionSelected(options[index].value)
-                                }
-                                currentlyPressedIndex.value = null
-                            },
-                            onCancel = { currentlyPressedIndex.value = null }
-                        )
-                ) {
-                    options.forEachIndexed { index, option ->
-                        key(option.value) {
-                            val cornerRadius = 12.dp
-                            val shape = when {
-                                options.size == 1 -> RoundedCornerShape(cornerRadius)
-                                index == 0 -> RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
-                                index == options.size - 1 -> RoundedCornerShape(bottomStart = cornerRadius, bottomEnd = cornerRadius)
-                                else -> RoundedCornerShape(0.dp)
-                            }
-
-                            val interactionSource = remember { MutableInteractionSource() }
-                            val isVisuallySelected = (selectedValue == option.value || currentlyPressedIndex.value == index)
-                            val isPressed by interactionSource.collectIsPressedAsState()
-
-                            LaunchedEffect(currentlyPressedIndex.value) {
-                                val press = PressInteraction.Press(Offset.Zero)
-                                if (currentlyPressedIndex.value == index) {
-                                    interactionSource.tryEmit(press)
-                                } else {
-                                    interactionSource.tryEmit(PressInteraction.Release(press))
-                                }
-                            }
-
-                            val backgroundColor = if (isPressed) {
-                                val pressOverlay = if (COUITheme.colorScheme.isDark) Color(0x0DFFFFFF) else Color(0x08000000)
-                                pressOverlay.compositeOver(colors.containerColor)
-                            } else {
-                                colors.containerColor
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .clip(shape)
-                                    .background(backgroundColor)
-                                    .indication(interactionSource, NoOpIndication)
-                            ) {
-                                DropdownImpl(
-                                    option = option,
-                                    isSelected = isVisuallySelected,
-                                    dropdownColors = colors
+                    Box(
+                        modifier = Modifier.drawWithContent {
+                            drawContent()
+                            if (index < items.size - 1) {
+                                val thicknessPx = 0.5.dp.toPx()
+                                drawLine(
+                                    color = dividerColor,
+                                    start = Offset(16.dp.toPx(), size.height - thicknessPx / 2),
+                                    end = Offset(size.width - 16.dp.toPx(), size.height - thicknessPx / 2),
+                                    strokeWidth = thicknessPx
                                 )
                             }
                         }
+                    ) {
+                        val showCheckmark = (selectedIndex == index)
+                        val showDarkBackground = (pressedIndex == index) || (hoveredIndex == index)
+
+                        DropdownImpl(
+                            text = string,
+                            optionSize = items.size,
+                            isSelected = showCheckmark,
+                            isPressed = showDarkBackground,
+                            dropdownColors = dropdownColors,
+                            index = index
+                        )
                     }
                 }
             }
@@ -290,142 +258,108 @@ private fun CouiDropdownMenuWithGestures(
     }
 }
 
-private fun Modifier.couiDragGesture(
-    itemHeightPx: Float,
-    itemCount: Int,
-    onPress: (Int) -> Unit,
-    onDrag: (Int) -> Unit,
-    onRelease: (Int?) -> Unit,
-    onCancel: () -> Unit
-): Modifier = pointerInput(itemHeightPx, itemCount) {
-    if (itemHeightPx <= 0f) return@pointerInput
-
-    coroutineScope {
-        awaitPointerEventScope {
-            while (true) {
-                try {
-                    val down = awaitPointerEvent().changes.first()
-                    down.consume()
-                    val startIndex = (down.position.y / itemHeightPx).toInt().coerceIn(0, itemCount - 1)
-                    onPress(startIndex)
-
-                    var isReleased = false
-                    val dragJob = launch {
-                        detectDragGestures(
-                            onDragStart = { },
-                            onDrag = { change, _ ->
-                                change.consume()
-                                val currentIndex = (change.position.y / itemHeightPx).toInt().coerceIn(0, itemCount - 1)
-                                onDrag(currentIndex)
-                            },
-                            onDragEnd = {
-                                isReleased = true
-                                val finalIndex = (down.position.y / itemHeightPx).toInt().coerceIn(0, itemCount - 1)
-                                onRelease(finalIndex)
-                            },
-                            onDragCancel = {
-                                isReleased = true
-                                onCancel()
-                            }
-                        )
-                    }
-
-                    val up = awaitPointerEvent().changes.first()
-                    if (!isReleased) {
-                        dragJob.cancel()
-                        if (up.pressed) {
-                            onCancel()
-                        } else {
-                            val finalIndex = (up.position.y / itemHeightPx).toInt().coerceIn(0, itemCount - 1)
-                            onRelease(finalIndex)
-                        }
-                    }
-                } catch (e: Exception) {
-                    onCancel()
-                }
-            }
-        }
+@Composable
+private fun RowScope.SuperDropdownRightActions(
+    showValue: Boolean,
+    itemsNotEmpty: Boolean,
+    items: List<String>,
+    selectedIndex: Int,
+    actionColor: Color
+) {
+    if (showValue && itemsNotEmpty) {
+        Text(
+            modifier = Modifier.widthIn(max = 130.dp),
+            text = items[selectedIndex],
+            fontSize = COUITheme.textStyles.body2.fontSize,
+            color = actionColor,
+            textAlign = TextAlign.End,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2
+        )
     }
+
+    Image(
+        modifier = Modifier
+            .padding(start = 8.dp)
+            .size(10.dp, 16.dp)
+            .align(Alignment.CenterVertically),
+        imageVector = MiuixIcons.Basic.ArrowUpDownIntegrated,
+        colorFilter = ColorFilter.tint(actionColor),
+        contentDescription = null
+    )
 }
 
 @Composable
 fun DropdownImpl(
-    option: DropdownOption,
+    text: String,
+    optionSize: Int,
     isSelected: Boolean,
-    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
+    isPressed: Boolean,
+    index: Int,
+    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors()
 ) {
-    val textColor = if (isSelected) dropdownColors.selectedContentColor else dropdownColors.contentColor
-    val checkmarkColor = dropdownColors.selectedContentColor
+    val additionalTopPadding = if (index == 0) 16.dp else 12.dp
+    val additionalBottomPadding = if (index == optionSize - 1) 16.dp else 12.dp
+
+    val textColor = if (isSelected) dropdownColors.selectedContentColor
+    else dropdownColors.contentColor
+
+    val checkColor = if (isSelected) dropdownColors.selectedContentColor
+    else Color.Transparent
+
+    val finalBackgroundColor = if (isPressed) {
+        COUITheme.colorScheme.onSurface
+            .copy(alpha = 0.10f)
+            .compositeOver(dropdownColors.containerColor)
+    } else {
+        dropdownColors.containerColor
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .padding(
-                start = 16.dp,
-                end = 16.dp,
-                top = 8.dp,
-                bottom = 8.dp
-            )
+            .widthIn(min = 178.dp)
+            .background(finalBackgroundColor)
+            .padding(horizontal = 16.dp)
+            .padding(top = additionalTopPadding, bottom = additionalBottomPadding)
     ) {
         Text(
-            modifier = Modifier.weight(1f),
-            text = option.text,
-            fontSize = 16.sp,
+            modifier = Modifier.widthIn(max = 178.dp),
+            text = text,
+            fontSize = COUITheme.textStyles.body1.fontSize,
             fontWeight = FontWeight.Normal,
-            color = textColor,
+            color = textColor
         )
-        if (isSelected) {
-            Image(
-                modifier = Modifier
-                    .padding(start = 12.dp)
-                    .size(24.dp),
-                imageVector = MiuixIcons.Basic.Check,
-                colorFilter = ColorFilter.tint(checkmarkColor),
-                contentDescription = "Selected",
-            )
-        }
+
+        Image(
+            modifier = Modifier
+                .padding(start = 12.dp)
+                .size(20.dp),
+            imageVector = MiuixIcons.Basic.Check,
+            colorFilter = BlendModeColorFilter(checkColor, BlendMode.SrcIn),
+            contentDescription = null
+        )
     }
 }
 
 @Immutable
-class DropdownColors(
+data class DropdownColors(
     val contentColor: Color,
     val containerColor: Color,
-    val selectedContentColor: Color,
+    val selectedContentColor: Color
 )
 
 object DropdownDefaults {
+
     @Composable
     fun dropdownColors(
-        contentColor: Color = if (COUITheme.colorScheme.isDark) Color(0xFFFFFFFF) else Color(0xFF000000),
-        containerColor: Color = if (COUITheme.colorScheme.isDark) Color(0xFF242424) else Color(0xFFFFFFFF),
-        selectedContentColor: Color = Color(0xFF39BF56)
-    ): DropdownColors {
-        return DropdownColors(
-            contentColor = contentColor,
-            containerColor = containerColor,
-            selectedContentColor = selectedContentColor
-        )
-    }
-}
-
-/**
- * An Indication that draws nothing, implemented using the modern Modifier.Node API
- * to avoid deprecation warnings.
- */
-private object NoOpIndication : Indication {
-    // This is the new factory method that replaces rememberUpdatedInstance
-    fun create(interactionSource: InteractionSource): Modifier.Node {
-        return NoOpIndicationNode
-    }
-
-    // The node itself can be a singleton object since it holds no state
-    private object NoOpIndicationNode : Modifier.Node(), DrawModifierNode {
-        override fun ContentDrawScope.draw() {
-            // Draw the component's content without any visual effects.
-            drawContent()
-        }
-    }
+        contentColor: Color = COUITheme.colorScheme.onSurface,
+        containerColor: Color = COUITheme.colorScheme.surface,
+        selectedContentColor: Color = COUITheme.colorScheme.onTertiaryContainer
+    ): DropdownColors = DropdownColors(
+        contentColor = contentColor,
+        containerColor = containerColor,
+        selectedContentColor = selectedContentColor
+    )
 }

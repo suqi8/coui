@@ -1,12 +1,10 @@
-// Copyright 2025, compose-miuix-ui contributors
-// SPDX-License-Identifier: Apache-2.0
-//
-// This file is a general-purpose popup implementation.
-
 package com.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,15 +18,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -36,6 +35,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -47,35 +47,26 @@ import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.BackHandler
 import com.suqi8.coui.kmp.utils.MiuixPopupUtils.Companion.PopupLayout
 import com.suqi8.coui.kmp.utils.getWindowSize
-import kotlin.math.min
+import kotlin.math.roundToInt
 
-/**
- * A popup with a list of items.
- */
 @Composable
 fun ListPopup(
     show: MutableState<Boolean>,
     popupModifier: Modifier = Modifier,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.Right,
-    enableWindowDim: Boolean = true,
+    enableWindowDim: Boolean = false,
     shadowElevation: Dp = 8.dp,
     onDismissRequest: (() -> Unit)? = null,
     maxHeight: Dp? = null,
-    // COUI visual parameters are now the defaults
     minWidth: Dp = 178.dp,
     cornerRadius: Dp = 12.dp,
-    verticalMargin: Dp = 8.dp,
     content: @Composable () -> Unit
 ) {
     if (!show.value) return
 
-    val windowSize = getWindowSize()
+    val windowSize by rememberUpdatedState(getWindowSize())
     var parentBounds by remember { mutableStateOf(IntRect.Zero) }
-
-    val couiPositionProvider = remember(verticalMargin) {
-        ListPopupDefaults.getCouiDropdownPositionProvider(verticalMargin)
-    }
 
     Layout(
         modifier = Modifier
@@ -100,42 +91,55 @@ fun ListPopup(
     val navigationBars = WindowInsets.navigationBars.asPaddingValues()
     val captionBar = WindowInsets.captionBar.asPaddingValues()
 
-    val popupMargin by remember(windowSize, layoutDirection, density) {
-        derivedStateOf {
-            with(density) {
-                IntRect(
-                    left = couiPositionProvider.getMargins().calculateLeftPadding(layoutDirection).roundToPx(),
-                    top = couiPositionProvider.getMargins().calculateTopPadding().roundToPx(),
-                    right = couiPositionProvider.getMargins().calculateRightPadding(layoutDirection).roundToPx(),
-                    bottom = couiPositionProvider.getMargins().calculateBottomPadding().roundToPx()
-                )
-            }
+    val popupMargin = remember(windowSize, density) {
+        with(density) {
+            IntRect(
+                left = popupPositionProvider.getMargins().calculateLeftPadding(layoutDirection).roundToPx(),
+                top = popupPositionProvider.getMargins().calculateTopPadding().roundToPx(),
+                right = popupPositionProvider.getMargins().calculateRightPadding(layoutDirection).roundToPx(),
+                bottom = popupPositionProvider.getMargins().calculateBottomPadding().roundToPx()
+            )
         }
     }
 
-    val windowBounds by remember(windowSize, layoutDirection, displayCutout, statusBars, navigationBars, captionBar, density) {
-        derivedStateOf {
-            with(density) {
-                IntRect(
-                    left = displayCutout.calculateLeftPadding(layoutDirection).roundToPx(),
-                    top = statusBars.calculateTopPadding().roundToPx(),
-                    right = windowSize.width - displayCutout.calculateRightPadding(layoutDirection).roundToPx(),
-                    bottom = windowSize.height - navigationBars.calculateBottomPadding().roundToPx()
-                            - captionBar.calculateBottomPadding().roundToPx()
-                )
-            }
+    val windowBounds = remember(windowSize, density) {
+        with(density) {
+            IntRect(
+                left = displayCutout.calculateLeftPadding(layoutDirection).roundToPx(),
+                top = statusBars.calculateTopPadding().roundToPx(),
+                right = windowSize.width - displayCutout.calculateRightPadding(layoutDirection).roundToPx(),
+                bottom = windowSize.height - navigationBars.calculateBottomPadding()
+                    .roundToPx() - captionBar.calculateBottomPadding().roundToPx()
+            )
         }
     }
 
-    // ... (TransformOrigin logic can be kept for smooth animations)
+    val transformOrigin = remember(windowSize, alignment, density) {
+        val xInWindow = when (alignment) {
+            PopupPositionProvider.Align.Right,
+            PopupPositionProvider.Align.TopRight,
+            PopupPositionProvider.Align.BottomRight -> parentBounds.right - popupMargin.right - with(density) { 64.dp.roundToPx() }
+
+            else -> parentBounds.left + popupMargin.left + with(density) { 64.dp.roundToPx() }
+        }
+        val yInWindow = parentBounds.top + parentBounds.height / 2 - with(density) { 56.dp.roundToPx() }
+        safeTransformOrigin(
+            xInWindow / windowSize.width.toFloat(),
+            yInWindow / windowSize.height.toFloat()
+        )
+    }
 
     PopupLayout(
         visible = show,
         enableWindowDim = enableWindowDim,
+        transformOrigin = { transformOrigin },
     ) {
+        val shape = remember { RoundedCornerShape(cornerRadius) }
+        val elevationPx = with(density) { shadowElevation.toPx() }
+
         Box(
             modifier = popupModifier
-                .pointerInput(Unit) {
+                .pointerInput(onDismissRequest) {
                     detectTapGestures(
                         onTap = { onDismissRequest?.invoke() }
                     )
@@ -143,15 +147,18 @@ fun ListPopup(
                 .layout { measurable, constraints ->
                     val placeable = measurable.measure(
                         constraints.copy(
-                            minWidth = minWidth.roundToPx().coerceAtMost(windowSize.width),
-                            minHeight = 0,
-                            maxHeight = maxHeight?.roundToPx()
-                                ?: (windowBounds.height - popupMargin.top - popupMargin.bottom)
+                            minWidth = if (minWidth.roundToPx() <= windowSize.width) minWidth.roundToPx() else windowSize.width,
+                            minHeight = if (50.dp.roundToPx() <= windowSize.height) 50.dp.roundToPx() else windowSize.height,
+                            maxHeight = maxHeight?.roundToPx()?.coerceAtLeast(50.dp.roundToPx())
+                                ?: (windowBounds.height - popupMargin.top - popupMargin.bottom).coerceAtLeast(
+                                    50.dp.roundToPx()
+                                ),
+                            maxWidth = if (minWidth.roundToPx() <= windowSize.width) windowSize.width else minWidth.roundToPx()
                         )
                     )
                     val measuredSize = IntSize(placeable.width, placeable.height)
 
-                    val calculatedOffset = couiPositionProvider.calculatePosition(
+                    val calculatedOffset = popupPositionProvider.calculatePosition(
                         parentBounds,
                         windowBounds,
                         layoutDirection,
@@ -165,12 +172,14 @@ fun ListPopup(
                     }
                 }
         ) {
-            val shape = RoundedCornerShape(cornerRadius)
             Box(
                 modifier = Modifier
-                    .shadow(elevation = shadowElevation, shape = shape)
-                    .background(COUITheme.colorScheme.surface, shape)
-                    .graphicsLayer(clip = true, shape = shape)
+                    .graphicsLayer(
+                        clip = true,
+                        shape = shape,
+                        shadowElevation = elevationPx
+                    )
+                    .background(COUITheme.colorScheme.surface)
             ) {
                 content()
             }
@@ -182,46 +191,112 @@ fun ListPopup(
     }
 }
 
-
-/**
- * A column that automatically aligns the width to the widest item
- */
 @Composable
 fun ListPopupColumn(
+    minWidth: Dp = 178.dp,
+    maxWidth: Dp = 288.dp,
+    onDragHover: (index: Int) -> Unit,
+    onDragEnd: () -> Unit,
+    onDragCancel: () -> Unit,
+    onPressedIndexChange: (index: Int) -> Unit,
+    onTap: (index: Int) -> Unit,
     content: @Composable () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val currentContent by rememberUpdatedState(content)
+    val itemBoundaries = remember { mutableListOf<IntRange>() }
+    val hapticFeedback = LocalHapticFeedback.current
+
+    val pressAndTapDetector = Modifier.pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val index = findIndex(down.position.y, scrollState.value, itemBoundaries)
+
+                if (index == -1) continue
+
+                onPressedIndexChange(index)
+
+                val up = waitForUpOrCancellation()
+
+                if (up != null) {
+                    onTap(index)
+                }
+
+                onPressedIndexChange(-1)
+            }
+        }
+    }
+
+    val longPressDragDetector = Modifier.pointerInput(Unit) {
+        detectDragGesturesAfterLongPress(
+            onDragStart = { offset ->
+                val index = findIndex(offset.y, scrollState.value, itemBoundaries)
+                if (index != -1) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onPressedIndexChange(-1)
+                    onDragHover(index)
+                }
+            },
+            onDrag = { change, _ ->
+                val index = findIndex(change.position.y, scrollState.value, itemBoundaries)
+                onDragHover(index)
+            },
+            onDragEnd = { onDragEnd() },
+            onDragCancel = { onDragCancel() }
+        )
+    }
 
     SubcomposeLayout(
-        modifier = Modifier.verticalScroll(scrollState)
+        modifier = Modifier
+            .verticalScroll(scrollState)
+            .then(longPressDragDetector)
+            .then(pressAndTapDetector)
     ) { constraints ->
-        val maxWidth = 232.dp.roundToPx() // From coui_popup_list_window_max_width
-        val tempConstraints = constraints.copy(minWidth = 0, minHeight = 0, maxWidth = maxWidth)
+        var listHeight = 0
 
-        val listWidth = subcompose("couiPopupListMeasurer", content).maxOfOrNull {
-            it.measure(tempConstraints).width
-        } ?: 0
+        val minWidthPx = minWidth.roundToPx()
+        val maxWidthPx = maxWidth.roundToPx()
+        val tempConstraints = constraints.copy(
+            minWidth = minWidthPx,
+            maxWidth = maxWidthPx,
+            minHeight = 0
+        )
+
+        val listWidth = subcompose("couiPopupListFake", currentContent).map {
+            it.measure(tempConstraints)
+        }.maxOfOrNull { it.width }?.coerceIn(minWidthPx, maxWidthPx) ?: minWidthPx
 
         val childConstraints = constraints.copy(minWidth = listWidth, maxWidth = listWidth, minHeight = 0)
 
-        var listHeight = 0
-        val placeables = subcompose("couiPopupListBuilder", content).map {
+        itemBoundaries.clear()
+        var currentY = 0
+
+        val placeables = subcompose("couiPopupListReal", currentContent).map {
             val placeable = it.measure(childConstraints)
+
+            itemBoundaries.add(currentY until (currentY + placeable.height))
+            currentY += placeable.height
+
             listHeight += placeable.height
             placeable
         }
-        layout(listWidth, min(constraints.maxHeight, listHeight)) {
-            var currentY = 0
+
+        layout(listWidth, listHeight) {
+            var yPosition = 0
             placeables.forEach {
-                it.place(0, currentY)
-                currentY += it.height
+                it.place(0, yPosition)
+                yPosition += it.height
             }
         }
     }
 }
 
+private fun findIndex(y: Float, scrollY: Int, boundaries: List<IntRange>): Int {
+    val yInList = y.roundToInt() + scrollY
+    return boundaries.indexOfFirst { yInList in it }
+}
 
-@Stable
 interface PopupPositionProvider {
     fun calculatePosition(
         anchorBounds: IntRect,
@@ -235,14 +310,17 @@ interface PopupPositionProvider {
     fun getMargins(): PaddingValues
 
     enum class Align {
-        Left, Right
+        Left,
+        Right,
+        TopLeft,
+        TopRight,
+        BottomLeft,
+        BottomRight
     }
 }
 
 object ListPopupDefaults {
-    val DropdownPositionProvider = getCouiDropdownPositionProvider(8.dp)
-
-    fun getCouiDropdownPositionProvider(verticalMargin: Dp) = object : PopupPositionProvider {
+    val DropdownPositionProvider = object : PopupPositionProvider {
         override fun calculatePosition(
             anchorBounds: IntRect,
             windowBounds: IntRect,
@@ -252,27 +330,37 @@ object ListPopupDefaults {
             alignment: PopupPositionProvider.Align
         ): IntOffset {
             val offsetX = if (alignment == PopupPositionProvider.Align.Right) {
-                anchorBounds.right - popupContentSize.width
+                anchorBounds.right - popupContentSize.width - popupMargin.right
             } else {
-                anchorBounds.left
+                anchorBounds.left + popupMargin.left
             }
-
-            val spaceBelow = windowBounds.bottom - anchorBounds.bottom
-            val spaceAbove = anchorBounds.top - windowBounds.top
-
-            val offsetY = if (spaceBelow >= popupContentSize.height || spaceBelow >= spaceAbove) {
+            val offsetY = if (windowBounds.bottom - anchorBounds.bottom > popupContentSize.height) {
                 anchorBounds.bottom + popupMargin.bottom
-            } else {
+            } else if (anchorBounds.top - windowBounds.top > popupContentSize.height) {
                 anchorBounds.top - popupContentSize.height - popupMargin.top
+            } else {
+                anchorBounds.top + anchorBounds.height / 2 - popupContentSize.height / 2
             }
             return IntOffset(
-                x = offsetX.coerceIn(windowBounds.left, windowBounds.right - popupContentSize.width),
-                y = offsetY.coerceIn(windowBounds.top, windowBounds.bottom - popupContentSize.height)
+                x = offsetX.coerceIn(
+                    windowBounds.left,
+                    (windowBounds.right - popupContentSize.width - popupMargin.right).coerceAtLeast(windowBounds.left)
+                ),
+                y = offsetY.coerceIn(
+                    (windowBounds.top + popupMargin.top).coerceAtMost(windowBounds.bottom - popupContentSize.height - popupMargin.bottom),
+                    windowBounds.bottom - popupContentSize.height - popupMargin.bottom
+                )
             )
         }
 
         override fun getMargins(): PaddingValues {
-            return PaddingValues(vertical = verticalMargin)
+            return PaddingValues(horizontal = 0.dp, vertical = 8.dp)
         }
     }
+}
+
+fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
+    val safeX = if (x.isNaN() || x < 0f) 0f else x
+    val safeY = if (y.isNaN() || y < 0f) 0f else y
+    return TransformOrigin(safeX, safeY)
 }

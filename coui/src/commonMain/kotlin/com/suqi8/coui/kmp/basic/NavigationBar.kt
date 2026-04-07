@@ -52,8 +52,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -219,48 +221,6 @@ private fun CouiNavigationPopupMenu(
     items: List<NavigationItem>,
     onItemSelected: (NavigationItem) -> Unit
 ) {
-    if (expanded) {
-        val density = LocalDensity.current
-        Popup(
-            onDismissRequest = onDismissRequest,
-            alignment = Alignment.BottomEnd,
-            offset = IntOffset(0, with(density) { -8.dp.toPx() }.toInt()), // coui_navigation_popup_vertical_margin
-            properties = PopupProperties(focusable = true)
-        ) {
-            Surface(
-                modifier = Modifier
-                    .width(208.dp) // coui_navigation_popup_item_min_width
-                    .padding(end = 16.dp, bottom = 56.dp),
-                shape = RoundedCornerShape(12.dp), // coui_popup_list_window_content_radius
-                shadowElevation = 8.dp
-            ) {
-                ListPopupColumn {
-                    items.forEachIndexed { index, item ->
-                        val shape = when {
-                            items.size == 1 -> RoundedCornerShape(12.dp)
-                            index == 0 -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                            index == items.size - 1 -> RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
-                            else -> RoundedCornerShape(0.dp)
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                                .clip(shape)
-                                .clickable(enabled = item.enabled) { onItemSelected(item) }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Spacer(Modifier.width(16.dp))
-                            Icon(painter = item.icon, contentDescription = null, modifier = Modifier.size(24.dp))
-                            Spacer(Modifier.width(16.dp))
-                            Text(text = item.label, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 // --- Custom Indication using modern Modifier.Node API ---

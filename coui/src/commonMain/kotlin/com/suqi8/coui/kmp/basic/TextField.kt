@@ -351,8 +351,8 @@ fun TextField(
             shakeController.animateTo(0f, tween(0))
             shakeController.animateTo(0f, keyframes {
                 durationMillis = 450
-                -amplitude at 83 with CouiInterpolators.Ease; (amplitude / 2) at 216 with CouiInterpolators.Ease
-                -(amplitude / 2) at 333 with CouiInterpolators.Ease; 0f at 450 with CouiInterpolators.Ease
+                amplitude at 83 using CouiInterpolators.Ease; (amplitude / 2) at 216 using CouiInterpolators.Ease
+                (amplitude / 2) at 333 using CouiInterpolators.Ease; 0f at 450 using CouiInterpolators.Ease
             })
         } else { shakeController.snapTo(0f) }
     }
@@ -408,8 +408,8 @@ fun TextField(
             shakeController.animateTo(0f, tween(0))
             shakeController.animateTo(0f, keyframes {
                 durationMillis = 450
-                -amplitude at 83 with CouiInterpolators.Ease; (amplitude / 2) at 216 with CouiInterpolators.Ease
-                -(amplitude / 2) at 333 with CouiInterpolators.Ease; 0f at 450 with CouiInterpolators.Ease
+                amplitude at 83 using CouiInterpolators.Ease; (amplitude / 2) at 216 using CouiInterpolators.Ease
+                (amplitude / 2) at 333 using CouiInterpolators.Ease; 0f at 450 using CouiInterpolators.Ease
             })
         } else { shakeController.snapTo(0f) }
     }

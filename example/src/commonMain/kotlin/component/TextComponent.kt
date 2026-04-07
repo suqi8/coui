@@ -50,7 +50,6 @@ import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.basic.TextButton
 import com.suqi8.coui.kmp.basic.TextField
 import com.suqi8.coui.kmp.extra.CheckboxLocation
-import com.suqi8.coui.kmp.extra.DropdownOption
 import com.suqi8.coui.kmp.extra.SpinnerEntry
 import com.suqi8.coui.kmp.extra.SuperArrow
 import com.suqi8.coui.kmp.extra.SuperBottomSheet
@@ -70,7 +69,7 @@ fun TextComponent(
     showDialog: MutableState<Boolean>,
     dialogTextFieldValue: MutableState<String>,
     showBottomSheet: MutableState<Boolean>,
-    bottomSheetDropdownSelectedOption: MutableState<String>,
+    bottomSheetDropdownSelectedOption: MutableState<Int>,
     bottomSheetSuperSwitchState: MutableState<Boolean>,
     checkbox: MutableState<Boolean>,
     checkboxTrue: MutableState<Boolean>,
@@ -87,6 +86,7 @@ fun TextComponent(
     miuixSuperSwitchState: MutableState<Boolean>,
     miuixSuperSwitchAnimState: MutableState<Boolean>,
 ) {
+    val dropdownOptions = remember { listOf("Option 1", "Option 2", "Option 3", "Option 4") }
     val spinnerOptions = remember {
         listOf(
             SpinnerEntry(
@@ -347,40 +347,24 @@ fun TextComponent(
         )
     }
 
-    val dropdownOptions = remember {
-        listOf(
-            DropdownOption(text = "Option 1", value = "opt1"),
-            DropdownOption(text = "Option 2", value = "opt2"),
-            DropdownOption(text = "Option 3", value = "opt3")
-        )
-    }
-
-    // 2. 更新状态变量：从 Int 类型 (selectedIndex) 升级为 String 类型 (selectedValue)
-    //    状态现在持有的是被选中项的唯一 `value`，而不是它在列表中的位置。
-    val dropdownOptionSelected = remember { mutableStateOf("opt1") } // 默认选中 "opt1"
-
     SmallTitle(text = "Dropdown")
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .padding(bottom = 12.dp)
     ) {
-        // 3. 更新 SuperDropdown 的调用参数
         SuperDropdown(
             title = "Dropdown",
-            items = dropdownOptions, // 传入新的 List<DropdownOption>
-            selectedValue = dropdownOptionSelected.value, // 使用 selectedValue 绑定 String 状态
-            onValueChange = { newValue -> // 使用 onValueChange，它返回的是 String 类型的 value
-                dropdownOptionSelected.value = newValue
-            },
+            items = dropdownOptions,
+            selectedIndex = dropdownOptionSelected.value,
+            onSelectedIndexChange = { newOption -> dropdownOptionSelected.value = newOption },
         )
 
-        // 4. 同样更新禁用的 Dropdown
         SuperDropdown(
             title = "Disabled Dropdown",
-            items = listOf(DropdownOption(text = "Option 3", value = "disabled_opt")), // 同样使用 DropdownOption
-            selectedValue = "disabled_opt", // 设置对应的 value
-            onValueChange = {}, // 回调名称已更新
+            items = listOf("Option 3"),
+            selectedIndex = 0,
+            onSelectedIndexChange = {},
             enabled = false
         )
     }
@@ -462,15 +446,10 @@ fun Dialog(
 @Composable
 fun BottomSheet(
     showBottomSheet: MutableState<Boolean>,
-    bottomSheetDropdownSelectedOption: MutableState<String>,
+    bottomSheetDropdownSelectedOption: MutableState<Int>,
     bottomSheetSuperSwitchState: MutableState<Boolean>
 ) {
-    val dropdownOptions = remember {
-        listOf(
-            DropdownOption(text = "Option 1", value = "bs_opt1"),
-            DropdownOption(text = "Option 2", value = "bs_opt2")
-        )
-    }
+    val dropdownOptions = listOf("Option 1", "Option 2")
     SuperBottomSheet(
         title = "BottomSheet",
         show = showBottomSheet,
@@ -516,11 +495,9 @@ fun BottomSheet(
                 ) {
                     SuperDropdown(
                         title = "Dropdown",
-                        items = dropdownOptions, // 确保这里传入的是 List<DropdownOption>
-                        selectedValue = bottomSheetDropdownSelectedOption.value, // 使用 .value 绑定 String 状态
-                        onValueChange = { newValue -> // 回调现在返回 String 类型的 value
-                            bottomSheetDropdownSelectedOption.value = newValue
-                        }
+                        items = dropdownOptions,
+                        selectedIndex = bottomSheetDropdownSelectedOption.value,
+                        onSelectedIndexChange = { newOption -> bottomSheetDropdownSelectedOption.value = newOption }
                     )
                     SuperSwitch(
                         title = "Switch",

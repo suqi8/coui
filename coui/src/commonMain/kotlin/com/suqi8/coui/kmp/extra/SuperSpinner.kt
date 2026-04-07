@@ -22,11 +22,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
@@ -163,6 +165,8 @@ private fun SuperSpinnerPopup(
     onSelectedIndexChange: ((Int) -> Unit)?
 ) {
     val onSelectState = rememberUpdatedState(onSelectedIndexChange)
+    var hoveredIndex by remember { mutableStateOf(-1) }
+    var pressedIndex by remember { mutableStateOf(-1) }
     ListPopup(
         show = isDropdownExpanded,
         alignment = PopupPositionProvider.Align.Right,
@@ -171,7 +175,32 @@ private fun SuperSpinnerPopup(
         },
         maxHeight = maxHeight
     ) {
-        ListPopupColumn {
+        ListPopupColumn(
+            onPressedIndexChange = { pressedIndex = it },
+            onDragHover = {
+                hoveredIndex = it
+            },
+            onTap = { index ->
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                onSelectedIndexChange?.invoke(index)
+                isDropdownExpanded.value = false
+                pressedIndex = -1
+                hoveredIndex = -1
+            },
+            onDragEnd = {
+                if (hoveredIndex != -1) {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                    onSelectedIndexChange?.invoke(hoveredIndex)
+                    isDropdownExpanded.value = false
+                }
+                pressedIndex = -1
+                hoveredIndex = -1
+            },
+            onDragCancel = {
+                pressedIndex = -1
+                hoveredIndex = -1
+            }
+        ) {
             items.forEachIndexed { index, spinnerEntry ->
                 key(index) {
                     SpinnerItemImpl(
