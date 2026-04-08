@@ -152,14 +152,14 @@ private fun ClockNavigationDemo(
                 when (currentPage) {
                     1, 2 -> LargeTopAppBar(
                         title = UIConstants.PAGE_TITLES[currentPage],
-                        subtitle = if (currentPage == 1) UIConstants.PAGE_SUBTITLES[currentPage] else null,
+                        subtitle = if (currentPage == 2) UIConstants.PAGE_SUBTITLES[currentPage] else null,
                         largeTitle = UIConstants.PAGE_TITLES[currentPage],
                         scrollBehavior = currentScrollBehavior,
                         actions = { TopAppBarActions() }
                     )
                     else -> TopAppBar(
                         title = UIConstants.PAGE_TITLES[currentPage],
-                        subtitle = UIConstants.PAGE_SUBTITLES[currentPage],
+                        subtitle = if (currentPage == 3) null else UIConstants.PAGE_SUBTITLES[currentPage],
                         scrollBehavior = currentScrollBehavior,
                         actions = { TopAppBarActions() }
                     )
