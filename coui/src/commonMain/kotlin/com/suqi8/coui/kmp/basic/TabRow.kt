@@ -3,45 +3,18 @@
 
 package com.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
-import com.mocharealm.gaze.capsule.ContinuousRoundedRectangle
 import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.utils.overScrollHorizontal
 
 /**
- * A [TabRow] with Miuix style.
+ * A COUI-style [TabRow].
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow]
@@ -60,48 +33,43 @@ fun TabRow(
     modifier: Modifier = Modifier,
     colors: TabRowColors = TabRowDefaults.tabRowColors(),
     minWidth: Dp = TabRowDefaults.TabRowMinWidth,
-    maxWidth: Dp = TabRowDefaults.TabRowMaxWidth,
+    maxWidth: Dp? = TabRowDefaults.TabRowMaxWidth,
     height: Dp = TabRowDefaults.TabRowHeight,
     cornerRadius: Dp = TabRowDefaults.TabRowCornerRadius,
     onTabSelected: ((Int) -> Unit)? = null,
 ) {
-    val currentOnTabSelected by rememberUpdatedState(onTabSelected)
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height)
-            .then(modifier)
-    ) {
-        val config = rememberTabRowConfig(tabs, minWidth, maxWidth, cornerRadius, 9.dp, this.maxWidth)
-
-        LazyRow(
-            state = config.listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .overScrollHorizontal()
-                .clip(config.shape),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
-            overscrollEffect = null
-        ) {
-            itemsIndexed(tabs) { index, tabText ->
-                TabItem(
-                    text = tabText,
-                    isSelected = selectedTabIndex == index,
-                    onClick = { currentOnTabSelected?.invoke(index) },
-                    enabled = currentOnTabSelected != null,
-                    colors = colors,
-                    shape = config.shape,
-                    width = config.tabWidth
-                )
-            }
-        }
-    }
+    CouiSegmentedRow(
+        items = tabs,
+        selectedIndex = selectedTabIndex,
+        onSelectionChange = onTabSelected,
+        modifier = modifier,
+        enabled = onTabSelected != null,
+        colors = colors.toSegmentedControlColors(),
+        metrics = SegmentedControlMetrics(
+            height = height,
+            outerPadding = 2.dp,
+            horizontalItemPadding = 14.dp,
+            minSegmentWidth = minWidth,
+            maxSegmentWidth = maxWidth,
+            indicatorShadowElevation = 0.dp,
+            textStyle = COUITheme.textStyles.headline,
+            fillMaxWidth = false,
+            sizeToContent = true,
+            cornerRadius = cornerRadius,
+            indicatorCornerRadius = 1.dp,
+            itemCornerRadius = cornerRadius - 2.dp,
+            indicatorHeight = 2.dp,
+            indicatorAtBottom = true,
+            indicatorBackgroundHeight = 2.dp,
+            indicatorBackgroundAtBottom = true,
+            indicatorBackgroundHorizontalPadding = 24.dp,
+            itemHorizontalInset = 2.dp,
+        ),
+    )
 }
 
 /**
- * A [TabRowWithContour] with Miuix style.
+ * A COUI-style [TabRowWithContour].
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow]
@@ -120,182 +88,41 @@ fun TabRowWithContour(
     modifier: Modifier = Modifier,
     colors: TabRowColors = TabRowDefaults.tabRowColors(),
     minWidth: Dp = TabRowDefaults.TabRowWithContourMinWidth,
-    maxWidth: Dp = TabRowDefaults.TabRowWithContourMaxWidth,
+    maxWidth: Dp? = TabRowDefaults.TabRowWithContourMaxWidth,
     height: Dp = TabRowDefaults.TabRowWithContourHeight,
     cornerRadius: Dp = TabRowDefaults.TabRowWithContourCornerRadius,
     onTabSelected: ((Int) -> Unit)? = null,
 ) {
-    val currentOnTabSelected by rememberUpdatedState(onTabSelected)
-    val contourPadding = 5.dp
-
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height)
-            .then(modifier)
-    ) {
-        val lazyRowAvailableWidth = this.maxWidth - (contourPadding * 2)
-        val config = rememberTabRowConfig(tabs, minWidth, maxWidth, cornerRadius, contourPadding, lazyRowAvailableWidth)
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(ContinuousRoundedRectangle(cornerRadius + contourPadding))
-                .background(color = colors.backgroundColor(false))
-                .padding(contourPadding)
-        ) {
-            LazyRow(
-                state = config.listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .overScrollHorizontal()
-                    .clip(ContinuousRoundedRectangle(cornerRadius)),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(contourPadding),
-                overscrollEffect = null
-            ) {
-                itemsIndexed(tabs) { index, tabText ->
-                    TabItemWithContour(
-                        text = tabText,
-                        isSelected = selectedTabIndex == index,
-                        onClick = { currentOnTabSelected?.invoke(index) },
-                        enabled = currentOnTabSelected != null,
-                        colors = colors,
-                        shape = config.shape,
-                        width = config.tabWidth
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TabItem(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    colors: TabRowColors,
-    shape: ContinuousRoundedRectangle,
-    width: Dp
-) {
-    Surface(
-        shape = shape,
-        onClick = onClick,
-        enabled = enabled,
-        color = colors.backgroundColor(isSelected),
-        modifier = Modifier
-            .fillMaxHeight()
-            .width(width)
-            .semantics { role = Role.Tab }
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color = colors.contentColor(isSelected),
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun TabItemWithContour(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    colors: TabRowColors,
-    shape: ContinuousRoundedRectangle,
-    width: Dp
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            .width(width)
-            .clip(shape)
-            .background(colors.backgroundColor(isSelected))
-            .clickable(enabled = enabled) { onClick() }
-            .semantics { role = Role.Tab },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = colors.contentColor(isSelected),
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-/**
- * Base configuration for TabRow implementations.
- */
-private data class TabRowConfig(
-    val tabWidth: Dp,
-    val shape: ContinuousRoundedRectangle,
-    val listState: LazyListState
-)
-
-/**
- * Prepare common TabRow configuration.
- * @param lazyRowAvailableWidth The actual width available for the LazyRow's content (tabs + inter-tab spacing).
- */
-@Composable
-private fun rememberTabRowConfig(
-    tabs: List<String>,
-    minWidth: Dp,
-    maxWidth: Dp,
-    cornerRadius: Dp,
-    spacing: Dp,
-    lazyRowAvailableWidth: Dp
-): TabRowConfig {
-    val listState = rememberLazyListState()
-    val tabWidth = remember(tabs.size, minWidth, maxWidth, lazyRowAvailableWidth, spacing) {
-        calculateTabWidth(tabs.size, minWidth, maxWidth, spacing, lazyRowAvailableWidth)
-    }
-    val shape = remember(cornerRadius) { ContinuousRoundedRectangle(cornerRadius) }
-
-    return TabRowConfig(tabWidth, shape, listState)
-}
-
-private fun calculateTabWidth(
-    tabCount: Int,
-    minWidth: Dp,
-    maxWidth: Dp,
-    spacing: Dp,
-    availableWidth: Dp
-): Dp {
-    if (tabCount == 0) return minWidth
-
-    val totalSpacing = if (tabCount > 1) (tabCount - 1) * spacing else 0.dp
-    val contentWidth = availableWidth - totalSpacing
-
-    return if (contentWidth <= 0.dp) {
-        minWidth
-    } else {
-        val idealWidth = contentWidth / tabCount
-        when {
-            idealWidth < minWidth -> minWidth
-            idealWidth > maxWidth -> {
-                val totalMaxWidth = maxWidth * tabCount + totalSpacing
-                if (totalMaxWidth < availableWidth) {
-                    idealWidth
-                } else {
-                    maxWidth
-                }
-            }
-
-            else -> idealWidth
-        }
-    }
+    val contourBorder = BorderStroke(1.dp, COUITheme.colorScheme.outline.copy(alpha = 0.16f))
+    CouiSegmentedRow(
+        items = tabs,
+        selectedIndex = selectedTabIndex,
+        onSelectionChange = onTabSelected,
+        modifier = modifier,
+        enabled = onTabSelected != null,
+        colors = colors.toSegmentedControlColors(),
+        metrics = SegmentedControlMetrics(
+            height = height,
+            outerPadding = 2.dp,
+            horizontalItemPadding = 10.dp,
+            minSegmentWidth = minWidth,
+            maxSegmentWidth = maxWidth,
+            indicatorShadowElevation = 0.dp,
+            textStyle = COUITheme.textStyles.body,
+            border = contourBorder,
+            fillMaxWidth = false,
+            sizeToContent = true,
+            cornerRadius = cornerRadius,
+            indicatorCornerRadius = 1.dp,
+            itemCornerRadius = cornerRadius - 2.dp,
+            indicatorHeight = 2.dp,
+            indicatorAtBottom = true,
+            indicatorBackgroundHeight = 2.dp,
+            indicatorBackgroundAtBottom = true,
+            indicatorBackgroundHorizontalPadding = 24.dp,
+            itemHorizontalInset = 2.dp,
+        ),
+    )
 }
 
 object TabRowDefaults {
@@ -303,22 +130,22 @@ object TabRowDefaults {
     /**
      * The default height of the [TabRow].
      */
-    val TabRowHeight = 54.dp
+    val TabRowHeight = 40.dp
 
     /**
      * The default height of the [TabRowWithContour].
      */
-    val TabRowWithContourHeight = 45.dp
+    val TabRowWithContourHeight = 36.dp
 
     /**
      * The default corner radius of the [TabRow].
      */
-    val TabRowCornerRadius = 12.dp
+    val TabRowCornerRadius = 20.dp
 
     /**
      * The default corner radius of the [TabRowWithContour].
      */
-    val TabRowWithContourCornerRadius = 8.dp
+    val TabRowWithContourCornerRadius = 12.dp
 
     /**
      * The default minimum width of the [TabRow].
@@ -328,32 +155,88 @@ object TabRowDefaults {
     /**
      * The default minimum width of the [TabRowWithContour].
      */
-    val TabRowWithContourMinWidth = 62.dp
+    val TabRowWithContourMinWidth = 52.dp
 
     /**
      * The default maximum width of the tab in [TabRow].
      */
-    val TabRowMaxWidth = 98.dp
+    val TabRowMaxWidth: Dp? = null
 
     /**
      * The default minimum width of the tab in [TabRowWithContour].
      */
-    val TabRowWithContourMaxWidth = 84.dp
+    val TabRowWithContourMaxWidth: Dp? = null
 
     /**
      * The default colors for the [TabRow].
      */
     @Composable
     fun tabRowColors(
-        backgroundColor: Color = COUITheme.colorScheme.background,
-        contentColor: Color = COUITheme.colorScheme.onSurfaceVariantSummary,
-        selectedBackgroundColor: Color = COUITheme.colorScheme.surface,
-        selectedContentColor: Color = COUITheme.colorScheme.onSurface
+        backgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.10f)
+        } else {
+            Color.Black.copy(alpha = 0.06f)
+        },
+        contentColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.54f)
+        } else {
+            Color.Black.copy(alpha = 0.40f)
+        },
+        selectedBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.Black.copy(alpha = 0.85f)
+        },
+        indicatorBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.10f)
+        } else {
+            Color.Black.copy(alpha = 0.06f)
+        },
+        selectedContentColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.Black.copy(alpha = 0.85f)
+        },
+        pressedContentColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.70f)
+        } else {
+            Color.Black.copy(alpha = 0.55f)
+        },
+        pressedSelectedContentColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.85f)
+        } else {
+            Color.Black.copy(alpha = 0.85f)
+        },
+        disabledBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.10f)
+        } else {
+            Color.Black.copy(alpha = 0.06f)
+        },
+        disabledSelectedBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.29f)
+        } else {
+            Color.Black.copy(alpha = 0.16f)
+        },
+        disabledIndicatorBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
+            Color.White.copy(alpha = 0.10f)
+        } else {
+            Color.Black.copy(alpha = 0.06f)
+        },
+        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        disabledSelectedContentColor: Color = COUITheme.colorScheme.disabledOnSurface,
     ): TabRowColors = TabRowColors(
         backgroundColor = backgroundColor,
         contentColor = contentColor,
         selectedBackgroundColor = selectedBackgroundColor,
-        selectedContentColor = selectedContentColor
+        indicatorBackgroundColor = indicatorBackgroundColor,
+        selectedContentColor = selectedContentColor,
+        pressedContentColor = pressedContentColor,
+        pressedSelectedContentColor = pressedSelectedContentColor,
+        disabledBackgroundColor = disabledBackgroundColor,
+        disabledSelectedBackgroundColor = disabledSelectedBackgroundColor,
+        disabledIndicatorBackgroundColor = disabledIndicatorBackgroundColor,
+        disabledContentColor = disabledContentColor,
+        disabledSelectedContentColor = disabledSelectedContentColor,
     )
 }
 
@@ -362,13 +245,29 @@ class TabRowColors(
     private val backgroundColor: Color,
     private val contentColor: Color,
     private val selectedBackgroundColor: Color,
-    private val selectedContentColor: Color
+    private val indicatorBackgroundColor: Color,
+    private val selectedContentColor: Color,
+    private val pressedContentColor: Color,
+    private val pressedSelectedContentColor: Color,
+    private val disabledBackgroundColor: Color,
+    private val disabledSelectedBackgroundColor: Color,
+    private val disabledIndicatorBackgroundColor: Color,
+    private val disabledContentColor: Color,
+    private val disabledSelectedContentColor: Color,
 ) {
     @Stable
-    internal fun backgroundColor(selected: Boolean): Color =
-        if (selected) selectedBackgroundColor else backgroundColor
-
-    @Stable
-    internal fun contentColor(selected: Boolean): Color =
-        if (selected) selectedContentColor else contentColor
+    internal fun toSegmentedControlColors(): SegmentedControlColors = SegmentedControlColors(
+        containerColor = backgroundColor,
+        indicatorColor = selectedBackgroundColor,
+        indicatorBackgroundColor = indicatorBackgroundColor,
+        contentColor = contentColor,
+        selectedContentColor = selectedContentColor,
+        pressedContentColor = pressedContentColor,
+        pressedSelectedContentColor = pressedSelectedContentColor,
+        disabledContainerColor = disabledBackgroundColor,
+        disabledIndicatorColor = disabledSelectedBackgroundColor,
+        disabledIndicatorBackgroundColor = disabledIndicatorBackgroundColor,
+        disabledContentColor = disabledContentColor,
+        disabledSelectedContentColor = disabledSelectedContentColor,
+    )
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.ChoiceChipRow
 import com.suqi8.coui.kmp.basic.TabRow
 import com.suqi8.coui.kmp.basic.TabRowWithContour
 
@@ -40,11 +41,19 @@ fun TabRowDemo() {
         ) {
             val tabs1 = listOf("Recommended", "Following", "Popular", "Featured")
             var selectedTabIndex1 by remember { mutableStateOf(0) }
+            val longTabs = listOf("Alarm settings overview", "Custom repeat schedule", "Important reminders")
+            var selectedLongTabIndex by remember { mutableStateOf(1) }
 
             TabRow(
                 tabs = tabs1,
                 selectedTabIndex = selectedTabIndex1,
                 onTabSelected = { selectedTabIndex1 = it }
+            )
+
+            TabRow(
+                tabs = longTabs,
+                selectedTabIndex = selectedLongTabIndex,
+                onTabSelected = { selectedLongTabIndex = it }
             )
             val tabs2 = listOf("All", "Photos", "Videos", "Documents")
             var selectedTabIndex2 by remember { mutableStateOf(0) }
@@ -53,6 +62,15 @@ fun TabRowDemo() {
                 tabs = tabs2,
                 selectedTabIndex = selectedTabIndex2,
                 onTabSelected = { selectedTabIndex2 = it }
+            )
+
+            val chipItems = listOf("Ring once", "Workday", "Every day", "Custom repeat")
+            var selectedChipIndex by remember { mutableStateOf(1) }
+
+            ChoiceChipRow(
+                items = chipItems,
+                selectedIndex = selectedChipIndex,
+                onSelectionChange = { selectedChipIndex = it }
             )
         }
     }

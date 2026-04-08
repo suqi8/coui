@@ -43,6 +43,7 @@ import com.suqi8.coui.kmp.basic.ButtonDefaults
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.CardDefaults
 import com.suqi8.coui.kmp.basic.Checkbox
+import com.suqi8.coui.kmp.basic.ChoiceChipRow
 import com.suqi8.coui.kmp.basic.CircularProgressIndicator
 import com.suqi8.coui.kmp.basic.ColorPalette
 import com.suqi8.coui.kmp.basic.ColorPicker
@@ -55,6 +56,8 @@ import com.suqi8.coui.kmp.basic.LinearProgressIndicator
 import com.suqi8.coui.kmp.basic.LoadingView
 import com.suqi8.coui.kmp.basic.OutlinedButton
 import com.suqi8.coui.kmp.basic.RangeSlider
+import com.suqi8.coui.kmp.basic.SegmentedControl
+import com.suqi8.coui.kmp.basic.SegmentedControlStyle
 import com.suqi8.coui.kmp.basic.Slider
 import com.suqi8.coui.kmp.basic.SliderDefaults
 import com.suqi8.coui.kmp.basic.SmallTitle
@@ -650,10 +653,20 @@ fun LazyListScope.otherComponent(
 
     item(key = "tabRow") {
         SmallTitle(text = "TabRow")
-        val tabTexts = remember { listOf("Tab 1", "Tab 2", "Tab 3") }
-        val tabTexts1 = remember { listOf("Tab 1", "Tab 2", "Tab 3", "Tab 4", "Tab 5", "Tab 6") }
+        val tabTexts = remember { listOf("Home", "Explore", "Profile") }
+        val tabTexts1 = remember { listOf("Overview", "Activity", "Albums", "Members", "Archive", "Settings") }
+        val longTabTexts = remember { listOf("Alarm settings overview", "Custom repeat schedule", "Important reminders") }
+        val choiceChipTexts = remember { listOf("Ring once", "Workday", "Every day", "Custom repeat") }
+        val disabledChoiceChipTexts = remember { listOf("Alarm", "Schedule", "Countdown") }
+        val segmentTexts = remember { listOf("Overview", "Details", "Gallery") }
+        val compactSegmentTexts = remember { listOf("Day", "Week", "Month") }
         var selectedTabIndex by remember { mutableStateOf(0) }
         var selectedTabIndex1 by remember { mutableStateOf(0) }
+        var selectedLongTabIndex by remember { mutableStateOf(1) }
+        var selectedChoiceChipIndex by remember { mutableStateOf(1) }
+        var disabledChoiceChipIndex by remember { mutableStateOf(0) }
+        var selectedSegmentIndex by remember { mutableStateOf(0) }
+        var selectedCompactSegmentIndex by remember { mutableStateOf(1) }
         TabRow(
             tabs = tabTexts,
             selectedTabIndex = selectedTabIndex,
@@ -663,6 +676,27 @@ fun LazyListScope.otherComponent(
         ) {
             selectedTabIndex = it
         }
+        Text(
+            text = "Selected TabRow: ${tabTexts[selectedTabIndex]}",
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp)
+        )
+        TabRow(
+            tabs = longTabTexts,
+            selectedTabIndex = selectedLongTabIndex,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp)
+        ) {
+            selectedLongTabIndex = it
+        }
+        Text(
+            text = "Selected long TabRow: ${longTabTexts[selectedLongTabIndex]}",
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp)
+        )
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -670,6 +704,44 @@ fun LazyListScope.otherComponent(
                 .padding(bottom = 12.dp),
             insideMargin = PaddingValues(16.dp)
         ) {
+            Text(
+                text = "ChoiceChipRow / COUI",
+                style = COUITheme.textStyles.headline,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            ChoiceChipRow(
+                items = choiceChipTexts,
+                selectedIndex = selectedChoiceChipIndex,
+                onSelectionChange = { selectedChoiceChipIndex = it }
+            )
+            Text(
+                text = "Selected ChoiceChip: ${choiceChipTexts[selectedChoiceChipIndex]}",
+                modifier = Modifier.padding(top = 12.dp)
+            )
+            ChoiceChipRow(
+                items = disabledChoiceChipTexts,
+                selectedIndex = disabledChoiceChipIndex,
+                onSelectionChange = { disabledChoiceChipIndex = it },
+                enabled = false,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+            Text(
+                text = "Disabled ChoiceChipRow",
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+            insideMargin = PaddingValues(16.dp)
+        ) {
+            Text(
+                text = "TabRowWithContour / COUI",
+                style = COUITheme.textStyles.headline,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
             TabRowWithContour(
                 tabs = tabTexts1,
                 selectedTabIndex = selectedTabIndex1,
@@ -680,7 +752,44 @@ fun LazyListScope.otherComponent(
                 derivedStateOf { tabTexts1[selectedTabIndex1] }
             }
             Text(
-                text = "Selected Tab: $selectedTabText",
+                text = "Selected TabRowWithContour: $selectedTabText",
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+            insideMargin = PaddingValues(16.dp)
+        ) {
+            Text(
+                text = "SegmentedControl / Regular",
+                style = COUITheme.textStyles.headline,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            SegmentedControl(
+                items = segmentTexts,
+                selectedIndex = selectedSegmentIndex,
+                onSelectionChange = { selectedSegmentIndex = it }
+            )
+            Text(
+                text = "Selected Segment: ${segmentTexts[selectedSegmentIndex]}",
+                modifier = Modifier.padding(top = 12.dp)
+            )
+            Text(
+                text = "SegmentedControl / Compact",
+                style = COUITheme.textStyles.headline,
+                modifier = Modifier.padding(top = 16.dp, bottom = 12.dp)
+            )
+            SegmentedControl(
+                items = compactSegmentTexts,
+                selectedIndex = selectedCompactSegmentIndex,
+                onSelectionChange = { selectedCompactSegmentIndex = it },
+                style = SegmentedControlStyle.Compact
+            )
+            Text(
+                text = "Selected Compact Segment: ${compactSegmentTexts[selectedCompactSegmentIndex]}",
                 modifier = Modifier.padding(top = 12.dp)
             )
         }
