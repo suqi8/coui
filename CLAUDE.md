@@ -103,7 +103,6 @@ Follow this parameter ordering:
 
 ```kotlin
 @Composable
-@NonRestartableComposable
 fun ComponentName(
     // 1. Required parameters (functional callbacks first)
     onClick: () -> Unit,
@@ -121,6 +120,8 @@ fun ComponentName(
     content: @Composable () -> Unit,
 )
 ```
+
+Add `@NonRestartableComposable` only when the component is a thin wrapper that fully delegates to another composable and reads no state itself — see the Key Patterns below. Do not include it on the default template.
 
 ### Defaults Object
 
@@ -164,7 +165,7 @@ data class ButtonColors(
 
 ### Key Patterns
 
-- **`rememberUpdatedState`** for callbacks that must always reflect the latest value without restarting an effect or invalidating a Modifier: use inside `LaunchedEffect`/`DisposableEffect` to avoid stale closures, and inside lambdas captured by Modifier factories (`clickable`, `toggleable`, etc.) to stabilize the lambda identity; do NOT use when passing a callback directly as a composable parameter (e.g., `Button(onClick = onClick)`) — Compose's skip mechanism handles that
+- **`rememberUpdatedState`** for values whose latest reading must be visible to a long-lived closure without re-running an effect or rebuilding a Modifier: use inside `LaunchedEffect`/`DisposableEffect` so the effect body sees the newest callback without being keyed on it, and inside `remember { }`-cached lambdas (e.g., the `onClick` you pass to `Modifier.clickable` after wrapping it in `remember`) so the cached body still calls the up-to-date callback. Note: this prevents *stale captures*, it does not stabilize the outer lambda's identity — a `Modifier.clickable { current() }` literal is still a fresh object on each composition. Do NOT use it when forwarding a callback directly to a child composable (e.g., `Button(onClick = onClick)`) — Compose's skip mechanism handles lambda stability there
 - **`remember` with keys** for derived values: `val alpha = remember(enabled) { if (enabled) 1f else 0.38f }`
 - **`@NonRestartableComposable`** on thin wrapper composables that fully delegate to other composables and read no state themselves; avoid on composables with multiple internal state reads (they benefit from smart recomposition)
 - **`@Immutable`** on color/style data classes
@@ -182,8 +183,8 @@ data class ButtonColors(
 
 - `LaunchedEffect` keys: only include values actually read in the effect body
 - `minIntrinsicWidth`/`maxIntrinsicWidth` triggers full subtree traversal — defer to overflow branch when possible
-- Use `@Immutable` on truly immutable data classes (all `val`, never mutated); use `@Stable` on classes whose mutable properties notify Compose via `MutableState`; `@Stable` is also the standard pattern for internal helper functions within `@Immutable` data classes (e.g., `@Stable internal fun color(enabled: Boolean): Color`)
-- Standard collections (`List`, `Set`, `Map`) are unstable to Compose; wrap in `@Immutable` data classes when passing as composable parameters
+- Use `@Immutable` on truly immutable data classes (all `val`, never mutated, **and** no lambda/callback fields — lambda equality is reference-based and breaks `@Immutable`'s "equals stays equal forever" contract); use `@Stable` for data classes that hold lambdas/callbacks, or for classes whose mutable properties notify Compose via `MutableState`; `@Stable` is also the standard pattern for internal helper functions within `@Immutable` data classes (e.g., `@Stable internal fun color(enabled: Boolean): Color`)
+- Standard collections (`List`, `Set`, `Map`) are unstable to Compose. Prefer `kotlinx.collections.immutable` (`ImmutableList`/`PersistentList`) — the Compose compiler recognizes them as stable. Wrapping a raw `List` in an `@Immutable` data class only works if the caller keeps the wrapper's identity stable (e.g., builds it inside a `remember`); otherwise the wrapper is "new" each composition and the `@Immutable` annotation is a false promise to Compose
 
 ## Workflows
 
