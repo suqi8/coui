@@ -53,7 +53,6 @@ import com.suqi8.coui.kmp.basic.ListPopup
 import com.suqi8.coui.kmp.basic.ListPopupColumn
 import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.TextButton
 import com.suqi8.coui.kmp.icon.MiuixIcons
 import com.suqi8.coui.kmp.icon.icons.basic.ArrowUpDownIntegrated
 import com.suqi8.coui.kmp.icon.icons.basic.Check
@@ -370,49 +369,31 @@ private fun SuperSpinnerDialog(
             isDropdownExpanded.value = false
         },
         insideMargin = DpSize(0.dp, 24.dp),
-        content = {
-            Layout(
-                content = {
-                    LazyColumn {
-                        items(items.size) { index ->
-                            SpinnerItemImpl(
-                                entry = items[index],
-                                entryCount = items.size,
-                                isSelected = selectedIndex == index,
-                                index = index,
-                                dialogMode = true,
-                                spinnerColors = spinnerColors
-                            ) { selectedIdx ->
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                                onSelectedIndexChange?.invoke(selectedIdx)
-                                isDropdownExpanded.value = false
-                            }
-                        }
-                    }
-                    TextButton(
-                        modifier = Modifier
-                            .padding(start = 24.dp, top = 12.dp, end = 24.dp)
-                            .fillMaxWidth(),
+        actions = {
+            SuperDialogActions(
+                actions = listOf(
+                    SuperDialogAction(
                         text = dialogButtonString,
-                        minHeight = 50.dp,
-                        onClick = {
-                            isDropdownExpanded.value = false
-                        }
+                        tone = SuperDialogActionTone.Primary,
+                        onClick = { isDropdownExpanded.value = false }
                     )
-                }
-            ) { measurables, constraints ->
-                if (measurables.size != 2) {
-                    layout(0, 0) { }
-                } else {
-                    val button = measurables[1].measure(constraints)
-                    val lazyList = measurables[0].measure(
-                        constraints.copy(
-                            maxHeight = constraints.maxHeight - button.height
-                        )
-                    )
-                    layout(constraints.maxWidth, lazyList.height + button.height) {
-                        lazyList.place(0, 0)
-                        button.place(0, lazyList.height)
+                )
+            )
+        },
+        content = {
+            LazyColumn {
+                items(items.size) { index ->
+                    SpinnerItemImpl(
+                        entry = items[index],
+                        entryCount = items.size,
+                        isSelected = selectedIndex == index,
+                        index = index,
+                        dialogMode = true,
+                        spinnerColors = spinnerColors
+                    ) { selectedIdx ->
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                        onSelectedIndexChange?.invoke(selectedIdx)
+                        isDropdownExpanded.value = false
                     }
                 }
             }

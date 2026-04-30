@@ -35,7 +35,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.basic.BasicComponent
-import com.suqi8.coui.kmp.basic.ButtonDefaults
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.CardDefaults
 import com.suqi8.coui.kmp.basic.Checkbox
@@ -55,6 +54,11 @@ import com.suqi8.coui.kmp.extra.SuperArrow
 import com.suqi8.coui.kmp.extra.SuperBottomSheet
 import com.suqi8.coui.kmp.extra.SuperCheckbox
 import com.suqi8.coui.kmp.extra.SuperDialog
+import com.suqi8.coui.kmp.extra.SuperDialogAction
+import com.suqi8.coui.kmp.extra.SuperDialogActionStyle
+import com.suqi8.coui.kmp.extra.SuperDialogActionTone
+import com.suqi8.coui.kmp.extra.SuperDialogActions
+import com.suqi8.coui.kmp.extra.SuperDialogActionsLayout
 import com.suqi8.coui.kmp.extra.SuperDropdown
 import com.suqi8.coui.kmp.extra.SuperSpinner
 import com.suqi8.coui.kmp.extra.SuperSwitch
@@ -412,34 +416,31 @@ fun Dialog(
         show = showDialog,
         onDismissRequest = {
             showDialog.value = false
+        },
+        actions = {
+            SuperDialogActions(
+                actions = listOf(
+                    SuperDialogAction(
+                        text = "Cancel",
+                        tone = SuperDialogActionTone.Neutral,
+                        onClick = { showDialog.value = false }
+                    ),
+                    SuperDialogAction(
+                        text = "Save",
+                        tone = SuperDialogActionTone.Primary,
+                        style = SuperDialogActionStyle.Recommend,
+                        onClick = { showDialog.value = false }
+                    )
+                ),
+                layout = SuperDialogActionsLayout.CompactVertical,
+            )
         }
     ) {
         TextField(
-            modifier = Modifier.padding(bottom = 16.dp),
             value = dialogTextFieldValue.value,
             maxLines = 1,
             onValueChange = { dialogTextFieldValue.value = it }
         )
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(
-                text = "Cancel",
-                onClick = {
-                    showDialog.value = false
-                },
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(Modifier.width(20.dp))
-            TextButton(
-                text = "Confirm",
-                onClick = {
-                    showDialog.value = false
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsNeutral()
-            )
-        }
     }
 }
 

@@ -198,7 +198,13 @@ fun LargeTopAppBar(
     }
 
     val pinnedHeightPx = with(density) { COUITopAppBarDefaults.ContainerHeight.toPx() }
-    val maxHeightPx = with(density) { COUITopAppBarDefaults.LargeContainerHeight.toPx() }
+    val maxHeightPx = with(density) {
+        (if (subtitle != null) {
+            COUITopAppBarDefaults.LargeContainerHeightWithSubtitle
+        } else {
+            COUITopAppBarDefaults.LargeContainerHeight
+        }).toPx()
+    }
 
     SideEffect {
         val limit = pinnedHeightPx - maxHeightPx
@@ -402,16 +408,19 @@ private data class LargeTopAppBarCollapseMetrics(
 private fun rememberLargeTopAppBarCollapseMetrics(collapsedFraction: Float): LargeTopAppBarCollapseMetrics {
     val density = LocalDensity.current
     return remember(collapsedFraction, density) {
-        val pinnedTitleProgress = ((collapsedFraction - 0.34f) / 0.5f).coerceIn(0f, 1f)
+        val easedCollapse = collapsedFraction * collapsedFraction * (3f - 2f * collapsedFraction)
+        val pinnedTitleProgress = (((collapsedFraction - 0.28f) / 0.52f).coerceIn(0f, 1f)).let {
+            it * it * (3f - 2f * it)
+        }
         LargeTopAppBarCollapseMetrics(
             pinnedTitleAlpha = pinnedTitleProgress,
-            pinnedTitleScale = lerpFloat(0.94f, 1f, pinnedTitleProgress),
-            pinnedTitleTranslationY = with(density) { lerpFloat(8.dp.toPx(), 0f, pinnedTitleProgress) },
-            largeTitleAlpha = (1f - (collapsedFraction / 0.72f)).coerceIn(0f, 1f),
-            largeTitleScale = lerpFloat(1f, 0.84f, collapsedFraction),
-            largeTitleTranslationY = with(density) { lerpFloat(0f, -10.dp.toPx(), collapsedFraction) },
-            largeSubtitleAlpha = (1f - collapsedFraction).coerceIn(0f, 1f),
-            largeSubtitleTranslationY = with(density) { lerpFloat(-12.dp.toPx(), 0f, collapsedFraction) },
+            pinnedTitleScale = lerpFloat(0.96f, 1f, pinnedTitleProgress),
+            pinnedTitleTranslationY = with(density) { lerpFloat(10.dp.toPx(), 0f, pinnedTitleProgress) },
+            largeTitleAlpha = (1f - (easedCollapse / 0.74f)).coerceIn(0f, 1f),
+            largeTitleScale = lerpFloat(1f, 0.9f, easedCollapse),
+            largeTitleTranslationY = with(density) { lerpFloat(0f, -8.dp.toPx(), easedCollapse) },
+            largeSubtitleAlpha = (1f - easedCollapse).coerceIn(0f, 1f),
+            largeSubtitleTranslationY = with(density) { lerpFloat(0f, -12.dp.toPx(), easedCollapse) },
         )
     }
 }
@@ -430,12 +439,14 @@ private fun LargeTitleSection(
             .fillMaxWidth()
             .clipToBounds()
     ) {
+        val density = LocalDensity.current
         val screenWidth = maxWidth
         val startPadding = when {
             screenWidth < 600.dp -> COUIDimens.PaddingNormalLeftCompat
             screenWidth < 840.dp -> COUIDimens.PaddingNormalLeftMedium
             else -> COUIDimens.PaddingNormalLeftExpanded
         }
+        val bottomPaddingPx = with(density) { 20.dp.roundToPx() }
 
         Layout(
             content = {
@@ -457,16 +468,20 @@ private fun LargeTitleSection(
                             style = COUITheme.textStyles.title1.copy(
                                 color = titleContentColor,
                                 fontWeight = FontWeight.Normal
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     if (subtitle != null) {
                         BasicText(
                             text = subtitle,
-                            modifier = Modifier.graphicsLayer {
-                                alpha = metrics.largeSubtitleAlpha
-                                translationY = metrics.largeSubtitleTranslationY
-                            },
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .graphicsLayer {
+                                    alpha = metrics.largeSubtitleAlpha
+                                    translationY = metrics.largeSubtitleTranslationY
+                                },
                             style = COUITheme.textStyles.subtitle.copy(
                                 color = titleContentColor.copy(alpha = 0.6f),
                                 fontSize = 12.sp
@@ -482,7 +497,7 @@ private fun LargeTitleSection(
             val currentHeight = (expandedHeightPx + heightOffset).coerceAtLeast(0f).roundToInt()
 
             layout(constraints.maxWidth, currentHeight) {
-                val y = currentHeight - placeable.height - 16.dp.roundToPx()
+                val y = currentHeight - placeable.height - bottomPaddingPx
                 placeable.placeRelative(0, y)
             }
         }
@@ -874,6 +889,7 @@ object COUITopAppBarDefaults {
     val SearchBarHeight = 48.dp
     val SearchContainerHeight = 164.dp
     val SearchBarLayoutHeight = 64.dp
+    val LargeContainerHeightWithSubtitle = 132.dp
 
     val windowInsets: WindowInsets
         @Composable

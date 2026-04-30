@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,6 +38,8 @@ import androidx.compose.ui.unit.offset
 import com.suqi8.coui.kmp.extra.SuperDialog
 import com.suqi8.coui.kmp.extra.SuperDropdown
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.LocalDialogStates
+import com.suqi8.coui.kmp.utils.LocalPopupStates
 import com.suqi8.coui.kmp.utils.MiuixPopupUtils
 import com.suqi8.coui.kmp.utils.MiuixPopupUtils.Companion.MiuixPopupHost
 import kotlin.jvm.JvmInline
@@ -86,25 +90,33 @@ fun Scaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     val safeInsets = remember(contentWindowInsets) { MutableWindowInsets(contentWindowInsets) }
-    Surface(
-        modifier = modifier.onConsumedWindowInsetsChanged { consumedWindowInsets ->
-            // Exclude currently consumed window insets from user provided contentWindowInsets
-            safeInsets.insets = contentWindowInsets.exclude(consumedWindowInsets)
-        },
-        color = containerColor
+    val dialogStates = remember { mutableStateListOf<MiuixPopupUtils.DialogState>() }
+    val popupStates = remember { mutableStateListOf<MiuixPopupUtils.PopupState>() }
+
+    CompositionLocalProvider(
+        LocalDialogStates provides dialogStates,
+        LocalPopupStates provides popupStates
     ) {
-        ScaffoldLayout(
-            topBar = topBar,
-            bottomBar = bottomBar,
-            content = content,
-            snackbar = snackbarHost,
-            floatingActionButton = floatingActionButton,
-            floatingActionButtonPosition = floatingActionButtonPosition,
-            floatingToolbar = floatingToolbar,
-            floatingToolbarPosition = floatingToolbarPosition,
-            popup = popupHost,
-            contentWindowInsets = safeInsets,
-        )
+        Surface(
+            modifier = modifier.onConsumedWindowInsetsChanged { consumedWindowInsets ->
+                // Exclude currently consumed window insets from user provided contentWindowInsets
+                safeInsets.insets = contentWindowInsets.exclude(consumedWindowInsets)
+            },
+            color = containerColor
+        ) {
+            ScaffoldLayout(
+                topBar = topBar,
+                bottomBar = bottomBar,
+                content = content,
+                snackbar = snackbarHost,
+                floatingActionButton = floatingActionButton,
+                floatingActionButtonPosition = floatingActionButtonPosition,
+                floatingToolbar = floatingToolbar,
+                floatingToolbarPosition = floatingToolbarPosition,
+                popup = popupHost,
+                contentWindowInsets = safeInsets,
+            )
+        }
     }
 }
 

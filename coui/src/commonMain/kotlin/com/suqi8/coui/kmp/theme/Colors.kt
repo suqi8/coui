@@ -525,7 +525,7 @@ fun darkColorScheme(
     background: Color = Color(0xFF000000),
     onBackground: Color = Color(0xFFF2F2F2),
     onBackgroundVariant: Color = Color(0xFF898989),
-    surface: Color = Color(0x1AFFFFFF),
+    surface: Color = Color(0xFF1E1E1E),
     onSurface: Color = Color(0xE6FFFFFF),
     surfaceVariant: Color = Color(0xFF1E1E1E),
     onSurfaceSecondary: Color = Color(0x8AFFFFFF),

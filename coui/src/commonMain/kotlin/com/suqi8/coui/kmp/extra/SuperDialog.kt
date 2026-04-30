@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
  * @param outsideMargin The margin outside the [SuperDialog].
  * @param insideMargin The margin inside the [SuperDialog].
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding to the [SuperDialog].
+ * @param actions Optional full-width actions shown below the dialog content.
  * @param content The [Composable] content of the [SuperDialog].
  */
 @Composable
@@ -77,6 +78,7 @@ fun SuperDialog(
     outsideMargin: DpSize = SuperDialogDefaults.outsideMargin,
     insideMargin: DpSize = SuperDialogDefaults.insideMargin,
     defaultWindowInsetsPadding: Boolean = true,
+    actions: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     if (!show.value) return
@@ -105,6 +107,7 @@ fun SuperDialog(
             backProgress = backProgress,
             dialogHeightPx = dialogHeightPx,
             onDismissRequest = currentOnDismissRequest,
+            actions = actions,
             content = content
         )
     }
@@ -143,6 +146,7 @@ private fun SuperDialogContent(
     backProgress: Float,
     dialogHeightPx: MutableState<Int>,
     onDismissRequest: (() -> Unit)?,
+    actions: (@Composable () -> Unit)?,
     content: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
@@ -200,16 +204,13 @@ private fun SuperDialogContent(
             dialogHeightPx.value = coordinates.size.height
         }
         .then(
-            // Apply predictive back animation
             if (isLargeScreen) {
-                // Large screen
                 Modifier.graphicsLayer {
                     val scale = 1f - (backProgress * 0.2f)
                     scaleX = scale
                     scaleY = scale
                 }
             } else {
-                // Small screen
                 Modifier.graphicsLayer {
                     translationY = backProgress * 800f
                 }
@@ -220,30 +221,47 @@ private fun SuperDialogContent(
         }
         .clip(ContinuousRoundedRectangle(bottomCornerRadius))
         .background(backgroundColor)
-        .padding(horizontal = insideMargin.width, vertical = insideMargin.height)
 
     Box(modifier = rootBoxModifier) {
         Column(modifier = columnModifier.align(contentAlignment)) {
-            title?.let {
-                Text(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    text = it,
-                    fontSize = COUITheme.textStyles.title4.fontSize,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center,
-                    color = titleColor
+            Column(
+                modifier = Modifier.padding(
+                    start = insideMargin.width,
+                    end = insideMargin.width,
+                    top = insideMargin.height,
+                    bottom = if (actions == null) insideMargin.height else 0.dp
                 )
+            ) {
+                title?.let {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        text = it,
+                        fontSize = COUITheme.textStyles.title4.fontSize,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        color = titleColor
+                    )
+                }
+                summary?.let {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        text = it,
+                        fontSize = COUITheme.textStyles.body1.fontSize,
+                        textAlign = TextAlign.Center,
+                        color = summaryColor
+                    )
+                }
+                content()
             }
-            summary?.let {
-                Text(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    text = it,
-                    fontSize = COUITheme.textStyles.body1.fontSize,
-                    textAlign = TextAlign.Center,
-                    color = summaryColor
-                )
+            actions?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    it()
+                }
             }
-            content()
         }
     }
 }

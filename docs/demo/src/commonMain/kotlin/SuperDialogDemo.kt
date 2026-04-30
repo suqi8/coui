@@ -21,6 +21,11 @@ import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.TextButton
 import com.suqi8.coui.kmp.extra.SuperDialog
+import com.suqi8.coui.kmp.extra.SuperDialogAction
+import com.suqi8.coui.kmp.extra.SuperDialogActionStyle
+import com.suqi8.coui.kmp.extra.SuperDialogActionTone
+import com.suqi8.coui.kmp.extra.SuperDialogActions
+import com.suqi8.coui.kmp.extra.SuperDialogActionsLayout
 
 @Composable
 fun SuperDialogDemo() {
@@ -49,13 +54,26 @@ fun SuperDialogDemo() {
                         title = "Dialog Title",
                         summary = "This is a basic dialog example that can contain various content.",
                         show = showDialog,
-                        onDismissRequest = { showDialog.value = false } // Close dialog
+                        onDismissRequest = { showDialog.value = false },
+                        actions = {
+                            SuperDialogActions(
+                                actions = listOf(
+                                    SuperDialogAction(
+                                        text = "Cancel",
+                                        tone = SuperDialogActionTone.Neutral,
+                                        onClick = { showDialog.value = false }
+                                    ),
+                                    SuperDialogAction(
+                                        text = "Confirm",
+                                        tone = SuperDialogActionTone.Primary,
+                                        style = SuperDialogActionStyle.Recommend,
+                                        onClick = { showDialog.value = false }
+                                    )
+                                ),
+                                layout = SuperDialogActionsLayout.CompactVertical,
+                            )
+                        }
                     ) {
-                        TextButton(
-                            text = "Confirm",
-                            onClick = { showDialog.value = false }, // Close dialog
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
             }

@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,6 +26,10 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.LocalDialogStates
+import com.suqi8.coui.kmp.utils.LocalPopupStates
+import com.suqi8.coui.kmp.utils.MiuixPopupUtils
+import com.suqi8.coui.kmp.utils.MiuixPopupUtils.Companion.MiuixPopupHost
 
 @Composable
 fun AdaptiveNavigationScaffold(
@@ -33,26 +39,35 @@ fun AdaptiveNavigationScaffold(
     navigationBar: @Composable () -> Unit = {},
     navigationRail: @Composable () -> Unit = {},
     actionBar: @Composable () -> Unit = {},
+    popupHost: @Composable () -> Unit = { MiuixPopupHost() },
     contentWindowInsets: WindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout),
     content: @Composable (PaddingValues) -> Unit,
 ) {
     val safeInsets = remember(contentWindowInsets) { MutableWindowInsets(contentWindowInsets) }
+    val dialogStates = remember { mutableStateListOf<MiuixPopupUtils.DialogState>() }
+    val popupStates = remember { mutableStateListOf<MiuixPopupUtils.PopupState>() }
 
-    Surface(
-        modifier = modifier.onConsumedWindowInsetsChanged { consumedWindowInsets ->
-            safeInsets.insets = contentWindowInsets.exclude(consumedWindowInsets)
-        },
-        color = COUITheme.colorScheme.background
+    CompositionLocalProvider(
+        LocalDialogStates provides dialogStates,
+        LocalPopupStates provides popupStates
     ) {
-        AdaptiveNavigationScaffoldLayout(
-            isWideScreen = isWideScreen,
-            topBar = topBar,
-            navigationBar = navigationBar,
-            navigationRail = navigationRail,
-            actionBar = actionBar,
-            contentWindowInsets = safeInsets,
-            content = content
-        )
+        Surface(
+            modifier = modifier.onConsumedWindowInsetsChanged { consumedWindowInsets ->
+                safeInsets.insets = contentWindowInsets.exclude(consumedWindowInsets)
+            },
+            color = COUITheme.colorScheme.background
+        ) {
+            AdaptiveNavigationScaffoldLayout(
+                isWideScreen = isWideScreen,
+                topBar = topBar,
+                navigationBar = navigationBar,
+                navigationRail = navigationRail,
+                actionBar = actionBar,
+                popup = popupHost,
+                contentWindowInsets = safeInsets,
+                content = content
+            )
+        }
     }
 }
 
@@ -63,6 +78,7 @@ private fun AdaptiveNavigationScaffoldLayout(
     navigationBar: @Composable () -> Unit,
     navigationRail: @Composable () -> Unit,
     actionBar: @Composable () -> Unit,
+    popup: @Composable () -> Unit,
     contentWindowInsets: WindowInsets,
     content: @Composable (PaddingValues) -> Unit,
 ) {
@@ -82,6 +98,7 @@ private fun AdaptiveNavigationScaffoldLayout(
         }
     }
 
+    val popupContent: @Composable () -> Unit = remember(popup) { { Box { popup() } } }
     val topBarContent: @Composable () -> Unit = remember(topBar) { { Box { topBar() } } }
     val bottomBarContent: @Composable () -> Unit = remember(navigationBar) { { Box { navigationBar() } } }
     val railContent: @Composable () -> Unit = remember(navigationRail) { { Box { navigationRail() } } }
@@ -95,6 +112,10 @@ private fun AdaptiveNavigationScaffoldLayout(
         val layoutHeight = constraints.maxHeight
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
         val insets = contentWindowInsets.asPaddingValues(this)
+
+        val popupPlaceable = subcompose(AdaptiveScaffoldSlot.Popup, popupContent)
+            .first()
+            .measure(looseConstraints)
 
         val railPlaceable = subcompose(AdaptiveScaffoldSlot.Rail, railContent)
             .first()
@@ -143,11 +164,14 @@ private fun AdaptiveNavigationScaffoldLayout(
             if (actionBarHeight > 0) {
                 actionBarPlaceable.place(railWidth, layoutHeight - actionBarHeight)
             }
+
+            popupPlaceable.place(0, 0)
         }
     }
 }
 
 private enum class AdaptiveScaffoldSlot {
+    Popup,
     TopBar,
     Rail,
     BottomBar,
