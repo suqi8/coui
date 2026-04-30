@@ -61,7 +61,6 @@ import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.theme.miuixShape
 
 // Step 1: Create a LayerBackdrop
 val backdrop = rememberLayerBackdrop()
@@ -105,7 +104,7 @@ Box(
         .size(200.dp)
         .textureBlur(
             backdrop = backdrop,
-            shape = miuixShape(16.dp)
+            shape = RoundedCornerShape(16.dp)
         )
 ) {
     Text(
@@ -140,7 +139,7 @@ Box(
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
-            shape = miuixShape(16.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = colors
         )
 ) {
@@ -231,7 +230,7 @@ Box(
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
-            shape = miuixShape(16.dp),
+            shape = RoundedCornerShape(16.dp),
             blurRadiusX = 100f,
             blurRadiusY = 20f
         )
@@ -269,7 +268,7 @@ Box(
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
-            shape = miuixShape(16.dp),
+            shape = RoundedCornerShape(16.dp),
             noiseCoefficient = 0f // Disable noise dithering
         )
 )
@@ -286,7 +285,7 @@ Box(
     modifier = Modifier
         .drawBackdrop(
             backdrop = backdrop,
-            shape = { miuixShape(16.dp) },
+            shape = { RoundedCornerShape(16.dp) },
             effects = {
                 // Apply a Gaussian blur
                 blur(radius = 60f)

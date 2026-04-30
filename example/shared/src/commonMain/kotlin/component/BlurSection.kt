@@ -58,7 +58,6 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.shared.generated.resources.Res
 import top.yukonga.miuix.kmp.shared.generated.resources.blur_test_bg
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.miuixShape
 import ui.isInDarkTheme
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
@@ -169,7 +168,7 @@ private fun BlurDemo() {
                         }
                         .textureBlur(
                             backdrop = backdrop,
-                            shape = miuixShape(16.dp),
+                            shape = RoundedCornerShape(16.dp),
                             blurRadiusX = blurRadiusX,
                             blurRadiusY = blurRadiusY,
                             noiseCoefficient = noiseCoefficient,

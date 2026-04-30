@@ -93,7 +93,6 @@ import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.shapes.SmoothRoundedCornerShape
 import top.yukonga.miuix.kmp.shared.generated.resources.Res
 import top.yukonga.miuix.kmp.shared.generated.resources.ic_launcher
 import top.yukonga.miuix.kmp.theme.LocalDismissState
@@ -343,7 +342,7 @@ private fun AboutContent(
                     }
                     .textureBlur(
                         backdrop = backdrop,
-                        shape = SmoothRoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(16.dp),
                         blurRadius = 150f,
                         noiseCoefficient = noiseCoefficient,
                         colors = BlurColors(
@@ -427,7 +426,7 @@ private fun AboutContent(
                         modifier = Modifier.padding(horizontal = 12.dp)
                             .textureBlur(
                                 backdrop = backdrop,
-                                shape = SmoothRoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 blurRadius = blurRadius,
                                 noiseCoefficient = noiseCoefficient,
                                 colors = BlurColors(
@@ -472,7 +471,7 @@ private fun AboutContent(
                             .padding(top = 12.dp)
                             .textureBlur(
                                 backdrop = backdrop,
-                                shape = SmoothRoundedCornerShape(16.dp),
+                                shape = RoundedCornerShape(16.dp),
                                 blurRadius = blurRadius,
                                 noiseCoefficient = noiseCoefficient,
                                 colors = BlurColors(
