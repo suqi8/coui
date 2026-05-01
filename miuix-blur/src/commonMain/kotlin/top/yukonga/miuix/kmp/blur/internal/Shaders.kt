@@ -3,23 +3,7 @@
 
 package top.yukonga.miuix.kmp.blur.internal
 
-/**
- * Builds a tap-count-specialized LM Gaussian blur shader.
- *
- * Array sizes and loop bounds match the actual [tapCount] to minimize
- * texture samples (2 × tapCount per pixel), with 7 specialized shader
- * variants (1–7 taps).
- *
- * Applied twice (horizontal then vertical) for separable 2D convolution.
- *
- * Coordinates are clamped to `[0.5, in_texSize - 0.5]` to prevent
- * out-of-bounds sampling that may return transparent black on some platforms.
- *
- * The blur accumulation and un-premultiply division use `float` (32-bit)
- * precision to avoid amplifying quantization errors that cause visible
- * color banding on smooth gradients. `half` (16-bit) has only ~3 decimal
- * digits of precision; `float` provides ~7 digits.
- */
+/** Builds a separable Gaussian blur shader with [tapCount] symmetric tap pairs (1..7). */
 internal fun buildGaussianBlurShader(tapCount: Int): String {
     require(tapCount in 1..MAX_BLUR_TAPS)
     val offsetSize = tapCount * 2
@@ -30,24 +14,69 @@ internal fun buildGaussianBlurShader(tapCount: Int): String {
     uniform float2 in_texSize;
 
     half4 main(float2 xy) {
-        float4 color = float4(0);
+        half4 color = half4(0);
         float2 maxCoord = in_texSize - 0.5;
         for (int i = 0; i < $tapCount; i++) {
             float2 offset = float2(in_blurOffset[i], in_blurOffset[i + $tapCount]);
             float2 c1 = clamp(xy + offset, float2(0.5), maxCoord);
             float2 c2 = clamp(xy - offset, float2(0.5), maxCoord);
-            color += (float4(child.eval(c1)) + float4(child.eval(c2))) * in_blurWeight[i];
+            color += (child.eval(c1) + child.eval(c2)) * half(in_blurWeight[i]);
         }
         if (color.a > 0.001) {
             return half4(color.rgb / color.a, 1.0);
         }
-        return half4(color);
+        return color;
     }
 """
 }
 
 /** Maximum number of tap pairs for the Gaussian blur shader. */
 internal const val MAX_BLUR_TAPS = 7
+
+/**
+ * Brightness / contrast / saturation adjustment.
+ *
+ * Brightness is applied in linear (gamma 2.2) space to avoid sRGB hue shift;
+ * contrast and saturation are applied in sRGB space.
+ *
+ * Uniforms: `in_brightness ∈ [-1, +1]`, `in_contrast ∈ [0, +∞)`, `in_saturation ∈ [0, +∞)`.
+ */
+internal const val COLOR_CONTROLS_SHADER = """
+    uniform shader child;
+    uniform float in_brightness;
+    uniform float in_contrast;
+    uniform float in_saturation;
+
+    half4 main(float2 xy) {
+        half4 src = child.eval(xy);
+        half a = src.a;
+        if (a < 0.001) return src;
+
+        half3 c = src.rgb / a;
+
+        if (in_brightness != 0.0) {
+            c = pow(c, half3(2.2));
+            if (in_brightness > 0.0) {
+                c = mix(c, half3(1.0), half(in_brightness));
+            } else {
+                c = c * half(1.0 + in_brightness);
+            }
+            c = pow(c, half3(0.45454545));
+        }
+
+        if (in_contrast != 1.0) {
+            c = (c - 0.5) * half(in_contrast) + 0.5;
+        }
+
+        if (in_saturation != 1.0) {
+            half lum = dot(c, half3(0.2126, 0.7152, 0.0722));
+            c = mix(half3(lum), c, half(in_saturation));
+        }
+
+        c = clamp(c, half3(0.0), half3(1.0));
+        return half4(c * a, a);
+    }
+"""
 
 /**
  * Noise dithering shader — 3-channel pseudo-random anti-banding.
@@ -71,25 +100,14 @@ internal const val NOISE_DITHER_SHADER = """
         float noise2 = (random2(xy) - 0.5) * noise_coeff;
         float noise3 = (random3(xy) - 0.5) * noise_coeff;
         half4 color = child.eval(xy);
-        color.r += half(noise1);
-        color.g += half(noise2);
-        color.b += half(noise3);
+        color.rg += half2(noise1);
+        color.rb += half2(noise2);
+        color.gb += half2(noise3);
         return color;
     }
 """
 
-/**
- * 2x downsample shader — 4-point box filter.
- *
- * Samples 4 sub-pixel positions at (0.25, 0.25), (0.25, 0.75), (0.75, 0.25),
- * (0.75, 0.75) within each output pixel's footprint, producing a proper
- * area-average that captures all source pixels. Matches libhwui's 2x
- * downsampling shader.
- *
- * Uniforms:
- * - `child`: Input image shader.
- * - `imageWH[2]`: Source image width and height.
- */
+/** 2× downsample with a 4-point box filter (uniforms: `child`, `imageWH[2]`). */
 internal const val DOWNSAMPLE_2X_SHADER = """
     uniform shader child;
     uniform float imageWH[2];
@@ -104,15 +122,7 @@ internal const val DOWNSAMPLE_2X_SHADER = """
     }
 """
 
-/**
- * Edge feather shader — fades blur alpha near the content boundary to mask
- * edge jitter caused by downsampled position quantization.
- *
- * Uniforms:
- * - `child`: Input blurred image shader.
- * - `contentBounds[4]`: Content area bounds (left, top, right, bottom) in texture pixels.
- * - `featherWidth`: Fade width in texture pixels.
- */
+/** Fades alpha within [featherWidth] of [contentBounds] to mask edge jitter from downsampling. */
 internal const val EDGE_FEATHER_SHADER = """
     uniform shader child;
     uniform float contentBounds[4];
@@ -129,21 +139,9 @@ internal const val EDGE_FEATHER_SHADER = """
 """
 
 /**
- * Blend mode shader — complete dispatch for all standard (0-31) and custom (100+) modes.
- *
- * Standard modes (0-31) use premultiplied-alpha formulas from libhwui/Skia.
- * Custom modes (100-121, 200-203) implement Lab color space operations,
- * linear light blending, and alpha-aware plus darker/lighter operations.
- *
- * Uniforms:
- * - `child`: Input blurred image shader.
- * - `layerCount`: Number of active blend layers (max 8).
- * - `blendModes[8]`: Blend mode ID for each layer.
- * - `layerColors[8]`: RGBA color for each layer.
- * - `uSaturation`: Saturation factor for mode 201.
- * - `uBrightness`: Brightness offset for mode 202.
- * - `uLuminanceAmount`: Luminance mix factor for mode 203.
- * - `uLuminanceValues`: Luminance curve control points for mode 203.
+ * Multi-layer blend mode dispatch. Standard Porter-Duff / separable / non-separable modes
+ * (0-31) plus extended modes (100-121, 200-203) covering Lab operations, linear light,
+ * alpha-aware plus darker/lighter, and brightness/saturation/luminance curves.
  */
 internal const val MI_BLEND_MODE_SHADER = """
     uniform shader child;
@@ -158,7 +156,7 @@ internal const val MI_BLEND_MODE_SHADER = """
     uniform vec4 uLuminanceValues;
 
     // ================================================================
-    // Standard blend modes (0-31) — premultiplied alpha, from libhwui
+    // Standard blend modes (0-31) — premultiplied alpha
     // ================================================================
 
     const half kMinNormalHalf = 0.00006103515625;
@@ -367,7 +365,7 @@ internal const val MI_BLEND_MODE_SHADER = """
     }
 
     // ================================================================
-    // Custom blend modes (100+) — Mi extensions
+    // Extended blend modes (100+)
     // ================================================================
 
     // SrcOver compositing (used by custom modes only)

@@ -4,8 +4,6 @@
 package component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,11 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import component.blend.ColorBlendToken
@@ -59,7 +54,6 @@ import top.yukonga.miuix.kmp.shared.generated.resources.Res
 import top.yukonga.miuix.kmp.shared.generated.resources.blur_test_bg
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.isInDarkTheme
-import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
 fun LazyListScope.blurSection() {
@@ -122,8 +116,6 @@ private fun BlurDemo() {
     }
     var blendModeIndex by remember { mutableIntStateOf(5) }
     val currentBlend = blendConfigs[blendModeIndex]
-    var offsetX by remember { mutableFloatStateOf(0f) }
-    var offsetY by remember { mutableFloatStateOf(0f) }
     Column(
         modifier = Modifier
             .padding(horizontal = 12.dp),
@@ -133,15 +125,7 @@ private fun BlurDemo() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onDoubleTap = {
-                                offsetX = 0f
-                                offsetY = 0f
-                            },
-                        )
-                    },
+                    .height(280.dp),
             ) {
                 // Background layer (captured by layerBackdrop)
                 Box(
@@ -158,14 +142,6 @@ private fun BlurDemo() {
                         .fillMaxWidth(0.8f)
                         .height(140.dp)
                         .align(Alignment.Center)
-                        .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                offsetX += dragAmount.x
-                                offsetY += dragAmount.y
-                            }
-                        }
                         .textureBlur(
                             backdrop = backdrop,
                             shape = RoundedCornerShape(16.dp),
@@ -272,17 +248,10 @@ private fun BlurDemo() {
             )
 
             // Blend mode
-            val modeInfo = currentBlend.second.let { entries ->
-                when {
-                    entries.size == 1 -> " (${entries.first().mode})"
-                    entries.size > 1 -> " (${entries.size} layers)"
-                    else -> ""
-                }
-            }
             BasicComponent(
                 title = "Blend Mode",
                 endActions = {
-                    ValueText(currentBlend.first + modeInfo)
+                    ValueText(currentBlend.first)
                 },
                 bottomAction = {
                     Row(
@@ -493,17 +462,10 @@ private fun ForegroundBlurDemo() {
                 insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
 
-            val modeInfo = currentBlend.second.let { entries ->
-                when {
-                    entries.size == 1 -> " (${entries.first().mode})"
-                    entries.size > 1 -> " (${entries.size} layers)"
-                    else -> ""
-                }
-            }
             BasicComponent(
                 title = "Blend Mode",
                 endActions = {
-                    ValueText(currentBlend.first + modeInfo)
+                    ValueText(currentBlend.first)
                 },
                 bottomAction = {
                     Row(

@@ -190,8 +190,16 @@ private class DrawBackdropNode(
     }
 
     private var graphicsLayer: GraphicsLayer? = null
-    private var cascadeLayer: GraphicsLayer? = null
+    private val cascadeLayers: MutableList<GraphicsLayer> = mutableListOf()
     private var noiseLayer: GraphicsLayer? = null
+
+    private fun obtainCascadeLayer(index: Int): GraphicsLayer {
+        val ctx = requireGraphicsContext()
+        while (cascadeLayers.size <= index) {
+            cascadeLayers.add(ctx.createGraphicsLayer())
+        }
+        return cascadeLayers[index]
+    }
 
     private val layoutLayerBlock: GraphicsLayerScope.() -> Unit = {
         clip = true
@@ -265,43 +273,80 @@ private class DrawBackdropNode(
                     fullHeight,
                 )
             } else {
-                // Two-step cascade: backdrop at 1/(sf/2), then bilinear 2x.
-                // Matches libhwui pattern: 4→2x→2x, 8→4x→2x, 16→8x→2x.
-                val firstStep = scaleFactor / 2
-                cascadeFirstStepScale = firstStep
-                val intermediateW = (fullWidth / firstStep).coerceAtLeast(1)
-                val intermediateH = (fullHeight / firstStep).coerceAtLeast(1)
-                val finalW = (intermediateW / 2).coerceAtLeast(1)
-                val finalH = (intermediateH / 2).coerceAtLeast(1)
+                // Multi-step cascade: backdrop at 2×, then log2(sf/2) box-filter ÷2 steps.
+                // Each step applies a 4-point cross box filter before bilinear ÷2 sampling.
+                //   sf =  4: backdrop 2× → box → 4×                (1 cascade layer)
+                //   sf =  8: backdrop 2× → box → 4× → box → 8×     (2 cascade layers)
+                //   sf = 16: backdrop 2× → box → 4× → box → 8× → box → 16×  (3 cascade layers)
+                cascadeFirstStepScale = 2
+                var prevW = (fullWidth / 2).coerceAtLeast(1)
+                var prevH = (fullHeight / 2).coerceAtLeast(1)
 
-                // Step 1: record backdrop at 1/firstStep into cascade layer
-                val intermediate = cascadeLayer
-                    ?: requireGraphicsContext().createGraphicsLayer().also { cascadeLayer = it }
-                recordLayer(intermediate, size = IntSize(intermediateW, intermediateH), block = recordBackdropBlock)
+                // Step 0: record backdrop at 2× into cascadeLayers[0].
+                val firstCascade = obtainCascadeLayer(0)
+                recordLayer(firstCascade, size = IntSize(prevW, prevH), block = recordBackdropBlock)
+                var prevLayer: GraphicsLayer = firstCascade
 
-                // Step 2: box-filter 2x from cascade layer into blur layer.
-                // Apply a 4-point box filter as RenderEffect on the cascade layer
-                // so that drawLayer produces pre-filtered output. The subsequent
-                // scale(0.5) then downsamples from pre-filtered content, matching
-                // libhwui's dedicated downsample shader quality.
+                // Number of box-filter ÷2 steps before reaching the final blur layer.
+                // sf is always a power of two (1, 2, 4, 8, 16) so log2(sf/2) is exact.
+                var remainingSteps = 0
+                var s = scaleFactor / 2
+                while (s > 1) {
+                    remainingSteps++
+                    s /= 2
+                }
+
+                // Intermediate steps 1..remainingSteps-1 (each fills cascadeLayers[i]).
+                var cascadeIndex = 1
+                while (cascadeIndex <= remainingSteps - 1) {
+                    if (isRuntimeShaderSupported()) {
+                        prevLayer.renderEffect = runtimeShaderEffect(
+                            runtimeShader = effectScope.obtainRuntimeShader(
+                                "Downsample2x",
+                                DOWNSAMPLE_2X_SHADER,
+                            ).apply {
+                                setFloatUniform(
+                                    "imageWH",
+                                    floatArrayOf(prevW.toFloat(), prevH.toFloat()),
+                                )
+                            },
+                            uniformShaderName = "child",
+                        )
+                    }
+                    val nextW = (prevW / 2).coerceAtLeast(1)
+                    val nextH = (prevH / 2).coerceAtLeast(1)
+                    val nextCascade = obtainCascadeLayer(cascadeIndex)
+                    recordLayer(nextCascade, size = IntSize(nextW, nextH)) {
+                        scale(0.5f, 0.5f, Offset.Zero) { drawLayer(prevLayer) }
+                    }
+                    prevLayer.renderEffect = null
+                    prevLayer = nextCascade
+                    prevW = nextW
+                    prevH = nextH
+                    cascadeIndex++
+                }
+
+                // Final step: box-filter ÷2 from prevLayer into the blur layer.
                 if (isRuntimeShaderSupported()) {
-                    intermediate.renderEffect = runtimeShaderEffect(
+                    prevLayer.renderEffect = runtimeShaderEffect(
                         runtimeShader = effectScope.obtainRuntimeShader(
                             "Downsample2x",
                             DOWNSAMPLE_2X_SHADER,
                         ).apply {
                             setFloatUniform(
                                 "imageWH",
-                                floatArrayOf(intermediateW.toFloat(), intermediateH.toFloat()),
+                                floatArrayOf(prevW.toFloat(), prevH.toFloat()),
                             )
                         },
                         uniformShaderName = "child",
                     )
                 }
+                val finalW = (prevW / 2).coerceAtLeast(1)
+                val finalH = (prevH / 2).coerceAtLeast(1)
                 recordLayer(layer, size = IntSize(finalW, finalH)) {
-                    scale(0.5f, 0.5f, Offset.Zero) { drawLayer(intermediate) }
+                    scale(0.5f, 0.5f, Offset.Zero) { drawLayer(prevLayer) }
                 }
-                intermediate.renderEffect = null
+                prevLayer.renderEffect = null
 
                 drawUpscaledLayer(
                     layer,
@@ -473,11 +518,17 @@ private class DrawBackdropNode(
 
     fun releaseGraphicsLayers() {
         val ctx = requireGraphicsContext()
-        graphicsLayer?.let { ctx.releaseGraphicsLayer(it) }
+        graphicsLayer?.let {
+            ctx.releaseGraphicsLayer(it)
+        }
         graphicsLayer = null
-        cascadeLayer?.let { ctx.releaseGraphicsLayer(it) }
-        cascadeLayer = null
-        noiseLayer?.let { ctx.releaseGraphicsLayer(it) }
+        for (cascade in cascadeLayers) {
+            ctx.releaseGraphicsLayer(cascade)
+        }
+        cascadeLayers.clear()
+        noiseLayer?.let {
+            ctx.releaseGraphicsLayer(it)
+        }
         noiseLayer = null
         effectScope.reset()
     }
