@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import top.yukonga.miuix.kmp.blur.internal.DOWNSAMPLE_2X_SHADER
+import top.yukonga.miuix.kmp.blur.internal.DOWNSAMPLE_4X_SHADER
 import top.yukonga.miuix.kmp.blur.internal.NOISE_DITHER_SHADER
 import top.yukonga.miuix.kmp.blur.internal.ShapeProvider
 import top.yukonga.miuix.kmp.blur.internal.recordLayer
@@ -273,80 +274,80 @@ private class DrawBackdropNode(
                     fullHeight,
                 )
             } else {
-                // Multi-step cascade: backdrop at 2×, then log2(sf/2) box-filter ÷2 steps.
-                // Each step applies a 4-point cross box filter before bilinear ÷2 sampling.
-                //   sf =  4: backdrop 2× → box → 4×                (1 cascade layer)
-                //   sf =  8: backdrop 2× → box → 4× → box → 8×     (2 cascade layers)
-                //   sf = 16: backdrop 2× → box → 4× → box → 8× → box → 16×  (3 cascade layers)
+                // Multi-step cascade, single-pass wider filter when possible:
+                //   sf =  4: backdrop ½ → 2x box → ¼                     (1 cascade layer)
+                //   sf =  8: backdrop ½ → 4x box → ⅛                     (1 cascade layer)
+                //   sf = 16: backdrop ½ → 4x box → ⅛ → 2x box → 1/16     (2 cascade layers)
                 cascadeFirstStepScale = 2
-                var prevW = (fullWidth / 2).coerceAtLeast(1)
-                var prevH = (fullHeight / 2).coerceAtLeast(1)
+                val firstW = (fullWidth / 2).coerceAtLeast(1)
+                val firstH = (fullHeight / 2).coerceAtLeast(1)
 
-                // Step 0: record backdrop at 2× into cascadeLayers[0].
+                // Step 0: record backdrop at ½ size (GPU bilinear, no shader).
                 val firstCascade = obtainCascadeLayer(0)
-                recordLayer(firstCascade, size = IntSize(prevW, prevH), block = recordBackdropBlock)
-                var prevLayer: GraphicsLayer = firstCascade
+                recordLayer(firstCascade, size = IntSize(firstW, firstH), block = recordBackdropBlock)
 
-                // Number of box-filter ÷2 steps before reaching the final blur layer.
-                // sf is always a power of two (1, 2, 4, 8, 16) so log2(sf/2) is exact.
-                var remainingSteps = 0
-                var s = scaleFactor / 2
-                while (s > 1) {
-                    remainingSteps++
-                    s /= 2
-                }
-
-                // Intermediate steps 1..remainingSteps-1 (each fills cascadeLayers[i]).
-                var cascadeIndex = 1
-                while (cascadeIndex <= remainingSteps - 1) {
-                    if (isRuntimeShaderSupported()) {
-                        prevLayer.renderEffect = runtimeShaderEffect(
-                            runtimeShader = effectScope.obtainRuntimeShader(
-                                "Downsample2x",
-                                DOWNSAMPLE_2X_SHADER,
-                            ).apply {
-                                setFloatUniform(
-                                    "imageWH",
-                                    floatArrayOf(prevW.toFloat(), prevH.toFloat()),
-                                )
-                            },
-                            uniformShaderName = "child",
+                when (scaleFactor) {
+                    4 -> {
+                        // Single 2× box step: ½ → ¼
+                        applyDownsampleStep(
+                            source = firstCascade,
+                            sourceW = firstW,
+                            sourceH = firstH,
+                            dest = layer,
+                            destW = (firstW / 2).coerceAtLeast(1),
+                            destH = (firstH / 2).coerceAtLeast(1),
+                            scale = 0.5f,
+                            shaderKey = "Downsample2x",
+                            shaderSrc = DOWNSAMPLE_2X_SHADER,
                         )
                     }
-                    val nextW = (prevW / 2).coerceAtLeast(1)
-                    val nextH = (prevH / 2).coerceAtLeast(1)
-                    val nextCascade = obtainCascadeLayer(cascadeIndex)
-                    recordLayer(nextCascade, size = IntSize(nextW, nextH)) {
-                        scale(0.5f, 0.5f, Offset.Zero) { drawLayer(prevLayer) }
-                    }
-                    prevLayer.renderEffect = null
-                    prevLayer = nextCascade
-                    prevW = nextW
-                    prevH = nextH
-                    cascadeIndex++
-                }
 
-                // Final step: box-filter ÷2 from prevLayer into the blur layer.
-                if (isRuntimeShaderSupported()) {
-                    prevLayer.renderEffect = runtimeShaderEffect(
-                        runtimeShader = effectScope.obtainRuntimeShader(
-                            "Downsample2x",
-                            DOWNSAMPLE_2X_SHADER,
-                        ).apply {
-                            setFloatUniform(
-                                "imageWH",
-                                floatArrayOf(prevW.toFloat(), prevH.toFloat()),
-                            )
-                        },
-                        uniformShaderName = "child",
-                    )
+                    8 -> {
+                        // Single 4× box step: ½ → ⅛
+                        applyDownsampleStep(
+                            source = firstCascade,
+                            sourceW = firstW,
+                            sourceH = firstH,
+                            dest = layer,
+                            destW = (firstW / 4).coerceAtLeast(1),
+                            destH = (firstH / 4).coerceAtLeast(1),
+                            scale = 0.25f,
+                            shaderKey = "Downsample4x",
+                            shaderSrc = DOWNSAMPLE_4X_SHADER,
+                        )
+                    }
+
+                    16 -> {
+                        // 4× then 2× cascade: ½ → ⅛ → 1/16
+                        val midW = (firstW / 4).coerceAtLeast(1)
+                        val midH = (firstH / 4).coerceAtLeast(1)
+                        val midCascade = obtainCascadeLayer(1)
+                        applyDownsampleStep(
+                            source = firstCascade,
+                            sourceW = firstW,
+                            sourceH = firstH,
+                            dest = midCascade,
+                            destW = midW,
+                            destH = midH,
+                            scale = 0.25f,
+                            shaderKey = "Downsample4x",
+                            shaderSrc = DOWNSAMPLE_4X_SHADER,
+                        )
+                        applyDownsampleStep(
+                            source = midCascade,
+                            sourceW = midW,
+                            sourceH = midH,
+                            dest = layer,
+                            destW = (midW / 2).coerceAtLeast(1),
+                            destH = (midH / 2).coerceAtLeast(1),
+                            scale = 0.5f,
+                            shaderKey = "Downsample2x",
+                            shaderSrc = DOWNSAMPLE_2X_SHADER,
+                        )
+                    }
+
+                    else -> error("Unsupported scaleFactor: $scaleFactor (must be 1/2/4/8/16)")
                 }
-                val finalW = (prevW / 2).coerceAtLeast(1)
-                val finalH = (prevH / 2).coerceAtLeast(1)
-                recordLayer(layer, size = IntSize(finalW, finalH)) {
-                    scale(0.5f, 0.5f, Offset.Zero) { drawLayer(prevLayer) }
-                }
-                prevLayer.renderEffect = null
 
                 drawUpscaledLayer(
                     layer,
@@ -463,6 +464,36 @@ private class DrawBackdropNode(
             ensureGraphicsLayer()
             observeEffects()
         }
+    }
+
+    /**
+     * Applies a single cascade downsample step: sets [shaderSrc] as a render effect on
+     * [source] then records [dest] at ([destW], [destH]) by drawing [source] with [scale].
+     * Clears the render effect from [source] when done so it does not leak to the next pass.
+     */
+    private fun DrawScope.applyDownsampleStep(
+        source: GraphicsLayer,
+        sourceW: Int,
+        sourceH: Int,
+        dest: GraphicsLayer,
+        destW: Int,
+        destH: Int,
+        scale: Float,
+        shaderKey: String,
+        shaderSrc: String,
+    ) {
+        if (isRuntimeShaderSupported()) {
+            source.renderEffect = runtimeShaderEffect(
+                runtimeShader = effectScope.obtainRuntimeShader(shaderKey, shaderSrc).apply {
+                    setFloatUniform("imageWH", floatArrayOf(sourceW.toFloat(), sourceH.toFloat()))
+                },
+                uniformShaderName = "child",
+            )
+        }
+        recordLayer(dest, size = IntSize(destW, destH)) {
+            scale(scale, scale, Offset.Zero) { drawLayer(source) }
+        }
+        source.renderEffect = null
     }
 
     /**

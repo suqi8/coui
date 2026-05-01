@@ -122,6 +122,34 @@ internal const val DOWNSAMPLE_2X_SHADER = """
     }
 """
 
+/** 4× downsample with a 16-tap 4×4 grid box filter (uniforms: `child`, `imageWH[2]`). */
+internal const val DOWNSAMPLE_4X_SHADER = """
+    uniform shader child;
+    uniform float imageWH[2];
+    half4 main(float2 xy) {
+        float2 center = float2(xy.x - 0.5, xy.y - 0.5);
+        center = clamp(center, float2(0), float2(imageWH[0] - 1, imageWH[1] - 1));
+        float4 color = float4(0);
+        color += float4(child.eval(center + float2(0.125, 0.125)));
+        color += float4(child.eval(center + float2(0.125, 0.375)));
+        color += float4(child.eval(center + float2(0.125, 0.625)));
+        color += float4(child.eval(center + float2(0.125, 0.875)));
+        color += float4(child.eval(center + float2(0.375, 0.125)));
+        color += float4(child.eval(center + float2(0.375, 0.375)));
+        color += float4(child.eval(center + float2(0.375, 0.625)));
+        color += float4(child.eval(center + float2(0.375, 0.875)));
+        color += float4(child.eval(center + float2(0.625, 0.125)));
+        color += float4(child.eval(center + float2(0.625, 0.375)));
+        color += float4(child.eval(center + float2(0.625, 0.625)));
+        color += float4(child.eval(center + float2(0.625, 0.875)));
+        color += float4(child.eval(center + float2(0.875, 0.125)));
+        color += float4(child.eval(center + float2(0.875, 0.375)));
+        color += float4(child.eval(center + float2(0.875, 0.625)));
+        color += float4(child.eval(center + float2(0.875, 0.875)));
+        return half4(color * (1.0/16.0));
+    }
+"""
+
 /** Fades alpha within [featherWidth] of [contentBounds] to mask edge jitter from downsampling. */
 internal const val EDGE_FEATHER_SHADER = """
     uniform shader child;
