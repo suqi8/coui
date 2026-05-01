@@ -31,3 +31,14 @@ Ltop/yukonga/miuix/kmp/blur/Backdrop;
 Ltop/yukonga/miuix/kmp/blur/BackdropEffectScope;
 Ltop/yukonga/miuix/kmp/blur/RuntimeShader;
 Ltop/yukonga/miuix/kmp/blur/RuntimeShaderCache;
+PLtop/yukonga/miuix/kmp/blur/highlight/BloomStroke;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/Highlight;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/HighlightElement;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/HighlightModifierKt**->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/HighlightNode;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/HighlightStyleKt**->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/LightPosition;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/LightSource;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/highlight/TiltLightKt**->**(**)**
+PLtop/yukonga/miuix/kmp/blur/sensor/DeviceTilt;->**(**)**
+PLtop/yukonga/miuix/kmp/blur/sensor/DeviceTilt_androidKt**->**(**)**

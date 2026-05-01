@@ -4,11 +4,9 @@
 package component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,23 +31,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import component.blend.ColorBlendToken
 import component.effect.BgEffectBackground
+import component.highlight.HighlightConfig
+import component.highlight.rememberContainerHighlight
 import org.jetbrains.compose.resources.painterResource
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.BlurDefaults
+import top.yukonga.miuix.kmp.blur.highlight.highlight
 import top.yukonga.miuix.kmp.blur.isRenderEffectSupported
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.shared.generated.resources.Res
 import top.yukonga.miuix.kmp.shared.generated.resources.blur_test_bg
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -81,10 +83,21 @@ private fun BlurDemo() {
 
     val backdrop = rememberLayerBackdrop()
     val surface = MiuixTheme.colorScheme.surface.copy(alpha = 0.6f)
+
+    var tiltDriven by remember { mutableStateOf(true) }
+    val containers = HighlightConfig.Container.entries
+    val containerItems = remember { containers.map { it.displayName } }
+    var containerIndex by remember { mutableIntStateOf(HighlightConfig.Container.Small.ordinal) }
+    val currentContainer = containers[containerIndex]
+    val highlight = rememberContainerHighlight(
+        container = currentContainer,
+        isDark = isInDark,
+        tiltDriven = tiltDriven,
+    )
+
     val blendConfigs = remember(isInDark, surface) {
         listOf(
             "None" to emptyList(),
-            // Token presets (theme-aware)
             "Info Thin" to if (isInDark) ColorBlendToken.Info_Thin_Dark else ColorBlendToken.Info_Thin_Light,
             "Info Regular" to if (isInDark) ColorBlendToken.Info_Regular_Dark else ColorBlendToken.Info_Regular_Light,
             "Colored Thin" to if (isInDark) ColorBlendToken.Colored_Thin_Dark else ColorBlendToken.Colored_Thin_Light,
@@ -94,28 +107,13 @@ private fun BlurDemo() {
             "Pured Thick" to if (isInDark) ColorBlendToken.Pured_Thick_Dark else ColorBlendToken.Pured_Thick_Light,
             "Overlay Thin" to if (isInDark) ColorBlendToken.Overlay_Thin_Light else ColorBlendToken.Overlay_Thin_Light,
             "Overlay Thick" to if (isInDark) ColorBlendToken.Overlay_Thick_Dark else ColorBlendToken.Overlay_Thick_Light,
-            // Single-mode blends
-            "SrcOver" to listOf(BlendColorEntry(surface, BlurBlendMode.SrcOver)),
-            "Screen" to listOf(BlendColorEntry(surface, BlurBlendMode.Screen)),
-            "Multiply" to listOf(BlendColorEntry(surface, BlurBlendMode.Multiply)),
-            "Overlay" to listOf(BlendColorEntry(surface, BlurBlendMode.Overlay)),
-            "Soft Light" to listOf(BlendColorEntry(surface, BlurBlendMode.SoftLight)),
-            "Color Dodge" to listOf(BlendColorEntry(surface, BlurBlendMode.ColorDodge)),
-            "Color Burn" to listOf(BlendColorEntry(surface, BlurBlendMode.ColorBurn)),
-            "Linear Light" to listOf(BlendColorEntry(surface, BlurBlendMode.LinearLight)),
-            "Linear Light Grey" to listOf(BlendColorEntry(surface, BlurBlendMode.LinearLightWithGreyscale)),
-            "Linear Light Lab" to listOf(BlendColorEntry(surface, BlurBlendMode.LinearLightLab)),
-            "Lab Lighten" to listOf(BlendColorEntry(surface, BlurBlendMode.LabLightenWithGreyscale)),
-            "Lab Darken" to listOf(BlendColorEntry(surface, BlurBlendMode.LabDarkenWithGreyscale)),
-            "MI Difference" to listOf(BlendColorEntry(surface, BlurBlendMode.MiDifference)),
-            "MI Color Dodge" to listOf(BlendColorEntry(surface, BlurBlendMode.MiColorDodge)),
-            "MI Color Burn" to listOf(BlendColorEntry(surface, BlurBlendMode.MiColorBurn)),
-            "Plus Lighter" to listOf(BlendColorEntry(surface, BlurBlendMode.PlusLighter)),
-            "Plus Darker" to listOf(BlendColorEntry(surface, BlurBlendMode.PlusDarker)),
         )
     }
     var blendModeIndex by remember { mutableIntStateOf(5) }
     val currentBlend = blendConfigs[blendModeIndex]
+    val blendModeItems = remember(blendConfigs) { blendConfigs.map { it.first } }
+    val shape = RoundedCornerShape(24.dp)
+
     Column(
         modifier = Modifier
             .padding(horizontal = 12.dp),
@@ -144,7 +142,7 @@ private fun BlurDemo() {
                         .align(Alignment.Center)
                         .textureBlur(
                             backdrop = backdrop,
-                            shape = RoundedCornerShape(16.dp),
+                            shape = shape,
                             blurRadiusX = blurRadiusX,
                             blurRadiusY = blurRadiusY,
                             noiseCoefficient = noiseCoefficient,
@@ -154,17 +152,21 @@ private fun BlurDemo() {
                                 contrast = contrast,
                                 saturation = saturation,
                             ),
+                        )
+                        .highlight(
+                            shape = shape,
+                            highlight = highlight,
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Texture Blur",
+                            text = "Texture Blur | R=${blurRadiusX.toInt()}",
                             style = MiuixTheme.textStyles.headline2,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
-                            text = "R=${blurRadiusX.toInt()} | ${currentBlend.first}",
+                            text = "${currentBlend.first} | ${containerItems[containerIndex]}",
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceVariantActions,
                         )
@@ -179,7 +181,22 @@ private fun BlurDemo() {
         Card(
             modifier = Modifier.padding(bottom = 12.dp),
         ) {
-            // Blur radius
+            OverlayDropdownPreference(
+                title = "Blend Mode",
+                items = blendModeItems,
+                selectedIndex = blendModeIndex,
+                onSelectedIndexChange = { blendModeIndex = it },
+            )
+
+            OverlayDropdownPreference(
+                title = "Highlight",
+                items = containerItems,
+                selectedIndex = containerIndex,
+                onSelectedIndexChange = { containerIndex = it },
+            )
+
+            HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+
             BasicComponent(
                 title = "Blur Radius",
                 endActions = { ValueText("${blurRadiusX.toInt()}") },
@@ -195,7 +212,6 @@ private fun BlurDemo() {
                 insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
 
-            // Noise
             BasicComponent(
                 title = "Noise",
                 endActions = { ValueText("${(noiseCoefficient * 10000).toInt() / 10000f}") },
@@ -208,7 +224,6 @@ private fun BlurDemo() {
                 insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
 
-            // Brightness
             BasicComponent(
                 title = "Brightness",
                 endActions = { ValueText("${(brightness * 100).toInt() / 100f}") },
@@ -221,7 +236,6 @@ private fun BlurDemo() {
                 insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
 
-            // Contrast
             BasicComponent(
                 title = "Contrast",
                 endActions = { ValueText("${(contrast * 100).toInt() / 100f}") },
@@ -234,7 +248,6 @@ private fun BlurDemo() {
                 insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
 
-            // Saturation
             BasicComponent(
                 title = "Saturation",
                 endActions = { ValueText("${(saturation * 100).toInt() / 100f}") },
@@ -243,36 +256,6 @@ private fun BlurDemo() {
                         value = saturation / 3f,
                         onValueChange = { saturation = it * 3f },
                     )
-                },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            // Blend mode
-            BasicComponent(
-                title = "Blend Mode",
-                endActions = {
-                    ValueText(currentBlend.first)
-                },
-                bottomAction = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        TextButton(
-                            text = "Prev",
-                            onClick = {
-                                blendModeIndex = (blendModeIndex - 1 + blendConfigs.size) % blendConfigs.size
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        TextButton(
-                            text = "Next",
-                            onClick = {
-                                blendModeIndex = (blendModeIndex + 1) % blendConfigs.size
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
                 },
             )
         }
@@ -311,7 +294,6 @@ private fun ForegroundBlurDemo() {
     val blendConfigs = remember(isInDark, onBackground) {
         listOf(
             "None" to emptyList(),
-            // Multi-layer presets
             "Logo Blend" to logoBlend,
             "Colored Thin" to if (isInDark) ColorBlendToken.Colored_Thin_Dark else ColorBlendToken.Colored_Thin_Light,
             "Colored Regular" to if (isInDark) ColorBlendToken.Colored_Regular_Dark else ColorBlendToken.Colored_Regular_Light,
@@ -319,28 +301,12 @@ private fun ForegroundBlurDemo() {
             "Pured Regular" to if (isInDark) ColorBlendToken.Pured_Regular_Dark else ColorBlendToken.Pured_Regular_Light,
             "Overlay Thin" to if (isInDark) ColorBlendToken.Overlay_Thin_Light else ColorBlendToken.Overlay_Thin_Light,
             "Info Colored" to ColorBlendToken.Info_Colored_Regular,
-            // Single-mode blends
-            "SrcOver" to listOf(BlendColorEntry(onBackground, BlurBlendMode.SrcOver)),
-            "Screen" to listOf(BlendColorEntry(onBackground, BlurBlendMode.Screen)),
-            "Multiply" to listOf(BlendColorEntry(onBackground, BlurBlendMode.Multiply)),
-            "Overlay" to listOf(BlendColorEntry(onBackground, BlurBlendMode.Overlay)),
-            "Soft Light" to listOf(BlendColorEntry(onBackground, BlurBlendMode.SoftLight)),
-            "Color Dodge" to listOf(BlendColorEntry(onBackground, BlurBlendMode.ColorDodge)),
-            "Color Burn" to listOf(BlendColorEntry(onBackground, BlurBlendMode.ColorBurn)),
-            "Linear Light" to listOf(BlendColorEntry(onBackground, BlurBlendMode.LinearLight)),
-            "Linear Light Grey" to listOf(BlendColorEntry(onBackground, BlurBlendMode.LinearLightWithGreyscale)),
-            "Linear Light Lab" to listOf(BlendColorEntry(onBackground, BlurBlendMode.LinearLightLab)),
-            "Lab Lighten" to listOf(BlendColorEntry(onBackground, BlurBlendMode.LabLightenWithGreyscale)),
-            "Lab Darken" to listOf(BlendColorEntry(onBackground, BlurBlendMode.LabDarkenWithGreyscale)),
-            "MI Difference" to listOf(BlendColorEntry(onBackground, BlurBlendMode.MiDifference)),
-            "MI Color Dodge" to listOf(BlendColorEntry(onBackground, BlurBlendMode.MiColorDodge)),
-            "MI Color Burn" to listOf(BlendColorEntry(onBackground, BlurBlendMode.MiColorBurn)),
-            "Plus Lighter" to listOf(BlendColorEntry(onBackground, BlurBlendMode.PlusLighter)),
-            "Plus Darker" to listOf(BlendColorEntry(onBackground, BlurBlendMode.PlusDarker)),
         )
     }
     var blendModeIndex by remember { mutableIntStateOf(1) }
     val currentBlend = blendConfigs[blendModeIndex]
+    val blendModeItems = remember(blendConfigs) { blendConfigs.map { it.first } }
+    var isOs3Effect by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier.padding(horizontal = 12.dp),
@@ -351,6 +317,7 @@ private fun ForegroundBlurDemo() {
             BgEffectBackground(
                 dynamicBackground = dynamicBackground.value,
                 isFullSize = true,
+                isOs3Effect = isOs3Effect,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(280.dp),
@@ -387,17 +354,28 @@ private fun ForegroundBlurDemo() {
 
         // Controls
         Card {
-            // Dynamic Background toggle
-            BasicComponent(
-                title = "Dynamic Background",
-                endActions = {
-                    Switch(
-                        dynamicBackground.value,
-                        { dynamicBackground.value = it },
-                    )
-                },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+            val effectVariantOptions = listOf("OS2", "OS3")
+            OverlayDropdownPreference(
+                title = "Effect Variant",
+                items = effectVariantOptions,
+                selectedIndex = if (isOs3Effect) 1 else 0,
+                onSelectedIndexChange = { isOs3Effect = (it == 1) },
             )
+
+            OverlayDropdownPreference(
+                title = "Blend Mode",
+                items = blendModeItems,
+                selectedIndex = blendModeIndex,
+                onSelectedIndexChange = { blendModeIndex = it },
+            )
+
+            SwitchPreference(
+                title = "Dynamic Background",
+                checked = dynamicBackground.value,
+                onCheckedChange = { dynamicBackground.value = it },
+            )
+
+            HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
 
             BasicComponent(
                 title = "Blur Radius",
@@ -458,35 +436,6 @@ private fun ForegroundBlurDemo() {
                         value = saturation / 3f,
                         onValueChange = { saturation = it * 3f },
                     )
-                },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            BasicComponent(
-                title = "Blend Mode",
-                endActions = {
-                    ValueText(currentBlend.first)
-                },
-                bottomAction = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        TextButton(
-                            text = "Prev",
-                            onClick = {
-                                blendModeIndex = (blendModeIndex - 1 + blendConfigs.size) % blendConfigs.size
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                        TextButton(
-                            text = "Next",
-                            onClick = {
-                                blendModeIndex = (blendModeIndex + 1) % blendConfigs.size
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
                 },
             )
         }
