@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -321,17 +322,17 @@ private fun TabItem(
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
-    val currentOnClick by rememberUpdatedState(onClick)
     Surface(
         shape = shape,
-        onClick = {
-            currentOnClick()
-        },
+        onClick = onClick,
         color = Color.Transparent,
         modifier = Modifier
             .fillMaxHeight()
             .width(width)
-            .semantics { role = Role.Tab },
+            .semantics {
+                role = Role.Tab
+                selected = isSelected
+            },
         interactionSource = interactionSource,
         indication = indication,
     ) {
@@ -363,7 +364,6 @@ private fun TabItemWithContour(
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
-    val currentOnClick by rememberUpdatedState(onClick)
     Box(
         modifier = Modifier
             .fillMaxHeight()
@@ -372,10 +372,12 @@ private fun TabItemWithContour(
             .clickable(
                 interactionSource = interactionSource,
                 indication = indication,
-            ) {
-                currentOnClick()
-            }
-            .semantics { role = Role.Tab },
+                onClick = onClick,
+            )
+            .semantics {
+                role = Role.Tab
+                selected = isSelected
+            },
         contentAlignment = contentAlignment,
     ) {
         Text(
