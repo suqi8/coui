@@ -42,8 +42,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param titleColor The color of the title of the [OverlaySpinnerPreference].
  * @param summary The summary of the [OverlaySpinnerPreference].
  * @param summaryColor The color of the summary of the [OverlaySpinnerPreference].
- * @param spinnerColors The [DropdownColors] of the [OverlaySpinnerPreference].
- * @param startAction The [Composable] content that on the start side of the [OverlaySpinnerPreference].
+ * @param spinnerColors The [SpinnerColors] of the [OverlaySpinnerPreference].
+ * @param startAction The [Composable] content on the start side of the [OverlaySpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [OverlaySpinnerPreference].
  * @param insideMargin The [PaddingValues] to be applied inside the [OverlaySpinnerPreference].
  * @param maxHeight The maximum height of the dropdown popup.

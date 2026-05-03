@@ -21,6 +21,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.RadioButton
 import top.yukonga.miuix.kmp.basic.RadioButtonColors
 import top.yukonga.miuix.kmp.basic.RadioButtonDefaults
+import top.yukonga.miuix.kmp.preference.internal.StartActionSlot
 
 /**
  * A radio button with a title and a summary.
@@ -33,7 +34,8 @@ import top.yukonga.miuix.kmp.basic.RadioButtonDefaults
  * @param summary The summary of the [RadioButtonPreference].
  * @param summaryColor The color of the summary.
  * @param radioButtonColors The [RadioButtonColors] of the [RadioButtonPreference].
- * @param endActions The [Composable] content that on the end side of the [RadioButtonPreference].
+ * @param startAction The [Composable] content on the start side of the [RadioButtonPreference].
+ * @param endActions The [Composable] content on the end side of the [RadioButtonPreference].
  * @param radioButtonLocation The location of radio button, [RadioButtonLocation.Start] or [RadioButtonLocation.End].
  * @param bottomAction The [Composable] content at the bottom of the [RadioButtonPreference].
  * @param insideMargin The margin inside the [RadioButtonPreference].
@@ -51,7 +53,8 @@ fun RadioButtonPreference(
     summary: String? = null,
     summaryColor: BasicComponentColors = BasicComponentDefaults.summaryColor(),
     radioButtonColors: RadioButtonColors = RadioButtonDefaults.radioButtonColors(),
-    endActions: @Composable RowScope.() -> Unit = {},
+    startAction: @Composable (() -> Unit)? = null,
+    endActions: @Composable (RowScope.() -> Unit)? = null,
     radioButtonLocation: RadioButtonLocation = RadioButtonLocation.Start,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
@@ -59,18 +62,6 @@ fun RadioButtonPreference(
     enabled: Boolean = true,
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
-    val startAction = if (radioButtonLocation == RadioButtonLocation.Start) {
-        @Composable {
-            RadioButtonPreferenceStartAction(
-                selected = selected,
-                onClick = currentOnClick,
-                enabled = enabled,
-                radioButtonColors = radioButtonColors,
-            )
-        }
-    } else {
-        null
-    }
 
     BasicComponent(
         modifier = modifier,
@@ -79,16 +70,44 @@ fun RadioButtonPreference(
         titleColor = titleColor,
         summary = summary,
         summaryColor = summaryColor,
-        startAction = startAction,
-        endActions = {
-            Row(
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .align(Alignment.CenterVertically)
-                    .weight(1f, fill = false),
-            ) {
-                endActions()
+        startAction = if (radioButtonLocation == RadioButtonLocation.Start || startAction != null) {
+            {
+                Row {
+                    if (radioButtonLocation == RadioButtonLocation.Start) {
+                        RadioButtonPreferenceStartAction(
+                            selected = selected,
+                            onClick = currentOnClick,
+                            enabled = enabled,
+                            radioButtonColors = radioButtonColors,
+                        )
+                    }
+
+                    startAction?.let {
+                        StartActionSlot(
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .weight(1f, fill = false),
+                            endSpacing = 5.dp,
+                            content = it,
+                        )
+                    }
+                }
             }
+        } else {
+            null
+        },
+        endActions = {
+            endActions?.let {
+                Row(
+                    modifier = Modifier
+                        .padding(end = 8.dp)
+                        .align(Alignment.CenterVertically)
+                        .weight(1f, fill = false),
+                ) {
+                    it()
+                }
+            }
+
             if (radioButtonLocation == RadioButtonLocation.End) {
                 RadioButtonPreferenceEndAction(
                     selected = selected,
@@ -124,7 +143,7 @@ private fun RadioButtonPreferenceStartAction(
     }
     RadioButton(
         modifier = Modifier
-            .padding(end = 8.dp),
+            .padding(end = 5.dp),
         selected = selected,
         onClick = wrappedOnClick,
         enabled = enabled,

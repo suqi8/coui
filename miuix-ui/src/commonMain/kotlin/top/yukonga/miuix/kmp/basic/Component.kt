@@ -44,7 +44,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param titleColor The color of the title.
  * @param summary The summary of the [BasicComponent].
  * @param summaryColor The color of the summary.
- * @param startAction The [Composable] content that on the start side of the [BasicComponent].
+ * @param startAction The [Composable] content on the start side of the [BasicComponent].
  * @param endActions The [Composable] content on the end side of the [BasicComponent].
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
@@ -103,7 +103,7 @@ fun BasicComponent(
  * A basic component with Miuix style. Widely used in other extension components.
  *
  * @param modifier The modifier to be applied to the [BasicComponent].
- * @param startAction The [Composable] content that on the start side of the [BasicComponent].
+ * @param startAction The [Composable] content on the start side of the [BasicComponent].
  * @param endActions The [Composable] content on the end side of the [BasicComponent].
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
@@ -210,15 +210,15 @@ fun BasicComponent(
                 val maxWidth = constraints.maxWidth
                 val maxHeight = constraints.maxHeight
 
-                val hasStart = startMeasurable != null
-                val hasEnd = endMeasurable != null
-                val startSpacerWidth = if (hasStart) spacerPx else 0
-                val endSpacerWidth = if (hasEnd) spacerPx else 0
-                val availableWidth = (maxWidth - startSpacerWidth - endSpacerWidth).coerceAtLeast(0)
-
                 val reqStart = startMeasurable?.maxIntrinsicWidth(maxHeight) ?: 0
                 val reqCenter = centerMeasurable.maxIntrinsicWidth(maxHeight)
                 val reqEnd = endMeasurable?.maxIntrinsicWidth(maxHeight) ?: 0
+
+                val hasStart = reqStart > 0
+                val hasEnd = reqEnd > 0
+                val startSpacerWidth = if (hasStart) spacerPx else 0
+                val endSpacerWidth = if (hasEnd) spacerPx else 0
+                val availableWidth = (maxWidth - startSpacerWidth - endSpacerWidth).coerceAtLeast(0)
 
                 val totalReq = reqStart + reqCenter + reqEnd
 

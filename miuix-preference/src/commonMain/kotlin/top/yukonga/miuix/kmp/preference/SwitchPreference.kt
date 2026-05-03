@@ -31,7 +31,7 @@ import top.yukonga.miuix.kmp.basic.SwitchDefaults
  * @param titleColor The color of the title.
  * @param summary The summary of the [SwitchPreference].
  * @param summaryColor The color of the summary.
- * @param startAction The [Composable] content that on the start side of the [SwitchPreference].
+ * @param startAction The [Composable] content on the start side of the [SwitchPreference].
  * @param endActions The [Composable] content on the end side of the [SwitchPreference].
  * @param bottomAction The [Composable] content at the bottom of the [SwitchPreference].
  * @param switchColors The [SwitchColors] of the [SwitchPreference].

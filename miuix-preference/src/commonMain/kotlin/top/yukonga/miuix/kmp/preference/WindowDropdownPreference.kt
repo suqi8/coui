@@ -42,7 +42,7 @@ import top.yukonga.miuix.kmp.window.WindowListPopup
  * @param summary The summary of the [WindowDropdownPreference].
  * @param summaryColor The color of the summary.
  * @param dropdownColors The [DropdownColors] of the [WindowDropdownPreference].
- * @param startAction The [Composable] content that on the start side of the [WindowDropdownPreference].
+ * @param startAction The [Composable] content on the start side of the [WindowDropdownPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowDropdownPreference].
  * @param insideMargin The margin inside the [WindowDropdownPreference].
  * @param maxHeight The maximum height of the [WindowListPopup].

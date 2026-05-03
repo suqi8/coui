@@ -42,8 +42,8 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param titleColor The color of the title of the [WindowSpinnerPreference].
  * @param summary The summary of the [WindowSpinnerPreference].
  * @param summaryColor The color of the summary of the [WindowSpinnerPreference].
- * @param spinnerColors The [DropdownColors] of the [WindowSpinnerPreference].
- * @param startAction The [Composable] content that on the start side of the [WindowSpinnerPreference].
+ * @param spinnerColors The [SpinnerColors] of the [WindowSpinnerPreference].
+ * @param startAction The [Composable] content on the start side of the [WindowSpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowSpinnerPreference].
  * @param insideMargin The [PaddingValues] to be applied inside the [WindowSpinnerPreference].
  * @param maxHeight The maximum height of the dropdown popup.

@@ -36,7 +36,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param titleColor The color of the title.
  * @param summary The summary of the [ArrowPreference].
  * @param summaryColor The color of the summary.
- * @param startAction The [Composable] content that on the start side of the [ArrowPreference].
+ * @param startAction The [Composable] content on the start side of the [ArrowPreference].
  * @param endActions The [Composable] content on the end side of the [ArrowPreference].
  * @param bottomAction The [Composable] content at the bottom of the [ArrowPreference].
  * @param modifier The modifier to be applied to the [ArrowPreference].

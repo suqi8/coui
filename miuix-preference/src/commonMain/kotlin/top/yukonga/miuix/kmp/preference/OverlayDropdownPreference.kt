@@ -41,7 +41,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param summary The summary of the [OverlayDropdownPreference].
  * @param summaryColor The color of the summary.
  * @param dropdownColors The [DropdownColors] of the [OverlayDropdownPreference].
- * @param startAction The [Composable] content that on the start side of the [OverlayDropdownPreference].
+ * @param startAction The [Composable] content on the start side of the [OverlayDropdownPreference].
  * @param bottomAction The [Composable] content at the bottom of the [OverlayDropdownPreference].
  * @param insideMargin The margin inside the [OverlayDropdownPreference].
  * @param maxHeight The maximum height of the [OverlayListPopup].

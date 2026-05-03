@@ -90,22 +90,23 @@ CheckboxPreference(
 
 ### CheckboxPreference 属性
 
-| 属性名           | 类型                            | 说明                       | 默认值                                | 是否必须 |
-| ---------------- | ------------------------------- | -------------------------- | ------------------------------------- | -------- |
-| title            | String                          | 复选框项的标题             | -                                     | 是       |
-| checked          | Boolean                         | 复选框的选中状态           | -                                     | 是       |
-| onCheckedChange  | ((Boolean) -> Unit)?            | 复选框状态变化时的回调     | -                                     | 否       |
-| modifier         | Modifier                        | 应用于组件的修饰符         | Modifier                              | 否       |
-| titleColor       | BasicComponentColors            | 标题文本的颜色配置         | BasicComponentDefaults.titleColor()   | 否       |
-| summary          | String?                         | 复选框项的摘要说明         | null                                  | 否       |
-| summaryColor     | BasicComponentColors            | 摘要文本的颜色配置         | BasicComponentDefaults.summaryColor() | 否       |
-| checkboxColors   | CheckboxColors                  | 复选框控件的颜色配置       | CheckboxDefaults.checkboxColors()     | 否       |
-| endActions       | @Composable RowScope.() -> Unit | 复选框前的自定义内容       | {}                                    | 否       |
-| checkboxLocation | CheckboxLocation                | 复选框的位置               | CheckboxLocation.Start                | 否       |
-| bottomAction     | @Composable (() -> Unit)?       | 底部自定义内容             | null                                  | 否       |
-| holdDownState    | Boolean                         | 组件是否处于按下状态       | false                                 | 否       |
-| insideMargin     | PaddingValues                   | 组件内部内容的边距         | BasicComponentDefaults.InsideMargin   | 否       |
-| enabled          | Boolean                         | 组件是否可交互             | true                                  | 否       |
+| 属性名              | 类型                                 | 说明          | 默认值                                   | 是否必须 |
+|------------------|------------------------------------|-------------|---------------------------------------|------|
+| title            | String                             | 复选框项的标题     | -                                     | 是    |
+| checked          | Boolean                            | 复选框的选中状态    | -                                     | 是    |
+| onCheckedChange  | ((Boolean) -> Unit)?               | 复选框状态变化时的回调 | -                                     | 否    |
+| modifier         | Modifier                           | 应用于组件的修饰符   | Modifier                              | 否    |
+| titleColor       | BasicComponentColors               | 标题文本的颜色配置   | BasicComponentDefaults.titleColor()   | 否    |
+| summary          | String?                            | 复选框项的摘要说明   | null                                  | 否    |
+| summaryColor     | BasicComponentColors               | 摘要文本的颜色配置   | BasicComponentDefaults.summaryColor() | 否    |
+| checkboxColors   | CheckboxColors                     | 复选框控件的颜色配置  | CheckboxDefaults.checkboxColors()     | 否    |
+| startAction      | @Composable (() -> Unit)?          | 复选框后的自定义内容  | null                                  | 否    |
+| endActions       | @Composable (RowScope.() -> Unit)? | 复选框前的自定义内容  | null                                  | 否    |
+| checkboxLocation | CheckboxLocation                   | 复选框的位置      | CheckboxLocation.Start                | 否    |
+| bottomAction     | @Composable (() -> Unit)?          | 底部自定义内容     | null                                  | 否    |
+| holdDownState    | Boolean                            | 组件是否处于按下状态  | false                                 | 否    |
+| insideMargin     | PaddingValues                      | 组件内部内容的边距   | BasicComponentDefaults.InsideMargin   | 否    |
+| enabled          | Boolean                            | 组件是否可交互     | true                                  | 否    |
 
 ## 进阶用法
 
@@ -151,8 +152,8 @@ Column {
     CheckboxPreference(
         title = "选项 1",
         checked = option1,
-        onCheckedChange = { 
-            option1 = it 
+        onCheckedChange = {
+            option1 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -160,8 +161,8 @@ Column {
     CheckboxPreference(
         title = "选项 2",
         checked = option2,
-        onCheckedChange = { 
-            option2 = it 
+        onCheckedChange = {
+            option2 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -169,8 +170,8 @@ Column {
     CheckboxPreference(
         title = "选项 3",
         checked = option3,
-        onCheckedChange = { 
-            option3 = it 
+        onCheckedChange = {
+            option3 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -214,7 +215,7 @@ Scaffold {
         onClick = { showDialog = true },
         holdDownState = showDialog
     )
-    
+
     OverlayDialog(
         title = "隐私设置",
         show = showDialog,
@@ -227,7 +228,7 @@ Scaffold {
                 checked = privacyOption,
                 onCheckedChange = { privacyOption = it }
             )
-            
+
             CheckboxPreference(
                 title = "分析数据",
                 summary = "允许收集匿名使用数据以改进服务",
@@ -235,7 +236,7 @@ Scaffold {
                 onCheckedChange = { analyticsOption = it }
             )
         }
-        
+
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.padding(top = 12.dp)

@@ -1,6 +1,8 @@
 # CheckboxPreference
 
-`CheckboxPreference` is a checkbox component in Miuix that provides a title, summary, and checkbox control. It supports click interactions and is commonly used in multi-select settings and selection lists.
+`CheckboxPreference` is a checkbox component in Miuix that provides a title, summary, and checkbox
+control. It supports click interactions and is commonly used in multi-select settings and selection
+lists.
 
 <div style="position: relative; height: 293px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=checkboxPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -90,22 +92,23 @@ CheckboxPreference(
 
 ### CheckboxPreference Properties
 
-| Property Name    | Type                            | Description                          | Default Value                         | Required |
-| ---------------- | ------------------------------- | ------------------------------------ | ------------------------------------- | -------- |
-| title            | String                          | Title of the checkbox item           | -                                     | Yes      |
-| checked          | Boolean                         | Checkbox checked state               | -                                     | Yes      |
-| onCheckedChange  | ((Boolean) -> Unit)?            | Callback when checkbox state changes | -                                     | No       |
-| modifier         | Modifier                        | Modifier applied to component        | Modifier                              | No       |
-| titleColor       | BasicComponentColors            | Title text color configuration       | BasicComponentDefaults.titleColor()   | No       |
-| summary          | String?                         | Summary description                  | null                                  | No       |
-| summaryColor     | BasicComponentColors            | Summary text color configuration     | BasicComponentDefaults.summaryColor() | No       |
-| checkboxColors   | CheckboxColors                  | Checkbox control color configuration | CheckboxDefaults.checkboxColors()     | No       |
-| endActions       | @Composable RowScope.() -> Unit | Custom content before checkbox       | {}                                    | No       |
-| checkboxLocation | CheckboxLocation                | Checkbox position                    | CheckboxLocation.Start                | No       |
-| bottomAction     | @Composable (() -> Unit)?       | Custom bottom content                | null                                  | No       |
-| holdDownState    | Boolean                         | Whether the component is held down   | false                                 | No       |
-| insideMargin     | PaddingValues                   | Internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
-| enabled          | Boolean                         | Whether component is interactive     | true                                  | No       |
+| Property Name    | Type                               | Description                          | Default Value                         | Required |
+|------------------|------------------------------------|--------------------------------------|---------------------------------------|----------|
+| title            | String                             | Title of the checkbox item           | -                                     | Yes      |
+| checked          | Boolean                            | Checkbox checked state               | -                                     | Yes      |
+| onCheckedChange  | ((Boolean) -> Unit)?               | Callback when checkbox state changes | -                                     | No       |
+| modifier         | Modifier                           | Modifier applied to component        | Modifier                              | No       |
+| titleColor       | BasicComponentColors               | Title text color configuration       | BasicComponentDefaults.titleColor()   | No       |
+| summary          | String?                            | Summary description                  | null                                  | No       |
+| summaryColor     | BasicComponentColors               | Summary text color configuration     | BasicComponentDefaults.summaryColor() | No       |
+| checkboxColors   | CheckboxColors                     | Checkbox control color configuration | CheckboxDefaults.checkboxColors()     | No       |
+| startAction      | @Composable (() -> Unit)?          | Custom content after checkbox        | null                                  | No       |
+| endActions       | @Composable (RowScope.() -> Unit)? | Custom content before checkbox       | null                                  | No       |
+| checkboxLocation | CheckboxLocation                   | Checkbox position                    | CheckboxLocation.Start                | No       |
+| bottomAction     | @Composable (() -> Unit)?          | Custom bottom content                | null                                  | No       |
+| holdDownState    | Boolean                            | Whether the component is held down   | false                                 | No       |
+| insideMargin     | PaddingValues                      | Internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
+| enabled          | Boolean                            | Whether component is interactive     | true                                  | No       |
 
 ## Advanced Usage
 
@@ -151,8 +154,8 @@ Column {
     CheckboxPreference(
         title = "Option 1",
         checked = option1,
-        onCheckedChange = { 
-            option1 = it 
+        onCheckedChange = {
+            option1 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -160,8 +163,8 @@ Column {
     CheckboxPreference(
         title = "Option 2",
         checked = option2,
-        onCheckedChange = { 
-            option2 = it 
+        onCheckedChange = {
+            option2 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -169,8 +172,8 @@ Column {
     CheckboxPreference(
         title = "Option 3",
         checked = option3,
-        onCheckedChange = { 
-            option3 = it 
+        onCheckedChange = {
+            option3 = it
             allSelected = option1 && option2 && option3
         },
         modifier = Modifier.padding(start = 24.dp)
@@ -214,7 +217,7 @@ Scaffold {
         onClick = { showDialog = true },
         holdDownState = showDialog
     )
-    
+
     OverlayDialog(
         title = "Privacy Settings",
         show = showDialog,
@@ -227,7 +230,7 @@ Scaffold {
                 checked = privacyOption,
                 onCheckedChange = { privacyOption = it }
             )
-            
+
             CheckboxPreference(
                 title = "Analytics Data",
                 summary = "Allow collection of anonymous usage data to improve services",
@@ -235,7 +238,7 @@ Scaffold {
                 onCheckedChange = { analyticsOption = it }
             )
         }
-        
+
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.padding(top = 12.dp)
