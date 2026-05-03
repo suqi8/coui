@@ -13,10 +13,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -43,38 +42,28 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param content The [Composable] content of the [Surface].
  */
 @Composable
+@NonRestartableComposable
 fun Surface(
     modifier: Modifier = Modifier,
-    shape: Shape = RectangleShape,
+    shape: Shape = SurfaceDefaults.Shape,
     color: Color = MiuixTheme.colorScheme.surface,
     contentColor: Color = MiuixTheme.colorScheme.onSurface,
     border: BorderStroke? = null,
-    shadowElevation: Dp = 0.dp,
+    shadowElevation: Dp = SurfaceDefaults.ShadowElevation,
     content: @Composable () -> Unit,
 ) {
-    val density = LocalDensity.current
-    val shadowElevationPx = remember(density, shadowElevation) {
-        with(density) { shadowElevation.toPx() }
-    }
-    CompositionLocalProvider(
-        LocalContentColor provides contentColor,
-    ) {
-        Box(
-            modifier = modifier
-                .surface(
-                    shape = shape,
-                    backgroundColor = color,
-                    border = border,
-                    shadowElevation = shadowElevationPx,
-                )
-                .semantics(mergeDescendants = false) {
-                    isTraversalGroup = true
-                },
-            propagateMinConstraints = true,
-        ) {
-            content()
-        }
-    }
+    SurfaceImpl(
+        shape = shape,
+        color = color,
+        contentColor = contentColor,
+        border = border,
+        shadowElevation = shadowElevation,
+        modifier = modifier
+            .semantics(mergeDescendants = false) {
+                isTraversalGroup = true
+            },
+        content = content,
+    )
 }
 
 /**
@@ -97,39 +86,52 @@ fun Surface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: Shape = RectangleShape,
+    shape: Shape = SurfaceDefaults.Shape,
     color: Color = MiuixTheme.colorScheme.surface,
     contentColor: Color = MiuixTheme.colorScheme.onSurface,
     border: BorderStroke? = null,
-    shadowElevation: Dp = 0.dp,
+    shadowElevation: Dp = SurfaceDefaults.ShadowElevation,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = LocalIndication.current,
     content: @Composable () -> Unit,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val currentOnClick by rememberUpdatedState(onClick)
-    val density = LocalDensity.current
-    val shadowElevationPx = remember(density, shadowElevation) {
-        with(density) { shadowElevation.toPx() }
-    }
-    CompositionLocalProvider(
-        LocalContentColor provides contentColor,
-    ) {
+    SurfaceImpl(
+        shape = shape,
+        color = color,
+        contentColor = contentColor,
+        border = border,
+        shadowElevation = shadowElevation,
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = indication,
+            enabled = enabled,
+            onClick = onClick,
+        ),
+        content = content,
+    )
+}
+
+@Composable
+private fun SurfaceImpl(
+    shape: Shape,
+    color: Color,
+    contentColor: Color,
+    border: BorderStroke?,
+    shadowElevation: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val shadowElevationPx = with(LocalDensity.current) { shadowElevation.toPx() }
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
-            modifier = modifier
-                .surface(
-                    shape = shape,
-                    backgroundColor = color,
-                    border = border,
-                    shadowElevation = shadowElevationPx,
-                )
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = indication,
-                    enabled = enabled,
-                    onClick = currentOnClick,
-                ),
+            modifier = modifier.surface(
+                shape = shape,
+                backgroundColor = color,
+                border = border,
+                shadowElevation = shadowElevationPx,
+            ),
             propagateMinConstraints = true,
         ) {
             content()
@@ -157,3 +159,11 @@ private fun Modifier.surface(
     .then(if (border != null) Modifier.border(border, shape) else Modifier)
     .clip(shape)
     .background(color = backgroundColor)
+
+object SurfaceDefaults {
+    /** The default [Shape] of the [Surface]. */
+    val Shape: Shape = RectangleShape
+
+    /** The default shadow elevation of the [Surface]. */
+    val ShadowElevation: Dp = 0.dp
+}
