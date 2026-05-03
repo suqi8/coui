@@ -52,7 +52,6 @@ import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.window.WindowListPopup
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
@@ -142,7 +141,7 @@ fun NavTestPage(
                             .padding(bottom = 12.dp),
                     ) {
                         ArrowPreference(
-                            title = "Long Title Long Title Long Title Long Title Long Title Long Title Long Title Long Title",
+                            title = "Long Long Long Long Long Title",
                             summary = "Summary",
                             startAction = {
                                 Text(text = "Start")
@@ -156,22 +155,9 @@ fun NavTestPage(
                         )
                         ArrowPreference(
                             title = "Title",
-                            summary = "Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary",
+                            summary = "Long Long Long Long Long Summary",
                             startAction = {
                                 Text(text = "Start")
-                            },
-                            endActions = {
-                                Text(text = "End1", textAlign = TextAlign.End)
-                                Spacer(Modifier.width(8.dp))
-                                Text(text = "End2", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        ArrowPreference(
-                            title = "Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Long Start Long Start Long Start Long Start Long Start Long Start Long Start Long Start")
                             },
                             endActions = {
                                 Text(text = "End1", textAlign = TextAlign.End)
@@ -188,32 +174,21 @@ fun NavTestPage(
                             },
                             endActions = {
                                 Text(
-                                    text = "Long End Long End Long End Long End Long End Long End Long End Long End",
+                                    text = "Long Long Long Long Long End",
                                     textAlign = TextAlign.End,
                                 )
                             },
                             enabled = true,
                         )
                         ArrowPreference(
-                            title = "Long Title Long Title Long Title Long Title Long Title Long Title Long Title Long Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Long Start Long Start Long Start Long Start Long Start Long Start Long Start Long Start")
-                            },
-                            endActions = {
-                                Text(text = "End", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        ArrowPreference(
-                            title = "Long Title Long Title Long Title Long Title Long Title Long Title Long Title Long Title",
+                            title = "Long Long Long Long Long Title",
                             summary = "Summary",
                             startAction = {
                                 Text(text = "Start")
                             },
                             endActions = {
                                 Text(
-                                    text = "Long End Long End Long End Long End Long End Long End Long End Long End",
+                                    text = "Long Long Long Long Long End",
                                     textAlign = TextAlign.End,
                                 )
                             },
@@ -221,50 +196,28 @@ fun NavTestPage(
                         )
                         ArrowPreference(
                             title = "Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Long Start Long Start Long Start Long Start Long Start Long Start Long Start Long Start")
-                            },
+                            summary = "Long Long Long Long Long Summary",
                             endActions = {
                                 Text(
-                                    text = "Long End Long End Long End Long End Long End Long End Long End Long End",
+                                    text = "Long Long Long Long Long End",
                                     textAlign = TextAlign.End,
                                 )
                             },
                             enabled = true,
                         )
                         ArrowPreference(
-                            title = "Title",
-                            summary = "Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary",
-                            endActions = {
-                                Text(
-                                    text = "Long End Long End Long End Long End Long End Long End Long End Long End",
-                                    textAlign = TextAlign.End,
-                                )
-                            },
-                            enabled = true,
-                        )
-                        ArrowPreference(
-                            title = "Long Title Long Title Long Title Long Title Long Title Long Title Long Title Long Title",
-                            summary = "Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary Long Summary",
-                            endActions = {
-                                Text(text = "Long End Long End Long End Long End", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        ArrowPreference(
-                            title = "Long Title Long Title Long Title Long Title",
+                            title = "Long Long Long Long Long Title",
                             summary = "Summary",
                             endActions = {
-                                Text(text = "Long End Long End Long End Long End", textAlign = TextAlign.End)
+                                Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
                             },
                             enabled = true,
                         )
                         ArrowPreference(
                             title = "Title",
-                            summary = "Long Summary Long Summary Long Summary Long Summary",
+                            summary = "Long Long Long Long Long Summary",
                             endActions = {
-                                Text(text = "Long End Long End", textAlign = TextAlign.End)
+                                Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
                             },
                             enabled = true,
                         )
@@ -296,7 +249,7 @@ fun TopBarActions() {
         Icon(
             imageVector = MiuixIcons.Edit,
             contentDescription = "WindowListPopup",
-            tint = colorScheme.onBackground,
+            tint = MiuixTheme.colorScheme.onBackground,
         )
     }
     WindowListPopup(
