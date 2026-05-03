@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.captionBar
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -312,6 +313,7 @@ fun FloatingNavigationBar(
         Row(
             modifier = Modifier
                 .padding(bottom = bottomPaddingValue)
+                .defaultMinSize(minHeight = 68.dp)
                 .then(
                     if (defaultWindowInsetsPadding) {
                         Modifier

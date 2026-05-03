@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -84,6 +85,7 @@ import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.NavigationBar
@@ -100,6 +102,8 @@ import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.highlight
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
@@ -114,6 +118,7 @@ import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Sort
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.FPSMonitor
 import utils.rememberBlurBackdrop
@@ -493,10 +498,34 @@ private fun NavigationBar(
             enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
             exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
         ) {
-            Box(
-                modifier = modifier,
-            ) {
+            val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
+            val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
+            val isDark = isInDarkTheme()
+            val floatingHighlight = remember(isDark) {
+                if (isDark) Highlight.GlassStrokeSmallDark else Highlight.GlassStrokeSmallLight
+            }
+            Box(modifier = modifier) {
                 FloatingNavigationBar(
+                    modifier = if (blurActive) {
+                        Modifier
+                            .textureBlur(
+                                backdrop = backdrop,
+                                shape = floatingBarShape,
+                                blurRadius = 25f,
+                                colors = BlurColors(
+                                    blendColors = listOf(
+                                        BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.6f)),
+                                    ),
+                                ),
+                            )
+                            .highlight(
+                                shape = floatingBarShape,
+                                highlight = floatingHighlight,
+                            )
+                    } else {
+                        Modifier
+                    },
+                    color = floatingBarColor,
                     mode = FloatingNavigationBarDisplayMode.entries[appState.floatingNavigationBarMode],
                     horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
                         .toAlignment(),
