@@ -9,6 +9,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,16 +29,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -143,9 +144,8 @@ fun RowScope.NavigationBarItem(
 ) {
     val platform = platform()
     val itemHeight = if (platform != Platform.IOS) NavigationBarDefaults.ItemHeight else NavigationBarDefaults.ItemHeightIOS
-    var isPressed by remember { mutableStateOf(false) }
-    val currentOnClick by rememberUpdatedState(onClick)
-    val currentEnabled by rememberUpdatedState(enabled)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
     val onSurfaceContainerColor = MiuixTheme.colorScheme.onSurfaceContainer
     val tint = when {
@@ -166,18 +166,14 @@ fun RowScope.NavigationBarItem(
         modifier = modifier
             .height(itemHeight)
             .weight(1f)
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        if (currentEnabled) {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        }
-                    },
-                    onTap = { if (currentEnabled) currentOnClick() },
-                )
-            },
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                enabled = enabled,
+                role = Role.Tab,
+                interactionSource = interactionSource,
+                indication = null,
+            ),
         horizontalAlignment = CenterHorizontally,
         verticalArrangement = if (mode == NavigationBarDisplayMode.IconAndText || mode == NavigationBarDisplayMode.IconWithSelectedLabel) Arrangement.Top else Arrangement.Center,
     ) {
@@ -387,9 +383,8 @@ fun FloatingNavigationBarItem(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-    val currentOnClick by rememberUpdatedState(onClick)
-    val currentEnabled by rememberUpdatedState(enabled)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
     val onSurfaceContainerColor = MiuixTheme.colorScheme.onSurfaceContainer
     val tint = when {
@@ -408,18 +403,14 @@ fun FloatingNavigationBarItem(
 
     Column(
         modifier = modifier
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = {
-                        if (currentEnabled) {
-                            isPressed = true
-                            tryAwaitRelease()
-                            isPressed = false
-                        }
-                    },
-                    onTap = { if (currentEnabled) currentOnClick() },
-                )
-            },
+            .selectable(
+                selected = selected,
+                onClick = onClick,
+                enabled = enabled,
+                role = Role.Tab,
+                interactionSource = interactionSource,
+                indication = null,
+            ),
         horizontalAlignment = CenterHorizontally,
     ) {
         when (mode) {
