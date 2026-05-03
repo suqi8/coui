@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -60,4 +61,39 @@ fun InteractionSource.collectIsHeldDownAsState(): State<Boolean> {
         }
     }
     return isHeldDown
+}
+
+/**
+ * Mirrors [holdDownState] into [interactionSource], releasing any in-flight [HoldDown] on dispose.
+ */
+@Composable
+internal fun HoldDownObserver(
+    holdDownState: Boolean,
+    interactionSource: MutableInteractionSource,
+) {
+    val holdDown = remember { mutableStateOf<HoldDown?>(null) }
+    LaunchedEffect(holdDownState, interactionSource) {
+        suspend fun release() {
+            holdDown.value?.let { current ->
+                interactionSource.emit(Release(current))
+                holdDown.value = null
+            }
+        }
+        if (holdDownState) {
+            release()
+            val interaction = HoldDown()
+            holdDown.value = interaction
+            interactionSource.emit(interaction)
+        } else {
+            release()
+        }
+    }
+    DisposableEffect(interactionSource) {
+        onDispose {
+            holdDown.value?.let { current ->
+                interactionSource.tryEmit(Release(current))
+            }
+            holdDown.value = null
+        }
+    }
 }

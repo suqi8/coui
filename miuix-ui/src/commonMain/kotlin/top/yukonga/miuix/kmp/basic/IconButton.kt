@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -22,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.interfaces.HoldDownInteraction
+import top.yukonga.miuix.kmp.interfaces.HoldDownObserver
 
 /**
  * A [IconButton] component with Miuix style.
@@ -54,20 +52,8 @@ fun IconButton(
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     val interactionSource = remember { MutableInteractionSource() }
-    val holdDown = remember { mutableStateOf<HoldDownInteraction.HoldDown?>(null) }
 
-    LaunchedEffect(holdDownState) {
-        if (holdDownState) {
-            val interaction = HoldDownInteraction.HoldDown()
-            holdDown.value = interaction
-            interactionSource.emit(interaction)
-        } else {
-            holdDown.value?.let { oldValue ->
-                interactionSource.emit(HoldDownInteraction.Release(oldValue))
-                holdDown.value = null
-            }
-        }
-    }
+    HoldDownObserver(holdDownState, interactionSource)
 
     val currentOnClick by rememberUpdatedState(onClick)
     val clickableModifier = remember(enabled, interactionSource) {

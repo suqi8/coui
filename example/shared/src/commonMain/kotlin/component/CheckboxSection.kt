@@ -33,8 +33,8 @@ fun LazyListScope.checkboxSection() {
                 .padding(bottom = 12.dp),
         ) {
             CheckboxRow()
-            SuperEndCheckboxDemo()
-            SuperCheckboxDemo()
+            CheckboxPreferenceEndDemo()
+            CheckboxPreferenceDemo()
             CheckboxPreference(
                 title = "Disabled Checkbox",
                 checked = true,
@@ -99,7 +99,7 @@ private fun CheckboxRow() {
 }
 
 @Composable
-private fun SuperEndCheckboxDemo() {
+private fun CheckboxPreferenceEndDemo() {
     var checked by remember { mutableStateOf(false) }
 
     CheckboxPreference(
@@ -118,7 +118,7 @@ private fun SuperEndCheckboxDemo() {
 }
 
 @Composable
-private fun SuperCheckboxDemo() {
+private fun CheckboxPreferenceDemo() {
     var checked by remember { mutableStateOf(false) }
 
     CheckboxPreference(

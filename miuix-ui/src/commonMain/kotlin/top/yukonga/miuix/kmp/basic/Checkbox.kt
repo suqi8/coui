@@ -35,6 +35,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
@@ -156,7 +160,11 @@ fun Checkbox(
             interactionSource = null,
         )
     } else {
-        Modifier
+        Modifier.semantics {
+            role = Role.Checkbox
+            toggleableState = state
+            if (!enabled) disabled()
+        }
     }
 
     Box(

@@ -18,11 +18,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -33,7 +31,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.interfaces.HoldDownInteraction
+import top.yukonga.miuix.kmp.interfaces.HoldDownObserver
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -130,23 +128,7 @@ fun BasicComponent(
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val currentOnClick by rememberUpdatedState(onClick)
 
-    val holdDown = remember { mutableStateOf<HoldDownInteraction.HoldDown?>(null) }
-    LaunchedEffect(holdDownState, interactionSource) {
-        suspend fun releaseHoldDown() {
-            holdDown.value?.let { oldValue ->
-                interactionSource.emit(HoldDownInteraction.Release(oldValue))
-                holdDown.value = null
-            }
-        }
-        if (holdDownState) {
-            releaseHoldDown()
-            val interaction = HoldDownInteraction.HoldDown()
-            holdDown.value = interaction
-            interactionSource.emit(interaction)
-        } else {
-            releaseHoldDown()
-        }
-    }
+    HoldDownObserver(holdDownState, interactionSource)
 
     val hasOnClick = onClick != null
     val clickableModifier = remember(enabled, hasOnClick, interactionSource) {

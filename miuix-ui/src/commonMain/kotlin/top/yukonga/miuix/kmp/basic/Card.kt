@@ -16,10 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -29,7 +27,7 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.interfaces.HoldDownInteraction
+import top.yukonga.miuix.kmp.interfaces.HoldDownObserver
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
@@ -104,23 +102,7 @@ fun Card(
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnLongPress by rememberUpdatedState(onLongPress)
 
-    val holdDown = remember { mutableStateOf<HoldDownInteraction.HoldDown?>(null) }
-    LaunchedEffect(holdDownState, interactionSource) {
-        suspend fun releaseHoldDown() {
-            holdDown.value?.let { oldValue ->
-                interactionSource.emit(HoldDownInteraction.Release(oldValue))
-                holdDown.value = null
-            }
-        }
-        if (holdDownState) {
-            releaseHoldDown()
-            val interaction = HoldDownInteraction.HoldDown()
-            holdDown.value = interaction
-            interactionSource.emit(interaction)
-        } else {
-            releaseHoldDown()
-        }
-    }
+    HoldDownObserver(holdDownState, interactionSource)
 
     val pressFeedback = remember(pressFeedbackType) {
         when (pressFeedbackType) {
@@ -133,6 +115,26 @@ fun Card(
     val usedInteractionSource = if (pressFeedback != null) interactionSource else null
     val indicationToUse = if (showIndication) LocalIndication.current else null
 
+    val hasOnClick = onClick != null
+    val hasLongPress = onLongPress != null
+    val isClickable = hasOnClick || hasLongPress
+    val clickableModifier = remember(isClickable, hasLongPress, interactionSource, indicationToUse) {
+        if (isClickable) {
+            Modifier.combinedClickable(
+                interactionSource = interactionSource,
+                indication = indicationToUse,
+                onClick = { currentOnClick?.invoke() },
+                onLongClick = if (hasLongPress) {
+                    { currentOnLongPress?.invoke() }
+                } else {
+                    null
+                },
+            )
+        } else {
+            Modifier
+        }
+    }
+
     BasicCard(
         modifier = modifier.pressable(
             interactionSource = usedInteractionSource,
@@ -144,12 +146,7 @@ fun Card(
     ) {
         Column(
             modifier = Modifier
-                .combinedClickable(
-                    interactionSource = interactionSource,
-                    indication = indicationToUse,
-                    onClick = currentOnClick ?: EmptyClickAction,
-                    onLongClick = currentOnLongPress,
-                )
+                .then(clickableModifier)
                 .padding(insideMargin),
             content = content,
         )
@@ -189,8 +186,6 @@ private fun BasicCard(
         }
     }
 }
-
-private val EmptyClickAction: () -> Unit = {}
 
 object CardDefaults {
 

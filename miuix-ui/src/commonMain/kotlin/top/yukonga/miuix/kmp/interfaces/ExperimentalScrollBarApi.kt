@@ -9,6 +9,7 @@ package top.yukonga.miuix.kmp.interfaces
  * This scrollbar component is in an early experimental stage with known issues.
  * Its API surface is unstable and subject to breaking changes in future releases.
  */
+@Suppress("ExperimentalAnnotationRetention")
 @RequiresOptIn(
     message = "This ScrollBar API is experimental. It has known issues and may change without notice.",
     level = RequiresOptIn.Level.WARNING,

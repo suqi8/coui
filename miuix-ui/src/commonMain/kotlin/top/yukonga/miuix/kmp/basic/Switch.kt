@@ -40,6 +40,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -109,8 +114,8 @@ fun Switch(
     )
 
     val hasCallback = onCheckedChange != null
-    val toggleableModifier = remember(checked, enabled, hasCallback, interactionSource) {
-        if (hasCallback) {
+    val toggleableModifier = if (hasCallback) {
+        remember(checked, enabled, interactionSource) {
             Modifier.toggleable(
                 value = checked,
                 onValueChange = { v ->
@@ -123,8 +128,12 @@ fun Switch(
                 role = Role.Switch,
                 interactionSource = interactionSource,
             )
-        } else {
-            Modifier
+        }
+    } else {
+        Modifier.semantics {
+            role = Role.Switch
+            toggleableState = ToggleableState(checked)
+            if (!enabled) disabled()
         }
     }
 
