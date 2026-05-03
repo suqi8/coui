@@ -365,9 +365,9 @@ fun SnackbarHost(
 fun Snackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 12.dp,
+    cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
-    insideMargin: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+    insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 ) {
     val shape = RoundedCornerShape(cornerRadius)
     val visuals = data.visuals
@@ -460,6 +460,12 @@ data class SnackbarColors(
  * Defaults for [Snackbar].
  */
 object SnackbarDefaults {
+    /** The default corner radius. */
+    val CornerRadius = 12.dp
+
+    /** The default inside margin. */
+    val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+
     @Composable
     fun snackbarColors(
         containerColor: Color = MiuixTheme.colorScheme.surfaceContainerHighest,

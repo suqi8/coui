@@ -110,9 +110,9 @@ In most cases you can keep the default `content` which uses the built‑in `Snac
 fun Snackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 12.dp,
+    cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
-    insideMargin: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+    insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
 ```
 
@@ -120,9 +120,9 @@ fun Snackbar(
 | -------------- | -------------- | ------------------------------------------ | --------------------------------- | -------- |
 | data           | SnackbarData   | Data describing message and actions        | -                                 | Yes      |
 | modifier       | Modifier       | Modifier applied to the Snackbar container | Modifier                          | No       |
-| cornerRadius   | Dp             | Corner radius of the Snackbar              | 12.dp                             | No       |
+| cornerRadius   | Dp             | Corner radius of the Snackbar              | SnackbarDefaults.CornerRadius     | No       |
 | colors         | SnackbarColors | Color configuration for the Snackbar       | SnackbarDefaults.snackbarColors() | No       |
-| insideMargin   | PaddingValues  | Inner padding of the Snackbar content      | PaddingValues(12.dp, 8.dp)        | No       |
+| insideMargin   | PaddingValues  | Inner padding of the Snackbar content      | SnackbarDefaults.InsideMargin     | No       |
 
 ### SnackbarColors and SnackbarDefaults
 
@@ -147,6 +147,15 @@ val colors = SnackbarDefaults.snackbarColors(
     dismissActionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
 )
 ```
+
+#### Constants
+
+`SnackbarDefaults` also exposes the default corner radius and inside margin used by `Snackbar`:
+
+| Constant Name | Type          | Description                                | Default Value                                          |
+| ------------- | ------------- | ------------------------------------------ | ------------------------------------------------------ |
+| CornerRadius  | Dp            | Default corner radius of the Snackbar      | 12.dp                                                  |
+| InsideMargin  | PaddingValues | Default inner padding of the Snackbar      | PaddingValues(horizontal = 12.dp, vertical = 8.dp)     |
 
 ## SnackbarDuration and SnackbarResult
 

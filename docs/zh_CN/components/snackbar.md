@@ -110,19 +110,19 @@ fun SnackbarHost(
 fun Snackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 12.dp,
+    cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
-    insideMargin: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+    insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
 ```
 
-| 参数名       | 类型           | 说明                     | 默认值                          | 是否必须 |
-| ------------ | -------------- | ------------------------ | -------------------------------- | -------- |
-| data         | SnackbarData   | 包含消息与操作信息的数据 | -                                | 是       |
-| modifier     | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                     | 否       |
-| cornerRadius | Dp             | Snackbar 的圆角半径      | 12.dp                           | 否       |
-| colors       | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否     |
-| insideMargin | PaddingValues  | Snackbar 内容区域的内边距 | PaddingValues(12.dp, 8.dp)    | 否       |
+| 参数名       | 类型           | 说明                     | 默认值                            | 是否必须 |
+| ------------ | -------------- | ------------------------ | --------------------------------- | -------- |
+| data         | SnackbarData   | 包含消息与操作信息的数据 | -                                 | 是       |
+| modifier     | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                      | 否       |
+| cornerRadius | Dp             | Snackbar 的圆角半径      | SnackbarDefaults.CornerRadius     | 否       |
+| colors       | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
+| insideMargin | PaddingValues  | Snackbar 内容区域的内边距 | SnackbarDefaults.InsideMargin    | 否       |
 
 ### SnackbarColors 与 SnackbarDefaults
 
@@ -147,6 +147,15 @@ val colors = SnackbarDefaults.snackbarColors(
     dismissActionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
 )
 ```
+
+#### 常量
+
+`SnackbarDefaults` 同时提供 `Snackbar` 使用的默认圆角与内边距：
+
+| 常量名       | 类型          | 说明                      | 默认值                                              |
+| ------------ | ------------- | ------------------------- | --------------------------------------------------- |
+| CornerRadius | Dp            | Snackbar 的默认圆角半径   | 12.dp                                               |
+| InsideMargin | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 12.dp, vertical = 8.dp)  |
 
 ## SnackbarDuration 与 SnackbarResult
 
