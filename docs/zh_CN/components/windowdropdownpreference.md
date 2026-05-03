@@ -12,8 +12,8 @@ popupHost: None
 
 `WindowDropdownPreference` 是 Miuix 中的下拉菜单组件，提供了标题、摘要和下拉选项列表。它在窗口级别渲染，不需要 `Scaffold` 宿主，适用于没有或不使用 `Scaffold` 的场景。
 
-<div style="position: relative; max-width: 700px; height: 285px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
-    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowDropdown" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowDropdownPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 
 ::: tip 提示
@@ -78,18 +78,16 @@ WindowDropdownPreference(
 
 ## 自定义条目
 
-当单个下拉项需要额外状态时，例如禁用某个选项，可以使用 `DropdownEntry` 和 `DropdownItem`。
+当单个下拉项需要额外状态时，例如选中状态、点击回调或禁用某个选项，可以使用 `DropdownEntry` 和 `DropdownItem`。
 
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val entry = DropdownEntry(
     items = listOf(
-        DropdownItem(text = "选项 1"),
+        DropdownItem(text = "选项 1", selected = selectedIndex == 0, onClick = { selectedIndex = 0 }),
         DropdownItem(text = "选项 2", enabled = false),
-        DropdownItem(text = "选项 3"),
-    ),
-    selectedIndex = selectedIndex,
-    onSelectedIndexChange = { selectedIndex = it }
+        DropdownItem(text = "选项 3", selected = selectedIndex == 2, onClick = { selectedIndex = 2 }),
+    )
 )
 
 WindowDropdownPreference(
@@ -102,21 +100,21 @@ WindowDropdownPreference(
 
 ## 分组下拉菜单
 
-使用 `entries` 可以显示多个由分割线隔开的下拉分组。每个分组都可以维护自己的选中索引和回调。
+使用 `entries` 可以显示多个由分割线隔开的下拉分组。每个条目都可以维护自己的选中状态和点击回调。
 
 ```kotlin
 var firstSelectedIndex by remember { mutableStateOf(0) }
 var secondSelectedIndex by remember { mutableStateOf(0) }
 val entries = listOf(
     DropdownEntry(
-        items = listOf("小", "中").map { DropdownItem(text = it) },
-        selectedIndex = firstSelectedIndex,
-        onSelectedIndexChange = { firstSelectedIndex = it }
+        items = listOf("小", "中").mapIndexed { index, text ->
+            DropdownItem(text = text, selected = firstSelectedIndex == index, onClick = { firstSelectedIndex = index })
+        }
     ),
     DropdownEntry(
-        items = listOf("红色", "绿色", "蓝色").map { DropdownItem(text = it) },
-        selectedIndex = secondSelectedIndex,
-        onSelectedIndexChange = { secondSelectedIndex = it }
+        items = listOf("红色", "绿色", "蓝色").mapIndexed { index, text ->
+            DropdownItem(text = text, selected = secondSelectedIndex == index, onClick = { secondSelectedIndex = index })
+        }
     )
 )
 
@@ -127,7 +125,45 @@ WindowDropdownPreference(
 )
 ```
 
-对于 `entries` 重载，`collapseOnSelection` 控制选中条目后是否关闭弹窗。它默认是 `false`，便于用户在不重新打开弹窗的情况下修改多个分组。
+对于 `entries` 重载，`collapseOnSelection` 控制选中条目后是否关闭弹窗。它默认是 `entries.size <= 1`，单个分组会在选中后关闭，多个分组会保持打开以便连续修改。
+
+## 多选
+
+因为选中状态放在 `DropdownItem` 上，可以用集合保存多个选中值，并在每个条目的 `onClick` 中切换选中状态。
+
+```kotlin
+var selectedItems by remember { mutableStateOf(setOf("A1", "B2")) }
+val entries = listOf(
+    DropdownEntry(
+        items = listOf("A1", "A2").map { text ->
+            DropdownItem(
+                text = text,
+                selected = text in selectedItems,
+                onClick = {
+                    selectedItems = if (text in selectedItems) selectedItems - text else selectedItems + text
+                }
+            )
+        }
+    ),
+    DropdownEntry(
+        items = listOf("B1", "B2", "B3").map { text ->
+            DropdownItem(
+                text = text,
+                selected = text in selectedItems,
+                onClick = {
+                    selectedItems = if (text in selectedItems) selectedItems - text else selectedItems + text
+                }
+            )
+        }
+    )
+)
+
+WindowDropdownPreference(
+    title = "多选下拉菜单",
+    entries = entries,
+    collapseOnSelection = false
+)
+```
 
 ## 组件状态
 
@@ -176,32 +212,39 @@ WindowDropdownPreference(
 
 ### Entries 分组重载属性
 
-| 属性名              | 类型                 | 说明                       | 默认值 | 是否必须 |
-| ------------------- | -------------------- | -------------------------- | ------ | -------- |
-| entries             | List\<DropdownEntry> | 由分割线隔开的下拉条目分组 | -      | 是       |
-| collapseOnSelection | Boolean              | 每次选中条目后是否关闭弹窗 | false  | 否       |
+| 属性名              | 类型                 | 说明                       | 默认值            | 是否必须 |
+| ------------------- | -------------------- | -------------------------- | ----------------- | -------- |
+| entries             | List\<DropdownEntry> | 由分割线隔开的下拉条目分组 | -                 | 是       |
+| collapseOnSelection | Boolean              | 每次选中条目后是否关闭弹窗 | entries.size <= 1 | 否       |
 
 ### DropdownEntry 属性
 
-| 属性名                | 类型                | 说明                                 | 默认值 | 是否必须 |
-| --------------------- | ------------------- | ------------------------------------ | ------ | -------- |
-| items                 | List\<DropdownItem> | 此分组中显示的条目                   | -      | 是       |
-| selectedIndex         | Int?                | 选中项索引，为 null 时不显示选中状态 | null   | 否       |
-| onSelectedIndexChange | ((Int) -> Unit)?    | 选中条目时触发的回调                 | null   | 否       |
+| 属性名  | 类型                | 说明                       | 默认值 | 是否必须 |
+| ------- | ------------------- | -------------------------- | ------ | -------- |
+| items   | List\<DropdownItem> | 此分组中显示的条目         | -      | 是       |
+| enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
+
+分组标题预留给后续使用。原版 MIUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
 
 ### DropdownItem 属性
 
-| 属性名  | 类型          | 说明                         | 默认值 | 是否必须 |
-| ------- | ------------- | ---------------------------- | ------ | -------- |
-| text    | String        | 条目显示文本                 | -      | 是       |
-| enabled | Boolean       | 条目是否可点击，禁用项会变灰 | true   | 否       |
-| onClick | (() -> Unit)? | 预留给动作式下拉条目使用     | null   | 否       |
+| 属性名   | 类型                              | 说明                         | 默认值 | 是否必须 |
+| -------- | --------------------------------- | ---------------------------- | ------ | -------- |
+| text     | String                            | 选项显示的文本               | -      | 是       |
+| enabled  | Boolean                           | 选项是否可点击，禁用时置灰   | true   | 否       |
+| selected | Boolean                           | 选项是否处于选中状态         | false  | 否       |
+| onClick  | (() -> Unit)?                     | 点击选项时触发的回调         | null   | 否       |
+| icon     | @Composable ((Modifier) -> Unit)? | 显示在选项文本前的图标       | null   | 否       |
+| summary  | String?                           | 显示在选项文本下方的摘要文本 | null   | 否       |
 
 ### DropdownColors 属性
 
-| 属性名                 | 类型  | 说明           |
-| ---------------------- | ----- | -------------- |
-| contentColor           | Color | 选项文本颜色   |
-| containerColor         | Color | 选项背景颜色   |
-| selectedContentColor   | Color | 选中项文本颜色 |
-| selectedContainerColor | Color | 选中项背景颜色 |
+| 属性名                 | 类型  | 说明             |
+| ---------------------- | ----- | ---------------- |
+| contentColor           | Color | 选项标题颜色     |
+| summaryColor           | Color | 选项摘要颜色     |
+| containerColor         | Color | 选项背景颜色     |
+| selectedContentColor   | Color | 选中项标题颜色   |
+| selectedSummaryColor   | Color | 选中项摘要颜色   |
+| selectedContainerColor | Color | 选中项背景颜色   |
+| selectedIndicatorColor | Color | 选中指示图标颜色 |

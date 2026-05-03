@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
@@ -27,13 +25,9 @@ import top.yukonga.miuix.kmp.basic.DropdownArrowEndAction
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.LocalDismissState
+import top.yukonga.miuix.kmp.popup.WindowDropdownPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowListPopup
 
@@ -80,7 +74,17 @@ fun WindowDropdownPreference(
         items,
         selectedIndex,
         onSelectedIndexChange,
-    ) { DropdownEntry(items.map { DropdownItem(it) }, selectedIndex, onSelectedIndexChange) }
+    ) {
+        DropdownEntry(
+            items.mapIndexed { index, item ->
+                DropdownItem(
+                    text = item,
+                    selected = index == selectedIndex,
+                    onClick = { onSelectedIndexChange?.invoke(index) },
+                )
+            },
+        )
+    }
     WindowDropdownPreference(
         entry = entry,
         title = title,
@@ -97,35 +101,6 @@ fun WindowDropdownPreference(
         showValue = showValue,
         collapseOnSelection = true,
         onExpandedChange = onExpandedChange,
-    )
-}
-
-@Composable
-private fun WindowDropdownPreferencePopup(
-    items: List<String>,
-    selectedIndex: Int,
-    isDropdownExpanded: Boolean,
-    onDismiss: () -> Unit,
-    onDismissFinished: () -> Unit,
-    maxHeight: Dp?,
-    dropdownColors: DropdownColors,
-    hapticFeedback: HapticFeedback,
-    onSelectedIndexChange: ((Int) -> Unit)?,
-) {
-    val entry = remember(
-        items,
-        selectedIndex,
-        onSelectedIndexChange,
-    ) { DropdownEntry(items.map { DropdownItem(it) }, selectedIndex, onSelectedIndexChange) }
-    WindowDropdownPreferencePopup(
-        entry = entry,
-        isDropdownExpanded = isDropdownExpanded,
-        onDismiss = onDismiss,
-        onDismissFinished = onDismissFinished,
-        maxHeight = maxHeight,
-        dropdownColors = dropdownColors,
-        hapticFeedback = hapticFeedback,
-        collapseOnSelection = true,
     )
 }
 
@@ -194,7 +169,7 @@ fun WindowDropdownPreference(
         startAction = startAction,
         endActions = {
             if (showValue && itemsNotEmpty) {
-                val text = entry.selectedIndex?.let { entry.items.getOrNull(it)?.text }
+                val text = entry.items.firstOrNull { it.selected }?.text
                 if (!text.isNullOrEmpty()) {
                     Text(
                         text = text,
@@ -212,14 +187,13 @@ fun WindowDropdownPreference(
                 actionColor = actionColor,
             )
             if (itemsNotEmpty) {
-                WindowDropdownPreferencePopup(
+                WindowDropdownPopup(
                     entry = entry,
-                    isDropdownExpanded = isDropdownExpanded.value,
+                    show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
                     onDismissFinished = { isHoldDown.value = false },
                     maxHeight = maxHeight,
                     dropdownColors = dropdownColors,
-                    hapticFeedback = hapticFeedback,
                     collapseOnSelection = collapseOnSelection,
                 )
             }
@@ -229,56 +203,6 @@ fun WindowDropdownPreference(
         holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
-}
-
-@Composable
-private fun WindowDropdownPreferencePopup(
-    entry: DropdownEntry,
-    isDropdownExpanded: Boolean,
-    onDismiss: () -> Unit,
-    onDismissFinished: () -> Unit,
-    maxHeight: Dp?,
-    dropdownColors: DropdownColors,
-    hapticFeedback: HapticFeedback,
-    collapseOnSelection: Boolean,
-) {
-    val currentEntry by rememberUpdatedState(entry)
-    val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
-    WindowListPopup(
-        show = isDropdownExpanded,
-        alignment = PopupPositionProvider.Align.End,
-        onDismissRequest = onDismiss,
-        onDismissFinished = onDismissFinished,
-        maxHeight = maxHeight,
-    ) {
-        val dismiss = LocalDismissState.current
-        val currentDismiss by rememberUpdatedState(dismiss)
-        val onItemSelected: (Int) -> Unit = remember {
-            { selectedIdx ->
-                currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                currentEntry.onSelectedIndexChange?.invoke(selectedIdx)
-                if (currentCollapseOnSelection) {
-                    currentDismiss?.invoke()
-                }
-            }
-        }
-        ListPopupColumn {
-            entry.items.forEachIndexed { index, item ->
-                key(index) {
-                    DropdownImpl(
-                        text = item.text,
-                        optionSize = entry.items.size,
-                        isSelected = entry.selectedIndex == index,
-                        index = index,
-                        dropdownColors = dropdownColors,
-                        enabled = item.enabled,
-                        onSelectedIndexChange = onItemSelected,
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -296,7 +220,7 @@ fun WindowDropdownPreference(
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
-    collapseOnSelection: Boolean = false,
+    collapseOnSelection: Boolean = entries.size <= 1,
     onExpandedChange: ((Boolean) -> Unit)? = null,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -347,7 +271,10 @@ fun WindowDropdownPreference(
         startAction = startAction,
         endActions = {
             val selectedValueText = nonEmptyEntries
-                .mapNotNull { group -> group.selectedIndex?.let { idx -> group.items.getOrNull(idx)?.text } }
+                .asSequence()
+                .flatMap { group -> group.items }
+                .filter { it.selected }
+                .map { it.text }
                 .filter { it.isNotBlank() }
                 .joinToString("\n")
                 .ifBlank { null }
@@ -358,21 +285,19 @@ fun WindowDropdownPreference(
                     fontSize = MiuixTheme.textStyles.body2.fontSize,
                     color = actionColor,
                     textAlign = TextAlign.End,
-                    lineHeight = MiuixTheme.textStyles.body2.lineHeight,
                 )
             }
             DropdownArrowEndAction(
                 actionColor = actionColor,
             )
             if (hasEntries) {
-                WindowDropdownPreferencePopup(
+                WindowDropdownPopup(
                     entries = nonEmptyEntries,
-                    isDropdownExpanded = isDropdownExpanded.value,
+                    show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
                     onDismissFinished = { isHoldDown.value = false },
                     maxHeight = maxHeight,
                     dropdownColors = dropdownColors,
-                    hapticFeedback = hapticFeedback,
                     collapseOnSelection = collapseOnSelection,
                 )
             }
@@ -382,64 +307,4 @@ fun WindowDropdownPreference(
         holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
-}
-
-@Composable
-private fun WindowDropdownPreferencePopup(
-    entries: List<DropdownEntry>,
-    isDropdownExpanded: Boolean,
-    onDismiss: () -> Unit,
-    onDismissFinished: () -> Unit,
-    maxHeight: Dp?,
-    dropdownColors: DropdownColors,
-    hapticFeedback: HapticFeedback,
-    collapseOnSelection: Boolean,
-) {
-    val currentEntries by rememberUpdatedState(entries)
-    val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
-    WindowListPopup(
-        show = isDropdownExpanded,
-        alignment = PopupPositionProvider.Align.End,
-        onDismissRequest = onDismiss,
-        onDismissFinished = onDismissFinished,
-        maxHeight = maxHeight,
-    ) {
-        val dismiss = LocalDismissState.current
-        val currentDismiss by rememberUpdatedState(dismiss)
-        val onItemSelected: (Int, Int) -> Unit = remember {
-            { entryIdx, selectedIdx ->
-                currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                currentEntries.getOrNull(entryIdx)?.onSelectedIndexChange?.invoke(selectedIdx)
-                if (currentCollapseOnSelection) {
-                    currentDismiss?.invoke()
-                }
-            }
-        }
-        ListPopupColumn {
-            entries.forEachIndexed { entryIdx, entry ->
-                entry.items.forEachIndexed { itemIdx, option ->
-                    key(entryIdx, itemIdx) {
-                        DropdownImpl(
-                            text = option.text,
-                            optionSize = entry.items.size,
-                            isSelected = entry.selectedIndex == itemIdx,
-                            index = itemIdx,
-                            dropdownColors = dropdownColors,
-                            enabled = option.enabled,
-                            onSelectedIndexChange = { selectedIdx ->
-                                onItemSelected(entryIdx, selectedIdx)
-                            },
-                        )
-                    }
-                }
-                if (entryIdx != entries.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        thickness = 1.dp,
-                    )
-                }
-            }
-        }
-    }
 }
