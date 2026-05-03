@@ -138,11 +138,13 @@ fun TextField(
             else -> TextFieldDefaults.LabelFontSizeNormal
         },
     )
-    val paddingModifier = remember(leadingIcon, trailingIcon, insideMargin) {
+    val hasLeadingIcon = leadingIcon != null
+    val hasTrailingIcon = trailingIcon != null
+    val paddingModifier = remember(hasLeadingIcon, hasTrailingIcon, insideMargin) {
         when {
-            leadingIcon == null && trailingIcon == null -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
-            leadingIcon == null -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
-            trailingIcon == null -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasLeadingIcon && !hasTrailingIcon -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
+            !hasLeadingIcon -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasTrailingIcon -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
             else -> Modifier.padding(vertical = insideMargin.height)
         }
     }
@@ -275,11 +277,13 @@ fun TextField(
             else -> TextFieldDefaults.LabelFontSizeNormal
         },
     )
-    val paddingModifier = remember(leadingIcon, trailingIcon, insideMargin) {
+    val hasLeadingIcon = leadingIcon != null
+    val hasTrailingIcon = trailingIcon != null
+    val paddingModifier = remember(hasLeadingIcon, hasTrailingIcon, insideMargin) {
         when {
-            leadingIcon == null && trailingIcon == null -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
-            leadingIcon == null -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
-            trailingIcon == null -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasLeadingIcon && !hasTrailingIcon -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
+            !hasLeadingIcon -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasTrailingIcon -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
             else -> Modifier.padding(vertical = insideMargin.height)
         }
     }
@@ -413,11 +417,13 @@ fun TextField(
             else -> TextFieldDefaults.LabelFontSizeNormal
         },
     )
-    val paddingModifier = remember(leadingIcon, trailingIcon, insideMargin) {
+    val hasLeadingIcon = leadingIcon != null
+    val hasTrailingIcon = trailingIcon != null
+    val paddingModifier = remember(hasLeadingIcon, hasTrailingIcon, insideMargin) {
         when {
-            leadingIcon == null && trailingIcon == null -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
-            leadingIcon == null -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
-            trailingIcon == null -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasLeadingIcon && !hasTrailingIcon -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
+            !hasLeadingIcon -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
+            !hasTrailingIcon -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
             else -> Modifier.padding(vertical = insideMargin.height)
         }
     }
