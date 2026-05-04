@@ -39,6 +39,8 @@ import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.drawHighlight
 import top.yukonga.miuix.kmp.blur.internal.DOWNSAMPLE_2X_SHADER
 import top.yukonga.miuix.kmp.blur.internal.DOWNSAMPLE_4X_SHADER
 import top.yukonga.miuix.kmp.blur.internal.NOISE_DITHER_SHADER
@@ -55,6 +57,7 @@ fun Modifier.drawBackdrop(
     backdrop: Backdrop,
     shape: () -> Shape,
     effects: BackdropEffectScope.() -> Unit,
+    highlight: (BackdropEffectScope.() -> Highlight?)? = null,
     layerBlock: (GraphicsLayerScope.() -> Unit)? = null,
     onDrawBehind: (DrawScope.() -> Unit)? = null,
     onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit = DefaultOnDrawBackdrop,
@@ -73,6 +76,7 @@ fun Modifier.drawBackdrop(
                 backdrop = backdrop,
                 shapeProvider = shapeProvider,
                 effects = effects,
+                highlight = highlight,
                 layerBlock = layerBlock,
                 onDrawBehind = onDrawBehind,
                 onDrawBackdrop = onDrawBackdrop,
@@ -88,6 +92,7 @@ private class DrawBackdropElement(
     val backdrop: Backdrop,
     val shapeProvider: ShapeProvider,
     val effects: BackdropEffectScope.() -> Unit,
+    val highlight: (BackdropEffectScope.() -> Highlight?)?,
     val layerBlock: (GraphicsLayerScope.() -> Unit)?,
     val onDrawBehind: (DrawScope.() -> Unit)?,
     val onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit,
@@ -101,6 +106,7 @@ private class DrawBackdropElement(
         backdrop = backdrop,
         shapeProvider = shapeProvider,
         effects = effects,
+        highlight = highlight,
         layerBlock = layerBlock,
         onDrawBehind = onDrawBehind,
         onDrawBackdrop = onDrawBackdrop,
@@ -115,6 +121,7 @@ private class DrawBackdropElement(
         node.backdrop = backdrop
         node.shapeProvider = shapeProvider
         node.effects = effects
+        node.highlight = highlight
         node.layerBlock = layerBlock
         node.onDrawBehind = onDrawBehind
         node.onDrawBackdrop = onDrawBackdrop
@@ -143,6 +150,7 @@ private class DrawBackdropElement(
         if (backdrop != other.backdrop) return false
         if (shapeProvider != other.shapeProvider) return false
         if (effects != other.effects) return false
+        if (highlight != other.highlight) return false
         if (layerBlock != other.layerBlock) return false
         if (onDrawBehind != other.onDrawBehind) return false
         if (onDrawBackdrop != other.onDrawBackdrop) return false
@@ -157,6 +165,7 @@ private class DrawBackdropElement(
         var result = backdrop.hashCode()
         result = 31 * result + shapeProvider.hashCode()
         result = 31 * result + effects.hashCode()
+        result = 31 * result + (highlight?.hashCode() ?: 0)
         result = 31 * result + (layerBlock?.hashCode() ?: 0)
         result = 31 * result + (onDrawBehind?.hashCode() ?: 0)
         result = 31 * result + onDrawBackdrop.hashCode()
@@ -172,6 +181,7 @@ private class DrawBackdropNode(
     var backdrop: Backdrop,
     var shapeProvider: ShapeProvider,
     var effects: BackdropEffectScope.() -> Unit,
+    var highlight: (BackdropEffectScope.() -> Highlight?)?,
     var layerBlock: (GraphicsLayerScope.() -> Unit)?,
     var onDrawBehind: (DrawScope.() -> Unit)?,
     var onDrawBackdrop: DrawScope.(drawBackdrop: DrawScope.() -> Unit) -> Unit,
@@ -378,6 +388,7 @@ private class DrawBackdropNode(
     }
 
     private val contentPaint = Paint()
+    private val highlightPaint = Paint()
 
     override fun ContentDrawScope.draw() {
         if (!enabled) {
@@ -401,6 +412,15 @@ private class DrawBackdropNode(
             )
             drawContent()
             drawContext.canvas.restore()
+        }
+
+        highlight?.invoke(effectScope)?.let { resolved ->
+            drawHighlight(
+                highlight = resolved,
+                shape = effectScope.shape,
+                runtimeShaderCache = currentValueOf(LocalRuntimeShaderCache),
+                paint = highlightPaint,
+            )
         }
 
         onDrawFront?.invoke(this)

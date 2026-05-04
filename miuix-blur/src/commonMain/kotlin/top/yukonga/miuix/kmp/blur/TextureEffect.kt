@@ -5,9 +5,7 @@ package top.yukonga.miuix.kmp.blur
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import top.yukonga.miuix.kmp.blur.internal.blendColors
-import top.yukonga.miuix.kmp.blur.internal.gaussianBlur
-import top.yukonga.miuix.kmp.blur.internal.noiseDither
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
 /**
@@ -22,6 +20,7 @@ import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
  *   Clamped to [0, [BlurDefaults.MaxBlurRadius]].
  * @param noiseCoefficient Noise dithering coefficient for anti-banding. 0 disables noise.
  * @param colors Color adjustments and blend layers applied after blur.
+ * @param highlight Optional edge highlight painted on top of the content. `null` skips drawing.
  * @param contentBlendMode Optional [ComposeBlendMode] for compositing content over the blur.
  *   Use [ComposeBlendMode.DstIn] for foreground blur (content alpha masks the blur).
  *   null means content draws normally on top.
@@ -33,6 +32,7 @@ fun Modifier.textureBlur(
     blurRadius: Float = BlurDefaults.BlurRadius,
     noiseCoefficient: Float = BlurDefaults.NoiseCoefficient,
     colors: BlurColors = BlurColors(),
+    highlight: Highlight? = null,
     contentBlendMode: ComposeBlendMode = ComposeBlendMode.SrcOver,
     enabled: Boolean = true,
 ): Modifier = textureEffect(
@@ -41,6 +41,7 @@ fun Modifier.textureBlur(
     blurRadius = blurRadius,
     noiseCoefficient = noiseCoefficient,
     colors = colors,
+    highlight = highlight,
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
@@ -56,6 +57,7 @@ fun Modifier.textureBlur(
  *   Clamped to [0, [BlurDefaults.MaxBlurRadius]].
  * @param noiseCoefficient Noise dithering coefficient for anti-banding. 0 disables noise.
  * @param colors Color adjustments and blend layers applied after blur.
+ * @param highlight Optional edge highlight painted on top of the content. `null` skips drawing.
  * @param contentBlendMode Optional [ComposeBlendMode] for compositing content over the blur.
  *   Use [ComposeBlendMode.DstIn] for foreground blur (content alpha masks the blur).
  *   null means content draws normally on top.
@@ -68,6 +70,7 @@ fun Modifier.textureBlur(
     blurRadiusY: Float,
     noiseCoefficient: Float = BlurDefaults.NoiseCoefficient,
     colors: BlurColors = BlurColors(),
+    highlight: Highlight? = null,
     contentBlendMode: ComposeBlendMode = ComposeBlendMode.SrcOver,
     enabled: Boolean = true,
 ): Modifier = textureEffect(
@@ -77,6 +80,7 @@ fun Modifier.textureBlur(
     blurRadiusY = blurRadiusY,
     noiseCoefficient = noiseCoefficient,
     colors = colors,
+    highlight = highlight,
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
@@ -91,6 +95,7 @@ fun Modifier.textureBlur(
  *   Clamped to [0, [BlurDefaults.MaxBlurRadius]].
  * @param noiseCoefficient Noise dithering coefficient for anti-banding.
  * @param colors Color adjustments and blend layers applied after blur.
+ * @param highlight Optional edge highlight painted on top of the content. `null` skips drawing.
  * @param contentBlendMode Optional [ComposeBlendMode] for compositing content over the blur.
  *   Use [ComposeBlendMode.DstIn] for foreground blur (content alpha masks the blur).
  *   null means content draws normally on top.
@@ -102,6 +107,7 @@ fun Modifier.textureEffect(
     blurRadius: Float = BlurDefaults.BlurRadius,
     noiseCoefficient: Float = BlurDefaults.NoiseCoefficient,
     colors: BlurColors = BlurColors(),
+    highlight: Highlight? = null,
     contentBlendMode: ComposeBlendMode = ComposeBlendMode.SrcOver,
     enabled: Boolean = true,
 ): Modifier = textureEffect(
@@ -111,6 +117,7 @@ fun Modifier.textureEffect(
     blurRadiusY = blurRadius,
     noiseCoefficient = noiseCoefficient,
     colors = colors,
+    highlight = highlight,
     contentBlendMode = contentBlendMode,
     enabled = enabled,
 )
@@ -127,6 +134,7 @@ fun Modifier.textureEffect(
  *   Clamped to [0, [BlurDefaults.MaxBlurRadius]].
  * @param noiseCoefficient Noise dithering coefficient for anti-banding.
  * @param colors Color adjustments and blend layers applied after blur.
+ * @param highlight Optional edge highlight painted on top of the content. `null` skips drawing.
  * @param contentBlendMode Optional [ComposeBlendMode] for compositing content over the blur.
  *   Use [ComposeBlendMode.DstIn] for foreground blur (content alpha masks the blur).
  *   null means content draws normally on top.
@@ -139,22 +147,25 @@ fun Modifier.textureEffect(
     blurRadiusY: Float,
     noiseCoefficient: Float = BlurDefaults.NoiseCoefficient,
     colors: BlurColors = BlurColors(),
+    highlight: Highlight? = null,
     contentBlendMode: ComposeBlendMode = ComposeBlendMode.SrcOver,
     enabled: Boolean = true,
-): Modifier {
-    val clampedX = blurRadiusX.coerceIn(0f, BlurDefaults.MaxBlurRadius)
-    val clampedY = blurRadiusY.coerceIn(0f, BlurDefaults.MaxBlurRadius)
-
-    return this.drawBackdrop(
-        backdrop = backdrop,
-        shape = { shape },
-        effects = {
-            noiseDither(noiseCoefficient)
-            colorControls(colors.brightness, colors.contrast, colors.saturation)
-            gaussianBlur(clampedX * density, clampedY * density)
-            blendColors(colors)
-        },
-        contentBlendMode = contentBlendMode,
-        enabled = enabled,
-    )
-}
+): Modifier = this.drawBackdrop(
+    backdrop = backdrop,
+    shape = { shape },
+    effects = {
+        textureBlurEffect(
+            blurRadiusX = blurRadiusX,
+            blurRadiusY = blurRadiusY,
+            noiseCoefficient = noiseCoefficient,
+            colors = colors,
+        )
+    },
+    highlight = if (highlight != null) {
+        { highlight }
+    } else {
+        null
+    },
+    contentBlendMode = contentBlendMode,
+    enabled = enabled,
+)

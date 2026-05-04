@@ -5,17 +5,16 @@ package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RenderEffect
-import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.RuntimeShaderCache
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-private const val RADIUS_TO_SIGMA = 0.45f
+/** Conversion factor from blur radius in pixels to Gaussian sigma. */
+internal const val GAUSSIAN_RADIUS_TO_SIGMA = 0.45f
 
 /** Max kernel reach in downsampled pixels — outermost pair reaches ~offset 12.5, rounded up. */
-private const val KERNEL_REACH = 14
+internal const val GAUSSIAN_KERNEL_REACH = 14
 
 private const val WEIGHT_THRESHOLD = 0.002
 
@@ -33,8 +32,8 @@ internal fun createGaussianBlurEffect(
 ): GaussianBlurResult? {
     if (radiusX <= 0f && radiusY <= 0f) return null
 
-    val sigmaX = radiusX * RADIUS_TO_SIGMA
-    val sigmaY = radiusY * RADIUS_TO_SIGMA
+    val sigmaX = radiusX * GAUSSIAN_RADIUS_TO_SIGMA
+    val sigmaY = radiusY * GAUSSIAN_RADIUS_TO_SIGMA
     val (adjustedVarianceX, downScaleX) = computeDownScaleParams(sigmaX)
     val (adjustedVarianceY, downScaleY) = computeDownScaleParams(sigmaY)
     val paramsX = if (radiusX > 0f) computeGaussianParams(adjustedVarianceX) else null
@@ -90,40 +89,6 @@ internal fun createGaussianBlurEffect(
     }
 
     return effect?.let { GaussianBlurResult(renderEffect = it, downscaleFactor = downScale) }
-}
-
-/**
- * Chains a separable Gaussian blur into the scope's [BackdropEffectScope.renderEffect],
- * adjusts [BackdropEffectScope.padding] to cover the kernel reach, and sets
- * [BackdropEffectScope.downscaleFactor]. Non-positive radii skip that axis.
- */
-internal fun BackdropEffectScope.gaussianBlur(radiusX: Float, radiusY: Float) {
-    if (!isRuntimeShaderSupported()) return
-
-    // Pre-compute downscale factor to set padding before creating the effect.
-    val sigmaMax = maxOf(radiusX, radiusY) * RADIUS_TO_SIGMA
-    val sf = computeDownScaleParams(sigmaMax).downScale
-
-    // Padding covers the blur kernel's maximum sampling reach in original
-    // pixel space. This keeps recording dimensions stable across radius
-    // changes within the same downscale level.
-    val kernelPadding = (KERNEL_REACH * sf).toFloat()
-    if (kernelPadding > padding) {
-        padding = kernelPadding
-    }
-
-    val paddedSize = Size(size.width + padding * 2f, size.height + padding * 2f)
-    val result = createGaussianBlurEffect(radiusX, radiusY, paddedSize, this) ?: return
-
-    // Set adaptive downsampling — effects execute on reduced-area texture
-    downscaleFactor = result.downscaleFactor
-    renderEffect = renderEffect?.chain(result.renderEffect) ?: result.renderEffect
-}
-
-/** Registers a noise dither pass with the given [coefficient]. Non-positive values are ignored. */
-internal fun BackdropEffectScope.noiseDither(coefficient: Float) {
-    if (coefficient <= 0f) return
-    noiseCoefficient = coefficient
 }
 
 /**

@@ -95,6 +95,14 @@ fun BackdropEffectScope.effect(effect: RenderEffect) {
 /**
  * Applies a custom runtime shader effect to the backdrop.
  *
+ * **Pixel-space uniforms must be scaled by [downscaleFactor].** When chained after
+ * [gaussianBlur] (or any effect that raises [downscaleFactor]), the backdrop layer is
+ * recorded at `1 / downscaleFactor` resolution, and the shader receives `coord` values in
+ * the downscaled layer's pixel space. Any uniform that describes a pixel-space distance
+ * (size, padding/offset, corner radii, refraction band, …) must be divided by
+ * [downscaleFactor] inside [block], otherwise the geometry will sit far outside the
+ * downscaled layer's bounds and every sample will land on transparent black.
+ *
  * @param key Cache key for the compiled shader.
  * @param shaderString The AGSL/SkSL shader source code.
  * @param uniformShaderName The name of the shader uniform that receives the input image.

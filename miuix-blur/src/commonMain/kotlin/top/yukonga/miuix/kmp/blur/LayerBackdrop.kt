@@ -8,6 +8,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -32,6 +33,12 @@ private val DefaultOnDraw: ContentDrawScope.() -> Unit = { drawContent() }
  * Use [Modifier.layerBackdrop][layerBackdrop] on the content container to capture its
  * rendered output, then pass this [LayerBackdrop] to blur modifiers.
  *
+ * The returned [LayerBackdrop] instance is keyed only on [graphicsLayer]; [onDraw] is
+ * tracked via [rememberUpdatedState] and re-read on every record. This keeps the
+ * instance stable across recompositions even when [onDraw] is a fresh lambda each
+ * frame, so [LayerBackdropElement][layerBackdrop]'s `onGloballyPositioned` does not
+ * thrash and `layerCoordinates` stays populated for backdrop sampling.
+ *
  * @param graphicsLayer The graphics layer to record content into.
  * @param onDraw Custom draw logic for the layer content.
  */
@@ -39,8 +46,11 @@ private val DefaultOnDraw: ContentDrawScope.() -> Unit = { drawContent() }
 fun rememberLayerBackdrop(
     graphicsLayer: GraphicsLayer = rememberGraphicsLayer(),
     onDraw: ContentDrawScope.() -> Unit = DefaultOnDraw,
-): LayerBackdrop = remember(graphicsLayer, onDraw) {
-    LayerBackdrop(graphicsLayer, onDraw)
+): LayerBackdrop {
+    val currentOnDraw by rememberUpdatedState(onDraw)
+    return remember(graphicsLayer) {
+        LayerBackdrop(graphicsLayer) { currentOnDraw() }
+    }
 }
 
 /**
