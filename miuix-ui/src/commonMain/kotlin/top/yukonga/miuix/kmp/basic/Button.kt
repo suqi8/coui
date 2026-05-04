@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +42,6 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param content The [Composable] content of the [Button].
  */
 @Composable
-@NonRestartableComposable
 fun Button(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -57,7 +55,12 @@ fun Button(
     indication: Indication? = LocalIndication.current,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
+    val rowModifier = remember(minWidth, minHeight, insideMargin) {
+        Modifier
+            .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+            .padding(insideMargin)
+    }
     Surface(
         onClick = onClick,
         enabled = enabled,
@@ -69,9 +72,7 @@ fun Button(
         indication = indication,
     ) {
         Row(
-            modifier = Modifier
-                .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
-                .padding(insideMargin),
+            modifier = rowModifier,
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
             content = content,
@@ -95,7 +96,6 @@ fun Button(
  * @param indication The [Indication] to be used for the [TextButton].
  */
 @Composable
-@NonRestartableComposable
 fun TextButton(
     text: String,
     onClick: () -> Unit,
@@ -109,6 +109,14 @@ fun TextButton(
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = LocalIndication.current,
 ) {
+    val mappedColors = remember(colors) {
+        ButtonColors(
+            color = colors.color,
+            disabledColor = colors.disabledColor,
+            contentColor = colors.textColor,
+            disabledContentColor = colors.disabledTextColor,
+        )
+    }
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -116,12 +124,7 @@ fun TextButton(
         cornerRadius = cornerRadius,
         minWidth = minWidth,
         minHeight = minHeight,
-        colors = ButtonColors(
-            color = colors.color,
-            disabledColor = colors.disabledColor,
-            contentColor = colors.textColor,
-            disabledContentColor = colors.disabledTextColor,
-        ),
+        colors = mappedColors,
         insideMargin = insideMargin,
         interactionSource = interactionSource,
         indication = indication,
@@ -179,19 +182,18 @@ object ButtonDefaults {
      * The [ButtonColors] for primary buttons.
      */
     @Composable
-    fun buttonColorsPrimary(): ButtonColors {
-        val color = MiuixTheme.colorScheme.primary
-        val disabledColor = MiuixTheme.colorScheme.disabledPrimaryButton
-        val contentColor = MiuixTheme.colorScheme.onPrimary
-        val disabledContentColor = MiuixTheme.colorScheme.disabledOnPrimaryButton
-        return remember(color, disabledColor, contentColor, disabledContentColor) {
-            ButtonColors(
-                color = color,
-                disabledColor = disabledColor,
-                contentColor = contentColor,
-                disabledContentColor = disabledContentColor,
-            )
-        }
+    fun buttonColorsPrimary(
+        color: Color = MiuixTheme.colorScheme.primary,
+        disabledColor: Color = MiuixTheme.colorScheme.disabledPrimaryButton,
+        contentColor: Color = MiuixTheme.colorScheme.onPrimary,
+        disabledContentColor: Color = MiuixTheme.colorScheme.disabledOnPrimaryButton,
+    ): ButtonColors = remember(color, disabledColor, contentColor, disabledContentColor) {
+        ButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            contentColor = contentColor,
+            disabledContentColor = disabledContentColor,
+        )
     }
 
     /**
@@ -216,19 +218,18 @@ object ButtonDefaults {
      * The [TextButtonColors] for primary text buttons.
      */
     @Composable
-    fun textButtonColorsPrimary(): TextButtonColors {
-        val color = MiuixTheme.colorScheme.primary
-        val disabledColor = MiuixTheme.colorScheme.disabledPrimaryButton
-        val textColor = MiuixTheme.colorScheme.onPrimary
-        val disabledTextColor = MiuixTheme.colorScheme.disabledOnPrimaryButton
-        return remember(color, disabledColor, textColor, disabledTextColor) {
-            TextButtonColors(
-                color = color,
-                disabledColor = disabledColor,
-                textColor = textColor,
-                disabledTextColor = disabledTextColor,
-            )
-        }
+    fun textButtonColorsPrimary(
+        color: Color = MiuixTheme.colorScheme.primary,
+        disabledColor: Color = MiuixTheme.colorScheme.disabledPrimaryButton,
+        textColor: Color = MiuixTheme.colorScheme.onPrimary,
+        disabledTextColor: Color = MiuixTheme.colorScheme.disabledOnPrimaryButton,
+    ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
+        TextButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            textColor = textColor,
+            disabledTextColor = disabledTextColor,
+        )
     }
 }
 
@@ -247,3 +248,4 @@ data class TextButtonColors(
     val textColor: Color,
     val disabledTextColor: Color,
 )
+
