@@ -70,6 +70,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.savedstate.serialization.SavedStateConfiguration
+import component.liquid.IosLiquidGlassNavigationBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
@@ -103,7 +104,6 @@ import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.highlight
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
@@ -413,7 +413,7 @@ private fun CompactScreenLayout(
             SnackbarHost(state = snackbarHostState)
         },
     ) { innerPadding ->
-        Box(modifier = Modifier.layerBackdrop(backdrop)) {
+        Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
             AppPager(
                 snackbarHostState = snackbarHostState,
                 padding = innerPadding,
@@ -505,10 +505,18 @@ private fun NavigationBar(
                 if (isDark) Highlight.GlassStrokeSmallDark else Highlight.GlassStrokeSmallLight
             }
             Box(modifier = modifier) {
-                FloatingNavigationBar(
-                    modifier = if (blurActive) {
-                        Modifier
-                            .textureBlur(
+                if (appState.floatingNavigationBarStyle == 1) {
+                    IosLiquidGlassNavigationBar(
+                        items = navigationItems,
+                        selectedIndex = page,
+                        onItemClick = { mainPagerState.animateToPage(it) },
+                        backdrop = backdrop,
+                        isBlurActive = blurActive,
+                    )
+                } else {
+                    FloatingNavigationBar(
+                        modifier = if (blurActive) {
+                            Modifier.textureBlur(
                                 backdrop = backdrop,
                                 shape = floatingBarShape,
                                 blurRadius = 25f,
@@ -517,26 +525,24 @@ private fun NavigationBar(
                                         BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.6f)),
                                     ),
                                 ),
-                            )
-                            .highlight(
-                                shape = floatingBarShape,
                                 highlight = floatingHighlight,
                             )
-                    } else {
-                        Modifier
-                    },
-                    color = floatingBarColor,
-                    mode = FloatingNavigationBarDisplayMode.entries[appState.floatingNavigationBarMode],
-                    horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
-                        .toAlignment(),
-                ) {
-                    navigationItems.forEachIndexed { index, item ->
-                        FloatingNavigationBarItem(
-                            selected = page == index,
-                            onClick = { mainPagerState.animateToPage(index) },
-                            icon = item.icon,
-                            label = item.label,
-                        )
+                        } else {
+                            Modifier
+                        },
+                        color = floatingBarColor,
+                        mode = FloatingNavigationBarDisplayMode.entries[appState.floatingNavigationBarMode],
+                        horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
+                            .toAlignment(),
+                    ) {
+                        navigationItems.forEachIndexed { index, item ->
+                            FloatingNavigationBarItem(
+                                selected = page == index,
+                                onClick = { mainPagerState.animateToPage(index) },
+                                icon = item.icon,
+                                label = item.label,
+                            )
+                        }
                     }
                 }
             }

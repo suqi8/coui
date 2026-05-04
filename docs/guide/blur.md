@@ -312,6 +312,10 @@ Box(
 | `effect(effect)` | Chains an arbitrary RenderEffect |
 | `runtimeShaderEffect(key, shaderString, uniformShaderName, block)` | Applies a custom AGSL/SkSL runtime shader |
 
+::: warning Pixel-space uniforms must be scaled by `downscaleFactor`
+When `runtimeShaderEffect` is chained after `blur` (or any other effect that raises `downscaleFactor`), the backdrop layer is recorded at `1 / downscaleFactor` resolution and the shader receives `coord` values in the downscaled layer's pixel space. Any uniform that describes a pixel-space distance — size, padding/offset, corner radii, refraction band, etc. — must be divided by `downscaleFactor` inside `block`, otherwise samples land outside the layer bounds and return transparent black.
+:::
+
 #### BackdropEffectScope Properties
 
 | Property | Type | Description |
@@ -337,6 +341,7 @@ Box(
 | blurRadiusY | Float | Vertical blur radius in dp (independent radii overload) | - | Yes* |
 | noiseCoefficient | Float | Noise dithering coefficient for anti-banding, 0 disables | 0.0045f | No |
 | colors | BlurColors | Color adjustments and blend layers applied after blur | BlurColors() | No |
+| highlight | Highlight? | Optional edge highlight painted on top of the content. `null` skips drawing | null | No |
 | contentBlendMode | BlendMode? | Blend mode for compositing content over the blur | null | No |
 | enabled | Boolean | Whether blur is active, when false the effect is skipped and content draws normally | true | No |
 
@@ -365,12 +370,13 @@ Box(
 
 ## Edge Highlight
 
-The `highlight` modifier paints a thin glassy edge with two directional lights along a rounded shape. Combine with `Modifier.textureBlur` to produce a "lit edge over blurred backdrop" look.
+A `Highlight` paints a thin glassy edge with two directional lights along a rounded shape. It is drawn through the `highlight` parameter on `Modifier.textureBlur` / `Modifier.textureEffect` (constant case) or on `Modifier.drawBackdrop` (reactive case, sharing the `BackdropEffectScope`). Combined with the blurred backdrop this produces a "lit edge over blurred backdrop" look.
+
+### With textureBlur (constant)
 
 ```kotlin
 import androidx.compose.foundation.shape.RoundedCornerShape
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.highlight
 
 Box(
     modifier = Modifier
@@ -378,18 +384,36 @@ Box(
         .textureBlur(
             backdrop = backdrop,
             shape = RoundedCornerShape(24.dp),
-        )
-        .highlight(
-            shape = RoundedCornerShape(24.dp),
             highlight = Highlight.GlassStrokeMiddleLight,
         ),
 )
 ```
 
-The shape passed to `highlight` should match the shape passed to `textureBlur`. Pass `null` (or a `Highlight` with `width = 0.dp`) to disable.
+### With drawBackdrop (reactive)
+
+The `highlight` lambda runs inside the same `BackdropEffectScope` as `effects`, so its return value can change with state (e.g. press progress) and pick up the current `size` / `shape` automatically.
+
+```kotlin
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.gaussianBlur
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+
+Box(
+    modifier = Modifier
+        .size(200.dp, 100.dp)
+        .drawBackdrop(
+            backdrop = backdrop,
+            shape = { RoundedCornerShape(24.dp) },
+            effects = { gaussianBlur(20.dp.toPx()) },
+            highlight = { Highlight.GlassStrokeMiddleLight.copy(alpha = pressProgress) },
+        ),
+)
+```
+
+Pass `null` (or a `Highlight` with `width = 0.dp`) to disable.
 
 ::: warning
-Edge highlight requires `isRuntimeShaderSupported()`. On unsupported platforms or API levels, the modifier becomes a no-op.
+Edge highlight requires `isRuntimeShaderSupported()`. On unsupported platforms or API levels, the highlight is skipped silently.
 :::
 
 ### Built-in Tokens

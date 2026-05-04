@@ -312,6 +312,10 @@ Box(
 | `effect(effect)` | 链接任意 RenderEffect |
 | `runtimeShaderEffect(key, shaderString, uniformShaderName, block)` | 应用自定义 AGSL/SkSL 运行时着色器 |
 
+::: warning 像素空间 uniform 需按 `downscaleFactor` 缩放
+当 `runtimeShaderEffect` 链接在 `blur`（或其他抬高 `downscaleFactor` 的效果）之后，backdrop layer 以 `1 / downscaleFactor` 的分辨率录制，shader 接收的 `coord` 也是该降采样后 layer 的像素坐标。任何描述像素空间距离的 uniform —— 例如 size、padding/offset、圆角半径、折射带宽等 —— 都必须在 `block` 内部除以 `downscaleFactor`，否则形状几何会落在 layer 范围之外，所有采样都会拿到透明黑色。
+:::
+
 #### BackdropEffectScope 属性
 
 | 属性 | 类型 | 说明 |
@@ -337,6 +341,7 @@ Box(
 | blurRadiusY | Float | 垂直模糊半径（dp，独立半径重载） | - | 是* |
 | noiseCoefficient | Float | 抗条纹噪声抖动系数，0 表示禁用 | 0.0045f | 否 |
 | colors | BlurColors | 模糊后应用的颜色调整和混合图层 | BlurColors() | 否 |
+| highlight | Highlight? | 可选的边缘高光，绘制在内容之上。`null` 时跳过 | null | 否 |
 | contentBlendMode | BlendMode? | 内容在模糊上方合成的混合模式 | null | 否 |
 | enabled | Boolean | 是否启用模糊，为 false 时跳过效果并正常绘制内容 | true | 否 |
 
@@ -365,12 +370,13 @@ Box(
 
 ## 边缘高光
 
-`highlight` modifier 沿圆角形状绘制一条带两路定向光的玻璃质感边缘。配合 `Modifier.textureBlur` 使用可营造"模糊背景上的发光边缘"效果。
+`Highlight` 沿圆角形状绘制一条带两路定向光的玻璃质感边缘。它通过 `Modifier.textureBlur` / `Modifier.textureEffect` 的 `highlight` 参数（恒定场景）或 `Modifier.drawBackdrop` 的 `highlight` 参数（响应式场景，与 `BackdropEffectScope` 共享）绘制。配合模糊背景可营造"模糊背景上的发光边缘"效果。
+
+### 配合 textureBlur（恒定）
 
 ```kotlin
 import androidx.compose.foundation.shape.RoundedCornerShape
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.highlight
 
 Box(
     modifier = Modifier
@@ -378,18 +384,36 @@ Box(
         .textureBlur(
             backdrop = backdrop,
             shape = RoundedCornerShape(24.dp),
-        )
-        .highlight(
-            shape = RoundedCornerShape(24.dp),
             highlight = Highlight.GlassStrokeMiddleLight,
         ),
 )
 ```
 
-传给 `highlight` 的形状应与传给 `textureBlur` 的形状保持一致。传 `null`（或 `width = 0.dp` 的 `Highlight`）即可禁用。
+### 配合 drawBackdrop（响应式）
+
+`highlight` lambda 与 `effects` 共用同一个 `BackdropEffectScope`，其返回值可随状态变化（如按压进度），并自动复用当前的 `size` / `shape`。
+
+```kotlin
+import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.gaussianBlur
+import top.yukonga.miuix.kmp.blur.highlight.Highlight
+
+Box(
+    modifier = Modifier
+        .size(200.dp, 100.dp)
+        .drawBackdrop(
+            backdrop = backdrop,
+            shape = { RoundedCornerShape(24.dp) },
+            effects = { gaussianBlur(20.dp.toPx()) },
+            highlight = { Highlight.GlassStrokeMiddleLight.copy(alpha = pressProgress) },
+        ),
+)
+```
+
+传 `null`（或 `width = 0.dp` 的 `Highlight`）即可禁用。
 
 ::: warning 注意
-边缘高光需要 `isRuntimeShaderSupported()` 支持。在不支持的平台或 API 级别上，modifier 会变为空操作。
+边缘高光需要 `isRuntimeShaderSupported()` 支持。在不支持的平台或 API 级别上，将静默跳过绘制。
 :::
 
 ### 内置预设

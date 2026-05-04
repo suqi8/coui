@@ -46,6 +46,7 @@ import kotlin.random.Random
 private val NavigationBarDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly", "IconWithSelectedLabel")
 private val NavigationRailDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly", "IconWithSelectedLabel")
 private val FloatingNavigationBarDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly")
+private val FloatingNavigationBarStyleOptions = listOf("Default", "iOS-like")
 private val FloatingNavigationBarPositionOptions = listOf("Center", "Start", "End")
 private val FloatingToolbarPositionOptions =
     listOf("TopStart", "CenterStart", "BottomStart", "TopEnd", "CenterEnd", "BottomEnd", "TopCenter", "BottomCenter")
@@ -167,17 +168,27 @@ private fun SettingsContent(
                             AnimatedVisibility(visible = appState.useFloatingNavigationBar) {
                                 Column {
                                     OverlayDropdownPreference(
-                                        title = "FloatingNavigationBar Mode",
-                                        items = FloatingNavigationBarDisplayModeOptions,
-                                        selectedIndex = appState.floatingNavigationBarMode,
-                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarMode = it) } },
+                                        title = "FloatingNavigationBar Style",
+                                        items = FloatingNavigationBarStyleOptions,
+                                        selectedIndex = appState.floatingNavigationBarStyle,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarStyle = it) } },
                                     )
-                                    OverlayDropdownPreference(
-                                        title = "FloatingNavigationBar Position",
-                                        items = FloatingNavigationBarPositionOptions,
-                                        selectedIndex = appState.floatingNavigationBarPosition,
-                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarPosition = it) } },
-                                    )
+                                    AnimatedVisibility(visible = appState.floatingNavigationBarStyle == 0) {
+                                        Column {
+                                            OverlayDropdownPreference(
+                                                title = "FloatingNavigationBar Mode",
+                                                items = FloatingNavigationBarDisplayModeOptions,
+                                                selectedIndex = appState.floatingNavigationBarMode,
+                                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarMode = it) } },
+                                            )
+                                            OverlayDropdownPreference(
+                                                title = "FloatingNavigationBar Position",
+                                                items = FloatingNavigationBarPositionOptions,
+                                                selectedIndex = appState.floatingNavigationBarPosition,
+                                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarPosition = it) } },
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

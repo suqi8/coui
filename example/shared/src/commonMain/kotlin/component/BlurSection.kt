@@ -45,7 +45,6 @@ import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurBlendMode
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.highlight.highlight
 import top.yukonga.miuix.kmp.blur.isRenderEffectSupported
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -112,7 +111,6 @@ private fun BlurDemo() {
     var blendModeIndex by remember { mutableIntStateOf(5) }
     val currentBlend = blendConfigs[blendModeIndex]
     val blendModeItems = remember(blendConfigs) { blendConfigs.map { it.first } }
-    val shape = RoundedCornerShape(24.dp)
 
     Column(
         modifier = Modifier
@@ -142,7 +140,7 @@ private fun BlurDemo() {
                         .align(Alignment.Center)
                         .textureBlur(
                             backdrop = backdrop,
-                            shape = shape,
+                            shape = RoundedCornerShape(24.dp),
                             blurRadiusX = blurRadiusX,
                             blurRadiusY = blurRadiusY,
                             noiseCoefficient = noiseCoefficient,
@@ -152,9 +150,6 @@ private fun BlurDemo() {
                                 contrast = contrast,
                                 saturation = saturation,
                             ),
-                        )
-                        .highlight(
-                            shape = shape,
                             highlight = highlight,
                         ),
                     contentAlignment = Alignment.Center,
