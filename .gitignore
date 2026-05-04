@@ -43,3 +43,4 @@ docs/public/dokka
 docs/public/compose
 docs/public/icons
 **/generated/baselineProfiles/**
+example/ios/iosApp/Generated.xcconfig
