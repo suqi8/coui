@@ -25,23 +25,18 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +48,6 @@ import androidx.compose.ui.unit.sp
 import component.BackNavigationIcon
 import component.blend.ColorBlendToken
 import component.effect.BgEffectBackground
-import kotlinx.coroutines.flow.onEach
 import misc.VersionInfo
 import navigation3.Route
 import org.jetbrains.compose.resources.painterResource
@@ -95,16 +89,20 @@ fun AboutPage(
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val navigator = LocalNavigator.current
     val lazyListState = rememberLazyListState()
-    var logoHeightPx by remember { mutableIntStateOf(0) }
 
     val scrollProgress by remember {
         derivedStateOf {
-            if (logoHeightPx <= 0) {
-                0f
-            } else {
-                val index = lazyListState.firstVisibleItemIndex
-                val offset = lazyListState.firstVisibleItemScrollOffset
-                if (index > 0) 1f else (offset.toFloat() / logoHeightPx).coerceIn(0f, 1f)
+            when {
+                lazyListState.firstVisibleItemIndex > 0 -> 1f
+
+                else -> {
+                    val spacer = lazyListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == "logoSpacer" }
+                    if (spacer != null && spacer.size > 0) {
+                        (lazyListState.firstVisibleItemScrollOffset.toFloat() / spacer.size).coerceIn(0f, 1f)
+                    } else {
+                        0f
+                    }
+                }
             }
         }
     }
@@ -124,7 +122,9 @@ fun AboutPage(
                     title = "About",
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
-                    titleColor = MiuixTheme.colorScheme.onSurface.copy(alpha = scrollProgress),
+                    titleColor = MiuixTheme.colorScheme.onSurface.copy(
+                        alpha = ((scrollProgress - 0.35f) / 0.65f).coerceIn(0f, 1f),
+                    ),
                     defaultWindowInsetsPadding = false,
                     navigationIcon = {
                         BackNavigationIcon(
@@ -144,7 +144,6 @@ fun AboutPage(
                 topAppBarScrollBehavior = topAppBarScrollBehavior,
                 lazyListState = lazyListState,
                 scrollProgress = scrollProgress,
-                onLogoHeightChanged = { logoHeightPx = it },
             )
         }
     }
@@ -156,7 +155,6 @@ private fun AboutContent(
     topAppBarScrollBehavior: ScrollBehavior,
     lazyListState: LazyListState,
     scrollProgress: Float,
-    onLogoHeightChanged: (Int) -> Unit,
 ) {
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
@@ -189,6 +187,7 @@ private fun AboutContent(
 
     val isInDark = isInDarkTheme()
     val dynamicBackground = remember { mutableStateOf(isRuntimeShaderSupported()) }
+    val isFullScreenBackground = remember { mutableStateOf(true) }
 
     val cardBlend = if (isInDark) ColorBlendToken.Overlay_Thin_Light else ColorBlendToken.Pured_Regular_Light
     val logoBlend = remember(isInDark) {
@@ -209,49 +208,15 @@ private fun AboutContent(
 
     val density = LocalDensity.current
     var logoHeightDp by remember { mutableStateOf(300.dp) }
-    var logoAreaY by remember { mutableFloatStateOf(0f) }
-    var iconY by remember { mutableFloatStateOf(0f) }
-    var projectNameY by remember { mutableFloatStateOf(0f) }
-    var versionCodeY by remember { mutableFloatStateOf(0f) }
 
-    var iconProgress by remember { mutableFloatStateOf(0f) }
-    var projectNameProgress by remember { mutableFloatStateOf(0f) }
-    var versionCodeProgress by remember { mutableFloatStateOf(0f) }
-    var initialLogoAreaY by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(lazyListState) {
-        snapshotFlow { lazyListState.firstVisibleItemScrollOffset }
-            .onEach { offset ->
-                if (lazyListState.firstVisibleItemIndex > 0) {
-                    if (iconProgress != 1f) iconProgress = 1f
-                    if (projectNameProgress != 1f) projectNameProgress = 1f
-                    if (versionCodeProgress != 1f) versionCodeProgress = 1f
-                    return@onEach
-                }
-
-                if (initialLogoAreaY == 0f && logoAreaY > 0f) {
-                    initialLogoAreaY = logoAreaY
-                }
-                val refLogoAreaY = if (initialLogoAreaY > 0f) initialLogoAreaY else logoAreaY
-
-                val stage1TotalLength = refLogoAreaY - versionCodeY
-                val stage2TotalLength = versionCodeY - projectNameY
-                val stage3TotalLength = projectNameY - iconY
-
-                val versionCodeDelay = stage1TotalLength * 0.5f
-                versionCodeProgress = ((offset.toFloat() - versionCodeDelay) / (stage1TotalLength - versionCodeDelay).coerceAtLeast(1f))
-                    .coerceIn(0f, 1f)
-                projectNameProgress = ((offset.toFloat() - stage1TotalLength) / stage2TotalLength.coerceAtLeast(1f))
-                    .coerceIn(0f, 1f)
-                iconProgress = ((offset.toFloat() - stage1TotalLength - stage2TotalLength) / stage3TotalLength.coerceAtLeast(1f))
-                    .coerceIn(0f, 1f)
-            }
-            .collect { }
-    }
+    val versionCodeProgress = ((scrollProgress - 0.05f) / 0.15f).coerceIn(0f, 1f)
+    val projectNameProgress = ((scrollProgress - 0.20f) / 0.15f).coerceIn(0f, 1f)
+    val iconProgress = ((scrollProgress - 0.35f) / 0.15f).coerceIn(0f, 1f)
 
     BgEffectBackground(
         dynamicBackground = dynamicBackground.value,
         isOs3Effect = isOs3Effect,
+        isFullSize = isFullScreenBackground.value,
         modifier = Modifier.fillMaxSize(),
         bgModifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier,
         alpha = { 1f - scrollProgress },
@@ -280,13 +245,7 @@ private fun AboutContent(
                         scaleX = 1 - (iconProgress * 0.05f)
                         scaleY = 1 - (iconProgress * 0.05f)
                     }
-                    .background(Color.White)
-                    .onGloballyPositioned { coordinates ->
-                        if (iconY != 0f) return@onGloballyPositioned
-                        val y = coordinates.positionInWindow().y
-                        val size = coordinates.size
-                        iconY = y + size.height
-                    },
+                    .background(Color.White),
             ) {
                 Image(
                     modifier = Modifier.size(74.dp),
@@ -296,12 +255,6 @@ private fun AboutContent(
             }
             Text(
                 modifier = Modifier.padding(top = 12.dp, bottom = 5.dp)
-                    .onGloballyPositioned { coordinates ->
-                        if (projectNameY != 0f) return@onGloballyPositioned
-                        val y = coordinates.positionInWindow().y
-                        val size = coordinates.size
-                        projectNameY = y + size.height
-                    }
                     .graphicsLayer {
                         alpha = 1 - projectNameProgress
                         scaleX = 1 - (projectNameProgress * 0.05f)
@@ -335,12 +288,6 @@ private fun AboutContent(
                         alpha = 1 - versionCodeProgress
                         scaleX = 1 - (versionCodeProgress * 0.05f)
                         scaleY = 1 - (versionCodeProgress * 0.05f)
-                    }
-                    .onGloballyPositioned { coordinates ->
-                        if (versionCodeY != 0f) return@onGloballyPositioned
-                        val y = coordinates.positionInWindow().y
-                        val size = coordinates.size
-                        versionCodeY = y + size.height
                     },
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 text = "v" + VersionInfo.VERSION_NAME + " (" + VersionInfo.VERSION_CODE + ")",
@@ -371,18 +318,10 @@ private fun AboutContent(
                         .height(
                             logoHeightDp + 52.dp + logoPadding.calculateTopPadding() - scrollPadding.calculateTopPadding() + 126.dp,
                         )
-                        .onSizeChanged { size ->
-                            onLogoHeightChanged(size.height)
-                        }
                         .pointerInput(Unit) {
                             detectTapGestures {
                                 showTextureSet = true
                             }
-                        }
-                        .onGloballyPositioned { coordinates ->
-                            val y = coordinates.positionInWindow().y
-                            val size = coordinates.size
-                            logoAreaY = y + size.height
                         },
                     contentAlignment = Alignment.TopCenter,
                     content = { },
@@ -520,10 +459,18 @@ private fun AboutContent(
                 )
 
                 SwitchPreference(
-                    title = "Dynamic Background Enabled",
+                    title = "Dynamic Background",
                     checked = dynamicBackground.value,
                     onCheckedChange = {
                         dynamicBackground.value = it
+                    },
+                )
+
+                SwitchPreference(
+                    title = "Full Screen Background",
+                    checked = isFullScreenBackground.value,
+                    onCheckedChange = {
+                        isFullScreenBackground.value = it
                     },
                 )
             }

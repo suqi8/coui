@@ -6,6 +6,8 @@ package component.effect
 import androidx.compose.ui.graphics.Brush
 import top.yukonga.miuix.kmp.blur.RuntimeShader
 import top.yukonga.miuix.kmp.blur.asBrush
+import kotlin.math.cos
+import kotlin.math.sin
 
 internal class BgEffectPainter(
     private val isOs3: Boolean = true,
@@ -23,6 +25,7 @@ internal class BgEffectPainter(
     private val resolution = FloatArray(2)
     private val bound = FloatArray(4)
     private val colorsBuffer = FloatArray(16)
+    private val pointsAnimBuffer = FloatArray(8)
 
     private var animTime = Float.NaN
     private var isDarkCached: Boolean? = null
@@ -36,6 +39,9 @@ internal class BgEffectPainter(
 
     private var cachedColorStage = Float.NaN
     private var cachedColorsPreset: BgEffectConfig.Config? = null
+
+    private var cachedPointsAnimTime = Float.NaN
+    private var cachedPointsAnimPreset: BgEffectConfig.Config? = null
 
     companion object {
 
@@ -63,6 +69,26 @@ internal class BgEffectPainter(
         if (animTime == time) return
         animTime = time
         runtimeShader.setFloatUniform("uAnimTime", animTime)
+    }
+
+    fun updatePointsAnim(time: Float, preset: BgEffectConfig.Config) {
+        if (cachedPointsAnimTime == time && cachedPointsAnimPreset === preset) return
+
+        val offset = preset.pointOffset
+        var i = 0
+        while (i < 4) {
+            val srcX = preset.points[i * 3]
+            val srcY = preset.points[i * 3 + 1]
+            val animX = srcX + sin(time + srcY) * offset
+            val animY = srcY + cos(time + animX) * offset
+            pointsAnimBuffer[i * 2] = animX
+            pointsAnimBuffer[i * 2 + 1] = animY
+            i++
+        }
+        runtimeShader.setFloatUniform("uPointsAnim", pointsAnimBuffer)
+
+        cachedPointsAnimTime = time
+        cachedPointsAnimPreset = preset
     }
 
     fun updateColors(preset: BgEffectConfig.Config, stage: Float) {
@@ -121,7 +147,6 @@ internal class BgEffectPainter(
         val preset = BgEffectConfig.get(deviceType, isDark, isOs3)
 
         runtimeShader.setFloatUniform("uPoints", preset.points)
-        runtimeShader.setFloatUniform("uPointOffset", preset.pointOffset)
         runtimeShader.setFloatUniform("uLightOffset", preset.lightOffset)
         runtimeShader.setFloatUniform("uSaturateOffset", preset.saturateOffset)
     }
