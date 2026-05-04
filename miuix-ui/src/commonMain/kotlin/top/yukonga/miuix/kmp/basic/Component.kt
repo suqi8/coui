@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
@@ -47,9 +48,13 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
  * @param onClick The callback when the [BasicComponent] is clicked.
+ * @param onClickLabel Optional label describing the click action for accessibility services.
+ * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [BasicComponent] is enabled.
  * @param interactionSource The [MutableInteractionSource] for the [BasicComponent].
+ *   The value should remain null or non-null for the lifetime of this component;
+ *   switching across recompositions will allocate a new internal source and lose pending interactions.
  */
 @Composable
 @NonRestartableComposable
@@ -64,6 +69,8 @@ fun BasicComponent(
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
     onClick: (() -> Unit)? = null,
+    onClickLabel: String? = null,
+    role: Role? = null,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -75,6 +82,8 @@ fun BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
         onClick = onClick,
+        onClickLabel = onClickLabel,
+        role = role,
         holdDownState = holdDownState,
         enabled = enabled,
         interactionSource = interactionSource,
@@ -106,9 +115,13 @@ fun BasicComponent(
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
  * @param onClick The callback when the [BasicComponent] is clicked.
+ * @param onClickLabel Optional label describing the click action for accessibility services.
+ * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [BasicComponent] is enabled.
  * @param interactionSource The [MutableInteractionSource] for the [BasicComponent].
+ *   The value should remain null or non-null for the lifetime of this component;
+ *   switching across recompositions will allocate a new internal source and lose pending interactions.
  * @param content The content of the [BasicComponent].
  */
 @Composable
@@ -119,6 +132,8 @@ fun BasicComponent(
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
     onClick: (() -> Unit)? = null,
+    onClickLabel: String? = null,
+    role: Role? = null,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -130,11 +145,12 @@ fun BasicComponent(
 
     HoldDownObserver(holdDownState, interactionSource)
 
-    val hasOnClick = onClick != null
-    val clickableModifier = remember(enabled, hasOnClick, interactionSource) {
-        if (enabled && hasOnClick) {
+    val clickableModifier = remember(enabled, onClick != null, interactionSource, role, onClickLabel) {
+        if (enabled && onClick != null) {
             Modifier.clickable(
                 interactionSource = interactionSource,
+                onClickLabel = onClickLabel,
+                role = role,
                 onClick = { currentOnClick?.invoke() },
             )
         } else {

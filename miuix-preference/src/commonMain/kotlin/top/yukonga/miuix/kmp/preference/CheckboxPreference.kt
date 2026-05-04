@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -122,6 +123,7 @@ fun CheckboxPreference(
         onClick = {
             currentOnCheckedChange.takeIf { enabled }?.invoke(!checked)
         },
+        role = Role.Checkbox,
         holdDownState = holdDownState,
         enabled = enabled,
     )

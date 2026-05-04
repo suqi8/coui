@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentColors
@@ -144,6 +145,7 @@ fun WindowDropdownMenu(
         },
         bottomAction = bottomAction,
         onClick = handleClick,
+        role = Role.DropdownList,
         holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )

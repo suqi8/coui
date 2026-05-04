@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.BasicComponentColors
@@ -121,6 +122,7 @@ fun RadioButtonPreference(
         onClick = {
             currentOnClick.takeIf { enabled }?.invoke()
         },
+        role = Role.RadioButton,
         holdDownState = holdDownState,
         enabled = enabled,
     )

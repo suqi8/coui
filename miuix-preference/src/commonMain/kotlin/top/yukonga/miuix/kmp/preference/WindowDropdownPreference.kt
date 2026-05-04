@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -200,6 +201,7 @@ fun WindowDropdownPreference(
         },
         bottomAction = bottomAction,
         onClick = handleClick,
+        role = Role.DropdownList,
         holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
@@ -304,6 +306,7 @@ fun WindowDropdownPreference(
         },
         bottomAction = bottomAction,
         onClick = handleClick,
+        role = Role.DropdownList,
         holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
