@@ -30,6 +30,7 @@ import top.yukonga.miuix.kmp.basic.PullToRefreshState
 import top.yukonga.miuix.kmp.basic.RefreshState
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.round
 import kotlin.math.sign
 
 /**
@@ -371,8 +372,8 @@ private class MiuixOverscrollEffectNode(
         val placeable = measurable.measure(constraints)
         return layout(placeable.width, placeable.height) {
             placeable.placeWithLayer(0, 0) {
-                translationX = effect.offsetX
-                translationY = effect.offsetY
+                translationX = round(effect.offsetX)
+                translationY = round(effect.offsetY)
                 clip = true
             }
         }

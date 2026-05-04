@@ -40,6 +40,7 @@ import top.yukonga.miuix.kmp.basic.PullToRefreshState
 import top.yukonga.miuix.kmp.basic.RefreshState
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.round
 import kotlin.math.sign
 
 /**
@@ -269,9 +270,9 @@ private class OverscrollNode(
         return layout(placeable.width, placeable.height) {
             placeable.placeWithLayer(0, 0) {
                 if (isVertical) {
-                    translationY = offset
+                    translationY = round(offset)
                 } else {
-                    translationX = offset
+                    translationX = round(offset)
                 }
                 clip = true
             }
