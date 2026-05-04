@@ -52,18 +52,22 @@ fun Surface(
     shadowElevation: Dp = SurfaceDefaults.ShadowElevation,
     content: @Composable () -> Unit,
 ) {
-    SurfaceImpl(
-        shape = shape,
-        color = color,
-        contentColor = contentColor,
-        border = border,
-        shadowElevation = shadowElevation,
-        modifier = modifier
-            .semantics(mergeDescendants = false) {
-                isTraversalGroup = true
-            },
-        content = content,
-    )
+    val shadowElevationPx = with(LocalDensity.current) { shadowElevation.toPx() }
+    CompositionLocalProvider(LocalContentColor provides contentColor) {
+        Box(
+            modifier = modifier
+                .semantics(mergeDescendants = false) { isTraversalGroup = true }
+                .surface(
+                    shape = shape,
+                    backgroundColor = color,
+                    border = border,
+                    shadowElevation = shadowElevationPx,
+                ),
+            propagateMinConstraints = true,
+        ) {
+            content()
+        }
+    }
 }
 
 /**
@@ -97,41 +101,22 @@ fun Surface(
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
-    SurfaceImpl(
-        shape = shape,
-        color = color,
-        contentColor = contentColor,
-        border = border,
-        shadowElevation = shadowElevation,
-        modifier = modifier.clickable(
-            interactionSource = interactionSource,
-            indication = indication,
-            enabled = enabled,
-            onClick = onClick,
-        ),
-        content = content,
-    )
-}
-
-@Composable
-private fun SurfaceImpl(
-    shape: Shape,
-    color: Color,
-    contentColor: Color,
-    border: BorderStroke?,
-    shadowElevation: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
     val shadowElevationPx = with(LocalDensity.current) { shadowElevation.toPx() }
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
-            modifier = modifier.surface(
-                shape = shape,
-                backgroundColor = color,
-                border = border,
-                shadowElevation = shadowElevationPx,
-            ),
+            modifier = modifier
+                .surface(
+                    shape = shape,
+                    backgroundColor = color,
+                    border = border,
+                    shadowElevation = shadowElevationPx,
+                )
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = indication,
+                    enabled = enabled,
+                    onClick = onClick,
+                ),
             propagateMinConstraints = true,
         ) {
             content()
