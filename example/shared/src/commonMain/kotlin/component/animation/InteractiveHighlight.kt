@@ -6,9 +6,10 @@ package component.animation
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -26,12 +27,9 @@ internal class InteractiveHighlight(
 ) {
 
     private val pressProgressAnimationSpec = spring(0.5f, 300f, 0.001f)
-    private val positionAnimationSpec = spring(0.5f, 300f, Offset.VisibilityThreshold)
 
     private val pressProgressAnimation = Animatable(0f, 0.001f)
-    private val positionAnimation = Animatable(Offset.Zero, Offset.VectorConverter, Offset.VisibilityThreshold)
-
-    private var startPosition = Offset.Zero
+    private var pointerPosition by mutableStateOf(Offset.Zero)
 
     val modifier: Modifier = Modifier.drawWithContent {
         val progress = pressProgressAnimation.value
@@ -40,7 +38,7 @@ internal class InteractiveHighlight(
                 color = Color.White.copy(alpha = 0.06f * progress),
                 blendMode = BlendMode.Plus,
             )
-            val pos = position(size, positionAnimation.value)
+            val pos = position(size, pointerPosition)
             val radius = (size.minDimension * 1.2f).coerceAtLeast(1f)
             val center = Offset(
                 x = pos.x.coerceIn(0f, size.width),
@@ -66,26 +64,21 @@ internal class InteractiveHighlight(
     val gestureModifier: Modifier = Modifier.pointerInput(animationScope) {
         inspectDragGestures(
             onDragStart = { down ->
-                startPosition = down.position
+                pointerPosition = down.position
                 animationScope.launch {
-                    launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
-                    launch { positionAnimation.snapTo(startPosition) }
+                    pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec)
                 }
             },
-            onDragEnd = {
-                animationScope.launch {
-                    launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
-                    launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
-                }
-            },
-            onDragCancel = {
-                animationScope.launch {
-                    launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
-                    launch { positionAnimation.animateTo(startPosition, positionAnimationSpec) }
-                }
-            },
+            onDragEnd = { release() },
+            onDragCancel = { release() },
         ) { change, _ ->
-            animationScope.launch { positionAnimation.snapTo(change.position) }
+            pointerPosition = change.position
+        }
+    }
+
+    private fun release() {
+        animationScope.launch {
+            pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec)
         }
     }
 }

@@ -3,8 +3,8 @@
 
 package top.yukonga.miuix.kmp.blur.internal
 
-/** Builds a separable Gaussian blur shader with [tapCount] symmetric tap pairs (1..7). */
-internal fun buildGaussianBlurShader(tapCount: Int): String {
+/** Builds a separable Blur shader with [tapCount] symmetric tap pairs (1..7). */
+internal fun buildBlurShader(tapCount: Int): String {
     require(tapCount in 1..MAX_BLUR_TAPS)
     val offsetSize = tapCount * 2
     return """
@@ -30,7 +30,7 @@ internal fun buildGaussianBlurShader(tapCount: Int): String {
 """
 }
 
-/** Maximum number of tap pairs for the Gaussian blur shader. */
+/** Maximum number of tap pairs for the Blur shader. */
 internal const val MAX_BLUR_TAPS = 7
 
 /**

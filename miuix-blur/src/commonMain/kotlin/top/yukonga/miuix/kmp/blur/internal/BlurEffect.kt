@@ -10,34 +10,34 @@ import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-/** Conversion factor from blur radius in pixels to Gaussian sigma. */
-internal const val GAUSSIAN_RADIUS_TO_SIGMA = 0.45f
+/** Conversion factor from blur radius in pixels to Blur sigma. */
+internal const val BLUR_RADIUS_TO_SIGMA = 0.45f
 
 /** Max kernel reach in downsampled pixels — outermost pair reaches ~offset 12.5, rounded up. */
-internal const val GAUSSIAN_KERNEL_REACH = 14
+internal const val BLUR_KERNEL_REACH = 14
 
 private const val WEIGHT_THRESHOLD = 0.002
 
-internal data class GaussianBlurResult(
+internal data class BlurResult(
     val renderEffect: RenderEffect,
     val downscaleFactor: Int,
 )
 
-/** Creates a separable Gaussian blur [RenderEffect] with independent horizontal / vertical radii. */
-internal fun createGaussianBlurEffect(
+/** Creates a separable Blur [RenderEffect] with independent horizontal / vertical radii. */
+internal fun createBlurEffect(
     radiusX: Float,
     radiusY: Float,
     size: Size,
     shaderCache: RuntimeShaderCache,
-): GaussianBlurResult? {
+): BlurResult? {
     if (radiusX <= 0f && radiusY <= 0f) return null
 
-    val sigmaX = radiusX * GAUSSIAN_RADIUS_TO_SIGMA
-    val sigmaY = radiusY * GAUSSIAN_RADIUS_TO_SIGMA
+    val sigmaX = radiusX * BLUR_RADIUS_TO_SIGMA
+    val sigmaY = radiusY * BLUR_RADIUS_TO_SIGMA
     val (adjustedVarianceX, downScaleX) = computeDownScaleParams(sigmaX)
     val (adjustedVarianceY, downScaleY) = computeDownScaleParams(sigmaY)
-    val paramsX = if (radiusX > 0f) computeGaussianParams(adjustedVarianceX) else null
-    val paramsY = if (radiusY > 0f) computeGaussianParams(adjustedVarianceY) else null
+    val paramsX = if (radiusX > 0f) computeBlurParams(adjustedVarianceX) else null
+    val paramsY = if (radiusY > 0f) computeBlurParams(adjustedVarianceY) else null
     if (paramsX?.tapCount == 0 && paramsY?.tapCount == 0) return null
 
     val downScale = maxOf(downScaleX, downScaleY)
@@ -54,7 +54,7 @@ internal fun createGaussianBlurEffect(
         val n = paramsX.tapCount
         val hShader = shaderCache.obtainRuntimeShader(
             "LMGauss$n",
-            buildGaussianBlurShader(n),
+            buildBlurShader(n),
         ).apply {
             val offsets = FloatArray(n * 2)
             for (i in 0 until n) {
@@ -73,7 +73,7 @@ internal fun createGaussianBlurEffect(
         val n = paramsY.tapCount
         val vShader = shaderCache.obtainRuntimeShader(
             "LMGauss$n",
-            buildGaussianBlurShader(n),
+            buildBlurShader(n),
         ).apply {
             val offsets = FloatArray(n * 2)
             for (i in 0 until n) {
@@ -88,21 +88,21 @@ internal fun createGaussianBlurEffect(
             ?: runtimeShaderEffect(vShader, "child")
     }
 
-    return effect?.let { GaussianBlurResult(renderEffect = it, downscaleFactor = downScale) }
+    return effect?.let { BlurResult(renderEffect = it, downscaleFactor = downScale) }
 }
 
 /**
- * Merged Gaussian taps for one axis. Each pair combines adjacent discrete taps via
+ * Merged Blur taps for one axis. Each pair combines adjacent discrete taps via
  * linear interpolation; the shader samples symmetrically at ±[offsets], so [tapCount]
  * pairs produce 2 × [tapCount] texture fetches.
  */
-internal class GaussianParams(
+internal class BlurParams(
     val offsets: FloatArray,
     val weights: FloatArray,
     val tapCount: Int,
 ) {
     companion object {
-        val EMPTY = GaussianParams(FloatArray(0), FloatArray(0), 0)
+        val EMPTY = BlurParams(FloatArray(0), FloatArray(0), 0)
     }
 }
 
@@ -151,16 +151,16 @@ internal fun computeDownScaleParams(sigma: Float): DownScaleParams {
 }
 
 /**
- * Builds [GaussianParams] from [variance]: generates a 27-tap discrete kernel (-13..+13),
+ * Builds [BlurParams] from [variance]: generates a 27-tap discrete kernel (-13..+13),
  * normalizes, then merges adjacent pairs (0,1), (2,3), …, (12,13) via linear interpolation
  * to reduce texture fetches. Returns up to [MAX_BLUR_TAPS] pairs.
  */
-internal fun computeGaussianParams(variance: Float): GaussianParams {
-    if (variance <= 0.25f) return GaussianParams.EMPTY
+internal fun computeBlurParams(variance: Float): BlurParams {
+    if (variance <= 0.25f) return BlurParams.EMPTY
 
     val v = variance.toDouble()
 
-    // 1. Generate raw Gaussian weights for offsets 0..13
+    // 1. Generate raw Blur weights for offsets 0..13
     val coeff = 1.0 / sqrt(2.0 * PI * v)
     val raw = DoubleArray(14) { i ->
         coeff * exp(-0.5 * i.toDouble() * i.toDouble() / v)
@@ -214,7 +214,7 @@ internal fun computeGaussianParams(variance: Float): GaussianParams {
         }
     }
 
-    return GaussianParams(
+    return BlurParams(
         offsets = offsets,
         weights = weights,
         tapCount = tapCount,

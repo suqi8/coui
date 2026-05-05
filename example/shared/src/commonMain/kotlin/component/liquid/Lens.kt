@@ -34,7 +34,7 @@ fun BackdropEffectScope.lens(
         } else {
             ROUNDED_RECT_REFRACTION_SHADER
         }
-    val key = if (chromaticAberration) "LiquidGlassLensDispersion" else "LiquidGlassLens"
+    val key = if (chromaticAberration) "LensDispersion" else "Lens"
 
     val sf = downscaleFactor.coerceAtLeast(1).toFloat()
     val scaledSizeW = size.width / sf

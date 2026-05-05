@@ -287,7 +287,7 @@ Box(
             backdrop = backdrop,
             shape = { RoundedCornerShape(16.dp) },
             effects = {
-                // Apply a Gaussian blur
+                // Apply a Blur
                 blur(radius = 60f)
                 // Adjust colors
                 colorControls(
@@ -306,7 +306,7 @@ Box(
 
 | Extension | Description |
 | --- | --- |
-| `blur(radius, edgeTreatment)` | Applies a Gaussian blur |
+| `blur(radius, edgeTreatment)` | Applies a Blur |
 | `colorFilter(colorFilter)` | Applies a ColorFilter |
 | `colorControls(brightness, contrast, saturation)` | Adjusts brightness, contrast, and saturation |
 | `effect(effect)` | Chains an arbitrary RenderEffect |
@@ -395,7 +395,7 @@ The `highlight` lambda runs inside the same `BackdropEffectScope` as `effects`, 
 
 ```kotlin
 import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.gaussianBlur
+import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 
 Box(
@@ -404,7 +404,7 @@ Box(
         .drawBackdrop(
             backdrop = backdrop,
             shape = { RoundedCornerShape(24.dp) },
-            effects = { gaussianBlur(20.dp.toPx()) },
+            effects = { blur(20.dp.toPx()) },
             highlight = { Highlight.GlassStrokeMiddleLight.copy(alpha = pressProgress) },
         ),
 )

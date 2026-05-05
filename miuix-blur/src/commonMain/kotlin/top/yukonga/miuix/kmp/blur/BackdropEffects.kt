@@ -6,48 +6,48 @@ package top.yukonga.miuix.kmp.blur
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
-import top.yukonga.miuix.kmp.blur.internal.GAUSSIAN_KERNEL_REACH
-import top.yukonga.miuix.kmp.blur.internal.GAUSSIAN_RADIUS_TO_SIGMA
+import top.yukonga.miuix.kmp.blur.internal.BLUR_KERNEL_REACH
+import top.yukonga.miuix.kmp.blur.internal.BLUR_RADIUS_TO_SIGMA
 import top.yukonga.miuix.kmp.blur.internal.MI_BLEND_MODE_SHADER
 import top.yukonga.miuix.kmp.blur.internal.chain
 import top.yukonga.miuix.kmp.blur.internal.computeDownScaleParams
-import top.yukonga.miuix.kmp.blur.internal.createGaussianBlurEffect
+import top.yukonga.miuix.kmp.blur.internal.createBlurEffect
 
 /** Maximum number of blend layers supported by [blendColors]. Extra entries are dropped. */
 private const val MAX_BLEND_LAYERS = 8
 
 /**
- * Chains a separable Gaussian blur into the scope's [BackdropEffectScope.renderEffect],
+ * Chains a separable Blur into the scope's [BackdropEffectScope.renderEffect],
  * adjusts [BackdropEffectScope.padding] to cover the kernel reach, and updates
  * [BackdropEffectScope.downscaleFactor]. Non-positive radii skip that axis.
  *
  * Typical use:
  * ```
  * Modifier.drawBackdrop(backdrop, shape = { shape }, effects = {
- *     gaussianBlur(20f * density)
+ *     blur(20f * density)
  * })
  * ```
  *
  * @param radiusX Horizontal blur radius in pixels.
  * @param radiusY Vertical blur radius in pixels. Defaults to [radiusX] for isotropic blur.
  */
-fun BackdropEffectScope.gaussianBlur(radiusX: Float, radiusY: Float = radiusX) {
+fun BackdropEffectScope.blur(radiusX: Float, radiusY: Float = radiusX) {
     if (!isRuntimeShaderSupported()) return
 
     // Pre-compute downscale factor to set padding before creating the effect.
-    val sigmaMax = maxOf(radiusX, radiusY) * GAUSSIAN_RADIUS_TO_SIGMA
+    val sigmaMax = maxOf(radiusX, radiusY) * BLUR_RADIUS_TO_SIGMA
     val sf = computeDownScaleParams(sigmaMax).downScale
 
     // Padding covers the blur kernel's maximum sampling reach in original
     // pixel space. Keeps recording dimensions stable across radius changes
     // within the same downscale level.
-    val kernelPadding = (GAUSSIAN_KERNEL_REACH * sf).toFloat()
+    val kernelPadding = (BLUR_KERNEL_REACH * sf).toFloat()
     if (kernelPadding > padding) {
         padding = kernelPadding
     }
 
     val paddedSize = Size(size.width + padding * 2f, size.height + padding * 2f)
-    val result = createGaussianBlurEffect(radiusX, radiusY, paddedSize, this) ?: return
+    val result = createBlurEffect(radiusX, radiusY, paddedSize, this) ?: return
 
     downscaleFactor = result.downscaleFactor
     renderEffect = renderEffect?.chain(result.renderEffect) ?: result.renderEffect
@@ -124,7 +124,7 @@ fun BackdropEffectScope.blendColor(color: Color, mode: BlurBlendMode = BlurBlend
  * Equivalent to what [Modifier.textureBlur] applies internally:
  * 1. [noiseDither] for anti-banding
  * 2. [colorControls] for brightness/contrast/saturation in linear (gamma 2.2) space
- * 3. [gaussianBlur] with the given radii in dp (multiplied by [BackdropEffectScope.density])
+ * 3. [blur] with the given radii in dp (multiplied by [BackdropEffectScope.density])
  * 4. [blendColors] for the layered tinting
  *
  * Use this to compose the standard preset with additional custom effects:
@@ -150,6 +150,6 @@ fun BackdropEffectScope.textureBlurEffect(
     val clampedY = blurRadiusY.coerceIn(0f, BlurDefaults.MaxBlurRadius)
     noiseDither(noiseCoefficient)
     colorControls(colors.brightness, colors.contrast, colors.saturation)
-    gaussianBlur(clampedX * density, clampedY * density)
+    blur(clampedX * density, clampedY * density)
     blendColors(colors)
 }

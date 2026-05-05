@@ -26,6 +26,8 @@ import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.fastFirstOrNull
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -58,6 +60,9 @@ internal class DampedDragAnimation(
     private val scaleYAnimation = Animatable(initialScale, 0.001f)
 
     private val mutatorMutex = MutatorMutex()
+
+    private var pressJob: Job? = null
+    private var releaseJob: Job? = null
 
     private val velocityTracker = VelocityTracker()
 
@@ -96,8 +101,10 @@ internal class DampedDragAnimation(
     }
 
     fun press() {
+        releaseJob?.cancel()
+        pressJob?.cancel()
         velocityTracker.resetTracking()
-        animationScope.launch {
+        pressJob = animationScope.launch {
             launch { pressProgressAnimation.animateTo(1f, pressProgressAnimationSpec) }
             launch { scaleXAnimation.animateTo(pressedScale, scaleXAnimationSpec) }
             launch { scaleYAnimation.animateTo(pressedScale, scaleYAnimationSpec) }
@@ -105,7 +112,8 @@ internal class DampedDragAnimation(
     }
 
     fun release() {
-        animationScope.launch {
+        releaseJob?.cancel()
+        releaseJob = animationScope.launch {
             withFrameMillis { }
             if (value != targetValue) {
                 val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
@@ -122,7 +130,7 @@ internal class DampedDragAnimation(
     fun updateValue(value: Float) {
         val targetValue = value.coerceIn(valueRange)
         animationScope.launch {
-            launch { valueAnimation.animateTo(targetValue, valueAnimationSpec) { updateVelocity() } }
+            valueAnimation.animateTo(targetValue, valueAnimationSpec) { updateVelocity() }
         }
     }
 
@@ -142,8 +150,11 @@ internal class DampedDragAnimation(
 
     private fun updateVelocity() {
         velocityTracker.addPosition(nowMillis(), Offset(value, 0f))
-        val targetVelocity = velocityTracker.calculateVelocity().x / (valueRange.endInclusive - valueRange.start)
-        animationScope.launch { velocityAnimation.animateTo(targetVelocity, velocityAnimationSpec) }
+        val span = (valueRange.endInclusive - valueRange.start).coerceAtLeast(1e-6f)
+        val targetVelocity = velocityTracker.calculateVelocity().x / span
+        animationScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            velocityAnimation.snapTo(targetVelocity)
+        }
     }
 }
 

@@ -395,7 +395,7 @@ Box(
 
 ```kotlin
 import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.gaussianBlur
+import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 
 Box(
@@ -404,7 +404,7 @@ Box(
         .drawBackdrop(
             backdrop = backdrop,
             shape = { RoundedCornerShape(24.dp) },
-            effects = { gaussianBlur(20.dp.toPx()) },
+            effects = { blur(20.dp.toPx()) },
             highlight = { Highlight.GlassStrokeMiddleLight.copy(alpha = pressProgress) },
         ),
 )

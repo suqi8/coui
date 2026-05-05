@@ -72,8 +72,8 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.gaussianBlur
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -212,12 +212,12 @@ internal fun IosLiquidGlassNavigationBar(
     }
     val combinedBackdrop = backdrop?.let { rememberCombinedBackdrop(it, tabsBackdrop) }
 
+    val navBarBottomPadding = WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+
     val bottomPaddingValue = when (platform()) {
-        Platform.IOS -> 8.dp
+        Platform.IOS -> WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
 
         Platform.Android -> {
-            val navBarBottomPadding =
-                WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
             if (navBarBottomPadding != 0.dp) 8.dp + navBarBottomPadding else 36.dp
         }
 
@@ -256,7 +256,7 @@ internal fun IosLiquidGlassNavigationBar(
                     text = item.label,
                     color = tabContentColor,
                     fontSize = 11.sp,
-                    fontWeight = if (index == currentIndex) FontWeight.SemiBold else FontWeight.Normal,
+                    fontWeight = FontWeight.Normal,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -298,8 +298,11 @@ internal fun IosLiquidGlassNavigationBar(
                                 backdrop = backdrop,
                                 shape = { pillShape },
                                 effects = {
-                                    iosVibrancy()
-                                    gaussianBlur(6.dp.toPx())
+                                    vibrancy()
+                                    blur(
+                                        6.dp.toPx(),
+                                        6.dp.toPx(),
+                                    )
                                     lens(
                                         refractionHeight = 24.dp.toPx(),
                                         refractionAmount = 24.dp.toPx(),
@@ -342,8 +345,11 @@ internal fun IosLiquidGlassNavigationBar(
                                 shape = { pillShape },
                                 effects = {
                                     val progress = dampedDrag.pressProgress
-                                    iosVibrancy()
-                                    gaussianBlur(6.dp.toPx())
+                                    vibrancy()
+                                    blur(
+                                        6.dp.toPx(),
+                                        6.dp.toPx(),
+                                    )
                                     lens(
                                         refractionHeight = 24.dp.toPx() * progress,
                                         refractionAmount = 24.dp.toPx() * progress,

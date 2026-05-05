@@ -20,9 +20,9 @@ HSPLtop/yukonga/miuix/kmp/blur/RuntimeShader_androidKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/TextureEffectKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/internal/BlendColorsDrawingKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/internal/DownScaleParams;->**(**)**
-HSPLtop/yukonga/miuix/kmp/blur/internal/GaussianBlurEffectKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/blur/internal/GaussianBlurResult;->**(**)**
-HSPLtop/yukonga/miuix/kmp/blur/internal/GaussianParams;->**(**)**
+HSPLtop/yukonga/miuix/kmp/blur/internal/BlurEffectKt**->**(**)**
+HSPLtop/yukonga/miuix/kmp/blur/internal/BlurResult;->**(**)**
+HSPLtop/yukonga/miuix/kmp/blur/internal/BlurParams;->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/internal/LayerRecorderKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/internal/RenderEffectCompat_androidKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/blur/internal/ShadersKt**->**(**)**
