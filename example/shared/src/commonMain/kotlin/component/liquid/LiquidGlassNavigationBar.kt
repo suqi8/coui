@@ -355,10 +355,9 @@ internal fun IosLiquidGlassNavigationBar(
                                     lens(
                                         refractionHeight = 24.dp.toPx(),
                                         refractionAmount = 24.dp.toPx(),
-                                        chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = 0.2f) },
+                                highlight = { baseHighlight.copy(alpha = 0.4f) },
                                 layerBlock = {
                                     val width = size.width.coerceAtLeast(1f)
                                     val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -402,7 +401,6 @@ internal fun IosLiquidGlassNavigationBar(
                                     lens(
                                         refractionHeight = 24.dp.toPx() * progress,
                                         refractionAmount = 24.dp.toPx() * progress,
-                                        chromaticAberration = 0.5f,
                                     )
                                 },
                                 onDrawSurface = { drawRect(containerColor) },
@@ -459,6 +457,13 @@ internal fun IosLiquidGlassNavigationBar(
                                     drawRect(Color.Black.copy(alpha = 0.03f * progress))
                                 },
                             )
+                            .innerShadow(shape = pillShape) {
+                                InnerShadow(
+                                    radius = 8.dp * dampedDrag.pressProgress,
+                                    color = Color.Black.copy(alpha = 0.15f),
+                                    alpha = dampedDrag.pressProgress,
+                                )
+                            }
                             .height(56.dp)
                             .width(tabWidthDp),
                     )
