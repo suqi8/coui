@@ -5,6 +5,7 @@ package top.yukonga.miuix.kmp.blur.internal
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -58,9 +59,10 @@ internal class InverseLayerScope : GraphicsLayerScope {
 
     fun DrawTransform.inverseTransform(
         density: Density,
+        consumerSize: Size,
         layerBlock: GraphicsLayerScope.() -> Unit,
     ) {
-        this@InverseLayerScope.size = size
+        this@InverseLayerScope.size = if (consumerSize.isSpecified) consumerSize else size
         this@InverseLayerScope.density = density.density
         fontScale = density.fontScale
         layerBlock()

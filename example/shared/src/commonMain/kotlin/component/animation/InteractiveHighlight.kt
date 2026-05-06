@@ -35,7 +35,7 @@ internal class InteractiveHighlight(
         val progress = pressProgressAnimation.value
         if (progress > 0f) {
             drawRect(
-                color = Color.White.copy(alpha = 0.06f * progress),
+                color = Color.White.copy(alpha = 0.04f * progress),
                 blendMode = BlendMode.Plus,
             )
             val pos = position(size, pointerPosition)
@@ -44,7 +44,7 @@ internal class InteractiveHighlight(
                 x = pos.x.coerceIn(0f, size.width),
                 y = pos.y.coerceIn(0f, size.height),
             )
-            val spotColor = Color.White.copy(alpha = 0.12f * progress)
+            val spotColor = Color.White.copy(alpha = 0.04f * progress)
             drawRect(
                 brush = Brush.radialGradient(
                     colorStops = arrayOf(

@@ -87,19 +87,13 @@ data class LightSource(
 )
 
 /**
- * Edge bloom stroke shading model for [HighlightStyle].
+ * Edge bloom stroke shading model for [HighlightStyle]: rounded-rect SDF + 3D hemispheric
+ * rim normal lit by directional lights, with a flat stroke on top.
  *
- * The shader builds a rounded-rect SDF, derives a 3D hemispheric normal along the
- * rounded edge, and paints two directional lights — one occupying the upper hemisphere
- * and one the lower (via `dot((0, ∓1, 0), n)` cosine factors). A flat stroke color is
- * added on top to form the thin glassy outline.
- *
- * @property color Base color of the stroke; alpha drives the stroke brightness.
- * @property blendMode Compositing mode for the highlight layer; default is additive.
- * @property innerBlurRadius Soft halo extent in dp — the depth the lighting reaches
- *  inward from the rounded edge. Larger values produce wider, softer halos.
- * @property primaryLight Upper-hemisphere light.
- * @property secondaryLight Lower-hemisphere light.
+ * @property innerBlurRadius Inward halo depth in dp.
+ * @property dualPeak `false` (default) = each light makes one rim peak. `true` = each
+ *  light makes two 180°-opposed peaks via `dot(N.xy, L.xy)²`; pair with a zero-intensity
+ *  [secondaryLight] for an Apple-style specular sweep.
  */
 @Immutable
 data class BloomStroke(
@@ -114,6 +108,7 @@ data class BloomStroke(
         position = LightPosition(0.5f, 0.8f, -0.5f),
         intensity = 0.25f,
     ),
+    val dualPeak: Boolean = false,
 ) : HighlightStyle {
 
     override fun DrawScope.createShader(
@@ -134,6 +129,7 @@ data class BloomStroke(
         shader.setFloatUniform("strokeAlphaMul", color.alpha)
         applyLightUniforms(shader, "1", primaryLight)
         applyLightUniforms(shader, "2", secondaryLight)
+        shader.setFloatUniform("useDualPeak", if (dualPeak) 1f else 0f)
         return shader.asComposeShader()
     }
 

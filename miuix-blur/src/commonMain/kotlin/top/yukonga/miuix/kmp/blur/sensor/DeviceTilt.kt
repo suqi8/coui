@@ -9,23 +9,27 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 
 /**
- * Device tilt expressed as Euler angles in radians.
+ * Device tilt as Euler angles plus the screen-plane projection of the unit gravity vector.
  *
- * @property pitch Forward/backward tilt around the device X axis (in radians).
- *  Positive when the top edge tilts away from the user.
- * @property roll  Left/right tilt around the device Y axis (in radians).
- *  Positive when the right edge tilts toward the user.
+ * @property pitch Tilt around the device X axis (radians); positive = top tilts away.
+ * @property roll Tilt around the device Y axis (radians); positive = right tilts toward.
+ * @property gravityX Gravity X in device space (`+X` = right). Sweeps the unit circle
+ *  with `gravityY` as the device rotates around its screen normal — info Euler angles
+ *  lose. `0` when no sensor.
+ * @property gravityY Gravity Y in device space (`+Y` = top). `0` when no sensor.
  */
 @Immutable
 data class DeviceTilt(
     val pitch: Float,
     val roll: Float,
+    val gravityX: Float = 0f,
+    val gravityY: Float = 0f,
 ) {
 
     companion object {
 
         @Stable
-        val Zero: DeviceTilt = DeviceTilt(0f, 0f)
+        val Zero: DeviceTilt = DeviceTilt(0f, 0f, 0f, 0f)
     }
 }
 

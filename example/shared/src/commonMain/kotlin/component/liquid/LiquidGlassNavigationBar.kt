@@ -74,9 +74,13 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
 import top.yukonga.miuix.kmp.blur.blur
 import top.yukonga.miuix.kmp.blur.drawBackdrop
+import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import top.yukonga.miuix.kmp.blur.highlight.LightPosition
+import top.yukonga.miuix.kmp.blur.highlight.LightSource
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
+import top.yukonga.miuix.kmp.blur.sensor.rememberDeviceTilt
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
@@ -84,8 +88,58 @@ import ui.isInDarkTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import kotlin.math.sqrt
 
 private val LocalIosTabScale = staticCompositionLocalOf { { 1f } }
+
+private val iosIndicatorSpecular: Highlight = Highlight(
+    width = 1.dp,
+    alpha = 1f,
+    style = BloomStroke(
+        color = Color.White.copy(alpha = 0.08f),
+        innerBlurRadius = 2.0.dp,
+        primaryLight = LightSource(
+            position = LightPosition(0.5f, -0.3f, -0.05f),
+            color = Color.White,
+            intensity = 0.5f,
+        ),
+        dualPeak = true,
+    ),
+)
+
+// Mirrors HighlightStyle.kt's LIGHT_REF — keep in sync.
+private const val LIGHT_REF_X = 0.5f
+private const val LIGHT_REF_Y = 0.7f
+private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f // |g_xy| > 0.1, ≈ 6° tilt
+
+/** Rotates a `dualPeak` highlight's primary light to follow gravity; falls back to "from top" when flat. */
+@Composable
+private fun rememberGravityRotatedHighlight(base: Highlight): Highlight {
+    val baseStyle = base.style as BloomStroke
+    val tilt by rememberDeviceTilt()
+    val rotatedPrimary = remember(tilt, baseStyle.primaryLight) {
+        val basePrimary = baseStyle.primaryLight
+        val gx = tilt.gravityX
+        val gy = tilt.gravityY
+        val gMagSq = gx * gx + gy * gy
+        val (lx, ly) = if (gMagSq > GRAVITY_DIR_THRESHOLD_SQ) {
+            val invMag = 1f / sqrt(gMagSq)
+            (gx * invMag) to (gy * invMag)
+        } else {
+            0f to -1f
+        }
+        basePrimary.copy(
+            position = LightPosition(
+                x = LIGHT_REF_X + lx,
+                y = LIGHT_REF_Y + ly,
+                z = basePrimary.position.z,
+            ),
+        )
+    }
+    return remember(base, rotatedPrimary) {
+        base.copy(style = baseStyle.copy(primaryLight = rotatedPrimary))
+    }
+}
 
 @Composable
 internal fun IosLiquidGlassNavigationBar(
@@ -131,6 +185,7 @@ internal fun IosLiquidGlassNavigationBar(
     class DampedDragHolder {
         var instance: DampedDragAnimation? = null
     }
+
     val holder = remember { DampedDragHolder() }
 
     val dampedDrag = remember(animationScope, tabsCount, density, isLtr) {
@@ -207,9 +262,8 @@ internal fun IosLiquidGlassNavigationBar(
         )
     }
 
-    val baseHighlight = remember(isDark) {
-        if (isDark) Highlight.GlassStrokeSmallDark else Highlight.GlassStrokeSmallLight
-    }
+    val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular)
+
     val combinedBackdrop = backdrop?.let { rememberCombinedBackdrop(it, tabsBackdrop) }
 
     val navBarBottomPadding = WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
@@ -229,7 +283,6 @@ internal fun IosLiquidGlassNavigationBar(
         items.forEachIndexed { index, item ->
             Column(
                 modifier = Modifier
-                    .clip(pillShape)
                     .clickable(
                         interactionSource = null,
                         indication = null,
@@ -300,15 +353,16 @@ internal fun IosLiquidGlassNavigationBar(
                                 effects = {
                                     vibrancy()
                                     blur(
-                                        6.dp.toPx(),
-                                        6.dp.toPx(),
+                                        4.dp.toPx(),
+                                        4.dp.toPx(),
                                     )
                                     lens(
                                         refractionHeight = 24.dp.toPx(),
                                         refractionAmount = 24.dp.toPx(),
+                                        chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { baseHighlight },
+                                highlight = { baseHighlight.copy(alpha = 0.4f) },
                                 layerBlock = {
                                     val width = size.width.coerceAtLeast(1f)
                                     val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -344,18 +398,18 @@ internal fun IosLiquidGlassNavigationBar(
                                 backdrop = backdrop,
                                 shape = { pillShape },
                                 effects = {
-                                    val progress = dampedDrag.pressProgress
                                     vibrancy()
                                     blur(
-                                        6.dp.toPx(),
-                                        6.dp.toPx(),
+                                        4.dp.toPx(),
+                                        4.dp.toPx(),
                                     )
+                                    val progress = dampedDrag.pressProgress
                                     lens(
                                         refractionHeight = 24.dp.toPx() * progress,
                                         refractionAmount = 24.dp.toPx() * progress,
+                                        chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = dampedDrag.pressProgress) },
                                 onDrawSurface = { drawRect(containerColor) },
                             )
                             .then(interactiveHighlight.modifier)
@@ -390,9 +444,10 @@ internal fun IosLiquidGlassNavigationBar(
                                         refractionHeight = 10.dp.toPx() * progress,
                                         refractionAmount = 14.dp.toPx() * progress,
                                         depthEffect = true,
+                                        chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { Highlight.Default.copy(alpha = dampedDrag.pressProgress) },
+                                highlight = { baseHighlight.copy(alpha = dampedDrag.pressProgress) },
                                 layerBlock = {
                                     scaleX = dampedDrag.scaleX
                                     scaleY = dampedDrag.scaleY

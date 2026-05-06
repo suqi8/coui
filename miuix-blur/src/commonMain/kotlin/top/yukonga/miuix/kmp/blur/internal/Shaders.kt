@@ -152,9 +152,23 @@ internal const val DOWNSAMPLE_4X_SHADER = """
 
 /**
  * Edge bloom stroke shader. A rounded-rect SDF defines an outer mask + a stroke band,
- * then a 3D hemispheric normal is built along the rounded edge so that two directional
- * lights paint the inner halo. The two lights split the upper / lower hemisphere via
- * a `dot((0, ∓1, 0), n)` cosine factor.
+ * then a 3D hemispheric normal is built along the rounded edge so that the directional
+ * lights paint the inner halo.
+ *
+ * Two shading modes, selected per call by the `useDualPeak` uniform:
+ *
+ *  - `useDualPeak = 0` (default): each light's hemisphere is derived from its own
+ *    projected XY direction (`normalize(lightDir.xy)`); a positive cosine factor between
+ *    the rim normal and that hemisphere axis gates the light's contribution. Lights
+ *    pointing purely along Z fall back to the upper / lower split `(0, ∓1, 0)` for
+ *    backwards compatibility with overhead-only configurations. Single peak per light.
+ *
+ *  - `useDualPeak = 1`: each light contributes via `dot(N.xy, L.xy)²` (xy-only dot²),
+ *    so a single light produces two rim peaks 180° apart (where `n.xy` aligns and
+ *    anti-aligns with `L.xy`) and naturally drops to zero perpendicular to `L.xy` and
+ *    on the interior surface (where `n.xy → 0`). Matches the specular rim model used
+ *    by Apple-style Liquid Glass demos; pair with a zero-intensity second light to get
+ *    the canonical "two opposing peaks rotating with the light direction".
  *
  * Light directions are pre-normalized on the CPU side: `dir = normalize((srcX-0.5,
  * srcY-0.7, srcZ))`, where `(0.5, 0.7, 0)` is the reference origin.
@@ -180,6 +194,8 @@ uniform float lightIntensity1;
 uniform float3 lightDir2;
 layout(color) uniform half4 lightColor2;
 uniform float lightIntensity2;
+
+uniform float useDualPeak;
 
 float pickRadius(float2 fragCoord, float2 halfView, float4 radii) {
     float2 up = fragCoord.y < halfView.y ? radii.xy : radii.zw;
@@ -237,15 +253,32 @@ half4 main(float2 fragCoord) {
 
     float3 n = getNormal(fragCoord, halfView, sdf, R, innerBlurRadius);
 
-    // Native: c1.rgb = light1 * Lcolor.rgb * Lcolor.a; c1.a = light1
-    //         result += c1.rgb * c1.a = light1^2 * Lcolor.rgb * Lcolor.a
-    float falloff1 = max(dot(float3(0.0, -1.0, 0.0), n), 0.0);
-    float light1 = clamp(dot(n, lightDir1) * falloff1, 0.0, 1.0);
-    rgb += half(light1 * light1 * lightIntensity1) * lightColor1.rgb;
+    if (useDualPeak > 0.5) {
+        // 2D dot² model: only the xy components of the rim normal and light direction
+        // contribute, so a single light yields two rim peaks 180° apart (where n.xy
+        // aligns / anti-aligns with L.xy) and naturally drops to zero perpendicular to
+        // L.xy and on the interior surface (where n.xy → 0). Pair with a zero-intensity
+        // secondary to mirror the Apple-style single-rim specular sweep.
+        float l1 = dot(n.xy, lightDir1.xy);
+        rgb += half(l1 * l1 * lightIntensity1) * lightColor1.rgb;
+        float l2 = dot(n.xy, lightDir2.xy);
+        rgb += half(l2 * l2 * lightIntensity2) * lightColor2.rgb;
+    } else {
+        // Hemisphere axis follows each light's own xy direction so the rim peak rotates
+        // with the light. When the light is purely along Z (xy magnitude < 1e-3) we fall
+        // back to the canonical upper / lower split for backwards compatibility.
+        float xyLen1 = length(lightDir1.xy);
+        float2 axis1 = xyLen1 > 1e-3 ? lightDir1.xy / xyLen1 : float2(0.0, -1.0);
+        float falloff1 = max(dot(float3(axis1, 0.0), n), 0.0);
+        float light1 = clamp(dot(n, lightDir1) * falloff1, 0.0, 1.0);
+        rgb += half(light1 * light1 * lightIntensity1) * lightColor1.rgb;
 
-    float falloff2 = max(dot(float3(0.0, 1.0, 0.0), n), 0.0);
-    float light2 = clamp(dot(n, lightDir2) * falloff2, 0.0, 1.0);
-    rgb += half(light2 * light2 * lightIntensity2) * lightColor2.rgb;
+        float xyLen2 = length(lightDir2.xy);
+        float2 axis2 = xyLen2 > 1e-3 ? lightDir2.xy / xyLen2 : float2(0.0, 1.0);
+        float falloff2 = max(dot(float3(axis2, 0.0), n), 0.0);
+        float light2 = clamp(dot(n, lightDir2) * falloff2, 0.0, 1.0);
+        rgb += half(light2 * light2 * lightIntensity2) * lightColor2.rgb;
+    }
 
     return half4(rgb * half(highlightAlpha), 1.0) * outMask;
 }

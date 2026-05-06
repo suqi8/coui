@@ -12,12 +12,19 @@ import top.yukonga.miuix.kmp.blur.BackdropEffectScope
 import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.runtimeShaderEffect
 
-/** Rounded-rect refraction lens with optional chromatic dispersion. */
+/**
+ * Rounded-rect refraction lens with optional chromatic dispersion.
+ *
+ * @param chromaticAberration Strength of the rim chromatic dispersion. `0` disables the
+ *  effect (cheaper non-dispersion shader is used). Typical values: `0.1` for subtle,
+ *  `0.2` for Apple-pill-like, `0.3+` for pronounced rainbow halo. The dispersion offset
+ *  scales with the refraction depth so it concentrates at the rim band's outer edge.
+ */
 fun BackdropEffectScope.lens(
     refractionHeight: Float,
     refractionAmount: Float,
     depthEffect: Boolean = false,
-    chromaticAberration: Boolean = false,
+    chromaticAberration: Float = 0f,
 ) {
     if (!isRuntimeShaderSupported()) return
     if (refractionHeight <= 0f || refractionAmount <= 0f) return
@@ -28,13 +35,14 @@ fun BackdropEffectScope.lens(
 
     val radii = roundedRectCornerRadii() ?: return
 
+    val dispersionEnabled = chromaticAberration > 0f
     val shaderString =
-        if (chromaticAberration) {
+        if (dispersionEnabled) {
             ROUNDED_RECT_REFRACTION_WITH_DISPERSION_SHADER
         } else {
             ROUNDED_RECT_REFRACTION_SHADER
         }
-    val key = if (chromaticAberration) "LensDispersion" else "Lens"
+    val key = if (dispersionEnabled) "LiquidGlassLensDispersion" else "LiquidGlassLens"
 
     val sf = downscaleFactor.coerceAtLeast(1).toFloat()
     val scaledSizeW = size.width / sf
@@ -55,8 +63,8 @@ fun BackdropEffectScope.lens(
         setFloatUniform("refractionHeight", scaledRefractionHeight)
         setFloatUniform("refractionAmount", -scaledRefractionAmount)
         setFloatUniform("depthEffect", if (depthEffect) 1f else 0f)
-        if (chromaticAberration) {
-            setFloatUniform("chromaticAberration", 1f)
+        if (dispersionEnabled) {
+            setFloatUniform("chromaticAberration", chromaticAberration)
         }
     }
 }
@@ -120,7 +128,8 @@ uniform float depthEffect;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    return 1.0 - sqrt(1.0 - x * x);
+    float x2 = x * x;
+    return 1.0 - pow(1.0 - x2 * x2, 0.25);
 }
 
 half4 main(float2 coord) {
@@ -157,7 +166,8 @@ uniform float chromaticAberration;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    return 1.0 - sqrt(1.0 - x * x);
+    float x2 = x * x;
+    return 1.0 - pow(1.0 - x2 * x2, 0.25);
 }
 
 half4 main(float2 coord) {
@@ -176,8 +186,7 @@ half4 main(float2 coord) {
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
     float2 refractedCoord = coord + d * grad;
-    float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
-    float2 dispersedCoord = d * grad * dispersionIntensity;
+    float2 dispersedCoord = d * grad * chromaticAberration;
 
     half4 color = half4(0.0);
 

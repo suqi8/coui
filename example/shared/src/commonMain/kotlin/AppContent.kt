@@ -129,11 +129,11 @@ private object UIConstants {
     const val MAIN_PAGE_INDEX = 0
     const val ICON_PAGE_INDEX = 1
     const val COLOR_PAGE_INDEX = 2
-    const val DROPDOWN_PAGE_INDEX = 3
+    const val POPUP_PAGE_INDEX = 3
     const val PAGE_COUNT = 5
     const val GITHUB_URL = "https://github.com/compose-miuix-ui/miuix"
 
-    val PAGE_TITLES = listOf("Home", "Icon", "Color", "Dropdown", "Settings")
+    val PAGE_TITLES = listOf("Home", "Icon", "Color", "Popup", "Settings")
 }
 
 enum class FloatingNavigationBarAlignment(val value: Int) {
@@ -666,17 +666,10 @@ fun AppPager(
         verticalAlignment = Alignment.Top,
         pageContent = { page ->
             when (page) {
-                UIConstants.MAIN_PAGE_INDEX -> MainPage(
-                    snackbarHostState = snackbarHostState,
-                    padding = padding,
-                )
-
+                UIConstants.MAIN_PAGE_INDEX -> MainPage(snackbarHostState = snackbarHostState, padding = padding)
                 UIConstants.ICON_PAGE_INDEX -> IconsPage(padding = padding)
-
                 UIConstants.COLOR_PAGE_INDEX -> ColorPage(padding = padding)
-
-                UIConstants.DROPDOWN_PAGE_INDEX -> DropdownPage(padding = padding)
-
+                UIConstants.POPUP_PAGE_INDEX -> PopupPage(snackbarHostState = snackbarHostState, padding = padding)
                 else -> SettingsPage(padding = padding)
             }
         },

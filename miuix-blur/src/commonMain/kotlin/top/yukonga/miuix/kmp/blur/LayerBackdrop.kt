@@ -14,7 +14,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -23,7 +22,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.Density
 import top.yukonga.miuix.kmp.blur.internal.InverseLayerScope
-import kotlin.math.roundToInt
 
 private val DefaultOnDraw: ContentDrawScope.() -> Unit = { drawContent() }
 
@@ -89,16 +87,14 @@ class LayerBackdrop internal constructor(
             coordinates.positionInWindow() - layerCoordinates.positionInWindow()
         }
 
+        val consumerSize = (density as? BackdropEffectScope)?.size ?: size
+
         withTransform({
             if (layerBlock != null) {
-                with(obtainInverseLayerScope()) { inverseTransform(density, layerBlock) }
+                with(obtainInverseLayerScope()) { inverseTransform(density, consumerSize, layerBlock) }
             }
             if (downscaleFactor > 1) {
                 val inv = 1f / downscaleFactor
-                // Round to nearest even integer in downsampled space for stable
-                // rasterization. Even alignment ensures that subsequent cascade 2x
-                // steps (scale 0.5) also land on integer pixel boundaries.
-                // The residual provides smooth sub-pixel positioning after upscale.
                 val scaledX = offset.x * inv
                 val scaledY = offset.y * inv
                 val roundedX = kotlin.math.round(scaledX * 0.5f).toInt().toFloat() * 2f
@@ -116,12 +112,6 @@ class LayerBackdrop internal constructor(
             drawLayer(graphicsLayer)
         }
     }
-
-    /**
-     * Utility for [LayoutCoordinates.localPositionOf] that returns the position
-     * of [other] relative to this coordinate system.
-     */
-    private fun LayoutCoordinates.localPositionOf(other: LayoutCoordinates): Offset = localPositionOf(other, Offset.Zero)
 
     private fun obtainInverseLayerScope(): InverseLayerScope = inverseLayerScope?.apply { reset() }
         ?: InverseLayerScope().also { inverseLayerScope = it }

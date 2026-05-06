@@ -32,6 +32,8 @@ actual fun rememberDeviceTilt(smoothing: Float): State<DeviceTilt> {
         val orientation = FloatArray(3)
         var smoothPitch = 0f
         var smoothRoll = 0f
+        var smoothGravityX = 0f
+        var smoothGravityY = 0f
         var initialized = false
 
         val listener = object : SensorEventListener {
@@ -39,15 +41,27 @@ actual fun rememberDeviceTilt(smoothing: Float): State<DeviceTilt> {
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
                 SensorManager.getOrientation(rotationMatrix, orientation)
                 // orientation: [azimuth, pitch, roll] in radians
+                // Gravity in device space = R^T * (0, 0, -1)_world = -(R[2][0], R[2][1], R[2][2])
+                val gravityX = -rotationMatrix[6]
+                val gravityY = -rotationMatrix[7]
                 if (!initialized) {
                     smoothPitch = orientation[1]
                     smoothRoll = orientation[2]
+                    smoothGravityX = gravityX
+                    smoothGravityY = gravityY
                     initialized = true
                 } else {
                     smoothPitch += (orientation[1] - smoothPitch) * smoothing
                     smoothRoll += (orientation[2] - smoothRoll) * smoothing
+                    smoothGravityX += (gravityX - smoothGravityX) * smoothing
+                    smoothGravityY += (gravityY - smoothGravityY) * smoothing
                 }
-                tilt.value = DeviceTilt(smoothPitch, smoothRoll)
+                tilt.value = DeviceTilt(
+                    pitch = smoothPitch,
+                    roll = smoothRoll,
+                    gravityX = smoothGravityX,
+                    gravityY = smoothGravityY,
+                )
             }
 
             override fun onAccuracyChanged(s: Sensor?, a: Int) = Unit
