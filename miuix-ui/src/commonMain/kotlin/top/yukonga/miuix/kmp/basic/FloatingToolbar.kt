@@ -14,8 +14,9 @@ import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -46,29 +47,31 @@ fun FloatingToolbar(
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
-    val roundedCornerShape = RoundedCornerShape(cornerRadius)
+    val shape = RoundedCornerShape(cornerRadius)
     val dividerColor = MiuixTheme.colorScheme.dividerLine
 
-    val clipRequired = cornerRadius > 0.dp
-    val layerOrClipModifier = remember(shadowElevation, clipRequired, roundedCornerShape, density) {
+    val layerOrClipModifier = remember(shadowElevation, shape, density) {
         when {
-            shadowElevation > 0.dp -> Modifier.graphicsLayer(
-                shadowElevation = with(density) { shadowElevation.toPx() },
-                shape = roundedCornerShape,
-                clip = clipRequired,
-            )
-
-            clipRequired -> Modifier.clip(roundedCornerShape)
+            shadowElevation > 0.dp -> {
+                Modifier.dropShadow(
+                    shape = shape,
+                    shadow = Shadow(
+                        radius = 10.dp,
+                        color = Color.Black,
+                        alpha = 0.1f,
+                    ),
+                ).clip(shape)
+            }
 
             else -> Modifier
         }
     }
-    val dividerModifier = remember(showDivider, roundedCornerShape, dividerColor) {
+    val dividerModifier = remember(showDivider, shape, dividerColor) {
         if (showDivider) {
             Modifier
                 .background(
                     color = dividerColor,
-                    shape = roundedCornerShape,
+                    shape = shape,
                 )
                 .padding(0.75.dp)
         } else {
@@ -81,7 +84,7 @@ fun FloatingToolbar(
             .padding(outSidePadding)
             .then(dividerModifier)
             .then(layerOrClipModifier)
-            .background(color = color)
+            .background(color = color, shape = shape)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             },

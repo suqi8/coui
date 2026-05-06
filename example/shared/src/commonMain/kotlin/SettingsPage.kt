@@ -45,7 +45,6 @@ import kotlin.random.Random
 
 private val NavigationBarDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly", "IconWithSelectedLabel")
 private val NavigationRailDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly", "IconWithSelectedLabel")
-private val FloatingNavigationBarDisplayModeOptions = listOf("IconAndText", "IconOnly", "TextOnly")
 private val FloatingNavigationBarStyleOptions = listOf("Default", "iOS-like")
 private val FloatingNavigationBarPositionOptions = listOf("Center", "Start", "End")
 private val FloatingToolbarPositionOptions =
@@ -175,12 +174,6 @@ private fun SettingsContent(
                                     )
                                     AnimatedVisibility(visible = appState.floatingNavigationBarStyle == 0) {
                                         Column {
-                                            OverlayDropdownPreference(
-                                                title = "FloatingNavigationBar Mode",
-                                                items = FloatingNavigationBarDisplayModeOptions,
-                                                selectedIndex = appState.floatingNavigationBarMode,
-                                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarMode = it) } },
-                                            )
                                             OverlayDropdownPreference(
                                                 title = "FloatingNavigationBar Position",
                                                 items = FloatingNavigationBarPositionOptions,

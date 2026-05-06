@@ -28,7 +28,6 @@ HSPLtop/yukonga/miuix/kmp/basic/DropdownItem;->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/DropdownKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/ExitUntilCollapsedScrollBehavior;->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/FabPosition;->**(**)**
-HSPLtop/yukonga/miuix/kmp/basic/FloatingNavigationBarDisplayMode;->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/IconKt**->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/LabelAnimState;->**(**)**
 HSPLtop/yukonga/miuix/kmp/basic/LazyLineContentAdapter;->**(**)**

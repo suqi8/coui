@@ -2,7 +2,7 @@
 
 `NavigationBar` 是 Miuix 中的底部导航栏组件，用于在应用底部创建导航菜单，支持 2 到 5 个导航项，提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
 
-`FloatingNavigationBar` 是一个悬浮样式的底部导航栏组件，同样支持 2 到 5 个导航项，提供不同的显示模式。
+`FloatingNavigationBar` 是一个悬浮样式的底部导航栏组件，同样支持 2 到 5 个导航项，仅显示图标。
 
 这些组件通常与 `Scaffold` 组件结合使用，以便在应用程序的不同页面中保持一致的布局和行为。
 
@@ -18,7 +18,6 @@ import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDisplayMode
 ```
 
 ## 基本用法
@@ -59,9 +58,7 @@ val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Set
 
 Scaffold(
     bottomBar = {
-        FloatingNavigationBar(
-            mode = FloatingNavigationBarDisplayMode.IconOnly // 仅显示图标
-        ) {
+        FloatingNavigationBar {
             items.forEachIndexed { index, label ->
                 FloatingNavigationBarItem(
                     selected = selectedIndex == index,
@@ -79,7 +76,7 @@ Scaffold(
 
 ### 选中状态
 
-`NavigationBarItem` 和 `FloatingNavigationBarItem` 都会自动处理选中项的视觉样式，选中项将显示粗体文本并高亮图标/文本。
+`NavigationBarItem` 会自动处理选中项的视觉样式，选中项将显示粗体文本并高亮图标/文本。`FloatingNavigationBarItem` 在选中时高亮图标。
 
 ## 属性
 
@@ -117,8 +114,7 @@ Scaffold(
 | shadowElevation            | Dp                        | 导航栏的阴影高度                   | FloatingNavigationBarDefaults.ShadowElevation          | 否       |
 | showDivider                | Boolean                   | 是否显示导航栏周围的分割线         | false                                   | 否       |
 | defaultWindowInsetsPadding | Boolean                   | 是否应用默认窗口嵌入边距           | true                                    | 否       |
-| mode                       | FloatingNavigationBarDisplayMode | 导航项的显示模式（图标/文本/两者） | FloatingNavigationBarDisplayMode.IconOnly  | 否       |
-| content                    | @Composable RowScope.()   | 导航栏的内容                       | -                                       | 是       |
+| content                    | @Composable () -> Unit    | 导航栏的内容                       | -                                       | 是       |
 
 ### FloatingNavigationBarItem 属性
 
@@ -137,17 +133,17 @@ NavigationBarDefaults 对象提供了 NavigationBar 和 NavigationBarItem 组件
 
 #### 常量
 
-| 常量名               | 类型     | 说明                       | 默认值 |
-| -------------------- | -------- | -------------------------- | ------ |
-| ItemHeight           | Dp       | 非 iOS 平台的项目高度      | 64.dp  |
-| ItemHeightIOS        | Dp       | iOS 平台的项目高度         | 48.dp  |
-| IconSize             | Dp       | 图标尺寸                   | 26.dp  |
-| LabelFontSize        | TextUnit | 标签字号                   | 12.sp  |
-| IconTopPadding       | Dp       | 图标顶部内边距             | 8.dp   |
-| BottomPadding        | Dp       | 标签底部内边距             | 8.dp   |
-| SelectedPressedAlpha | Float    | 选中项按压时的透明度       | 0.5f   |
-| UnselectedPressedAlpha | Float  | 未选中项按压时的透明度     | 0.6f   |
-| UnselectedAlpha      | Float    | 未选中项的透明度           | 0.4f   |
+| 常量名                 | 类型     | 说明                       | 默认值 |
+| ---------------------- | -------- | -------------------------- | ------ |
+| ItemHeight             | Dp       | 项目高度                   | 64.dp  |
+| IconSize               | Dp       | 图标尺寸                   | 26.dp  |
+| TextFontSize           | TextUnit | 字号（TextOnly 模式）      | 14.sp  |
+| LabelFontSize          | TextUnit | 标签字号                   | 12.sp  |
+| IconTopPadding         | Dp       | 图标顶部内边距             | 8.dp   |
+| BottomPadding          | Dp       | 标签底部内边距             | 8.dp   |
+| SelectedPressedAlpha   | Float    | 选中项按压时的透明度       | 0.5f   |
+| UnselectedPressedAlpha | Float    | 未选中项按压时的透明度     | 0.6f   |
+| UnselectedAlpha        | Float    | 未选中项的透明度           | 0.4f   |
 
 ### FloatingNavigationBarDefaults 对象
 
@@ -155,23 +151,17 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 
 #### 常量
 
-| 常量名                   | 类型     | 说明                               | 默认值 |
-| ------------------------ | -------- | ---------------------------------- | ------ |
-| HorizontalOutSidePadding | Dp      | 外部水平内边距                     | 36.dp  |
-| ShadowElevation          | Dp      | 阴影高度                           | 1.dp   |
-| HorizontalPadding        | Dp      | 内部水平内边距                     | 12.dp  |
-| ItemSpacing              | Dp      | 项目间距                           | 12.dp  |
-| IconSize                 | Dp      | 图标尺寸（IconAndText 模式）       | 24.dp  |
-| LabelFontSize            | TextUnit| 标签字号（IconAndText 模式）       | 12.sp  |
-| VerticalPadding          | Dp      | 垂直内边距（IconAndText 模式）     | 6.dp   |
-| TextVerticalPadding      | Dp      | 垂直内边距（TextOnly 模式）        | 16.dp  |
-| TextHorizontalPadding    | Dp      | 水平内边距（TextOnly 模式）        | 2.dp   |
-| TextFontSize             | TextUnit| 字号（TextOnly 模式）              | 14.sp  |
-| IconOnlySize             | Dp      | 图标尺寸（IconOnly 模式）          | 28.dp  |
-| IconOnlyPadding          | Dp      | 内边距（IconOnly 模式）            | 10.dp  |
-| SelectedPressedAlpha     | Float   | 选中项按压时的透明度               | 0.5f   |
-| UnselectedPressedAlpha   | Float   | 未选中项按压时的透明度             | 0.6f   |
-| UnselectedAlpha          | Float   | 未选中项的透明度                   | 0.4f   |
+| 常量名                   | 类型  | 说明                       | 默认值 |
+| ------------------------ | ----- | -------------------------- | ------ |
+| HorizontalOutSidePadding | Dp    | 外部水平内边距             | 36.dp  |
+| ShadowElevation          | Dp    | 阴影高度                   | 1.dp   |
+| HorizontalPadding        | Dp    | 内部水平内边距             | 12.dp  |
+| ItemSpacing              | Dp    | 项目间距                   | 12.dp  |
+| IconSize                 | Dp    | 图标尺寸                   | 28.dp  |
+| IconPadding              | Dp    | 图标周围的内边距           | 10.dp  |
+| SelectedPressedAlpha     | Float | 选中项按压时的透明度       | 0.5f   |
+| UnselectedPressedAlpha   | Float | 未选中项按压时的透明度     | 0.6f   |
+| UnselectedAlpha          | Float | 未选中项的透明度           | 0.4f   |
 
 ### NavigationBarDisplayMode 枚举
 
@@ -181,14 +171,6 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 | IconOnly              | 仅显示图标             |
 | TextOnly              | 仅显示文本             |
 | IconWithSelectedLabel | 始终显示图标，仅选中时显示文本 |
-
-### FloatingNavigationBarDisplayMode 枚举
-
-| 值          | 说明           |
-| ----------- | -------------- |
-| IconAndText | 显示图标和文本 |
-| IconOnly    | 仅显示图标     |
-| TextOnly    | 仅显示文本     |
 
 ## 进阶用法
 
@@ -226,33 +208,12 @@ NavigationBar(
 
 ### FloatingNavigationBar
 
-#### 自定义模式（图标和文本）
-
-```kotlin
-FloatingNavigationBar(
-    mode = FloatingNavigationBarDisplayMode.IconAndText
-) {
-    // ... items ...
-}
-```
-
-#### 自定义模式（仅文本）
-
-```kotlin
-FloatingNavigationBar(
-    mode = FloatingNavigationBarDisplayMode.TextOnly
-) {
-    // ... items ...
-}
-```
-
 #### 自定义颜色和圆角
 
 ```kotlin
 FloatingNavigationBar(
     color = MiuixTheme.colorScheme.primaryContainer,
-    cornerRadius = 28.dp,
-    mode = FloatingNavigationBarDisplayMode.IconAndText
+    cornerRadius = 28.dp
 ) {
     // ... items ...
 }
@@ -263,8 +224,7 @@ FloatingNavigationBar(
 ```kotlin
 FloatingNavigationBar(
     horizontalAlignment = Alignment.Start, // 左对齐
-    horizontalOutSidePadding = 16.dp, // 设置外部边距
-    mode = FloatingNavigationBarDisplayMode.IconOnly
+    horizontalOutSidePadding = 16.dp // 设置外部边距
 ) {
     // ... items ...
 }
@@ -317,9 +277,7 @@ var selectedIndex by remember { mutableStateOf(0) }
 
 Scaffold(
     bottomBar = {
-        FloatingNavigationBar(
-            mode = FloatingNavigationBarDisplayMode.IconOnly // 仅显示图标
-        ) {
+        FloatingNavigationBar {
             pages.forEachIndexed { index, label ->
                 FloatingNavigationBarItem(
                     selected = selectedIndex == index,

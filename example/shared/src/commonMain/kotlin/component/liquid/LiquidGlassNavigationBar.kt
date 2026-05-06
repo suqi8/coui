@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -101,7 +101,7 @@ private val iosIndicatorSpecular: Highlight = Highlight(
         primaryLight = LightSource(
             position = LightPosition(0.5f, -0.3f, -0.05f),
             color = Color.White,
-            intensity = 0.5f,
+            intensity = 1f,
         ),
         dualPeak = true,
     ),
@@ -151,8 +151,7 @@ internal fun IosLiquidGlassNavigationBar(
     modifier: Modifier = Modifier,
 ) {
     val isDark = isInDarkTheme()
-    val isLight = !isDark
-    val pillShape = remember { RoundedCornerShape(percent = 50) }
+    val pillShape = remember { CircleShape }
     val accentColor = MiuixTheme.colorScheme.primary
     val tabContentColor = MiuixTheme.colorScheme.onSurface
     val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
@@ -267,15 +266,12 @@ internal fun IosLiquidGlassNavigationBar(
     val combinedBackdrop = backdrop?.let { rememberCombinedBackdrop(it, tabsBackdrop) }
 
     val navBarBottomPadding = WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
-
     val bottomPaddingValue = when (platform()) {
-        Platform.IOS -> WindowInsets.navigationBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+        Platform.IOS -> 20.dp
 
-        Platform.Android -> {
+        else -> {
             if (navBarBottomPadding != 0.dp) 8.dp + navBarBottomPadding else 36.dp
         }
-
-        else -> 36.dp
     }
 
     val tabsContent: @Composable RowScope.() -> Unit = {
@@ -320,7 +316,7 @@ internal fun IosLiquidGlassNavigationBar(
     Column(modifier = modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
-                .padding(bottom = bottomPaddingValue, start = 16.dp, end = 16.dp)
+                .padding(bottom = bottomPaddingValue, start = 24.dp, end = 24.dp)
                 .fillMaxWidth(),
             contentAlignment = Alignment.CenterStart,
         ) {
@@ -335,9 +331,9 @@ internal fun IosLiquidGlassNavigationBar(
                     .dropShadow(
                         shape = pillShape,
                         shadow = Shadow(
-                            radius = 12.dp,
+                            radius = 10.dp,
                             color = Color.Black,
-                            alpha = if (isDark) 0.3f else 0.1f,
+                            alpha = 0.2f,
                         ),
                     )
                     .clickable(
@@ -362,7 +358,7 @@ internal fun IosLiquidGlassNavigationBar(
                                         chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = 0.4f) },
+                                highlight = { baseHighlight.copy(alpha = 0.2f) },
                                 layerBlock = {
                                     val width = size.width.coerceAtLeast(1f)
                                     val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -373,7 +369,6 @@ internal fun IosLiquidGlassNavigationBar(
                             )
                         } else {
                             Modifier
-                                .clip(pillShape)
                                 .background(containerColor, pillShape)
                         },
                     )
@@ -458,7 +453,7 @@ internal fun IosLiquidGlassNavigationBar(
                                 onDrawSurface = {
                                     val progress = dampedDrag.pressProgress
                                     drawRect(
-                                        color = if (isLight) Color.Black.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.1f),
+                                        color = if (!isDark) Color.Black.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.1f),
                                         alpha = 1f - progress,
                                     )
                                     drawRect(Color.Black.copy(alpha = 0.03f * progress))

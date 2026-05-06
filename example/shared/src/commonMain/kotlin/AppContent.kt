@@ -83,7 +83,6 @@ import navigation3.Route
 import top.yukonga.miuix.kmp.basic.FabPosition
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
@@ -441,6 +440,7 @@ private fun NavigationBar(
     val blurActive = appState.enableBlur && backdrop != null
     val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
     val page = mainPagerState.selectedPage
+
     AnimatedVisibility(
         visible = appState.showNavigationBar,
         enter = fadeIn() + expandVertically(),
@@ -493,16 +493,12 @@ private fun NavigationBar(
                 }
             }
         }
-        AnimatedVisibility(
-            visible = appState.useFloatingNavigationBar,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
-        ) {
+        if (appState.useFloatingNavigationBar) {
             val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
             val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
             val isDark = isInDarkTheme()
             val floatingHighlight = remember(isDark) {
-                if (isDark) Highlight.GlassStrokeSmallDark else Highlight.GlassStrokeSmallLight
+                if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
             }
             Box(modifier = modifier) {
                 if (appState.floatingNavigationBarStyle == 1) {
@@ -531,7 +527,6 @@ private fun NavigationBar(
                             Modifier
                         },
                         color = floatingBarColor,
-                        mode = FloatingNavigationBarDisplayMode.entries[appState.floatingNavigationBarMode],
                         horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
                             .toAlignment(),
                     ) {

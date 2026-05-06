@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarDisplayMode
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
@@ -95,9 +94,7 @@ fun NavigationBarDemo() {
                 ) {
                     Scaffold(
                         bottomBar = {
-                            FloatingNavigationBar(
-                                mode = FloatingNavigationBarDisplayMode.IconOnly, // Show icons only
-                            ) {
+                            FloatingNavigationBar {
                                 items.forEachIndexed { index, item ->
                                     FloatingNavigationBarItem(
                                         selected = selectedIndex2 == index,
