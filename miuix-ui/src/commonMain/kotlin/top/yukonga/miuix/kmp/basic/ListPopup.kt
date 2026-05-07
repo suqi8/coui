@@ -99,8 +99,8 @@ fun ListPopupColumn(
                 }
                 val parentMin = constraints.minWidth
                 val parentMax = constraints.maxWidth
-                val lower = maxOf(minPx, parentMin)
                 val upper = maxOf(maxPx, parentMin).coerceAtMost(parentMax)
+                val lower = maxOf(minPx, parentMin).coerceAtMost(upper)
                 val listWidth = maxIntrinsic.coerceIn(lower, upper)
 
                 val childConstraints = constraints.copy(minWidth = listWidth, maxWidth = listWidth, minHeight = 0)
