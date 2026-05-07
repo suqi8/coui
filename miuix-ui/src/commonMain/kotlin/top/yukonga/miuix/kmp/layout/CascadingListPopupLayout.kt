@@ -23,13 +23,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -105,7 +103,6 @@ internal fun CascadingListPopupLayout(
     val arrowEndDeg = remember(layoutDirection) {
         if (layoutDirection == LayoutDirection.Ltr) -90f else 90f
     }
-    val haptic = LocalHapticFeedback.current
 
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
     val currentOnDismissFinished by rememberUpdatedState(onDismissFinished)
@@ -113,7 +110,6 @@ internal fun CascadingListPopupLayout(
     LaunchedEffect(show) {
         if (show) {
             internalVisible.value = true
-            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
             launch { enterFraction.animateTo(1f, ListPopupDefaults.FractionAnimationSpec) }
             launch { enterAlpha.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) }
             launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
