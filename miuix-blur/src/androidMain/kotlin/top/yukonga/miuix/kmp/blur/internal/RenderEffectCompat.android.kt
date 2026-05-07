@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import top.yukonga.miuix.kmp.blur.RuntimeShader
 import top.yukonga.miuix.kmp.blur.asAndroidRuntimeShader
 
-@RequiresApi(Build.VERSION_CODES.S)
 internal actual fun RenderEffect?.chain(other: RenderEffect): RenderEffect = if (this != null) {
     android.graphics.RenderEffect.createChainEffect(
         other.asAndroidRenderEffect(),
@@ -31,7 +30,6 @@ internal actual fun runtimeShaderEffect(
     uniformShaderName,
 ).asComposeRenderEffect()
 
-@RequiresApi(Build.VERSION_CODES.S)
 internal actual fun colorFilterEffect(
     renderEffect: RenderEffect?,
     colorFilter: ColorFilter,

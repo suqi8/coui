@@ -22,7 +22,7 @@ kotlin {
                     minorApiLevel = BuildConfig.COMPILE_SDK_MINOR
                 }
         }
-        minSdk = 31
+        minSdk = 32
         namespace = "${BuildConfig.LIBRARY_ID}.blur"
     }
 
