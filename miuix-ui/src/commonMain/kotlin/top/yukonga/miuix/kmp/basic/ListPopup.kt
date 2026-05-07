@@ -6,6 +6,7 @@ package top.yukonga.miuix.kmp.basic
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,11 +24,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Outline.Generic
-import androidx.compose.ui.graphics.Outline.Rectangle
-import androidx.compose.ui.graphics.Outline.Rounded
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -46,6 +45,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -72,7 +72,8 @@ private const val MAX_ITEMS_FOR_WIDTH = 8
 private const val MAX_ITEMS_FOR_HEIGHT = 8
 
 /**
- * A column that automatically aligns the width to the widest item
+ * A column that automatically aligns the width to the widest item.
+ *
  * @param content The items
  */
 @Composable
@@ -87,25 +88,30 @@ fun ListPopupColumn(
                 measurables: List<Measurable>,
                 constraints: Constraints,
             ): MeasureResult {
-                var maxWidth = 0
-                measurables.take(min(MAX_ITEMS_FOR_WIDTH, measurables.size)).forEach { measurable ->
-                    val w = measurable.maxIntrinsicWidth(constraints.maxHeight)
-                    if (w > maxWidth) maxWidth = w
+                val minPx = 200.dp.roundToPx()
+                val maxPx = 288.dp.roundToPx()
+                val widthCount = min(MAX_ITEMS_FOR_WIDTH, measurables.size)
+                var maxIntrinsic = 0
+                for (i in 0 until widthCount) {
+                    val w = measurables[i].maxIntrinsicWidth(constraints.maxHeight)
+                    if (w > maxIntrinsic) maxIntrinsic = w
                 }
-                val listWidth = maxWidth.coerceIn(200.dp.roundToPx(), 288.dp.roundToPx())
+                val listWidth = maxIntrinsic.coerceIn(minPx, maxPx)
 
                 val childConstraints = constraints.copy(minWidth = listWidth, maxWidth = listWidth, minHeight = 0)
 
                 val placeables = ArrayList<Placeable>(measurables.size)
-                measurables.forEach { measurable ->
-                    val p = measurable.measure(childConstraints)
+                var listHeight = 0
+                for (i in measurables.indices) {
+                    val p = measurables[i].measure(childConstraints)
                     placeables.add(p)
+                    listHeight += p.height
                 }
-                val listHeight = placeables.sumOf { it.height }
 
                 return layout(listWidth, listHeight) {
                     var currentY = 0
-                    placeables.forEach { p ->
+                    for (i in placeables.indices) {
+                        val p = placeables[i]
                         p.placeRelative(0, currentY)
                         currentY += p.height
                     }
@@ -116,16 +122,20 @@ fun ListPopupColumn(
                 measurables: List<IntrinsicMeasurable>,
                 width: Int,
             ): Int {
-                var maxWidth = 0
-                measurables.take(min(MAX_ITEMS_FOR_WIDTH, measurables.size)).forEach { measurable ->
-                    val w = measurable.maxIntrinsicWidth(Int.MAX_VALUE)
-                    if (w > maxWidth) maxWidth = w
+                val minPx = 200.dp.roundToPx()
+                val maxPx = 288.dp.roundToPx()
+                val widthCount = min(MAX_ITEMS_FOR_WIDTH, measurables.size)
+                var maxIntrinsic = 0
+                for (i in 0 until widthCount) {
+                    val w = measurables[i].maxIntrinsicWidth(Int.MAX_VALUE)
+                    if (w > maxIntrinsic) maxIntrinsic = w
                 }
-                val listWidth = maxWidth.coerceIn(200.dp.roundToPx(), 288.dp.roundToPx())
+                val listWidth = maxIntrinsic.coerceIn(minPx, maxPx)
 
+                val heightCount = min(MAX_ITEMS_FOR_HEIGHT, measurables.size)
                 var height = 0
-                measurables.take(min(MAX_ITEMS_FOR_HEIGHT, measurables.size)).forEach { m ->
-                    height += m.minIntrinsicHeight(listWidth)
+                for (i in 0 until heightCount) {
+                    height += measurables[i].minIntrinsicHeight(listWidth)
                 }
                 return height
             }
@@ -135,6 +145,7 @@ fun ListPopupColumn(
     Layout(
         content = content,
         modifier = Modifier
+            .focusGroup()
             .height(IntrinsicSize.Min)
             .verticalScroll(state = scrollState),
         measurePolicy = measurePolicy,
@@ -147,7 +158,8 @@ interface PopupPositionProvider {
      * Calculate the position (offset) of Popup
      *
      * @param anchorBounds Bounds of the anchored (parent) component
-     * @param windowBounds Bounds of the safe area of window (excluding the [WindowInsets.Companion.statusBars], [WindowInsets.Companion.navigationBars] and [WindowInsets.Companion.captionBar])
+     * @param windowBounds Bounds of the safe area of window (excluding the [WindowInsets.Companion.statusBars],
+     *   [WindowInsets.Companion.navigationBars] and [WindowInsets.Companion.captionBar])
      * @param layoutDirection [LayoutDirection]
      * @param popupContentSize Actual size of the popup content
      * @param popupMargin (Extra) Margins for the popup content. See [PopupPositionProvider.getMargins]
@@ -188,7 +200,12 @@ object ListPopupDefaults {
     val DimExitAnimationSpec = tween<Float>(durationMillis = 150, easing = SinOutEasing)
     val ResetAnimationSpec = spring(dampingRatio = 0.82f, stiffness = 362.5f, visibilityThreshold = 0.0001f)
 
-    val DropdownPositionProvider = object : PopupPositionProvider {
+    fun dropdownPositionProvider(
+        verticalMargin: Dp = 8.dp,
+        horizontalMargin: Dp = 0.dp,
+    ): PopupPositionProvider = object : PopupPositionProvider {
+        private val margins = PaddingValues(horizontal = horizontalMargin, vertical = verticalMargin)
+
         override fun calculatePosition(
             anchorBounds: IntRect,
             windowBounds: IntRect,
@@ -224,8 +241,11 @@ object ListPopupDefaults {
             )
         }
 
-        override fun getMargins(): PaddingValues = PaddingValues(horizontal = 0.dp, vertical = 8.dp)
+        override fun getMargins(): PaddingValues = margins
     }
+
+    val DropdownPositionProvider: PopupPositionProvider = dropdownPositionProvider()
+
     val ContextMenuPositionProvider = object : PopupPositionProvider {
         override fun calculatePosition(
             anchorBounds: IntRect,
@@ -293,10 +313,7 @@ object ListPopupDefaults {
     }
 }
 
-/**
- * Ensure TransformOrigin is available.
- */
-fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
+internal fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
     val safeX = if (x.isNaN() || x < 0f) 0f else x
     val safeY = if (y.isNaN() || y < 0f) 0f else y
     return TransformOrigin(safeX, safeY)
@@ -333,13 +350,14 @@ fun rememberListPopupLayoutInfo(
     val navigationBars = WindowInsets.navigationBars
     val captionBar = WindowInsets.captionBar
 
-    val popupMargin = remember(layoutDirection, density, popupPositionProvider) {
+    val margins = popupPositionProvider.getMargins()
+    val popupMargin = remember(layoutDirection, density, margins) {
         with(density) {
             IntRect(
-                left = popupPositionProvider.getMargins().calculateLeftPadding(layoutDirection).roundToPx(),
-                top = popupPositionProvider.getMargins().calculateTopPadding().roundToPx(),
-                right = popupPositionProvider.getMargins().calculateRightPadding(layoutDirection).roundToPx(),
-                bottom = popupPositionProvider.getMargins().calculateBottomPadding().roundToPx(),
+                left = margins.calculateLeftPadding(layoutDirection).roundToPx(),
+                top = margins.calculateTopPadding().roundToPx(),
+                right = margins.calculateRightPadding(layoutDirection).roundToPx(),
+                bottom = margins.calculateBottomPadding().roundToPx(),
             )
         }
     }
@@ -444,15 +462,10 @@ fun rememberListPopupLayoutInfo(
 
     val effectiveTransformOrigin = remember(
         popupContentSize,
-        alignment,
-        layoutDirection,
-        popupMargin,
-        parentBounds,
-        windowBounds,
-        popupPositionProvider,
         calculatedOffset,
         popupLayoutPosition,
         containerSize,
+        predictedTransformOrigin,
     ) {
         if (popupContentSize == IntSize.Zero) {
             predictedTransformOrigin
@@ -515,9 +528,8 @@ fun ListPopupContent(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val density = LocalDensity.current
-
-    val shape = RoundedCornerShape(16.dp)
+    val shape = remember { RoundedCornerShape(16.dp) }
+    val backgroundColor = MiuixTheme.colorScheme.surfaceContainer
 
     Box(
         modifier = modifier
@@ -540,43 +552,51 @@ fun ListPopupContent(
                     this.shape = shape
                     clip = true
                 }
-                .drawWithContent {
-                    val progress = fractionProgress()
-                    val (showBelow, showAbove, _) = popupLayoutPosition
-                    val size = this.size
+                .drawWithCache {
+                    val path = Path()
+                    onDrawWithContent {
+                        val progress = fractionProgress()
+                        val height = size.height
+                        val showBelow = popupLayoutPosition.showBelow
+                        val showAbove = popupLayoutPosition.showAbove
 
-                    val clipTop = when {
-                        showAbove -> size.height * (1f - progress)
-                        else -> 0f
-                    }
-                    val clipBottom = when {
-                        showBelow -> size.height * progress
-                        showAbove -> size.height
-                        else -> size.height * (0.5f + 0.5f * progress)
-                    }
-                    val clipStart = if (!showBelow && !showAbove) size.height * (0.5f - 0.5f * progress) else clipTop
-                    val currentHeight = clipBottom - clipStart
-
-                    if (currentHeight > 0f) {
-                        val visibleSize = Size(size.width, currentHeight)
-                        val outline = shape.createOutline(visibleSize, layoutDirection, density)
-
-                        translate(top = clipStart) {
-                            val path = when (outline) {
-                                is Rectangle -> Path().apply { addRect(outline.rect) }
-                                is Rounded -> Path().apply { addRoundRect(outline.roundRect) }
-                                is Generic -> outline.path
+                        val clipTop = if (showAbove) height * (1f - progress) else 0f
+                        val clipBottom = when {
+                            showBelow -> height * progress
+                            showAbove -> height
+                            else -> height * (0.5f + 0.5f * progress)
+                        }
+                        val clipStart =
+                            if (!showBelow && !showAbove) {
+                                height * (0.5f - 0.5f * progress)
+                            } else {
+                                clipTop
                             }
+                        val visibleHeight = clipBottom - clipStart
 
-                            clipPath(path) {
-                                translate(top = -clipStart) {
-                                    this@drawWithContent.drawContent()
+                        if (visibleHeight > 0f) {
+                            val outline = shape.createOutline(
+                                Size(size.width, visibleHeight),
+                                layoutDirection,
+                                this,
+                            )
+                            path.rewind()
+                            when (outline) {
+                                is Outline.Rectangle -> path.addRect(outline.rect)
+                                is Outline.Rounded -> path.addRoundRect(outline.roundRect)
+                                is Outline.Generic -> path.addPath(outline.path)
+                            }
+                            translate(top = clipStart) {
+                                clipPath(path) {
+                                    translate(top = -clipStart) {
+                                        this@onDrawWithContent.drawContent()
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                .background(MiuixTheme.colorScheme.surfaceContainer, shape),
+                .background(backgroundColor, shape),
         ) {
             content()
         }

@@ -4,7 +4,6 @@
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,8 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,7 +29,10 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlendModeColorFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowUpDown
@@ -36,13 +40,15 @@ import top.yukonga.miuix.kmp.icon.basic.Check
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
+@NonRestartableComposable
 fun RowScope.DropdownArrowEndAction(
     actionColor: Color,
+    modifier: Modifier = Modifier,
 ) {
     val colorFilter = remember(actionColor) { ColorFilter.tint(actionColor) }
     Image(
-        modifier = Modifier
-            .size(10.dp, 16.dp)
+        modifier = modifier
+            .size(width = DropdownDefaults.ArrowSize.width, height = DropdownDefaults.ArrowSize.height)
             .align(Alignment.CenterVertically),
         imageVector = MiuixIcons.Basic.ArrowUpDown,
         colorFilter = colorFilter,
@@ -73,14 +79,25 @@ fun DropdownImpl(
     dialogMode: Boolean = false,
     onSelectedIndexChange: (Int) -> Unit,
 ) {
-    val additionalTopPadding = if (!dialogMode && index == 0) 20.dp else 12.dp
-    val additionalBottomPadding = if (!dialogMode && index == optionSize - 1) 20.dp else 12.dp
+    val additionalTopPadding =
+        if (!dialogMode && index == 0) {
+            DropdownDefaults.FirstLastVerticalPadding
+        } else {
+            DropdownDefaults.MiddleVerticalPadding
+        }
+    val additionalBottomPadding =
+        if (!dialogMode && index == optionSize - 1) {
+            DropdownDefaults.FirstLastVerticalPadding
+        } else {
+            DropdownDefaults.MiddleVerticalPadding
+        }
 
     val backgroundColor = if (isSelected) {
         dropdownColors.selectedContainerColor
     } else {
         dropdownColors.containerColor
     }
+    val backgroundColorState = rememberUpdatedState(backgroundColor)
 
     val checkColor = when {
         !isSelected -> Color.Transparent
@@ -100,41 +117,42 @@ fun DropdownImpl(
         else -> dropdownColors.summaryColor
     }
 
+    val containerModifier = remember(dialogMode, additionalTopPadding, additionalBottomPadding) {
+        val sized = if (dialogMode) {
+            Modifier
+                .heightIn(min = DropdownDefaults.MinHeight)
+                .widthIn(min = DropdownDefaults.MinWidth)
+                .fillMaxWidth()
+                .padding(horizontal = DropdownDefaults.DialogHorizontalPadding)
+        } else {
+            Modifier.padding(horizontal = DropdownDefaults.InsideHorizontalPadding)
+        }
+        sized.padding(top = additionalTopPadding, bottom = additionalBottomPadding)
+    }
+    val innerRowModifier = remember(dialogMode) {
+        if (dialogMode) Modifier else Modifier.widthIn(max = DropdownDefaults.MaxItemTextWidth)
+    }
+
     val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
-            .drawBehind { drawRect(backgroundColor) }
-            .clickable(enabled = enabled) { currentOnSelectedIndexChange(index) }
-            .then(
-                if (dialogMode) {
-                    Modifier
-                        .heightIn(min = 56.dp)
-                        .widthIn(min = 200.dp)
-                        .fillMaxWidth()
-                        .padding(horizontal = 28.dp)
-                } else {
-                    Modifier.padding(horizontal = 20.dp)
-                },
+            .drawBehind { drawRect(backgroundColorState.value) }
+            .selectable(
+                selected = isSelected,
+                enabled = enabled,
+                role = Role.RadioButton,
+                onClick = { currentOnSelectedIndexChange(index) },
             )
-            .padding(
-                top = additionalTopPadding,
-                bottom = additionalBottomPadding,
-            ),
+            .then(containerModifier),
     ) {
         Row(
-            modifier = if (dialogMode) Modifier else Modifier.widthIn(max = 216.dp),
+            modifier = innerRowModifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
-            item.icon?.let {
-                it(
-                    Modifier
-                        .sizeIn(minWidth = 26.dp, minHeight = 26.dp)
-                        .padding(end = 12.dp),
-                )
-            }
+            item.icon?.let { it(IconCellModifier) }
             Column {
                 Text(
                     text = item.text,
@@ -156,9 +174,7 @@ fun DropdownImpl(
             BlendModeColorFilter(checkColor, BlendMode.SrcIn)
         }
         Image(
-            modifier = Modifier
-                .padding(start = 12.dp)
-                .size(20.dp),
+            modifier = CheckIconBaseModifier,
             imageVector = MiuixIcons.Basic.Check,
             colorFilter = checkColorFilter,
             contentDescription = null,
@@ -167,6 +183,7 @@ fun DropdownImpl(
 }
 
 @Composable
+@NonRestartableComposable
 fun DropdownImpl(
     text: String,
     optionSize: Int,
@@ -201,6 +218,15 @@ fun DropdownImpl(
  * @param dialogMode whether the spinner is in dialog mode.
  * @param onSelectedIndexChange the callback to be invoked when the selected index of the spinner is changed.
  */
+@Deprecated(
+    message = "Use DropdownImpl instead. SpinnerItemImpl is a thin alias kept for compatibility.",
+    replaceWith = ReplaceWith(
+        "DropdownImpl(item = entry, optionSize = entryCount, isSelected = isSelected, " +
+            "index = index, dropdownColors = spinnerColors, enabled = entry.enabled, " +
+            "dialogMode = dialogMode, onSelectedIndexChange = onSelectedIndexChange)",
+    ),
+    level = DeprecationLevel.WARNING,
+)
 @Composable
 fun SpinnerItemImpl(
     entry: DropdownItem,
@@ -296,6 +322,41 @@ data class DropdownItem(
 }
 
 object DropdownDefaults {
+    /** Minimum row height when the dropdown is shown in dialog mode. */
+    val MinHeight: Dp = 56.dp
+
+    /** Minimum row width when the dropdown is shown in dialog mode. */
+    val MinWidth: Dp = 200.dp
+
+    /** Size of the trailing check icon shown on the selected option. */
+    val CheckIconSize: Dp = 20.dp
+
+    /** Size of the up-down arrow rendered by [DropdownArrowEndAction]. */
+    val ArrowSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
+
+    /** Minimum size of the leading icon cell. */
+    val IconMinSize: Dp = 26.dp
+
+    /** Maximum width of the inner text/icon row when the dropdown is shown in popup mode. */
+    val MaxItemTextWidth: Dp = 216.dp
+
+    /** Horizontal padding of each row in popup mode. */
+    val InsideHorizontalPadding: Dp = 20.dp
+
+    /** Horizontal padding of each row in dialog mode. */
+    val DialogHorizontalPadding: Dp = 28.dp
+
+    /** Top/bottom padding applied to the first/last row in popup mode. */
+    val FirstLastVerticalPadding: Dp = 20.dp
+
+    /** Top/bottom padding applied to middle rows in popup mode and to all rows in dialog mode. */
+    val MiddleVerticalPadding: Dp = 12.dp
+
+    /** Padding between the leading icon cell and the title text. */
+    val IconEndPadding: Dp = 12.dp
+
+    /** Padding between the title/summary block and the trailing check icon. */
+    val CheckIconStartPadding: Dp = 12.dp
 
     @Composable
     fun dropdownColors(
@@ -306,25 +367,15 @@ object DropdownDefaults {
         selectedSummaryColor: Color = MiuixTheme.colorScheme.primary,
         selectedContainerColor: Color = MiuixTheme.colorScheme.surfaceContainer,
         selectedIndicatorColor: Color = MiuixTheme.colorScheme.primary,
-    ): DropdownColors = remember(
-        contentColor,
-        summaryColor,
-        containerColor,
-        selectedContentColor,
-        selectedSummaryColor,
-        selectedContainerColor,
-        selectedIndicatorColor,
-    ) {
-        DropdownColors(
-            contentColor = contentColor,
-            summaryColor = summaryColor,
-            containerColor = containerColor,
-            selectedContentColor = selectedContentColor,
-            selectedSummaryColor = selectedSummaryColor,
-            selectedContainerColor = selectedContainerColor,
-            selectedIndicatorColor = selectedIndicatorColor,
-        )
-    }
+    ): DropdownColors = rememberDropdownColorsImpl(
+        contentColor = contentColor,
+        summaryColor = summaryColor,
+        containerColor = containerColor,
+        selectedContentColor = selectedContentColor,
+        selectedSummaryColor = selectedSummaryColor,
+        selectedContainerColor = selectedContainerColor,
+        selectedIndicatorColor = selectedIndicatorColor,
+    )
 
     @Composable
     fun dialogDropdownColors(
@@ -335,7 +386,7 @@ object DropdownDefaults {
         selectedSummaryColor: Color = MiuixTheme.colorScheme.onTertiaryContainer,
         selectedContainerColor: Color = MiuixTheme.colorScheme.tertiaryContainer,
         selectedIndicatorColor: Color = MiuixTheme.colorScheme.onTertiaryContainer,
-    ): DropdownColors = dropdownColors(
+    ): DropdownColors = rememberDropdownColorsImpl(
         contentColor = contentColor,
         summaryColor = summaryColor,
         containerColor = containerColor,
@@ -345,6 +396,43 @@ object DropdownDefaults {
         selectedIndicatorColor = selectedIndicatorColor,
     )
 }
+
+@Composable
+private fun rememberDropdownColorsImpl(
+    contentColor: Color,
+    summaryColor: Color,
+    containerColor: Color,
+    selectedContentColor: Color,
+    selectedSummaryColor: Color,
+    selectedContainerColor: Color,
+    selectedIndicatorColor: Color,
+): DropdownColors = remember(
+    contentColor,
+    summaryColor,
+    containerColor,
+    selectedContentColor,
+    selectedSummaryColor,
+    selectedContainerColor,
+    selectedIndicatorColor,
+) {
+    DropdownColors(
+        contentColor = contentColor,
+        summaryColor = summaryColor,
+        containerColor = containerColor,
+        selectedContentColor = selectedContentColor,
+        selectedSummaryColor = selectedSummaryColor,
+        selectedContainerColor = selectedContainerColor,
+        selectedIndicatorColor = selectedIndicatorColor,
+    )
+}
+
+private val CheckIconBaseModifier = Modifier
+    .padding(start = DropdownDefaults.CheckIconStartPadding)
+    .size(DropdownDefaults.CheckIconSize)
+
+private val IconCellModifier = Modifier
+    .sizeIn(minWidth = DropdownDefaults.IconMinSize, minHeight = DropdownDefaults.IconMinSize)
+    .padding(end = DropdownDefaults.IconEndPadding)
 
 @Deprecated(
     message = "Use DropdownDefaults instead.",
