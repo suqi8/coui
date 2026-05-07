@@ -292,22 +292,6 @@ private fun SettingsContent(
                     )
                 }
             }
-            item(key = "settingsNavigation") {
-                Card(
-                    modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                ) {
-                    ArrowPreference(
-                        title = "Navigate Test",
-                        summary = "Navigate to a Navigate Test Page",
-                        onClick = { navigator.push(Route.NavTest(Random.nextLong().toString())) },
-                    )
-                    ArrowPreference(
-                        title = "Multi-Scaffold Test",
-                        summary = "Test popup positioning with side-by-side Scaffolds",
-                        onClick = { navigator.push(Route.MultiScaffoldTest) },
-                    )
-                }
-            }
             item(key = "settingsAbout") {
                 Card(
                     modifier = Modifier.padding(horizontal = 12.dp),

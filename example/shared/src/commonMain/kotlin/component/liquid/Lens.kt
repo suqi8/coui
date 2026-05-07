@@ -128,8 +128,7 @@ uniform float depthEffect;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    float x2 = x * x;
-    return 1.0 - pow(1.0 - x2 * x2, 0.25);
+    return 1.0 - sqrt(1.0 - x * x);
 }
 
 half4 main(float2 coord) {
@@ -166,8 +165,7 @@ uniform float chromaticAberration;
 $ROUNDED_RECT_SDF
 
 float circleMap(float x) {
-    float x2 = x * x;
-    return 1.0 - pow(1.0 - x2 * x2, 0.25);
+    return 1.0 - sqrt(1.0 - x * x);
 }
 
 half4 main(float2 coord) {
@@ -186,7 +184,8 @@ half4 main(float2 coord) {
     float2 grad = normalize(gradSdRoundedRect(centeredCoord, halfSize, gradRadius) + depthEffect * normalize(centeredCoord));
 
     float2 refractedCoord = coord + d * grad;
-    float2 dispersedCoord = d * grad * chromaticAberration;
+    float dispersionIntensity = chromaticAberration * ((centeredCoord.x * centeredCoord.y) / (halfSize.x * halfSize.y));
+    float2 dispersedCoord = d * grad * dispersionIntensity;
 
     half4 color = half4(0.0);
 

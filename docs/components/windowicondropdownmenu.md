@@ -166,6 +166,7 @@ All other parameters are identical to the entries overload above.
 | onClick       | (() -> Unit)?                     | Callback invoked when the item is clicked                | null          | No       |
 | icon          | @Composable ((Modifier) -> Unit)? | Icon shown before the item text                          | null          | No       |
 | summary       | String?                           | Summary text shown below the item text                   | null          | No       |
+| children      | List\<DropdownItem>?              | Optional submenu items; cascading variants only          | null          | No       |
 
 ### DropdownColors Properties
 

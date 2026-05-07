@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
@@ -96,7 +97,11 @@ fun ListPopupColumn(
                     val w = measurables[i].maxIntrinsicWidth(constraints.maxHeight)
                     if (w > maxIntrinsic) maxIntrinsic = w
                 }
-                val listWidth = maxIntrinsic.coerceIn(minPx, maxPx)
+                val parentMin = constraints.minWidth
+                val parentMax = constraints.maxWidth
+                val lower = maxOf(minPx, parentMin)
+                val upper = maxOf(maxPx, parentMin).coerceAtMost(parentMax)
+                val listWidth = maxIntrinsic.coerceIn(lower, upper)
 
                 val childConstraints = constraints.copy(minWidth = listWidth, maxWidth = listWidth, minHeight = 0)
 
@@ -552,53 +557,65 @@ fun ListPopupContent(
                     this.shape = shape
                     clip = true
                 }
-                .drawWithCache {
-                    val path = Path()
-                    onDrawWithContent {
-                        val progress = fractionProgress()
-                        val height = size.height
-                        val showBelow = popupLayoutPosition.showBelow
-                        val showAbove = popupLayoutPosition.showAbove
-
-                        val clipTop = if (showAbove) height * (1f - progress) else 0f
-                        val clipBottom = when {
-                            showBelow -> height * progress
-                            showAbove -> height
-                            else -> height * (0.5f + 0.5f * progress)
-                        }
-                        val clipStart =
-                            if (!showBelow && !showAbove) {
-                                height * (0.5f - 0.5f * progress)
-                            } else {
-                                clipTop
-                            }
-                        val visibleHeight = clipBottom - clipStart
-
-                        if (visibleHeight > 0f) {
-                            val outline = shape.createOutline(
-                                Size(size.width, visibleHeight),
-                                layoutDirection,
-                                this,
-                            )
-                            path.rewind()
-                            when (outline) {
-                                is Outline.Rectangle -> path.addRect(outline.rect)
-                                is Outline.Rounded -> path.addRoundRect(outline.roundRect)
-                                is Outline.Generic -> path.addPath(outline.path)
-                            }
-                            translate(top = clipStart) {
-                                clipPath(path) {
-                                    translate(top = -clipStart) {
-                                        this@onDrawWithContent.drawContent()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                .popupClipReveal(fractionProgress, popupLayoutPosition, shape)
                 .background(backgroundColor, shape),
         ) {
             content()
+        }
+    }
+}
+
+/**
+ * Directional clip-reveal used during popup enter/exit. The visible band grows along the popup's
+ * spawn direction encoded by [popupLayoutPosition] as [fractionProgress] moves 0 → 1: from the top
+ * when shown below the anchor, from the bottom when shown above, and outwards from the center
+ * otherwise. The band is shaped by [shape] so the rounded corners stay aligned during reveal.
+ */
+internal fun Modifier.popupClipReveal(
+    fractionProgress: () -> Float,
+    popupLayoutPosition: PopupLayoutPosition,
+    shape: Shape,
+): Modifier = drawWithCache {
+    val path = Path()
+    onDrawWithContent {
+        val progress = fractionProgress()
+        val height = size.height
+        val showBelow = popupLayoutPosition.showBelow
+        val showAbove = popupLayoutPosition.showAbove
+
+        val clipTop = if (showAbove) height * (1f - progress) else 0f
+        val clipBottom = when {
+            showBelow -> height * progress
+            showAbove -> height
+            else -> height * (0.5f + 0.5f * progress)
+        }
+        val clipStart =
+            if (!showBelow && !showAbove) {
+                height * (0.5f - 0.5f * progress)
+            } else {
+                clipTop
+            }
+        val visibleHeight = clipBottom - clipStart
+
+        if (visibleHeight > 0f) {
+            val outline = shape.createOutline(
+                Size(size.width, visibleHeight),
+                layoutDirection,
+                this,
+            )
+            path.rewind()
+            when (outline) {
+                is Outline.Rectangle -> path.addRect(outline.rect)
+                is Outline.Rounded -> path.addRoundRect(outline.roundRect)
+                is Outline.Generic -> path.addPath(outline.path)
+            }
+            translate(top = clipStart) {
+                clipPath(path) {
+                    translate(top = -clipStart) {
+                        this@onDrawWithContent.drawContent()
+                    }
+                }
+            }
         }
     }
 }

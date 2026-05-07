@@ -166,6 +166,7 @@ WindowIconDropdownMenu(
 | onClick  | (() -> Unit)?                     | 点击选项时触发的回调         | null   | 否       |
 | icon     | @Composable ((Modifier) -> Unit)? | 显示在选项文本前的图标       | null   | 否       |
 | summary  | String?                           | 显示在选项文本下方的摘要文本 | null   | 否       |
+| children | List\<DropdownItem>?              | 可选的子菜单项；仅级联变体   | null   | 否       |
 
 ### DropdownColors 属性
 

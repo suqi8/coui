@@ -36,7 +36,6 @@ import component.highlight.rememberContainerHighlight
 import org.jetbrains.compose.resources.painterResource
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.SmallTitle
@@ -117,7 +116,9 @@ private fun BlurDemo() {
             .padding(horizontal = 12.dp),
     ) {
         // Preview area
-        Card {
+        Card(
+            modifier = Modifier.padding(bottom = 12.dp),
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,14 +169,7 @@ private fun BlurDemo() {
                     }
                 }
             }
-        }
 
-        Spacer(Modifier.height(12.dp))
-
-        // Controls
-        Card(
-            modifier = Modifier.padding(bottom = 12.dp),
-        ) {
             OverlayDropdownPreference(
                 title = "Blend Mode",
                 items = blendModeItems,
@@ -307,7 +301,7 @@ private fun ForegroundBlurDemo() {
         modifier = Modifier.padding(horizontal = 12.dp),
     ) {
         Card(
-            colors = CardDefaults.defaultColors(Color.Transparent),
+            modifier = Modifier.padding(bottom = 12.dp),
         ) {
             BgEffectBackground(
                 dynamicBackground = dynamicBackground.value,
@@ -343,12 +337,7 @@ private fun ForegroundBlurDemo() {
                         ),
                 )
             }
-        }
 
-        Spacer(Modifier.height(12.dp))
-
-        // Controls
-        Card {
             val effectVariantOptions = listOf("OS2", "OS3")
             OverlayDropdownPreference(
                 title = "Effect Variant",

@@ -115,7 +115,6 @@ import top.yukonga.miuix.kmp.icon.extended.Image
 import top.yukonga.miuix.kmp.icon.extended.Link
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.Sort
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import ui.isInDarkTheme
 import utils.BlurredBar
@@ -128,11 +127,10 @@ private object UIConstants {
     const val MAIN_PAGE_INDEX = 0
     const val ICON_PAGE_INDEX = 1
     const val COLOR_PAGE_INDEX = 2
-    const val POPUP_PAGE_INDEX = 3
-    const val PAGE_COUNT = 5
+    const val PAGE_COUNT = 4
     const val GITHUB_URL = "https://github.com/compose-miuix-ui/miuix"
 
-    val PAGE_TITLES = listOf("Home", "Icon", "Color", "Popup", "Settings")
+    val PAGE_TITLES = listOf("Home", "Icon", "Color", "Settings")
 }
 
 enum class FloatingNavigationBarAlignment(val value: Int) {
@@ -166,10 +164,11 @@ fun AppContent(
         SerializersModule {
             polymorphic(NavKey::class) {
                 subclass(Route.Main::class)
+                subclass(Route.PullToRefresh::class)
                 subclass(Route.About::class)
                 subclass(Route.License::class)
-                subclass(Route.NavTest::class)
-                subclass(Route.MultiScaffoldTest::class)
+                subclass(Route.Navigation::class)
+                subclass(Route.MultiScaffold::class)
             }
         }
     }
@@ -191,8 +190,7 @@ fun AppContent(
             NavigationItem(UIConstants.PAGE_TITLES[0], MiuixIcons.HorizontalSplit),
             NavigationItem(UIConstants.PAGE_TITLES[1], MiuixIcons.Create),
             NavigationItem(UIConstants.PAGE_TITLES[2], MiuixIcons.Image),
-            NavigationItem(UIConstants.PAGE_TITLES[3], MiuixIcons.Sort),
-            NavigationItem(UIConstants.PAGE_TITLES[4], MiuixIcons.Settings),
+            NavigationItem(UIConstants.PAGE_TITLES[3], MiuixIcons.Settings),
         )
     }
 
@@ -214,20 +212,23 @@ fun AppContent(
                         mainPagerState = mainPagerState,
                     )
                 }
+                entry<Route.PullToRefresh> {
+                    PullToRefreshPage(padding = padding)
+                }
                 entry<Route.About> {
                     AboutPage(padding = padding)
                 }
                 entry<Route.License> {
                     LicensePage(padding = padding)
                 }
-                entry<Route.NavTest> { route ->
-                    val index = backStack.filterIsInstance<Route.NavTest>().indexOf(route) + 1
+                entry<Route.Navigation> { route ->
+                    val index = backStack.filterIsInstance<Route.Navigation>().indexOf(route) + 1
                     NavTestPage(
                         index = index,
                         padding = padding,
                     )
                 }
-                entry<Route.MultiScaffoldTest> {
+                entry<Route.MultiScaffold> {
                     MultiScaffoldTestPage(padding = padding)
                 }
             }
@@ -664,7 +665,6 @@ fun AppPager(
                 UIConstants.MAIN_PAGE_INDEX -> MainPage(snackbarHostState = snackbarHostState, padding = padding)
                 UIConstants.ICON_PAGE_INDEX -> IconsPage(padding = padding)
                 UIConstants.COLOR_PAGE_INDEX -> ColorPage(padding = padding)
-                UIConstants.POPUP_PAGE_INDEX -> PopupPage(snackbarHostState = snackbarHostState, padding = padding)
                 else -> SettingsPage(padding = padding)
             }
         },

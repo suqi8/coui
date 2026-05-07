@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.icon.basic.ArrowUpDown
 import top.yukonga.miuix.kmp.icon.basic.Check
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -66,6 +67,8 @@ fun RowScope.DropdownArrowEndAction(
  * @param dropdownColors The [DropdownColors] used to style the option row.
  * @param enabled Whether the option is clickable. Disabled rows ignore clicks and use the disabled text color.
  * @param dialogMode Whether the item is shown in dialog mode.
+ * @param hasSubmenu When true, this row acts as a submenu trigger: a trailing chevron is shown
+ *   instead of the selection check, and the row's accessibility role becomes [Role.Button].
  * @param onSelectedIndexChange The callback invoked with [index] when the option is selected.
  */
 @Composable
@@ -77,6 +80,7 @@ fun DropdownImpl(
     dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     enabled: Boolean = item.enabled,
     dialogMode: Boolean = false,
+    hasSubmenu: Boolean = false,
     onSelectedIndexChange: (Int) -> Unit,
 ) {
     val additionalTopPadding =
@@ -134,6 +138,7 @@ fun DropdownImpl(
     }
 
     val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
+    val role = if (hasSubmenu) Role.Button else Role.RadioButton
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -142,7 +147,7 @@ fun DropdownImpl(
             .selectable(
                 selected = isSelected,
                 enabled = enabled,
-                role = Role.RadioButton,
+                role = role,
                 onClick = { currentOnSelectedIndexChange(index) },
             )
             .then(containerModifier),
@@ -170,15 +175,35 @@ fun DropdownImpl(
             }
         }
 
-        val checkColorFilter = remember(checkColor) {
-            BlendModeColorFilter(checkColor, BlendMode.SrcIn)
+        if (hasSubmenu) {
+            // Chevron uses the softer summaryColor so the trigger row doesn't visually
+            // compete with selected/leaf items. The chevron is intentionally static —
+            // only the cloned header in the secondary popup rotates during expansion.
+            val chevronColor = when {
+                !enabled -> MiuixTheme.colorScheme.disabledOnSecondaryVariant
+                isSelected -> dropdownColors.selectedContentColor
+                else -> dropdownColors.summaryColor
+            }
+            val chevronColorFilter = remember(chevronColor) {
+                BlendModeColorFilter(chevronColor, BlendMode.SrcIn)
+            }
+            Image(
+                modifier = ChevronIconBaseModifier,
+                imageVector = MiuixIcons.Basic.ArrowRight,
+                colorFilter = chevronColorFilter,
+                contentDescription = null,
+            )
+        } else {
+            val checkColorFilter = remember(checkColor) {
+                BlendModeColorFilter(checkColor, BlendMode.SrcIn)
+            }
+            Image(
+                modifier = CheckIconBaseModifier,
+                imageVector = MiuixIcons.Basic.Check,
+                colorFilter = checkColorFilter,
+                contentDescription = null,
+            )
         }
-        Image(
-            modifier = CheckIconBaseModifier,
-            imageVector = MiuixIcons.Basic.Check,
-            colorFilter = checkColorFilter,
-            contentDescription = null,
-        )
     }
 }
 
@@ -294,9 +319,13 @@ data class DropdownEntry(
  * @param text Text shown for the item.
  * @param enabled Whether the item can be clicked.
  * @param selected Whether the item is selected.
- * @param onClick Callback invoked when the item is clicked.
+ * @param onClick Callback invoked when the item is clicked. Ignored when [children] is non-null
+ *   and non-empty (the click is consumed by the cascading layer to expand the submenu).
  * @param icon Optional icon shown before [text].
  * @param summary Optional summary shown below [text].
+ * @param children Optional submenu items. When non-null and non-empty, this item becomes a
+ *   submenu trigger: cascading dropdown popups render a chevron and open a child popup on click,
+ *   recursively. Stabilize this list (e.g. via `remember`) to avoid unnecessary recomposition.
  */
 @Stable
 data class DropdownItem(
@@ -306,6 +335,7 @@ data class DropdownItem(
     val onClick: (() -> Unit)? = null,
     val icon: @Composable ((Modifier) -> Unit)? = null,
     val summary: String? = null,
+    val children: List<DropdownItem>? = null,
 ) {
     /**
      * [SpinnerEntry] compatibility
@@ -333,6 +363,9 @@ object DropdownDefaults {
 
     /** Size of the up-down arrow rendered by [DropdownArrowEndAction]. */
     val ArrowSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
+
+    /** Size of the trailing chevron shown on rows that own a submenu. */
+    val ChevronSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
 
     /** Minimum size of the leading icon cell. */
     val IconMinSize: Dp = 26.dp
@@ -429,6 +462,10 @@ private fun rememberDropdownColorsImpl(
 private val CheckIconBaseModifier = Modifier
     .padding(start = DropdownDefaults.CheckIconStartPadding)
     .size(DropdownDefaults.CheckIconSize)
+
+private val ChevronIconBaseModifier = Modifier
+    .padding(start = DropdownDefaults.CheckIconStartPadding)
+    .size(width = DropdownDefaults.ChevronSize.width, height = DropdownDefaults.ChevronSize.height)
 
 private val IconCellModifier = Modifier
     .sizeIn(minWidth = DropdownDefaults.IconMinSize, minHeight = DropdownDefaults.IconMinSize)

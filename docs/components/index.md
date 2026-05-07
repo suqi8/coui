@@ -53,16 +53,20 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [CheckboxPreference](../components/checkboxpreference)         | Checkbox component based on BasicComponent                                               | Multiple selection, terms agreement    |
 | [RadioButtonPreference](../components/radiobuttonpreference)   | Radio button component based on BasicComponent                                           | Exclusive choices, option selection    |
 | [OverlayListPopup](../components/overlaylistpopup)             | List popup component based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`) | Option selection, feature list         |
+| [OverlayCascadingListPopup](../components/overlaycascadinglistpopup) | Two-level cascading list popup (uses MiuixPopupUtils; requires `Scaffold`)               | Submenus, grouped action panels        |
 | [OverlayDropdownPreference](../components/overlaydropdownpreference) | Dropdown selector based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`)    | Option selection, feature list         |
 | [OverlaySpinnerPreference](../components/overlayspinnerpreference) | Advanced selector based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`)    | Advanced options, feature list         |
 | [OverlayDropdownMenu](../components/overlaydropdownmenu)       | Action menu based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`)          | Action menus, multi-select choices     |
 | [OverlayIconDropdownMenu](../components/overlayicondropdownmenu) | Icon-button action menu (uses MiuixPopupUtils; requires `Scaffold`)                      | Toolbar actions, overflow menu         |
+| [OverlayIconCascadingDropdownMenu](../components/overlayiconcascadingdropdownmenu) | Icon-button cascading two-level menu (uses MiuixPopupUtils; requires `Scaffold`)         | Toolbar actions with submenus          |
 | [OverlayBottomSheet](../components/overlaybottomsheet)         | Bottom sheet based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`)         | Bottom drawer, additional options      |
 | [OverlayDialog](../components/overlaydialog)                   | Dialog window based on BasicComponent (uses MiuixPopupUtils; requires `Scaffold`)        | Prompts, action confirmation           |
 | [WindowListPopup](../components/windowlistpopup)     | Window-level list popup component                                                        | Option selection, feature list         |
+| [WindowCascadingListPopup](../components/windowcascadinglistpopup) | Window-level two-level cascading list popup                                              | Submenus, grouped action panels        |
 | [WindowDropdownPreference](../components/windowdropdownpreference) | Window-level dropdown selector component                                                 | Option selection, feature list         |
 | [WindowSpinnerPreference](../components/windowspinnerpreference)   | Window-level advanced selector component                                                 | Advanced options, feature list         |
 | [WindowDropdownMenu](../components/windowdropdownmenu) | Window-level action menu component                                                       | Action menus, multi-select choices     |
 | [WindowIconDropdownMenu](../components/windowicondropdownmenu) | Window-level icon-button action menu component                                           | Toolbar actions, overflow menu         |
+| [WindowIconCascadingDropdownMenu](../components/windowiconcascadingdropdownmenu) | Window-level icon-button cascading two-level menu                                        | Toolbar actions with submenus          |
 | [WindowBottomSheet](../components/windowbottomsheet) | Window-level bottom sheet component                                                      | Bottom drawer, additional options      |
 | [WindowDialog](../components/windowdialog)           | Window-level dialog component                                                            | Prompts, action confirmation           |

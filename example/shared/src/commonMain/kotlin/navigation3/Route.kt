@@ -16,14 +16,17 @@ sealed interface Route : NavKey {
     data object Main : Route
 
     @Serializable
+    data object PullToRefresh : Route
+
+    @Serializable
     data object About : Route
 
     @Serializable
     data object License : Route
 
     @Serializable
-    data class NavTest(val id: String) : Route
+    data class Navigation(val id: String) : Route
 
     @Serializable
-    data object MultiScaffoldTest : Route
+    data object MultiScaffold : Route
 }

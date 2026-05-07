@@ -129,8 +129,8 @@ fun NavTestPage(
                     ) {
                         val navigator = LocalNavigator.current
                         ArrowPreference(
-                            title = "Push another Navigate Test Page",
-                            onClick = { navigator.push(Route.NavTest(Random.nextLong().toString())) },
+                            title = "Push another Navigation Page",
+                            onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
                         )
                     }
                 }

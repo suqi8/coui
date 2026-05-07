@@ -62,9 +62,11 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.DecelerateEasing
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.getRoundedCorner
+import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
  * Internal shared layout logic for [OverlayDialog] and [WindowDialog].

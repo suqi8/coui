@@ -39,8 +39,10 @@ import top.yukonga.miuix.kmp.basic.ListPopupContent
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.rememberListPopupLayoutInfo
+import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.LocalDismissState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowListPopup
 
 /**
  * Internal shared layout logic for [OverlayListPopup] and [WindowListPopup].

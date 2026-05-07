@@ -357,7 +357,7 @@ internal fun IosLiquidGlassNavigationBar(
                                         refractionAmount = 24.dp.toPx(),
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = 0.4f) },
+                                highlight = { baseHighlight.copy(alpha = 0.5f) },
                                 layerBlock = {
                                     val width = size.width.coerceAtLeast(1f)
                                     val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)

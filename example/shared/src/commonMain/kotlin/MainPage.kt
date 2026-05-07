@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,8 +45,12 @@ import component.snackbarSection
 import component.spinnerSection
 import component.switchSection
 import component.tabRowSection
+import component.testPageSection
 import component.textFieldSection
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -56,7 +61,13 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.VerticalScrollBar
 import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
 import top.yukonga.miuix.kmp.blur.layerBackdrop
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.SelectAll
+import top.yukonga.miuix.kmp.icon.extended.Sort
+import top.yukonga.miuix.kmp.icon.extended.Tune
 import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
+import top.yukonga.miuix.kmp.menu.OverlayIconCascadingDropdownMenu
+import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
@@ -89,6 +100,147 @@ fun MainPage(
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val lazyListState = rememberLazyListState()
 
+    var selectedIndex1 by remember { mutableIntStateOf(0) }
+    var selectedIndex2 by remember { mutableIntStateOf(1) }
+    var selectedIndex3 by remember { mutableIntStateOf(2) }
+    val optionItems = remember(
+        selectedIndex1,
+        selectedIndex2,
+        selectedIndex3,
+    ) {
+        listOf(
+            DropdownEntry(
+                items = listOf("Selection A-1", "Selection A-2")
+                    .mapIndexed { index, text ->
+                        DropdownItem(
+                            text = text,
+                            selected = selectedIndex1 == index,
+                            onClick = { selectedIndex1 = index },
+                        )
+                    },
+            ),
+            DropdownEntry(
+                items = listOf("Selection B-1", "Selection B-2", "Selection B-3")
+                    .mapIndexed { index, text ->
+                        DropdownItem(
+                            text = text,
+                            selected = selectedIndex2 == index,
+                            onClick = { selectedIndex2 = index },
+                        )
+                    },
+            ),
+            DropdownEntry(
+                items = listOf("Selection C-1", "Selection C-2", "Selection C-3", "Selection C-4")
+                    .mapIndexed { index, text ->
+                        DropdownItem(
+                            text = text,
+                            selected = selectedIndex3 == index,
+                            onClick = { selectedIndex3 = index },
+                        )
+                    },
+            ),
+        )
+    }
+    var cascadingSortIndex by remember { mutableIntStateOf(0) }
+    var cascadingViewIndex by remember { mutableIntStateOf(0) }
+    var cascadingFilterIndex by remember { mutableIntStateOf(0) }
+    val cascadingEntries = remember(
+        cascadingSortIndex,
+        cascadingViewIndex,
+        cascadingFilterIndex,
+    ) {
+        val sortLabels = listOf("Sort by capture date", "Sort by date added")
+        val viewLabels = listOf("Group by date", "Compact")
+        val filterLabels = listOf("All items", "Camera album")
+        listOf(
+            DropdownEntry(
+                items = sortLabels.mapIndexed { idx, label ->
+                    DropdownItem(
+                        text = label,
+                        selected = cascadingSortIndex == idx,
+                        onClick = { cascadingSortIndex = idx },
+                    )
+                },
+            ),
+            DropdownEntry(
+                items = listOf(
+                    DropdownItem(
+                        text = "View mode",
+                        children = viewLabels.mapIndexed { idx, label ->
+                            DropdownItem(
+                                text = label,
+                                selected = cascadingViewIndex == idx,
+                                onClick = { cascadingViewIndex = idx },
+                            )
+                        },
+                    ),
+                    DropdownItem(
+                        text = "Filter",
+                        children = filterLabels.mapIndexed { idx, label ->
+                            DropdownItem(
+                                text = label,
+                                selected = cascadingFilterIndex == idx,
+                                onClick = { cascadingFilterIndex = idx },
+                            )
+                        },
+                    ),
+                ),
+            ),
+        )
+    }
+    var multiSelectedItems by remember {
+        mutableStateOf(
+            setOf(
+                "Multi selection A-1",
+                "Multi selection B-2",
+                "Multi selection B-3",
+            ),
+        )
+    }
+    val multiSelectItems = remember(multiSelectedItems) {
+        listOf(
+            DropdownEntry(
+                items = listOf(
+                    "Multi selection A-1",
+                    "Multi selection A-2",
+                ).map { text ->
+                    DropdownItem(
+                        text = text,
+                        selected = text in multiSelectedItems,
+                        onClick = {
+                            multiSelectedItems =
+                                if (text in multiSelectedItems) {
+                                    multiSelectedItems - text
+                                } else {
+                                    multiSelectedItems + text
+                                }
+                        },
+                    )
+                },
+            ),
+            DropdownEntry(
+                items = listOf(
+                    "Multi selection B-1",
+                    "Multi selection B-2",
+                    "Multi selection B-3",
+                ).map { text ->
+                    DropdownItem(
+                        text = text,
+                        selected = text in multiSelectedItems,
+                        onClick = {
+                            multiSelectedItems =
+                                if (text in multiSelectedItems) {
+                                    multiSelectedItems - text
+                                } else {
+                                    multiSelectedItems + text
+                                }
+                        },
+                    )
+                },
+            ),
+        )
+    }
+
     Scaffold(
         topBar = {
             BlurredBar(backdrop, blurActive) {
@@ -98,6 +250,35 @@ fun MainPage(
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    actions = {
+                        OverlayIconCascadingDropdownMenu(
+                            entries = cascadingEntries,
+                            collapseOnSelection = true,
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Tune,
+                                contentDescription = "Tune",
+                            )
+                        }
+                        OverlayIconDropdownMenu(
+                            entries = optionItems,
+                            collapseOnSelection = false,
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Sort,
+                                contentDescription = "Sort",
+                            )
+                        }
+                        OverlayIconDropdownMenu(
+                            entries = multiSelectItems,
+                            collapseOnSelection = false,
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.SelectAll,
+                                contentDescription = "SelectAll",
+                            )
+                        }
+                    },
                 )
             }
         },
@@ -178,6 +359,7 @@ fun MainPage(
                     colorPickerSection()
                     cardSection()
                     blurSection()
+                    testPageSection()
                     item { Spacer(modifier = Modifier.height(12.dp)) }
                 }
             }
