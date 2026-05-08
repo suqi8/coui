@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -52,10 +54,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -96,7 +102,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param endAction Optional [Composable] to display on the end side of the title.
  * @param enableWindowDim Whether to dim the window behind the bottom sheet.
  * @param onDismissRequest The callback when the user tries to dismiss the bottom sheet.
- * @param onDismissFinished The callback when the bottom sheet is completely dismissed.
+ * @param onDismissFinished Invoked when the hide animation completes; not invoked if the hide
+ *   is cancelled mid-flight (e.g., by [show] toggling back to true).
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding.
  * @param allowDismiss Whether to allow dismissing the sheet via drag or back gesture.
  * @param enableNestedScroll Whether to enable nested scrolling for the content.
@@ -207,18 +214,22 @@ internal fun BottomSheetContentLayout(
             },
         )
 
-        LaunchedEffect(navigationEventState.transitionState, allowDismiss) {
-            val transitionState = navigationEventState.transitionState
-            if (
-                transitionState is NavigationEventTransitionState.InProgress &&
-                transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
-            ) {
-                val maxOffset = if (sheetHeightPx.intValue > 0) sheetHeightPx.intValue.toFloat() else 500f
-                val offset = transitionState.latestEvent.progress * maxOffset
-                val finalOffset = if (!allowDismiss) offset * 0.1f else offset
-                dragSnapChannel.trySend(finalOffset)
-                if (allowDismiss) dimAlpha.floatValue = 1f - transitionState.latestEvent.progress
-            }
+        LaunchedEffect(allowDismiss) {
+            // Collect inside a single coroutine so the per-frame `transitionState` ticks during a
+            // back gesture do not cancel/relaunch the LaunchedEffect on every progress update.
+            snapshotFlow { navigationEventState.transitionState }
+                .collect { transitionState ->
+                    if (
+                        transitionState is NavigationEventTransitionState.InProgress &&
+                        transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+                    ) {
+                        val maxOffset = if (sheetHeightPx.intValue > 0) sheetHeightPx.intValue.toFloat() else 500f
+                        val offset = transitionState.latestEvent.progress * maxOffset
+                        val finalOffset = if (!allowDismiss) offset * 0.1f else offset
+                        dragSnapChannel.trySend(finalOffset)
+                        if (allowDismiss) dimAlpha.floatValue = 1f - transitionState.latestEvent.progress
+                    }
+                }
         }
 
         if (enableWindowDim) {
@@ -235,7 +246,9 @@ internal fun BottomSheetContentLayout(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
+                // Key on `allowDismiss` so the gesture coroutine restarts with the latest closure
+                // when the consumer toggles it; otherwise the in-flight detector keeps the stale value.
+                .pointerInput(allowDismiss) {
                     detectTapGestures(
                         onTap = {
                             if (allowDismiss) {
@@ -243,6 +256,14 @@ internal fun BottomSheetContentLayout(
                             }
                         },
                     )
+                }
+                .semantics {
+                    if (allowDismiss) {
+                        onClick(label = "Dismiss") {
+                            requestDismiss()
+                            true
+                        }
+                    }
                 },
             contentAlignment = Alignment.BottomCenter,
         ) {
@@ -370,6 +391,10 @@ internal fun BottomSheetContent(
             settlingJob.value = coroutineScope.launch {
                 val currentOffset = dragOffsetY.value
                 val dismissThresholdPx = with(density) { 150.dp.toPx() }
+                // Velocity comes from gesture pipeline as px/s; the threshold is intentionally
+                // expressed as a dp value converted to px so the trigger feels equivalent across
+                // densities (higher-density screens both demand and produce proportionally larger
+                // px/s values, which roughly cancels out).
                 val velocityThresholdPx = with(density) { 800.dp.toPx() }
                 val windowHeightPx = with(density) { currentWindowHeight.toPx() }
 
@@ -522,8 +547,8 @@ internal fun BottomSheetContent(
 @Composable
 private fun BottomSheetColumn(
     title: String?,
-    startAction: @Composable (() -> Unit?)?,
-    endAction: @Composable (() -> Unit?)?,
+    startAction: (@Composable () -> Unit)?,
+    endAction: (@Composable () -> Unit)?,
     backgroundColor: Color,
     cornerRadius: Dp,
     sheetMaxWidth: Dp,
@@ -546,25 +571,21 @@ private fun BottomSheetColumn(
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
-    val topCornerShape = RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
-    val overscrollOffsetPx by remember { derivedStateOf { (-dragOffsetY.value).coerceAtLeast(0f) } }
+    val imeInsets = WindowInsets.ime
+    val topCornerShape = remember(cornerRadius) {
+        RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)
+    }
 
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.BottomCenter,
     ) {
-        // Background fill for the area revealed when dragging up (overscroll effect)
-        if (overscrollOffsetPx > 0f) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .widthIn(max = sheetMaxWidth)
-                    .fillMaxWidth()
-                    .height(with(density) { overscrollOffsetPx.toDp() } + 1.dp)
-                    .padding(horizontal = outsideMargin.width)
-                    .background(backgroundColor),
-            )
-        }
+        OverscrollBackground(
+            dragOffsetY = dragOffsetY,
+            sheetMaxWidth = sheetMaxWidth,
+            outsideMargin = outsideMargin,
+            backgroundColor = backgroundColor,
+        )
 
         Column(
             modifier = modifier
@@ -575,7 +596,12 @@ private fun BottomSheetColumn(
                 .wrapContentHeight()
                 .heightIn(max = windowHeight - topInset)
                 .onGloballyPositioned { coordinates ->
-                    sheetHeightPx.intValue = coordinates.size.height
+                    // Only capture the natural sheet height while the IME is closed; otherwise the
+                    // bottom inset added by imePadding would inflate sheetHeightPx, shifting the
+                    // dim threshold and causing translationY jumps mid-animation.
+                    if (imeInsets.getBottom(density) == 0) {
+                        sheetHeightPx.intValue = coordinates.size.height
+                    }
                 }
                 .then(if (defaultWindowInsetsPadding) Modifier.imePadding() else Modifier)
                 .padding(horizontal = outsideMargin.width)
@@ -605,6 +631,59 @@ private fun BottomSheetColumn(
     }
 }
 
+/**
+ * Renders the elastic background fill that follows the sheet upward when the user
+ * drags past the top of its contents (negative `dragOffsetY`). Lives in its own
+ * composable so the only state it reads — `dragOffsetY.value` — invalidates this
+ * subtree alone, leaving the surrounding [BottomSheetColumn] free of per-frame
+ * recomposition during a drag.
+ */
+@Composable
+private fun BoxScope.OverscrollBackground(
+    dragOffsetY: Animatable<Float, *>,
+    sheetMaxWidth: Dp,
+    outsideMargin: DpSize,
+    backgroundColor: Color,
+) {
+    val density = LocalDensity.current
+    val overscrollOffsetPx by remember { derivedStateOf { (-dragOffsetY.value).coerceAtLeast(0f) } }
+    if (overscrollOffsetPx > 0f) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .widthIn(max = sheetMaxWidth)
+                .fillMaxWidth()
+                .height(with(density) { overscrollOffsetPx.toDp() } + 1.dp)
+                .padding(horizontal = outsideMargin.width)
+                .background(backgroundColor),
+        )
+    }
+}
+
+private fun CoroutineScope.animateHandlePressDown(
+    pressScale: Animatable<Float, *>,
+    pressWidth: Animatable<Float, *>,
+) {
+    launch { pressScale.animateTo(targetValue = 1.15f, animationSpec = tween(durationMillis = 100)) }
+    launch { pressWidth.animateTo(targetValue = 55f, animationSpec = tween(durationMillis = 100)) }
+}
+
+private fun CoroutineScope.animateHandlePressRelease(
+    pressScale: Animatable<Float, *>,
+    pressWidth: Animatable<Float, *>,
+) {
+    launch { pressScale.animateTo(targetValue = 1f, animationSpec = tween(durationMillis = 150)) }
+    launch { pressWidth.animateTo(targetValue = 45f, animationSpec = tween(durationMillis = 150)) }
+}
+
+/**
+ * Drag handle strip at the top of the sheet. Animates a press scale/width when the user
+ * touches or drags the handle, and forwards drag amounts into [dragSnapChannel].
+ *
+ * Press/release scaling is delegated to [animateHandlePressDown] / [animateHandlePressRelease]
+ * so the same launch-pair is not rewritten in each of the four entry points
+ * (tap-press, tap-release, drag-start, drag-stop).
+ */
 @Composable
 private fun DragHandleArea(
     dragHandleColor: Color,
@@ -618,44 +697,22 @@ private fun DragHandleArea(
     val isPressing = remember { mutableFloatStateOf(0f) }
     val pressScale = remember { Animatable(1f) }
     val pressWidth = remember { Animatable(45f) }
-    val handleShape = RoundedCornerShape(2.dp)
+    val handleShape = remember { RoundedCornerShape(2.dp) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(24.dp)
+            .pointerHoverIcon(PointerIcon.Hand)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
                         isPressing.floatValue = 1f
-                        coroutineScope.launch {
-                            pressScale.animateTo(
-                                targetValue = 1.15f,
-                                animationSpec = tween(durationMillis = 100),
-                            )
-                        }
-                        coroutineScope.launch {
-                            pressWidth.animateTo(
-                                targetValue = 55f,
-                                animationSpec = tween(durationMillis = 100),
-                            )
-                        }
-
+                        coroutineScope.animateHandlePressDown(pressScale, pressWidth)
                         val released = tryAwaitRelease()
                         if (released) {
                             isPressing.floatValue = 0f
-                            coroutineScope.launch {
-                                pressScale.animateTo(
-                                    targetValue = 1f,
-                                    animationSpec = tween(durationMillis = 150),
-                                )
-                            }
-                            coroutineScope.launch {
-                                pressWidth.animateTo(
-                                    targetValue = 45f,
-                                    animationSpec = tween(durationMillis = 150),
-                                )
-                            }
+                            coroutineScope.animateHandlePressRelease(pressScale, pressWidth)
                         }
                     },
                 )
@@ -680,22 +737,11 @@ private fun DragHandleArea(
                 },
                 onDragStarted = {
                     isPressing.floatValue = 1f
-                    coroutineScope.launch {
-                        pressScale.animateTo(1.15f, animationSpec = tween(durationMillis = 100))
-                    }
-                    coroutineScope.launch {
-                        pressWidth.animateTo(55f, animationSpec = tween(durationMillis = 100))
-                    }
+                    coroutineScope.animateHandlePressDown(pressScale, pressWidth)
                 },
                 onDragStopped = { velocity ->
                     isPressing.floatValue = 0f
-                    coroutineScope.launch {
-                        pressScale.animateTo(1f, animationSpec = tween(durationMillis = 150))
-                    }
-                    coroutineScope.launch {
-                        pressWidth.animateTo(45f, animationSpec = tween(durationMillis = 150))
-                    }
-
+                    coroutineScope.animateHandlePressRelease(pressScale, pressWidth)
                     // Delegate the settle logic to the shared function
                     onSettle(velocity)
                 },
@@ -721,8 +767,8 @@ private fun DragHandleArea(
 @Composable
 private fun TitleAndActionsRow(
     title: String?,
-    startAction: @Composable (() -> Unit?)?,
-    endAction: @Composable (() -> Unit?)?,
+    startAction: (@Composable () -> Unit)?,
+    endAction: (@Composable () -> Unit)?,
 ) {
     Box(
         modifier = Modifier

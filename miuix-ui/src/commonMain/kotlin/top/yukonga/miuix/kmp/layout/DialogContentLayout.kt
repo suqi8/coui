@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -180,16 +181,20 @@ internal fun DialogContentLayout(
             onBackCompleted = { requestDismiss() },
         )
 
-        LaunchedEffect(navigationEventState.transitionState) {
-            val transitionState = navigationEventState.transitionState
-            if (
-                transitionState is NavigationEventTransitionState.InProgress &&
-                transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
-            ) {
-                val progress = transitionState.latestEvent.progress
-                backProgress.snapTo(progress)
-                dimAlpha.floatValue = 1f - progress
-            }
+        LaunchedEffect(Unit) {
+            // Collect inside a single coroutine so the per-frame `transitionState` ticks during a
+            // back gesture do not cancel/relaunch the LaunchedEffect on every progress update.
+            snapshotFlow { navigationEventState.transitionState }
+                .collect { transitionState ->
+                    if (
+                        transitionState is NavigationEventTransitionState.InProgress &&
+                        transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+                    ) {
+                        val progress = transitionState.latestEvent.progress
+                        backProgress.snapTo(progress)
+                        dimAlpha.floatValue = 1f - progress
+                    }
+                }
         }
 
         if (enableWindowDim) {
