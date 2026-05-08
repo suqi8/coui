@@ -334,7 +334,7 @@ private fun CascadingMorphSubLayout(
         // see CascadingPrimaryContent below — so user input feels instant.
         val activeExpanded = displayedItem
         val anchorRect = activeExpanded?.let { getAnchorBounds(it) }
-        val (anchorPaddingTopPx, anchorPaddingBottomPx) = if (activeExpanded != null) {
+        val (anchorPaddingTopPx, _) = if (activeExpanded != null) {
             computeAnchorPaddingPx(activeExpanded, entries)
         } else {
             0 to 0
@@ -441,7 +441,6 @@ private fun CascadingMorphSubLayout(
                             secondaryLocalInUnion = secondaryLocalInUnion,
                             anchorLocalInUnion = anchorLocalInUnion,
                             anchorPaddingTopPx = anchorPaddingTopPx,
-                            anchorPaddingBottomPx = anchorPaddingBottomPx,
                             secondaryContentMaxHeight = resolvedMaxHeightPx,
                             enterFraction = enterFraction,
                             enterAlpha = enterAlpha,
@@ -572,21 +571,25 @@ internal fun computeSecondaryRect(
 }
 
 /** Trigger row's vertical paddings (first/last vs middle), used by [MorphHeaderRow] to
- *  interpolate its own padding during expansion. */
+ *  interpolate its own padding during expansion. Must match the popup-global first/last logic
+ *  used when rendering the primary row, otherwise the morph animation start frame mismatches
+ *  the rendered anchor and the expansion appears to jump. */
 private fun Density.computeAnchorPaddingPx(
     item: DropdownItem,
     entries: List<DropdownEntry>,
 ): Pair<Int, Int> {
-    entries.forEach { entry ->
+    val lastEntryIdx = entries.lastIndex
+    entries.forEachIndexed { entryIdx, entry ->
         val idx = entry.items.indexOf(item)
         if (idx != -1) {
-            val size = entry.items.size
-            val top = if (idx == 0) {
+            val isPopupFirst = entryIdx == 0 && idx == 0
+            val isPopupLast = entryIdx == lastEntryIdx && idx == entry.items.lastIndex
+            val top = if (isPopupFirst) {
                 DropdownDefaults.FirstLastVerticalPadding.roundToPx()
             } else {
                 DropdownDefaults.MiddleVerticalPadding.roundToPx()
             }
-            val bottom = if (idx == size - 1) {
+            val bottom = if (isPopupLast) {
                 DropdownDefaults.FirstLastVerticalPadding.roundToPx()
             } else {
                 DropdownDefaults.MiddleVerticalPadding.roundToPx()

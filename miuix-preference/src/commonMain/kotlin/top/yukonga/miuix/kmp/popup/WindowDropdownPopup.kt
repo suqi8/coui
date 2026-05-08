@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -20,8 +19,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.DropdownColors
 import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownImpl
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -97,29 +94,11 @@ fun WindowDropdownPopup(
             }
         }
         ListPopupColumn {
-            entries.forEachIndexed { entryIdx, entry ->
-                entry.items.forEachIndexed { itemIdx, option ->
-                    key(entryIdx, itemIdx) {
-                        DropdownImpl(
-                            item = option,
-                            optionSize = entry.items.size,
-                            isSelected = option.selected,
-                            index = itemIdx,
-                            dropdownColors = dropdownColors,
-                            enabled = entry.enabled && option.enabled,
-                            onSelectedIndexChange = { index ->
-                                onItemClicked(entryIdx, index)
-                            },
-                        )
-                    }
-                }
-                if (entryIdx != entries.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        thickness = 1.dp,
-                    )
-                }
-            }
+            DropdownEntriesPopupContent(
+                entries = entries,
+                dropdownColors = dropdownColors,
+                onItemClick = onItemClicked,
+            )
         }
     }
 }
@@ -202,37 +181,11 @@ fun WindowDropdownDialog(
             Layout(
                 content = {
                     LazyColumn {
-                        entries.forEachIndexed { entryIdx, entry ->
-                            items(
-                                entry.items.size,
-                                key = { itemIdx -> "$entryIdx-$itemIdx" },
-                            ) { itemIdx ->
-                                val item = entry.items[itemIdx]
-                                DropdownImpl(
-                                    item = item,
-                                    optionSize = entry.items.size,
-                                    isSelected = item.selected,
-                                    index = itemIdx,
-                                    dropdownColors = dropdownColors,
-                                    enabled = entry.enabled && item.enabled,
-                                    dialogMode = true,
-                                    onSelectedIndexChange = { index ->
-                                        onItemClicked(entryIdx, index)
-                                    },
-                                )
-                            }
-                            if (entryIdx != entries.lastIndex) {
-                                item(key = "divider-$entryIdx") {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(
-                                            horizontal = 28.dp,
-                                            vertical = 6.dp,
-                                        ),
-                                        thickness = 1.dp,
-                                    )
-                                }
-                            }
-                        }
+                        dropdownEntriesDialogItems(
+                            entries = entries,
+                            dropdownColors = dropdownColors,
+                            onItemClick = onItemClicked,
+                        )
                     }
                     TextButton(
                         modifier = Modifier

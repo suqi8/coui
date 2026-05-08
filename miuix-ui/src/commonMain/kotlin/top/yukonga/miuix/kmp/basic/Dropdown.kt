@@ -69,6 +69,12 @@ fun RowScope.DropdownArrowEndAction(
  * @param dialogMode Whether the item is shown in dialog mode.
  * @param hasSubmenu When true, this row acts as a submenu trigger: a trailing chevron is shown
  *   instead of the selection check, and the row's accessibility role becomes [Role.Button].
+ * @param isFirst Whether this row is the first row of the entire popup. Controls the larger top
+ *   padding in popup mode. Defaults to `index == 0`; multi-entry callers should pass the
+ *   popup-global flag so only the actual first row gets extra padding.
+ * @param isLast Whether this row is the last row of the entire popup. Controls the larger bottom
+ *   padding in popup mode. Defaults to `index == optionSize - 1`; multi-entry callers should pass
+ *   the popup-global flag.
  * @param onSelectedIndexChange The callback invoked with [index] when the option is selected.
  */
 @Composable
@@ -81,16 +87,18 @@ fun DropdownImpl(
     enabled: Boolean = item.enabled,
     dialogMode: Boolean = false,
     hasSubmenu: Boolean = false,
+    isFirst: Boolean = index == 0,
+    isLast: Boolean = index == optionSize - 1,
     onSelectedIndexChange: (Int) -> Unit,
 ) {
     val additionalTopPadding =
-        if (!dialogMode && index == 0) {
+        if (!dialogMode && isFirst) {
             DropdownDefaults.FirstLastVerticalPadding
         } else {
             DropdownDefaults.MiddleVerticalPadding
         }
     val additionalBottomPadding =
-        if (!dialogMode && index == optionSize - 1) {
+        if (!dialogMode && isLast) {
             DropdownDefaults.FirstLastVerticalPadding
         } else {
             DropdownDefaults.MiddleVerticalPadding

@@ -98,8 +98,11 @@ internal fun CascadingPrimaryContent(
     ) {
         Box {
             ListPopupColumn {
-                val totalEntries = entries.size
+                val lastEntryIdx = entries.lastIndex
                 entries.forEachIndexed { entryIndex, entry ->
+                    val lastItemIdx = entry.items.lastIndex
+                    val isFirstEntry = entryIndex == 0
+                    val isLastEntry = entryIndex == lastEntryIdx
                     entry.items.forEachIndexed { itemIndex, item ->
                         key(entry, item) {
                             CascadingPrimaryRow(
@@ -107,6 +110,8 @@ internal fun CascadingPrimaryContent(
                                 optionSize = entry.items.size,
                                 index = itemIndex,
                                 entryEnabled = entry.enabled,
+                                isFirst = isFirstEntry && itemIndex == 0,
+                                isLast = isLastEntry && itemIndex == lastItemIdx,
                                 dropdownColors = dropdownColors,
                                 onClick = {
                                     val children = item.children?.takeIf { it.isNotEmpty() }
@@ -129,11 +134,12 @@ internal fun CascadingPrimaryContent(
                             )
                         }
                     }
-                    if (entryIndex != totalEntries - 1) {
+                    if (entryIndex != lastEntryIdx) {
                         key("divider", entry) {
                             HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 20.dp),
-                                thickness = 1.dp,
+                                modifier = Modifier
+                                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                                thickness = 1.5.dp,
                             )
                         }
                     }
@@ -160,6 +166,8 @@ private fun CascadingPrimaryRow(
     optionSize: Int,
     index: Int,
     entryEnabled: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
     dropdownColors: DropdownColors,
     onClick: () -> Unit,
     onAnchorBounds: (DropdownItem, IntRect) -> Unit,
@@ -190,6 +198,8 @@ private fun CascadingPrimaryRow(
             dropdownColors = dropdownColors,
             enabled = rowEnabled,
             hasSubmenu = !item.children.isNullOrEmpty(),
+            isFirst = isFirst,
+            isLast = isLast,
             onSelectedIndexChange = { onClick() },
         )
     }
@@ -205,7 +215,6 @@ internal fun CascadingSecondaryContent(
     secondaryLocalInUnion: IntRect,
     anchorLocalInUnion: IntRect,
     anchorPaddingTopPx: Int,
-    anchorPaddingBottomPx: Int,
     secondaryContentMaxHeight: Int,
     enterFraction: () -> Float,
     enterAlpha: () -> Float,
@@ -332,8 +341,9 @@ internal fun CascadingSecondaryContent(
                     onClick = onCollapseSecondary,
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    thickness = 1.dp,
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp, vertical = 4.dp),
+                    thickness = 1.5.dp,
                 )
                 children.forEachIndexed { index, child ->
                     key(child) {
