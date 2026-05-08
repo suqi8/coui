@@ -10,7 +10,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
 import top.yukonga.miuix.kmp.basic.PopupPositionProvider
@@ -44,7 +43,7 @@ fun OverlayListPopup(
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
-    minWidth: Dp = 200.dp,
+    minWidth: Dp = ListPopupDefaults.MinWidth,
     renderInRootScaffold: Boolean = true,
     content: @Composable () -> Unit,
 ) {

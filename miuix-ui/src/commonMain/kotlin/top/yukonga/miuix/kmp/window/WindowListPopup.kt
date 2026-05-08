@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
@@ -44,7 +43,7 @@ fun WindowListPopup(
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
-    minWidth: Dp = 200.dp,
+    minWidth: Dp = ListPopupDefaults.MinWidth,
     content: @Composable () -> Unit,
 ) {
     val currentOnDismissRequest = rememberUpdatedState(onDismissRequest)

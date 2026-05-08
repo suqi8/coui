@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -29,11 +30,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.ListPopupContent
 import top.yukonga.miuix.kmp.basic.ListPopupDefaults
@@ -49,12 +50,18 @@ import top.yukonga.miuix.kmp.window.WindowListPopup
  *
  * @param show Whether the popup is currently shown.
  * @param popupHost A composable that provides the popup container (e.g., PopupLayout or Dialog).
- *   It receives the visibility state and the inner content composable.
+ *   It receives an internal "mounted" state (true from the moment the enter animation starts
+ *   until the exit animation finishes) and the inner content composable. Hosts that
+ *   conditionally render their container (e.g., a `Dialog`) should respect this flag and
+ *   should NOT animate enter/exit themselves — entry/exit transitions are driven internally.
  * @param popupModifier The modifier to be applied to the popup content area.
  * @param popupPositionProvider The [PopupPositionProvider] for positioning.
  * @param alignment The alignment of the popup.
- * @param enableWindowDim Whether to enable window dimming.
+ * @param enableWindowDim Whether to render and animate the window-dim layer. The outside-tap
+ *   dismiss gesture is preserved regardless of this flag.
  * @param onDismissRequest The callback when the popup is dismissed.
+ * @param onDismissFinished Invoked when the hide animation completes; not invoked if the hide
+ *   is cancelled mid-flight (e.g., by [show] toggling back to true).
  * @param maxHeight The maximum height of the popup.
  * @param minWidth The minimum width of the popup.
  * @param content The content of the popup.
@@ -70,7 +77,7 @@ internal fun ListPopupLayout(
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
-    minWidth: Dp = 200.dp,
+    minWidth: Dp = ListPopupDefaults.MinWidth,
     content: @Composable () -> Unit,
 ) {
     val fractionProgress = remember { Animatable(0f) }
@@ -86,14 +93,21 @@ internal fun ListPopupLayout(
             internalVisible.value = true
             launch { fractionProgress.animateTo(1f, ListPopupDefaults.FractionAnimationSpec) }
             launch { alphaProgress.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) }
-            launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
+            if (enableWindowDim) {
+                launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
+            }
         } else {
             if (!internalVisible.value) return@LaunchedEffect
             launch { fractionProgress.animateTo(0f, ListPopupDefaults.FractionAnimationSpec) }
-            launch { dimProgress.animateTo(0f, ListPopupDefaults.DimExitAnimationSpec) }
+            if (enableWindowDim) {
+                launch { dimProgress.animateTo(0f, ListPopupDefaults.DimExitAnimationSpec) }
+            }
+            // Alpha controls the master timing: once content fades out, unmount immediately.
             alphaProgress.animateTo(0f, ListPopupDefaults.AlphaExitAnimationSpec)
-            fractionProgress.stop()
-            dimProgress.stop()
+            // Force-settle remaining tracks so the next enter starts from a clean zero baseline.
+            fractionProgress.snapTo(0f)
+            alphaProgress.snapTo(0f)
+            dimProgress.snapTo(0f)
             internalVisible.value = false
             currentOnDismissFinished?.invoke()
         }
@@ -130,6 +144,10 @@ internal fun ListPopupLayout(
 
     var hostPositionInWindow by remember { mutableStateOf(Offset.Zero) }
 
+    val requestDismiss: () -> Unit = remember {
+        { currentOnDismiss?.invoke() }
+    }
+
     popupHost(internalVisible.value) {
         val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
         NavigationBackHandler(
@@ -137,26 +155,33 @@ internal fun ListPopupLayout(
             isBackEnabled = show,
             onBackCancelled = {
                 coroutineScope.launch {
-                    launch { fractionProgress.animateTo(1f, ListPopupDefaults.ResetAnimationSpec) }
-                    launch { alphaProgress.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) }
-                    launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
+                    // joinAll keeps the three reset coroutines as children of this launch so
+                    // structural cancellation propagates if a new gesture supersedes the reset.
+                    joinAll(
+                        launch { fractionProgress.animateTo(1f, ListPopupDefaults.ResetAnimationSpec) },
+                        launch { alphaProgress.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) },
+                        launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) },
+                    )
                 }
             },
-            onBackCompleted = {
-                currentOnDismiss?.invoke()
-            },
+            onBackCompleted = { requestDismiss() },
         )
 
-        LaunchedEffect(navigationEventState.transitionState) {
-            val transitionState = navigationEventState.transitionState
-            if (
-                transitionState is NavigationEventTransitionState.InProgress &&
-                transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
-            ) {
-                val progress = transitionState.latestEvent.progress
-                fractionProgress.snapTo(1f - progress)
-                alphaProgress.snapTo(1f - progress)
-            }
+        LaunchedEffect(Unit) {
+            // Collect inside a single coroutine so the per-frame `transitionState` ticks during a
+            // back gesture do not cancel/relaunch the LaunchedEffect on every progress update.
+            snapshotFlow { navigationEventState.transitionState }
+                .collect { transitionState ->
+                    if (
+                        transitionState is NavigationEventTransitionState.InProgress &&
+                        transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+                    ) {
+                        val progress = transitionState.latestEvent.progress
+                        fractionProgress.snapTo(1f - progress)
+                        alphaProgress.snapTo(1f - progress)
+                        dimProgress.snapTo(1f - progress)
+                    }
+                }
         }
 
         Box(
@@ -180,18 +205,19 @@ internal fun ListPopupLayout(
                     }
                     .pointerInput(Unit) {
                         detectTapGestures(
-                            onTap = { currentOnDismiss?.invoke() },
+                            onTap = { requestDismiss() },
                         )
                     }
                     .layout { measurable, constraints ->
                         val windowBounds = layoutInfo.windowBounds
                         val popupMargin = layoutInfo.popupMargin
+                        val minHeightPx = ListPopupDefaults.MinPopupHeight.roundToPx()
                         val placeable = measurable.measure(
                             constraints.copy(
-                                maxHeight = maxHeight?.roundToPx()?.coerceAtLeast(50.dp.roundToPx())
+                                maxHeight = maxHeight?.roundToPx()?.coerceAtLeast(minHeightPx)
                                     ?: (windowBounds.height - popupMargin.top - popupMargin.bottom)
-                                        .coerceAtLeast(50.dp.roundToPx()),
-                                minHeight = if (50.dp.roundToPx() <= constraints.maxHeight) 50.dp.roundToPx() else constraints.maxHeight,
+                                        .coerceAtLeast(minHeightPx),
+                                minHeight = if (minHeightPx <= constraints.maxHeight) minHeightPx else constraints.maxHeight,
                                 maxWidth = constraints.maxWidth,
                                 minWidth = minWidth.roundToPx().coerceAtMost(constraints.maxWidth),
                             ),
@@ -225,7 +251,7 @@ internal fun ListPopupLayout(
                     popupLayoutPosition = layoutInfo.popupLayoutPosition,
                     localTransformOrigin = layoutInfo.localTransformOrigin,
                     content = {
-                        CompositionLocalProvider(LocalDismissState provides { currentOnDismiss?.invoke() }) {
+                        CompositionLocalProvider(LocalDismissState provides requestDismiss) {
                             content()
                         }
                     },

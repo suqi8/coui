@@ -205,6 +205,18 @@ object ListPopupDefaults {
     val DimExitAnimationSpec = tween<Float>(durationMillis = 150, easing = SinOutEasing)
     val ResetAnimationSpec = spring(dampingRatio = 0.82f, stiffness = 362.5f, visibilityThreshold = 0.0001f)
 
+    /**
+     * Default minimum width of the popup. Also matches the lower clamp inside
+     * [ListPopupColumn]'s width measurement.
+     */
+    val MinWidth = 200.dp
+
+    /**
+     * Default minimum height the popup will occupy when measured. Used as the floor for the
+     * effective `maxHeight` and `minHeight` constraints during placement.
+     */
+    val MinPopupHeight = 50.dp
+
     fun dropdownPositionProvider(
         verticalMargin: Dp = 8.dp,
         horizontalMargin: Dp = 0.dp,
