@@ -85,7 +85,7 @@ internal fun CascadingPrimaryContent(
                 this.transformOrigin = transformOrigin
             }
             .graphicsLayer {
-                // Direction-aware origin: primary recedes toward the popup's spawn anchor.
+                // Recedes toward the spawn anchor while a secondary is on screen.
                 val s = primaryScale()
                 scaleX = s
                 scaleY = s
@@ -206,8 +206,7 @@ private fun CascadingPrimaryRow(
 }
 
 /** Secondary side of a cascading popup. Laid out at union size (primary ∪ secondary) with a
- *  single dynamic clip path that interpolates from the anchor row to the secondary rect, and
- *  a drop shadow tracking the same morph so its source-fill stays under the painted region. */
+ *  single dynamic clip path that interpolates from the anchor row to the secondary rect. */
 @Composable
 internal fun CascadingSecondaryContent(
     triggerItem: DropdownItem,
@@ -215,6 +214,7 @@ internal fun CascadingSecondaryContent(
     secondaryLocalInUnion: IntRect,
     anchorLocalInUnion: IntRect,
     anchorPaddingTopPx: Int,
+    isAnchorPopupLast: Boolean,
     secondaryContentMaxHeight: Int,
     enterFraction: () -> Float,
     enterAlpha: () -> Float,
@@ -244,13 +244,16 @@ internal fun CascadingSecondaryContent(
                 this.transformOrigin = transformOrigin
             }
             .popupClipReveal(enterFraction, popupLayoutPosition, revealShape)
-            // No dropShadow on the union surface: it would leak source-fill outside the inner
-            // clip. The shadow is applied to the translating inner content instead.
             .drawWithCache {
                 val innerPath = Path()
                 onDrawWithContent {
                     val frac = expandFraction()
-                    val r = cornerPx * frac
+                    val rTop = cornerPx * frac
+                    // Last-row anchors share primary's rounded bottom — keep both bottom corners
+                    // full. Mid-list anchors must shrink uniformly into a flat internal row.
+                    val rBottom = if (isAnchorPopupLast) cornerPx else rTop
+                    val topRadius = CornerRadius(rTop, rTop)
+                    val bottomRadius = CornerRadius(rBottom, rBottom)
                     innerPath.rewind()
                     innerPath.addRoundRect(
                         RoundRect(
@@ -274,7 +277,10 @@ internal fun CascadingSecondaryContent(
                                 secondaryLocalInUnion.bottom.toFloat(),
                                 frac,
                             ),
-                            cornerRadius = CornerRadius(r, r),
+                            topLeftCornerRadius = topRadius,
+                            topRightCornerRadius = topRadius,
+                            bottomRightCornerRadius = bottomRadius,
+                            bottomLeftCornerRadius = bottomRadius,
                         ),
                     )
                     clipPath(innerPath) {
@@ -287,8 +293,8 @@ internal fun CascadingSecondaryContent(
                     }
                 }
             }
-            // Surface must occupy the full union size so the inner content can slide from
-            // anchor to secondary when the anchor sits outside the secondary bounds.
+            // Occupy full union size so the inner content can slide between anchor and
+            // secondary even when the anchor sits outside the secondary bounds.
             .layout { measurable, _ ->
                 val placeable = measurable.measure(
                     Constraints.fixed(unionSize.width, unionSize.height),
@@ -296,9 +302,8 @@ internal fun CascadingSecondaryContent(
                 layout(unionSize.width, unionSize.height) { placeable.place(0, 0) }
             },
     ) {
-        // Translates from anchor → secondary so content tracks the inner clip path.
-        // propagateMinConstraints=true forces ListPopupColumn to stretch to secondaryWidth;
-        // otherwise it collapses to its intrinsic min and leaves an unclickable strip.
+        // propagateMinConstraints stretches ListPopupColumn to secondaryWidth; without it the
+        // column collapses to its intrinsic min and leaves an unclickable strip.
         Box(
             modifier = Modifier
                 .graphicsLayer {
@@ -323,7 +328,7 @@ internal fun CascadingSecondaryContent(
                             maxHeight = secondaryContentMaxHeight,
                         ),
                     )
-                    // Occupy union so the surface drawWithCache sees a full-area drawContent.
+                    // Place within union so the surface's drawWithCache sees a full-area drawContent.
                     layout(unionSize.width, unionSize.height) {
                         placeable.place(0, 0)
                     }

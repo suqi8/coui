@@ -36,10 +36,9 @@ import top.yukonga.miuix.kmp.icon.basic.ArrowRight
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
- * The header row at the top of a cascading secondary popup. Visually identical to a primary
- * row that owns a submenu (chevron at the trailing edge); during expansion its outer height
- * AND its top/bottom padding interpolate from the anchor row's measurements to the header's
- * intrinsic values. Tapping the header collapses the secondary popup.
+ * Header row at the top of a cascading secondary popup. Visually mirrors its primary trigger
+ * (chevron at the trailing edge); during expansion its outer height and top/bottom padding
+ * interpolate from anchor measurements to intrinsic values. Tapping collapses the secondary.
  */
 @Composable
 internal fun MorphHeaderRow(
@@ -51,12 +50,8 @@ internal fun MorphHeaderRow(
     dropdownColors: DropdownColors,
     onClick: () -> Unit,
 ) {
-    // The cloned trigger row at the top of the secondary popup uses the *regular*
-    // container/content colors, NOT the "selected" highlight palette — visual identity is
-    // conveyed by the back-pointing chevron alone, so highlighting the row with selected
-    // colors would make it look incorrectly active. The chevron itself uses [summaryColor]
-    // (a softer gray) rather than the title's [contentColor], so it reads as a subtle
-    // affordance rather than a primary control.
+    // Use regular (not selected) palette: the back-pointing chevron alone signals the row's
+    // role; selected colors would make it look incorrectly active.
     val backgroundColor = dropdownColors.containerColor
     val backgroundColorState = rememberUpdatedState(backgroundColor)
     val titleColor = dropdownColors.contentColor
@@ -121,9 +116,8 @@ internal fun MorphHeaderRow(
                 )
             }
         },
-        // selectable + drawBehind on the outer Layout so the click target spans the full
-        // interpolated row height (including the top/bottom paddings), not just the Row's
-        // intrinsic content height.
+        // selectable + background on the outer Layout so the click target spans the full
+        // interpolated row height (paddings included), not just the inner Row's content.
         modifier = Modifier
             .fillMaxWidth()
             .drawBehind { drawRect(backgroundColorState.value) }

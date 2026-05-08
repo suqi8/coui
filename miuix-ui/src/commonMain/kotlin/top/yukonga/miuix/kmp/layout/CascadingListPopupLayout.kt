@@ -18,8 +18,10 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,8 +40,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.anim.folmeSpring
 import top.yukonga.miuix.kmp.basic.DropdownColors
@@ -91,8 +95,7 @@ internal fun CascadingListPopupLayout(
     val dimProgress = remember { Animatable(0f) }
 
     var expandedItem by remember { mutableStateOf<DropdownItem?>(null) }
-    // displayedItem stays non-null through the collapse animation so the secondary surface
-    // remains subcomposed even after expandedItem flips to null.
+    // Outlives [expandedItem] until the collapse spring settles so the secondary stays subcomposed.
     var displayedItem by remember { mutableStateOf<DropdownItem?>(null) }
     val expandFraction = remember { Animatable(0f) }
     val primaryScale = remember { Animatable(1f) }
@@ -106,6 +109,7 @@ internal fun CascadingListPopupLayout(
 
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
     val currentOnDismissFinished by rememberUpdatedState(onDismissFinished)
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(show) {
         if (show) {
@@ -137,8 +141,8 @@ internal fun CascadingListPopupLayout(
         }
         launch {
             expandFraction.animateTo(target, mainSpec)
-            // Clear displayedItem the moment the main spring settles; otherwise the slower
-            // arrowRotation collapse would keep the secondary subcomposed past visibility.
+            // Settle on the main spring — the slower arrowRotation would otherwise hold the
+            // secondary subcomposed past visibility.
             if (target == 0f) displayedItem = null
         }
         launch {
@@ -196,6 +200,28 @@ internal fun CascadingListPopupLayout(
         NavigationBackHandler(
             state = backState,
             isBackEnabled = show,
+            onBackCancelled = {
+                // Reset whichever tree the gesture drove; depth cannot change mid-gesture.
+                coroutineScope.launch {
+                    if (expandedItem != null) {
+                        val mainSpec = folmeSpring<Float>(EXPAND_SPRING_DAMPING, EXPAND_SPRING_RESPONSE)
+                        val arrowSpec = folmeSpring<Float>(MAIN_SPRING_DAMPING, ARROW_EXPAND_SPRING_RESPONSE)
+                        joinAll(
+                            launch { expandFraction.animateTo(1f, mainSpec) },
+                            launch { primaryScale.animateTo(PRIMARY_SHRUNK_SCALE, mainSpec) },
+                            launch { maskAlpha.animateTo(1f, mainSpec) },
+                            launch { arrowRotation.animateTo(arrowEndDeg, arrowSpec) },
+                        )
+                    } else {
+                        joinAll(
+                            launch { enterFraction.animateTo(1f, ListPopupDefaults.ResetAnimationSpec) },
+                            launch { enterAlpha.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) },
+                            launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) },
+                        )
+                    }
+                }
+            },
+            // Mirror outside-tap: depth > 0 collapses the secondary, depth 0 dismisses the popup.
             onBackCompleted = {
                 if (expandedItem != null) {
                     expandedItem = null
@@ -204,6 +230,31 @@ internal fun CascadingListPopupLayout(
                 }
             },
         )
+
+        LaunchedEffect(Unit) {
+            // Single-coroutine collector so per-frame ticks do not relaunch this effect.
+            snapshotFlow { backState.transitionState }
+                .collect { transitionState ->
+                    if (
+                        transitionState is NavigationEventTransitionState.InProgress &&
+                        transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
+                    ) {
+                        val inv = 1f - transitionState.latestEvent.progress
+                        if (expandedItem != null) {
+                            // Preview secondary → primary collapse along the expand-tree.
+                            expandFraction.snapTo(inv)
+                            primaryScale.snapTo(1f + (PRIMARY_SHRUNK_SCALE - 1f) * inv)
+                            maskAlpha.snapTo(inv)
+                            arrowRotation.snapTo(arrowEndDeg * inv)
+                        } else {
+                            // Preview popup → spawn corner retreat along the entry tree.
+                            enterFraction.snapTo(inv)
+                            enterAlpha.snapTo(inv)
+                            dimProgress.snapTo(inv)
+                        }
+                    }
+                }
+        }
 
         CompositionLocalProvider(LocalDismissState provides { currentOnDismiss() }) {
             val dimColor = MiuixTheme.colorScheme.windowDimming
@@ -229,7 +280,13 @@ internal fun CascadingListPopupLayout(
                             hostPositionInWindow = IntOffset(pos.x.toInt(), pos.y.toInt())
                         }
                         .pointerInput(Unit) {
-                            detectTapGestures(onTap = { currentOnDismiss() })
+                            detectTapGestures(onTap = {
+                                if (expandedItem != null) {
+                                    expandedItem = null
+                                } else {
+                                    currentOnDismiss()
+                                }
+                            })
                         },
                 ) {
                     CascadingMorphSubLayout(
@@ -247,9 +304,8 @@ internal fun CascadingListPopupLayout(
                         },
                         getAnchorBounds = { anchorBoundsByItem[it] },
                         setAnchorBounds = { item, bounds ->
-                            // Freeze the anchor while a secondary surface is on screen so the
-                            // primary's scale animation doesn't drift the secondary's position
-                            // through onGloballyPositioned.
+                            // Freeze the anchor once secondary is shown so primary's scale
+                            // animation can't drift it via onGloballyPositioned.
                             if (displayedItem == null) {
                                 anchorBoundsByItem[item] = bounds
                             }
@@ -328,10 +384,8 @@ private fun CascadingMorphSubLayout(
             maxHeight = resolvedMaxHeightPx.coerceAtMost(constraints.maxHeight),
         )
 
-        // Secondary subcomposition tracks [displayedItem] (kept non-null until the spring
-        // collapse animation finishes) so the morphing surface stays alive throughout the
-        // collapse. The primary's mask/chevron, in contrast, react to [expandedItem] —
-        // see CascadingPrimaryContent below — so user input feels instant.
+        // Secondary subcomposition tracks [displayedItem] so the morphing surface survives the
+        // collapse spring; primary's mask/chevron use [expandedItem] for instant input feedback.
         val activeExpanded = displayedItem
         val anchorRect = activeExpanded?.let { getAnchorBounds(it) }
         val (anchorPaddingTopPx, _) = if (activeExpanded != null) {
@@ -339,6 +393,11 @@ private fun CascadingMorphSubLayout(
         } else {
             0 to 0
         }
+        // Last-row anchors share primary's rounded bottom — keep the morph's bottom corners
+        // full. Mid-list anchors must shrink uniformly or a rounded tongue would protrude from
+        // a flat internal row. === because DropdownItem is a data class.
+        val isAnchorPopupLast = activeExpanded != null &&
+            entries.lastOrNull { it.items.isNotEmpty() }?.items?.last() === activeExpanded
 
         val primaryPlaceables = subcompose(SLOT_PRIMARY) {
             CascadingPrimaryContent(
@@ -378,9 +437,8 @@ private fun CascadingMorphSubLayout(
             )
         }
 
-        // Probe the secondary's natural size, derive the union rect (primary ∪ secondary),
-        // then measure the real secondary at union size so its content can slide from the
-        // anchor row to its final position inside a fixed-size container.
+        // Probe secondary's natural size first so the union rect (primary ∪ secondary) is
+        // known before the real secondary is measured at union size for its anchor-to-final slide.
         val probeConstraints = primaryConstraints.copy(
             minWidth = primaryWidth.coerceAtMost(primaryConstraints.maxWidth),
             maxHeight = resolvedMaxHeightPx.coerceAtMost(constraints.maxHeight),
@@ -441,6 +499,7 @@ private fun CascadingMorphSubLayout(
                             secondaryLocalInUnion = secondaryLocalInUnion,
                             anchorLocalInUnion = anchorLocalInUnion,
                             anchorPaddingTopPx = anchorPaddingTopPx,
+                            isAnchorPopupLast = isAnchorPopupLast,
                             secondaryContentMaxHeight = resolvedMaxHeightPx,
                             enterFraction = enterFraction,
                             enterAlpha = enterAlpha,
@@ -487,8 +546,7 @@ private fun unionOf(a: IntRect, b: IntRect): IntRect = IntRect(
     bottom = maxOf(a.bottom, b.bottom),
 )
 
-/** First-pass measurement-only stand-in for [CascadingSecondaryContent], used to obtain the
- *  natural secondary size before its window rect (and the union) can be derived. */
+/** Measurement-only stand-in for [CascadingSecondaryContent] used to derive the union rect. */
 @Composable
 private fun SecondaryProbe(
     triggerItem: DropdownItem,
@@ -537,8 +595,7 @@ internal fun computeSecondaryRect(
     layoutDirection: LayoutDirection,
 ): IntRect {
     val ltr = layoutDirection == LayoutDirection.Ltr
-    // Leading-edge align (LTR: anchor.left, RTL: anchor.right); fall back to the opposite
-    // edge if the trailing side overflows the window, then clamp.
+    // Leading-edge align; fall back to the opposite edge if the trailing side overflows.
     val left = if (ltr) {
         val leftAligned = anchor.left
         when {
@@ -570,20 +627,20 @@ internal fun computeSecondaryRect(
     )
 }
 
-/** Trigger row's vertical paddings (first/last vs middle), used by [MorphHeaderRow] to
- *  interpolate its own padding during expansion. Must match the popup-global first/last logic
- *  used when rendering the primary row, otherwise the morph animation start frame mismatches
- *  the rendered anchor and the expansion appears to jump. */
+/** First/last/middle padding for [MorphHeaderRow]'s expansion-time padding interpolation.
+ *  Must match the primary row's popup-global first/last logic or the morph's start frame jumps. */
 private fun Density.computeAnchorPaddingPx(
     item: DropdownItem,
     entries: List<DropdownEntry>,
 ): Pair<Int, Int> {
-    val lastEntryIdx = entries.lastIndex
+    // Skip leading/trailing empty entries so the visually-first/last row keeps FirstLast padding.
+    val firstNonEmptyIdx = entries.indexOfFirst { it.items.isNotEmpty() }
+    val lastNonEmptyIdx = entries.indexOfLast { it.items.isNotEmpty() }
     entries.forEachIndexed { entryIdx, entry ->
         val idx = entry.items.indexOf(item)
         if (idx != -1) {
-            val isPopupFirst = entryIdx == 0 && idx == 0
-            val isPopupLast = entryIdx == lastEntryIdx && idx == entry.items.lastIndex
+            val isPopupFirst = entryIdx == firstNonEmptyIdx && idx == 0
+            val isPopupLast = entryIdx == lastNonEmptyIdx && idx == entry.items.lastIndex
             val top = if (isPopupFirst) {
                 DropdownDefaults.FirstLastVerticalPadding.roundToPx()
             } else {
