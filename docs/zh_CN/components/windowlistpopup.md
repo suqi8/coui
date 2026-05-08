@@ -77,8 +77,9 @@ Box {
 | alignment             | PopupPositionProvider.Align | 指定弹窗相对于锚点的对齐方式         | PopupPositionProvider.Align.Start          |
 | enableWindowDim       | Boolean                     | 是否在弹窗显示时使背景变暗           | true                                       |
 | onDismissRequest      | (() -> Unit)?               | 当用户请求关闭（例如点击外部）时触发 | null                                       |
+| onDismissFinished     | (() -> Unit)?               | 关闭动画完成后调用；若关闭过程被中途取消（例如 `show` 被设回 true），则不会触发 | null    |
 | maxHeight             | Dp?                         | 弹窗内容的最大高度                   | null                                       |
-| minWidth              | Dp                          | 弹窗内容的最小宽度                   | 200.dp                                     |
+| minWidth              | Dp                          | 弹窗内容的最小宽度                   | ListPopupDefaults.MinWidth                 |
 | content               | @Composable () -> Unit      | 要在弹窗内显示的内容                 | -                                          |
 
 ### ListPopupColumn 属性

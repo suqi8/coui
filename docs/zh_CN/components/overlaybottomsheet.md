@@ -66,7 +66,7 @@ Scaffold {
 | cornerRadius               | Dp                        | 顶部圆角半径                                 | BottomSheetDefaults.cornerRadius      | 否       |
 | sheetMaxWidth              | Dp                        | 底部抽屉的最大宽度                           | BottomSheetDefaults.maxWidth          | 否       |
 | onDismissRequest           | (() -> Unit)?             | 当用户请求关闭（点击遮罩层或返回手势）时触发 | null                                       | 否       |
-| onDismissFinished          | (() -> Unit)?             | 底部抽屉完全关闭（动画结束）时的回调         | null                                       | 否       |
+| onDismissFinished          | (() -> Unit)?             | 关闭动画完成后调用；若关闭过程被中途取消（例如 `show` 被设回 true），则不会触发 | null     | 否       |
 | outsideMargin              | DpSize                    | 底部抽屉外部边距                             | BottomSheetDefaults.outsideMargin     | 否       |
 | insideMargin               | DpSize                    | 底部抽屉内部内容的边距                       | BottomSheetDefaults.insideMargin      | 否       |
 | defaultWindowInsetsPadding | Boolean                   | 是否应用默认窗口插入内边距                   | true                                       | 否       |

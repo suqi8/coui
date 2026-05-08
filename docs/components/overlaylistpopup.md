@@ -114,8 +114,9 @@ OverlayListPopup(
 | alignment             | PopupPositionProvider.Align | Specifies the alignment of the popup relative to the anchor.      | PopupPositionProvider.Align.Start          |
 | enableWindowDim       | Boolean                     | Whether to dim the background when popup is shown.                | true                                       |
 | onDismissRequest      | (() -> Unit)?               | Called when the user requests dismissal (e.g., clicking outside). | null                                       |
+| onDismissFinished     | (() -> Unit)?               | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null         |
 | maxHeight             | Dp?                         | Maximum height of the popup content.                              | null                                       |
-| minWidth              | Dp                          | Minimum width of the popup content.                               | 200.dp                                     |
+| minWidth              | Dp                          | Minimum width of the popup content.                               | ListPopupDefaults.MinWidth                 |
 | renderInRootScaffold  | Boolean                     | Whether to render the popup in the root (outermost) Scaffold. When true, the popup covers the full screen. When false, it renders within the current Scaffold's bounds with position compensation. | true |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                          | -                                          |
 

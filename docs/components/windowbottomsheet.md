@@ -70,7 +70,7 @@ WindowBottomSheet(
 | cornerRadius               | Dp                        | Corner radius of the top corners                               | BottomSheetDefaults.cornerRadius       | No       |
 | sheetMaxWidth              | Dp                        | Maximum width of the bottom sheet                              | BottomSheetDefaults.maxWidth           | No       |
 | onDismissRequest           | (() -> Unit)?             | Called when the user requests dismissal (outside tap or back)  | null                                         | No       |
-| onDismissFinished          | (() -> Unit)?             | Callback after bottom sheet fully dismisses                    | null                                         | No       |
+| onDismissFinished          | (() -> Unit)?             | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null        | No       |
 | outsideMargin              | DpSize                    | Bottom sheet external margin                                   | BottomSheetDefaults.outsideMargin      | No       |
 | insideMargin               | DpSize                    | Bottom sheet internal content margin                           | BottomSheetDefaults.insideMargin       | No       |
 | defaultWindowInsetsPadding | Boolean                   | Whether to apply default window insets padding                 | true                                         | No       |
