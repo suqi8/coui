@@ -30,7 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -50,6 +50,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -85,7 +87,8 @@ import top.yukonga.miuix.kmp.window.WindowDialog
  * @param summary The summary of the dialog.
  * @param enableWindowDim Whether to enable window dimming.
  * @param onDismissRequest The callback when the dialog is dismissed.
- * @param onDismissFinished The callback when the dialog is completely dismissed.
+ * @param onDismissFinished Invoked when the hide animation completes; not invoked if the hide
+ *   is cancelled mid-flight (e.g., by [show] toggling back to true).
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding.
  * @param topInset Optional top inset override. If null, calculated from window insets.
  * @param content The content of the dialog.
@@ -121,12 +124,17 @@ internal fun DialogContentLayout(
     val isLargeScreen = DialogDefaults.isLargeScreen()
 
     LaunchedEffect(show) {
+        // Snapshot at launch so a window-resize crossing the breakpoint mid-animation does not
+        // swap the spec or relaunch the effect.
+        val largeAtStart = isLargeScreen
         if (show) {
             internalVisible.value = true
-            launch { dimProgress.animateTo(1f, tween(300, easing = DecelerateEasing(1.5f))) }
+            if (enableWindowDim) {
+                launch { dimProgress.animateTo(1f, tween(300, easing = DecelerateEasing(1.5f))) }
+            }
             animationProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = if (isLargeScreen) {
+                animationSpec = if (largeAtStart) {
                     folmeSpring(damping = 0.9f, response = 0.3f)
                 } else {
                     spring(dampingRatio = 0.88f, stiffness = 450f, visibilityThreshold = 0.0001f)
@@ -137,12 +145,14 @@ internal fun DialogContentLayout(
             if (imeInsets.getBottom(density) > 0) {
                 keyboardController?.hide()
             }
-            launch { dimProgress.animateTo(0f, tween(250, easing = DecelerateEasing(1.5f))) }
+            if (enableWindowDim) {
+                launch { dimProgress.animateTo(0f, tween(250, easing = DecelerateEasing(1.5f))) }
+            }
             animationProgress.animateTo(
                 targetValue = 0f,
                 animationSpec = tween(durationMillis = 260, easing = DecelerateEasing(1.5f)),
             )
-            dimProgress.stop()
+            dimProgress.snapTo(0f)
             internalVisible.value = false
             currentOnDismissFinished?.invoke()
         }
@@ -157,16 +167,17 @@ internal fun DialogContentLayout(
     val currentOnDismissRequest by rememberUpdatedState(onDismissRequest)
 
     val windowInfo = LocalWindowInfo.current
-    val windowHeightPx = with(density) { windowInfo.containerDpSize.height.toPx() }
 
-    val requestDismiss: () -> Unit = {
-        currentOnDismissRequest?.invoke()
+    val requestDismiss: () -> Unit = remember {
+        { currentOnDismissRequest?.invoke() }
     }
 
-    val resetGesture: suspend () -> Unit = {
-        backProgress.animateTo(0f, animationSpec = tween(durationMillis = 150))
-        animate(dimAlpha.floatValue, 1f, animationSpec = tween(durationMillis = 150)) { value, _ ->
-            dimAlpha.floatValue = value
+    val resetGesture: suspend () -> Unit = remember {
+        {
+            backProgress.animateTo(0f, animationSpec = tween(durationMillis = 150))
+            animate(dimAlpha.floatValue, 1f, animationSpec = tween(durationMillis = 150)) { value, _ ->
+                dimAlpha.floatValue = value
+            }
         }
     }
 
@@ -216,7 +227,7 @@ internal fun DialogContentLayout(
                 scaleY = scale
                 alpha = progress
             } else {
-                translationY = (1f - progress) * windowHeightPx
+                translationY = (1f - progress) * windowInfo.containerDpSize.height.toPx()
                 alpha = 1f
             }
         }
@@ -232,11 +243,11 @@ internal fun DialogContentLayout(
             defaultWindowInsetsPadding = defaultWindowInsetsPadding,
             backProgress = backProgress,
             dialogHeightPx = dialogHeightPx,
-            onDismissRequest = { requestDismiss() },
+            onDismissRequest = requestDismiss,
             modifier = contentModifier,
             topInset = topInset,
             content = {
-                CompositionLocalProvider(LocalDismissState provides { requestDismiss() }) {
+                CompositionLocalProvider(LocalDismissState provides requestDismiss) {
                     content()
                 }
             },
@@ -256,12 +267,13 @@ internal fun DialogContent(
     insideMargin: DpSize,
     defaultWindowInsetsPadding: Boolean,
     backProgress: Animatable<Float, *>,
-    dialogHeightPx: MutableState<Int>,
+    dialogHeightPx: MutableIntState,
     onDismissRequest: (() -> Unit)?,
     modifier: Modifier = Modifier,
     topInset: Dp? = null,
     content: @Composable () -> Unit,
 ) {
+    val density = LocalDensity.current
     val windowInfo = LocalWindowInfo.current
     val windowHeight = windowInfo.containerDpSize.height
     val isLargeScreen = DialogDefaults.isLargeScreen()
@@ -273,8 +285,7 @@ internal fun DialogContent(
         val offset = if (isLargeScreen) 0.dp else outsideMargin.width
         (roundedCorner - offset).coerceAtLeast(32.dp)
     }
-
-    val bottomCornerShape = RoundedCornerShape(bottomCornerRadius)
+    val bottomCornerShape = remember(bottomCornerRadius) { RoundedCornerShape(bottomCornerRadius) }
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
 
     val calculatedTopInset = if (topInset != null) {
@@ -286,38 +297,40 @@ internal fun DialogContent(
         maxOf(statusBars, captionBar, displayCutout)
     }
 
+    // Predictive-back translation pad (small-screen only). Pre-converted to px so the per-frame
+    // graphicsLayer block does not call asPaddingValues() / toPx() each invalidation.
+    val bottomPadding = if (isLargeScreen) {
+        0.dp
+    } else {
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
+            WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
+    }
+    val extraBottomPaddingPx = remember(density, bottomPadding, outsideMargin.height, isLargeScreen) {
+        if (isLargeScreen) 0f else with(density) { (bottomPadding + outsideMargin.height).toPx() }
+    }
+
     val contentModifier = modifier
-        .widthIn(max = 420.dp)
+        .widthIn(max = DialogDefaults.MaxWidth)
         .heightIn(max = if (isLargeScreen) windowHeight * (2f / 3f) else Dp.Unspecified)
         .onGloballyPositioned { coordinates ->
-            dialogHeightPx.value = coordinates.size.height
+            dialogHeightPx.intValue = coordinates.size.height
         }
-        .then(
-            // Apply predictive back animation
+        .graphicsLayer {
+            // Apply predictive back animation; branch inside the block so the modifier chain
+            // produces a single graphicsLayer node instead of swapping nodes per recomposition.
             if (isLargeScreen) {
-                // Large screen
-                Modifier.graphicsLayer {
-                    val scale = 1f - (backProgress.value * 0.2f)
-                    scaleX = scale
-                    scaleY = scale
-                }
+                val scale = 1f - (backProgress.value * 0.2f)
+                scaleX = scale
+                scaleY = scale
             } else {
-                val bottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                    WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
-                val extraBottomPadding = remember(bottomPadding, outsideMargin.height) {
-                    bottomPadding + outsideMargin.height
+                val maxOffset = if (dialogHeightPx.intValue > 0) {
+                    dialogHeightPx.intValue.toFloat() + extraBottomPaddingPx
+                } else {
+                    500f
                 }
-                // Small screen
-                Modifier.graphicsLayer {
-                    val maxOffset = if (dialogHeightPx.value > 0) {
-                        dialogHeightPx.value.toFloat() + extraBottomPadding.toPx()
-                    } else {
-                        500f
-                    }
-                    translationY = backProgress.value * maxOffset
-                }
-            },
-        )
+                translationY = backProgress.value * maxOffset
+            }
+        }
         .pointerInput(Unit) {
             detectTapGestures { /* Consume click */ }
         }
@@ -342,6 +355,12 @@ internal fun DialogContent(
                 detectTapGestures(
                     onTap = { currentOnDismiss?.invoke() },
                 )
+            }
+            .semantics {
+                onClick(label = "Dismiss") {
+                    currentOnDismiss?.invoke()
+                    true
+                }
             }
             .padding(horizontal = outsideMargin.width)
             .padding(top = calculatedTopInset, bottom = outsideMargin.height),
@@ -374,6 +393,11 @@ internal fun DialogContent(
 }
 
 object DialogDefaults {
+    /**
+     * Window-size threshold above which the dialog is centered (instead of bottom-aligned)
+     * and uses scale-in transitions. Roughly aligns with the Window Size Class
+     * compact -> expanded boundary (840 dp width / 480 dp height).
+     */
     @Composable
     internal fun isLargeScreen(): Boolean {
         val windowInfo = LocalWindowInfo.current
@@ -399,6 +423,12 @@ object DialogDefaults {
      */
     @Composable
     fun backgroundColor() = MiuixTheme.colorScheme.background
+
+    /**
+     * The default upper bound on dialog content width. Keeps dialogs from stretching across
+     * tablet / desktop windows.
+     */
+    val MaxWidth = 420.dp
 
     /**
      * The default margin outside the dialog.
