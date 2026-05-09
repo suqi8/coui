@@ -42,5 +42,5 @@ docs/.vitepress/cache
 docs/public/dokka
 docs/public/compose
 docs/public/icons
-**/generated/baselineProfiles/**
+miuix-ui/**/generated/baselineProfiles/**
 example/ios/iosApp/Generated.xcconfig
