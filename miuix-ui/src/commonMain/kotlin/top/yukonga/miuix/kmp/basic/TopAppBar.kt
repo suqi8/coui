@@ -32,7 +32,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -188,7 +187,6 @@ fun TopAppBar(
  * @param bottomContent The [Composable] content displayed below the title bar area.
  */
 @Composable
-@NonRestartableComposable
 fun SmallTopAppBar(
     title: String,
     modifier: Modifier = Modifier,
