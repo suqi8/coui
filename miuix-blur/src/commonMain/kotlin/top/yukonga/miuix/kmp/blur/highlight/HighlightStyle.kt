@@ -121,7 +121,7 @@ data class BloomStroke(
         val sizePx = size
         val shader = runtimeShaderCache.obtainRuntimeShader("BloomStroke", BLOOM_STROKE_SHADER)
         shader.setFloatUniform("size", sizePx.width, sizePx.height)
-        shader.setFloatUniform("cornerRadii", getCornerRadii(shape))
+        setCornerRadiiUniform(shader, shape)
         shader.setFloatUniform("strokeWidth", strokeWidthPx)
         shader.setFloatUniform("innerBlurRadius", innerBlurRadius.toPx())
         shader.setFloatUniform("highlightAlpha", highlightAlpha)
@@ -241,10 +241,16 @@ internal fun applyLightUniforms(
     shader.setFloatUniform("lightIntensity$suffix", light.color.alpha * light.intensity)
 }
 
-internal fun DrawScope.getCornerRadii(shape: Shape): FloatArray {
+// Writes [TL, TR, BL, BR] order directly into the float4 cornerRadii uniform, avoiding
+// a per-frame FloatArray(4) allocation.
+internal fun DrawScope.setCornerRadiiUniform(shader: RuntimeShader, shape: Shape) {
     val sizePx = size
     val maxRadius = sizePx.minDimension / 2f
-    val cornerShape = shape as? CornerBasedShape ?: return FloatArray(4) { maxRadius }
+    val cornerShape = shape as? CornerBasedShape
+    if (cornerShape == null) {
+        shader.setFloatUniform("cornerRadii", maxRadius, maxRadius, maxRadius, maxRadius)
+        return
+    }
     val isLtr = layoutDirection == LayoutDirection.Ltr
     val topLeft =
         if (isLtr) cornerShape.topStart.toPx(sizePx, this) else cornerShape.topEnd.toPx(sizePx, this)
@@ -254,8 +260,8 @@ internal fun DrawScope.getCornerRadii(shape: Shape): FloatArray {
         if (isLtr) cornerShape.bottomEnd.toPx(sizePx, this) else cornerShape.bottomStart.toPx(sizePx, this)
     val bottomLeft =
         if (isLtr) cornerShape.bottomStart.toPx(sizePx, this) else cornerShape.bottomEnd.toPx(sizePx, this)
-    // Returned in [TL, TR, BL, BR] order, matching the shader's cornerRadii layout.
-    return floatArrayOf(
+    shader.setFloatUniform(
+        "cornerRadii",
         topLeft.fastCoerceAtMost(maxRadius),
         topRight.fastCoerceAtMost(maxRadius),
         bottomLeft.fastCoerceAtMost(maxRadius),

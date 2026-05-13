@@ -14,14 +14,13 @@ import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import kotlin.random.Random
 
-fun LazyListScope.testPageSection() {
-    item(key = "others") {
+fun LazyListScope.otherPageSection() {
+    item(key = "other") {
         val navigator = LocalNavigator.current
-        SmallTitle(text = "Others")
+        SmallTitle(text = "Other")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 12.dp),
         ) {
             ArrowPreference(
                 title = "PullToRefresh Test",

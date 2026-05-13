@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import top.yukonga.miuix.kmp.blur.internal.COLOR_CONTROLS_SHADER
+import top.yukonga.miuix.kmp.blur.internal.MAX_BLUR_TAPS
 import top.yukonga.miuix.kmp.blur.internal.chain
 import top.yukonga.miuix.kmp.blur.internal.colorFilterEffect
 import top.yukonga.miuix.kmp.blur.internal.runtimeShaderEffect as createRuntimeShaderEffect
@@ -95,13 +96,13 @@ fun BackdropEffectScope.effect(effect: RenderEffect) {
 /**
  * Applies a custom runtime shader effect to the backdrop.
  *
- * **Pixel-space uniforms must be scaled by [downscaleFactor].** When chained after
- * [blur] (or any effect that raises [downscaleFactor]), the backdrop layer is
- * recorded at `1 / downscaleFactor` resolution, and the shader receives `coord` values in
- * the downscaled layer's pixel space. Any uniform that describes a pixel-space distance
+ * **Pixel-space uniforms must be scaled by [BackdropEffectScope.downscaleFactor].** When chained
+ * after [blur] (or any effect that raises [BackdropEffectScope.downscaleFactor]), the backdrop
+ * layer is recorded at `1 / downscaleFactor` resolution, and the shader receives `coord` values
+ * in the downscaled layer's pixel space. Any uniform that describes a pixel-space distance
  * (size, padding/offset, corner radii, refraction band, …) must be divided by
- * [downscaleFactor] inside [block], otherwise the geometry will sit far outside the
- * downscaled layer's bounds and every sample will land on transparent black.
+ * [BackdropEffectScope.downscaleFactor] inside [block], otherwise the geometry will sit far
+ * outside the downscaled layer's bounds and every sample will land on transparent black.
  *
  * @param key Cache key for the compiled shader.
  * @param shaderString The AGSL/SkSL shader source code.
@@ -172,6 +173,26 @@ internal abstract class BackdropEffectScopeImpl :
 
     var runtimeShaderCache: RuntimeShaderCache = RuntimeShaderCacheImpl()
 
+    // Scratch buffers for createBlurEffect — reused across observe-driven updateEffects()
+    // invocations. X and Y axes are computed sequentially so they share the same buffers.
+    internal val blurRawWeights: DoubleArray = DoubleArray(14)
+    internal val blurParamOffsets: FloatArray = FloatArray(MAX_BLUR_TAPS)
+    internal val blurParamWeights: FloatArray = FloatArray(MAX_BLUR_TAPS)
+
+    // Lazy per-tapCount uniform buffers for setFloatUniform — uniform arrays require
+    // exact length matching the shader declaration. Indexed [0..MAX_BLUR_TAPS]; slot 0 unused.
+    private val shaderOffsetsByTaps: Array<FloatArray?> = arrayOfNulls(MAX_BLUR_TAPS + 1)
+    private val shaderWeightsByTaps: Array<FloatArray?> = arrayOfNulls(MAX_BLUR_TAPS + 1)
+
+    internal fun obtainShaderOffsetsBuffer(tapCount: Int): FloatArray = shaderOffsetsByTaps[tapCount]
+        ?: FloatArray(tapCount * 2).also { shaderOffsetsByTaps[tapCount] = it }
+
+    internal fun obtainShaderWeightsBuffer(tapCount: Int): FloatArray = shaderWeightsByTaps[tapCount]
+        ?: FloatArray(tapCount).also { shaderWeightsByTaps[tapCount] = it }
+
+    internal val blendModesBuffer: FloatArray = FloatArray(MAX_BLEND_LAYERS)
+    internal val blendColorsBuffer: FloatArray = FloatArray(MAX_BLEND_LAYERS * 4)
+
     override fun obtainRuntimeShader(key: String, string: String): RuntimeShader = runtimeShaderCache.obtainRuntimeShader(key, string)
 
     fun update(scope: DrawScope): Boolean {
@@ -214,5 +235,13 @@ internal abstract class BackdropEffectScopeImpl :
         noiseCoefficient = 0f
     }
 }
+
+/**
+ * Internal downcast helper. [BackdropEffectScope] is a sealed interface whose only
+ * implementation is [BackdropEffectScopeImpl] (enforced at compile time), so this cast
+ * cannot fail at runtime.
+ */
+internal val BackdropEffectScope.impl: BackdropEffectScopeImpl
+    get() = this as BackdropEffectScopeImpl
 
 // endregion
