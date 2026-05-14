@@ -125,7 +125,7 @@ fun TextField(
             }
         }
     }
-    val labelAnim by animateDpAsState(
+    val labelAnim = animateDpAsState(
         when (labelState) {
             LabelAnimState.Floating -> -insideMargin.height / 2
             LabelAnimState.Placeholder, LabelAnimState.Normal -> 0.dp
@@ -185,7 +185,7 @@ fun TextField(
                 paddingModifier = paddingModifier,
                 leadingIcon = leadingIcon,
                 trailingIcon = trailingIcon,
-                labelAnim = labelAnim,
+                labelAnim = { labelAnim.value },
                 insideMargin = insideMargin,
                 innerTextField = innerTextField,
             )
@@ -264,7 +264,7 @@ fun TextField(
             else -> LabelAnimState.Normal
         }
     }
-    val labelAnim by animateDpAsState(
+    val labelAnim = animateDpAsState(
         when (labelState) {
             LabelAnimState.Floating -> -insideMargin.height / 2
             LabelAnimState.Placeholder, LabelAnimState.Normal -> 0.dp
@@ -326,7 +326,7 @@ fun TextField(
                 paddingModifier = paddingModifier,
                 leadingIcon = leadingIcon,
                 trailingIcon = trailingIcon,
-                labelAnim = labelAnim,
+                labelAnim = { labelAnim.value },
                 insideMargin = insideMargin,
                 innerTextField = innerTextField,
             )
@@ -404,7 +404,7 @@ fun TextField(
             else -> LabelAnimState.Normal
         }
     }
-    val labelAnim by animateDpAsState(
+    val labelAnim = animateDpAsState(
         when (labelState) {
             LabelAnimState.Floating -> -insideMargin.height / 2
             LabelAnimState.Placeholder, LabelAnimState.Normal -> 0.dp
@@ -466,7 +466,7 @@ fun TextField(
                 paddingModifier = paddingModifier,
                 leadingIcon = leadingIcon,
                 trailingIcon = trailingIcon,
-                labelAnim = labelAnim,
+                labelAnim = { labelAnim.value },
                 insideMargin = insideMargin,
                 innerTextField = innerTextField,
             )
@@ -510,7 +510,7 @@ private fun TextFieldDecorationBox(
     paddingModifier: Modifier = Modifier,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
-    labelAnim: Dp = 0.dp,
+    labelAnim: () -> Dp = { 0.dp },
     insideMargin: DpSize = TextFieldDefaults.InsideMargin,
     innerTextField: @Composable () -> Unit,
 ) {
@@ -551,7 +551,7 @@ private fun TextFieldDecorationBox(
                         fontSize = labelFontSize.value.sp,
                         color = labelColor,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.offset { IntOffset(0, labelAnim.roundToPx()) },
+                        modifier = Modifier.offset { IntOffset(0, labelAnim().roundToPx()) },
                         textAlign = TextAlign.Start,
                     )
                 }

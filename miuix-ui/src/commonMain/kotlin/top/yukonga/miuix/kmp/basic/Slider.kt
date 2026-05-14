@@ -1250,27 +1250,6 @@ internal class RangeSliderHapticState {
 
 private fun stepsToTickFractions(steps: Int): FloatArray = if (steps == 0) floatArrayOf() else FloatArray(steps + 2) { it.toFloat() / (steps + 1) }
 
-private fun snapValueToTick(
-    current: Float,
-    tickFractions: FloatArray,
-    minPx: Float,
-    maxPx: Float,
-): Float {
-    if (tickFractions.isEmpty()) return current
-    var bestFraction = tickFractions[0]
-    var bestDist = abs(lerp(minPx, maxPx, bestFraction) - current)
-    for (i in 1 until tickFractions.size) {
-        val f = tickFractions[i]
-        val px = lerp(minPx, maxPx, f)
-        val dist = abs(px - current)
-        if (dist < bestDist) {
-            bestDist = dist
-            bestFraction = f
-        }
-    }
-    return lerp(minPx, maxPx, bestFraction)
-}
-
 private fun resolveValueFromFraction(
     fraction: Float,
     valueRange: ClosedFloatingPointRange<Float>,
