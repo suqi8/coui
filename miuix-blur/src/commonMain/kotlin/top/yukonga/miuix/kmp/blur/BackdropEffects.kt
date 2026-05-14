@@ -6,9 +6,10 @@ package top.yukonga.miuix.kmp.blur
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
+import top.yukonga.miuix.kmp.blur.internal.BLEND_MODE_SHADER_EXTENDED
+import top.yukonga.miuix.kmp.blur.internal.BLEND_MODE_SHADER_STANDARD
 import top.yukonga.miuix.kmp.blur.internal.BLUR_KERNEL_REACH
 import top.yukonga.miuix.kmp.blur.internal.BLUR_RADIUS_TO_SIGMA
-import top.yukonga.miuix.kmp.blur.internal.MI_BLEND_MODE_SHADER
 import top.yukonga.miuix.kmp.blur.internal.chain
 import top.yukonga.miuix.kmp.blur.internal.computeDownScaleParams
 import top.yukonga.miuix.kmp.blur.internal.createBlurEffect
@@ -79,17 +80,19 @@ fun BackdropEffectScope.blendColors(colors: BlurColors) {
     val modes = scope.blendModesBuffer
     val colorData = scope.blendColorsBuffer
 
+    val needsExtended = (0 until layerCount).any { layerList[it].mode.value >= 100 }
+    val shaderKey = if (needsExtended) "MiBlendModesExt" else "MiBlendModesStd"
+    val shaderSource = if (needsExtended) BLEND_MODE_SHADER_EXTENDED else BLEND_MODE_SHADER_STANDARD
+
     runtimeShaderEffect(
-        key = "MiBlendModes",
-        shaderString = MI_BLEND_MODE_SHADER,
+        key = shaderKey,
+        shaderString = shaderSource,
         uniformShaderName = "child",
     ) {
         setFloatUniform("layerCount", layerCount.toFloat())
 
-        // Pack blend modes as float array (Skiko lacks IntArray uniform support).
-        // Pack colors as flat float array with premultiplied alpha
-        // (array-indexed setColorUniform is not supported on Android/Skiko).
-        // Zero unused trailing slots so stale state from a previous invocation doesn't leak.
+        // Skiko lacks IntArray / array-indexed Color uniform — pack into flat float arrays.
+        // Zero unused trailing slots to avoid stale state from a previous invocation.
         for (i in 0 until layerCount) {
             val entry = layerList[i]
             modes[i] = entry.mode.value.toFloat()
@@ -109,10 +112,13 @@ fun BackdropEffectScope.blendColors(colors: BlurColors) {
         }
         setFloatUniform("blendModes", modes)
         setFloatUniform("layerColors", colorData)
-        setFloatUniform("uSaturation", colors.saturation)
-        setFloatUniform("uBrightness", colors.brightness)
-        setFloatUniform("uLuminanceAmount", 0f)
-        setFloatUniform("uLuminanceValues", 0f, 0f, 0f, 0f)
+        // Standard family doesn't declare these uniforms; setting them would error.
+        if (needsExtended) {
+            setFloatUniform("uSaturation", colors.saturation)
+            setFloatUniform("uBrightness", colors.brightness)
+            setFloatUniform("uLuminanceAmount", 0f)
+            setFloatUniform("uLuminanceValues", 0f, 0f, 0f, 0f)
+        }
     }
 }
 

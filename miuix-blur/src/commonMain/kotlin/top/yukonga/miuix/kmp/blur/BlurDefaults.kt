@@ -120,7 +120,7 @@ value class BlurBlendMode(val value: Int) {
         /** Plus lighter with alpha-aware compositing. */
         val PlusLighter = BlurBlendMode(121)
 
-        /** Alpha blend with child modulation. */
+        /** Alpha blend with mask-channel modulation; the mask resolves to backdrop.r. */
         val AlphaBlend = BlurBlendMode(200)
 
         /** Saturation adjustment. Requires [BlurColors.saturation]. */

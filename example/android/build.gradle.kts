@@ -72,7 +72,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         create("benchmarkRelease") {
-            isDebuggable = true
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += "release"
         }

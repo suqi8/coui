@@ -6,9 +6,7 @@ package top.yukonga.miuix.kmp.blur.internal
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.RenderEffect
 import top.yukonga.miuix.kmp.blur.BackdropEffectScopeImpl
-import kotlin.math.PI
 import kotlin.math.exp
-import kotlin.math.sqrt
 
 /** Conversion factor from blur radius in pixels to Blur sigma. */
 internal const val BLUR_RADIUS_TO_SIGMA = 0.45f
@@ -57,17 +55,17 @@ internal fun createBlurEffect(
             val shaderOffsets = scope.obtainShaderOffsetsBuffer(n)
             val shaderWeights = scope.obtainShaderWeightsBuffer(n)
             for (i in 0 until n) {
-                shaderOffsets[i] = paramOffsets[i]
-                shaderOffsets[i + n] = 0f
+                shaderOffsets[i * 2] = paramOffsets[i]
+                shaderOffsets[i * 2 + 1] = 0f
                 shaderWeights[i] = paramWeights[i]
             }
             val hShader = scope.obtainRuntimeShader(
                 "LMGauss$n",
-                buildBlurShader(n),
+                BLUR_SHADER_BY_TAP[n],
             ).apply {
                 setFloatUniform("in_blurOffset", shaderOffsets)
                 setFloatUniform("in_blurWeight", shaderWeights)
-                setFloatUniform("in_texSize", texW, texH)
+                setFloatUniform("in_maxCoord", texW - 0.5f, texH - 0.5f)
             }
             effect = runtimeShaderEffect(hShader, "child")
         }
@@ -80,17 +78,17 @@ internal fun createBlurEffect(
             val shaderOffsets = scope.obtainShaderOffsetsBuffer(n)
             val shaderWeights = scope.obtainShaderWeightsBuffer(n)
             for (i in 0 until n) {
-                shaderOffsets[i] = 0f
-                shaderOffsets[i + n] = paramOffsets[i]
+                shaderOffsets[i * 2] = 0f
+                shaderOffsets[i * 2 + 1] = paramOffsets[i]
                 shaderWeights[i] = paramWeights[i]
             }
             val vShader = scope.obtainRuntimeShader(
                 "LMGauss$n",
-                buildBlurShader(n),
+                BLUR_SHADER_BY_TAP[n],
             ).apply {
                 setFloatUniform("in_blurOffset", shaderOffsets)
                 setFloatUniform("in_blurWeight", shaderWeights)
-                setFloatUniform("in_texSize", texW, texH)
+                setFloatUniform("in_maxCoord", texW - 0.5f, texH - 0.5f)
             }
             effect = effect?.chain(runtimeShaderEffect(vShader, "child"))
                 ?: runtimeShaderEffect(vShader, "child")
@@ -164,9 +162,8 @@ internal fun computeBlurParamsInto(
     val v = variance.toDouble()
 
     // 1. Generate raw Blur weights for offsets 0..13 into the scratch buffer.
-    val coeff = 1.0 / sqrt(2.0 * PI * v)
     for (i in 0..13) {
-        rawScratch[i] = coeff * exp(-0.5 * i.toDouble() * i.toDouble() / v)
+        rawScratch[i] = exp(-0.5 * i.toDouble() * i.toDouble() / v)
     }
 
     // 2. Normalize so all weights sum to 1.0 (accounting for symmetry)

@@ -85,9 +85,12 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.Platform
 import top.yukonga.miuix.kmp.utils.platform
 import ui.isInDarkTheme
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 private val LocalIosTabScale = staticCompositionLocalOf { { 1f } }
@@ -96,12 +99,17 @@ private val iosIndicatorSpecular: Highlight = Highlight(
     width = 1.dp,
     alpha = 1f,
     style = BloomStroke(
-        color = Color.White.copy(alpha = 0.08f),
+        color = Color.White.copy(alpha = 0.12f),
         innerBlurRadius = 2.0.dp,
         primaryLight = LightSource(
             position = LightPosition(0.5f, -0.3f, -0.05f),
             color = Color.White,
             intensity = 1f,
+        ),
+        secondaryLight = LightSource(
+            position = LightPosition(0.5f, 0.8f, -0.5f),
+            color = Color.White,
+            intensity = 0.4f,
         ),
         dualPeak = true,
     ),
@@ -112,22 +120,30 @@ private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
 private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f // |g_xy| > 0.1, ≈ 6° tilt
 
-/** Rotates a `dualPeak` highlight's primary light to follow gravity; falls back to "from top" when flat. */
+/** Tracks gravity for a `dualPeak` highlight's primary light, with an extra UV-clockwise offset on top. */
 @Composable
-private fun rememberGravityRotatedHighlight(base: Highlight): Highlight {
+private fun rememberGravityRotatedHighlight(
+    base: Highlight,
+    extraDegrees: Float = 0f,
+): Highlight {
     val baseStyle = base.style as BloomStroke
     val tilt by rememberDeviceTilt()
-    val rotatedPrimary = remember(tilt, baseStyle.primaryLight) {
+    val rotatedPrimary = remember(tilt, baseStyle.primaryLight, extraDegrees) {
         val basePrimary = baseStyle.primaryLight
         val gx = tilt.gravityX
         val gy = tilt.gravityY
         val gMagSq = gx * gx + gy * gy
-        val (lx, ly) = if (gMagSq > GRAVITY_DIR_THRESHOLD_SQ) {
+        val (lx0, ly0) = if (gMagSq > GRAVITY_DIR_THRESHOLD_SQ) {
             val invMag = 1f / sqrt(gMagSq)
             (gx * invMag) to (gy * invMag)
         } else {
             0f to -1f
         }
+        val rad = extraDegrees * PI / 180.0
+        val c = cos(rad).toFloat()
+        val s = sin(rad).toFloat()
+        val lx = c * lx0 - s * ly0
+        val ly = s * lx0 + c * ly0
         basePrimary.copy(
             position = LightPosition(
                 x = LIGHT_REF_X + lx,
@@ -261,7 +277,8 @@ internal fun IosLiquidGlassNavigationBar(
         )
     }
 
-    val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular)
+    val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = -45f)
+    val pillHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = 90f)
 
     val combinedBackdrop = backdrop?.let { rememberCombinedBackdrop(it, tabsBackdrop) }
 
@@ -357,7 +374,7 @@ internal fun IosLiquidGlassNavigationBar(
                                         refractionAmount = 24.dp.toPx(),
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = 0.5f) },
+                                highlight = { baseHighlight.copy(alpha = 0.75f) },
                                 layerBlock = {
                                     val width = size.width.coerceAtLeast(1f)
                                     val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -440,7 +457,7 @@ internal fun IosLiquidGlassNavigationBar(
                                         chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { baseHighlight.copy(alpha = dampedDrag.pressProgress) },
+                                highlight = { pillHighlight.copy(alpha = dampedDrag.pressProgress) },
                                 layerBlock = {
                                     scaleX = dampedDrag.scaleX
                                     scaleY = dampedDrag.scaleY
