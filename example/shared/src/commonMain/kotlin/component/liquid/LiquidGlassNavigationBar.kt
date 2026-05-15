@@ -410,14 +410,10 @@ internal fun IosLiquidGlassNavigationBar(
                                 shape = { pillShape },
                                 effects = {
                                     vibrancy()
-                                    blur(
-                                        4.dp.toPx(),
-                                        4.dp.toPx(),
-                                    )
-                                    val progress = dampedDrag.pressProgress
+                                    blur(4.dp.toPx(), 4.dp.toPx())
                                     lens(
-                                        refractionHeight = 24.dp.toPx() * progress,
-                                        refractionAmount = 24.dp.toPx() * progress,
+                                        refractionHeight = 24.dp.toPx(),
+                                        refractionAmount = 24.dp.toPx(),
                                     )
                                 },
                                 onDrawSurface = { drawRect(containerColor) },
