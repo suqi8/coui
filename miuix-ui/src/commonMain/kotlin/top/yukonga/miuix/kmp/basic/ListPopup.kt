@@ -87,8 +87,8 @@ fun ListPopupColumn(
                 measurables: List<Measurable>,
                 constraints: Constraints,
             ): MeasureResult {
-                val minPx = 200.dp.roundToPx()
-                val maxPx = 288.dp.roundToPx()
+                val minPx = 178.dp.roundToPx()
+                val maxPx = 248.dp.roundToPx()
                 val widthCount = min(MAX_ITEMS_FOR_WIDTH, measurables.size)
                 var maxIntrinsic = 0
                 for (i in 0 until widthCount) {
@@ -125,8 +125,8 @@ fun ListPopupColumn(
                 measurables: List<IntrinsicMeasurable>,
                 width: Int,
             ): Int {
-                val minPx = 200.dp.roundToPx()
-                val maxPx = 288.dp.roundToPx()
+                val minPx = 178.dp.roundToPx()
+                val maxPx = 248.dp.roundToPx()
                 val widthCount = min(MAX_ITEMS_FOR_WIDTH, measurables.size)
                 var maxIntrinsic = 0
                 for (i in 0 until widthCount) {
@@ -207,7 +207,7 @@ object ListPopupDefaults {
      * Default minimum width of the popup. Also matches the lower clamp inside
      * [ListPopupColumn]'s width measurement.
      */
-    val MinWidth = 200.dp
+    val MinWidth = 178.dp
 
     /**
      * Default minimum height the popup will occupy when measured. Used as the floor for the
