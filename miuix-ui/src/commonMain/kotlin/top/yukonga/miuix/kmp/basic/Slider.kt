@@ -1338,12 +1338,12 @@ object SliderDefaults {
     /**
      * The minimum height of the [Slider] and [RangeSlider].
      */
-    val MinHeight = 28.dp
+    val MinHeight = 20.dp
 
     /**
      * The radius of the key points on the [Slider] and [RangeSlider].
      */
-    val KeyPointRadius = 3.855.dp
+    val KeyPointRadius = 3.0.dp
 
     /**
      * The type of haptic feedback to be used for the slider.

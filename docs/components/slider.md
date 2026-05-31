@@ -147,8 +147,8 @@ The SliderDefaults object provides default configurations for the Slider compone
 
 | Constant Name       | Type               | Default Value           | Description                  |
 | ------------------- | ------------------ | ----------------------- | ---------------------------- |
-| MinHeight           | Dp                 | 28.dp                   | Default height of the slider |
-| KeyPointRadius      | Dp                 | 3.855.dp                | Default radius of key points |
+| MinHeight           | Dp                 | 20.dp                   | Default height of the slider |
+| KeyPointRadius      | Dp                 | 3.0.dp                  | Default radius of key points |
 | DefaultHapticEffect | SliderHapticEffect | SliderHapticEffect.Edge | Default haptic feedback type |
 
 ### SliderHapticEffect
