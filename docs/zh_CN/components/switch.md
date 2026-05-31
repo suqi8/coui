@@ -51,6 +51,7 @@ Switch(
 | modifier        | Modifier             | 应用于开关的修饰符       | Modifier                      | 否       |
 | colors          | SwitchColors         | 开关的颜色配置           | SwitchDefaults.switchColors() | 否       |
 | enabled         | Boolean              | 开关是否可交互           | true                          | 否       |
+| isLoading       | Boolean              | 滑块是否显示加载转圈(COUI 加载样式) | false                | 否       |
 
 ### SwitchDefaults 对象
 

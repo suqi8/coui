@@ -65,6 +65,12 @@ fun LazyListScope.switchSection() {
                     modifier = Modifier.padding(start = 6.dp),
                     enabled = false,
                 )
+                Switch(
+                    checked = switchTrue.value,
+                    onCheckedChange = { switchTrue.value = it },
+                    modifier = Modifier.padding(start = 6.dp),
+                    isLoading = true,
+                )
             }
             SwitchPreference(
                 title = "Switch",

@@ -50,6 +50,7 @@ Switch(
 | modifier        | Modifier             | Modifier applied to the switch     | Modifier                      | No       |
 | colors          | SwitchColors         | Color configuration for the switch | SwitchDefaults.switchColors() | No       |
 | enabled         | Boolean              | Whether the switch is interactive  | true                          | No       |
+| isLoading       | Boolean              | Whether the thumb shows a loading spinner (COUI loading style) | false | No       |
 
 ### SwitchDefaults Object
 

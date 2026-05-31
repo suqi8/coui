@@ -6,8 +6,13 @@ package top.yukonga.miuix.kmp.basic
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.hoverable
@@ -33,7 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
@@ -58,6 +68,7 @@ import top.yukonga.miuix.kmp.utils.rememberCouiHaptic
  * @param modifier The modifier to be applied to the [Switch].
  * @param colors The [SwitchColors] of the [Switch].
  * @param enabled Whether the [Switch] is enabled.
+ * @param isLoading Whether the [Switch] shows a loading spinner on the thumb (COUI loading style).
  */
 @Composable
 fun Switch(
@@ -66,6 +77,7 @@ fun Switch(
     modifier: Modifier = Modifier,
     colors: SwitchColors = SwitchDefaults.switchColors(),
     enabled: Boolean = true,
+    isLoading: Boolean = false,
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
     val interactionSource = remember { MutableInteractionSource() }
@@ -133,17 +145,35 @@ fun Switch(
     // The inner circle uses the unchecked track color so the unchecked thumb reads as a ring.
     val innerCircleColor = colors.uncheckedTrackColor(enabled)
 
+    // COUI loading style: the thumb hosts a spinner rotating 0..360 over 800ms (COUISwitch q()).
+    val loadingRotation = if (isLoading) {
+        val transition = rememberInfiniteTransition(label = "switchLoading")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 800, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "switchLoadingRotation",
+        )
+    } else {
+        null
+    }
+
     val currentCouiHaptic by rememberUpdatedState(couiHaptic)
+    // Loading switches cannot be toggled (COUISwitch loading style swallows touch).
+    val interactive = enabled && !isLoading
     val hasCallback = onCheckedChange != null
     val toggleableModifier = if (hasCallback) {
-        remember(checked, enabled, interactionSource) {
+        remember(checked, interactive, interactionSource) {
             Modifier.toggleable(
                 value = checked,
                 onValueChange = { v ->
                     currentOnCheckedChange?.invoke(v)
                     currentCouiHaptic(CouiHapticEffect.Switch)
                 },
-                enabled = enabled,
+                enabled = interactive,
                 role = Role.Switch,
                 interactionSource = interactionSource,
             )
@@ -167,7 +197,7 @@ fun Switch(
             }
             .hoverable(
                 interactionSource = interactionSource,
-                enabled = enabled,
+                enabled = interactive,
             )
             .then(toggleableModifier),
     ) {
@@ -184,15 +214,33 @@ fun Switch(
                 .drawBehind {
                     // Outer circle (the thumb body).
                     drawCircle(color = thumbColorState.value)
-                    // Inner circle: visible when unchecked, fades out when checked
-                    // (COUISwitch inner_circle_width 7.9dp vs outer 18dp).
-                    val innerAlpha = innerCircleAlphaState.value
-                    if (innerAlpha > 0f) {
-                        drawCircle(
-                            color = innerCircleColor,
-                            radius = size.minDimension / 2f * (SwitchDefaults.InnerCircleSize / SwitchDefaults.ThumbSize),
-                            alpha = innerAlpha,
-                        )
+                    val rotation = loadingRotation?.value
+                    if (rotation != null) {
+                        // COUI loading style: a rotating arc on the thumb.
+                        val stroke = size.minDimension * 0.1f
+                        val inset = stroke * 1.5f
+                        rotate(rotation) {
+                            drawArc(
+                                color = innerCircleColor,
+                                startAngle = 0f,
+                                sweepAngle = 270f,
+                                useCenter = false,
+                                topLeft = Offset(inset, inset),
+                                size = Size(size.width - inset * 2f, size.height - inset * 2f),
+                                style = Stroke(width = stroke, cap = StrokeCap.Round),
+                            )
+                        }
+                    } else {
+                        // Inner circle: visible when unchecked, fades out when checked
+                        // (COUISwitch inner_circle_width 7.9dp vs outer 18dp).
+                        val innerAlpha = innerCircleAlphaState.value
+                        if (innerAlpha > 0f) {
+                            drawCircle(
+                                color = innerCircleColor,
+                                radius = size.minDimension / 2f * (SwitchDefaults.InnerCircleSize / SwitchDefaults.ThumbSize),
+                                alpha = innerAlpha,
+                            )
+                        }
                     }
                 },
         )
