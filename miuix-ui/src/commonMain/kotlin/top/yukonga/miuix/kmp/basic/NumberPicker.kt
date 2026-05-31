@@ -76,7 +76,7 @@ fun NumberPicker(
     visibleItemCount: Int = 5,
     wrapAround: Boolean = false,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    textStyle: TextStyle = MiuixTheme.textStyles.title1,
+    textStyle: TextStyle = MiuixTheme.textStyles.title3,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
 ) {
     require(visibleItemCount % 2 == 1 && visibleItemCount >= 3) {
@@ -297,7 +297,7 @@ object NumberPickerDefaults {
     @Composable
     fun colors(
         selectedTextColor: Color = MiuixTheme.colorScheme.onSurface,
-        unselectedTextColor: Color = MiuixTheme.colorScheme.onSurfaceSecondary,
+        unselectedTextColor: Color = MiuixTheme.colorScheme.onSurfaceVariantActions,
         disabledSelectedTextColor: Color = MiuixTheme.colorScheme.disabledOnSecondary,
         disabledUnselectedTextColor: Color = MiuixTheme.colorScheme.disabledOnSecondary,
     ): NumberPickerColors = remember(
