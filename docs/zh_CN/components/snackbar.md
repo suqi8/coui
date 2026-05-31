@@ -156,7 +156,7 @@ val colors = SnackbarDefaults.snackbarColors(
 
 | 常量名       | 类型          | 说明                      | 默认值                                              |
 | ------------ | ------------- | ------------------------- | --------------------------------------------------- |
-| CornerRadius | Dp            | Snackbar 的默认圆角半径   | 12.dp                                               |
+| CornerRadius | Dp            | Snackbar 的默认圆角半径   | 16.dp                                               |
 | InsideMargin | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 12.dp, vertical = 8.dp)  |
 
 ## SnackbarDuration 与 SnackbarResult

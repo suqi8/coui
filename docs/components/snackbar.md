@@ -156,7 +156,7 @@ val colors = SnackbarDefaults.snackbarColors(
 
 | Constant Name | Type          | Description                                | Default Value                                          |
 | ------------- | ------------- | ------------------------------------------ | ------------------------------------------------------ |
-| CornerRadius  | Dp            | Default corner radius of the Snackbar      | 12.dp                                                  |
+| CornerRadius  | Dp            | Default corner radius of the Snackbar      | 16.dp                                                  |
 | InsideMargin  | PaddingValues | Default inner padding of the Snackbar      | PaddingValues(horizontal = 12.dp, vertical = 8.dp)     |
 
 ## SnackbarDuration and SnackbarResult

@@ -460,8 +460,8 @@ data class SnackbarColors(
  * Defaults for [Snackbar].
  */
 object SnackbarDefaults {
-    /** The default corner radius. */
-    val CornerRadius = 12.dp
+    /** The default corner radius (COUI coui_snack_bar_radius). */
+    val CornerRadius = 16.dp
 
     /** The default inside margin. */
     val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
