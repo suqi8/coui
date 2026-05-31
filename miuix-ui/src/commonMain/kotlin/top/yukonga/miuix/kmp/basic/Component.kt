@@ -158,7 +158,7 @@ fun BasicComponent(
 
     Column(
         modifier = modifier
-            .heightIn(min = 56.dp)
+            .heightIn(min = 60.dp)
             .fillMaxWidth()
             .then(clickableModifier)
             .padding(insideMargin),
