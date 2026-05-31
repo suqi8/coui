@@ -13,7 +13,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -89,15 +88,16 @@ fun Switch(
     val couiHaptic = rememberCouiHaptic()
 
     val capsuleShape = CircleShape
-    val thumbOffsetSpringSpec = remember { spring<Dp>(dampingRatio = 0.7f, stiffness = 987f) }
     // COUI toggle interpolator: PathInterpolatorCompat.create(0.3f, 0f, 0.1f, 1f).
     val couiToggleEasing = remember { CubicBezierEasing(0.3f, 0f, 0.1f, 1f) }
+    // COUI animates circleTranslation over 383ms with the toggle interpolator (COUISwitch.b()).
+    val thumbOffsetSpec = remember { tween<Dp>(durationMillis = 383, easing = couiToggleEasing) }
 
     // COUI switch is tap-driven: the thumb only animates between the off/on positions on toggle,
     // it never tracks the finger (COUISwitch.onTouchEvent has no ACTION_MOVE).
     val thumbOffsetState = animateDpAsState(
         targetValue = if (checked) SwitchDefaults.ThumbEndOffset else SwitchDefaults.ThumbStartOffset,
-        animationSpec = thumbOffsetSpringSpec,
+        animationSpec = thumbOffsetSpec,
     )
 
     // COUI thumb squash: on toggle, circleScaleX briefly goes 1.0 -> 1.04 (133ms) then back to 1.0
@@ -126,7 +126,7 @@ fun Switch(
 
     val backgroundColorState = animateColorAsState(
         if (checked) colors.checkedTrackColor(enabled) else colors.uncheckedTrackColor(enabled),
-        animationSpec = spring(dampingRatio = 0.99f, stiffness = 438.6f),
+        animationSpec = tween(durationMillis = 450, easing = couiToggleEasing),
     )
 
     // COUI press/hover feedback is a translucent overlay on the track tint (coui_color_press 12% /

@@ -50,3 +50,4 @@ example/ios/iosApp/Generated.xcconfig
 # COUI retheme transient artifacts
 .coui-research.workflow.js
 .serena/
+.coui-verify.workflow.js
