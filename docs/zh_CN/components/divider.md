@@ -65,7 +65,7 @@ DividerDefaults 对象提供了分割线组件的默认值。
 
 | 常量名       | 类型  | 说明             | 默认值                             |
 | ------------ | ----- | ---------------- | ---------------------------------- |
-| Thickness    | Dp    | 分割线的默认厚度 | 0.75.dp                            |
+| Thickness    | Dp    | 分割线的默认厚度 | 0.33.dp                            |
 | DividerColor | Color | 分割线的默认颜色 | MiuixTheme.colorScheme.dividerLine |
 
 ## 进阶用法

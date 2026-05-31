@@ -66,9 +66,9 @@ fun VerticalDivider(
 object DividerDefaults {
 
     /**
-     * Default thickness of the divider line.
+     * Default thickness of the divider line (COUI coui_list_divider_height).
      */
-    val Thickness = 0.75.dp
+    val Thickness = 0.33.dp
 
     /**
      * Default color of the divider line.

@@ -65,7 +65,7 @@ The DividerDefaults object provides default values for the divider components.
 
 | Constant Name | Type  | Description                  | Default Value                      |
 | ------------- | ----- | ---------------------------- | ---------------------------------- |
-| Thickness     | Dp    | Default thickness of divider | 0.75.dp                            |
+| Thickness     | Dp    | Default thickness of divider | 0.33.dp                            |
 | DividerColor  | Color | Default color of divider     | MiuixTheme.colorScheme.dividerLine |
 
 ## Advanced Usage
