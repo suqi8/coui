@@ -366,8 +366,8 @@ object DropdownDefaults {
     /** Minimum row width when the dropdown is shown in dialog mode. */
     val MinWidth: Dp = 200.dp
 
-    /** Size of the trailing check icon shown on the selected option. */
-    val CheckIconSize: Dp = 20.dp
+    /** Size of the trailing check icon shown on the selected option (COUI coui_popup_list_window_checkbox_width). */
+    val CheckIconSize: Dp = 24.dp
 
     /** Size of the up-down arrow rendered by [DropdownArrowEndAction]. */
     val ArrowSize: DpSize = DpSize(width = 10.dp, height = 16.dp)
@@ -381,17 +381,17 @@ object DropdownDefaults {
     /** Maximum width of the inner text/icon row when the dropdown is shown in popup mode. */
     val MaxItemTextWidth: Dp = 216.dp
 
-    /** Horizontal padding of each row in popup mode. */
-    val InsideHorizontalPadding: Dp = 20.dp
+    /** Horizontal padding of each row in popup mode (COUI coui_popup_list_window_item_title_margin_with_no_icon). */
+    val InsideHorizontalPadding: Dp = 16.dp
 
     /** Horizontal padding of each row in dialog mode. */
     val DialogHorizontalPadding: Dp = 28.dp
 
-    /** Top/bottom padding applied to the first/last row in popup mode. */
-    val FirstLastVerticalPadding: Dp = 20.dp
+    /** Top/bottom padding applied to the first/last row in popup mode (COUI popup item padding). */
+    val FirstLastVerticalPadding: Dp = 10.dp
 
     /** Top/bottom padding applied to middle rows in popup mode and to all rows in dialog mode. */
-    val MiddleVerticalPadding: Dp = 12.dp
+    val MiddleVerticalPadding: Dp = 8.dp
 
     /** Padding between the leading icon cell and the title text. */
     val IconEndPadding: Dp = 12.dp
