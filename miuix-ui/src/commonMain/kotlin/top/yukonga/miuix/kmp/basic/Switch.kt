@@ -4,12 +4,14 @@
 package top.yukonga.miuix.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,8 +35,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
@@ -46,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.LocalColors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
+import top.yukonga.miuix.kmp.utils.CouiHapticEffect
+import top.yukonga.miuix.kmp.utils.rememberCouiHaptic
 
 /**
  * A [Switch] component with Miuix style.
@@ -67,15 +70,16 @@ fun Switch(
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isDragged by interactionSource.collectIsDraggedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
+    // COUI fires the OPLUS linear-motor toggle waveform (302) on switch toggle; off-ColorOS this
+    // falls back to the closest standard haptic.
+    val couiHaptic = rememberCouiHaptic()
 
     val capsuleShape = CircleShape
     val thumbOffsetSpringSpec = remember { spring<Dp>(dampingRatio = 0.7f, stiffness = 987f) }
-    val thumbSquashSpringSpec = remember { spring<Float>(dampingRatio = 0.6f, stiffness = 987f) }
+    // COUI toggle interpolator: PathInterpolatorCompat.create(0.3f, 0f, 0.1f, 1f).
+    val couiToggleEasing = remember { CubicBezierEasing(0.3f, 0f, 0.1f, 1f) }
 
     // COUI switch is tap-driven: the thumb only animates between the off/on positions on toggle,
     // it never tracks the finger (COUISwitch.onTouchEvent has no ACTION_MOVE).
@@ -84,11 +88,24 @@ fun Switch(
         animationSpec = thumbOffsetSpringSpec,
     )
 
-    // COUI has no uniform press-scale on the thumb. The only thumb deform is a brief horizontal
-    // squash-stretch (scaleX -> 1.3) during the off<->on toggle slide.
-    val thumbSquashState = animateFloatAsState(
-        targetValue = if (enabled && (isPressed || isDragged)) 1.3f else 1f,
-        animationSpec = thumbSquashSpringSpec,
+    // COUI thumb squash: on toggle, circleScaleX briefly goes 1.0 -> 1.04 (133ms) then back to 1.0
+    // (250ms after a 133ms delay). It is NOT a press effect (COUISwitch.b()).
+    val thumbSquash = remember { Animatable(1f) }
+    var isFirstComposition by remember { mutableStateOf(true) }
+    LaunchedEffect(checked) {
+        if (isFirstComposition) {
+            isFirstComposition = false
+            return@LaunchedEffect
+        }
+        thumbSquash.animateTo(1.04f, tween(durationMillis = 133, easing = couiToggleEasing))
+        thumbSquash.animateTo(1f, tween(durationMillis = 250, easing = couiToggleEasing))
+    }
+
+    // COUI thumb has a two-layer structure: an outer circle plus an inner circle that is visible
+    // when unchecked and fades out when checked (innerCircleAlpha 1->0, COUISwitch.b()).
+    val innerCircleAlphaState = animateFloatAsState(
+        targetValue = if (checked) 0f else 1f,
+        animationSpec = tween(durationMillis = 100, easing = couiToggleEasing),
     )
 
     val thumbColorState = animateColorAsState(
@@ -100,17 +117,23 @@ fun Switch(
         animationSpec = spring(dampingRatio = 0.99f, stiffness = 438.6f),
     )
 
-    // COUI press/hover feedback is a translucent black overlay on the track (coui_color_press /
-    // coui_color_hover), not a thumb scale.
+    // COUI press/hover feedback is a translucent overlay on the track tint (coui_color_press 12% /
+    // coui_color_hover 7.8%), composited over the bar color. The overlay tone follows the scheme
+    // (black in light, white in dark), so derive it from onSurface (COUISwitch.f() + e()).
+    val overlayTone = MiuixTheme.colorScheme.onSurface
     val pressOverlayState = animateColorAsState(
         when {
             !enabled -> Color.Transparent
-            isPressed || isDragged -> Color.Black.copy(alpha = 0.12f)
-            isHovered -> Color.Black.copy(alpha = 0.078f)
+            isPressed -> overlayTone.copy(alpha = 0.12f)
+            isHovered -> overlayTone.copy(alpha = 0.078f)
             else -> Color.Transparent
         },
     )
 
+    // The inner circle uses the unchecked track color so the unchecked thumb reads as a ring.
+    val innerCircleColor = colors.uncheckedTrackColor(enabled)
+
+    val currentCouiHaptic by rememberUpdatedState(couiHaptic)
     val hasCallback = onCheckedChange != null
     val toggleableModifier = if (hasCallback) {
         remember(checked, enabled, interactionSource) {
@@ -118,9 +141,7 @@ fun Switch(
                 value = checked,
                 onValueChange = { v ->
                     currentOnCheckedChange?.invoke(v)
-                    currentHapticFeedback.performHapticFeedback(
-                        if (v) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
-                    )
+                    currentCouiHaptic(CouiHapticEffect.Switch)
                 },
                 enabled = enabled,
                 role = Role.Switch,
@@ -158,10 +179,21 @@ fun Switch(
                     IntOffset(thumbOffsetState.value.roundToPx(), 0)
                 }
                 .graphicsLayer {
-                    scaleX = thumbSquashState.value
+                    scaleX = thumbSquash.value
                 }
                 .drawBehind {
+                    // Outer circle (the thumb body).
                     drawCircle(color = thumbColorState.value)
+                    // Inner circle: visible when unchecked, fades out when checked
+                    // (COUISwitch inner_circle_width 7.9dp vs outer 18dp).
+                    val innerAlpha = innerCircleAlphaState.value
+                    if (innerAlpha > 0f) {
+                        drawCircle(
+                            color = innerCircleColor,
+                            radius = size.minDimension / 2f * (SwitchDefaults.InnerCircleSize / SwitchDefaults.ThumbSize),
+                            alpha = innerAlpha,
+                        )
+                    }
                 },
         )
     }
@@ -177,6 +209,9 @@ object SwitchDefaults {
 
     /** The diameter of the [Switch] thumb (COUISwitch outer_circle_width). */
     val ThumbSize: Dp = 18.dp
+
+    /** The diameter of the inner circle shown on the unchecked thumb (COUISwitch inner_circle_width). */
+    val InnerCircleSize: Dp = 7.9.dp
 
     /** The inset of the thumb from the track edge when fully on one side (COUISwitch circle_padding). */
     private val ThumbMargin: Dp = 3.dp
