@@ -129,7 +129,7 @@ fun Slider(
     }
 
     val animatedValueState = animateFloatAsState(coercedValue, progressAnimationSpec)
-    val thumbScaleState = animateFloatAsState(if (isPressed || isDragging || isHoveringThumb) 1.127f else 1f, ThumbScaleAnimationSpec)
+    val thumbScaleState = animateFloatAsState(if (isPressed || isDragging || isHoveringThumb) 1.3333f else 1f, ThumbScaleAnimationSpec)
 
     val stepFractions = remember(steps) { stepsToTickFractions(steps) }
 
@@ -181,7 +181,7 @@ fun Slider(
 
                                     val thumbRadius = currentLayoutHeight / 2f
                                     val availableWidth = (currentLayoutWidth - 2f * thumbRadius).coerceAtLeast(0f)
-                                    val knobRadius = thumbRadius * 0.72f
+                                    val knobRadius = thumbRadius * 0.6f
                                     val hitRadius = knobRadius + (thumbRadius * 0.5f)
 
                                     val position = change.position
@@ -333,7 +333,7 @@ fun VerticalSlider(
     }
 
     val animatedValueState = animateFloatAsState(coercedValue, progressAnimationSpec)
-    val thumbScaleState = animateFloatAsState(if (isPressed || isDragging || isHoveringThumb) 1.127f else 1f, ThumbScaleAnimationSpec)
+    val thumbScaleState = animateFloatAsState(if (isPressed || isDragging || isHoveringThumb) 1.3333f else 1f, ThumbScaleAnimationSpec)
 
     val stepFractions = remember(steps) { stepsToTickFractions(steps) }
 
@@ -385,7 +385,7 @@ fun VerticalSlider(
 
                                     val thumbRadius = currentLayoutWidth / 2f
                                     val availableHeight = (currentLayoutHeight - 2f * thumbRadius).coerceAtLeast(0f)
-                                    val knobRadius = thumbRadius * 0.72f
+                                    val knobRadius = thumbRadius * 0.6f
                                     val hitRadius = knobRadius + (thumbRadius * 0.5f)
 
                                     val position = change.position
@@ -552,10 +552,10 @@ fun RangeSlider(
     val animatedStartValueState = animateFloatAsState(coercedStart, progressAnimationSpec)
     val animatedEndValueState = animateFloatAsState(coercedEnd, progressAnimationSpec)
     val startThumbScaleState = animateFloatAsState(
-        if (isDraggingStart || isPressed || isHoveringStartThumb) 1.127f else 1f,
+        if (isDraggingStart || isPressed || isHoveringStartThumb) 1.3333f else 1f,
         ThumbScaleAnimationSpec,
     )
-    val endThumbScaleState = animateFloatAsState(if (isDraggingEnd || isPressed || isHoveringEndThumb) 1.127f else 1f, ThumbScaleAnimationSpec)
+    val endThumbScaleState = animateFloatAsState(if (isDraggingEnd || isPressed || isHoveringEndThumb) 1.3333f else 1f, ThumbScaleAnimationSpec)
 
     val stepFractions = remember(steps) { stepsToTickFractions(steps) }
 
@@ -608,7 +608,7 @@ fun RangeSlider(
 
                                     val thumbRadius = currentLayoutHeight / 2f
                                     val availableWidth = (currentLayoutWidth - 2f * thumbRadius).coerceAtLeast(0f)
-                                    val knobRadius = thumbRadius * 0.72f
+                                    val knobRadius = thumbRadius * 0.6f
                                     val hitRadius = knobRadius + (thumbRadius * 0.5f)
 
                                     val position = change.position
@@ -732,7 +732,7 @@ fun RangeSlider(
                                 val startPos = thumbRadius + effectiveStartFraction * availableWidth
                                 val endPos = thumbRadius + effectiveEndFraction * availableWidth
 
-                                val knobRadius = thumbRadius * 0.72f
+                                val knobRadius = thumbRadius * 0.6f
                                 val hitRadius = knobRadius + (thumbRadius * 0.5f)
                                 val isOnStartThumb = abs(offset.x - startPos) <= hitRadius
                                 val isOnEndThumb = abs(offset.x - endPos) <= hitRadius
@@ -868,7 +868,7 @@ private fun SliderTrack(
             )
 
             if (showKeyPoints && stepFractions.isNotEmpty()) {
-                val keyPointRadius = barWidth / 7.5f
+                val keyPointRadius = SliderDefaults.KeyPointRadius.toPx()
                 for (i in stepFractions.indices) {
                     val stepFraction = stepFractions[i]
                     val effectiveStep = if (reverseDirection) stepFraction else (1f - stepFraction)
@@ -883,7 +883,7 @@ private fun SliderTrack(
             }
             drawCircle(
                 color = thumbColor,
-                radius = thumbRadius * 0.72f * thumbScale,
+                radius = thumbRadius * 0.6f * thumbScale,
                 center = Offset(barWidth / 2f, centerY),
             )
         } else {
@@ -902,7 +902,7 @@ private fun SliderTrack(
             )
 
             if (showKeyPoints && stepFractions.isNotEmpty()) {
-                val keyPointRadius = barHeight / 7.5f
+                val keyPointRadius = SliderDefaults.KeyPointRadius.toPx()
                 for (i in stepFractions.indices) {
                     val stepFraction = stepFractions[i]
                     val effectiveStep = if (reverseDirection) 1f - stepFraction else stepFraction
@@ -918,7 +918,7 @@ private fun SliderTrack(
             }
             drawCircle(
                 color = thumbColor,
-                radius = thumbRadius * 0.72f * thumbScale,
+                radius = thumbRadius * 0.6f * thumbScale,
                 center = Offset(centerX, barHeight / 2f),
             )
         }
@@ -1003,12 +1003,12 @@ private fun RangeSliderTrack(
 
         drawCircle(
             color = thumbColor,
-            radius = thumbRadius * 0.72f * startThumbScale,
+            radius = thumbRadius * 0.6f * startThumbScale,
             center = Offset(startX, centerY),
         )
         drawCircle(
             color = thumbColor,
-            radius = thumbRadius * 0.72f * endThumbScale,
+            radius = thumbRadius * 0.6f * endThumbScale,
             center = Offset(endX, centerY),
         )
     }

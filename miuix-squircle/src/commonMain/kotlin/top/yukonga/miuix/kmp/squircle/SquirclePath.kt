@@ -13,8 +13,8 @@ import kotlin.math.min
 /** Shared default constants for every squircle API in this module. */
 object SquircleDefaults {
 
-    /** Corner-tile size as a multiple of `cornerRadius`. 1.0 = circular arc, 1.25 = ColorOS continuous corner. */
-    val Extension = 1.25f
+    /** Corner-tile size as a multiple of `cornerRadius`. COUI card/surface smoothing ≈ 1.2819 (COUIShapePath 128.19/100). */
+    val Extension = 1.2819f
 
     /** Inclusive lower bound for [Extension]. */
     val ExtensionMin = 1f

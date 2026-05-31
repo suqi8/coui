@@ -7,11 +7,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -26,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -51,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.LocalColors
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
-import kotlin.math.absoluteValue
 
 /**
  * A [Switch] component with Miuix style.
@@ -78,32 +72,23 @@ fun Switch(
 
     val hapticFeedback = LocalHapticFeedback.current
     val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
-    var hasVibrated by remember { mutableStateOf(false) }
-    var hasVibratedOnce by remember { mutableStateOf(false) }
-    var rawDragOffset by remember { mutableFloatStateOf(0f) }
-    var currentDragInteraction by remember { mutableStateOf<DragInteraction.Start?>(null) }
 
     val capsuleShape = CircleShape
     val thumbOffsetSpringSpec = remember { spring<Dp>(dampingRatio = 0.7f, stiffness = 987f) }
-    val thumbScaleSpringSpec = remember { spring<Float>(dampingRatio = 0.6f, stiffness = 987f) }
+    val thumbSquashSpringSpec = remember { spring<Float>(dampingRatio = 0.6f, stiffness = 987f) }
 
-    var dragOffset by remember { mutableFloatStateOf(0f) }
-    // Thumb travel distance in dp (as a raw Float), shared by the offset animation and the drag math.
-    val travel = SwitchDefaults.Travel.value
+    // COUI switch is tap-driven: the thumb only animates between the off/on positions on toggle,
+    // it never tracks the finger (COUISwitch.onTouchEvent has no ACTION_MOVE).
     val thumbOffsetState = animateDpAsState(
-        targetValue = (if (checked) SwitchDefaults.ThumbEndOffset else SwitchDefaults.ThumbStartOffset) + dragOffset.dp,
+        targetValue = if (checked) SwitchDefaults.ThumbEndOffset else SwitchDefaults.ThumbStartOffset,
         animationSpec = thumbOffsetSpringSpec,
     )
 
-    val thumbScaleState = animateFloatAsState(
-        targetValue = if (!enabled) {
-            1f
-        } else if (isPressed || isDragged || isHovered) {
-            1.127f
-        } else {
-            1f
-        },
-        animationSpec = thumbScaleSpringSpec,
+    // COUI has no uniform press-scale on the thumb. The only thumb deform is a brief horizontal
+    // squash-stretch (scaleX -> 1.3) during the off<->on toggle slide.
+    val thumbSquashState = animateFloatAsState(
+        targetValue = if (enabled && (isPressed || isDragged)) 1.3f else 1f,
+        animationSpec = thumbSquashSpringSpec,
     )
 
     val thumbColorState = animateColorAsState(
@@ -113,6 +98,17 @@ fun Switch(
     val backgroundColorState = animateColorAsState(
         if (checked) colors.checkedTrackColor(enabled) else colors.uncheckedTrackColor(enabled),
         animationSpec = spring(dampingRatio = 0.99f, stiffness = 438.6f),
+    )
+
+    // COUI press/hover feedback is a translucent black overlay on the track (coui_color_press /
+    // coui_color_hover), not a thumb scale.
+    val pressOverlayState = animateColorAsState(
+        when {
+            !enabled -> Color.Transparent
+            isPressed || isDragged -> Color.Black.copy(alpha = 0.12f)
+            isHovered -> Color.Black.copy(alpha = 0.078f)
+            else -> Color.Transparent
+        },
     )
 
     val hasCallback = onCheckedChange != null
@@ -146,6 +142,7 @@ fun Switch(
             .clip(capsuleShape)
             .drawBehind {
                 drawRect(backgroundColorState.value)
+                drawRect(pressOverlayState.value)
             }
             .hoverable(
                 interactionSource = interactionSource,
@@ -161,83 +158,28 @@ fun Switch(
                     IntOffset(thumbOffsetState.value.roundToPx(), 0)
                 }
                 .graphicsLayer {
-                    scaleX = thumbScaleState.value
-                    scaleY = thumbScaleState.value
+                    scaleX = thumbSquashState.value
                 }
                 .drawBehind {
                     drawCircle(color = thumbColorState.value)
-                }
-                .then(
-                    if (enabled) {
-                        Modifier.draggable(
-                            orientation = Orientation.Horizontal,
-                            state = rememberDraggableState { dragAmount ->
-                                rawDragOffset += dragAmount / 2f
-                                dragOffset = if (checked) {
-                                    rawDragOffset.coerceIn(-travel, 0f)
-                                } else {
-                                    rawDragOffset.coerceIn(0f, travel)
-                                }
-
-                                val half = travel / 2f
-                                if (dragOffset in -half..-(half - 1f) || dragOffset in (half - 1f)..half) {
-                                    hasVibratedOnce = false
-                                } else if (dragOffset in -(travel - 1f)..-1f || dragOffset in 1f..(travel - 1f)) {
-                                    hasVibrated = false
-                                } else if (!hasVibrated) {
-                                    if ((checked && dragOffset == -travel) || (!checked && dragOffset == 0f)) {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
-                                        hasVibrated = true
-                                        hasVibratedOnce = true
-                                    } else if ((checked && dragOffset == 0f) || (!checked && dragOffset == travel)) {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
-                                        hasVibrated = true
-                                        hasVibratedOnce = true
-                                    }
-                                }
-                            },
-                            onDragStarted = { _ ->
-                                currentDragInteraction = DragInteraction.Start().also { interactionSource.tryEmit(it) }
-                                hasVibrated = true
-                                hasVibratedOnce = false
-                                rawDragOffset = 0f
-                            },
-                            onDragStopped = {
-                                if (dragOffset.absoluteValue > travel / 2f) currentOnCheckedChange?.invoke(!checked)
-                                if (!hasVibratedOnce && dragOffset.absoluteValue >= 1f) {
-                                    val half = travel / 2f
-                                    if ((checked && dragOffset <= -half) || (!checked && dragOffset <= half - 1f)) {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
-                                    } else if ((checked && dragOffset >= -(half - 1f)) || (!checked && dragOffset >= half)) {
-                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
-                                    }
-                                }
-                                currentDragInteraction?.let { interactionSource.tryEmit(DragInteraction.Stop(it)) }
-                                dragOffset = 0f
-                                rawDragOffset = 0f
-                            },
-                        )
-                    } else {
-                        Modifier
-                    },
-                ),
+                },
         )
     }
 }
 
 object SwitchDefaults {
 
-    /** The track width of the [Switch] (coui_switch_width). */
-    val TrackWidth: Dp = 36.dp
+    /** The track width of the [Switch] (COUISwitch bar_width). */
+    val TrackWidth: Dp = 38.dp
 
-    /** The track height of the [Switch] (coui_switch_height). */
-    val TrackHeight: Dp = 22.dp
+    /** The track height of the [Switch] (COUISwitch bar_height). */
+    val TrackHeight: Dp = 24.dp
 
-    /** The diameter of the [Switch] thumb. */
+    /** The diameter of the [Switch] thumb (COUISwitch outer_circle_width). */
     val ThumbSize: Dp = 18.dp
 
-    /** The inset of the thumb from the track edge when fully on one side. */
-    private val ThumbMargin: Dp = 2.dp
+    /** The inset of the thumb from the track edge when fully on one side (COUISwitch circle_padding). */
+    private val ThumbMargin: Dp = 3.dp
 
     /** The thumb offset in the unchecked (off) position. */
     val ThumbStartOffset: Dp = ThumbMargin

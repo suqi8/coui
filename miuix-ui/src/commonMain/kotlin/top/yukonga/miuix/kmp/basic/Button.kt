@@ -162,14 +162,16 @@ object ButtonDefaults {
     val MinHeight = 44.dp
 
     /**
-     * The default corner radius applied for all buttons.
+     * The default corner radius applied for all buttons. COUI buttons are height-derived capsules
+     * (radius = height / 2); 22.dp matches the 44.dp default min height on the squircle path.
      */
-    val CornerRadius = 21.5.dp
+    val CornerRadius = 22.dp
 
     /**
-     * The default inside margin applied for all buttons.
+     * The default inside margin applied for all buttons. COUI buttons have horizontal padding only;
+     * the height is driven by [MinHeight] with content centered.
      */
-    val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 13.dp)
+    val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
 
     /**
      * The default [ButtonColors] for all buttons.
