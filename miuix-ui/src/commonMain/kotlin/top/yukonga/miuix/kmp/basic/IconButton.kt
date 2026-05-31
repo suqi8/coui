@@ -89,7 +89,7 @@ object IconButtonDefaults {
     val MinHeight = 48.dp
 
     /**
-     * The default corner radius of the [IconButton].
+     * The default corner radius of the [IconButton] (COUI coui_toolbar_menu_bg_radius).
      */
-    val CornerRadius = 40.dp
+    val CornerRadius = 24.dp
 }
