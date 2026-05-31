@@ -2,6 +2,8 @@
 
 Compose Multiplatform UI component library. Targets Android, iOS, Desktop (JVM), macOS, Web (Wasm/JS).
 
+> **COUI 改造主线**：本仓库正基于 Miuix 就地演进成一套 COUI（ColorOS 设计语言）组件库。凡涉及「换成 ColorOS 风格 / COUI 换肤 / 调主题或控件视觉 / 逆向提取 ColorOS 设计 token」的任务，先读 `AGENT.md`（设备/工具环境、逆向校准工作流、token→代码落点映射），再按本文件的工程规范落地。本文件的代码风格、API 约定、性能约束在 COUI 改造中**继续生效**。
+
 ## Quick Start
 
 - For significant features or refactors, sketch an Plan first; keep it updated as you work.
