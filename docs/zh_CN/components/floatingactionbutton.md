@@ -58,7 +58,7 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 | --------------- | ---- | ------------ | ------ |
 | MinWidth        | Dp   | 按钮最小宽度 | 56.dp  |
 | MinHeight       | Dp   | 按钮最小高度 | 56.dp  |
-| ShadowElevation | Dp   | 按钮阴影高度 | 4.dp   |
+| ShadowElevation | Dp   | 按钮阴影高度 | 5.dp   |
 
 ## 进阶用法
 

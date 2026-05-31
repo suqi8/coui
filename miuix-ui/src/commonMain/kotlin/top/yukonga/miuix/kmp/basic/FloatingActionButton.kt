@@ -71,6 +71,6 @@ object FloatingActionButtonDefaults {
     /** The default minimum height of the [FloatingActionButton]. */
     val MinHeight = 56.dp
 
-    /** The default shadow elevation of the [FloatingActionButton]. */
-    val ShadowElevation = 4.dp
+    /** The default shadow elevation of the [FloatingActionButton] (COUI coui_floating_button_close_elevation). */
+    val ShadowElevation = 5.dp
 }
