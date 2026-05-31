@@ -57,7 +57,7 @@ Scaffold(
 
 | Property Name  | Type                    | Description              | Value                                   |
 | -------------- | ----------------------- | ------------------------ | --------------------------------------- |
-| CornerRadius   | Dp                      | Default corner radius    | 50.dp                                   |
+| CornerRadius   | Dp                      | Default corner radius    | 24.dp                                   |
 | defaultColor() | @Composable () -> Color | Default background color | MiuixTheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | Default outside padding  | PaddingValues(12.dp, 8.dp)              |
 

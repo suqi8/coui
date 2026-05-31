@@ -57,7 +57,7 @@ Scaffold(
 
 | 属性名         | 类型                    | 说明           | 值                                      |
 | -------------- | ----------------------- | -------------- | --------------------------------------- |
-| CornerRadius   | Dp                      | 默认圆角半径   | 50.dp                                   |
+| CornerRadius   | Dp                      | 默认圆角半径   | 24.dp                                   |
 | defaultColor() | @Composable () -> Color | 默认背景颜色   | MiuixTheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | 默认外部内边距 | PaddingValues(12.dp, 8.dp)              |
 

@@ -86,7 +86,7 @@ object FloatingToolbarDefaults {
     /**
      * Default corner radius of the [FloatingToolbar].
      */
-    val CornerRadius = 50.dp
+    val CornerRadius = 24.dp
 
     /**
      * Default color of the [FloatingToolbar].

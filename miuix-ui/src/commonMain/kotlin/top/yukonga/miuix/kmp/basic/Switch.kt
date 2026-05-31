@@ -88,8 +88,10 @@ fun Switch(
     val thumbScaleSpringSpec = remember { spring<Float>(dampingRatio = 0.6f, stiffness = 987f) }
 
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    // Thumb travel distance in dp (as a raw Float), shared by the offset animation and the drag math.
+    val travel = SwitchDefaults.Travel.value
     val thumbOffsetState = animateDpAsState(
-        targetValue = (if (checked) 25.dp else 4.dp) + dragOffset.dp,
+        targetValue = (if (checked) SwitchDefaults.ThumbEndOffset else SwitchDefaults.ThumbStartOffset) + dragOffset.dp,
         animationSpec = thumbOffsetSpringSpec,
     )
 
@@ -140,7 +142,7 @@ fun Switch(
     Box(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
-            .size(49.dp, 28.dp)
+            .size(SwitchDefaults.TrackWidth, SwitchDefaults.TrackHeight)
             .clip(capsuleShape)
             .drawBehind {
                 drawRect(backgroundColorState.value)
@@ -153,7 +155,7 @@ fun Switch(
     ) {
         Box(
             modifier = Modifier
-                .size(20.dp)
+                .size(SwitchDefaults.ThumbSize)
                 .align(Alignment.CenterStart)
                 .offset {
                     IntOffset(thumbOffsetState.value.roundToPx(), 0)
@@ -172,21 +174,22 @@ fun Switch(
                             state = rememberDraggableState { dragAmount ->
                                 rawDragOffset += dragAmount / 2f
                                 dragOffset = if (checked) {
-                                    rawDragOffset.coerceIn(-21f, 0f)
+                                    rawDragOffset.coerceIn(-travel, 0f)
                                 } else {
-                                    rawDragOffset.coerceIn(0f, 21f)
+                                    rawDragOffset.coerceIn(0f, travel)
                                 }
 
-                                if (dragOffset in -11f..-10f || dragOffset in 10f..11f) {
+                                val half = travel / 2f
+                                if (dragOffset in -half..-(half - 1f) || dragOffset in (half - 1f)..half) {
                                     hasVibratedOnce = false
-                                } else if (dragOffset in -20f..-1f || dragOffset in 1f..20f) {
+                                } else if (dragOffset in -(travel - 1f)..-1f || dragOffset in 1f..(travel - 1f)) {
                                     hasVibrated = false
                                 } else if (!hasVibrated) {
-                                    if ((checked && dragOffset == -21f) || (!checked && dragOffset == 0f)) {
+                                    if ((checked && dragOffset == -travel) || (!checked && dragOffset == 0f)) {
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
                                         hasVibrated = true
                                         hasVibratedOnce = true
-                                    } else if ((checked && dragOffset == 0f) || (!checked && dragOffset == 21f)) {
+                                    } else if ((checked && dragOffset == 0f) || (!checked && dragOffset == travel)) {
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
                                         hasVibrated = true
                                         hasVibratedOnce = true
@@ -200,11 +203,12 @@ fun Switch(
                                 rawDragOffset = 0f
                             },
                             onDragStopped = {
-                                if (dragOffset.absoluteValue > 21f / 2f) currentOnCheckedChange?.invoke(!checked)
+                                if (dragOffset.absoluteValue > travel / 2f) currentOnCheckedChange?.invoke(!checked)
                                 if (!hasVibratedOnce && dragOffset.absoluteValue >= 1f) {
-                                    if ((checked && dragOffset <= -11f) || (!checked && dragOffset <= 10f)) {
+                                    val half = travel / 2f
+                                    if ((checked && dragOffset <= -half) || (!checked && dragOffset <= half - 1f)) {
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOff)
-                                    } else if ((checked && dragOffset >= -10f) || (!checked && dragOffset >= 11f)) {
+                                    } else if ((checked && dragOffset >= -(half - 1f)) || (!checked && dragOffset >= half)) {
                                         hapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
                                     }
                                 }
@@ -222,6 +226,27 @@ fun Switch(
 }
 
 object SwitchDefaults {
+
+    /** The track width of the [Switch] (coui_switch_width). */
+    val TrackWidth: Dp = 36.dp
+
+    /** The track height of the [Switch] (coui_switch_height). */
+    val TrackHeight: Dp = 22.dp
+
+    /** The diameter of the [Switch] thumb. */
+    val ThumbSize: Dp = 18.dp
+
+    /** The inset of the thumb from the track edge when fully on one side. */
+    private val ThumbMargin: Dp = 2.dp
+
+    /** The thumb offset in the unchecked (off) position. */
+    val ThumbStartOffset: Dp = ThumbMargin
+
+    /** The thumb offset in the checked (on) position. */
+    val ThumbEndOffset: Dp = TrackWidth - ThumbSize - ThumbMargin
+
+    /** The distance the thumb travels between off and on. */
+    val Travel: Dp = ThumbEndOffset - ThumbStartOffset
 
     /**
      * The default colors for the [Switch].
