@@ -161,6 +161,7 @@ Builds a [TextFieldColors] instance. Override any subset; unspecified params fal
 | backgroundColor  | Color | MiuixTheme.colorScheme.secondaryContainer        |
 | labelColor       | Color | MiuixTheme.colorScheme.onSecondaryContainer      |
 | borderColor      | Color | MiuixTheme.colorScheme.primary                   |
+| unfocusedBorderColor | Color | MiuixTheme.colorScheme.outline               |
 
 ## Advanced Usage
 

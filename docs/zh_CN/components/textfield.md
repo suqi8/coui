@@ -161,6 +161,7 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 | backgroundColor  | Color | MiuixTheme.colorScheme.secondaryContainer         |
 | labelColor       | Color | MiuixTheme.colorScheme.onSecondaryContainer       |
 | borderColor      | Color | MiuixTheme.colorScheme.primary                    |
+| unfocusedBorderColor | Color | MiuixTheme.colorScheme.outline                |
 
 ## 进阶用法
 

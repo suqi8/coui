@@ -378,8 +378,11 @@ object TextFieldDefaults {
     /** The default inside margin of the [TextField]. */
     val InsideMargin = DpSize(16.dp, 16.dp)
 
-    /** The default border width when the [TextField] is focused. */
-    internal val BorderWidth = 2.dp
+    /** The default border width when the [TextField] is focused (COUI coui_textinput_focus_stroke_width). */
+    internal val BorderWidth = 1.dp
+
+    /** The default border width when the [TextField] is not focused (COUI coui_textinput_stroke_width). */
+    internal val UnfocusedBorderWidth = 0.33.dp
 
     /** The label font size when the label is floating above the text. */
     internal val LabelFontSizeFloating = 10.dp
@@ -399,11 +402,13 @@ object TextFieldDefaults {
         backgroundColor: Color = MiuixTheme.colorScheme.secondaryContainer,
         labelColor: Color = MiuixTheme.colorScheme.onSecondaryContainer,
         borderColor: Color = MiuixTheme.colorScheme.primary,
-    ): TextFieldColors = remember(backgroundColor, labelColor, borderColor) {
+        unfocusedBorderColor: Color = MiuixTheme.colorScheme.outline,
+    ): TextFieldColors = remember(backgroundColor, labelColor, borderColor, unfocusedBorderColor) {
         TextFieldColors(
             backgroundColor = backgroundColor,
             labelColor = labelColor,
             borderColor = borderColor,
+            unfocusedBorderColor = unfocusedBorderColor,
         )
     }
 }
@@ -420,6 +425,7 @@ data class TextFieldColors(
     val backgroundColor: Color,
     val labelColor: Color,
     val borderColor: Color,
+    val unfocusedBorderColor: Color,
 )
 
 /**
@@ -439,8 +445,8 @@ private fun TextFieldChrome(
     isFocused: Boolean,
     innerTextField: @Composable () -> Unit,
 ) {
-    val borderWidthState = animateDpAsState(if (isFocused) TextFieldDefaults.BorderWidth else 0.dp)
-    val borderColorState = animateColorAsState(if (isFocused) colors.borderColor else colors.backgroundColor)
+    val borderWidthState = animateDpAsState(if (isFocused) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth)
+    val borderColorState = animateColorAsState(if (isFocused) colors.borderColor else colors.unfocusedBorderColor)
     val labelAnim = animateDpAsState(
         when (labelState) {
             LabelAnimState.Floating -> -insideMargin.height / 2
