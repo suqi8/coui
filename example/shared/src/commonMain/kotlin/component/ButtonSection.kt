@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Stepper
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 
 fun LazyListScope.buttonSection() {
@@ -93,6 +95,22 @@ fun LazyListScope.buttonSection() {
                 enabled = false,
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.textButtonColorsBorderless(),
+            )
+        }
+        var stepperValue by remember { mutableIntStateOf(2) }
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = "Stepper")
+            Stepper(
+                value = stepperValue,
+                onValueChange = { stepperValue = it },
+                minValue = 0,
+                maxValue = 10,
             )
         }
     }
