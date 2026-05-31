@@ -151,7 +151,7 @@ Switch / Slider / Checkbox / RadioButton / Button 的所有 accent 态都读 `co
 - **批次 3 — Squircle Extension**:1.1f→1.25f(全局形状手感,广泛回归)。
 - **批次 4 — 次级 Defaults**:TextField 角 16→10、SmallTitle (28,8)→(32,12)、TopAppBar TitlePadding 26→24、IconButton 40→48、FAB 60→56。
 - **批次 5 — 代码字面量(中风险)**:Component heightIn 56→60、Dialog 底角 32→33。
-- **批次 6 — 可选/高风险几何(默认不做,需确认)**:Switch 49×28→36×22、FloatingToolbar 50→24、TabRow 12→8、字体梯度整体下调。
+- **批次 6 — 几何(已做 Switch + FloatingToolbar)**:Switch 49×28→36×22(拇指 18dp,行程/偏移/拖拽阈值全由 `SwitchDefaults.Travel` 推导,数学自洽);FloatingToolbar 50→24(`coui_toolbar_menu_bg_radius`)。**未做**:TabRow 12→8(证据不足/低置信,不臆造)、字体梯度(用户决策"暂不动")。
 
 ## 8. 未决项(需运行时目测)
 
