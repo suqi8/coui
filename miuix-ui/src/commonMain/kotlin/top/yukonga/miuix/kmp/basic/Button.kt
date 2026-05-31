@@ -81,7 +81,7 @@ fun Button(
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
         targetValue = if (enabled && isPressed) ButtonDefaults.PressedScale else 1f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = 800f),
+        animationSpec = spring(dampingRatio = 0.3f, stiffness = 1500f),
         label = "buttonPressScale",
     )
     val pressedContainerColor by animateColorAsState(
