@@ -284,6 +284,25 @@ object ButtonDefaults {
             disabledTextColor = disabledTextColor,
         )
     }
+
+    /**
+     * The [TextButtonColors] for borderless / translate text buttons (COUI
+     * Widget.COUI.Button.Large.Borderless / Translate): no fill, primary-tinted label.
+     */
+    @Composable
+    fun textButtonColorsBorderless(
+        color: Color = Color.Transparent,
+        disabledColor: Color = Color.Transparent,
+        textColor: Color = MiuixTheme.colorScheme.primary,
+        disabledTextColor: Color = MiuixTheme.colorScheme.disabledPrimary,
+    ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
+        TextButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            textColor = textColor,
+            disabledTextColor = disabledTextColor,
+        )
+    }
 }
 
 @Immutable

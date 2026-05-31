@@ -74,5 +74,26 @@ fun LazyListScope.buttonSection() {
                 colors = ButtonDefaults.textButtonColorsPrimary(),
             )
         }
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            TextButton(
+                text = "Borderless",
+                onClick = {},
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.textButtonColorsBorderless(),
+            )
+            Spacer(Modifier.width(12.dp))
+            TextButton(
+                text = "Disabled",
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.textButtonColorsBorderless(),
+            )
+        }
     }
 }

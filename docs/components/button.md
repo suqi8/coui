@@ -127,6 +127,7 @@ The ButtonDefaults object provides default values and color configurations for b
 | buttonColorsPrimary()     | ButtonColors     | Creates color configuration for primary buttons        |
 | textButtonColors()        | TextButtonColors | Creates color configuration for secondary text buttons |
 | textButtonColorsPrimary() | TextButtonColors | Creates color configuration for primary text buttons   |
+| textButtonColorsBorderless() | TextButtonColors | Creates color configuration for borderless / text buttons (transparent fill, themed label) |
 
 ## Advanced Usage
 

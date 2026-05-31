@@ -127,6 +127,7 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 | buttonColorsPrimary()     | ButtonColors     | 创建主要按钮的颜色配置     |
 | textButtonColors()        | TextButtonColors | 创建次要文本按钮的颜色配置 |
 | textButtonColorsPrimary() | TextButtonColors | 创建主要文本按钮的颜色配置 |
+| textButtonColorsBorderless() | TextButtonColors | 创建无边框 / 文字按钮的颜色配置(透明填充、主题色文字) |
 
 ## 进阶用法
 
