@@ -373,7 +373,7 @@ private enum class LabelAnimState { Hidden, Placeholder, Normal, Floating }
 /** Contains default values used by [TextField]. */
 object TextFieldDefaults {
     /** The default corner radius of the [TextField]. */
-    val CornerRadius = 16.dp
+    val CornerRadius = 10.dp
 
     /** The default inside margin of the [TextField]. */
     val InsideMargin = DpSize(16.dp, 16.dp)

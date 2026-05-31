@@ -66,10 +66,10 @@ fun FloatingActionButton(
 /** Contains default values used by [FloatingActionButton]. */
 object FloatingActionButtonDefaults {
     /** The default minimum width of the [FloatingActionButton]. */
-    val MinWidth = 60.dp
+    val MinWidth = 56.dp
 
     /** The default minimum height of the [FloatingActionButton]. */
-    val MinHeight = 60.dp
+    val MinHeight = 56.dp
 
     /** The default shadow elevation of the [FloatingActionButton]. */
     val ShadowElevation = 4.dp

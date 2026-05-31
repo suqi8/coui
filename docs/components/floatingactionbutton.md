@@ -56,8 +56,8 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 
 | Constant Name   | Type | Description                    | Default Value |
 | --------------- | ---- | ------------------------------ | ------------- |
-| MinWidth        | Dp   | Minimum width of the button    | 60.dp         |
-| MinHeight       | Dp   | Minimum height of the button   | 60.dp         |
+| MinWidth        | Dp   | Minimum width of the button    | 56.dp         |
+| MinHeight       | Dp   | Minimum height of the button   | 56.dp         |
 | ShadowElevation | Dp   | Shadow elevation of the button | 4.dp          |
 
 ## Advanced Usage

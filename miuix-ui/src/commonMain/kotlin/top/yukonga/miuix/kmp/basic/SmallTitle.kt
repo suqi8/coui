@@ -39,5 +39,5 @@ fun SmallTitle(
 /** Contains default values used by [SmallTitle]. */
 object SmallTitleDefaults {
     /** The default inside margin of the [SmallTitle]. */
-    val InsideMargin = PaddingValues(28.dp, 8.dp)
+    val InsideMargin = PaddingValues(32.dp, 12.dp)
 }

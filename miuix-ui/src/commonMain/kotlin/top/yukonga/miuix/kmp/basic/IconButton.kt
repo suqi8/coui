@@ -81,12 +81,12 @@ object IconButtonDefaults {
     /**
      * The default minimum width of the [IconButton].
      */
-    val MinWidth = 40.dp
+    val MinWidth = 48.dp
 
     /**
      * The default minimum height of the [IconButton].
      */
-    val MinHeight = 40.dp
+    val MinHeight = 48.dp
 
     /**
      * The default corner radius of the [IconButton].

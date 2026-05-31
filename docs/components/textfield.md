@@ -149,7 +149,7 @@ The TextFieldDefaults object provides default values for TextField components.
 
 | Constant Name | Type   | Description                  | Default Value          |
 | ------------- | ------ | ---------------------------- | ---------------------- |
-| CornerRadius  | Dp     | Corner radius of the field   | 16.dp                  |
+| CornerRadius  | Dp     | Corner radius of the field   | 10.dp                  |
 | InsideMargin  | DpSize | Internal padding of the field| DpSize(16.dp, 16.dp)  |
 
 #### `textFieldColors()` factory

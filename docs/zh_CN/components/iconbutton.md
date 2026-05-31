@@ -95,8 +95,8 @@ IconButtonDefaults 对象提供了图标按钮组件的默认值。
 
 | 常量名       | 类型 | 说明           | 默认值 |
 | ------------ | ---- | -------------- | ------ |
-| MinWidth     | Dp   | 按钮的最小宽度 | 40.dp  |
-| MinHeight    | Dp   | 按钮的最小高度 | 40.dp  |
+| MinWidth     | Dp   | 按钮的最小宽度 | 48.dp  |
+| MinHeight    | Dp   | 按钮的最小高度 | 48.dp  |
 | CornerRadius | Dp   | 按钮的圆角半径 | 40.dp  |
 
 ## 进阶用法

@@ -95,8 +95,8 @@ The IconButtonDefaults object provides default values for the icon button compon
 
 | Constant Name | Type | Description           | Default Value |
 | ------------- | ---- | --------------------- | ------------- |
-| MinWidth      | Dp   | Minimum button width  | 40.dp         |
-| MinHeight     | Dp   | Minimum button height | 40.dp         |
+| MinWidth      | Dp   | Minimum button width  | 48.dp         |
+| MinHeight     | Dp   | Minimum button height | 48.dp         |
 | CornerRadius  | Dp   | Button corner radius  | 40.dp         |
 
 ## Advanced Usage

@@ -383,7 +383,7 @@ class TopAppBarState(
 /** Contains default values used by [TopAppBar] and [SmallTopAppBar]. */
 object TopAppBarDefaults {
     /** The default horizontal padding of the title and large title. */
-    val TitlePadding = 26.dp
+    val TitlePadding = 24.dp
 
     /** The default start padding of the navigation icon. */
     val NavigationIconPadding = 16.dp

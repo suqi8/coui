@@ -149,7 +149,7 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 
 | 常量名       | 类型   | 说明           | 默认值                |
 | ------------ | ------ | -------------- | --------------------- |
-| CornerRadius | Dp     | 输入框圆角半径 | 16.dp                 |
+| CornerRadius | Dp     | 输入框圆角半径 | 10.dp                 |
 | InsideMargin | DpSize | 输入框内部边距 | DpSize(16.dp, 16.dp) |
 
 #### `textFieldColors()` 工厂
