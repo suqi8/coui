@@ -429,20 +429,20 @@ fun FloatingNavigationBarItem(
 
 /** Contains default values used by [NavigationBar] and [NavigationBarItem]. */
 object NavigationBarDefaults {
-    /** The default item height. */
-    val ItemHeight = 64.dp
+    /** The default item height (COUI coui_tool_navigation_item_height). */
+    val ItemHeight = 56.dp
 
-    /** The default icon size. */
-    val IconSize = 26.dp
+    /** The default icon size (COUI coui_navigation_icon_size). */
+    val IconSize = 24.dp
 
     /** The default text font size. */
     val TextFontSize = 14.sp
 
-    /** The default label font size. */
-    val LabelFontSize = 12.sp
+    /** The default label font size (COUI coui_navigation_item_text_size). */
+    val LabelFontSize = 10.sp
 
-    /** The default top padding for the icon. */
-    val IconTopPadding = 8.dp
+    /** The default top padding for the icon (COUI coui_navigation_icon_margin_top). */
+    val IconTopPadding = 9.dp
 
     /** The default bottom padding for the label. */
     val BottomPadding = 8.dp

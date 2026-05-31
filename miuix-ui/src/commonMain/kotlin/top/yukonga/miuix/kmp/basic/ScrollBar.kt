@@ -199,9 +199,9 @@ fun HorizontalScrollBar(
 
 @ExperimentalScrollBarApi
 object ScrollBarDefaults {
-    val ThumbWidth: Dp = 3.64.dp
-    val EndPadding: Dp = 3.46.dp
-    val ThumbMinLength: Dp = 36.dp
+    val ThumbWidth: Dp = 3.dp
+    val EndPadding: Dp = 5.5.dp
+    val ThumbMinLength: Dp = 48.dp
     val CornerRadius: Dp = Dp.Unspecified
     val FadeDelayMillis = 1000
     val FadeDurationMillis = 500

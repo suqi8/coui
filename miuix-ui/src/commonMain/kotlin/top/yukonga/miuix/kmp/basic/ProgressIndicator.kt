@@ -319,11 +319,11 @@ private fun DrawScope.drawCircularBackground(
 }
 
 object ProgressIndicatorDefaults {
-    /** The default height of [LinearProgressIndicator]. */
-    val DefaultLinearProgressIndicatorHeight = 6.dp
+    /** The default height of [LinearProgressIndicator] (COUI coui_loading_dialog_progress_height). */
+    val DefaultLinearProgressIndicatorHeight = 4.dp
 
-    /** The default stroke width of [CircularProgressIndicator]. */
-    val DefaultCircularProgressIndicatorStrokeWidth = 4.dp
+    /** The default stroke width of [CircularProgressIndicator] (COUI coui_circular_progress_medium_stroke_width). */
+    val DefaultCircularProgressIndicatorStrokeWidth = 3.dp
 
     /** The default size of [CircularProgressIndicator]. */
     val DefaultCircularProgressIndicatorSize = 30.dp

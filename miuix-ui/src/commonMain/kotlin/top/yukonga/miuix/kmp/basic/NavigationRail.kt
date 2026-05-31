@@ -222,8 +222,8 @@ fun NavigationRailItem(
 
 /** Contains default values used by [NavigationRail] and [NavigationRailItem]. */
 object NavigationRailDefaults {
-    /** The default minimum width of the [NavigationRail]. */
-    val MinWidth = 80.dp
+    /** The default minimum width of the [NavigationRail] (COUI coui_navigation_rail_min_width). */
+    val MinWidth = 72.dp
 
     /** The default vertical padding of the [NavigationRail] content. */
     val VerticalPadding = 24.dp
@@ -231,17 +231,17 @@ object NavigationRailDefaults {
     /** The default spacing after the header. */
     val HeaderSpacing = 24.dp
 
-    /** The default icon size. */
-    val IconSize = 28.dp
+    /** The default icon size (COUI coui_side_navigation_icon_size). */
+    val IconSize = 24.dp
 
-    /** The default spacing between icon and text. */
-    val IconTextSpacing = 4.dp
+    /** The default spacing between icon and text (COUI coui_navigation_rail_text_margin_top). */
+    val IconTextSpacing = 2.dp
 
     /** The default vertical padding for each item. */
     val ItemVerticalPadding = 12.dp
 
-    /** The default label font size. */
-    val LabelFontSize = 12.sp
+    /** The default label font size (COUI coui_navigation_rail_item_text_size). */
+    val LabelFontSize = 10.sp
 
     /** The font size in [NavigationRailDisplayMode.TextOnly] mode. */
     val TextOnlyFontSize = 14.sp
