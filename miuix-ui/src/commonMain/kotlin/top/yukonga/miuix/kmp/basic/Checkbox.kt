@@ -216,7 +216,20 @@ fun Checkbox(
                 )
 
                 onDrawBehind {
-                    drawCircle(backgroundColorState.value)
+                    // COUI checkbox: unchecked is a hollow ring, checked is a filled circle.
+                    val fillAlpha = checkAlphaState.value
+                    if (fillAlpha < 1f) {
+                        // Ring for the (transitioning-to-)unchecked state.
+                        drawCircle(
+                            color = backgroundColorState.value,
+                            style = Stroke(width = strokeWidth),
+                            alpha = 1f - fillAlpha,
+                        )
+                    }
+                    if (fillAlpha > 0f) {
+                        // Filled circle for the (transitioning-to-)checked state.
+                        drawCircle(backgroundColorState.value, alpha = fillAlpha)
+                    }
                     drawTrimmedCheckmark(
                         color = foregroundColorState.value,
                         alpha = checkAlphaState.value,
