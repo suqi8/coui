@@ -16,6 +16,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -23,13 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
@@ -70,6 +67,7 @@ fun RadioButton(
     val transition = updateTransition(selected, label = "RadioButtonTransition")
 
     val color = colors.color(enabled)
+    val unselectedColor = colors.unselectedColor(enabled)
 
     val checkAlphaState = transition.animateFloat(
         transitionSpec = {
@@ -82,15 +80,7 @@ fun RadioButton(
         label = "CheckAlpha",
     ) { if (it) 1f else 0f }
 
-    val trimEndState = transition.animateFloat(
-        transitionSpec = {
-            tween(durationMillis = 300, easing = FastOutSlowInEasing)
-        },
-        label = "TrimEnd",
-    ) { if (it) 1f else 0f }
-
     val capsuleShape = CircleShape
-    val checkPath = remember { Path() }
     val sinkFeedback = remember { SinkFeedback(sinkAmount = 0.85f, animationSpec = spring(0.99f, 986.96f)) }
 
     val finalModifier = if (onClick != null) {
@@ -127,97 +117,29 @@ fun RadioButton(
             )
             .clip(capsuleShape)
             .drawWithCache {
-                // Path coordinates from miuix-classic SingleChoicePreference
-                // Original viewport: 56x56, path: M 10.9 29 L 23.1 40.8 L 44 16
-                val viewportSize = 56f
-                val strokeWidth = 7.0f / viewportSize * size.width
-                val centerX = size.width / 2
-                val centerY = size.height / 2
-                val viewportCenter = viewportSize / 2
-
-                val startPoint = Offset(
-                    centerX + ((10.9f - viewportCenter) / viewportSize * size.width),
-                    centerY + ((29f - viewportCenter) / viewportSize * size.height),
-                )
-                val middlePoint = Offset(
-                    centerX + ((23.1f - viewportCenter) / viewportSize * size.width),
-                    centerY + ((40.8f - viewportCenter) / viewportSize * size.height),
-                )
-                val endPoint = Offset(
-                    centerX + ((44f - viewportCenter) / viewportSize * size.width),
-                    centerY + ((16f - viewportCenter) / viewportSize * size.height),
-                )
-
-                val cache = CheckCache(startPoint, middlePoint, endPoint)
-
-                val stroke = Stroke(
-                    width = strokeWidth,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round,
-                    miter = 10.0f,
-                )
-
                 onDrawBehind {
-                    drawTrimmedCheck(
-                        color = color,
-                        alpha = checkAlphaState.value,
-                        trimEnd = trimEndState.value,
-                        path = checkPath,
-                        cache = cache,
-                        stroke = stroke,
+                    // COUI radio button: an outer ring always present, plus a filled inner dot
+                    // when selected (instead of miuix-classic's checkmark).
+                    val ringStrokeWidth = size.width * 0.09f
+                    val selected = checkAlphaState.value
+                    // Outer ring: unselected color blends to selected color.
+                    drawCircle(
+                        color = lerp(unselectedColor, color, selected),
+                        radius = (size.minDimension - ringStrokeWidth) / 2f,
+                        style = Stroke(width = ringStrokeWidth),
                     )
+                    // Inner dot: scales/fades in when selected.
+                    if (selected > 0f) {
+                        drawCircle(
+                            color = color,
+                            radius = size.minDimension * 0.28f * selected,
+                            alpha = selected,
+                        )
+                    }
                 }
             }
             .then(finalModifier),
     ) {}
-}
-
-private data class CheckCache(
-    val startPoint: Offset,
-    val middlePoint: Offset,
-    val endPoint: Offset,
-)
-
-private fun DrawScope.drawTrimmedCheck(
-    color: Color,
-    alpha: Float,
-    trimEnd: Float,
-    path: Path,
-    cache: CheckCache,
-    stroke: Stroke,
-) {
-    if (alpha <= 0f || trimEnd <= 0f) return
-
-    path.rewind()
-
-    val firstSegmentLength = (cache.middlePoint - cache.startPoint).getDistance()
-    val secondSegmentLength = (cache.endPoint - cache.middlePoint).getDistance()
-    val totalLength = firstSegmentLength + secondSegmentLength
-    val endDistance = totalLength * trimEnd
-
-    path.moveTo(cache.startPoint.x, cache.startPoint.y)
-
-    if (endDistance <= firstSegmentLength) {
-        val ratio = endDistance / firstSegmentLength
-        path.lineTo(
-            cache.startPoint.x + (cache.middlePoint.x - cache.startPoint.x) * ratio,
-            cache.startPoint.y + (cache.middlePoint.y - cache.startPoint.y) * ratio,
-        )
-    } else {
-        path.lineTo(cache.middlePoint.x, cache.middlePoint.y)
-        val ratio = ((endDistance - firstSegmentLength) / secondSegmentLength).coerceAtMost(1f)
-        path.lineTo(
-            cache.middlePoint.x + (cache.endPoint.x - cache.middlePoint.x) * ratio,
-            cache.middlePoint.y + (cache.endPoint.y - cache.middlePoint.y) * ratio,
-        )
-    }
-
-    drawPath(
-        path = path,
-        color = color,
-        alpha = alpha,
-        style = stroke,
-    )
 }
 
 object RadioButtonDefaults {
@@ -225,13 +147,19 @@ object RadioButtonDefaults {
     fun radioButtonColors(
         selectedColor: Color = MiuixTheme.colorScheme.primary,
         disabledSelectedColor: Color = MiuixTheme.colorScheme.disabledPrimary,
+        unselectedColor: Color = MiuixTheme.colorScheme.secondaryContainerVariant,
+        disabledUnselectedColor: Color = MiuixTheme.colorScheme.disabledSecondary,
     ): RadioButtonColors = remember(
         selectedColor,
         disabledSelectedColor,
+        unselectedColor,
+        disabledUnselectedColor,
     ) {
         RadioButtonColors(
             selectedColor = selectedColor,
             disabledSelectedColor = disabledSelectedColor,
+            unselectedColor = unselectedColor,
+            disabledUnselectedColor = disabledUnselectedColor,
         )
     }
 }
@@ -240,6 +168,11 @@ object RadioButtonDefaults {
 data class RadioButtonColors(
     private val selectedColor: Color,
     private val disabledSelectedColor: Color,
+    private val unselectedColor: Color,
+    private val disabledUnselectedColor: Color,
 ) {
     internal fun color(enabled: Boolean): Color = if (enabled) selectedColor else disabledSelectedColor
+
+    @Stable
+    internal fun unselectedColor(enabled: Boolean): Color = if (enabled) unselectedColor else disabledUnselectedColor
 }
