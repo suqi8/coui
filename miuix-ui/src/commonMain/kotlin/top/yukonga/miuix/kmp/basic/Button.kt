@@ -159,17 +159,17 @@ object ButtonDefaults {
      * The default min height applied for all buttons. Note that you can override it by applying
      * Modifier.heightIn directly on the button composable.
      */
-    val MinHeight = 40.dp
+    val MinHeight = 44.dp
 
     /**
      * The default corner radius applied for all buttons.
      */
-    val CornerRadius = 16.dp
+    val CornerRadius = 21.5.dp
 
     /**
      * The default inside margin applied for all buttons.
      */
-    val InsideMargin = PaddingValues(horizontal = 16.dp, vertical = 13.dp)
+    val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 13.dp)
 
     /**
      * The default [ButtonColors] for all buttons.

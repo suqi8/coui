@@ -53,7 +53,7 @@ CardDefaults 对象提供了卡片组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值              |
 | ------------ | ------------- | -------------- | ------------------- |
-| CornerRadius | Dp            | 卡片的圆角半径 | 16.dp               |
+| CornerRadius | Dp            | 卡片的圆角半径 | 17.dp               |
 | InsideMargin | PaddingValues | 卡片的内部边距 | PaddingValues(0.dp) |
 
 #### 方法

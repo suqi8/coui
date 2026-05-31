@@ -187,7 +187,7 @@ object CardDefaults {
     /**
      * The default corner radius of the [Card].
      */
-    val CornerRadius = 16.dp
+    val CornerRadius = 17.dp
 
     /**
      * The default margin inside the [Card].

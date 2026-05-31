@@ -52,7 +52,7 @@ The CardDefaults object provides default values and color configurations for the
 
 | Constant Name | Type          | Description        | Default Value       |
 | ------------- | ------------- | ------------------ | ------------------- |
-| CornerRadius  | Dp            | Card corner radius | 16.dp               |
+| CornerRadius  | Dp            | Card corner radius | 17.dp               |
 | InsideMargin  | PaddingValues | Card inner padding | PaddingValues(0.dp) |
 
 #### Methods

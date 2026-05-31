@@ -115,9 +115,9 @@ The ButtonDefaults object provides default values and color configurations for b
 | Constant Name | Type          | Description                    | Default Value        |
 | ------------- | ------------- | ------------------------------ | -------------------- |
 | MinWidth      | Dp            | Minimum width of the button    | 58.dp                |
-| MinHeight     | Dp            | Minimum height of the button   | 40.dp                |
-| CornerRadius  | Dp            | Corner radius of the button    | 16.dp                |
-| InsideMargin  | PaddingValues | Internal padding of the button | PaddingValues(horizontal = 16.dp, vertical = 13.dp) |
+| MinHeight     | Dp            | Minimum height of the button   | 44.dp                |
+| CornerRadius  | Dp            | Corner radius of the button    | 21.5.dp              |
+| InsideMargin  | PaddingValues | Internal padding of the button | PaddingValues(horizontal = 12.dp, vertical = 13.dp) |
 
 #### Methods
 
