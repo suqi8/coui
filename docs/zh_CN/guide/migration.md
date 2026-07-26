@@ -92,6 +92,37 @@ COUI 的 `TextField` 新增 `backgroundMode: TextFieldMode` 参数，提供三�
 
 如需 ColorOS 的「卡片输入框」（字段上方带独立标题），请使用新组件 [InputView](../components/inputview.md)。
 
+### PressFeedbackType
+
+`PressFeedbackType`（`Card` 等可按压组件使用）新增 `Tint` 值——COUI 的按压蒙层反馈。原有穷举式 `when` 会因此编译失败，需补上新分支（或 `else`）：
+
+```kotlin
+when (pressFeedbackType) {
+    PressFeedbackType.None -> ...
+    PressFeedbackType.Sink -> ...
+    PressFeedbackType.Tilt -> ...
+    PressFeedbackType.Tint -> ... // COUI 新增
+}
+```
+
+### 弹窗内容内边距
+
+`OverlayDialog` / `WindowDialog` **有意**不给 `content` 槽加内边距，以便按钮行和分割线能贯通弹窗全宽（与 ColorOS 一致）。如果你的 Miuix 弹窗依赖内置内容边距，请自行包一层——水平 `24.dp` 与 COUI 的标题/摘要边距对齐：
+
+```kotlin
+OverlayDialog(show = showDialog, title = "标题", onDismissRequest = { ... }) {
+    Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)) {
+        // 弹窗内容
+    }
+}
+```
+
+弹窗调用点较多时，建议封装一个自己的 `AppDialog` 组合项统一处理，而不是每处都写内边距。
+
+### TopAppBar
+
+导航图标自带 `16.dp` 的 `navigationIconPadding`。如果你在 Miuix 下为返回按钮额外加过 start 内边距，请移除，否则图标离屏幕边缘会过宽。
+
 ### TabRow
 
 `TabRow` 在视觉上重建为 ColorOS 分段按钮。签名保持兼容，但有细微差异：`itemSpacing` 默认值改为 `0.dp`（原为 `9.dp`；`TabRowWithContour` 原为 `5.dp`），普通 `TabRow` 默认使用透明背景并新增 `indication` 参数，`TabRowWithContour` 新增 `contourPadding` 参数。
@@ -100,7 +131,28 @@ COUI 的 `TextField` 新增 `backgroundMode: TextFieldMode` 参数，提供三�
 
 `Switch` 新增 `isLoading: Boolean = false` — 加载中时滑块显示 COUI 加载指示器且无法切换（对应 ColorOS 异步生效的设置项）。
 
-## 5. 行为与视觉差异
+## 5. 从旧版 Miuix 迁移（`extra` 包）
+
+较早的 Miuix 版本有一个 `top.yukonga.miuix.kmp.extra` 包，内含 `Super*` 前缀组件。Miuix 与 COUI 后来都对其做了拆分；如果你的项目仍在使用 `extra.*`，按下表映射：
+
+| 旧版 Miuix（`extra.*`） | COUI |
+| :-- | :-- |
+| `SuperDialog` | `overlay.OverlayDialog`（或 `window.WindowDialog`）——`show` 参数由 `MutableState<Boolean>` 改为普通 `Boolean` |
+| `SuperCheckbox` | `coui-preference`：`preference.CheckboxPreference` |
+| `SuperSwitch` | `coui-preference`：`preference.SwitchPreference` |
+| `SuperArrow` | `coui-preference`：`preference.ArrowPreference` |
+| `SuperDropdown` | `coui-preference`：`preference.OverlayDropdownPreference` / `WindowDropdownPreference` |
+| `SuperSpinner` | `coui-preference`：`preference.OverlaySpinnerPreference` / `WindowSpinnerPreference` |
+| `CheckboxLocation` | `coui-preference`：`preference.CheckboxLocation` |
+| `WindowBottomSheet` | `window.WindowBottomSheet`（仅包名变化） |
+
+Preference 系组件位于独立的 `coui-preference` 构件中——如果你之前只依赖 `miuix`，记得补上依赖。旧版直接暴露的样式参数（如 `TextField` 的 `backgroundColor`）大多已移入对应的 `Defaults.…Colors(...)` 工厂。
+
+## 6. 自定义配色方案
+
+`Colors` 构造器保持了 Miuix 的参数顺序，按位置传参构建的完整自定义配色可原样迁移、继续编译。不过更建议直接删掉自定义配色——`lightColorScheme()` / `darkColorScheme()` 现在返回的就是原生 ColorOS 16 配色，通常正是 COUI 应用想要的效果；一次真实迁移借此删掉了约 220 行自定义颜色。
+
+## 7. 行为与视觉差异
 
 API 保持熟悉的形态，但每个组件都已按 ColorOS 16 重新设计：
 
@@ -109,7 +161,7 @@ API 保持熟悉的形态，但每个组件都已按 ColorOS 16 重新设计：
 - **动效**：动画曲线与按压反馈（缩放/着色）遵循 COUI 动效设计。
 - **动态取色**：仍然通过 `ThemeController` 支持 Monet / 动态取色（`ColorSchemeMode.MonetSystem`、`MonetLight`、`MonetDark`），与之前完全一致 — 参见[主题系统](../guide/theme.md)。
 
-## 6. 新增组件
+## 8. 新增组件
 
 迁移后还可以使用 Miuix 中不存在的组件：
 

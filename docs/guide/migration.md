@@ -92,6 +92,37 @@ COUI's `TextField` adds a `backgroundMode: TextFieldMode` parameter with three C
 
 For the ColorOS "card input" with a separate title above the field, use the new [InputView](../components/inputview.md) instead.
 
+### PressFeedbackType
+
+`PressFeedbackType` (used by `Card` and other pressables) gains a new `Tint` value — the COUI press-mask feedback. Any exhaustive `when` over it stops compiling until you add the new branch (or an `else`):
+
+```kotlin
+when (pressFeedbackType) {
+    PressFeedbackType.None -> ...
+    PressFeedbackType.Sink -> ...
+    PressFeedbackType.Tilt -> ...
+    PressFeedbackType.Tint -> ... // new in COUI
+}
+```
+
+### Dialog content padding
+
+`OverlayDialog` / `WindowDialog` deliberately apply **no padding** to the `content` slot, so button bars and dividers can span the full dialog width (matching ColorOS). If your Miuix dialogs relied on built-in content insets, wrap your content in its own padding — `24.dp` horizontal matches the COUI title/summary insets:
+
+```kotlin
+OverlayDialog(show = showDialog, title = "Title", onDismissRequest = { ... }) {
+    Column(Modifier.padding(start = 24.dp, end = 24.dp, bottom = 24.dp)) {
+        // dialog body
+    }
+}
+```
+
+If you show many dialogs, wrap this once in your own `AppDialog` composable instead of padding every call site.
+
+### TopAppBar
+
+The navigation icon already carries a built-in `navigationIconPadding` of `16.dp`. If you added your own start padding around the back button under Miuix, remove it — otherwise the icon sits too far from the edge.
+
 ### TabRow
 
 `TabRow` is visually rebuilt as ColorOS segment buttons. The signature is compatible, with small differences: `itemSpacing` defaults to `0.dp` (was `9.dp`; `TabRowWithContour` was `5.dp`), the plain `TabRow` defaults to a transparent background and accepts an `indication` parameter, and `TabRowWithContour` gains a `contourPadding` parameter.
@@ -100,7 +131,28 @@ For the ColorOS "card input" with a separate title above the field, use the new 
 
 `Switch` gains `isLoading: Boolean = false` — while loading, the thumb shows the COUI spinner and the switch cannot be toggled (mirroring ColorOS async settings).
 
-## 5. Behavioral and visual differences
+## 5. Migrating from an older Miuix (the `extra` package)
+
+Older Miuix releases shipped a `top.yukonga.miuix.kmp.extra` package with `Super*`-prefixed components. Both Miuix and COUI have since split it up; if your project still uses `extra.*`, map as follows:
+
+| Old Miuix (`extra.*`) | COUI |
+| :-- | :-- |
+| `SuperDialog` | `overlay.OverlayDialog` (or `window.WindowDialog`) — `show` is now a plain `Boolean` instead of `MutableState<Boolean>` |
+| `SuperCheckbox` | `coui-preference`: `preference.CheckboxPreference` |
+| `SuperSwitch` | `coui-preference`: `preference.SwitchPreference` |
+| `SuperArrow` | `coui-preference`: `preference.ArrowPreference` |
+| `SuperDropdown` | `coui-preference`: `preference.OverlayDropdownPreference` / `WindowDropdownPreference` |
+| `SuperSpinner` | `coui-preference`: `preference.OverlaySpinnerPreference` / `WindowSpinnerPreference` |
+| `CheckboxLocation` | `coui-preference`: `preference.CheckboxLocation` |
+| `WindowBottomSheet` | `window.WindowBottomSheet` (package changed only) |
+
+The preference components live in the separate `coui-preference` artifact — add it to your dependencies if you only had `miuix` before. Old direct styling parameters (such as `TextField`'s `backgroundColor`) have generally moved into the corresponding `Defaults.…Colors(...)` factories.
+
+## 6. Custom color schemes
+
+The `Colors` constructor keeps Miuix's parameter order, so a fully custom scheme built with positional arguments carries over unchanged and keeps compiling. That said, consider deleting your custom palette entirely — `lightColorScheme()` / `darkColorScheme()` now return the native ColorOS 16 palette, which is usually what a COUI app wants; a real-world migration removed ~220 lines of custom colors this way.
+
+## 7. Behavioral and visual differences
 
 The API stays familiar, but every component is rethemed to ColorOS 16:
 
@@ -109,7 +161,7 @@ The API stays familiar, but every component is rethemed to ColorOS 16:
 - **Motion**: animation curves and press feedback (scale/tint) follow COUI's motion design.
 - **Dynamic color**: Monet / dynamic color is still supported through `ThemeController` (`ColorSchemeMode.MonetSystem`, `MonetLight`, `MonetDark`), exactly as before — see [Theme System](../guide/theme.md).
 
-## 6. New components
+## 8. New components
 
 Migrating also unlocks components that do not exist in Miuix:
 
