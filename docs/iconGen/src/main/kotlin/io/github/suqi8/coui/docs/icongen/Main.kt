@@ -309,7 +309,7 @@ fun main(args: Array<String>) {
 
             val content = StringBuilder()
             content.append("### Basic Icons\n\n")
-            content.append("Basic icons include commonly used basic UI elements such as arrows and checkmarks. These icons are also used in Miuix's own components. Below is the complete list:\n\n")
+            content.append("Basic icons include commonly used basic UI elements such as arrows and checkmarks. These icons are also used in COUI's own components. Below is the complete list:\n\n")
             content.append(basicTable).append("\n")
             content.append("### Extended Icons\n\n")
             content.append("Extended icons include a wide variety of icons for different use cases. Below is the complete list:\n\n")
@@ -331,7 +331,7 @@ fun main(args: Array<String>) {
 
             val content = StringBuilder()
             content.append("### Basic（基础图标）\n\n")
-            content.append("基础图标包含一些常用的基本界面元素，如箭头、勾选等，这些图标在 Miuix 本身的组件中也会使用到。以下是完整的列表：\n\n")
+            content.append("基础图标包含一些常用的基本界面元素，如箭头、勾选等，这些图标在 COUI 本身的组件中也会使用到。以下是完整的列表：\n\n")
             content.append(basicTable).append("\n")
             content.append("### Extended (扩展图标)\n\n")
             content.append("扩展图标包含更多场景下的图标。以下是完整的列表：\n\n")

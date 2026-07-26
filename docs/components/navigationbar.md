@@ -1,6 +1,6 @@
 # NavigationBar
 
-`NavigationBar` is a bottom navigation bar component in Miuix, used to create navigation menus fixed at the bottom of applications. It supports 2 to 5 navigation items, offering different display modes (icon only, text only, icon and text, icon with selected label).
+`NavigationBar` is a bottom navigation bar component in COUI, used to create navigation menus fixed at the bottom of applications. It supports 2 to 5 navigation items, offering different display modes (icon only, text only, icon and text, icon with selected label).
 
 `FloatingNavigationBar` is a floating-style bottom navigation bar component, also supporting 2 to 5 navigation items, showing icons only.
 
@@ -18,6 +18,7 @@ import io.github.suqi8.coui.kmp.basic.NavigationBarItem
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBar
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarItem
 import io.github.suqi8.coui.kmp.basic.NavigationBarDisplayMode
+import io.github.suqi8.coui.kmp.basic.NavigationItem
 ```
 
 ## Basic Usage
@@ -172,6 +173,17 @@ The FloatingNavigationBarDefaults object provides default values for FloatingNav
 | TextOnly              | Show text only                               |
 | IconWithSelectedLabel | Show icon always, show text only when selected|
 
+The display mode set on `NavigationBar` is delivered to its items through the `LocalNavigationBarDisplayMode` composition local. `FloatingNavigationBar` has no `mode` parameter — its items always show icons only.
+
+### NavigationItem Properties
+
+`NavigationItem` is a convenience data class for holding a navigation item's label and icon.
+
+| Property Name | Type        | Description       | Default Value | Required |
+| ------------- | ----------- | ----------------- | ------------- | -------- |
+| label         | String      | Label of the item | -             | Yes      |
+| icon          | ImageVector | Icon of the item  | -             | Yes      |
+
 ## Advanced Usage
 
 ### NavigationBar
@@ -206,6 +218,17 @@ NavigationBar(
 }
 ```
 
+#### Display Modes
+
+```kotlin
+NavigationBar(
+    // IconAndText (default) / IconOnly / TextOnly / IconWithSelectedLabel
+    mode = NavigationBarDisplayMode.IconWithSelectedLabel
+) {
+    // ... items ...
+}
+```
+
 ### FloatingNavigationBar
 
 #### Custom Color and Corner Radius
@@ -225,6 +248,17 @@ FloatingNavigationBar(
 FloatingNavigationBar(
     horizontalAlignment = Alignment.Start, // Align to start
     horizontalOutSidePadding = 16.dp // Set outside padding
+) {
+    // ... items ...
+}
+```
+
+#### Divider and Shadow
+
+```kotlin
+FloatingNavigationBar(
+    showDivider = true, // Draw a thin divider ring around the bar
+    shadowElevation = 0.dp // Disable the drop shadow
 ) {
     // ... items ...
 }

@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` is a basic interactive component in Miuix used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling.
+`DatePicker` is a basic interactive component in COUI used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling.
 
 Dates are represented by the plain `DateValue` data class, so no date/time library dependency is required.
 
@@ -10,6 +10,7 @@ Dates are represented by the plain `DateValue` data class, so no date/time libra
 import io.github.suqi8.coui.kmp.basic.DatePicker
 import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
 import io.github.suqi8.coui.kmp.basic.DateValue
+import io.github.suqi8.coui.kmp.basic.NumberPickerDefaults
 ```
 
 ## Basic Usage

@@ -1,6 +1,6 @@
 # TabRow
 
-`TabRow` is a navigation component in Miuix that reproduces the ColorOS 16 segment button (`COUISegmentButtonLayout`). It provides two variants: the contour style (a capsule container with a sliding indicator) and the standard style (the same segment button without the container fill), suitable for content categorization and navigation scenarios.
+`TabRow` is a navigation component in COUI that reproduces the ColorOS 16 segment button (`COUISegmentButtonLayout`). It provides two variants: the contour style (a capsule container with a sliding indicator) and the standard style (the same segment button without the container fill), suitable for content categorization and navigation scenarios.
 
 <div style="position: relative; height: 180px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=tabRow" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

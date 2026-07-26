@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowSpinnerPreference
 
-`WindowSpinnerPreference` is a dropdown selector component in Miuix that provides titles, summaries, and a list of options with icons and text. It renders at the window level without needing a `Scaffold` host, making it suitable for use cases where `Scaffold` is not available or desired.
+`WindowSpinnerPreference` is a dropdown selector component in COUI that provides titles, summaries, and a list of options with icons and text. It renders at the window level without needing a `Scaffold` host, making it suitable for use cases where `Scaffold` is not available or desired.
 
 <div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowSpinnerPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -68,17 +68,16 @@ private class RoundedRectanglePainter(
 var selectedIndex by remember { mutableStateOf(0) }
 val options = listOf(
     DropdownItem(
-        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFFFF5B29)) },
+        icon = { modifier -> Icon(RoundedRectanglePainter(), "Icon", modifier, Color(0xFFFF5B29)) },
         text = "Red Theme",
         summary = "Energetic Red"
     ),
     DropdownItem(
-        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFF3482FF)) },
+        icon = { modifier -> Icon(RoundedRectanglePainter(), "Icon", modifier, Color(0xFF3482FF)) },
         text = "Blue Theme",
         summary = "Calm Blue"
     ),
 )
-
 
 WindowSpinnerPreference(
     title = "Menu",
@@ -233,7 +232,7 @@ WindowSpinnerPreference(
 | enabled               | Boolean                   | Whether component is interactive     | true                                  | No       |
 | showValue             | Boolean                   | Whether to show the selected value   | true                                  | No       |
 | onExpandedChange      | ((Boolean) -> Unit)?      | Callback when expanded state changes | null                                  | No       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | -                                     | No       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | null                                  | No       |
 
 ### Entry Overload Properties
 
@@ -248,6 +247,8 @@ WindowSpinnerPreference(
 | ------------------- | -------------------- | ----------------------------------------------- | ----------------- | -------- |
 | entries             | List\<DropdownEntry> | Dropdown entry groups separated by dividers     | -                 | Yes      |
 | collapseOnSelection | Boolean              | Whether to close the popup after each selection | entries.size <= 1 | No       |
+
+All other parameters are identical to the items overload above. The `entry` and `entries` overloads do not take `onSelectedIndexChange` — use each `DropdownItem.onClick` instead.
 
 ### WindowSpinnerPreference Properties (Dialog Mode)
 
@@ -268,8 +269,9 @@ WindowSpinnerPreference(
 | insideMargin          | PaddingValues             | Internal content padding             | BasicComponentDefaults.InsideMargin     | No       |
 | enabled               | Boolean                   | Whether component is interactive     | true                                    | No       |
 | showValue             | Boolean                   | Whether to show the selected value   | true                                    | No       |
+| collapseOnSelection   | Boolean                   | Whether to close the dialog after selection | true                             | No       |
 | onExpandedChange      | ((Boolean) -> Unit)?      | Callback when expanded state changes | null                                    | No       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | -                                       | No       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | null                                    | No       |
 
 ### Dialog Entry Overload Properties
 
@@ -287,6 +289,8 @@ WindowSpinnerPreference(
 | dialogButtonString | String               | Text for the dialog button                       | -                 | Yes      |
 | collapseOnSelection | Boolean             | Whether to close the dialog after each selection | entries.size <= 1 | No       |
 
+All other parameters are identical to the dialog-mode items overload above. The `entry` and `entries` overloads do not take `onSelectedIndexChange` — use each `DropdownItem.onClick` instead.
+
 ### DropdownEntry Properties
 
 | Property Name | Type                | Description                        | Default Value | Required |
@@ -294,7 +298,7 @@ WindowSpinnerPreference(
 | items         | List\<DropdownItem> | Items shown in this dropdown group | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true | No |
 
-Group titles are reserved for future use. The original MIUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
+Group titles are reserved for future use. The original COUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
 
 ### DropdownItem Properties
 

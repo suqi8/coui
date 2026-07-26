@@ -1,6 +1,6 @@
 # Button
 
-`Button` 是 Miuix 中的基础交互组件，用于触发操作或事件。提供了多种风格选择，包括主要按钮、次要按钮和文本按钮。
+`Button` 是 COUI 中的基础交互组件，用于触发操作或事件。提供了多种风格选择，包括主要按钮、次要按钮和文本按钮。
 
 <div style="position: relative; height: 200px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=button" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -26,7 +26,7 @@ Button(
 
 ## 按钮类型
 
-Miuix 提供了多种类型的按钮，适用于不同的场景和重要程度：
+COUI 提供了多种类型的按钮，适用于不同的场景和重要程度：
 
 ### 主要按钮（Primary Button）
 
@@ -59,6 +59,34 @@ TextButton(
 )
 ```
 
+### 无边框文本按钮（Borderless Text Button）
+
+对应 COUI 的 `Widget.COUI.Button.Large.Borderless` / `Translate`：无填充、主题色文字。
+
+```kotlin
+TextButton(
+    text = "无边框按钮",
+    onClick = { /* 处理点击事件 */ },
+    colors = ButtonDefaults.textButtonColorsBorderless()
+)
+```
+
+### 小尺寸档（Small Size Tier）
+
+将 `ButtonDefaults` 中的 `Small` 系列常量与 14sp 文字样式搭配使用，即可得到 COUI 小尺寸档（`Widget.COUI.Button.Small`）：
+
+```kotlin
+TextButton(
+    text = "小按钮",
+    onClick = { /* 处理点击事件 */ },
+    cornerRadius = ButtonDefaults.CornerRadiusSmall,
+    minWidth = ButtonDefaults.MinWidthSmall,
+    minHeight = ButtonDefaults.MinHeightSmall,
+    insideMargin = ButtonDefaults.InsideMarginSmall,
+    textStyle = COUITheme.textStyles.button.copy(fontSize = 14.sp)
+)
+```
+
 ## 组件状态
 
 ### 禁用状态
@@ -87,7 +115,7 @@ Button(
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |
 | insideMargin      | PaddingValues                   | 按钮内部边距             | ButtonDefaults.InsideMargin   | 否       |
 | interactionSource | MutableInteractionSource?       | 按钮的交互源             | null                          | 否       |
-| indication        | Indication?                     | 点击交互的反馈效果       | LocalIndication.current       | 否       |
+| indication        | Indication?                     | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 | content           | @Composable RowScope.() -> Unit | 按钮内容区域的可组合函数 | -                             | 是       |
 
 ### TextButton 属性
@@ -105,7 +133,7 @@ Button(
 | insideMargin      | PaddingValues             | 按钮内部边距         | ButtonDefaults.InsideMargin       | 否       |
 | textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 14sp 样式可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
-| indication        | Indication?               | 点击交互的反馈效果   | LocalIndication.current           | 否       |
+| indication        | Indication?               | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 
 ### ButtonDefaults 对象
 
@@ -115,6 +143,8 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值               |
 | ------------ | ------------- | -------------- | -------------------- |
+| PressedScale | Float         | 按下时按钮收缩到的最小比例（48 x 48dp 以内的表面） | 0.92f |
+| PressedBrightness | Float    | 旧版 COUIButton 的 `brightness` 属性值；仅为源码兼容保留，已不再使用 | 0.8f |
 | MinWidth     | Dp            | 按钮的最小宽度 | 58.dp                |
 | MinHeight    | Dp            | 按钮的最小高度 | 44.dp                |
 | CornerRadius | Dp            | 按钮的圆角半径 | 22.dp                |
@@ -148,7 +178,7 @@ Button(
     )
     Spacer(modifier = Modifier.width(8.dp))
     Text("带图标按钮")
-    }
+}
 ```
 
 ### 自定义样式按钮

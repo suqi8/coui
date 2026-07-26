@@ -1,6 +1,6 @@
 # SearchBar
 
-`SearchBar` is a component in Miuix used for user search input. It provides an intuitive and
+`SearchBar` is a component in COUI used for user search input. It provides an intuitive and
 easy-to-use search interface with support for expanded/collapsed state switching and search
 suggestions display.
 
@@ -125,7 +125,7 @@ SearchBar(
             leadingIcon = {
                 Icon(
                     modifier = Modifier.padding(start = 12.dp, end = 8.dp),
-                    imageVector = COUIIcons.Search,
+                    imageVector = COUIIcons.Basic.Search,
                     contentDescription = "Search"
                 )
             }

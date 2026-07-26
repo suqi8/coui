@@ -1,6 +1,6 @@
 # BasicComponent
 
-`BasicComponent` is a foundational standard component in Miuix. It provides customizable content areas on the start and end sides, along with a title and summary, making it suitable for building list items, settings items, and other UI elements.
+`BasicComponent` is a foundational standard component in COUI. It provides customizable content areas on the start and end sides, along with a title and summary, making it suitable for building list items, settings items, and other UI elements.
 
 This project builds upon it to provide some extended components, enabling developers to quickly create UI components that conform to design specifications. See the usage of [Extended Components](../components/#extended-components) for details.
 
@@ -32,7 +32,7 @@ BasicComponent(
 ```kotlin
 BasicComponent(
     title = "Wi-Fi",
-    summary = "Connected to MIUI-WiFi",
+    summary = "Connected to HOME-WiFi",
     onClick = { /* Handle click event */ }
 )
 ```

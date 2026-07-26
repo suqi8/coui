@@ -1,12 +1,10 @@
 # PullToRefresh
 
-`PullToRefresh` is a pull-to-refresh component in Miuix that provides refresh functionality for lists and other scrollable content. It features an animated interactive refresh indicator suitable for various scenarios where data refresh is needed.
+`PullToRefresh` is a pull-to-refresh component in COUI that provides refresh functionality for lists and other scrollable content. It features an animated interactive refresh indicator suitable for various scenarios where data refresh is needed.
 
 ::: warning
 This component is only available in touch-enabled environments.
 :::
-
-For a demo, see the DropDowns page of the <a href="https://compose-coui-ui.github.io/miuix-jsCanvas/" target="_blank" rel="noopener noreferrer">Miuix Example</a>.
 
 ## Import
 
@@ -54,7 +52,7 @@ Surface {
 ```
 
 ::: tip Contract for `isRefreshing`
-`isRefreshing` is the source of truth and is synchronized in both directions: raising it to `true` while the indicator is idle shows the indicator programmatically (see below), and lowering it to `false` ends the refresh. Set it to `true` promptly in `onRefresh` — synchronously (as above), or in a coroutine launched on the UI scope before its first suspension. If it is still (or already again) `false` when the indicator settles into the refreshing state, the refresh is treated as finished and the completion animation runs immediately; a `true` that arrives later shows the indicator again.
+`isRefreshing` is the hoisted source of truth for the refresh operation. Set it to `true` in `onRefresh` when the gesture triggers a refresh, and set it back to `false` when the data loading completes — lowering it ends the refresh and plays the completion animation. The indicator itself is shown by the pull gesture; `PullToRefreshState` only manages the visual state.
 :::
 
 ## Component States
@@ -83,25 +81,17 @@ PullToRefresh has the following states:
 | circleSize              | Dp                     | Indicator circle size          | PullToRefreshDefaults.circleSize       | No       |
 | refreshTexts            | List\<String>          | Text list for different states | PullToRefreshDefaults.refreshTexts     | No       |
 | refreshTextStyle        | TextStyle              | Refresh text style             | PullToRefreshDefaults.refreshTextStyle | No       |
-| onPullProgress          | ((Float) -> Unit)?     | Real-time full-range drag progress (0-1) callback | null                    | No       |
 | content                 | @Composable () -> Unit | Scrollable content composable  | None                                   | Yes      |
 
 ### PullToRefreshState Class
 
-PullToRefreshState manages the UI state of the refresh indicator and can be created using `rememberPullToRefreshState()`. It should only be used for UI state, while refresh logic should be controlled by `isRefreshing` and `onRefresh`.
+PullToRefreshState manages the UI state of the refresh indicator and can be created using `rememberPullToRefreshState()` (which takes no parameters). It should only be used for UI state, while refresh logic should be controlled by `isRefreshing` and `onRefresh`.
 
-`rememberPullToRefreshState()` accepts an optional `refreshThreshold` parameter to customize the pull progress percentage required to trigger refresh:
-
-| Parameter        | Type  | Description                                                                                 | Default |
-| ---------------- | ----- | ------------------------------------------------------------------------------------------- | ------- |
-| refreshThreshold | Float | Pull progress threshold (0.0~1.0). 0.25 means 25% of full drag range. 0.0 triggers on any pull; 1.0 requires maximum stretch. | 0.25 |
-
-| Property Name               | Type         | Description                                                     |
-| --------------------------- | ------------ | --------------------------------------------------------------- |
-| refreshState                | RefreshState | Current refresh state                                           |
-| pullProgress                | Float        | Pull progress (0-1) relative to the effective trigger threshold |
-| fullDragProgress            | Float        | Full-range drag progress (0-1) across the entire visual range   |
-| visualProgress              | Float        | Visual scaling progress (0-1) of the indicator circle           |
+| Property Name | Type         | Description                                                     |
+| ------------- | ------------ | --------------------------------------------------------------- |
+| refreshState  | RefreshState | Current visual refresh state                                    |
+| pullProgress  | Float        | Pull progress (0-1) relative to the refresh trigger threshold   |
+| dragOffset    | Float        | The current drag offset in pixels                               |
 
 ### PullToRefreshDefaults Object
 
@@ -115,18 +105,6 @@ PullToRefreshDefaults provides default values for the component.
 | refreshTextStyle | TextStyle     | Default text style      | TextStyle(fontSize = 14.sp, fontWeight = Bold, color = color)                             |
 
 ## Advanced Usage
-
-### Programmatic Refresh
-
-Setting `isRefreshing` to `true` while the indicator is idle shows the indicator without a gesture — for example, to refresh on entry:
-
-```kotlin
-LaunchedEffect(Unit) {
-    isRefreshing = true // The indicator expands and spins until set back to false
-}
-```
-
-Note that while the indicator is shown, nested scrolling of the content is consumed, consistent with a gesture-triggered refresh.
 
 ### Custom Indicator Color
 
@@ -155,33 +133,18 @@ PullToRefresh(
 }
 ```
 
-### Custom Refresh Threshold
+### Coordinating with a TopAppBar
+
+Pass the `TopAppBar` scroll behavior so the app bar and the pull gesture share nested scroll events:
 
 ```kotlin
-val pullToRefreshState = rememberPullToRefreshState(
-    refreshThreshold = 0.5f // 50% of full drag range
-)
+val scrollBehavior = COUIScrollBehavior()
 
 PullToRefresh(
     isRefreshing = isRefreshing,
     onRefresh = { isRefreshing = true },
-    pullToRefreshState = pullToRefreshState,
+    topAppBarScrollBehavior = scrollBehavior,
 ) {
-    // Content
-}
-```
-
-### Real-time Pull Progress Callback
-
-```kotlin
-PullToRefresh(
-    isRefreshing = isRefreshing,
-    onRefresh = { isRefreshing = true },
-    pullToRefreshState = pullToRefreshState,
-    onPullProgress = { progress ->
-        // React to full-range drag progress in real time (0.0 to 1.0)
-    },
-) {
-    // Content
+    // Scrollable content
 }
 ```

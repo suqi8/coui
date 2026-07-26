@@ -142,7 +142,7 @@ Surface {
 
 ```kotlin
 var showColorDialog by remember { mutableStateOf(false) }
-var selectedColor by remember { mutableStateOf(Color.Red) }
+var selectedColor by remember { mutableStateOf(Color(0xFF2196F3)) }
 
 Scaffold {
     TextButton(

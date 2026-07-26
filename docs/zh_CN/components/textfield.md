@@ -1,6 +1,6 @@
 # TextField
 
-`TextField` 是 Miuix 中的基础输入组件，用于接收用户的文本输入，视觉对齐 ColorOS COUIEditText。默认呈现 ColorOS 设置对话框中的输入形态：16sp 裸文本 + 细下划线，聚焦时主题色 1dp 线条从起始边展开，标签作为普通占位符使用。同时提供纯描边圆角矩形、完全无装饰（卡片内）两种形态，以及可选的浮动标签、错误抖动、字数统计、清除按钮与密码切换。
+`TextField` 是 COUI 中的基础输入组件，用于接收用户的文本输入，视觉对齐 ColorOS COUIEditText。默认呈现 ColorOS 设置对话框中的输入形态：16sp 裸文本 + 细下划线，聚焦时主题色 1dp 线条从起始边展开，标签作为普通占位符使用。同时提供纯描边圆角矩形、完全无装饰（卡片内）两种形态，以及可选的浮动标签、错误抖动、字数统计、清除按钮与密码切换。
 
 <div style="position: relative; height: 340px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=textField" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -28,7 +28,7 @@ TextField(
 ```
 
 ::: info 信息
-此 TextFiled 组件现在也支持最新基于状态的版本，具体请参考 [State-based](https://developer.android.com/develop/ui/compose/text/user-input?textfield=state-based&hl=zh-cn) 文档。
+此 TextField 组件现在也支持最新基于状态的版本，具体请参考 [State-based](https://developer.android.com/develop/ui/compose/text/user-input?textfield=state-based&hl=zh-cn) 文档。
 :::
 
 ## 输入框类型
@@ -106,6 +106,24 @@ TextField(
     label = "矩形样式",
     backgroundMode = TextFieldMode.Rectangle
 )
+```
+
+### 无装饰（None）模式
+
+`TextFieldMode.None` 移除所有背景装饰——当外层容器（例如白色输入卡片）已经提供视觉框架时使用：
+
+```kotlin
+var text by remember { mutableStateOf("") }
+
+Card {
+    TextField(
+        value = text,
+        onValueChange = { text = it },
+        label = "裸输入框",
+        backgroundMode = TextFieldMode.None,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+}
 ```
 
 ### 仅显示聚焦线
@@ -278,7 +296,7 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 
 #### `textFieldColors()` 工厂
 
-构造 [TextFieldColors] 实例。按需覆盖任意子集，未指定的参数回退到 Miuix 主题默认值。
+构造 [TextFieldColors] 实例。按需覆盖任意子集，未指定的参数回退到 COUI 主题默认值。
 
 | 参数             | 类型  | 默认值                                            |
 | ---------------- | ----- | ------------------------------------------------- |

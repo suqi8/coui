@@ -1,6 +1,6 @@
 # FullPageStatement
 
-A full page statement is the first-launch user agreement / privacy statement page, mirroring ColorOS's COUIFullPageStatement (coui_full_page_statement.xml): a centered title, a scrollable statement body with vertical fading edges, and a bottom area holding a filled primary button plus an optional borderless exit text button.
+`FullPageStatement` is a full-page user agreement / privacy statement component in COUI, typically shown on first launch, mirroring ColorOS's COUIFullPageStatement (coui_full_page_statement.xml): a centered title, a scrollable statement body with vertical fading edges, and a bottom area holding a filled primary button plus an optional borderless exit text button.
 
 The statement body takes all the space left between the title and the button area, so the buttons stay pinned to the bottom of the page.
 
@@ -28,7 +28,7 @@ The component fills its parent (`fillMaxSize`), so it is normally hosted as a wh
 
 ## Properties
 
-### FullPageStatement
+### FullPageStatement Properties
 
 | Property               | Type                     | Description                                          | Default Value                                    | Required |
 | ---------------------- | ------------------------ | ---------------------------------------------------- | ------------------------------------------------ | -------- |
@@ -45,7 +45,7 @@ The component fills its parent (`fillMaxSize`), so it is normally hosted as a wh
 | contentPadding         | PaddingValues            | Padding around the statement text                    | FullPageStatementDefaults.ContentPadding         | No       |
 | scrollState            | ScrollState              | Scroll state of the statement area                   | rememberScrollState()                            | No       |
 
-### FullPageStatementDefaults
+### FullPageStatementDefaults Object
 
 | Constant                    | Type          | Default Value                                    | COUI source                                          |
 | --------------------------- | ------------- | ------------------------------------------------ | ---------------------------------------------------- |
@@ -73,8 +73,62 @@ The component fills its parent (`fillMaxSize`), so it is normally hosted as a wh
 | contentColor         | Color | COUITheme.colorScheme.onSurfaceSecondary | couiColorSecondNeutral     |
 | secondaryButtonColor | Color | COUITheme.colorScheme.primary            | couiColorPrimaryTextOnPopup |
 
+### FullPageStatementColors Class
+
+| Property Name        | Type  | Description                       |
+| -------------------- | ----- | --------------------------------- |
+| titleColor           | Color | Color of the title                |
+| contentColor         | Color | Color of the statement text       |
+| secondaryButtonColor | Color | Color of the exit text button     |
+
 ## Behavior
 
 - The statement body scrolls and shows 46dp vertical fading edges that ramp in with the scroll offset, like the COUIMaxHeightScrollView host.
 - The primary button label is capped at two lines (COUIFullPageStatement `setMaxLines(2)`), with a fixed COUI bucket width: 174dp, 220dp from 300dp-wide windows and 280dp from 600dp-wide windows.
 - The exit button is a bare accent-colored text (16sp, medium) with no fill and no press overlay, matching the COUI `txt_exit` TextView.
+
+## Advanced Usage
+
+### Confirm-Only Statement
+
+Omit `secondaryButtonText` (it defaults to `null`) to hide the exit text button:
+
+```kotlin
+FullPageStatement(
+    title = "User Agreement",
+    content = "Welcome! Before you continue, please read the statement carefully…",
+    primaryButtonText = "Got it",
+    onPrimaryButtonClick = { /* Continue */ }
+)
+```
+
+### Fixed Primary Button Width
+
+Pass `primaryButtonWidth` to override the COUI adaptive width buckets:
+
+```kotlin
+FullPageStatement(
+    title = "User Agreement",
+    content = "Welcome! Before you continue, please read the statement carefully…",
+    primaryButtonText = "Agree",
+    onPrimaryButtonClick = { /* Continue */ },
+    primaryButtonWidth = 240.dp
+)
+```
+
+### Custom Colors
+
+```kotlin
+FullPageStatement(
+    title = "User Agreement",
+    content = "Welcome! Before you continue, please read the statement carefully…",
+    primaryButtonText = "Agree",
+    onPrimaryButtonClick = { /* Continue */ },
+    secondaryButtonText = "Disagree and exit",
+    onSecondaryButtonClick = { /* Exit */ },
+    colors = FullPageStatementDefaults.fullPageStatementColors(
+        contentColor = COUITheme.colorScheme.onBackground
+    ),
+    primaryButtonColors = ButtonDefaults.buttonColors()
+)
+```

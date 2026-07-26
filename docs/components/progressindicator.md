@@ -1,6 +1,6 @@
 # ProgressIndicator
 
-`ProgressIndicator` is a progress indication component in Miuix used to display the progress status of operations. It provides three styles: linear progress bar, circular progress indicator, and infinite spinning indicator, suitable for different loading and progress display scenarios.
+`ProgressIndicator` is a progress indication component in COUI used to display the progress status of operations. It provides three styles: linear progress bar, circular progress indicator, and infinite spinning indicator, suitable for different loading and progress display scenarios.
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=progressIndicator" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -54,6 +54,24 @@ Infinite progress indicator is suitable for scenarios where operation duration i
 
 ```kotlin
 InfiniteProgressIndicator()
+```
+
+### Size Tiers
+
+Circular and infinite indicators ship with a medium (default) and a large tier defined in `ProgressIndicatorDefaults`:
+
+```kotlin
+// Large circular progress indicator
+CircularProgressIndicator(
+    size = ProgressIndicatorDefaults.LargeCircularProgressIndicatorSize,
+    strokeWidth = ProgressIndicatorDefaults.LargeCircularProgressIndicatorStrokeWidth
+)
+
+// Large infinite progress indicator
+InfiniteProgressIndicator(
+    size = ProgressIndicatorDefaults.LargeInfiniteProgressIndicatorSize,
+    strokeWidth = ProgressIndicatorDefaults.LargeInfiniteProgressIndicatorStrokeWidth
+)
 ```
 
 ## Component States

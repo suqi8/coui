@@ -1,6 +1,6 @@
 # RadioButtonPreference
 
-`RadioButtonPreference` is a radio button component in Miuix that provides a title, summary, and radio button control. It supports click interactions and is commonly used in single-select settings and selection lists.
+`RadioButtonPreference` is a radio button component in COUI that provides a title, summary, and radio button control. It supports click interactions and is commonly used in single-select settings and selection lists.
 
 <div style="position: relative; height: 293px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=radioButtonPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -79,13 +79,35 @@ RadioButtonPreference(
 | summary           | String?                         | Summary description                     | null                                      | No       |
 | summaryColor      | BasicComponentColors            | Summary text color configuration        | BasicComponentDefaults.summaryColor()     | No       |
 | radioButtonColors | RadioButtonColors               | RadioButton control color configuration | RadioButtonDefaults.radioButtonColors()   | No       |
-| endActions        | @Composable RowScope.() -> Unit | Custom end content                      | {}                                        | No       |
+| startAction         | @Composable (() -> Unit)?         | Custom start content                    | null                                      | No       |
+| endActions          | @Composable (RowScope.() -> Unit)? | Custom end content                     | null                                      | No       |
+| radioButtonLocation | RadioButtonLocation               | Location of the radio button control    | RadioButtonLocation.Start                 | No       |
 | bottomAction      | @Composable (() -> Unit)?       | Custom bottom content                   | null                                      | No       |
-| holdDownState     | Boolean                         | Whether the component is held down      | false                                     | No       |
 | insideMargin      | PaddingValues                   | Internal content padding                | BasicComponentDefaults.InsideMargin       | No       |
+| holdDownState     | Boolean                         | Whether the component is held down      | false                                     | No       |
 | enabled           | Boolean                         | Whether component is interactive        | true                                      | No       |
 
+### RadioButtonLocation Options
+
+| Option | Description                                        |
+| ------ | -------------------------------------------------- |
+| Start  | The radio button is placed at the start (default)  |
+| End    | The radio button is placed at the end              |
+
 ## Advanced Usage
+
+### Radio Button at the End
+
+```kotlin
+var selectedIndex by remember { mutableIntStateOf(0) }
+
+RadioButtonPreference(
+    title = "Option A",
+    selected = selectedIndex == 0,
+    onClick = { selectedIndex = 0 },
+    radioButtonLocation = RadioButtonLocation.End
+)
+```
 
 ### Custom Colors
 

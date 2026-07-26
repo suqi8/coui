@@ -58,6 +58,21 @@ Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
 8dp 间距对应 COUIChipGroup 的默认横/纵间距。
 
+## 组件状态
+
+### 禁用状态
+
+禁用的 Chip 保持其选中/未选中形态,但切换为禁用容器色与内容色,且不再响应按压:
+
+```kotlin
+Chip(
+    selected = true,
+    onClick = { /* Ignored while disabled */ },
+    label = "Disabled",
+    enabled = false,
+)
+```
+
 ## 属性
 
 ### Chip
@@ -91,6 +106,13 @@ Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 | IconSize     | Dp            | 16.dp                             | coui_chip_selection_style_chip_icon_size         |
 | IconSpacing  | Dp            | 4.dp                              | coui_chip_selection_style_chip_icon_end_padding  |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |
+
+#### 方法
+
+| 方法名       | 类型       | 说明                                                                    |
+| ------------ | ---------- | ----------------------------------------------------------------------- |
+| textStyle()  | TextStyle  | 默认标签样式(COUITheme.textStyles.body2,COUI couiTextBodyM 14sp)     |
+| chipColors() | ChipColors | 创建 Chip 的颜色配置                                                    |
 
 ### `chipColors()` 工厂
 

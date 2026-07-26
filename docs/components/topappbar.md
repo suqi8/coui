@@ -1,6 +1,6 @@
 # TopAppBar
 
-`TopAppBar` is a top application bar component in Miuix, used to provide navigation, title, and action buttons at the top of the interface. It supports both large title and regular modes, as well as dynamic effects during scrolling.
+`TopAppBar` is a top application bar component in COUI, used to provide navigation, title, and action buttons at the top of the interface. It supports both large title and regular modes, as well as dynamic effects during scrolling.
 
 This component is typically used in conjunction with the `Scaffold` component to maintain consistent layout and behavior across different pages in the application.
 
@@ -61,6 +61,21 @@ Scaffold(
             }
         )
     }
+)
+```
+
+### With Subtitle
+
+Both bars can show a subtitle below the title. On the collapsible `TopAppBar` the subtitle
+fades out while the bar collapses by default; set `hideSubtitleOnCollapse = false` to keep
+it visible and slide it into the collapsed bar below the title:
+
+```kotlin
+TopAppBar(
+    title = "Title",
+    largeTitle = "Large Title",
+    subtitle = "Subtitle",
+    hideSubtitleOnCollapse = false
 )
 ```
 

@@ -1,33 +1,33 @@
 :root {
 
     /* 亮色模式主题色系统 */
-    --miuix-color-primary: #3482FF;
-    --miuix-color-primary-container: #5D9BFF;
-    --miuix-color-on-tertiary-container: #3482FF;
-    --miuix-color-outline: #D9D9D9;
-    --miuix-color-divider-line: #E0E0E0;
+    --coui-color-primary: #3482FF;
+    --coui-color-primary-container: #5D9BFF;
+    --coui-color-on-tertiary-container: #3482FF;
+    --coui-color-outline: #D9D9D9;
+    --coui-color-divider-line: #E0E0E0;
 
     /* 主要字体 */
     --vp-font-family-base: 'MiSans VF', 'Inter', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
     /* 主要主题色 */
-    --vp-c-brand-1: var(--miuix-color-primary);
-    --vp-c-brand-2: var(--miuix-color-primary-container);
-    --vp-c-brand-3: var(--miuix-color-on-tertiary-container);
+    --vp-c-brand-1: var(--coui-color-primary);
+    --vp-c-brand-2: var(--coui-color-primary-container);
+    --vp-c-brand-3: var(--coui-color-on-tertiary-container);
 
     /* 边框和分隔线颜色 */
-    --vp-c-divider: var(--miuix-color-divider-line);
-    --vp-c-gutter: var(--miuix-color-outline);
+    --vp-c-divider: var(--coui-color-divider-line);
+    --vp-c-gutter: var(--coui-color-outline);
 
     /* hero logo 背景颜色 */
-    --vp-home-hero-image-background-image: linear-gradient(to right bottom, var(--miuix-color-primary), var(--miuix-color-primary-container));
+    --vp-home-hero-image-background-image: linear-gradient(to right bottom, var(--coui-color-primary), var(--coui-color-primary-container));
     --vp-home-hero-image-filter: blur(40px);
 
     /* 搜索框边框描边颜色 */
     @media (min-width: 960px) {
         .DocSearch-Button {
-            border: 1px solid var(--miuix-color-outline);
+            border: 1px solid var(--coui-color-outline);
         }
     }
 
@@ -35,16 +35,16 @@
 
 /* 深色模式主题色 */
 .dark {
-    --miuix-color-primary: #277AF7;
-    --miuix-color-primary-container: #338FE4;
-    --miuix-color-on-tertiary-container: #277AF7;
-    --miuix-color-outline: #404040;
-    --miuix-color-divider-line: #393939;
+    --coui-color-primary: #277AF7;
+    --coui-color-primary-container: #338FE4;
+    --coui-color-on-tertiary-container: #277AF7;
+    --coui-color-outline: #404040;
+    --coui-color-divider-line: #393939;
 }
 
 /* 标题颜色 */
 .VPDoc h1 {
-    background: linear-gradient(120deg, var(--miuix-color-primary), var(--miuix-color-primary-container));
+    background: linear-gradient(120deg, var(--coui-color-primary), var(--coui-color-primary-container));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

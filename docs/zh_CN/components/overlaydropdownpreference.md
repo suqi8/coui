@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayDropdownPreference
 
-`OverlayDropdownPreference` 是 Miuix 中的下拉菜单组件，提供了标题、摘要和下拉选项列表，支持点击交互，常用于选项设置和列表选择中。
+`OverlayDropdownPreference` 是 COUI 中的下拉菜单组件，提供了标题、摘要和下拉选项列表，支持点击交互，常用于选项设置和列表选择中。
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=overlayDropdownPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -215,7 +215,7 @@ OverlayDropdownPreference(
 | showValue             | Boolean                   | 是否显示当前选中的值 | true                                  | 否       |
 | renderInRootScaffold  | Boolean                   | 是否在根（最外层）Scaffold 中渲染弹窗。为 true 时，弹窗覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染并进行位置补偿 | true | 否 |
 | onExpandedChange      | ((Boolean) -> Unit)?      | 展开状态变化时的回调 | null                                  | 否       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | 选中项变化时的回调   | -                                     | 否       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | 选中项变化时的回调   | null                                  | 否       |
 
 ### Entry 重载属性
 
@@ -239,7 +239,7 @@ OverlayDropdownPreference(
 | items   | List\<DropdownItem> | 此分组中显示的条目         | -      | 是       |
 | enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
 
-分组标题预留给后续使用。原版 MIUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
+分组标题预留给后续使用。COUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
 
 ### DropdownItem 属性
 

@@ -58,6 +58,21 @@ Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
 The 8dp spacing matches COUIChipGroup's default horizontal/vertical spacing.
 
+## Component States
+
+### Disabled State
+
+A disabled chip keeps its selected/unselected shape but switches to the disabled container and content colors, and no longer reacts to presses:
+
+```kotlin
+Chip(
+    selected = true,
+    onClick = { /* Ignored while disabled */ },
+    label = "Disabled",
+    enabled = false,
+)
+```
+
 ## Properties
 
 ### Chip
@@ -91,6 +106,13 @@ The 8dp spacing matches COUIChipGroup's default horizontal/vertical spacing.
 | IconSize     | Dp            | 16.dp                            | coui_chip_selection_style_chip_icon_size       |
 | IconSpacing  | Dp            | 4.dp                             | coui_chip_selection_style_chip_icon_end_padding |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |
+
+#### Methods
+
+| Method Name  | Type       | Description                                                                  |
+| ------------ | ---------- | ---------------------------------------------------------------------------- |
+| textStyle()  | TextStyle  | Default label style (COUITheme.textStyles.body2, COUI couiTextBodyM 14sp)    |
+| chipColors() | ChipColors | Creates the color configuration for the chip                                 |
 
 ### `chipColors()` factory
 

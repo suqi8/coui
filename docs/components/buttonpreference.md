@@ -50,6 +50,32 @@ ButtonPreference(
 )
 ```
 
+### Hold Down State
+
+ButtonPreference supports controlling the hold-down state of the row through the `holdDownState` parameter, typically used for visual feedback when displaying popup dialogs:
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+Scaffold {
+    ButtonPreference(
+        title = "Account",
+        summary = "Manage account details",
+        buttonText = "Sign in",
+        onButtonClick = { /* sign in */ },
+        onClick = { showDialog = true },
+        holdDownState = showDialog
+    )
+    OverlayDialog(
+        title = "Account Details",
+        show = showDialog,
+        onDismissRequest = { showDialog = false }
+    ) {
+        // Dialog content
+    }
+}
+```
+
 ## Properties
 
 ### ButtonPreference Properties
@@ -107,6 +133,25 @@ ButtonPreference(
         color = COUITheme.colorScheme.error,
         contentColor = COUITheme.colorScheme.onError
     )
+)
+```
+
+### With End Actions
+
+Content passed to `endActions` is placed before the inline button:
+
+```kotlin
+ButtonPreference(
+    title = "Membership",
+    summary = "Current plan",
+    buttonText = "Upgrade",
+    onButtonClick = { /* upgrade */ },
+    endActions = {
+        Text(
+            text = "Free",
+            color = COUITheme.colorScheme.onSurfaceVariantActions
+        )
+    }
 )
 ```
 

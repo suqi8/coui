@@ -31,6 +31,31 @@ ColorSwatchPicker(
 
 > 请在 `remember { }` 中构建 `colors` 列表(或跨重组保持同一实例):标准 `List` 对 Compose 不稳定,每次新建实例会破坏重组跳过。
 
+## 组件状态
+
+### 无选中态
+
+传入负值 `selectedIndex` 可渲染无选中环的色点行:
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = -1,
+    onSwatchSelected = { selectedIndex = it },
+)
+```
+
+### 禁用状态
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = selectedIndex,
+    onSwatchSelected = { selectedIndex = it },
+    enabled = false,
+)
+```
+
 ## 属性
 
 ### ColorSwatchPicker
@@ -65,3 +90,22 @@ ColorSwatchPicker(
 - 点按单元格时以其下标回调 `onSwatchSelected`;组件无内部状态,选中态由调用方持有。
 - 选中环以 280ms 淡入、150ms 淡出,使用 COUI 缓动曲线。
 - 每个单元格具备 `Role.RadioButton` 语义并置于 selectable group 中,便于无障碍访问。
+
+## 进阶用法
+
+### 自定义尺寸与选中环
+
+所有尺寸参数与选中环颜色均可覆盖。下例拉开单元格间距并使用自定义选中环:
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = selectedIndex,
+    onSwatchSelected = { selectedIndex = it },
+    swatchSize = 28.dp,
+    cellSize = 36.dp,
+    ringStrokeWidth = 3.dp,
+    ringColor = Color(0xFFDB382C),
+    spacing = 8.dp,
+)
+```

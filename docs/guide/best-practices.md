@@ -1,9 +1,9 @@
 # Best Practices
 
-The Miuix UI library has been adopted by many open-source projects. Below are some example applications built with Miuix, showcasing how to apply Miuix components and design principles in real-world projects.
+COUI is based on [Miuix](https://github.com/compose-miuix-ui/miuix) and shares the same component API surface, so patterns from the wider Miuix ecosystem apply directly to COUI. Below are some example applications built with COUI or Miuix, showcasing how to apply the components and design principles in real-world projects.
 
 ### Example Applications
-The example application of this project itself demonstrates how to build interfaces using all the components included in Miuix. You can find usage and examples of various components in the example application to better understand and use the Miuix UI library.
+The example application of this project itself demonstrates how to build interfaces using all the components included in COUI. You can find usage and examples of various components in the example application to better understand and use the COUI UI library.
 
 ### Updater-KMP
 
@@ -19,7 +19,7 @@ The example application of this project itself demonstrates how to build interfa
 
 ### OShin
 
-[OShin](https://github.com/suqi8/OShin) is an Xposed module for OPPO unlocked devices. This project fully demonstrates how to create more diverse components based on Miuix.
+[OShin](https://github.com/suqi8/OShin) is an Xposed module for OPPO unlocked devices. This project fully demonstrates how to create more diverse components based on COUI.
 
 ### HyperStar
 

@@ -31,6 +31,31 @@ ColorSwatchPicker(
 
 > Build the `colors` list inside a `remember { }` block (or keep the same instance across compositions): standard `List` is unstable to Compose and a fresh instance would defeat recomposition skipping.
 
+## Component States
+
+### No Selection
+
+Pass a negative `selectedIndex` to render the row without any selection ring:
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = -1,
+    onSwatchSelected = { selectedIndex = it },
+)
+```
+
+### Disabled State
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = selectedIndex,
+    onSwatchSelected = { selectedIndex = it },
+    enabled = false,
+)
+```
+
 ## Properties
 
 ### ColorSwatchPicker
@@ -65,3 +90,22 @@ ColorSwatchPicker(
 - Tapping a cell invokes `onSwatchSelected` with the cell index; the component is stateless and the caller owns the selection.
 - The selection ring fades in over 280ms and fades out over 150ms with the COUI easing curve.
 - Each cell exposes `Role.RadioButton` semantics inside a selectable group for accessibility.
+
+## Advanced Usage
+
+### Custom Sizing and Ring
+
+All metrics and the ring color can be overridden. The example below spaces the cells apart and uses a custom ring:
+
+```kotlin
+ColorSwatchPicker(
+    colors = colors,
+    selectedIndex = selectedIndex,
+    onSwatchSelected = { selectedIndex = it },
+    swatchSize = 28.dp,
+    cellSize = 36.dp,
+    ringStrokeWidth = 3.dp,
+    ringColor = Color(0xFFDB382C),
+    spacing = 8.dp,
+)
+```

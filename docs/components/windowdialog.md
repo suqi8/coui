@@ -71,6 +71,9 @@ WindowDialog(
 | outsideMargin              | DpSize                 | Outer margin (window edges)                                   | DialogDefaults.outsideMargin     | No       |
 | insideMargin               | DpSize                 | Margin for the built-in title/summary texts (width = horizontal padding, height = padding above the title); the content slot is unpadded | DialogDefaults.insideMargin      | No       |
 | defaultWindowInsetsPadding | Boolean                | Apply default insets padding (IME, nav, caption)              | true                                   | No       |
+| maxWidth                   | Dp                     | Maximum dialog content width                                  | DialogDefaults.MaxWidth          | No       |
+| largeScreen                | Boolean?               | Override for the large-screen presentation (centered scale/fade instead of bottom slide-in); if null, detected from the window size | null | No       |
+| cornerRadius               | Dp?                    | Corner radius override; if null, DialogDefaults.CornerRadius for the centered presentation, or derived from the screen corner radius (clamped to 32dp..48dp) when bottom-attached | null | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                      | Yes      |
 
 ### DialogDefaults
@@ -102,4 +105,31 @@ TextButton(
     text = "Close",
     onClick = { dismiss?.invoke() }
 )
+```
+
+## Advanced Usage
+
+### Presentation Overrides
+
+By default the dialog is bottom-attached on compact windows and centered on large windows (>= 840dp x 480dp). Use `largeScreen`, `cornerRadius` and `maxWidth` to override the presentation:
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+WindowDialog(
+    show = showDialog,
+    title = "Custom Presentation",
+    summary = "Forced centered presentation with custom shape",
+    largeScreen = true,   // always use the centered scale/fade presentation
+    cornerRadius = 24.dp, // override the panel corner radius
+    maxWidth = 320.dp,    // narrower content width cap
+    onDismissRequest = { showDialog = false }
+) {
+    val dismiss = LocalDismissState.current
+    TextButton(
+        text = "OK",
+        onClick = { dismiss?.invoke() },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
 ```

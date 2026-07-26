@@ -1,8 +1,6 @@
-#! /usr/bin/env markdown
-
 # Tooltip
 
-`Tooltip` is a component in Miuix that briefly describes an anchor element. Following Material 3, a single `TooltipBox` anchors a tooltip to its content; you fill its `tooltip` slot with a `PlainTooltip` (a short inverse-surface label) or a `RichTooltip` (a surface-container card with an optional title and action). Tooltips are shown on hover (mouse) or long press (touch), or programmatically via `TooltipState`.
+`Tooltip` is a component in COUI that briefly describes an anchor element. Following Material 3, a single `TooltipBox` anchors a tooltip to its content; you fill its `tooltip` slot with a `PlainTooltip` (a short inverse-surface label) or a `RichTooltip` (a surface-container card with an optional title and action). Tooltips are shown on hover (mouse) or long press (touch), or programmatically via `TooltipState`.
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=tooltip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -11,14 +9,14 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.RichTooltipBox
-import top.yukonga.miuix.kmp.basic.PlainTooltip
-import top.yukonga.miuix.kmp.basic.RichTooltip
-import top.yukonga.miuix.kmp.basic.TooltipState
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
-import top.yukonga.miuix.kmp.basic.TooltipDefaults
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
+import io.github.suqi8.coui.kmp.basic.TooltipBox
+import io.github.suqi8.coui.kmp.basic.RichTooltipBox
+import io.github.suqi8.coui.kmp.basic.PlainTooltip
+import io.github.suqi8.coui.kmp.basic.RichTooltip
+import io.github.suqi8.coui.kmp.basic.TooltipState
+import io.github.suqi8.coui.kmp.basic.rememberTooltipState
+import io.github.suqi8.coui.kmp.basic.TooltipDefaults
+import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 ```
 
 ## Basic Usage
@@ -29,7 +27,7 @@ The quickest way to label an icon-only control is the `text` convenience overloa
 TooltipBox(text = "Search") {
     IconButton(onClick = { /* ... */ }) {
         Icon(
-            imageVector = MiuixIcons.Basic.Search,
+            imageVector = COUIIcons.Search,
             contentDescription = "Search",
         )
     }
@@ -70,14 +68,14 @@ TooltipBox(
     state = rememberTooltipState(),
 ) {
     IconButton(onClick = { /* ... */ }) {
-        Icon(imageVector = MiuixIcons.Basic.Check, contentDescription = "Add to favorites")
+        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "Add to favorites")
     }
 }
 ```
 
 ## PlainTooltip
 
-`PlainTooltip` is a short, non-interactive label rendered on the Miuix inverse surface. It is a `TooltipScope` extension, so it is used inside the `TooltipBox` `tooltip` slot.
+`PlainTooltip` is a short, non-interactive label rendered on the COUI inverse surface. It is a `TooltipScope` extension, so it is used inside the `TooltipBox` `tooltip` slot.
 
 ```kotlin
 @Composable
@@ -136,7 +134,7 @@ TooltipBox(
     focusable = true,
 ) {
     IconButton(onClick = { scope.launch { tooltipState.show() } }) {
-        Icon(imageVector = MiuixIcons.Basic.Check, contentDescription = "What's new")
+        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "What's new")
     }
 }
 ```
@@ -197,10 +195,10 @@ val plainContent = TooltipDefaults.plainTooltipContentColor       // secondaryVa
 
 // Rich tooltip (surface container)
 val richColors = TooltipDefaults.richTooltipColors(
-    containerColor = MiuixTheme.colorScheme.surfaceContainer,
-    contentColor = MiuixTheme.colorScheme.onSurfaceContainerVariant,
-    titleContentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-    actionContentColor = MiuixTheme.colorScheme.primary,
+    containerColor = COUITheme.colorScheme.surfaceContainer,
+    contentColor = COUITheme.colorScheme.onSurfaceContainerVariant,
+    titleContentColor = COUITheme.colorScheme.onSurfaceContainer,
+    actionContentColor = COUITheme.colorScheme.primary,
 )
 ```
 
@@ -213,7 +211,7 @@ fun TooltipDefaults.caretShape(): Shape
 val TooltipDefaults.caretSize: DpSize // 16 x 8 dp
 ```
 
-Pass `caretShape = TooltipDefaults.caretShape()` to `PlainTooltip` / `RichTooltip` to draw a caret pointing at the anchor (for `Above` / `Below` positioning). The default is caret-less, matching the rest of Miuix's floating surfaces.
+Pass `caretShape = TooltipDefaults.caretShape()` to `PlainTooltip` / `RichTooltip` to draw a caret pointing at the anchor (for `Above` / `Below` positioning). The default is caret-less, matching the rest of COUI's floating surfaces.
 
 ### Constants
 

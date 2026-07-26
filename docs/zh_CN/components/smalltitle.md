@@ -1,6 +1,6 @@
 # SmallTitle
 
-`SmallTitle` 是 Miuix 中的基础小标题组件，用于快速创建小型标题文本。采用 COUI 分组标题样式（12sp、中等字重），具有预设的内边距和 16dp 最小文本高度。
+`SmallTitle` 是 COUI 中的基础小标题组件，用于快速创建小型标题文本。采用 COUI 分组标题样式（12sp、中等字重），具有预设的内边距和 16dp 最小文本高度。
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=smallTitle" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

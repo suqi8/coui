@@ -1,6 +1,6 @@
 # CheckboxPreference
 
-`CheckboxPreference` 是 Miuix 中的复选框组件，提供了标题、摘要和复选框控件，支持点击交互，常用于多选项设置和选择列表中。
+`CheckboxPreference` 是 COUI 中的复选框组件，提供了标题、摘要和复选框控件，支持点击交互，常用于多选项设置和选择列表中。
 
 <div style="position: relative; height: 293px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=checkboxPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -94,7 +94,7 @@ CheckboxPreference(
 |------------------|------------------------------------|-------------|---------------------------------------|------|
 | title            | String                             | 复选框项的标题     | -                                     | 是    |
 | checked          | Boolean                            | 复选框的选中状态    | -                                     | 是    |
-| onCheckedChange  | ((Boolean) -> Unit)?               | 复选框状态变化时的回调 | -                                     | 否    |
+| onCheckedChange  | ((Boolean) -> Unit)?               | 复选框状态变化时的回调 | -                                     | 是    |
 | modifier         | Modifier                           | 应用于组件的修饰符   | Modifier                              | 否    |
 | titleColor       | BasicComponentColors               | 标题文本的颜色配置   | BasicComponentDefaults.titleColor()   | 否    |
 | summary          | String?                            | 复选框项的摘要说明   | null                                  | 否    |
@@ -125,6 +125,28 @@ CheckboxPreference(
             text = if (backupEnabled) "已启用" else "未启用",
             color = COUITheme.colorScheme.onSurfaceVariantActions,
             modifier = Modifier.padding(end = 6.dp)
+        )
+    }
+)
+```
+
+### 带左侧图标
+
+提供 `startAction` 时，其内容会显示在复选框之后（默认复选框位于起始端）：
+
+```kotlin
+var syncEnabled by remember { mutableStateOf(false) }
+
+CheckboxPreference(
+    title = "同步联系人",
+    summary = "保持联系人信息最新",
+    checked = syncEnabled,
+    onCheckedChange = { syncEnabled = it },
+    startAction = {
+        Icon(
+            imageVector = COUIIcons.Contacts,
+            contentDescription = null,
+            tint = COUITheme.colorScheme.onBackground
         )
     }
 )

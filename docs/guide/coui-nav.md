@@ -7,7 +7,7 @@
 Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
-implementation("top.yukonga.miuix.kmp:coui-nav:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-nav:<version>")
 ```
 
 Annotate your route hierarchy with `@Serializable` so the back stack can be saved and restored across configuration changes and process death.
@@ -16,10 +16,10 @@ Annotate your route hierarchy with `@Serializable` so the back stack can be save
 
 ```kotlin
 import kotlinx.serialization.Serializable
-import top.yukonga.miuix.kmp.nav.core.NavDisplay
-import top.yukonga.miuix.kmp.nav.core.NavKey
-import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
-import top.yukonga.miuix.kmp.nav.transition.NavTransitions
+import io.github.suqi8.coui.kmp.nav.core.NavDisplay
+import io.github.suqi8.coui.kmp.nav.core.NavKey
+import io.github.suqi8.coui.kmp.nav.core.rememberNavBackStack
+import io.github.suqi8.coui.kmp.nav.transition.NavTransitions
 
 @Serializable
 sealed interface Route : NavKey {
@@ -72,7 +72,7 @@ A built-in preset library is available as `NavTransitions`:
 
 | Preset | Description |
 | :-- | :-- |
-| `MiuixDefault` (default) | Full-width slide + quarter-width parallax + light covered alpha falloff |
+| `COUIDefault` (default) | Full-width slide + quarter-width parallax + light covered alpha falloff |
 | `Modal` | Bottom-up slide; lower layer stays visible |
 | `None` | Instant, no animation |
 
@@ -81,7 +81,7 @@ The leading-edge corner clip and the dark dim scrim are not baked into any prese
 Set a global default on `NavDisplay(transition = ...)` and override per route with `entry(transition = ...)`:
 
 ```kotlin
-NavDisplay(backStack, transition = NavTransitions.MiuixDefault) {
+NavDisplay(backStack, transition = NavTransitions.COUIDefault) {
     entry<Route.Home> { HomeScreen() }
     entry<Route.Detail>(transition = NavTransitions.Modal) { DetailScreen(it.id) }
 }
@@ -104,7 +104,7 @@ The interactive swipe that pops the top entry runs along the **same axis as the 
 Once a swipe engages it owns the pointer for the rest of the gesture (consuming both axes), so a cross-axis wiggle cannot steal it or cancel mid-swipe, and in-page taps / scrolls are suppressed until the finger lifts. Set or override it per route — including `NavSwipeDirection.None` to keep a route button-only:
 
 ```kotlin
-import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
+import io.github.suqi8.coui.kmp.nav.transition.NavSwipeDirection
 
 NavDisplay(backStack) {
     // Enable an LTR back swipe on this route (off by default).
@@ -123,7 +123,7 @@ A custom transition can still declare a natural direction so routes inherit it: 
 Build any transition by reading the raw float depth and writing a `graphicsLayer`. The block runs inside a deferred-read layer, so reading `relativeDepth` does not recompose:
 
 ```kotlin
-import top.yukonga.miuix.kmp.nav.transition.navGraphicsTransition
+import io.github.suqi8.coui.kmp.nav.transition.navGraphicsTransition
 
 val myTransition = navGraphicsTransition { scope ->
     val d = scope.relativeDepth          // animatedTop - index
@@ -266,7 +266,7 @@ NavDisplay(
         cornerClipRadius = rememberNavSystemCornerRadius(),
         cornerClipMode = NavCornerClipMode.All,
         dimAmount = 0.32f,
-        backdropColor = MiuixTheme.colorScheme.background,
+        backdropColor = COUITheme.colorScheme.background,
     ),
 ) { /* ... */ }
 ```

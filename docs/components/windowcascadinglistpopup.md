@@ -16,6 +16,10 @@ popupHost: None
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowCascadingListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 
+::: tip
+This component does not depend on `Scaffold` and can be used in any composable scope.
+:::
+
 ## Import
 
 ```kotlin

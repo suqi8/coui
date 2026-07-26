@@ -149,3 +149,24 @@ WindowBottomSheet(
     )
 }
 ```
+
+### Preventing Dismissal
+
+Set `allowDismiss = false` to ignore drag-down and back-gesture dismissal, so the sheet can only be closed programmatically:
+
+```kotlin
+var showBottomSheet by remember { mutableStateOf(false) }
+
+WindowBottomSheet(
+    show = showBottomSheet,
+    title = "Processing",
+    allowDismiss = false, // drag and back gesture will not dismiss the sheet
+    onDismissRequest = { showBottomSheet = false }
+) {
+    Text("This sheet can only be closed programmatically")
+    TextButton(
+        text = "Done",
+        onClick = { showBottomSheet = false }
+    )
+}
+```

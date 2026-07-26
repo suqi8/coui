@@ -1,6 +1,6 @@
 # Theme System
 
-Miuix provides a complete theme system that allows you to easily maintain a consistent design style
+COUI provides a complete theme system that allows you to easily maintain a consistent design style
 throughout your application. The theme system consists of color schemes and text styles.
 
 ## Using COUITheme
@@ -100,7 +100,7 @@ fun App() {
 
 ## ThemeController
 
-The `ThemeController` manages the current color scheme of the Miuix theme.
+The `ThemeController` manages the current color scheme of the COUI theme.
 
 ### ThemeController Properties
 

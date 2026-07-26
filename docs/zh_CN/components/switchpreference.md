@@ -1,6 +1,6 @@
 # SwitchPreference
 
-`SwitchPreference` 是 Miuix 中的开关组件，提供了标题、摘要和右侧开关控件，支持点击交互，常用于设置项和偏好切换中。
+`SwitchPreference` 是 COUI 中的开关组件，提供了标题、摘要和右侧开关控件，支持点击交互，常用于设置项和偏好切换中。
 
 <div style="position: relative; height: 231px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=switchPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

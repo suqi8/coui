@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` 是 Miuix 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。
+`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 
@@ -10,6 +10,7 @@
 import io.github.suqi8.coui.kmp.basic.DatePicker
 import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
 import io.github.suqi8.coui.kmp.basic.DateValue
+import io.github.suqi8.coui.kmp.basic.NumberPickerDefaults
 ```
 
 ## 基本用法

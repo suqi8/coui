@@ -1,6 +1,6 @@
 # Switch
 
-`Switch` is a basic toggle component in Miuix used to switch between two states. It provides an interactive switch control with animation effects, suitable for enabling and disabling settings.
+`Switch` is a basic toggle component in COUI used to switch between two states. It provides an interactive switch control with animation effects, suitable for enabling and disabling settings.
 
 <div style="position: relative; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=switch" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -39,6 +39,21 @@ Switch(
 )
 ```
 
+### Loading State
+
+While `isLoading` is true, the thumb shrinks away and is replaced by a spinning gradient arc; touch input is swallowed until loading ends:
+
+```kotlin
+var checked by remember { mutableStateOf(true) }
+var isLoading by remember { mutableStateOf(true) }
+
+Switch(
+    checked = checked,
+    onCheckedChange = { checked = it },
+    isLoading = isLoading
+)
+```
+
 ## Properties
 
 ### Switch Properties
@@ -46,7 +61,7 @@ Switch(
 | Property Name   | Type                 | Description                        | Default Value                 | Required |
 | --------------- | -------------------- | ---------------------------------- | ----------------------------- | -------- |
 | checked         | Boolean              | Whether the switch is checked      | -                             | Yes      |
-| onCheckedChange | ((Boolean) -> Unit)? | Callback when switch state changes | -                             | No       |
+| onCheckedChange | ((Boolean) -> Unit)? | Callback when switch state changes; `null` = non-interactive | -   | Yes      |
 | modifier        | Modifier             | Modifier applied to the switch     | Modifier                      | No       |
 | colors          | SwitchColors         | Color configuration for the switch | SwitchDefaults.switchColors() | No       |
 | enabled         | Boolean              | Whether the switch is interactive  | true                          | No       |
@@ -171,4 +186,4 @@ LazyColumn {
         }
     }
 }
-````
+```

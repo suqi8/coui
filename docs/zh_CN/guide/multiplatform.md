@@ -1,10 +1,10 @@
 # 平台支持
 
-Miuix 是一个支持多种平台的 Compose Multiplatform UI 框架，允许您使用相同的代码库在不同平台上构建应用程序。
+COUI 是一个支持多种平台的 Compose Multiplatform UI 框架，允许您使用相同的代码库在不同平台上构建应用程序。
 
 ## 支持的平台
 
-目前，Miuix 支持以下平台：
+目前，COUI 支持以下平台：
 
 - **Android**：适用于 Android 移动设备
 - **iOS**：适用于 iPhone 和 iPad 设备

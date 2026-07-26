@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayBottomSheet
 
-`OverlayBottomSheet` 是 Miuix 中的底部抽屉组件，从屏幕底部滑入显示。持拖拽手势关闭和自定义样式。
+`OverlayBottomSheet` 是 COUI 中的底部抽屉组件，从屏幕底部滑入显示。支持拖拽手势关闭和自定义样式。
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=overlayBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -25,6 +25,7 @@ popupHost: COUIPopupHost
 
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## 基本用法
@@ -84,8 +85,8 @@ Scaffold {
 | ------------- | ------ | --------------------- |
 | cornerRadius  | Dp     | 默认圆角半径 (20.dp，COUI couiRoundCornerXL) |
 | maxWidth      | Dp     | 默认宽度上限 (Dp.Infinity，实际宽度由 COUI 响应式栅格决定) |
-| outsideMargin | DpSize | 底部抽屉外部默认边距  |
-| insideMargin  | DpSize | 底部抽屉内部默认边距  |
+| outsideMargin | DpSize | 底部抽屉外部默认边距 (DpSize(0.dp, 0.dp)) |
+| insideMargin  | DpSize | 底部抽屉内部默认边距 (DpSize(24.dp, 0.dp)；宽 = 水平内边距，高 = 底部内边距) |
 
 #### BottomSheetDefaults 函数
 
@@ -211,18 +212,17 @@ Scaffold {
         show = showBottomSheet,
         title = "操作面板",
         startAction = {
+            val dismiss = LocalDismissState.current
             TextButton(
                 text = "取消",
-                onClick = { showBottomSheet = false }
+                onClick = { dismiss?.invoke() }
             )
         },
         endAction = {
+            val dismiss = LocalDismissState.current
             TextButton(
                 text = "确认",
-                onClick = { 
-                    // 处理确认操作
-                    showBottomSheet = false 
-                },
+                onClick = { dismiss?.invoke() },
                 colors = ButtonDefaults.textButtonColorsPrimary()
             )
         },
@@ -254,7 +254,9 @@ Scaffold {
         onDismissRequest = { showBottomSheet = false }
     ) {
         Card(
-            color = COUITheme.colorScheme.secondaryContainer,
+            colors = CardDefaults.defaultColors(
+                color = COUITheme.colorScheme.secondaryContainer,
+            ),
         ) {
             TextField(
                 modifier = Modifier.padding(vertical = 12.dp),

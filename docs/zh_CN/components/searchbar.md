@@ -1,6 +1,6 @@
 # SearchBar
 
-`SearchBar` 是 Miuix 中用于用户输入搜索内容的组件。它提供了一个直观且易用的搜索界面，支持展开/收起状态切换以及搜索建议展示。
+`SearchBar` 是 COUI 中用于用户输入搜索内容的组件。它提供了一个直观且易用的搜索界面，支持展开/收起状态切换以及搜索建议展示。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=searchBar" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -50,7 +50,7 @@ SearchBar(
 | modifier          | Modifier                           | 应用于搜索栏的修饰符    | Modifier            | 否    |
 | insideMargin      | DpSize                             | 内部边距          | SearchBarDefaults.InsideMargin | 否    |
 | expanded          | Boolean                            | 是否展开显示搜索结果    | false               | 否    |
-| outsideEndAction. | @Composable (() -> Unit)?          | 展开时显示在右侧的操作组件 | null                | 否    |
+| outsideEndAction  | @Composable (() -> Unit)?          | 展开时显示在右侧的操作组件 | null                | 否    |
 | content           | @Composable ColumnScope.() -> Unit | 展开时显示的内容      | -                   | 是    |
 
 ### InputField 属性
@@ -65,7 +65,7 @@ SearchBar(
 | modifier          | Modifier                  | 应用于输入框的修饰符    | Modifier | 否    |
 | label             | String                    | 搜索框为空时显示的提示文本 | ""       | 否    |
 | enabled           | Boolean                   | 是否启用搜索框       | true     | 否    |
-| textStyle         | TextStyle                 | 搜索框中文本的样式     | null     | 否    |
+| textStyle         | TextStyle?                | 搜索框中文本的样式     | null     | 否    |
 | colors            | SearchBarColors           | 输入框的颜色配置      | SearchBarDefaults.searchBarColors() | 否    |
 | leadingIcon       | @Composable (() -> Unit)? | 前置图标          | 默认放大镜    | 否    |
 | trailingIcon      | @Composable (() -> Unit)? | 后置图标          | 默认清除按钮   | 否    |
@@ -123,7 +123,7 @@ SearchBar(
             leadingIcon = {
                 Icon(
                     modifier = Modifier.padding(start = 12.dp, end = 8.dp),
-                    imageVector = COUIIcons.Search,
+                    imageVector = COUIIcons.Basic.Search,
                     contentDescription = "搜索"
                 )
             }

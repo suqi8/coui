@@ -35,24 +35,24 @@ import io.github.suqi8.coui.kmp.basic.DropdownItem
 
 ```kotlin
 val entry = DropdownEntry(
-    items = listOf("编辑", "复制", "分享", "删除").map { text ->
-        DropdownItem(text = text, onClick = { /* 处理动作 */ })
+    items = listOf("Edit", "Duplicate", "Share", "Delete").map { text ->
+        DropdownItem(text = text, onClick = { /* handle action */ })
     }
 )
 
 Scaffold(
     topBar = {
         SmallTopAppBar(
-            title = "收件箱",
+            title = "Inbox",
             actions = {
                 OverlayIconDropdownMenu(entry = entry) {
-                    Icon(imageVector = COUIIcons.Edit, contentDescription = "动作菜单")
+                    Icon(imageVector = COUIIcons.Edit, contentDescription = "Action menu")
                 }
             }
         )
     }
 ) { padding ->
-    // 页面内容
+    // page content
 }
 ```
 
@@ -65,14 +65,14 @@ Scaffold(
 ```kotlin
 var sortIndex by remember { mutableStateOf(0) }
 val entry = DropdownEntry(
-    items = listOf("名称", "日期", "大小").mapIndexed { index, text ->
+    items = listOf("Name", "Date", "Size").mapIndexed { index, text ->
         DropdownItem(text = text, selected = sortIndex == index, onClick = { sortIndex = index })
     }
 )
 
 Scaffold {
     OverlayIconDropdownMenu(entry = entry) {
-        Icon(imageVector = COUIIcons.Sort, contentDescription = "排序")
+        Icon(imageVector = COUIIcons.Sort, contentDescription = "Sort")
     }
 }
 ```
@@ -82,9 +82,9 @@ Scaffold {
 用一个 `Set` 跟踪选中值，在每个条目的 `onClick` 中切换状态，并设置 `collapseOnSelection = false` 让弹出框在多次选择之间保持打开。
 
 ```kotlin
-var selected by remember { mutableStateOf(setOf("照片")) }
+var selected by remember { mutableStateOf(setOf("Photos")) }
 val entry = DropdownEntry(
-    items = listOf("照片", "视频", "文件").map { text ->
+    items = listOf("Photos", "Videos", "Files").map { text ->
         DropdownItem(
             text = text,
             selected = text in selected,
@@ -97,7 +97,7 @@ val entry = DropdownEntry(
 
 Scaffold {
     OverlayIconDropdownMenu(entry = entry, collapseOnSelection = false) {
-        Icon(imageVector = COUIIcons.SelectAll, contentDescription = "多选")
+        Icon(imageVector = COUIIcons.SelectAll, contentDescription = "Multiple selection")
     }
 }
 ```
@@ -108,13 +108,43 @@ Scaffold {
 
 ```kotlin
 val entries = listOf(
-    DropdownEntry(items = listOf("条目 A-1", "条目 A-2").map { DropdownItem(text = it) }),
-    DropdownEntry(items = listOf("条目 B-1", "条目 B-2", "条目 B-3").map { DropdownItem(text = it) })
+    DropdownEntry(items = listOf("Item A-1", "Item A-2").map { DropdownItem(text = it) }),
+    DropdownEntry(items = listOf("Item B-1", "Item B-2", "Item B-3").map { DropdownItem(text = it) })
 )
 
 Scaffold {
     OverlayIconDropdownMenu(entries = entries) {
-        Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "更多")
+        Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
+    }
+}
+```
+
+## 带图标与摘要的选项
+
+每个 `DropdownItem` 都可以在文本前显示图标，并在文本下方显示一行摘要。`icon` lambda 会收到一个预设尺寸的 `Modifier`，应将其应用到图标组件上。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(
+            text = "Rename",
+            summary = "Change the display name",
+            icon = { modifier ->
+                Icon(
+                    modifier = modifier,
+                    imageVector = COUIIcons.Rename,
+                    contentDescription = null,
+                )
+            },
+            onClick = { /* handle action */ },
+        ),
+        DropdownItem(text = "Delete", onClick = { /* handle action */ }),
+    )
+)
+
+Scaffold {
+    OverlayIconDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.More, contentDescription = "More")
     }
 }
 ```
@@ -125,14 +155,33 @@ Scaffold {
 
 ```kotlin
 OverlayIconDropdownMenu(
-    entry = DropdownEntry(items = listOf(DropdownItem(text = "选项 1"))),
+    entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false
 ) {
-    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "更多")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 
 当所有 `DropdownEntry` 都不包含任何条目时，菜单也会被隐式禁用。
+
+### 禁用部分选项
+
+通过 `DropdownItem.enabled` 可以禁用单个选项，通过 `DropdownEntry.enabled` 可以禁用整个分组。禁用的行会置灰并忽略点击。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Available option"),
+        DropdownItem(text = "Unavailable option", enabled = false),
+    )
+)
+
+Scaffold {
+    OverlayIconDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
+    }
+}
+```
 
 ## 属性
 

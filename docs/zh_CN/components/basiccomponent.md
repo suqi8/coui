@@ -1,6 +1,6 @@
 # BasicComponent
 
-`BasicComponent` 是 Miuix 中的基础标准组件。提供了标题、摘要以及左右两侧的可自定义内容区域，常用于构建列表项、设置项等界面元素。
+`BasicComponent` 是 COUI 中的基础标准组件。提供了标题、摘要以及左右两侧的可自定义内容区域，常用于构建列表项、设置项等界面元素。
 
 本项目以此为基础提供了一些扩展组件，方便开发者快速构建符合设计规范的 UI 组件，详见[扩展组件](../components/#扩展组件)的使用。
 
@@ -32,7 +32,7 @@ BasicComponent(
 ```kotlin
 BasicComponent(
     title = "Wi-Fi",
-    summary = "已连接到 MIUI-WiFi",
+    summary = "已连接到 HOME-WiFi",
     onClick = { /* 处理点击事件 */ }
 )
 ```
@@ -185,9 +185,9 @@ BasicComponentDefaults 对象提供了 BasicComponent 组件的默认值和颜�
 BasicComponent(
     title = "音量",
     summary = "媒体音量：70%",
-        startAction = {
+    startAction = {
         Icon(
-        modifier = Modifier.padding(end = 16.dp),
+            modifier = Modifier.padding(end = 16.dp),
             imageVector = COUIIcons.Play,
             contentDescription = "音量图标",
             tint = COUITheme.colorScheme.onBackground

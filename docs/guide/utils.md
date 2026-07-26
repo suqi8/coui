@@ -1,6 +1,6 @@
 # Utility Functions
 
-Miuix provides a series of utility functions to help you develop applications more efficiently. Below is a detailed introduction and usage examples of the main utility functions.
+COUI provides a series of utility functions to help you develop applications more efficiently. Below is a detailed introduction and usage examples of the main utility functions.
 
 ## Popup Utilities (COUIPopupUtils)
 
@@ -55,7 +55,7 @@ Normally, you don't need to use it actively. See the [OverlayListPopup](../compo
 
 ## Overscroll Effects
 
-Miuix provides easy-to-use overscroll effect modifiers for smoother and more natural scrolling experiences.
+COUI provides easy-to-use overscroll effect modifiers for smoother and more natural scrolling experiences.
 
 ### Vertical Overscroll
 
@@ -112,7 +112,7 @@ LazyColumn(
 
 ### Via OverscrollFactory (Theme-Level Integration)
 
-`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same spring-based overscroll physics as `overScrollVertical()`, but integrated at the theme level. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the Miuix overscroll effect automatically — no extra modifier required.
+`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same spring-based overscroll physics as `overScrollVertical()`, but integrated at the theme level. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the COUI overscroll effect automatically — no extra modifier required.
 
 ```kotlin
 // No modifier needed — COUITheme provides the overscroll effect automatically
@@ -133,7 +133,7 @@ Disable for an entire subtree:
 
 ```kotlin
 CompositionLocalProvider(LocalOverscrollFactory provides null) {
-    // Components here will not have the Miuix overscroll effect
+    // Components here will not have the COUI overscroll effect
 }
 ```
 
@@ -164,7 +164,7 @@ LazyColumn(
 
 ## Scroll End Haptic Feedback (Modifier.scrollEndHaptic())
 
-Miuix provides a `scrollEndHaptic` modifier to trigger haptic feedback when a scrollable container is flung to its start or end boundaries. This enhances the user experience by providing a tactile confirmation that the end of the list has been reached.
+COUI provides a `scrollEndHaptic` modifier to trigger haptic feedback when a scrollable container is flung to its start or end boundaries. This enhances the user experience by providing a tactile confirmation that the end of the list has been reached.
 
 ```kotlin
 LazyColumn(
@@ -185,7 +185,7 @@ LazyColumn(
 
 ## Press Feedback Effects (Modifier.pressable())
 
-Miuix provides visual feedback effects to enhance user interaction experience, improving operability through tactile-like responses.
+COUI provides visual feedback effects to enhance user interaction experience, improving operability through tactile-like responses.
 
 Supports use with responsive modifiers such as `Modifier.clickable()`, and `SinkFeedback` is the default effect.
 

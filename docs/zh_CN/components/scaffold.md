@@ -1,6 +1,6 @@
 # Scaffold
 
-`Scaffold` 是 Miuix 中的脚手架组件，用于实现基本设计视觉布局结构。它提供了应用程序界面的基本框架，包括顶部栏、底部栏、悬浮按钮等元素的容器。
+`Scaffold` 是 COUI 中的脚手架组件，用于实现基本设计视觉布局结构。它提供了应用程序界面的基本框架，包括顶部栏、底部栏、悬浮按钮等元素的容器。
 
 <div style="position: relative; height: 350px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=scaffold" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -59,7 +59,7 @@ Scaffold(
 | floatingActionButtonPosition | FabPosition                         | 显示悬浮按钮的位置                           | FabPosition.End                   | 否       |
 | floatingToolbar              | @Composable () -> Unit              | 悬浮工具栏                                   | {}                                | 否       |
 | floatingToolbarPosition      | ToolbarPosition                     | 显示悬浮工具栏的位置                         | ToolbarPosition.BottomCenter      | 否       |
-| snackbarHost                 | @Composable () -> Unit              | 用于显示 Snackbar 的容器，Miuix 不提供此组件 | {}                                | 否       |
+| snackbarHost                 | @Composable () -> Unit              | 承载通过 SnackbarHostState.showSnackbar 显示的 Snackbar 的容器，通常为 SnackbarHost | {}         | 否       |
 | popupHost                    | @Composable () -> Unit              | 用于显示弹出窗口的容器                       | \{ COUIPopupHost() }             | 否       |
 | containerColor               | Color                               | 脚手架的背景颜色                             | COUITheme.colorScheme.surface | 否       |
 | contentWindowInsets          | WindowInsets                        | 传递给内容的窗口插入边距                     | WindowInsets.systemBars.union(WindowInsets.displayCutout) | 否       |
@@ -169,14 +169,14 @@ Scaffold(
 )
 ```
 
-### 带有 Snackbar 的页面布局（需要使用 Material 组件）
+### 带有 Snackbar 的页面布局
 
 ```kotlin
 val snackbarHostState = remember { SnackbarHostState() }
 val scope = rememberCoroutineScope()
 
 Scaffold(
-    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    snackbarHost = { SnackbarHost(state = snackbarHostState) },
     topBar = {
         SmallTopAppBar(title = "标题")
     },

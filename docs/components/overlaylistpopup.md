@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayListPopup
 
-`OverlayListPopup` is a popup list component in Miuix used to display a popup menu with multiple options. It provides a lightweight, floating temporary list suitable for various dropdown menus, context menus, and similar scenarios.
+`OverlayListPopup` is a popup list component in COUI used to display a popup menu with multiple options. It provides a lightweight, floating temporary list suitable for various dropdown menus, context menus, and similar scenarios.
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlayListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -26,6 +26,9 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.DropdownImpl
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 ```
 
 ## Basic Usage
@@ -65,6 +68,7 @@ Scaffold {
         }
     }
 }
+```
 
 ## Component States
 
@@ -93,7 +97,7 @@ var showPopup by remember { mutableStateOf(false) }
 
 OverlayListPopup(
     show = showPopup,
-    onDismissRequest = { showPopup = false } // Close the popup menu
+    onDismissRequest = { showPopup = false }, // Close the popup menu
     enableWindowDim = false // Disable dimming layer
 ) {
     ListPopupColumn {
@@ -101,6 +105,27 @@ OverlayListPopup(
     }
 }
 ```
+
+### Context Menu Positioning
+
+Besides the default dropdown provider, `ListPopupDefaults.ContextMenuPositionProvider` anchors the popup to a corner of the anchor, combined with the corner alignments (`TopStart` / `TopEnd` / `BottomStart` / `BottomEnd`):
+
+```kotlin
+var showPopup by remember { mutableStateOf(false) }
+
+OverlayListPopup(
+    show = showPopup,
+    popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+    alignment = PopupPositionProvider.Align.TopEnd,
+    onDismissRequest = { showPopup = false }
+) {
+    ListPopupColumn {
+        // Custom content
+    }
+}
+```
+
+You can also build a dropdown provider with custom margins via `ListPopupDefaults.dropdownPositionProvider(verticalMargin, horizontalMargin)`.
 
 ## Properties
 
@@ -141,6 +166,8 @@ DropdownImpl(
 )
 ```
 
+The text-based overload:
+
 | Property Name         | Type           | Description                                 | Default Value                     |
 | --------------------- | -------------- | ------------------------------------------- | --------------------------------- |
 | text                  | String         | Text shown for the option                   | -                                 |
@@ -149,7 +176,24 @@ DropdownImpl(
 | index                 | Int            | Index of this option                        | -                                 |
 | dropdownColors        | DropdownColors | Color configuration for the option          | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | Whether this option can be clicked          | true                              |
+| dialogMode            | Boolean        | Whether the row is shown in dialog mode     | false                             |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked        | -                                 |
+
+The item-based overload accepts a `DropdownItem` (with optional `icon` and `summary`) and exposes extra layout flags:
+
+| Property Name         | Type           | Description                                                                                                  | Default Value                     |
+| --------------------- | -------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| item                  | DropdownItem   | The item of the current option                                                                               | -                                 |
+| optionSize            | Int            | Total number of options                                                                                      | -                                 |
+| isSelected            | Boolean        | Whether this option is selected                                                                              | -                                 |
+| index                 | Int            | Index of this option                                                                                         | -                                 |
+| dropdownColors        | DropdownColors | Color configuration for the option                                                                           | DropdownDefaults.dropdownColors() |
+| enabled               | Boolean        | Whether this option can be clicked                                                                           | item.enabled                      |
+| dialogMode            | Boolean        | Whether the row is shown in dialog mode                                                                      | false                             |
+| hasSubmenu            | Boolean        | When true, the row acts as a submenu trigger: a trailing chevron is shown instead of the selection check     | false                             |
+| isFirst               | Boolean        | Whether this row is the first row of the entire popup (controls the larger top padding in popup mode)        | index == 0                        |
+| isLast                | Boolean        | Whether this row is the last row of the entire popup (controls the larger bottom padding in popup mode)      | index == optionSize - 1           |
+| onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked                                                                         | -                                 |
 
 ### PopupPositionProvider.Align
 
@@ -161,3 +205,23 @@ DropdownImpl(
 | TopEnd      | Aligns the popup to the top-end of the anchor.      |
 | BottomStart | Aligns the popup to the bottom-start of the anchor. |
 | BottomEnd   | Aligns the popup to the bottom-end of the anchor.   |
+
+### ListPopupDefaults Object
+
+The ListPopupDefaults object provides default values and position providers for the popup.
+
+#### Constants
+
+| Constant Name  | Type | Description                                          | Value  |
+| -------------- | ---- | ---------------------------------------------------- | ------ |
+| MinWidth       | Dp   | Default minimum width of the popup                   | 178.dp |
+| MaxWidth       | Dp   | Maximum width clamp used by `ListPopupColumn`        | 232.dp |
+| MinPopupHeight | Dp   | Minimum height the popup will occupy when measured   | 50.dp  |
+
+#### Position Providers
+
+| Name                                                | Type                  | Description                                                                                    |
+| --------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| DropdownPositionProvider                            | PopupPositionProvider | Anchors the popup below (or above when there is no room) the anchor, for dropdown-style menus  |
+| ContextMenuPositionProvider                         | PopupPositionProvider | Anchors the popup to a corner of the anchor, for context menus                                 |
+| dropdownPositionProvider(verticalMargin, horizontalMargin) | PopupPositionProvider | Factory creating a dropdown provider with custom margins (defaults: vertical 8.dp, horizontal 0.dp) |

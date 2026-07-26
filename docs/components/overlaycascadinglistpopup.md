@@ -27,6 +27,7 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 import io.github.suqi8.coui.kmp.overlay.OverlayCascadingListPopup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 ```
 
 ## Basic Usage
@@ -121,6 +122,22 @@ OverlayCascadingListPopup(
     collapseOnSelection = false,
 )
 ```
+
+### Selected Item Marking
+
+Leaf items with `selected = true` show a trailing check icon tinted with `DropdownColors.selectedIndicatorColor`; submenu trigger rows always show a trailing chevron instead.
+
+```kotlin
+DropdownItem(
+    text = "Sort by date added",
+    selected = true, // Marks this leaf with a trailing check icon
+    onClick = { /* ... */ },
+)
+```
+
+### Back Navigation and Morph Behavior
+
+Back handling mirrors the outside-tap rule: while the secondary list is shown, a back gesture (or a tap outside the popup, or a tap on the cloned submenu header) collapses the secondary back into the primary list; at the primary level, back and outside taps dismiss the popup via `onDismissRequest`. Predictive back gestures preview the collapse/dismiss and restore the popup when cancelled — no extra configuration is needed.
 
 ## Properties
 

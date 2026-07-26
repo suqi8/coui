@@ -35,8 +35,8 @@ fun ColorPaletteDemo() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val miuixColor = COUITheme.colorScheme.primary
-            var selectedColor by remember { mutableStateOf(miuixColor) }
+            val themeColor = COUITheme.colorScheme.primary
+            var selectedColor by remember { mutableStateOf(themeColor) }
             ColorPalette(
                 color = selectedColor,
                 onColorChanged = { selectedColor = it },

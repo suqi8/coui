@@ -1,6 +1,6 @@
 # ColorPicker
 
-`ColorPicker` is a color selection component in Miuix that allows users to pick colors by adjusting
+`ColorPicker` is a color selection component in COUI that allows users to pick colors by adjusting
 hue, saturation, brightness, and transparency. The component provides an intuitive slider interface
 with haptic feedback and real-time color preview.
 

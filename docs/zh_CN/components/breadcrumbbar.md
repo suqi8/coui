@@ -1,6 +1,6 @@
 # BreadcrumbBar
 
-`BreadcrumbBar` 是 Miuix 中的水平导航组件，以箭头图标分隔显示路径段，每段呈现为胶囊形状。当内容超出可用宽度时，组件会水平滚动而非折叠（考虑到 miuix 通常用于移动设备）。
+`BreadcrumbBar` 是 COUI 中的水平导航组件，以箭头图标分隔显示路径段，每段呈现为胶囊形状。当内容超出可用宽度时，组件会水平滚动而非折叠，与移动设备上文件管理器的惯例一致。
 
 `highlightIndex` 与 `items` 列表解耦：调用方可以显示完整路径的同时高亮任意一段（例如当前目录，或用户回退到的某个父级目录）。组件会自动滚动以保持高亮项可见。
 
@@ -11,9 +11,9 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.BreadcrumbBar
-import top.yukonga.miuix.kmp.basic.BreadcrumbItem
-import top.yukonga.miuix.kmp.basic.joinToPath
+import io.github.suqi8.coui.kmp.basic.BreadcrumbBar
+import io.github.suqi8.coui.kmp.basic.BreadcrumbItem
+import io.github.suqi8.coui.kmp.basic.joinToPath
 ```
 
 ## 基本用法
@@ -136,10 +136,10 @@ BreadcrumbBar(
     items = items,
     onItemClick = { index -> /* 处理点击 */ },
     colors = BreadcrumbBarDefaults.breadcrumbBarColors(
-        color = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-        highlightColor = MiuixTheme.colorScheme.primary,
-        backgroundColor = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.1f),
-        highlightBackgroundColor = MiuixTheme.colorScheme.primary.copy(alpha = 0.2f),
+        color = COUITheme.colorScheme.onBackground.copy(alpha = 0.55f),
+        highlightColor = COUITheme.colorScheme.primary,
+        backgroundColor = COUITheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        highlightBackgroundColor = COUITheme.colorScheme.primary.copy(alpha = 0.2f),
     ),
 )
 ```

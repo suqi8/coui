@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayDialog
 
-`OverlayDialog` 是 Miuix 中的对话框组件，用于显示重要信息、收集用户输入或确认用户操作。对话框会在当前界面上层显示，并支持自定义样式和内容布局。
+`OverlayDialog` 是 COUI 中的对话框组件，用于显示重要信息、收集用户输入或确认用户操作。对话框会在当前界面上层显示，并支持自定义样式和内容布局。
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=overlayDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -44,11 +44,11 @@ Scaffold {
         title = "对话框标题",
         summary = "这是一个基本的对话框示例，可以包含各种内容。",
         show = showDialog,
-        onDismissRequest = { showDialog = false } // 关闭对话框
+        onDismissRequest = { showDialog = false } // Close dialog
     ) {
         TextButton(
             text = "确定",
-            onClick = { showDialog = false }, // 关闭对话框
+            onClick = { showDialog = false }, // Close dialog
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -75,6 +75,9 @@ Scaffold {
 | insideMargin               | DpSize                 | 内置标题/摘要文本的边距（宽 = 水平内边距，高 = 标题上方内边距）；content 插槽不加内边距 | DialogDefaults.insideMargin      | 否       |
 | defaultWindowInsetsPadding | Boolean                | 是否应用默认窗口插入内边距                   | true                                  | 否       |
 | renderInRootScaffold       | Boolean                | 是否在根（最外层）Scaffold 中渲染对话框。为 true 时，对话框覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染 | true | 否 |
+| maxWidth                   | Dp                     | 对话框的最大宽度                             | DialogDefaults.MaxWidth          | 否       |
+| largeScreen                | Boolean?               | 大屏呈现方式的覆盖项（居中缩放/淡入淡出，而非底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
+| cornerRadius               | Dp?                    | 圆角半径覆盖项；为 null 时使用 DialogDefaults.CornerRadius | null | 否       |
 | content                    | @Composable () -> Unit | 对话框的内容                                 | -                                     | 是       |
 
 ### DialogDefaults
@@ -98,6 +101,37 @@ Scaffold {
 
 ## 进阶用法
 
+### 居中呈现（大屏）
+
+当窗口宽度不小于 840dp 且高度不小于 480dp 时，对话框会自动居中，并使用缩放/淡入淡出过渡代替底部滑入。可使用 `largeScreen` 强制指定呈现方式，`cornerRadius` 覆盖面板圆角：
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+Scaffold {
+    TextButton(
+        text = "显示居中对话框",
+        onClick = { showDialog = true }
+    )
+
+    OverlayDialog(
+        title = "居中对话框",
+        summary = "该对话框始终居中显示，与窗口尺寸无关",
+        show = showDialog,
+        largeScreen = true, // Force the centered presentation
+        cornerRadius = 24.dp, // Override the panel corner radius
+        maxWidth = 320.dp,
+        onDismissRequest = { showDialog = false }
+    ) {
+        TextButton(
+            text = "确认",
+            onClick = { showDialog = false },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+```
+
 ### 自定义样式对话框
 
 ```kotlin
@@ -113,7 +147,7 @@ Scaffold {
         title = "自定义样式",
         summary = "这个对话框使用了自定义颜色和边距",
         show = showDialog,
-        onDismissRequest = { showDialog = false }, // 关闭对话框
+        onDismissRequest = { showDialog = false }, // Close dialog
         titleColor = Color.Blue,
         summaryColor = Color.Gray,
         backgroundColor = Color(0xFFF5F5F5),
@@ -127,7 +161,7 @@ Scaffold {
         
         TextButton(
             text = "关闭",
-            onClick = { showDialog = false }, // 关闭对话框
+            onClick = { showDialog = false }, // Close dialog
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -154,7 +188,7 @@ Scaffold {
         title = "确认操作",
         summary = "此操作不可撤销，是否继续？",
         show = showConfirmDialog,
-        onDismissRequest = { showConfirmDialog = false } // 关闭对话框
+        onDismissRequest = { showConfirmDialog = false } // Close dialog
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween
@@ -163,7 +197,7 @@ Scaffold {
                 text = "取消",
                 onClick = { 
                     result = "用户取消了操作"
-                    showConfirmDialog = false // 关闭对话框
+                    showConfirmDialog = false // Close dialog
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -172,10 +206,10 @@ Scaffold {
                 text = "确认",
                 onClick = { 
                     result = "用户确认了操作"
-                    showConfirmDialog = false // 关闭对话框
+                    showConfirmDialog = false // Close dialog
                 },
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsPrimary() // 使用主题颜色
+                colors = ButtonDefaults.textButtonColorsPrimary() // Use theme color
             )
         }
     }
@@ -197,7 +231,7 @@ Scaffold {
     OverlayDialog(
         title = "请输入内容",
         show = showDialog,
-        onDismissRequest = { showDialog = false } // 关闭对话框
+        onDismissRequest = { showDialog = false } // Close dialog
     ) {
         TextField(
             modifier = Modifier.padding(bottom = 16.dp),
@@ -211,15 +245,15 @@ Scaffold {
         ) {
             TextButton(
                 text = "取消",
-                onClick = { showDialog = false }, // 关闭对话框
+                onClick = { showDialog = false }, // Close dialog
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(20.dp))
             TextButton(
                 text = "确认",
-                onClick = { showDialog = false }, // 关闭对话框
+                onClick = { showDialog = false }, // Close dialog
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsPrimary() // 使用主题颜色
+                colors = ButtonDefaults.textButtonColorsPrimary() // Use theme color
             )
         }
     }
@@ -243,10 +277,12 @@ Scaffold {
     OverlayDialog(
         title = "表单对话框",
         show = showDialog,
-        onDismissRequest = { showDialog = false } // 关闭对话框
+        onDismissRequest = { showDialog = false } // Close dialog
     ) {
         Card(
-            color = COUITheme.colorScheme.secondaryContainer,
+            colors = CardDefaults.defaultColors(
+                color = COUITheme.colorScheme.secondaryContainer,
+            ),
         ) {
             OverlayDropdownPreference(
                 title = "下拉选择",
@@ -269,15 +305,15 @@ Scaffold {
         ) {
             TextButton(
                 text = "取消",
-                onClick = { showDialog = false }, // 关闭对话框
+                onClick = { showDialog = false }, // Close dialog
                 modifier = Modifier.weight(1f)
             )
             Spacer(Modifier.width(20.dp))
             TextButton(
                 text = "确认",
-                onClick = { showDialog = false }, // 关闭对话框
+                onClick = { showDialog = false }, // Close dialog
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.textButtonColorsPrimary() // 使用主题颜色
+                colors = ButtonDefaults.textButtonColorsPrimary() // Use theme color
             )
         }
     }
@@ -299,7 +335,7 @@ Scaffold {
     OverlayDialog(
         title = "选择颜色",
         show = showColorDialog,
-        onDismissRequest = { showColorDialog = false } // 关闭对话框
+        onDismissRequest = { showColorDialog = false } // Close dialog
     ) {
         Column {
             ColorPicker(
@@ -314,15 +350,15 @@ Scaffold {
                 TextButton(
                     modifier = Modifier.weight(1f),
                     text = "取消",
-                    onClick = { showColorDialog = false } // 关闭对话框
+                    onClick = { showColorDialog = false } // Close dialog
                 )
                 TextButton(
                     modifier = Modifier.weight(1f),
                     text = "确认",
-                    colors = ButtonDefaults.textButtonColorsPrimary(), // 使用主题颜色
+                    colors = ButtonDefaults.textButtonColorsPrimary(), // Use theme color
                     onClick = {
-                        showColorDialog = false // 关闭对话框
-                        // 处理确认逻辑
+                        showColorDialog = false // Close dialog
+                        // Handle confirm logic
                     }
                 )
             }

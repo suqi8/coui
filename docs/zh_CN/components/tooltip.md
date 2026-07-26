@@ -1,8 +1,6 @@
-#! /usr/bin/env markdown
-
 # Tooltip
 
-`Tooltip` 是 Miuix 中用于简短描述锚点元素的组件。参照 Material 3，统一由 `TooltipBox` 将 tooltip 锚定到内容上；你在它的 `tooltip` 槽里填入 `PlainTooltip`（反色表面短标签）或 `RichTooltip`（带可选标题与操作的 surfaceContainer 卡片）。tooltip 在悬停（光标）或长按（触摸）时显示，也可通过 `TooltipState` 以编程方式显示。
+`Tooltip` 是 COUI 中用于简短描述锚点元素的组件。参照 Material 3，统一由 `TooltipBox` 将 tooltip 锚定到内容上；你在它的 `tooltip` 槽里填入 `PlainTooltip`（反色表面短标签）或 `RichTooltip`（带可选标题与操作的 surfaceContainer 卡片）。tooltip 在悬停（光标）或长按（触摸）时显示，也可通过 `TooltipState` 以编程方式显示。
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=tooltip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -11,14 +9,14 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.RichTooltipBox
-import top.yukonga.miuix.kmp.basic.PlainTooltip
-import top.yukonga.miuix.kmp.basic.RichTooltip
-import top.yukonga.miuix.kmp.basic.TooltipState
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
-import top.yukonga.miuix.kmp.basic.TooltipDefaults
-import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
+import io.github.suqi8.coui.kmp.basic.TooltipBox
+import io.github.suqi8.coui.kmp.basic.RichTooltipBox
+import io.github.suqi8.coui.kmp.basic.PlainTooltip
+import io.github.suqi8.coui.kmp.basic.RichTooltip
+import io.github.suqi8.coui.kmp.basic.TooltipState
+import io.github.suqi8.coui.kmp.basic.rememberTooltipState
+import io.github.suqi8.coui.kmp.basic.TooltipDefaults
+import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 ```
 
 ## 基本用法
@@ -29,7 +27,7 @@ import top.yukonga.miuix.kmp.basic.TooltipAnchorPosition
 TooltipBox(text = "搜索") {
     IconButton(onClick = { /* ... */ }) {
         Icon(
-            imageVector = MiuixIcons.Basic.Search,
+            imageVector = COUIIcons.Search,
             contentDescription = "搜索",
         )
     }
@@ -70,14 +68,14 @@ TooltipBox(
     state = rememberTooltipState(),
 ) {
     IconButton(onClick = { /* ... */ }) {
-        Icon(imageVector = MiuixIcons.Basic.Check, contentDescription = "添加到收藏")
+        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "添加到收藏")
     }
 }
 ```
 
 ## PlainTooltip
 
-`PlainTooltip` 是渲染在 Miuix 反色表面上的短标签、不可交互。它是 `TooltipScope` 扩展，用于 `TooltipBox` 的 `tooltip` 槽内。
+`PlainTooltip` 是渲染在 COUI 反色表面上的短标签、不可交互。它是 `TooltipScope` 扩展，用于 `TooltipBox` 的 `tooltip` 槽内。
 
 ```kotlin
 @Composable
@@ -136,7 +134,7 @@ TooltipBox(
     focusable = true,
 ) {
     IconButton(onClick = { scope.launch { tooltipState.show() } }) {
-        Icon(imageVector = MiuixIcons.Basic.Check, contentDescription = "新功能")
+        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "新功能")
     }
 }
 ```
@@ -197,10 +195,10 @@ val plainContent = TooltipDefaults.plainTooltipContentColor       // secondaryVa
 
 // rich tooltip（surface container）
 val richColors = TooltipDefaults.richTooltipColors(
-    containerColor = MiuixTheme.colorScheme.surfaceContainer,
-    contentColor = MiuixTheme.colorScheme.onSurfaceContainerVariant,
-    titleContentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-    actionContentColor = MiuixTheme.colorScheme.primary,
+    containerColor = COUITheme.colorScheme.surfaceContainer,
+    contentColor = COUITheme.colorScheme.onSurfaceContainerVariant,
+    titleContentColor = COUITheme.colorScheme.onSurfaceContainer,
+    actionContentColor = COUITheme.colorScheme.primary,
 )
 ```
 
@@ -213,7 +211,7 @@ fun TooltipDefaults.caretShape(): Shape
 val TooltipDefaults.caretSize: DpSize // 16 x 8 dp
 ```
 
-向 `PlainTooltip` / `RichTooltip` 传入 `caretShape = TooltipDefaults.caretShape()` 即可绘制指向锚点的箭头（针对 `Above` / `Below` 方位）。默认无箭头，与 Miuix 其余浮层保持一致。
+向 `PlainTooltip` / `RichTooltip` 传入 `caretShape = TooltipDefaults.caretShape()` 即可绘制指向锚点的箭头（针对 `Above` / `Below` 方位）。默认无箭头，与 COUI 其余浮层保持一致。
 
 ### 常量
 

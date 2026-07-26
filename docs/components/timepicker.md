@@ -1,6 +1,6 @@
 # TimePicker
 
-`TimePicker` is a basic interactive component in Miuix used for selecting a time of day with hour and minute scroll wheels, mirroring ColorOS's COUITimeLimitPicker. It supports both 24-hour and 12-hour formats; in 12-hour mode an AM/PM wheel is added, placed before the hour wheel or after the minute wheel depending on locale convention. Optional unit labels (e.g. "h" / "min") can be drawn beside the selected row like the COUI unit text.
+`TimePicker` is a basic interactive component in COUI used for selecting a time of day with hour and minute scroll wheels, mirroring ColorOS's COUITimeLimitPicker. It supports both 24-hour and 12-hour formats; in 12-hour mode an AM/PM wheel is added, placed before the hour wheel or after the minute wheel depending on locale convention. Optional unit labels (e.g. "h" / "min") can be drawn beside the selected row like the COUI unit text.
 
 Times are represented by the plain `TimeValue` data class; the hour is always stored in 24-hour form (0..23) regardless of the display mode.
 

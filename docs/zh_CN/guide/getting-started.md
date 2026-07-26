@@ -8,7 +8,7 @@
 
 ## 添加依赖
 
-要在您的项目中使用 Miuix，请按照以下步骤添加依赖：
+要在您的项目中使用 COUI，请按照以下步骤添加依赖：
 
 ### Gradle (Kotlin DSL)
 
@@ -25,7 +25,7 @@ repositories {
 
 3. 在项目的 build.gradle.kts 中添加依赖：
 
-Miuix 由多个可独立使用的模块组成：
+COUI 由多个可独立使用的模块组成：
 
 | 模块 | 说明 |
 |---|---|
@@ -125,7 +125,7 @@ implementation("io.github.suqi8.coui.kmp:coui-squircle-js:<version>")
 
 ## 基本用法
 
-### 应用 Miuix 主题
+### 应用 COUI 主题
 
 ```kotlin
 @Composable
@@ -141,7 +141,7 @@ fun AppTheme(
 }
 ```
 
-### 使用 Miuix 脚手架
+### 使用 COUI 脚手架
 
 ```kotlin
 Scaffold(

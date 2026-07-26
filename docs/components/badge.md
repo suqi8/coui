@@ -19,7 +19,46 @@ Badge(count = 1000)    // three-dot ellipsis (1000+)
 Badge(stroke = true)   // white outline for colored surfaces
 ```
 
-### Anchored to an icon
+## Badge Forms
+
+### Dot Badge
+
+Counts of 0 or below (the default) render a plain 6dp dot (COUI POINT_ONLY_MODE):
+
+```kotlin
+Badge()
+```
+
+### Count Badge
+
+Counts from 1 to 999 render a 16dp-high capsule that widens with the digit count (16dp under 10, 20dp under 100, 26dp under 1000). Count changes ease the capsule width over 517ms while the old and new numbers crossfade over 150ms:
+
+```kotlin
+var unread by remember { mutableIntStateOf(8) }
+
+Badge(count = unread)
+```
+
+### Overflow Ellipsis
+
+Counts of 1000 and above render a 20dp-wide capsule with a three-dot ellipsis (COUI `red_dot_more`):
+
+```kotlin
+Badge(count = 1000)
+```
+
+### Stroke Outline
+
+`stroke = true` draws a 1dp white outline around the dot or capsule, for badges placed on colored surfaces (COUI POINT_ONLY_MODE_STROKE / POINT_NUM_MODE_STROKE):
+
+```kotlin
+Badge(stroke = true)              // dot with outline
+Badge(count = 99, stroke = true)  // capsule with outline
+```
+
+## Anchoring with BadgeBox
+
+`BadgeBox` anchors a badge at the top end corner of its content. A positive `overhang` lets the badge stick out of the corner by that amount and grows the layout accordingly (COUI rectangular anchors such as icons):
 
 ```kotlin
 BadgeBox(
@@ -29,6 +68,21 @@ BadgeBox(
     Icon(
         imageVector = COUIIcons.Settings,
         contentDescription = "Settings",
+    )
+}
+```
+
+A negative `overhang` insets the badge inside the corner instead (COUI circular anchors such as avatars):
+
+```kotlin
+BadgeBox(
+    badge = { Badge() },
+    overhang = (-2).dp,
+) {
+    Image(
+        painter = avatarPainter,
+        contentDescription = "Avatar",
+        modifier = Modifier.size(40.dp).clip(CircleShape),
     )
 }
 ```

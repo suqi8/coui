@@ -50,6 +50,32 @@ ButtonPreference(
 )
 ```
 
+### 按下状态
+
+ButtonPreference 支持通过 `holdDownState` 参数控制整行的按下状态，通常用于显示弹出对话框时的视觉反馈：
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+Scaffold {
+    ButtonPreference(
+        title = "账号",
+        summary = "管理账号详情",
+        buttonText = "登录",
+        onButtonClick = { /* 登录 */ },
+        onClick = { showDialog = true },
+        holdDownState = showDialog
+    )
+    OverlayDialog(
+        title = "账号详情",
+        show = showDialog,
+        onDismissRequest = { showDialog = false } // 关闭对话框
+    ) {
+        // 对话框内容
+    }
+}
+```
+
 ## 属性
 
 ### ButtonPreference 属性
@@ -107,6 +133,25 @@ ButtonPreference(
         color = COUITheme.colorScheme.error,
         contentColor = COUITheme.colorScheme.onError
     )
+)
+```
+
+### 带右侧额外内容
+
+传入 `endActions` 的内容会显示在内嵌按钮之前：
+
+```kotlin
+ButtonPreference(
+    title = "会员",
+    summary = "当前套餐",
+    buttonText = "升级",
+    onButtonClick = { /* 升级 */ },
+    endActions = {
+        Text(
+            text = "免费版",
+            color = COUITheme.colorScheme.onSurfaceVariantActions
+        )
+    }
 )
 ```
 

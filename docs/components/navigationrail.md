@@ -1,6 +1,6 @@
 # NavigationRail
 
-`NavigationRail` is a side navigation component in Miuix, suitable for wide screens. It offers different display modes (icon only, text only, icon and text, icon with selected label).
+`NavigationRail` is a side navigation component in COUI, suitable for wide screens. It offers different display modes (icon only, text only, icon and text, icon with selected label).
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=navigationRail" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -78,13 +78,13 @@ The NavigationRailDefaults object provides default values for NavigationRail and
 
 | Constant Name          | Type     | Description                                | Default Value |
 | ---------------------- | -------- | ------------------------------------------ | ------------- |
-| MinWidth               | Dp       | Minimum width of the rail                  | 80.dp         |
+| MinWidth               | Dp       | Minimum width of the rail                  | 72.dp         |
 | VerticalPadding        | Dp       | Vertical padding of the content            | 24.dp         |
 | HeaderSpacing          | Dp       | Spacing after the header                   | 24.dp         |
-| IconSize               | Dp       | Icon size                                  | 28.dp         |
-| IconTextSpacing        | Dp       | Spacing between icon and text              | 4.dp          |
+| IconSize               | Dp       | Icon size                                  | 24.dp         |
+| IconTextSpacing        | Dp       | Spacing between icon and text              | 2.dp          |
 | ItemVerticalPadding    | Dp       | Vertical padding for each item             | 12.dp         |
-| LabelFontSize          | TextUnit | Label font size                            | 12.sp         |
+| LabelFontSize          | TextUnit | Label font size                            | 10.sp         |
 | TextOnlyFontSize       | TextUnit | Font size in TextOnly mode                 | 14.sp         |
 | TextOnlyVerticalPadding| Dp       | Vertical padding in TextOnly mode          | 4.dp          |
 | SelectedPressedAlpha   | Float    | Alpha for selected pressed item            | 0.5f          |
@@ -99,3 +99,59 @@ The NavigationRailDefaults object provides default values for NavigationRail and
 | IconOnly              | Display only icon.                                |
 | TextOnly              | Display only text.                                |
 | IconWithSelectedLabel | Display icon always, and text only when selected. |
+
+The display mode set on `NavigationRail` is delivered to its items through the `LocalNavigationRailDisplayMode` composition local.
+
+## Advanced Usage
+
+### Display Modes
+
+```kotlin
+NavigationRail(
+    // IconAndText (default) / IconOnly / TextOnly / IconWithSelectedLabel
+    mode = NavigationRailDisplayMode.IconWithSelectedLabel
+) {
+    // ... items ...
+}
+```
+
+### With Header
+
+```kotlin
+NavigationRail(
+    header = {
+        // Usually a FloatingActionButton or a logo
+        FloatingActionButton(
+            onClick = { /* Handle click */ }
+        ) {
+            Icon(
+                imageVector = COUIIcons.Add,
+                contentDescription = "Add"
+            )
+        }
+    }
+) {
+    // ... items ...
+}
+```
+
+### Custom Color and Width
+
+```kotlin
+NavigationRail(
+    color = COUITheme.colorScheme.background,
+    minWidth = 96.dp
+) {
+    // ... items ...
+}
+```
+
+### Without Divider
+
+```kotlin
+NavigationRail(
+    showDivider = false
+) {
+    // ... items ...
+}
+```

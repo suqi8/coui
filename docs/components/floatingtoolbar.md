@@ -1,6 +1,6 @@
 # FloatingToolbar
 
-`FloatingToolbar` is a floating toolbar component in Miuix that renders its content within a container with a rounded background, arranged either horizontally or vertically. The actual placement on the screen is handled by the parent component, typically `Scaffold`.
+`FloatingToolbar` is a floating toolbar component in COUI that renders its content within a container with a rounded background, arranged either horizontally or vertically. The actual placement on the screen is handled by the parent component, typically `Scaffold`.
 
 This component is usually used in conjunction with `Scaffold`, placed in a specific position on the page to provide quick actions or display information.
 
@@ -85,6 +85,29 @@ FloatingToolbar(
         }
         IconButton(onClick = { /* Action 2 */ }) {
             Icon(COUIIcons.Delete, contentDescription = "Delete", tint = COUITheme.colorScheme.onPrimaryContainer)
+        }
+    }
+}
+```
+
+### Toolbar with Divider
+
+Set `showDivider = true` to draw a hairline divider ring around the toolbar; set `shadowElevation = 0.dp` to disable the drop shadow:
+
+```kotlin
+FloatingToolbar(
+    showDivider = true,
+    shadowElevation = 0.dp
+) {
+    Row(
+        modifier = Modifier.padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IconButton(onClick = { /* Action 1 */ }) {
+            Icon(COUIIcons.Edit, contentDescription = "Edit")
+        }
+        IconButton(onClick = { /* Action 2 */ }) {
+            Icon(COUIIcons.Delete, contentDescription = "Delete")
         }
     }
 }

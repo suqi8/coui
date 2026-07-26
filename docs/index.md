@@ -3,9 +3,9 @@
 layout: home
 
 hero:
-  name: Miuix
+  name: COUI
   text: A UI library for Compose MultiPlatform
-  tagline: Provides components with Xiaomi HyperOS design style
+  tagline: Provides components with ColorOS design style
   image:
     src: /Icon.webp
     alt: Logo
@@ -18,21 +18,26 @@ hero:
       link: /components/index
     - theme: alt
       text: GitHub
-      link: https://github.com/compose-coui-ui/miuix
+      link: https://github.com/suqi8/coui
 
 features:
   - icon: 🚀
     title: Easy to Use
     details: Similar to Compose Material with low learning curve for quick integration.
   - icon: 🎨
-    title: Xiaomi Aesthetics
-    details: Authentic Xiaomi HyperOS design language and interactive effects for your apps.
+    title: ColorOS Aesthetics
+    details: Authentic ColorOS design language and interactive effects for your apps.
   - icon: 📦
     title: Rich Components
     details: Comprehensive basic and complex components for most application scenarios.
   - icon: 🌐
     title: Cross-Platform
     details: One codebase for Android, iOS, Desktop and more via Compose Multiplatform.
+  - icon: 🧬
+    title: Based on Miuix
+    details: Built on the excellent Miuix Compose Multiplatform UI library.
+    link: https://github.com/compose-miuix-ui/miuix
+    linkText: Visit Miuix
 
 nolebase:
   gitChangelog: false

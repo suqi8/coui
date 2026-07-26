@@ -33,19 +33,19 @@ import io.github.suqi8.coui.kmp.theme.LocalDismissState
 var showDialog by remember { mutableStateOf(false) }
 
 TextButton(
-    text = "打开",
+    text = "Open",
     onClick = { showDialog = true }
 )
 
 WindowDialog(
     title = "WindowDialog",
-    summary = "一个基础的窗口级对话框示例",
+    summary = "A basic window-level dialog",
     show = showDialog,
     onDismissRequest = { showDialog = false }
 ) {
     val dismiss = LocalDismissState.current
     TextButton(
-        text = "确认",
+        text = "Confirm",
         onClick = { dismiss?.invoke() },
         modifier = Modifier.fillMaxWidth()
     )
@@ -71,6 +71,9 @@ WindowDialog(
 | outsideMargin              | DpSize                 | 相对窗口边缘的外部边距                         | DialogDefaults.outsideMargin     | 否       |
 | insideMargin               | DpSize                 | 内置标题/摘要文本的边距（宽 = 水平内边距，高 = 标题上方内边距）；content 插槽不加内边距 | DialogDefaults.insideMargin      | 否       |
 | defaultWindowInsetsPadding | Boolean                | 是否应用默认窗口插入内边距（输入法/导航/标题） | true                                   | 否       |
+| maxWidth                   | Dp                     | 对话框内容最大宽度                             | DialogDefaults.MaxWidth          | 否       |
+| largeScreen                | Boolean?               | 大屏呈现方式覆写（居中缩放/淡入替代底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
+| cornerRadius               | Dp?                    | 圆角半径覆写；为 null 时，居中呈现使用 DialogDefaults.CornerRadius，底部吸附时由屏幕圆角推导（限制在 32dp..48dp） | null | 否       |
 | content                    | @Composable () -> Unit | 对话框内容                                     | -                                      | 是       |
 
 ### DialogDefaults
@@ -99,7 +102,34 @@ WindowDialog(
 ```kotlin
 val dismiss = LocalDismissState.current
 TextButton(
-    text = "关闭",
+    text = "Close",
     onClick = { dismiss?.invoke() }
 )
+```
+
+## 进阶用法
+
+### 呈现方式覆写
+
+默认情况下，对话框在紧凑窗口中吸附于底部，在大窗口（>= 840dp x 480dp）中居中显示。可通过 `largeScreen`、`cornerRadius` 和 `maxWidth` 覆写呈现方式：
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+WindowDialog(
+    show = showDialog,
+    title = "Custom Presentation",
+    summary = "Forced centered presentation with custom shape",
+    largeScreen = true,   // always use the centered scale/fade presentation
+    cornerRadius = 24.dp, // override the panel corner radius
+    maxWidth = 320.dp,    // narrower content width cap
+    onDismissRequest = { showDialog = false }
+) {
+    val dismiss = LocalDismissState.current
+    TextButton(
+        text = "OK",
+        onClick = { dismiss?.invoke() },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
 ```

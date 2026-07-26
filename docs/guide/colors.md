@@ -1,6 +1,6 @@
 # Color System
 
-This page lists all colors in the Miuix color scheme with their default light and dark values. Values are shown in ARGB hex.
+This page lists all colors in the COUI color scheme with their default light and dark values. Values are shown in ARGB hex.
 
 ## Accessing Colors
 

@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlaySpinnerPreference
 
-`OverlaySpinnerPreference` is a dropdown selector component in Miuix that provides titles, summaries, and a list of options with icons and text. It supports click interaction and various display modes, commonly used in option settings with visual aids. This component is similar to `OverlayDropdownPreference` but offers richer functionality and interaction experience.
+`OverlaySpinnerPreference` is a dropdown selector component in COUI that provides titles, summaries, and a list of options with icons and text. It supports click interaction and various display modes, commonly used in option settings with visual aids. This component is similar to `OverlayDropdownPreference` but offers richer functionality and interaction experience.
 
 <div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlaySpinnerPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -258,7 +258,7 @@ Scaffold {
 | showValue             | Boolean                   | Show current selected value     | true                                  | No       |
 | renderInRootScaffold  | Boolean                   | Whether to render the popup in the root (outermost) Scaffold. When true, the popup covers the full screen. When false, it renders within the current Scaffold's bounds with position compensation | true | No |
 | onExpandedChange      | ((Boolean) -> Unit)?      | Callback when expanded state changes | null                               | No       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback       | -                                     | No       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback       | null                                  | No       |
 
 ### Entry Overload Properties
 
@@ -296,7 +296,7 @@ Scaffold {
 | showValue             | Boolean                   | Show current selected value          | true                                    | No       |
 | renderInRootScaffold  | Boolean                   | Whether to render the dialog in the root (outermost) Scaffold. When true, the dialog covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |
 | onExpandedChange      | ((Boolean) -> Unit)?      | Callback when expanded state changes | null                               | No       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | -                                       | No       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | null                                    | No       |
 
 ### Dialog Entry Overload Properties
 
@@ -322,7 +322,7 @@ Scaffold {
 | items         | List\<DropdownItem> | Items shown in this dropdown group | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true | No |
 
-Group titles are reserved for future use. The original MIUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
+Group titles are reserved for future use. The COUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
 
 ### DropdownItem Properties
 

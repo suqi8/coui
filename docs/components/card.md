@@ -1,6 +1,6 @@
 # Card
 
-`Card` is a basic container component in Miuix, used to hold related content and actions. It provides a card container with Miuix style, suitable for scenarios such as information display and content grouping. Supports both static display and interactive modes.
+`Card` is a basic container component in COUI, used to hold related content and actions. It provides a card container with COUI style, suitable for scenarios such as information display and content grouping. Supports both static display and interactive modes.
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=card" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -30,9 +30,9 @@ Card {
 | Property Name     | Type                               | Description                               | Default Value                | Required | Applies To  |
 | ----------------- | ---------------------------------- | ----------------------------------------- | ---------------------------- | -------- | ----------- |
 | modifier          | Modifier                           | Modifier applied to the card              | Modifier                     | No       | All         |
-| colors            | CardColors                         | Card color configuration                  | CardDefaults.defaultColors() | No       | All         |
 | cornerRadius      | Dp                                 | Card corner radius                        | CardDefaults.CornerRadius    | No       | All         |
 | insideMargin      | PaddingValues                      | Card inner padding                        | CardDefaults.InsideMargin    | No       | All         |
+| colors            | CardColors                         | Card color configuration                  | CardDefaults.defaultColors() | No       | All         |
 | pressFeedbackType | PressFeedbackType                  | Feedback type when pressed                | PressFeedbackType.Tint       | No       | Interactive |
 | showIndication    | Boolean                            | Show indication on interaction            | false                        | No       | Interactive |
 | holdDownState     | Boolean                            | Whether the card is in the pressed state  | false                        | No       | Interactive |

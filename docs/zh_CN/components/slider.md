@@ -1,8 +1,8 @@
 # Slider
 
-`Slider` 是 Miuix 中的基础交互组件，用于在连续的数值范围内进行选择。用户可以通过拖动滑块来调整值，适用于诸如音量调节、亮度控制、进度显示等场景。
+`Slider` 是 COUI 中的基础交互组件，用于在连续的数值范围内进行选择。用户可以通过拖动滑块来调整值，适用于诸如音量调节、亮度控制、进度显示等场景。
 
-Miuix 还提供了 `VerticalSlider` 用于垂直方向的滑块，以及 `RangeSlider` 用于选择数值范围。
+COUI 还提供了 `VerticalSlider` 用于垂直方向的滑块，以及 `RangeSlider` 用于选择数值范围。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=slider" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

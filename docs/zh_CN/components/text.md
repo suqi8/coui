@@ -1,6 +1,6 @@
 # Text
 
-`Text` 组件是 Miuix 中的基础文本组件，用于显示文字内容。支持自定义各种文本样式、对齐方式和装饰效果。
+`Text` 组件是 COUI 中的基础文本组件，用于显示文字内容。支持自定义各种文本样式、对齐方式和装饰效果。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=text" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -17,30 +17,30 @@ import io.github.suqi8.coui.kmp.basic.Text
 最简单的文本展示：
 
 ```kotlin
-Text("这是一段基本文本")
+Text("This is a basic text")
 ```
 
 ## 文本样式
 
-Miuix 提供了多种预定义的文本样式：
+COUI 提供了多种预定义的文本样式：
 
 ```kotlin
 Text(
-    text = "标题文本",
+    text = "Title Text",
     style = COUITheme.textStyles.headline1
 )
 
 Text(
-    text = "小标题文本",
+    text = "Subtitle Text",
     style = COUITheme.textStyles.subtitle
 )
 Text(
-    text = "摘要文本",
+    text = "Summary Text",
     style = COUITheme.textStyles.body2
 )
 
 Text(
-    text = "正文文本",
+    text = "Main Text",
     style = COUITheme.textStyles.main
 )
 
@@ -50,17 +50,17 @@ Text(
 
 ```kotlin
 Text(
-    text = "默认颜色文本",
+    text = "Default Color Text",
     color = COUITheme.colorScheme.onBackground
 )
 
 Text(
-    text = "主题色文本",
+    text = "Primary Color Text",
     color = COUITheme.colorScheme.primary
 )
 
 Text(
-    text = "次要文本",
+    text = "Secondary Text",
     color = COUITheme.colorScheme.onSurfaceContainerVariant
 )
 ```
@@ -120,7 +120,7 @@ Text(
 
 ```kotlin
 Text(
-    text = "这是一段很长很长的文本，当空间不足时会被截断并显示省略号，这在显示长内容摘要时很有用。",
+    text = "This is a very long text that will be truncated and show ellipsis when there is not enough space. This is useful for displaying long content summaries.",
     maxLines = 2,
     overflow = TextOverflow.Ellipsis
 )
@@ -130,12 +130,12 @@ Text(
 
 ```kotlin
 Text(
-    text = "带下划线的文本",
+    text = "Underlined Text",
     textDecoration = TextDecoration.Underline
 )
 
 Text(
-    text = "带删除线的文本",
+    text = "Strikethrough Text",
     textDecoration = TextDecoration.LineThrough
 )
 ```
@@ -146,12 +146,12 @@ Text(
 Text(
     buildAnnotatedString {
         withStyle(style = SpanStyle(color = COUITheme.colorScheme.primary)) {
-            append("Miuix ")
+            append("COUI ")
         }
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-            append("UI 库")
+            append("UI Library")
         }
-        append("，这是一段富文本")
+        append(", this is a piece of rich text")
     }
 )
 ```
@@ -162,7 +162,7 @@ Text(
 
 ```kotlin
 Text(
-    text = "自适应文本",
+    text = "Adaptive text",
     autoSize = TextAutoSize.StepBased(
         minFontSize = 12.sp,
         maxFontSize = 17.sp,
@@ -185,7 +185,7 @@ fun Text(text: AnnotatedString, color: ColorProducer, modifier: Modifier = Modif
 ```kotlin
 val scrollState = rememberScrollState()
 Text(
-    text = "随滚动渐变的文本",
+    text = "Scroll-tinted text",
     color = {
         lerp(
             COUITheme.colorScheme.onSurface,
@@ -202,9 +202,9 @@ Text(
 
 ```kotlin
 val annotated = buildAnnotatedString {
-    append("访问 ")
+    append("Visit ")
     val start = length
-    append("Miuix 文档站")
+    append("COUI Docs")
     addLink(
         LinkAnnotation.Url(
             url = "https://suqi8.github.io/coui/",

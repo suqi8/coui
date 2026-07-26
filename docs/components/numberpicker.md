@@ -1,6 +1,6 @@
 # NumberPicker
 
-`NumberPicker` is a basic interactive component in Miuix used for selecting a value from a range of numbers by vertical scrolling. The selected item is centered and highlighted, while surrounding items fade out and scale down. Supports infinite scrolling with the `wrapAround` parameter.
+`NumberPicker` is a basic interactive component in COUI used for selecting a value from a range of numbers by vertical scrolling. The selected item is centered, enlarged and highlighted, while surrounding items scale down and transition to the unselected color within half an item of the center. Supports infinite scrolling with the `wrapAround` parameter.
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=numberPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -69,7 +69,7 @@ NumberPicker(
 | visibleItemCount | Int                | Number of visible items. Must be odd and at least 3                      | 3                          | No       |
 | wrapAround       | Boolean            | Whether the picker wraps around (infinite scrolling)                     | false                      | No       |
 | colors           | NumberPickerColors | Color configuration of the picker                                        | NumberPickerDefaults.colors() | No       |
-| textStyle        | TextStyle          | Text style for picker items                                              | COUITheme.textStyles.title1 | No       |
+| textStyle        | TextStyle          | Text style for picker items                                              | COUITheme.textStyles.title3 | No       |
 | itemHeight       | Dp                 | The height of each item in the picker                                    | NumberPickerDefaults.ItemHeight | No       |
 
 ### NumberPickerDefaults Object
@@ -87,6 +87,15 @@ The NumberPickerDefaults object provides default configurations for the NumberPi
 | Method Name | Return Type        | Description                         |
 | ----------- | ------------------ | ----------------------------------- |
 | colors()    | NumberPickerColors | Creates default color configuration |
+
+The `colors()` factory accepts the following parameters:
+
+| Parameter Name              | Type  | Default Value                                  |
+| --------------------------- | ----- | ---------------------------------------------- |
+| selectedTextColor           | Color | COUITheme.colorScheme.onSurface                |
+| unselectedTextColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
+| disabledSelectedTextColor   | Color | COUITheme.colorScheme.disabledOnSecondary      |
+| disabledUnselectedTextColor | Color | COUITheme.colorScheme.disabledOnSecondary      |
 
 ### NumberPickerColors Class
 
@@ -156,7 +165,7 @@ NumberPicker(
     value = value,
     onValueChange = { value = it },
     range = 1..100,
-    visibleItemCount = 3
+    visibleItemCount = 5 // Must be odd and at least 3
 )
 ```
 

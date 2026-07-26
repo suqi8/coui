@@ -1,6 +1,6 @@
 # RangeSliderPreference
 
-`RangeSliderPreference` 是 Miuix 中的范围滑块偏好设置组件，将标题/摘要与范围滑块控件结合在一起。范围滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要选择数值范围的场景，如价格筛选、频段选择或双阈值控制。
+`RangeSliderPreference` 是 COUI 中的范围滑块偏好设置组件，将标题/摘要与范围滑块控件结合在一起。范围滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要选择数值范围的场景，如价格筛选、频段选择或双阈值控制。
 
 ## 引入
 

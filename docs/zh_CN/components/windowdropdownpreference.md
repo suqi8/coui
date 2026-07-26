@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowDropdownPreference
 
-`WindowDropdownPreference` 是 Miuix 中的下拉菜单组件，提供了标题、摘要和下拉选项列表。它在窗口级别渲染，不需要 `Scaffold` 宿主，适用于没有或不使用 `Scaffold` 的场景。
+`WindowDropdownPreference` 是 COUI 中的下拉菜单组件，提供了标题、摘要和下拉选项列表。它在窗口级别渲染，不需要 `Scaffold` 宿主，适用于没有或不使用 `Scaffold` 的场景。
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowDropdownPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -201,7 +201,7 @@ WindowDropdownPreference(
 | enabled               | Boolean                   | 组件是否可交互       | true                                  | 否       |
 | showValue             | Boolean                   | 是否显示当前选中值   | true                                  | 否       |
 | onExpandedChange      | ((Boolean) -> Unit)?      | 展开状态变化时的回调 | null                                  | 否       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | 选中项变化时的回调   | -                                     | 否       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | 选中项变化时的回调   | null                                  | 否       |
 
 ### Entry 重载属性
 
@@ -217,6 +217,8 @@ WindowDropdownPreference(
 | entries             | List\<DropdownEntry> | 由分割线隔开的下拉条目分组 | -                 | 是       |
 | collapseOnSelection | Boolean              | 每次选中条目后是否关闭弹窗 | entries.size <= 1 | 否       |
 
+其余参数与上方 items 重载完全一致。`entry` 和 `entries` 重载不提供 `onSelectedIndexChange`，请改用每个 `DropdownItem.onClick`。
+
 ### DropdownEntry 属性
 
 | 属性名  | 类型                | 说明                       | 默认值 | 是否必须 |
@@ -224,7 +226,7 @@ WindowDropdownPreference(
 | items   | List\<DropdownItem> | 此分组中显示的条目         | -      | 是       |
 | enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
 
-分组标题预留给后续使用。原版 MIUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
+分组标题预留给后续使用。原版 COUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
 
 ### DropdownItem 属性
 

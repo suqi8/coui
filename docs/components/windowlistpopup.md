@@ -16,6 +16,10 @@ popupHost: None
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 
+::: tip
+This component does not depend on `Scaffold` and can be used in any composable scope.
+:::
+
 ## Import
 
 ```kotlin
@@ -107,7 +111,23 @@ DropdownImpl(
 | index                 | Int            | Index of this option                 | -                                 |
 | dropdownColors        | DropdownColors | Color configuration for the option   | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | Whether this option can be clicked   | true                              |
+| dialogMode            | Boolean        | Use dialog-style row metrics instead of popup metrics | false            |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked | -                                 |
+
+`DropdownImpl` also provides an overload that takes a full `DropdownItem` instead of `text`, enabling rows with an icon or summary. It additionally accepts `hasSubmenu` (renders a trailing chevron), and `isFirst` / `isLast` (control the larger edge padding of the first/last row, defaulting to `index == 0` and `index == optionSize - 1`); `enabled` defaults to `item.enabled`.
+
+```kotlin
+DropdownImpl(
+    item = DropdownItem(
+        text = "Copy",
+        summary = "Copy to clipboard",
+    ),
+    optionSize = items.size,
+    isSelected = false,
+    index = 0,
+    onSelectedIndexChange = { /* handle click */ }
+)
+```
 
 ### PopupPositionProvider.Align
 

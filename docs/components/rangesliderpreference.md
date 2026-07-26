@@ -1,6 +1,6 @@
 # RangeSliderPreference
 
-`RangeSliderPreference` is a preference component in Miuix that combines a title/summary with a range slider control. The range slider is placed in the bottom action area of the `BasicComponent`, making it ideal for settings screens where users need to select a range of values such as price filters, frequency bands, or dual-threshold controls.
+`RangeSliderPreference` is a preference component in COUI that combines a title/summary with a range slider control. The range slider is placed in the bottom action area of the `BasicComponent`, making it ideal for settings screens where users need to select a range of values such as price filters, frequency bands, or dual-threshold controls.
 
 ## Import
 

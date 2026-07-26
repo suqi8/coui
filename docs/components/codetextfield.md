@@ -36,6 +36,21 @@ CodeTextField(
 )
 ```
 
+## Component States
+
+### Disabled State
+
+A disabled field keeps its current code visible but cannot be focused or edited, and the cursor and active-cell stroke are hidden:
+
+```kotlin
+CodeTextField(
+    value = code,
+    onValueChange = { code = it },
+    enabled = false,
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
 ## Properties
 
 ### CodeTextField
@@ -70,7 +85,12 @@ CodeTextField(
 | CursorWidth          | Dp     | Width of the blinking cursor                         | 2.dp                 |
 | ReferenceWidth       | Dp     | Reference width below which cells scale down         | 360.dp               |
 
-`textStyle()` returns the default digit style (30sp, COUI coui_code_input_cell_text_size).
+#### Methods
+
+| Method Name           | Type                | Description                                                                       |
+| --------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| textStyle()           | TextStyle           | Default digit style (COUITheme.textStyles.title2 at 30sp, coui_code_input_cell_text_size) |
+| codeTextFieldColors() | CodeTextFieldColors | Creates the color configuration for the code text field                           |
 
 ### `codeTextFieldColors()` factory
 
@@ -89,3 +109,21 @@ CodeTextField(
 - The active cell (first empty one, or the last cell when full) shows a 1.6dp stroke while focused; the stroke fades in over 100ms with a 33ms delay and fades out over 100ms (COUI move ease 0.3, 0, 0.1, 1).
 - Digits appear with a 0.6 -> 1.0 scale + fade over 100ms and fade out with a 33ms delay; security mode skips digit animations, mirroring COUI.
 - Below the 360dp reference width the cells shrink proportionally and the gap between cells adapts within 4dp and 16dp.
+
+## Advanced Usage
+
+### Custom Cell Style
+
+```kotlin
+CodeTextField(
+    value = code,
+    onValueChange = { code = it },
+    cellCount = 4,
+    cellSize = DpSize(48.dp, 52.dp),
+    cellCornerRadius = 12.dp,
+    colors = CodeTextFieldDefaults.codeTextFieldColors(
+        focusedStrokeColor = COUITheme.colorScheme.secondary,
+    ),
+    modifier = Modifier.fillMaxWidth(),
+)
+```

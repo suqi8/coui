@@ -15,7 +15,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
-// 或
+// or
 import io.github.suqi8.coui.kmp.window.WindowLoadingDialog
 
 import io.github.suqi8.coui.kmp.layout.LoadingDialogDefaults
@@ -37,7 +37,7 @@ Scaffold {
         text = "加载中..."
     )
 
-    // 任务完成后隐藏对话框
+    // Hide the dialog when the task completes
     LaunchedEffect(showLoading) {
         if (showLoading) {
             doWork()
@@ -51,6 +51,17 @@ Scaffold {
 
 ```kotlin
 OverlayLoadingDialog(show = showLoading)
+```
+
+`WindowLoadingDialog` 用法相同, 但渲染在平台窗口层级, 无需 `Scaffold`:
+
+```kotlin
+var showLoading by remember { mutableStateOf(false) }
+
+WindowLoadingDialog(
+    show = showLoading,
+    text = "加载中..."
+)
 ```
 
 ## 用户关闭
@@ -67,7 +78,7 @@ OverlayLoadingDialog(
 
 ## 属性
 
-### OverlayLoadingDialog / WindowLoadingDialog 属性
+### OverlayLoadingDialog 属性
 
 | 属性名               | 类型          | 说明                                                             | 默认值                                | 必需 |
 | -------------------- | ------------- | ---------------------------------------------------------------- | ------------------------------------- | ---- |
@@ -80,7 +91,23 @@ OverlayLoadingDialog(
 | enableWindowDim      | Boolean       | 是否启用背景遮罩                                                 | true                                  | 否   |
 | onDismissRequest     | (() -> Unit)? | 用户点击外部或按返回键时回调; 为 null 时用户无法关闭             | null                                  | 否   |
 | onDismissFinished    | (() -> Unit)? | 隐藏动画完成后回调                                               | null                                  | 否   |
-| renderInRootScaffold | Boolean       | 是否渲染在根 (最外层) Scaffold 中 (仅 `OverlayLoadingDialog`)    | true                                  | 否   |
+| renderInRootScaffold | Boolean       | 是否渲染在根 (最外层) Scaffold 中。为 true 时对话框覆盖全屏, 为 false 时在当前 Scaffold 的范围内渲染 | true | 否   |
+
+### WindowLoadingDialog 属性
+
+与 `OverlayLoadingDialog` 相同, 但没有 `renderInRootScaffold` (对话框始终渲染在窗口层级):
+
+| 属性名               | 类型          | 说明                                                             | 默认值                                | 必需 |
+| -------------------- | ------------- | ---------------------------------------------------------------- | ------------------------------------- | ---- |
+| show                 | Boolean       | 是否显示对话框                                                   | -                                     | 是   |
+| modifier             | Modifier      | 应用于对话框的修饰符                                             | Modifier                              | 否   |
+| text                 | String?       | 加载指示器下方的文字                                             | null                                  | 否   |
+| textColor            | Color         | 文字颜色                                                         | LoadingDialogDefaults.textColor()     | 否   |
+| spinnerColor         | Color         | 加载指示器颜色                                                   | LoadingDialogDefaults.spinnerColor()  | 否   |
+| backgroundColor      | Color         | 卡片背景色                                                       | DialogDefaults.backgroundColor()      | 否   |
+| enableWindowDim      | Boolean       | 是否启用背景遮罩                                                 | true                                  | 否   |
+| onDismissRequest     | (() -> Unit)? | 用户点击外部或按返回键时回调; 为 null 时用户无法关闭             | null                                  | 否   |
+| onDismissFinished    | (() -> Unit)? | 隐藏动画完成后回调                                               | null                                  | 否   |
 
 ### LoadingDialogDefaults 对象
 

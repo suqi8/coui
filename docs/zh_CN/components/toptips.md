@@ -67,6 +67,14 @@ TopTips(
 | IconSpacing     | Dp   | 8.dp   | coui_toptips_view_title_start_margin |
 | TextMinHeight   | Dp   | 20.dp  | coui_toptips_view_title_min_height   |
 
+#### 方法
+
+| 方法名            | 类型          | 说明                                                      |
+| ----------------- | ------------- | --------------------------------------------------------- |
+| textStyle()       | TextStyle     | 文案的默认文本样式（14sp，`coui_toptips_view_default_text_size`） |
+| actionTextStyle() | TextStyle     | 行动按钮的默认文本样式（14sp Medium）                     |
+| topTipsColors()   | TopTipsColors | 创建默认颜色配置（见下）                                  |
+
 ### `topTipsColors()` 工厂
 
 | 参数             | 类型  | 默认值                                    | COUI 属性              |

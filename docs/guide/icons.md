@@ -1,10 +1,10 @@
 # Icon System
 
-Miuix provides a rich built-in icon system that meets the primary design needs of most applications. These icons are available in five weights: Light, Normal, Regular, Medium, and Demibold.
+COUI provides a rich built-in icon system that meets the primary design needs of most applications. These icons are available in five weights: Light, Normal, Regular, Medium, and Demibold.
 
 ## Installation
 
-The basic `coui-ui` library includes only a small set of essential icons. To access the full collection of Miuix icons, you need to add the `coui-icons` dependency to your project.
+The basic `coui-ui` library includes only a small set of essential icons. To access the full collection of COUI icons, you need to add the `coui-icons` dependency to your project.
 
 ```kotlin
 // build.gradle.kts
@@ -17,7 +17,7 @@ commonMain.dependencies {
 
 ## Usage
 
-To use Miuix icons in your project, first import them correctly:
+To use COUI icons in your project, first import them correctly:
 
 ```kotlin
 import androidx.compose.foundation.layout.size
@@ -57,7 +57,7 @@ Icon(
 
 ## Icon Weights
 
-Miuix icons support five weights, matching the named instances of the source font `misymbol_vf.ttf`:
+COUI icons support five weights, matching the named instances of the source font `misymbol_vf.ttf`:
 
 - `COUIIcons.Light`: Light weight icons (wght=250)
 - `COUIIcons.Normal`: Lighter-than-regular icons (wght=305)
@@ -69,7 +69,7 @@ Miuix icons support five weights, matching the named instances of the source fon
 
 ### Basic Icons
 
-Basic icons include commonly used basic UI elements such as arrows and checkmarks. These icons are also used in Miuix's own components. Below is the complete list:
+Basic icons include commonly used basic UI elements such as arrows and checkmarks. These icons are also used in COUI's own components. Below is the complete list:
 
 | Icon Name | Light | Normal | Regular | Medium | Demibold |
 |---|---|---|---|---|---|

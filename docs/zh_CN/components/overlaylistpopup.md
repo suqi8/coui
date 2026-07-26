@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayListPopup
 
-`OverlayListPopup` 是 Miuix 中的弹出列表组件，用于显示包含多个选项的弹出菜单。它提供了一个轻量级的、浮动的临时列表，适用于各种下拉菜单、上下文菜单等场景。
+`OverlayListPopup` 是 COUI 中的弹出列表组件，用于显示包含多个选项的弹出菜单。它提供了一个轻量级的、浮动的临时列表，适用于各种下拉菜单、上下文菜单等场景。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=overlayListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -26,6 +26,9 @@ popupHost: COUIPopupHost
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.DropdownImpl
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 ```
 
 ## 基本用法
@@ -35,18 +38,18 @@ OverlayListPopup 组件可用于创建简单的下拉菜单：
 ```kotlin
 var showPopup by remember { mutableStateOf(false) }
 var selectedIndex by remember { mutableStateOf(0) }
-val items = listOf("选项 1", "选项 2", "选项 3")
+val items = listOf("Option 1", "Option 2", "Option 3")
 
 Scaffold {
     Box {
         TextButton(
-            text = "点击显示菜单",
+            text = "Click to show menu",
             onClick = { showPopup = true }
         )
         OverlayListPopup(
             show = showPopup,
             alignment = PopupPositionProvider.Align.Start,
-            onDismissRequest = { showPopup = false } // 关闭弹窗菜单
+            onDismissRequest = { showPopup = false } // Close the popup menu
         ) {
             ListPopupColumn {
                 items.forEachIndexed { index, string ->
@@ -57,7 +60,7 @@ Scaffold {
                         index = index,
                         onSelectedIndexChange = {
                             selectedIndex = index
-                            showPopup = false // 关闭弹窗菜单
+                            showPopup = false // Close the popup menu
                         }
                     )
                 }
@@ -78,11 +81,11 @@ var showPopup by remember { mutableStateOf(false) }
 
 OverlayListPopup(
     show = showPopup,
-    onDismissRequest = { showPopup = false }, // 关闭弹窗菜单
+    onDismissRequest = { showPopup = false }, // Close the popup menu
     alignment = PopupPositionProvider.Align.Start
 ) {
     ListPopupColumn {
-        // 自定义内容
+        // Custom content
     }
 }
 ```
@@ -94,14 +97,35 @@ var showPopup by remember { mutableStateOf(false) }
 
 OverlayListPopup(
     show = showPopup,
-    onDismissRequest = { showPopup = false } // 关闭弹窗菜单
-    enableWindowDim = false // 禁用变暗层
+    onDismissRequest = { showPopup = false }, // Close the popup menu
+    enableWindowDim = false // Disable dimming layer
 ) {
     ListPopupColumn {
-        // 自定义内容
+        // Custom content
     }
 }
 ```
+
+### 上下文菜单定位
+
+除默认的下拉定位器外，`ListPopupDefaults.ContextMenuPositionProvider` 会将弹窗锚定到锚点的某个角，配合角落对齐方式（`TopStart` / `TopEnd` / `BottomStart` / `BottomEnd`）使用：
+
+```kotlin
+var showPopup by remember { mutableStateOf(false) }
+
+OverlayListPopup(
+    show = showPopup,
+    popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+    alignment = PopupPositionProvider.Align.TopEnd,
+    onDismissRequest = { showPopup = false }
+) {
+    ListPopupColumn {
+        // Custom content
+    }
+}
+```
+
+你也可以通过 `ListPopupDefaults.dropdownPositionProvider(verticalMargin, horizontalMargin)` 构建带自定义边距的下拉定位器。
 
 ## 属性
 
@@ -133,7 +157,7 @@ OverlayListPopup(
 
 ```kotlin
 DropdownImpl(
-    text = "禁用选项",
+    text = "Disabled option",
     optionSize = items.size,
     isSelected = false,
     index = 1,
@@ -141,6 +165,8 @@ DropdownImpl(
     onSelectedIndexChange = {}
 )
 ```
+
+基于文本的重载：
 
 | 属性名                | 类型           | 说明               | 默认值                            |
 | --------------------- | -------------  | ------------------ | --------------------------------- |
@@ -150,7 +176,24 @@ DropdownImpl(
 | index                 | Int            | 此选项的索引       | -                                 |
 | dropdownColors        | DropdownColors | 选项颜色配置       | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | 此选项是否可点击   | true                              |
+| dialogMode            | Boolean        | 是否以对话框模式显示此行 | false                        |
 | onSelectedIndexChange | (Int) -> Unit  | 点击此选项时的回调 | -                                 |
+
+基于条目的重载接受 `DropdownItem`（可携带 `icon` 与 `summary`），并暴露额外的布局标志：
+
+| 属性名                | 类型           | 说明                                                                       | 默认值                            |
+| --------------------- | -------------- | -------------------------------------------------------------------------- | --------------------------------- |
+| item                  | DropdownItem   | 当前选项的条目                                                             | -                                 |
+| optionSize            | Int            | 选项总数                                                                   | -                                 |
+| isSelected            | Boolean        | 此选项是否被选中                                                           | -                                 |
+| index                 | Int            | 此选项的索引                                                               | -                                 |
+| dropdownColors        | DropdownColors | 选项颜色配置                                                               | DropdownDefaults.dropdownColors() |
+| enabled               | Boolean        | 此选项是否可点击                                                           | item.enabled                      |
+| dialogMode            | Boolean        | 是否以对话框模式显示此行                                                   | false                             |
+| hasSubmenu            | Boolean        | 为 true 时此行作为子菜单触发行：尾部显示 chevron 而非选中对勾              | false                             |
+| isFirst               | Boolean        | 此行是否为整个弹窗的第一行（控制弹窗模式下更大的顶部内边距）               | index == 0                        |
+| isLast                | Boolean        | 此行是否为整个弹窗的最后一行（控制弹窗模式下更大的底部内边距）             | index == optionSize - 1           |
+| onSelectedIndexChange | (Int) -> Unit  | 点击此选项时的回调                                                         | -                                 |
 
 ### PopupPositionProvider.Align
 
@@ -162,3 +205,23 @@ DropdownImpl(
 | TopEnd      | 将弹窗对齐到锚点的顶部结束端 |
 | BottomStart | 将弹窗对齐到锚点的底部起始端 |
 | BottomEnd   | 将弹窗对齐到锚点的底部结束端 |
+
+### ListPopupDefaults 对象
+
+ListPopupDefaults 对象提供弹窗的默认值与定位器。
+
+#### 常量
+
+| 常量名         | 类型 | 说明                                   | 值     |
+| -------------- | ---- | -------------------------------------- | ------ |
+| MinWidth       | Dp   | 弹窗的默认最小宽度                     | 178.dp |
+| MaxWidth       | Dp   | `ListPopupColumn` 使用的最大宽度上限   | 232.dp |
+| MinPopupHeight | Dp   | 弹窗测量时占用的最小高度               | 50.dp  |
+
+#### 定位器
+
+| 名称                                                | 类型                  | 说明                                                                 |
+| --------------------------------------------------- | --------------------- | -------------------------------------------------------------------- |
+| DropdownPositionProvider                            | PopupPositionProvider | 将弹窗锚定在锚点下方（空间不足时上方），用于下拉菜单                 |
+| ContextMenuPositionProvider                         | PopupPositionProvider | 将弹窗锚定到锚点的某个角，用于上下文菜单                             |
+| dropdownPositionProvider(verticalMargin, horizontalMargin) | PopupPositionProvider | 创建带自定义边距的下拉定位器的工厂函数（默认：垂直 8.dp，水平 0.dp） |

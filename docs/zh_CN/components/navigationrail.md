@@ -1,6 +1,6 @@
 # NavigationRail
 
-`NavigationRail` 是 Miuix 中的侧边导航组件，适用于宽屏设备。提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
+`NavigationRail` 是 COUI 中的侧边导航组件，适用于宽屏设备。提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=navigationRail" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -20,7 +20,7 @@ NavigationRail 组件可用于创建侧边导航菜单：
 
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
-val items = listOf("主页", "个人", "设置")
+val items = listOf("Home", "Profile", "Settings")
 val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Row {
@@ -34,7 +34,7 @@ Row {
             )
         }
     }
-    // 内容区域
+    // Content area
 }
 ```
 
@@ -78,13 +78,13 @@ NavigationRailDefaults 对象提供了 NavigationRail 和 NavigationRailItem 组
 
 | 常量名                 | 类型     | 说明                         | 默认值 |
 | ---------------------- | -------- | ---------------------------- | ------ |
-| MinWidth               | Dp       | 导航栏最小宽度               | 80.dp  |
+| MinWidth               | Dp       | 导航栏最小宽度               | 72.dp  |
 | VerticalPadding        | Dp       | 内容垂直内边距               | 24.dp  |
 | HeaderSpacing          | Dp       | 头部后的间距                 | 24.dp  |
-| IconSize               | Dp       | 图标尺寸                     | 28.dp  |
-| IconTextSpacing        | Dp       | 图标与文字间距               | 4.dp   |
+| IconSize               | Dp       | 图标尺寸                     | 24.dp  |
+| IconTextSpacing        | Dp       | 图标与文字间距               | 2.dp   |
 | ItemVerticalPadding    | Dp       | 每个项目的垂直内边距         | 12.dp  |
-| LabelFontSize          | TextUnit | 标签字号                     | 12.sp  |
+| LabelFontSize          | TextUnit | 标签字号                     | 10.sp  |
 | TextOnlyFontSize       | TextUnit | TextOnly 模式字号            | 14.sp  |
 | TextOnlyVerticalPadding| Dp       | TextOnly 模式垂直内边距      | 4.dp   |
 | SelectedPressedAlpha   | Float    | 选中项按压时的透明度         | 0.5f   |
@@ -99,3 +99,59 @@ NavigationRailDefaults 对象提供了 NavigationRail 和 NavigationRailItem 组
 | IconOnly              | 仅显示图标。                            |
 | TextOnly              | 仅显示文本。                            |
 | IconWithSelectedLabel | 始终显示图标，仅在选中时显示文本。      |
+
+设置在 `NavigationRail` 上的显示模式会通过 `LocalNavigationRailDisplayMode` 组合局部值传递给各导航项。
+
+## 进阶用法
+
+### 显示模式
+
+```kotlin
+NavigationRail(
+    // IconAndText (default) / IconOnly / TextOnly / IconWithSelectedLabel
+    mode = NavigationRailDisplayMode.IconWithSelectedLabel
+) {
+    // ... items ...
+}
+```
+
+### 使用头部内容
+
+```kotlin
+NavigationRail(
+    header = {
+        // Usually a FloatingActionButton or a logo
+        FloatingActionButton(
+            onClick = { /* Handle click */ }
+        ) {
+            Icon(
+                imageVector = COUIIcons.Add,
+                contentDescription = "Add"
+            )
+        }
+    }
+) {
+    // ... items ...
+}
+```
+
+### 自定义颜色和宽度
+
+```kotlin
+NavigationRail(
+    color = COUITheme.colorScheme.background,
+    minWidth = 96.dp
+) {
+    // ... items ...
+}
+```
+
+### 无分割线
+
+```kotlin
+NavigationRail(
+    showDivider = false
+) {
+    // ... items ...
+}
+```

@@ -1,6 +1,6 @@
 # Text Styles
 
-This page documents all text styles provided by Miuix, based on the actual implementation.
+This page documents all text styles provided by COUI, based on the actual implementation.
 
 ## Using Text Styles
 

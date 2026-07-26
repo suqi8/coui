@@ -36,8 +36,8 @@ fun ColorPickerDemo() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val miuixColor = COUITheme.colorScheme.primary
-            var selectedColor by remember { mutableStateOf(miuixColor) }
+            val themeColor = COUITheme.colorScheme.primary
+            var selectedColor by remember { mutableStateOf(themeColor) }
             ColorPicker(
                 color = selectedColor,
                 onColorChanged = { selectedColor = it },

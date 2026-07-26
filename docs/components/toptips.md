@@ -67,6 +67,14 @@ TopTips(
 | IconSpacing     | Dp   | 8.dp          | coui_toptips_view_title_start_margin |
 | TextMinHeight   | Dp   | 20.dp         | coui_toptips_view_title_min_height   |
 
+#### Methods
+
+| Method Name       | Type          | Description                                                                    |
+| ----------------- | ------------- | ------------------------------------------------------------------------------ |
+| textStyle()       | TextStyle     | Default text style of the message (14sp, `coui_toptips_view_default_text_size`) |
+| actionTextStyle() | TextStyle     | Default text style of the action button (14sp medium)                          |
+| topTipsColors()   | TopTipsColors | Creates the default color configuration (see below)                            |
+
 ### `topTipsColors()` factory
 
 | Parameter        | Type  | Default                                        | COUI Attribute        |

@@ -1,8 +1,6 @@
-#! /usr/bin/env markdown
-
 # Snackbar
 
-`Snackbar` 是 Miuix 中用于在屏幕底部展示简短提示信息的轻量反馈组件。它可以附带操作按钮（例如“撤销”），并支持多种显示时长。
+`Snackbar` 是 COUI 中用于在屏幕底部展示简短提示信息的轻量反馈组件。它可以附带操作按钮（例如“撤销”），并支持多种显示时长。
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=snackbar" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -201,6 +199,25 @@ enum class SnackbarResult {
 ```
 
 ## 进阶用法
+
+### 带前置图标的 Snackbar
+
+通过 `SnackbarHost` 的自定义 `content` 插槽，为内置 `Snackbar` 传入图标：
+
+```kotlin
+SnackbarHost(state = snackbarHostState) { data ->
+    Snackbar(
+        data = data,
+        icon = {
+            Icon(
+                imageVector = COUIIcons.Basic.Check,
+                contentDescription = null,
+                tint = COUITheme.colorScheme.primary
+            )
+        }
+    )
+}
+```
 
 ### 带操作按钮的 Snackbar
 

@@ -1,6 +1,6 @@
 # FloatingActionButton
 
-`FloatingActionButton` is a floating button component in Miuix, typically used to display the most important or frequently used actions on a page. It usually floats above the interface with a prominent visual effect for quick user access.
+`FloatingActionButton` is a floating button component in COUI, typically used to display the most important or frequently used actions on a page. It usually floats above the interface with a prominent visual effect for quick user access.
 
 This component is typically used in conjunction with the `Scaffold` component to maintain consistent layout and behavior across different pages in the application.
 

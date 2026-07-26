@@ -119,6 +119,36 @@ Scaffold {
 }
 ```
 
+## Items with Icons and Summaries
+
+Each `DropdownItem` can display a leading icon and a summary line below its text. The `icon` lambda receives a pre-sized `Modifier` that should be applied to the icon composable.
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(
+            text = "Rename",
+            summary = "Change the display name",
+            icon = { modifier ->
+                Icon(
+                    modifier = modifier,
+                    imageVector = COUIIcons.Rename,
+                    contentDescription = null,
+                )
+            },
+            onClick = { /* handle action */ },
+        ),
+        DropdownItem(text = "Delete", onClick = { /* handle action */ }),
+    )
+)
+
+Scaffold {
+    OverlayIconDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.More, contentDescription = "More")
+    }
+}
+```
+
 ## Component States
 
 ### Disabled State
@@ -133,6 +163,25 @@ OverlayIconDropdownMenu(
 ```
 
 The menu is also implicitly disabled when no `DropdownEntry` contains any items.
+
+### Disabled Items
+
+Individual items can be disabled via `DropdownItem.enabled`, and an entire group via `DropdownEntry.enabled`. Disabled rows are grayed out and ignore clicks.
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Available option"),
+        DropdownItem(text = "Unavailable option", enabled = false),
+    )
+)
+
+Scaffold {
+    OverlayIconDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
+    }
+}
+```
 
 ## Properties
 

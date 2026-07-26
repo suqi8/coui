@@ -1,6 +1,6 @@
 # Icon
 
-`Icon` 是 Miuix 中的基础图标组件，用于在界面中展示各种矢量图标、位图图标或自定义绘制内容。它提供了多种绘制图标的方式，适应不同的图标资源类型。
+`Icon` 是 COUI 中的基础图标组件，用于在界面中展示各种矢量图标、位图图标或自定义绘制内容。它提供了多种绘制图标的方式，适应不同的图标资源类型。
 
 `tint` 的默认值是 `LocalContentColor.current`，因此图标会跟随父级组件（如 `Button`、`Surface`）提供的内容颜色。若需要覆盖该颜色，传入显式的 `Color`（例如 `COUITheme.colorScheme.onBackground`）；若想保留资源本身的颜色而不做着色，传入 `Color.Unspecified`。
 
@@ -29,14 +29,14 @@ Icon(
 
 ## 图标类型
 
-Miuix Icon 支持多种类型的图标资源：
+COUI Icon 支持多种类型的图标资源：
 
 ### 矢量图标（Vector Icon）
 
 ```kotlin
 Icon(
     imageVector = COUIIcons.Settings,
-    contentDescription = "设置图标"
+    contentDescription = "Settings Icon"
 )
 ```
 
@@ -46,7 +46,7 @@ Icon(
 val bitmap = ImageBitmap(...)
 Icon(
     bitmap = bitmap,
-    contentDescription = "位图图标"
+    contentDescription = "Bitmap Icon"
 )
 ```
 
@@ -57,7 +57,7 @@ Icon(
 ```kotlin
 Icon(
     painter = painterResource(Res.drawable.ic_custom),
-    contentDescription = "自定义图标"
+    contentDescription = "Custom Icon"
 )
 ```
 
@@ -68,7 +68,7 @@ Icon(
 ```kotlin
 Icon(
     imageVector = COUIIcons.Contacts,
-    contentDescription = "人像图标",
+    contentDescription = "Personal Icon",
     tint = Color.Red
 )
 ```
@@ -79,7 +79,7 @@ Icon(
 Icon(
     imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites",
-    tint = Color.Unspecified // 关闭着色，保留图标自身颜色
+    tint = Color.Unspecified // Disable tinting and keep the source colors
 )
 ```
 
@@ -139,14 +139,14 @@ Icon(
 
 ```kotlin
 Button(
-    onClick = { /* 处理点击事件 */ }
+    onClick = { /* Handle click event */ }
 ) {
     Icon(
         imageVector = COUIIcons.Save,
-        contentDescription = "下载图标"
+        contentDescription = "Download Icon"
     )
     Spacer(modifier = Modifier.width(8.dp))
-    Text("下载")
+    Text("Download")
 }
 ```
 
@@ -155,7 +155,7 @@ Button(
 ```kotlin
 Icon(
     imageVector = COUIIcons.Info,
-    contentDescription = "警告图标",
+    contentDescription = "Warning Icon",
     tint = Color(0xFFFFA500),
     modifier = Modifier
         .size(48.dp)
@@ -169,7 +169,7 @@ Icon(
 
 ### 动态变化图标
 
-需要点击交互时，用 `IconButton` 包裹 `Icon`，以获得 Miuix 风格的触摸反馈：
+需要点击交互时，用 `IconButton` 包裹 `Icon`，以获得 COUI 风格的触摸反馈：
 
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }
@@ -177,7 +177,7 @@ var isSelected by remember { mutableStateOf(false) }
 IconButton(onClick = { isSelected = !isSelected }) {
     Icon(
         imageVector = if (isSelected) COUIIcons.FavoritesFill else COUIIcons.Favorites,
-        contentDescription = if (isSelected) "喜欢" else "不喜欢",
+        contentDescription = "Favorites",
     )
 }
 ```

@@ -7,7 +7,7 @@
 在 `build.gradle.kts` 中添加依赖：
 
 ```kotlin
-implementation("top.yukonga.miuix.kmp:coui-nav:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-nav:<version>")
 ```
 
 为路由层级标注 `@Serializable`，使返回栈能在配置变更与进程死亡后保存与恢复。
@@ -16,10 +16,10 @@ implementation("top.yukonga.miuix.kmp:coui-nav:<version>")
 
 ```kotlin
 import kotlinx.serialization.Serializable
-import top.yukonga.miuix.kmp.nav.core.NavDisplay
-import top.yukonga.miuix.kmp.nav.core.NavKey
-import top.yukonga.miuix.kmp.nav.core.rememberNavBackStack
-import top.yukonga.miuix.kmp.nav.transition.NavTransitions
+import io.github.suqi8.coui.kmp.nav.core.NavDisplay
+import io.github.suqi8.coui.kmp.nav.core.NavKey
+import io.github.suqi8.coui.kmp.nav.core.rememberNavBackStack
+import io.github.suqi8.coui.kmp.nav.transition.NavTransitions
 
 @Serializable
 sealed interface Route : NavKey {
@@ -72,7 +72,7 @@ reconciler 把每次变化分类为 `Push` / `Pop` / `MultiPush(n)` / `MultiPop(
 
 | 预设 | 描述 |
 | :-- | :-- |
-| `MiuixDefault`（默认） | 全宽滑动 + 四分之一宽视差 + 被覆盖层轻微透明衰减 |
+| `COUIDefault`（默认） | 全宽滑动 + 四分之一宽视差 + 被覆盖层轻微透明衰减 |
 | `Modal` | 上滑、下层保留可见 |
 | `None` | 瞬时无动画 |
 
@@ -81,7 +81,7 @@ reconciler 把每次变化分类为 `Push` / `Pop` / `MultiPush(n)` / `MultiPop(
 在 `NavDisplay(transition = ...)` 上设全局默认，并用 `entry(transition = ...)` 按路由覆盖：
 
 ```kotlin
-NavDisplay(backStack, transition = NavTransitions.MiuixDefault) {
+NavDisplay(backStack, transition = NavTransitions.COUIDefault) {
     entry<Route.Home> { HomeScreen() }
     entry<Route.Detail>(transition = NavTransitions.Modal) { DetailScreen(it.id) }
 }
@@ -104,7 +104,7 @@ NavDisplay(backStack, transition = NavTransitions.MiuixDefault) {
 一旦手势认领成功，它会在本次手势余下过程中独占指针（消费两个轴向），因此跨轴的轻微滑动既不会抢走它、也不会中途取消；在手指抬起前，页面内的点击 / 滚动都被屏蔽。可按路由设置或覆盖——包括用 `NavSwipeDirection.None` 让某路由仅按钮关闭：
 
 ```kotlin
-import top.yukonga.miuix.kmp.nav.transition.NavSwipeDirection
+import io.github.suqi8.coui.kmp.nav.transition.NavSwipeDirection
 
 NavDisplay(backStack) {
     // 在该路由上开启 LTR 返回滑动（默认关闭）。
@@ -123,7 +123,7 @@ NavDisplay(backStack) {
 读取原始 float 深度，自由写 `graphicsLayer`。该 block 在延迟读取的图层内执行，读 `relativeDepth` 不触发重组：
 
 ```kotlin
-import top.yukonga.miuix.kmp.nav.transition.navGraphicsTransition
+import io.github.suqi8.coui.kmp.nav.transition.navGraphicsTransition
 
 val myTransition = navGraphicsTransition { scope ->
     val d = scope.relativeDepth          // animatedTop - index
@@ -266,7 +266,7 @@ NavDisplay(
         cornerClipRadius = rememberNavSystemCornerRadius(),
         cornerClipMode = NavCornerClipMode.All,
         dimAmount = 0.32f,
-        backdropColor = MiuixTheme.colorScheme.background,
+        backdropColor = COUITheme.colorScheme.background,
     ),
 ) { /* ... */ }
 ```

@@ -8,7 +8,7 @@ This library is experimental, and APIs may change in future versions without not
 
 ## Adding Dependencies
 
-To use Miuix in your project, follow these steps to add dependencies:
+To use COUI in your project, follow these steps to add dependencies:
 
 ### Gradle (Kotlin DSL)
 
@@ -25,7 +25,7 @@ repositories {
 
 3. Add dependencies to your project's `build.gradle.kts`:
 
-Miuix is composed of several modules that can be used independently:
+COUI is composed of several modules that can be used independently:
 
 | Module             | Description                                          |
 | ------------------ | ---------------------------------------------------- |
@@ -125,7 +125,7 @@ implementation("io.github.suqi8.coui.kmp:coui-squircle-js:<version>")
 
 ## Basic Usage
 
-### Applying the Miuix Theme
+### Applying the COUI Theme
 
 ```kotlin
 @Composable
@@ -141,7 +141,7 @@ fun AppTheme(
 }
 ```
 
-### Using the Miuix Scaffold
+### Using the COUI Scaffold
 
 ```kotlin
 Scaffold(

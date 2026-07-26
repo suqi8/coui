@@ -134,8 +134,34 @@ OverlayIconCascadingDropdownMenu(
 
 The menu is also implicitly disabled when no `DropdownEntry` contains any items.
 
+### Disabled Items
+
+Individual items can be disabled via `DropdownItem.enabled`, and an entire group via `DropdownEntry.enabled`. A disabled submenu trigger is grayed out and does not expand its `children`.
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(
+            text = "View mode",
+            enabled = false,
+            children = listOf(
+                DropdownItem(text = "Group by date"),
+                DropdownItem(text = "Compact"),
+            ),
+        ),
+        DropdownItem(text = "Refresh", onClick = { /* handle action */ }),
+    )
+)
+
+Scaffold {
+    OverlayIconCascadingDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
+    }
+}
+```
+
 ::: tip Cascading Depth
-Cascading depth is capped at 2. Items at the secondary level cannot have their own `children`; deeper trees are silently ignored.
+Cascading depth is capped at 2. Items at the secondary level cannot have their own `children`; deeper trees are ignored, and a warning is logged once when such a submenu is expanded.
 :::
 
 ## Properties

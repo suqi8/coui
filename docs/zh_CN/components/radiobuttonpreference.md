@@ -1,6 +1,6 @@
 # RadioButtonPreference
 
-`RadioButtonPreference` 是 Miuix 中的单选按钮组件，提供标题、摘要和单选按钮控件。它支持点击交互，常用于单选设置和选择列表。
+`RadioButtonPreference` 是 COUI 中的单选按钮组件，提供标题、摘要和单选按钮控件。它支持点击交互，常用于单选设置和选择列表。
 
 <div style="position: relative; height: 293px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=radioButtonPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -79,13 +79,35 @@ RadioButtonPreference(
 | summary           | String?                         | 摘要描述                     | null                                      | 否       |
 | summaryColor      | BasicComponentColors            | 摘要文本颜色配置             | BasicComponentDefaults.summaryColor()     | 否       |
 | radioButtonColors | RadioButtonColors               | 单选按钮控件颜色配置         | RadioButtonDefaults.radioButtonColors()   | 否       |
-| endActions        | @Composable RowScope.() -> Unit | 自定义末尾内容               | {}                                        | 否       |
+| startAction         | @Composable (() -> Unit)?          | 自定义起始内容             | null                                      | 否       |
+| endActions          | @Composable (RowScope.() -> Unit)? | 自定义末尾内容             | null                                      | 否       |
+| radioButtonLocation | RadioButtonLocation                | 单选按钮控件的位置         | RadioButtonLocation.Start                 | 否       |
 | bottomAction      | @Composable (() -> Unit)?       | 自定义底部内容               | null                                      | 否       |
-| holdDownState     | Boolean                         | 组件是否处于按下状态         | false                                     | 否       |
 | insideMargin      | PaddingValues                   | 内部内容边距                 | BasicComponentDefaults.InsideMargin       | 否       |
+| holdDownState     | Boolean                         | 组件是否处于按下状态         | false                                     | 否       |
 | enabled           | Boolean                         | 组件是否可交互               | true                                      | 否       |
 
+### RadioButtonLocation 选项
+
+| 选项  | 说明                             |
+| ----- | -------------------------------- |
+| Start | 单选按钮位于起始位置（默认）     |
+| End   | 单选按钮位于末尾位置             |
+
 ## 进阶用法
+
+### 单选按钮位于末尾
+
+```kotlin
+var selectedIndex by remember { mutableIntStateOf(0) }
+
+RadioButtonPreference(
+    title = "选项 A",
+    selected = selectedIndex == 0,
+    onClick = { selectedIndex = 0 },
+    radioButtonLocation = RadioButtonLocation.End
+)
+```
 
 ### 自定义颜色
 

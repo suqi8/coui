@@ -1,6 +1,6 @@
 # TextField
 
-`TextField` is a basic input component in Miuix for receiving text input from users, styled after ColorOS COUIEditText. By default it renders the ColorOS Settings dialog form: bare 16sp text over a hairline underline that turns into an expanding accent line when focused, with the label acting as a plain placeholder. Stroke-only rectangle and fully undecorated (card) forms, an opt-in floating label, error shake, character counter, clear button and password toggle are also available.
+`TextField` is a basic input component in COUI for receiving text input from users, styled after ColorOS COUIEditText. By default it renders the ColorOS Settings dialog form: bare 16sp text over a hairline underline that turns into an expanding accent line when focused, with the label acting as a plain placeholder. Stroke-only rectangle and fully undecorated (card) forms, an opt-in floating label, error shake, character counter, clear button and password toggle are also available.
 
 <div style="position: relative; height: 340px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=textField" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -114,6 +114,25 @@ TextField(
     label = "Rectangle style",
     backgroundMode = TextFieldMode.Rectangle
 )
+```
+
+### Undecorated (None) Mode
+
+`TextFieldMode.None` removes all background decoration — useful when the surrounding
+container (such as a white input card) already provides the visual frame:
+
+```kotlin
+var text by remember { mutableStateOf("") }
+
+Card {
+    TextField(
+        value = text,
+        onValueChange = { text = it },
+        label = "Bare input",
+        backgroundMode = TextFieldMode.None,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+}
 ```
 
 ### Focus Line Only
@@ -293,7 +312,7 @@ The TextFieldDefaults object provides default values for TextField components.
 
 #### `textFieldColors()` factory
 
-Builds a [TextFieldColors] instance. Override any subset; unspecified params fall back to the Miuix theme defaults.
+Builds a [TextFieldColors] instance. Override any subset; unspecified params fall back to the COUI theme defaults.
 
 | Parameter        | Type  | Default                                          |
 | ---------------- | ----- | ------------------------------------------------ |

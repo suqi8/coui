@@ -1,8 +1,6 @@
-#! /usr/bin/env markdown
-
 # Snackbar
 
-`Snackbar` is a lightweight feedback component in Miuix used to display brief messages at the bottom of the screen. It can optionally provide actions such as “Undo” and supports different display durations.
+`Snackbar` is a lightweight feedback component in COUI used to display brief messages at the bottom of the screen. It can optionally provide actions such as “Undo” and supports different display durations.
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=snackbar" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -20,7 +18,7 @@ import io.github.suqi8.coui.kmp.basic.SnackbarResult
 
 ## Basic Usage
 
-The Snackbar is usually used together with `Scaffold`. You create a `SnackbarHostState`, pass it to `SnackbarHost`, and then call `showSnackbar` to display messages:a
+The Snackbar is usually used together with `Scaffold`. You create a `SnackbarHostState`, pass it to `SnackbarHost`, and then call `showSnackbar` to display messages:
 
 ```kotlin
 val snackbarHostState = remember { SnackbarHostState() }
@@ -201,6 +199,25 @@ enum class SnackbarResult {
 ```
 
 ## Advanced Usage
+
+### Snackbar with leading icon
+
+Pass a custom `content` lambda to `SnackbarHost` to render the built-in `Snackbar` with an icon:
+
+```kotlin
+SnackbarHost(state = snackbarHostState) { data ->
+    Snackbar(
+        data = data,
+        icon = {
+            Icon(
+                imageVector = COUIIcons.Basic.Check,
+                contentDescription = null,
+                tint = COUITheme.colorScheme.primary
+            )
+        }
+    )
+}
+```
 
 ### Snackbar with action
 

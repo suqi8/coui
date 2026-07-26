@@ -38,9 +38,9 @@ var sortIndex by remember { mutableStateOf(0) }
 var viewIndex by remember { mutableStateOf(0) }
 var filterIndex by remember { mutableStateOf(0) }
 
-val sortLabels = listOf("按拍摄日期排序", "按添加日期排序")
-val viewLabels = listOf("按日期分组", "紧凑视图")
-val filterLabels = listOf("全部内容", "相机相册")
+val sortLabels = listOf("Sort by capture date", "Sort by date added")
+val viewLabels = listOf("Group by date", "Compact")
+val filterLabels = listOf("All items", "Camera album")
 
 val entries = listOf(
     DropdownEntry(
@@ -55,7 +55,7 @@ val entries = listOf(
     DropdownEntry(
         items = listOf(
             DropdownItem(
-                text = "查看模式",
+                text = "View mode",
                 children = viewLabels.mapIndexed { idx, label ->
                     DropdownItem(
                         text = label,
@@ -65,7 +65,7 @@ val entries = listOf(
                 },
             ),
             DropdownItem(
-                text = "筛选",
+                text = "Filter",
                 children = filterLabels.mapIndexed { idx, label ->
                     DropdownItem(
                         text = label,
@@ -81,16 +81,16 @@ val entries = listOf(
 Scaffold(
     topBar = {
         SmallTopAppBar(
-            title = "图库",
+            title = "Library",
             actions = {
                 OverlayIconCascadingDropdownMenu(entries = entries) {
-                    Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
+                    Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
                 }
             }
         )
     }
 ) { padding ->
-    // 页面内容
+    // page content
 }
 ```
 
@@ -102,19 +102,19 @@ Scaffold(
 val entry = DropdownEntry(
     items = listOf(
         DropdownItem(
-            text = "查看模式",
+            text = "View mode",
             children = listOf(
-                DropdownItem(text = "按日期分组", onClick = { /* ... */ }),
-                DropdownItem(text = "紧凑视图", onClick = { /* ... */ }),
+                DropdownItem(text = "Group by date", onClick = { /* ... */ }),
+                DropdownItem(text = "Compact", onClick = { /* ... */ }),
             ),
         ),
-        DropdownItem(text = "刷新", onClick = { /* ... */ }),
+        DropdownItem(text = "Refresh", onClick = { /* ... */ }),
     ),
 )
 
 Scaffold {
     OverlayIconCascadingDropdownMenu(entry = entry) {
-        Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
+        Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
     }
 }
 ```
@@ -125,17 +125,43 @@ Scaffold {
 
 ```kotlin
 OverlayIconCascadingDropdownMenu(
-    entry = DropdownEntry(items = listOf(DropdownItem(text = "选项 1"))),
+    entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false,
 ) {
-    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "更多")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 
 当所有 `DropdownEntry` 都不包含任何条目时，菜单也会被隐式禁用。
 
+### 禁用部分选项
+
+通过 `DropdownItem.enabled` 可以禁用单个选项，通过 `DropdownEntry.enabled` 可以禁用整个分组。被禁用的子菜单触发行会置灰，且不会展开其 `children`。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(
+            text = "View mode",
+            enabled = false,
+            children = listOf(
+                DropdownItem(text = "Group by date"),
+                DropdownItem(text = "Compact"),
+            ),
+        ),
+        DropdownItem(text = "Refresh", onClick = { /* handle action */ }),
+    )
+)
+
+Scaffold {
+    OverlayIconCascadingDropdownMenu(entry = entry) {
+        Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
+    }
+}
+```
+
 ::: tip 级联深度
-级联深度上限为 2。二级菜单中的项不会再处理自己的 `children`；更深层的子树会被静默忽略。
+级联深度上限为 2。二级菜单中的项不会再处理自己的 `children`；更深层的子树会被忽略，并在展开这类子菜单时输出一次警告日志。
 :::
 
 ## 属性

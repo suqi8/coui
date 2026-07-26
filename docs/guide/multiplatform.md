@@ -1,10 +1,10 @@
 # Platform Support
 
-Miuix is a Compose Multiplatform UI framework that supports multiple platforms, allowing you to build applications for different platforms using the same codebase.
+COUI is a Compose Multiplatform UI framework that supports multiple platforms, allowing you to build applications for different platforms using the same codebase.
 
 ## Supported Platforms
 
-Currently, Miuix supports the following platforms:
+Currently, COUI supports the following platforms:
 
 - **Android**: For Android mobile devices
 - **iOS**: For iPhone and iPad devices

@@ -1,6 +1,6 @@
 # 主题系统
 
-Miuix 提供了一套完整的主题系统，使您能够轻松地在整个应用中保持一致的设计风格。整个主题系统由颜色方案和文本样式组成。
+COUI 提供了一套完整的主题系统，使您能够轻松地在整个应用中保持一致的设计风格。整个主题系统由颜色方案和文本样式组成。
 
 ## 使用 COUITheme
 
@@ -99,7 +99,7 @@ fun App() {
 
 ## ThemeController
 
-`ThemeController` 管理当前 Miuix 主题的配色方案。
+`ThemeController` 管理当前 COUI 主题的配色方案。
 
 ### ThemeController 属性
 

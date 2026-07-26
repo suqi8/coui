@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayBottomSheet
 
-`OverlayBottomSheet` is a bottom sheet component in Miuix that slides up from the bottom of the screen. Supports swipe-to-dismiss gestures and custom styling.
+`OverlayBottomSheet` is a bottom sheet component in COUI that slides up from the bottom of the screen. Supports swipe-to-dismiss gestures and custom styling.
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlayBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -87,8 +87,8 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 | ------------- | ------ | ------------------------------------ |
 | cornerRadius  | Dp     | Default corner radius (20.dp, COUI couiRoundCornerXL) |
 | maxWidth      | Dp     | Default width cap (Dp.Infinity; width follows the COUI responsive grid) |
-| outsideMargin | DpSize | Default bottom sheet external margin |
-| insideMargin  | DpSize | Default bottom sheet internal margin |
+| outsideMargin | DpSize | Default bottom sheet external margin (DpSize(0.dp, 0.dp)) |
+| insideMargin  | DpSize | Default bottom sheet internal margin (DpSize(24.dp, 0.dp); width = horizontal padding, height = bottom padding) |
 
 #### BottomSheetDefaults Functions
 

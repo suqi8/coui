@@ -155,7 +155,7 @@ Modifier.squircleSurface(
 
 ```kotlin
 Modifier.absoluteSquircleSurface(
-    color = MiuixTheme.colorScheme.surface,
+    color = COUITheme.colorScheme.surface,
     topLeft = 24.dp,
     topRight = 24.dp,
     bottomRight = 0.dp,

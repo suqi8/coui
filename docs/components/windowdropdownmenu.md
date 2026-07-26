@@ -156,7 +156,7 @@ The menu is also implicitly disabled when no `DropdownEntry` contains any items.
 | summaryColor        | BasicComponentColors      | Summary text color configuration                | BasicComponentDefaults.summaryColor() | No       |
 | dropdownColors      | DropdownColors            | Color configuration for dropdown items          | DropdownDefaults.dropdownColors()     | No       |
 | startAction         | @Composable (() -> Unit)? | Custom start side content                       | null                                  | No       |
-| bottomAction        | @Composable (() -> Unit)? | Custom bottom side content                      | null                                  | No       |
+| bottomAction        | (@Composable () -> Unit)? | Custom bottom side content                      | null                                  | No       |
 | insideMargin        | PaddingValues             | Internal content padding                        | BasicComponentDefaults.InsideMargin   | No       |
 | maxHeight           | Dp?                       | Maximum height of the dropdown popup            | null                                  | No       |
 | enabled             | Boolean                   | Whether component is interactive                | true                                  | No       |

@@ -10,11 +10,15 @@ popupHost: None
 
 # WindowDropdownPreference
 
-`WindowDropdownPreference` is a dropdown menu component in Miuix that provides a title, summary, and a list of dropdown options. It renders at the window level without needing a `Scaffold` host, making it suitable for use cases where `Scaffold` is not available or desired.
+`WindowDropdownPreference` is a dropdown menu component in COUI that provides a title, summary, and a list of dropdown options. It renders at the window level without needing a `Scaffold` host, making it suitable for use cases where `Scaffold` is not available or desired.
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowDropdownPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
+
+::: tip Note
+This component does not rely on `Scaffold` and can be used in any Composable scope.
+:::
 
 ## Import
 
@@ -197,7 +201,7 @@ WindowDropdownPreference(
 | enabled               | Boolean                   | Whether component is interactive     | true                                  | No       |
 | showValue             | Boolean                   | Whether to show the selected value   | true                                  | No       |
 | onExpandedChange      | ((Boolean) -> Unit)?      | Callback when expanded state changes | null                                  | No       |
-| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | -                                     | No       |
+| onSelectedIndexChange | ((Int) -> Unit)?          | Selection change callback            | null                                  | No       |
 
 ### Entry Overload Properties
 
@@ -213,6 +217,8 @@ WindowDropdownPreference(
 | entries             | List\<DropdownEntry> | Dropdown entry groups separated by dividers     | -                 | Yes      |
 | collapseOnSelection | Boolean              | Whether to close the popup after each selection | entries.size <= 1 | No       |
 
+All other parameters are identical to the items overload above. The `entry` and `entries` overloads do not take `onSelectedIndexChange` — use each `DropdownItem.onClick` instead.
+
 ### DropdownEntry Properties
 
 | Property Name | Type                | Description                        | Default Value | Required |
@@ -220,7 +226,7 @@ WindowDropdownPreference(
 | items         | List\<DropdownItem> | Items shown in this dropdown group | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true | No |
 
-Group titles are reserved for future use. The original MIUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
+Group titles are reserved for future use. The original COUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
 
 ### DropdownItem Properties
 

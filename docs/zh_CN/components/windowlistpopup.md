@@ -111,7 +111,23 @@ DropdownImpl(
 | index                 | Int           | 此选项的索引       | -                                 |
 | dropdownColors        | DropdownColors | 选项颜色配置      | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean       | 此选项是否可点击   | true                              |
+| dialogMode            | Boolean       | 使用对话框样式的行高与内边距，而非弹窗样式 | false             |
 | onSelectedIndexChange | (Int) -> Unit | 点击此选项时的回调 | -                                 |
+
+`DropdownImpl` 还提供接收完整 `DropdownItem`（代替 `text`）的重载，用于显示带图标或摘要的行。它额外接受 `hasSubmenu`（渲染尾部 chevron 箭头）以及 `isFirst` / `isLast`（控制首/末行更大的边缘内边距，默认分别为 `index == 0` 与 `index == optionSize - 1`）；`enabled` 默认为 `item.enabled`。
+
+```kotlin
+DropdownImpl(
+    item = DropdownItem(
+        text = "Copy",
+        summary = "Copy to clipboard",
+    ),
+    optionSize = items.size,
+    isSelected = false,
+    index = 0,
+    onSelectedIndexChange = { /* handle click */ }
+)
+```
 
 ### PopupPositionProvider.Align
 

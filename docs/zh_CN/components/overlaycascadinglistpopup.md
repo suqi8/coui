@@ -27,6 +27,7 @@ popupHost: COUIPopupHost
 import io.github.suqi8.coui.kmp.overlay.OverlayCascadingListPopup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 ```
 
 ## 基本用法
@@ -38,8 +39,8 @@ var showPopup by remember { mutableStateOf(false) }
 var sortIndex by remember { mutableStateOf(0) }
 var viewIndex by remember { mutableStateOf(0) }
 
-val sortLabels = listOf("按拍摄日期排序", "按添加日期排序")
-val viewLabels = listOf("按日期分组", "紧凑视图")
+val sortLabels = listOf("Sort by capture date", "Sort by date added")
+val viewLabels = listOf("Group by date", "Compact")
 val entries = listOf(
     DropdownEntry(
         items = sortLabels.mapIndexed { idx, label ->
@@ -53,7 +54,7 @@ val entries = listOf(
     DropdownEntry(
         items = listOf(
             DropdownItem(
-                text = "查看模式",
+                text = "View mode",
                 children = viewLabels.mapIndexed { idx, label ->
                     DropdownItem(
                         text = label,
@@ -69,7 +70,7 @@ val entries = listOf(
 Scaffold {
     Box {
         TextButton(
-            text = "点击显示菜单",
+            text = "Click to show menu",
             onClick = { showPopup = true },
         )
         OverlayCascadingListPopup(
@@ -122,6 +123,22 @@ OverlayCascadingListPopup(
 )
 ```
 
+### 选中项标记
+
+`selected = true` 的叶子项尾部会显示以 `DropdownColors.selectedIndicatorColor` 着色的对勾图标；子菜单触发行则始终显示尾部 chevron。
+
+```kotlin
+DropdownItem(
+    text = "Sort by date added",
+    selected = true, // Marks this leaf with a trailing check icon
+    onClick = { /* ... */ },
+)
+```
+
+### 返回导航与变形行为
+
+返回处理与点击外部的规则一致：二级列表展开时，返回手势（或点击弹窗外部、点击克隆的子菜单标题行）会将二级列表收起回主列表；处于主列表层级时，返回与点击外部会通过 `onDismissRequest` 关闭弹窗。预测式返回手势会预览收起/关闭过程，取消手势时弹窗会自动恢复，无需额外配置。
+
 ## 属性
 
 ### OverlayCascadingListPopup
@@ -129,7 +146,7 @@ OverlayCascadingListPopup(
 | 属性名                | 类型                        | 说明                                                                                                            | 默认值                                     |
 | --------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | show                  | Boolean                     | 是否显示弹窗                                                                                                   | -                                          |
-| entries               | List\<DropdownEntry>        | 由分割线分组的下拉条目；顶层中 `children` 非空的项会成为子菜单触发行                                            | -                                          |
+| entries               | List\<DropdownEntry>        | 分组的下拉条目；顶层中 `children` 非空的项会成为子菜单触发行                                                    | -                                          |
 | onDismissRequest      | () -> Unit                  | 用户请求关闭（点击外部、触发返回等）时调用                                                                     | -                                          |
 | popupModifier         | Modifier                    | 应用于弹窗主体的修饰符                                                                                         | Modifier                                   |
 | onDismissFinished     | (() -> Unit)?               | 退出动画结束后调用                                                                                             | null                                       |

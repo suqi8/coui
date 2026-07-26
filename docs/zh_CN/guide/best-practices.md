@@ -1,9 +1,9 @@
 # 最佳实践
 
- Miuix UI 库已被多个开源项目采用。以下是一些基于 Miuix 创建的示例应用，它们展示了如何在实际项目中应用 Miuix 组件和设计理念。
+COUI 基于 [Miuix](https://github.com/compose-miuix-ui/miuix) 构建，二者共享同一套组件 API，因此 Miuix 生态中的实践经验同样适用于 COUI。以下是一些基于 COUI 或 Miuix 创建的示例应用，它们展示了如何在实际项目中应用组件和设计理念。
 
 ### 示例应用
-本项目自身的示例应用展示了如何使用 Miuix 已包含的所有组件构建界面。您可以在示例应用中找到各种组件的用法和示例，帮助您更好地理解和使用 Miuix UI 库。
+本项目自身的示例应用展示了如何使用 COUI 已包含的所有组件构建界面。您可以在示例应用中找到各种组件的用法和示例，帮助您更好地理解和使用 COUI UI 库。
 
 ### Updater-KMP
 
@@ -19,7 +19,7 @@
 
 ### OShin
 
-[OShin](https://github.com/suqi8/OShin) 是一个适用于 OPPO 系解锁设备的 Xposed 大杂烩模块。该项目充分展示了如何以 Miuix 为基础创建更多样的组件。
+[OShin](https://github.com/suqi8/OShin) 是一个适用于 OPPO 系解锁设备的 Xposed 大杂烩模块。该项目充分展示了如何以 COUI 为基础创建更多样的组件。
 
 ### HyperStar
 

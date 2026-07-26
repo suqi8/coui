@@ -35,7 +35,7 @@ Hide the preview panel at the top by setting `showPreview` to `false`:
 
 ```kotlin
 ColorPalette(
-    color = selected,
+    color = selectedColor,
     onColorChanged = { newColor ->
         selectedColor = newColor
     },
@@ -49,7 +49,7 @@ You can change the number of rows and hue columns, and toggle the gray column at
 
 ```kotlin
 ColorPalette(
-    color = selected,
+    color = selectedColor,
     onColorChanged = { newColor ->
         selectedColor = newColor
     },
@@ -65,7 +65,7 @@ Control the palette corner radius and the selection indicator radius:
 
 ```kotlin
 ColorPalette(
-    color = selected,
+    color = selectedColor,
     onColorChanged = { newColor ->
         selectedColor = newColor
     },

@@ -1,6 +1,6 @@
 # Switch
 
-`Switch` 是 Miuix 中的基础切换组件，用于在两种状态之间进行切换。它提供了具有动画效果的交互式开关控件，适用于设置项的启用与禁用场景。
+`Switch` 是 COUI 中的基础切换组件，用于在两种状态之间进行切换。它提供了具有动画效果的交互式开关控件，适用于设置项的启用与禁用场景。
 
 <div style="position: relative; height: 100px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=switch" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -39,6 +39,20 @@ Switch(
 )
 ```
 
+### 加载状态
+
+当 `isLoading` 为 true 时，滑块缩小消失并被旋转的渐变弧取代，加载期间不响应点击：
+
+```kotlin
+var checked by remember { mutableStateOf(true) }
+var isLoading by remember { mutableStateOf(true) }
+
+Switch(
+    checked = checked,
+    onCheckedChange = { checked = it },
+    isLoading = isLoading
+)
+```
 
 ## 属性
 
@@ -47,7 +61,7 @@ Switch(
 | 属性名          | 类型                 | 说明                     | 默认值                        | 是否必须 |
 | --------------- | -------------------- | ------------------------ | ----------------------------- | -------- |
 | checked         | Boolean              | 开关是否处于选中状态     | -                             | 是       |
-| onCheckedChange | ((Boolean) -> Unit)? | 开关状态变化时的回调函数 | -                             | 否       |
+| onCheckedChange | ((Boolean) -> Unit)? | 开关状态变化时的回调函数；为 `null` 时组件不可交互 | -           | 是       |
 | modifier        | Modifier             | 应用于开关的修饰符       | Modifier                      | 否       |
 | colors          | SwitchColors         | 开关的颜色配置           | SwitchDefaults.switchColors() | 否       |
 | enabled         | Boolean              | 开关是否可交互           | true                          | 否       |
@@ -172,4 +186,4 @@ LazyColumn {
         }
     }
 }
-````
+```

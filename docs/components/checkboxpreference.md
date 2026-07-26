@@ -1,6 +1,6 @@
 # CheckboxPreference
 
-`CheckboxPreference` is a checkbox component in Miuix that provides a title, summary, and checkbox
+`CheckboxPreference` is a checkbox component in COUI that provides a title, summary, and checkbox
 control. It supports click interactions and is commonly used in multi-select settings and selection
 lists.
 
@@ -96,7 +96,7 @@ CheckboxPreference(
 |------------------|------------------------------------|--------------------------------------|---------------------------------------|----------|
 | title            | String                             | Title of the checkbox item           | -                                     | Yes      |
 | checked          | Boolean                            | Checkbox checked state               | -                                     | Yes      |
-| onCheckedChange  | ((Boolean) -> Unit)?               | Callback when checkbox state changes | -                                     | No       |
+| onCheckedChange  | ((Boolean) -> Unit)?               | Callback when checkbox state changes | -                                     | Yes      |
 | modifier         | Modifier                           | Modifier applied to component        | Modifier                              | No       |
 | titleColor       | BasicComponentColors               | Title text color configuration       | BasicComponentDefaults.titleColor()   | No       |
 | summary          | String?                            | Summary description                  | null                                  | No       |
@@ -127,6 +127,28 @@ CheckboxPreference(
             text = if (backupEnabled) "Enabled" else "Disabled",
             color = COUITheme.colorScheme.onSurfaceVariantActions,
             modifier = Modifier.padding(end = 6.dp)
+        )
+    }
+)
+```
+
+### With Start Icon
+
+When `startAction` is provided, it is placed after the checkbox (with the default start location):
+
+```kotlin
+var syncEnabled by remember { mutableStateOf(false) }
+
+CheckboxPreference(
+    title = "Sync Contacts",
+    summary = "Keep contacts up to date",
+    checked = syncEnabled,
+    onCheckedChange = { syncEnabled = it },
+    startAction = {
+        Icon(
+            imageVector = COUIIcons.Contacts,
+            contentDescription = null,
+            tint = COUITheme.colorScheme.onBackground
         )
     }
 )

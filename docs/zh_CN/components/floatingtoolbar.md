@@ -1,6 +1,6 @@
 # FloatingToolbar
 
-`FloatingToolbar` 是 Miuix 中的悬浮工具栏组件，它将其内容渲染在一个具有圆角背景的容器中，可以水平或垂直排列。实际的屏幕放置由父组件（通常是 `Scaffold`）处理。
+`FloatingToolbar` 是 COUI 中的悬浮工具栏组件，它将其内容渲染在一个具有圆角背景的容器中，可以水平或垂直排列。实际的屏幕放置由父组件（通常是 `Scaffold`）处理。
 
 此组件通常与 `Scaffold` 结合使用，放置在页面的特定位置，提供快捷操作或信息展示。
 
@@ -85,6 +85,29 @@ FloatingToolbar(
         }
         IconButton(onClick = { /* 操作 2 */ }) {
             Icon(COUIIcons.Delete, contentDescription = "删除", tint = COUITheme.colorScheme.onPrimaryContainer)
+        }
+    }
+}
+```
+
+### 带分割线的工具栏
+
+设置 `showDivider = true` 可在工具栏四周绘制一圈细分割线；设置 `shadowElevation = 0.dp` 可关闭投影：
+
+```kotlin
+FloatingToolbar(
+    showDivider = true,
+    shadowElevation = 0.dp
+) {
+    Row(
+        modifier = Modifier.padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        IconButton(onClick = { /* 操作 1 */ }) {
+            Icon(COUIIcons.Edit, contentDescription = "编辑")
+        }
+        IconButton(onClick = { /* 操作 2 */ }) {
+            Icon(COUIIcons.Delete, contentDescription = "删除")
         }
     }
 }

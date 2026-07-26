@@ -1,6 +1,6 @@
 # NavigationBar
 
-`NavigationBar` 是 Miuix 中的底部导航栏组件，用于在应用底部创建导航菜单，支持 2 到 5 个导航项，提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
+`NavigationBar` 是 COUI 中的底部导航栏组件，用于在应用底部创建导航菜单，支持 2 到 5 个导航项，提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
 
 `FloatingNavigationBar` 是一个悬浮样式的底部导航栏组件，同样支持 2 到 5 个导航项，仅显示图标。
 
@@ -18,6 +18,7 @@ import io.github.suqi8.coui.kmp.basic.NavigationBarItem
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBar
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarItem
 import io.github.suqi8.coui.kmp.basic.NavigationBarDisplayMode
+import io.github.suqi8.coui.kmp.basic.NavigationItem
 ```
 
 ## 基本用法
@@ -28,7 +29,7 @@ NavigationBar 组件可用于创建固定在底部的导航菜单：
 
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
-val items = listOf("首页", "我的", "设置")
+val items = listOf("Home", "Profile", "Settings")
 val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
@@ -53,7 +54,7 @@ FloatingNavigationBar 组件可用于创建悬浮在底部的导航菜单：
 
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
-val items = listOf("首页", "我的", "设置")
+val items = listOf("Home", "Profile", "Settings")
 val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
@@ -172,6 +173,17 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 | TextOnly              | 仅显示文本             |
 | IconWithSelectedLabel | 始终显示图标，仅选中时显示文本 |
 
+设置在 `NavigationBar` 上的显示模式会通过 `LocalNavigationBarDisplayMode` 组合局部值传递给各导航项。`FloatingNavigationBar` 没有 `mode` 参数——其导航项始终仅显示图标。
+
+### NavigationItem 属性
+
+`NavigationItem` 是一个用于承载导航项标签与图标的便捷数据类。
+
+| 属性名 | 类型        | 说明       | 默认值 | 是否必须 |
+| ------ | ----------- | ---------- | ------ | -------- |
+| label  | String      | 该项的标签 | -      | 是       |
+| icon   | ImageVector | 该项的图标 | -      | 是       |
+
 ## 进阶用法
 
 ### NavigationBar
@@ -200,7 +212,18 @@ NavigationBar(
 
 ```kotlin
 NavigationBar(
-    defaultWindowInsetsPadding = false // 自行处理窗口嵌入边距
+    defaultWindowInsetsPadding = false // Handle window insets padding manually
+) {
+    // ... items ...
+}
+```
+
+#### 显示模式
+
+```kotlin
+NavigationBar(
+    // IconAndText (default) / IconOnly / TextOnly / IconWithSelectedLabel
+    mode = NavigationBarDisplayMode.IconWithSelectedLabel
 ) {
     // ... items ...
 }
@@ -223,8 +246,19 @@ FloatingNavigationBar(
 
 ```kotlin
 FloatingNavigationBar(
-    horizontalAlignment = Alignment.Start, // 左对齐
-    horizontalOutSidePadding = 16.dp // 设置外部边距
+    horizontalAlignment = Alignment.Start, // Align to start
+    horizontalOutSidePadding = 16.dp // Set outside padding
+) {
+    // ... items ...
+}
+```
+
+#### 分割线与阴影
+
+```kotlin
+FloatingNavigationBar(
+    showDivider = true, // Draw a thin divider ring around the bar
+    shadowElevation = 0.dp // Disable the drop shadow
 ) {
     // ... items ...
 }
@@ -235,7 +269,7 @@ FloatingNavigationBar(
 #### 使用 NavigationBar
 
 ```kotlin
-val pages = listOf("首页", "我的", "设置")
+val pages = listOf("Home", "Profile", "Settings")
 val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
@@ -253,7 +287,7 @@ Scaffold(
         }
     }
 ) { paddingValues ->
-    // 内容区域需要考虑 padding
+    // Content area needs to consider padding
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -261,7 +295,7 @@ Scaffold(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "当前页面：${pages[selectedIndex]}",
+            text = "Current Page: ${pages[selectedIndex]}",
             style = COUITheme.textStyles.title1
         )
     }
@@ -271,7 +305,7 @@ Scaffold(
 #### 使用 FloatingNavigationBar
 
 ```kotlin
-val pages = listOf("首页", "我的", "设置")
+val pages = listOf("Home", "Profile", "Settings")
 val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
@@ -289,7 +323,7 @@ Scaffold(
         }
     }
 ) { paddingValues ->
-    // 内容区域需要考虑 padding
+    // Content area needs to consider padding
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -297,7 +331,7 @@ Scaffold(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "当前页面：${pages[selectedIndex]}",
+            text = "Current Page: ${pages[selectedIndex]}",
             style = COUITheme.textStyles.title1
         )
     }

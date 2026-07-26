@@ -245,8 +245,8 @@ val colors = BlurColors(
 `Modifier.progressiveTextureBlur` applies a gradient backdrop blur: the blur strength ramps continuously from full to zero along a direction, with a genuine medium blur in the middle of the ramp and a pixel-sharp, full-resolution clear end. Ideal for navigation bars and edge fades.
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.ProgressiveBlur
-import top.yukonga.miuix.kmp.blur.progressiveTextureBlur
+import io.github.suqi8.coui.kmp.blur.ProgressiveBlur
+import io.github.suqi8.coui.kmp.blur.progressiveTextureBlur
 
 Box(
     modifier = Modifier

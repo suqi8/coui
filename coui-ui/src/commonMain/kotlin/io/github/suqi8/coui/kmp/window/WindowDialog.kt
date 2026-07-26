@@ -45,8 +45,7 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param largeScreen Optional override for the large-screen presentation (centered scale/fade
  *   instead of bottom slide-in). If null, detected from the window size.
  * @param cornerRadius Optional corner radius override. If null, [DialogDefaults.CornerRadius]
- *   for the centered presentation, or derived from the screen corner radius (clamped to
- *   32dp..48dp) when bottom-attached.
+ *   is used.
  * @param content The [Composable] content of the [WindowDialog].
  */
 @Composable

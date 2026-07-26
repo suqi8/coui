@@ -36,7 +36,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val entry = DropdownEntry(
-    items = listOf("选项 1", "选项 2", "选项 3").mapIndexed { index, text ->
+    items = listOf("Option 1", "Option 2", "Option 3").mapIndexed { index, text ->
         DropdownItem(
             text = text,
             selected = selectedIndex == index,
@@ -47,7 +47,7 @@ val entry = DropdownEntry(
 
 Scaffold {
     OverlayDropdownMenu(
-        title = "下拉菜单",
+        title = "Dropdown Menu",
         entry = entry
     )
 }
@@ -62,12 +62,12 @@ var sizeIndex by remember { mutableStateOf(0) }
 var colorIndex by remember { mutableStateOf(0) }
 val entries = listOf(
     DropdownEntry(
-        items = listOf("小", "中").mapIndexed { index, text ->
+        items = listOf("Small", "Medium").mapIndexed { index, text ->
             DropdownItem(text = text, selected = sizeIndex == index, onClick = { sizeIndex = index })
         }
     ),
     DropdownEntry(
-        items = listOf("红色", "绿色", "蓝色").mapIndexed { index, text ->
+        items = listOf("Red", "Green", "Blue").mapIndexed { index, text ->
             DropdownItem(text = text, selected = colorIndex == index, onClick = { colorIndex = index })
         }
     )
@@ -75,7 +75,7 @@ val entries = listOf(
 
 Scaffold {
     OverlayDropdownMenu(
-        title = "分组菜单",
+        title = "Grouped Menu",
         entries = entries,
         collapseOnSelection = false
     )
@@ -115,9 +115,40 @@ val entries = listOf(
 
 Scaffold {
     OverlayDropdownMenu(
-        title = "多选菜单",
+        title = "Multi Select Menu",
         entries = entries,
         collapseOnSelection = false
+    )
+}
+```
+
+## 带图标与摘要的选项
+
+每个 `DropdownItem` 都可以在文本前显示图标，并在文本下方显示一行摘要。`icon` lambda 会收到一个预设尺寸的 `Modifier`，应将其应用到图标组件上。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(
+            text = "Rename",
+            summary = "Change the display name",
+            icon = { modifier ->
+                Icon(
+                    modifier = modifier,
+                    imageVector = COUIIcons.Rename,
+                    contentDescription = null,
+                )
+            },
+            onClick = { /* handle action */ },
+        ),
+        DropdownItem(text = "Delete", onClick = { /* handle action */ }),
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(
+        title = "Item Icons",
+        entry = entry
     )
 }
 ```
@@ -127,13 +158,13 @@ Scaffold {
 ```kotlin
 var expanded by remember { mutableStateOf(false) }
 val entry = DropdownEntry(
-    items = listOf("选项 1", "选项 2", "选项 3").map { DropdownItem(text = it) }
+    items = listOf("Option 1", "Option 2", "Option 3").map { DropdownItem(text = it) }
 )
 
 Scaffold {
     OverlayDropdownMenu(
-        title = "监听展开",
-        summary = if (expanded) "展开" else "收起",
+        title = "Observe Expanded",
+        summary = if (expanded) "Expanded" else "Collapsed",
         entry = entry,
         onExpandedChange = { expanded = it }
     )
@@ -146,14 +177,40 @@ Scaffold {
 
 ```kotlin
 OverlayDropdownMenu(
-    title = "禁用菜单",
-    summary = "此菜单当前不可用",
-    entry = DropdownEntry(items = listOf(DropdownItem(text = "选项 1"))),
+    title = "Disabled Menu",
+    summary = "This menu is currently unavailable",
+    entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false
 )
 ```
 
 当所有 `DropdownEntry` 都不包含任何条目时，菜单也会被隐式禁用。
+
+### 禁用部分选项
+
+通过 `DropdownItem.enabled` 可以禁用单个选项，通过 `DropdownEntry.enabled` 可以禁用整个分组。禁用的行会置灰并忽略点击。
+
+```kotlin
+val entries = listOf(
+    DropdownEntry(
+        items = listOf(
+            DropdownItem(text = "Available option"),
+            DropdownItem(text = "Unavailable option", enabled = false),
+        )
+    ),
+    DropdownEntry(
+        items = listOf(DropdownItem(text = "Whole group disabled")),
+        enabled = false
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(
+        title = "Partially Disabled",
+        entries = entries
+    )
+}
+```
 
 ## 属性
 

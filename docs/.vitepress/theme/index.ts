@@ -131,8 +131,10 @@ export default {
     /* giscus */
     giscusTalk(
       {
-        repo: "compose-coui-ui/miuix-giscus",
-        repoId: "R_kgDOQo99Eg",
+        // NOTE: giscus requires GitHub Discussions to be enabled on this repo.
+        // Regenerate categoryId at https://giscus.app once a category exists.
+        repo: "suqi8/coui",
+        repoId: "R_kgDOQRH87w",
         category: "General",
         categoryId: "DIC_kwDOQo99Es4Cz0CR",
         inputPosition: "bottom",

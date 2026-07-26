@@ -17,12 +17,12 @@ var nickname by remember { mutableStateOf("") }
 InputView(
     value = nickname,
     onValueChange = { nickname = it },
-    title = "昵称",
-    label = "请输入昵称",
+    title = "Nickname",
+    label = "Enter your nickname",
     showCount = true,
     maxCount = 10,
     showClearButton = true,
-    errorMessage = if (nickname.contains(' ')) "昵称不能包含空格" else "",
+    errorMessage = if (nickname.contains(' ')) "Nickname cannot contain spaces" else "",
 )
 ```
 
@@ -36,10 +36,23 @@ var signature by remember { mutableStateOf("") }
 InputView(
     value = signature,
     onValueChange = { signature = it },
-    label = "个性签名",
+    label = "Signature",
     showCount = true,
     maxCount = 100,
     singleLine = false,
+)
+```
+
+## 组件状态
+
+### 禁用状态
+
+```kotlin
+InputView(
+    value = "Read only value",
+    onValueChange = {},
+    title = "Nickname",
+    enabled = false,
 )
 ```
 
@@ -86,6 +99,7 @@ InputView(
 | FieldPaddingVertical        | Dp       | 无标题时输入区垂直内边距                     | 15.dp  |
 | FieldPaddingBottomWithTitle | Dp       | 有标题时输入区底部内边距（顶部为 0）         | 12.dp  |
 | MultiFieldPadding           | Dp       | 多行卡片输入区垂直内边距                     | 13.dp  |
+| MultiCountSpacing           | Dp       | 多行输入区与计数之间的间距                   | 4.dp   |
 | MultiCountMarginBottom      | Dp       | 多行计数底部外边距                           | 12.dp  |
 | MultiCountFontSize          | TextUnit | 多行计数字号                                 | 12.sp  |
 | CountFontSize               | TextUnit | 单行行内计数字号                             | 10.sp  |
@@ -122,10 +136,10 @@ var password by remember { mutableStateOf("") }
 InputView(
     value = password,
     onValueChange = { password = it },
-    title = "密码",
-    label = "至少 8 个字符",
+    title = "Password",
+    label = "At least 8 characters",
     showPasswordToggle = true,
-    errorMessage = if (password.isNotEmpty() && password.length < 8) "密码过短" else "",
+    errorMessage = if (password.isNotEmpty() && password.length < 8) "Password is too short" else "",
     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
 )
 ```

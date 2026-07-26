@@ -36,6 +36,21 @@ CodeTextField(
 )
 ```
 
+## 组件状态
+
+### 禁用状态
+
+禁用后组件仍显示当前验证码,但无法聚焦或编辑,光标与活动格描边也会隐藏:
+
+```kotlin
+CodeTextField(
+    value = code,
+    onValueChange = { code = it },
+    enabled = false,
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
 ## 属性
 
 ### CodeTextField
@@ -70,7 +85,12 @@ CodeTextField(
 | CursorWidth          | Dp     | 闪烁光标宽度                     | 2.dp                 |
 | ReferenceWidth       | Dp     | 触发缩放的参考宽度               | 360.dp               |
 
-`textStyle()` 返回默认数字样式(30sp,COUI coui_code_input_cell_text_size)。
+#### 方法
+
+| 方法名                | 类型                | 说明                                                                              |
+| --------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| textStyle()           | TextStyle           | 默认数字样式(COUITheme.textStyles.title2 调整为 30sp,coui_code_input_cell_text_size) |
+| codeTextFieldColors() | CodeTextFieldColors | 创建验证码输入框的颜色配置                                                        |
 
 ### `codeTextFieldColors()` 工厂
 
@@ -89,3 +109,21 @@ CodeTextField(
 - 活动格(第一个空格,填满时为最后一格)在聚焦时显示 1.6dp 描边;描边以 100ms(延迟 33ms)淡入、100ms 淡出(COUI move 缓动 0.3, 0, 0.1, 1)。
 - 数字以 0.6 -> 1.0 缩放 + 100ms 淡入出现,删除时延迟 33ms 淡出;安全模式跳过数字动画,与 COUI 一致。
 - 可用宽度低于 360dp 参考宽度时,各格按比例缩小,格间距在 4dp 与 16dp 之间自适应。
+
+## 进阶用法
+
+### 自定义单格样式
+
+```kotlin
+CodeTextField(
+    value = code,
+    onValueChange = { code = it },
+    cellCount = 4,
+    cellSize = DpSize(48.dp, 52.dp),
+    cellCornerRadius = 12.dp,
+    colors = CodeTextFieldDefaults.codeTextFieldColors(
+        focusedStrokeColor = COUITheme.colorScheme.secondary,
+    ),
+    modifier = Modifier.fillMaxWidth(),
+)
+```

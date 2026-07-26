@@ -1,10 +1,10 @@
 # 图标系统
 
-Miuix 提供了一套丰富的内置图标系统，满足大多数应用的主要设计需求。这些图标提供五种粗细：Light、Normal、Regular、Medium 和 Demibold。
+COUI 提供了一套丰富的内置图标系统，满足大多数应用的主要设计需求。这些图标提供五种粗细：Light、Normal、Regular、Medium 和 Demibold。
 
 ## 安装
 
-基础的 `coui-ui` 库仅包含少量核心图标。如需使用完整的 Miuix 图标库，您需要将 `coui-icons` 依赖添加到您的项目中。
+基础的 `coui-ui` 库仅包含少量核心图标。如需使用完整的 COUI 图标库，您需要将 `coui-icons` 依赖添加到您的项目中。
 
 ```kotlin
 // build.gradle.kts
@@ -17,7 +17,7 @@ commonMain.dependencies {
 
 ## 使用方法
 
-要在项目中使用 Miuix 图标，首先需要正确导入：
+要在项目中使用 COUI 图标，首先需要正确导入：
 
 ```kotlin
 import androidx.compose.foundation.layout.size
@@ -57,7 +57,7 @@ Icon(
 
 ## 图标粗细
 
-Miuix 图标支持五种粗细，对应字体源 `misymbol_vf.ttf` 的 5 个命名实例：
+COUI 图标支持五种粗细，对应字体源 `misymbol_vf.ttf` 的 5 个命名实例：
 
 - `COUIIcons.Light`: 细图标 (wght=250)
 - `COUIIcons.Normal`: 偏细图标 (wght=305)
@@ -69,7 +69,7 @@ Miuix 图标支持五种粗细，对应字体源 `misymbol_vf.ttf` 的 5 个命�
 
 ### Basic（基础图标）
 
-基础图标包含一些常用的基本界面元素，如箭头、勾选等，这些图标在 Miuix 本身的组件中也会使用到。以下是完整的列表：
+基础图标包含一些常用的基本界面元素，如箭头、勾选等，这些图标在 COUI 本身的组件中也会使用到。以下是完整的列表：
 
 | 图标名称 | Light | Normal | Regular | Medium | Demibold |
 |---|---|---|---|---|---|

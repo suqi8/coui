@@ -1,6 +1,6 @@
 # Card
 
-`Card` 是 Miuix 中的基础容器组件，用于承载相关内容和操作。它提供了具有 Miuix 风格的卡片容器，适用于信息展示、内容分组等场景。支持静态显示和交互式两种模式。
+`Card` 是 COUI 中的基础容器组件，用于承载相关内容和操作。它提供了具有 COUI 风格的卡片容器，适用于信息展示、内容分组等场景。支持静态显示和交互式两种模式。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=card" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -31,9 +31,9 @@ Card {
 | 属性名            | 类型                               | 说明                     | 默认值                       | 是否必须 | 适用范围 |
 | ----------------- | ---------------------------------- | ------------------------ | ---------------------------- | -------- | -------- |
 | modifier          | Modifier                           | 应用于卡片的修饰符       | Modifier                     | 否       | 所有     |
-| colors            | CardColors                         | 卡片颜色配置             | CardDefaults.defaultColors() | 否       | 所有     |
 | cornerRadius      | Dp                                 | 卡片圆角半径             | CardDefaults.CornerRadius    | 否       | 所有     |
 | insideMargin      | PaddingValues                      | 卡片内部边距             | CardDefaults.InsideMargin    | 否       | 所有     |
+| colors            | CardColors                         | 卡片颜色配置             | CardDefaults.defaultColors() | 否       | 所有     |
 | pressFeedbackType | PressFeedbackType                  | 按压反馈类型             | PressFeedbackType.Tint       | 否       | 交互式   |
 | showIndication    | Boolean                            | 显示点击指示效果         | false                        | 否       | 交互式   |
 | holdDownState     | Boolean                            | 卡片是否处于按下状态     | false                        | 否       | 交互式   |

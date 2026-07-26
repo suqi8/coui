@@ -1,6 +1,6 @@
 # TabRow
 
-`TabRow` 是 Miuix 中的导航组件，完整复刻了 ColorOS 16 的分段按钮（`COUISegmentButtonLayout`）。提供了带轮廓（Contour）样式（带容器胶囊与滑动指示器）和标准样式（去掉容器底色的同款分段按钮）两种变体，适用于内容分类和导航场景。
+`TabRow` 是 COUI 中的导航组件，完整复刻了 ColorOS 16 的分段按钮（`COUISegmentButtonLayout`）。提供了带轮廓（Contour）样式（带容器胶囊与滑动指示器）和标准样式（去掉容器底色的同款分段按钮）两种变体，适用于内容分类和导航场景。
 
 <div style="position: relative; height: 180px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=tabRow" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

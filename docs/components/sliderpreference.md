@@ -1,6 +1,6 @@
 # SliderPreference
 
-`SliderPreference` is a preference component in Miuix that combines a title/summary with a slider control. The slider is placed in the bottom action area of the `BasicComponent`, making it ideal for settings screens where users need to adjust values such as volume, brightness, or font size.
+`SliderPreference` is a preference component in COUI that combines a title/summary with a slider control. The slider is placed in the bottom action area of the `BasicComponent`, making it ideal for settings screens where users need to adjust values such as volume, brightness, or font size.
 
 ## Import
 
@@ -82,6 +82,22 @@ SliderPreference(
 | insideMargin          | PaddingValues                     | Internal content padding                                                                                                                                                       | BasicComponentDefaults.InsideMargin | No       |
 
 ## Advanced Usage
+
+### With Value Text and Click Action
+
+When `onClick` is non-null, an arrow icon is shown in the end area; `valueText` displays the current value with summary-style formatting:
+
+```kotlin
+var volume by remember { mutableFloatStateOf(0.7f) }
+
+SliderPreference(
+    value = volume,
+    onValueChange = { volume = it },
+    title = "Volume",
+    valueText = "${(volume * 100).roundToInt()}%",
+    onClick = { /* Open detailed settings */ }
+)
+```
 
 ### Custom Value Range with Steps
 

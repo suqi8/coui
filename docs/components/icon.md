@@ -1,6 +1,6 @@
 # Icon
 
-`Icon` is a fundamental icon component in Miuix used to display various vector icons, bitmap icons, or custom drawn content in the interface. It provides multiple ways to render icons to accommodate different icon resource types.
+`Icon` is a fundamental icon component in COUI used to display various vector icons, bitmap icons, or custom drawn content in the interface. It provides multiple ways to render icons to accommodate different icon resource types.
 
 By default, `tint` resolves to `LocalContentColor.current`, so the icon follows the content color provided by parent components such as `Button` or `Surface`. Pass an explicit `Color` (for example `COUITheme.colorScheme.onBackground`) when you need to override that, or `Color.Unspecified` to disable tinting and keep the source colors.
 
@@ -29,7 +29,7 @@ Icon(
 
 ## Icon Types
 
-Miuix Icon supports multiple types of icon resources:
+COUI Icon supports multiple types of icon resources:
 
 ### Vector Icon
 
@@ -169,7 +169,7 @@ Icon(
 
 ### Dynamic Icon
 
-Wrap the `Icon` in an `IconButton` to make it clickable while keeping the Miuix touch feedback:
+Wrap the `Icon` in an `IconButton` to make it clickable while keeping the COUI touch feedback:
 
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }

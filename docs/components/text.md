@@ -1,6 +1,6 @@
 # Text
 
-`Text` component is a basic text component in Miuix, used to display text content. It supports customizing various text styles, alignment, and decoration effects.
+`Text` component is a basic text component in COUI, used to display text content. It supports customizing various text styles, alignment, and decoration effects.
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=text" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -22,7 +22,7 @@ Text("This is a basic text")
 
 ## Text Styles
 
-Miuix provides multiple predefined text styles:
+COUI provides multiple predefined text styles:
 
 ```kotlin
 Text(
@@ -146,7 +146,7 @@ Text(
 Text(
     buildAnnotatedString {
         withStyle(style = SpanStyle(color = COUITheme.colorScheme.primary)) {
-            append("Miuix ")
+            append("COUI ")
         }
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
             append("UI Library")
@@ -204,7 +204,7 @@ Use `AnnotatedString` with `LinkAnnotation` to create clickable links:
 val annotated = buildAnnotatedString {
     append("Visit ")
     val start = length
-    append("Miuix Docs")
+    append("COUI Docs")
     addLink(
         LinkAnnotation.Url(
             url = "https://suqi8.github.io/coui/",

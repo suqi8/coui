@@ -33,6 +33,18 @@ LoadingButton(
 )
 ```
 
+## Component States
+
+### Disabled State
+
+```kotlin
+LoadingButton(
+    text = "Download",
+    onClick = { /* Handle click event */ },
+    enabled = false,
+)
+```
+
 ## Properties
 
 ### LoadingButton
@@ -55,10 +67,10 @@ LoadingButton(
 
 ### LoadingButtonDefaults
 
-| Constant   | Type | Default Value |
-| ---------- | ---- | ------------- |
-| DotRadius  | Dp   | 1.dp          |
-| DotSpacing | Dp   | 2.dp          |
+| Constant   | Type | Description                              | Default Value |
+| ---------- | ---- | ---------------------------------------- | ------------- |
+| DotRadius  | Dp   | Radius of each loading dot               | 1.dp          |
+| DotSpacing | Dp   | Gap between two neighbouring loading dots | 2.dp         |
 
 ## Behavior
 

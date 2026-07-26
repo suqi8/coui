@@ -44,6 +44,19 @@ InputView(
 )
 ```
 
+## Component States
+
+### Disabled State
+
+```kotlin
+InputView(
+    value = "Read only value",
+    onValueChange = {},
+    title = "Nickname",
+    enabled = false,
+)
+```
+
 ## Properties
 
 ### InputView
@@ -87,6 +100,7 @@ InputView(
 | FieldPaddingVertical       | Dp       | Vertical field padding without a title                  | 15.dp         |
 | FieldPaddingBottomWithTitle | Dp      | Bottom field padding when a title is shown (top is 0)   | 12.dp         |
 | MultiFieldPadding          | Dp       | Vertical field padding in the multi-line card           | 13.dp         |
+| MultiCountSpacing          | Dp       | Gap between the multi-line field and its counter        | 4.dp          |
 | MultiCountMarginBottom     | Dp       | Bottom margin of the multi-line counter                 | 12.dp         |
 | MultiCountFontSize         | TextUnit | Font size of the multi-line counter                     | 12.sp         |
 | CountFontSize              | TextUnit | Font size of the single-line inline counter             | 10.sp         |

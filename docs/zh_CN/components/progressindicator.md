@@ -1,6 +1,6 @@
 # ProgressIndicator
 
-`ProgressIndicator` 是 Miuix 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条和无限旋转指示器三种样式，适用于不同场景下的加载和进度展示需求。
+`ProgressIndicator` 是 COUI 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条和无限旋转指示器三种样式，适用于不同场景下的加载和进度展示需求。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=progressIndicator" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -20,8 +20,6 @@ import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转�
 
 线性进度条可用于展示操作的进度：
 
-
-
 ```kotlin
 // 确定进度的线性进度条
 var progress by remember { mutableStateOf(0.3f) }
@@ -33,7 +31,6 @@ LinearProgressIndicator(progress = progress)
 // 不确定进度的线性进度条
 LinearProgressIndicator()
 ```
-
 
 ### 环形进度条
 
@@ -57,6 +54,24 @@ CircularProgressIndicator()
 
 ```kotlin
 InfiniteProgressIndicator()
+```
+
+### 尺寸规格
+
+环形与无限旋转指示器提供中号（默认）和大号两种规格，定义在 `ProgressIndicatorDefaults` 中：
+
+```kotlin
+// Large circular progress indicator
+CircularProgressIndicator(
+    size = ProgressIndicatorDefaults.LargeCircularProgressIndicatorSize,
+    strokeWidth = ProgressIndicatorDefaults.LargeCircularProgressIndicatorStrokeWidth
+)
+
+// Large infinite progress indicator
+InfiniteProgressIndicator(
+    size = ProgressIndicatorDefaults.LargeInfiniteProgressIndicatorSize,
+    strokeWidth = ProgressIndicatorDefaults.LargeInfiniteProgressIndicatorStrokeWidth
+)
 ```
 
 ## 组件状态

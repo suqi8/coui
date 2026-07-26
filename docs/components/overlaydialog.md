@@ -11,7 +11,7 @@ popupHost: COUIPopupHost
 
 # OverlayDialog
 
-`OverlayDialog` is a dialog component in Miuix used to display important information, collect user input, or confirm user actions. The dialog appears above the current interface and supports custom styles and content layouts.
+`OverlayDialog` is a dialog component in COUI used to display important information, collect user input, or confirm user actions. The dialog appears above the current interface and supports custom styles and content layouts.
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlayDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -75,6 +75,9 @@ Scaffold {
 | insideMargin               | DpSize                 | Margin for the built-in title/summary texts (width = horizontal padding, height = padding above the title); the content slot is unpadded | DialogDefaults.insideMargin      | No       |
 | defaultWindowInsetsPadding | Boolean                | Whether to apply default window insets padding                | true                                  | No       |
 | renderInRootScaffold       | Boolean                | Whether to render the dialog in the root (outermost) Scaffold. When true, the dialog covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |
+| maxWidth                   | Dp                     | Maximum width of the dialog                                   | DialogDefaults.MaxWidth          | No       |
+| largeScreen                | Boolean?               | Override for the large-screen presentation (centered scale/fade instead of bottom slide-in); when null, detected from the window size | null | No       |
+| cornerRadius               | Dp?                    | Corner radius override; when null, DialogDefaults.CornerRadius is used | null | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                     | Yes      |
 
 ### DialogDefaults Object
@@ -99,6 +102,37 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 | backgroundColor() | Color       | Get default dialog background color |
 
 ## Advanced Usage
+
+### Centered Presentation (Large Screens)
+
+On windows at least 840dp wide and 480dp tall, the dialog is automatically centered and uses scale/fade transitions instead of sliding up from the bottom. Use `largeScreen` to force either presentation, and `cornerRadius` to override the panel radius:
+
+```kotlin
+var showDialog by remember { mutableStateOf(false) }
+
+Scaffold {
+    TextButton(
+        text = "Show Centered Dialog",
+        onClick = { showDialog = true }
+    )
+
+    OverlayDialog(
+        title = "Centered Dialog",
+        summary = "This dialog is always centered, regardless of window size",
+        show = showDialog,
+        largeScreen = true, // Force the centered presentation
+        cornerRadius = 24.dp, // Override the panel corner radius
+        maxWidth = 320.dp,
+        onDismissRequest = { showDialog = false }
+    ) {
+        TextButton(
+            text = "Confirm",
+            onClick = { showDialog = false },
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+```
 
 ### Custom Styled Dialog
 

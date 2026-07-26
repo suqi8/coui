@@ -34,21 +34,21 @@ import io.github.suqi8.coui.kmp.theme.LocalDismissState
 ```kotlin
 var showBottomSheet by remember { mutableStateOf(false) }
 
-// 可以在任何地方使用
+// Can be used anywhere
 TextButton(
-    text = "显示 Window 底部抽屉",
+    text = "Show Window Bottom Sheet",
     onClick = { showBottomSheet = true }
 )
 
 WindowBottomSheet(
     show = showBottomSheet,
-    title = "Window 底部抽屉标题",
+    title = "Window Bottom Sheet Title",
     onDismissRequest = { showBottomSheet = false }
 ) {
     val dismiss = LocalDismissState.current
-    Text(text = "这是 Window 底部抽屉的内容")
+    Text(text = "This is the content of the window bottom sheet")
     TextButton(
-        text = "关闭",
+        text = "Close",
         onClick = { dismiss?.invoke() }
     )
 }
@@ -79,7 +79,9 @@ WindowBottomSheet(
 | enableNestedScroll         | Boolean                   | 是否允许内容嵌套滚动                         | true                                        | 否       |
 | content                    | @Composable () -> Unit    | 底部抽屉的内容                               | -                                           | 是       |
 
-### BottomSheetDefaults
+### BottomSheetDefaults 对象
+
+BottomSheetDefaults 对象为底部抽屉组件提供默认设置。
 
 #### BottomSheetDefaults 属性
 
@@ -99,6 +101,36 @@ WindowBottomSheet(
 
 ## 进阶用法
 
+### 头部操作按钮
+
+使用 `startAction` 与 `endAction` 在头部区域放置操作按钮。`LocalDismissState` 会同时提供给两个操作插槽和内容插槽：
+
+```kotlin
+var showBottomSheet by remember { mutableStateOf(false) }
+
+WindowBottomSheet(
+    show = showBottomSheet,
+    title = "Action Sheet",
+    startAction = {
+        val dismiss = LocalDismissState.current
+        TextButton(
+            text = "Cancel",
+            onClick = { dismiss?.invoke() }
+        )
+    },
+    endAction = {
+        val dismiss = LocalDismissState.current
+        TextButton(
+            text = "Confirm",
+            onClick = { dismiss?.invoke() }
+        )
+    },
+    onDismissRequest = { showBottomSheet = false }
+) {
+    Text("Content with header action buttons")
+}
+```
+
 ### 从内容中关闭
 
 您可以使用 `LocalDismissState` 从其内容中关闭底部抽屉：
@@ -106,15 +138,35 @@ WindowBottomSheet(
 ```kotlin
 WindowBottomSheet(
     show = showBottomSheet,
-    title = "关闭示例",
+    title = "Dismiss Example",
     onDismissRequest = { showBottomSheet = false }
 ) {
     val dismiss = LocalDismissState.current
-    
-    Button(
+
+    TextButton(
+        text = "Close Bottom Sheet",
         onClick = { dismiss?.invoke() }
-    ) {
-        Text("关闭底部抽屉")
-    }
+    )
+}
+```
+
+### 禁止手势关闭
+
+设置 `allowDismiss = false` 可忽略下拉拖拽与返回手势关闭，此时抽屉只能通过代码关闭：
+
+```kotlin
+var showBottomSheet by remember { mutableStateOf(false) }
+
+WindowBottomSheet(
+    show = showBottomSheet,
+    title = "Processing",
+    allowDismiss = false, // drag and back gesture will not dismiss the sheet
+    onDismissRequest = { showBottomSheet = false }
+) {
+    Text("This sheet can only be closed programmatically")
+    TextButton(
+        text = "Done",
+        onClick = { showBottomSheet = false }
+    )
 }
 ```

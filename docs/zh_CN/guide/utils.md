@@ -1,6 +1,6 @@
 # 工具函数
 
-Miuix 提供了一系列工具函数，帮助您更高效地开发应用程序。以下是主要工具函数的详细介绍和使用示例。
+COUI 提供了一系列工具函数，帮助您更高效地开发应用程序。以下是主要工具函数的详细介绍和使用示例。
 
 ## 弹出窗口工具 (COUIPopupUtils)
 
@@ -55,7 +55,7 @@ PopupLayout(
 
 ## 越界回弹效果 (Overscroll)
 
-Miuix 提供了易于使用的越界回弹效果修饰符，让滚动体验更加流畅自然。
+COUI 提供了易于使用的越界回弹效果修饰符，让滚动体验更加流畅自然。
 
 ### 垂直越界回弹
 
@@ -112,7 +112,7 @@ LazyColumn(
 
 ### 通过 OverscrollFactory（主题级集成）
 
-`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的弹簧物理效果，但以主题级别集成。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 Miuix 越界回弹效果。
+`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的弹簧物理效果，但以主题级别集成。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 COUI 越界回弹效果。
 
 ```kotlin
 // 无需额外修饰符 —— COUITheme 已自动提供越界回弹效果
@@ -133,7 +133,7 @@ LazyColumn(overscrollEffect = null) {
 
 ```kotlin
 CompositionLocalProvider(LocalOverscrollFactory provides null) {
-    // 此处的组件不会有 Miuix 越界回弹效果
+    // 此处的组件不会有 COUI 越界回弹效果
 }
 ```
 
@@ -164,7 +164,7 @@ LazyColumn(
 
 ## 滚动到边界触觉反馈 (Modifier.scrollEndHaptic())
 
-Miuix 提供了用于在可滚动容器快速滑动到其开始或结束边界时触发触觉反馈的修饰符，通过触觉反馈确认已到达边界增强用户的交互体验。
+COUI 提供了用于在可滚动容器快速滑动到其开始或结束边界时触发触觉反馈的修饰符，通过触觉反馈确认已到达边界增强用户的交互体验。
 
 ```kotlin
 LazyColumn(
@@ -185,7 +185,7 @@ LazyColumn(
 
 ## 按压反馈效果 (Modifier.pressable())
 
-Miuix 提供了视觉反馈效果来增强用户交互体验，通过类似触觉的响应提升操作感。
+COUI 提供了视觉反馈效果来增强用户交互体验，通过类似触觉的响应提升操作感。
 
 支持与 `Modifier.clickable()` 等响应式修饰符一起使用，`SinkFeedback` 为默认效果。
 

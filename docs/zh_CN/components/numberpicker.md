@@ -1,6 +1,6 @@
 # NumberPicker
 
-`NumberPicker` 是 Miuix 中的基础交互组件，用于通过垂直滚动从一组数字中选择值。选中项居中并高亮显示，周围的项目逐渐淡出并缩小。通过 `wrapAround` 参数支持无限循环滚动。
+`NumberPicker` 是 COUI 中的基础交互组件，用于通过垂直滚动从一组数字中选择值。选中项居中放大并高亮显示，周围的项目在距中心半个条目内缩小并过渡到未选中颜色。通过 `wrapAround` 参数支持无限循环滚动。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=numberPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -69,7 +69,7 @@ NumberPicker(
 | visibleItemCount | Int                | 可见项数。必须为奇数且不小于 3                       | 3                                | 否       |
 | wrapAround       | Boolean            | 是否启用循环滚动（无限滚动）                         | false                            | 否       |
 | colors           | NumberPickerColors | 选择器的颜色配置                                     | NumberPickerDefaults.colors()    | 否       |
-| textStyle        | TextStyle          | 选择器项目的文本样式                                 | COUITheme.textStyles.title1     | 否       |
+| textStyle        | TextStyle          | 选择器项目的文本样式                                 | COUITheme.textStyles.title3     | 否       |
 | itemHeight       | Dp                 | 每个项目的高度                                       | NumberPickerDefaults.ItemHeight   | 否       |
 
 ### NumberPickerDefaults 对象
@@ -87,6 +87,15 @@ NumberPickerDefaults 对象提供了 NumberPicker 组件的默认配置。
 | 方法名   | 返回类型           | 说明                       |
 | -------- | ------------------ | -------------------------- |
 | colors() | NumberPickerColors | 创建默认的颜色配置         |
+
+`colors()` 工厂方法接受以下参数：
+
+| 参数名                      | 类型  | 默认值                                         |
+| --------------------------- | ----- | ---------------------------------------------- |
+| selectedTextColor           | Color | COUITheme.colorScheme.onSurface                |
+| unselectedTextColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
+| disabledSelectedTextColor   | Color | COUITheme.colorScheme.disabledOnSecondary      |
+| disabledUnselectedTextColor | Color | COUITheme.colorScheme.disabledOnSecondary      |
 
 ### NumberPickerColors 类
 
@@ -156,7 +165,7 @@ NumberPicker(
     value = value,
     onValueChange = { value = it },
     range = 1..100,
-    visibleItemCount = 3
+    visibleItemCount = 5 // Must be odd and at least 3
 )
 ```
 

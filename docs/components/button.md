@@ -1,6 +1,6 @@
 # Button
 
-`Button` is a basic interactive component in Miuix, used to trigger actions or events. It provides multiple style options, including primary buttons, secondary buttons, and text buttons.
+`Button` is a basic interactive component in COUI, used to trigger actions or events. It provides multiple style options, including primary buttons, secondary buttons, and text buttons.
 
 <div style="position: relative; height: 200px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=button" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -26,7 +26,7 @@ Button(
 
 ## Button Types
 
-Miuix provides various types of buttons suitable for different scenarios and levels of importance:
+COUI provides various types of buttons suitable for different scenarios and levels of importance:
 
 ### Primary Button
 
@@ -59,6 +59,34 @@ TextButton(
 )
 ```
 
+### Borderless Text Button
+
+Corresponds to COUI `Widget.COUI.Button.Large.Borderless` / `Translate`: no fill, primary-tinted label.
+
+```kotlin
+TextButton(
+    text = "Borderless Button",
+    onClick = { /* Handle click event */ },
+    colors = ButtonDefaults.textButtonColorsBorderless()
+)
+```
+
+### Small Size Tier
+
+Pass the `Small` metrics from `ButtonDefaults` together with a 14sp text style to get the COUI small size tier (`Widget.COUI.Button.Small`):
+
+```kotlin
+TextButton(
+    text = "Small Button",
+    onClick = { /* Handle click event */ },
+    cornerRadius = ButtonDefaults.CornerRadiusSmall,
+    minWidth = ButtonDefaults.MinWidthSmall,
+    minHeight = ButtonDefaults.MinHeightSmall,
+    insideMargin = ButtonDefaults.InsideMarginSmall,
+    textStyle = COUITheme.textStyles.button.copy(fontSize = 14.sp)
+)
+```
+
 ## Component States
 
 ### Disabled State
@@ -87,7 +115,7 @@ Button(
 | colors            | ButtonColors                    | Button color configuration             | ButtonDefaults.buttonColors() | No       |
 | insideMargin      | PaddingValues                   | Internal padding of the button         | ButtonDefaults.InsideMargin   | No       |
 | interactionSource | MutableInteractionSource?       | Interaction source for the button      | null                          | No       |
-| indication        | Indication?                     | Indication for click interactions      | LocalIndication.current       | No       |
+| indication        | Indication?                     | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 | content           | @Composable RowScope.() -> Unit | Composable function for button content | -                             | Yes      |
 
 ### TextButton Properties
@@ -105,7 +133,7 @@ Button(
 | insideMargin      | PaddingValues             | Internal padding of the button    | ButtonDefaults.InsideMargin       | No       |
 | textStyle         | TextStyle                 | Text style of the label (pass a 14sp style with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.button | No       |
 | interactionSource | MutableInteractionSource? | Interaction source for the button | null                              | No       |
-| indication        | Indication?               | Indication for click interactions | LocalIndication.current           | No       |
+| indication        | Indication?               | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 
 ### ButtonDefaults Object
 
@@ -115,6 +143,8 @@ The ButtonDefaults object provides default values and color configurations for b
 
 | Constant Name | Type          | Description                    | Default Value        |
 | ------------- | ------------- | ------------------------------ | -------------------- |
+| PressedScale  | Float         | Smallest scale a button shrinks to while pressed (surfaces up to 48 x 48dp) | 0.92f |
+| PressedBrightness | Float     | Legacy COUIButton `brightness` value; retained for source compatibility only, no longer used | 0.8f |
 | MinWidth      | Dp            | Minimum width of the button    | 58.dp                |
 | MinHeight     | Dp            | Minimum height of the button   | 44.dp                |
 | CornerRadius  | Dp            | Corner radius of the button    | 22.dp                |

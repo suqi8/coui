@@ -165,7 +165,7 @@ regardless of RTL/LTR (e.g. a transition reveal tied to a swipe edge).
 
 ```kotlin
 Modifier.absoluteSquircleSurface(
-    color = MiuixTheme.colorScheme.surface,
+    color = COUITheme.colorScheme.surface,
     topLeft = 24.dp,
     topRight = 24.dp,
     bottomRight = 0.dp,

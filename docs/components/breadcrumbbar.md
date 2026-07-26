@@ -1,6 +1,6 @@
 # BreadcrumbBar
 
-`BreadcrumbBar` is a horizontal navigation component in Miuix that displays a trail of path segments as capsule-shaped items separated by arrow icons. When the content overflows the available width, it scrolls horizontally instead of collapsing (given that miuix is typically used on mobile devices).
+`BreadcrumbBar` is a horizontal navigation component in COUI that displays a trail of path segments as capsule-shaped items separated by arrow icons. When the content overflows the available width, it scrolls horizontally instead of collapsing, matching the file-manager convention on mobile devices.
 
 The `highlightIndex` is decoupled from the `items` list: the caller may show the full path while highlighting any segment (e.g. the current directory or a parent the user navigated back to). The bar automatically scrolls to keep the highlighted item visible.
 
@@ -11,9 +11,9 @@ The `highlightIndex` is decoupled from the `items` list: the caller may show the
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.BreadcrumbBar
-import top.yukonga.miuix.kmp.basic.BreadcrumbItem
-import top.yukonga.miuix.kmp.basic.joinToPath
+import io.github.suqi8.coui.kmp.basic.BreadcrumbBar
+import io.github.suqi8.coui.kmp.basic.BreadcrumbItem
+import io.github.suqi8.coui.kmp.basic.joinToPath
 ```
 
 ## Basic Usage
@@ -136,10 +136,10 @@ BreadcrumbBar(
     items = items,
     onItemClick = { index -> /* Handle click */ },
     colors = BreadcrumbBarDefaults.breadcrumbBarColors(
-        color = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.55f),
-        highlightColor = MiuixTheme.colorScheme.primary,
-        backgroundColor = MiuixTheme.colorScheme.onBackground.copy(alpha = 0.1f),
-        highlightBackgroundColor = MiuixTheme.colorScheme.primary.copy(alpha = 0.2f),
+        color = COUITheme.colorScheme.onBackground.copy(alpha = 0.55f),
+        highlightColor = COUITheme.colorScheme.primary,
+        backgroundColor = COUITheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        highlightBackgroundColor = COUITheme.colorScheme.primary.copy(alpha = 0.2f),
     ),
 )
 ```

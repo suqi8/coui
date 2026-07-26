@@ -19,7 +19,46 @@ Badge(count = 1000)    // 三点省略号(1000+)
 Badge(stroke = true)   // 白色描边,用于彩色背景
 ```
 
-### 锚定在图标上
+## 角标形态
+
+### 纯圆点
+
+`count` 为 0 或更小(默认值)时,渲染 6dp 纯圆点(COUI POINT_ONLY_MODE):
+
+```kotlin
+Badge()
+```
+
+### 数字胶囊
+
+`count` 在 1..999 之间时,渲染 16dp 高的胶囊,宽度随位数增加(10 以内 16dp,100 以内 20dp,1000 以内 26dp)。数字变化时胶囊宽度以 517ms 缓动,新旧数字同时以 150ms 交叉淡变:
+
+```kotlin
+var unread by remember { mutableIntStateOf(8) }
+
+Badge(count = unread)
+```
+
+### 溢出省略号
+
+`count` 达到 1000 及以上时,渲染 20dp 宽胶囊内的三点省略号(COUI `red_dot_more`):
+
+```kotlin
+Badge(count = 1000)
+```
+
+### 白色描边
+
+`stroke = true` 会在圆点或胶囊外绘制 1dp 白色描边,用于放在彩色背景上的角标(COUI POINT_ONLY_MODE_STROKE / POINT_NUM_MODE_STROKE):
+
+```kotlin
+Badge(stroke = true)              // 带描边的圆点
+Badge(count = 99, stroke = true)  // 带描边的胶囊
+```
+
+## 使用 BadgeBox 锚定
+
+`BadgeBox` 将角标锚定在内容的右上角。`overhang` 为正时,角标按该距离超出内容右上角并相应扩大布局(COUI 矩形锚点,如图标):
 
 ```kotlin
 BadgeBox(
@@ -29,6 +68,21 @@ BadgeBox(
     Icon(
         imageVector = COUIIcons.Settings,
         contentDescription = "Settings",
+    )
+}
+```
+
+`overhang` 为负时,角标改为内缩于角内(COUI 圆形锚点,如头像):
+
+```kotlin
+BadgeBox(
+    badge = { Badge() },
+    overhang = (-2).dp,
+) {
+    Image(
+        painter = avatarPainter,
+        contentDescription = "Avatar",
+        modifier = Modifier.size(40.dp).clip(CircleShape),
     )
 }
 ```

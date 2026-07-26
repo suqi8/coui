@@ -1,6 +1,6 @@
 # SliderPreference
 
-`SliderPreference` 是 Miuix 中的滑块偏好设置组件，将标题/摘要与滑块控件结合在一起。滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要调整数值的场景，如音量、亮度或字体大小控制。
+`SliderPreference` 是 COUI 中的滑块偏好设置组件，将标题/摘要与滑块控件结合在一起。滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要调整数值的场景，如音量、亮度或字体大小控制。
 
 ## 引入
 
@@ -82,6 +82,22 @@ SliderPreference(
 | insideMargin          | PaddingValues                     | 组件内部内容的边距                                                                                               | BasicComponentDefaults.InsideMargin | 否       |
 
 ## 进阶用法
+
+### 带数值文本与点击操作
+
+当 `onClick` 非 null 时，末尾区域会显示箭头图标；`valueText` 以摘要样式展示当前值：
+
+```kotlin
+var volume by remember { mutableFloatStateOf(0.7f) }
+
+SliderPreference(
+    value = volume,
+    onValueChange = { volume = it },
+    title = "音量",
+    valueText = "${(volume * 100).roundToInt()}%",
+    onClick = { /* 打开详细设置 */ }
+)
+```
 
 ### 自定义数值范围与步长
 

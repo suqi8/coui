@@ -1,6 +1,6 @@
 # Scaffold
 
-`Scaffold` is a scaffolding component in Miuix used to implement basic design layout structures. It provides the fundamental framework for application interfaces, including containers for top bars, bottom bars, floating action buttons, and other elements.
+`Scaffold` is a scaffolding component in COUI used to implement basic design layout structures. It provides the fundamental framework for application interfaces, including containers for top bars, bottom bars, floating action buttons, and other elements.
 
 <div style="position: relative; height: 350px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=scaffold" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -59,7 +59,7 @@ Scaffold(
 | floatingActionButtonPosition | FabPosition                         | Position to display the floating action button                           | FabPosition.End                   | No       |
 | floatingToolbar              | @Composable () -> Unit              | Floating toolbar                                                         | {}                                | No       |
 | floatingToolbarPosition      | ToolbarPosition                     | Position to display the floating toolbar                                 | ToolbarPosition.BottomCenter      | No       |
-| snackbarHost                 | @Composable () -> Unit              | Container for displaying Snackbar, Miuix does not provide this component | {}                                | No       |
+| snackbarHost                 | @Composable () -> Unit              | Container hosting Snackbars shown via SnackbarHostState.showSnackbar, typically a SnackbarHost | {}          | No       |
 | popupHost                    | @Composable () -> Unit              | Container for displaying popup windows                                   | \{ COUIPopupHost() }             | No       |
 | containerColor               | Color                               | Background color of the scaffold                                         | COUITheme.colorScheme.surface | No       |
 | contentWindowInsets          | WindowInsets                        | Window insets passed to the content                                      | WindowInsets.systemBars.union(WindowInsets.displayCutout) | No       |
@@ -169,14 +169,14 @@ Scaffold(
 )
 ```
 
-### Page Layout with Snackbar (requires Material components)
+### Page Layout with Snackbar
 
 ```kotlin
 val snackbarHostState = remember { SnackbarHostState() }
 val scope = rememberCoroutineScope()
 
 Scaffold(
-    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    snackbarHost = { SnackbarHost(state = snackbarHostState) },
     topBar = {
         SmallTopAppBar(title = "Title")
     },

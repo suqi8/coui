@@ -1,6 +1,6 @@
 # TopAppBar
 
-`TopAppBar` 是 Miuix 中的顶部应用栏组件，用于在界面顶部提供导航、标题和操作按钮。支持大标题模式和普通模式，以及滚动时的动态效果。
+`TopAppBar` 是 COUI 中的顶部应用栏组件，用于在界面顶部提供导航、标题和操作按钮。支持大标题模式和普通模式，以及滚动时的动态效果。
 
 此组件通常与 `Scaffold` 组件结合使用，以便在应用程序的不同页面中保持一致的布局和行为。
 
@@ -61,6 +61,19 @@ Scaffold(
             }
         )
     }
+)
+```
+
+### 带副标题
+
+两种顶部栏都可以在标题下方显示副标题。可折叠的 `TopAppBar` 中副标题默认随折叠渐隐；设置 `hideSubtitleOnCollapse = false` 可让其保持可见并滑入折叠栏标题下方：
+
+```kotlin
+TopAppBar(
+    title = "标题",
+    largeTitle = "大标题",
+    subtitle = "副标题",
+    hideSubtitleOnCollapse = false
 )
 ```
 
