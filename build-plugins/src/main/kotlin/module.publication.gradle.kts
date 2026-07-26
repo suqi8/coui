@@ -39,8 +39,8 @@ val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
 }
 
-val projectUrl = "https://github.com/suqi8/COUI"
-val githubPackagesUrl = "https://maven.pkg.github.com/suqi8/COUI"
+val projectUrl = "https://github.com/suqi8/coui"
+val githubPackagesUrl = "https://maven.pkg.github.com/suqi8/coui"
 val sonatypePackageUrl = layout.buildDirectory.dir("publishing/mavenCentral")
 val localPackageUrl = layout.buildDirectory.dir("repository/local")
 
