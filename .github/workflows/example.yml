@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"
+      - "AGENTS.md"
       - "docs/**"
 
 jobs:
@@ -13,9 +14,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        os: [macos-26, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
         include:
-          - os: macos-latest
+          - os: macos-26
             platform: macos arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
             artifact-path: example/macos/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg
@@ -45,7 +46,7 @@ jobs:
             archive: true
     steps:
       - name: Checkout Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Setup JDK
@@ -88,6 +89,34 @@ jobs:
           name: ${{ matrix.artifact-nameEx }}
           path: ${{ matrix.artifact-nameEx }}
           archive: false
+      - name: Build unsigned iOS IPA
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ./gradlew :example:shared:generateVersionInfo
+          xcodebuild archive \
+            -project example/ios/iosApp.xcodeproj \
+            -scheme 'example [ios]' \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Miuix.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            DEVELOPMENT_TEAM=""
+          APP="$RUNNER_TEMP/Miuix.xcarchive/Products/Applications/Miuix.app"
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$APP" "$RUNNER_TEMP/Payload/"
+          ( cd "$RUNNER_TEMP" && zip -r -y "$GITHUB_WORKSPACE/Miuix-ios-arm64-unsigned.ipa" Payload )
+      - name: Upload unsigned iOS IPA artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v7
+        with:
+          name: Miuix-ios-arm64-unsigned.ipa
+          path: Miuix-ios-arm64-unsigned.ipa
+          archive: false
 
   post_telegram:
     needs: build
@@ -95,7 +124,7 @@ jobs:
     if: ${{ success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.ref_type != 'tag' }}
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 

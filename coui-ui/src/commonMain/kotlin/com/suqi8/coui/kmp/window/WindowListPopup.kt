@@ -15,6 +15,7 @@ import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.layout.ListPopupLayout
 import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.utils.RemovePlatformDialogDefaultEffects
+import com.suqi8.coui.kmp.utils.WindowNavigationEventScope
 import com.suqi8.coui.kmp.utils.platformDialogProperties
 
 /**
@@ -57,7 +58,9 @@ fun WindowListPopup(
                     properties = platformDialogProperties(),
                 ) {
                     RemovePlatformDialogDefaultEffects()
-                    hostContent()
+                    WindowNavigationEventScope {
+                        hostContent()
+                    }
                 }
             }
         },

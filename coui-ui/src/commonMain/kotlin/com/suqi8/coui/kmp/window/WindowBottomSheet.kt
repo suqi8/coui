@@ -21,6 +21,7 @@ import com.suqi8.coui.kmp.layout.BottomSheetContentLayout
 import com.suqi8.coui.kmp.layout.BottomSheetDefaults
 import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.utils.RemovePlatformDialogDefaultEffects
+import com.suqi8.coui.kmp.utils.WindowNavigationEventScope
 import com.suqi8.coui.kmp.utils.platformDialogProperties
 
 /**
@@ -96,7 +97,9 @@ fun WindowBottomSheet(
                     properties = platformDialogProperties(),
                 ) {
                     RemovePlatformDialogDefaultEffects()
-                    hostContent()
+                    WindowNavigationEventScope {
+                        hostContent()
+                    }
                 }
             }
         },

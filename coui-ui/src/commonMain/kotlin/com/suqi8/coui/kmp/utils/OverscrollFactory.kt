@@ -5,7 +5,6 @@ package com.suqi8.coui.kmp.utils
 
 import androidx.compose.foundation.OverscrollEffect
 import androidx.compose.foundation.OverscrollFactory
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -19,11 +18,12 @@ import androidx.compose.ui.node.currentValueOf
 import androidx.compose.ui.node.invalidatePlacement
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.LocalPullToRefreshState
 import com.suqi8.coui.kmp.basic.PullToRefreshState
@@ -59,19 +59,30 @@ object COUIOverscrollFactory : OverscrollFactory {
 class COUIOverscrollEffect : OverscrollEffect {
     private val offsetThreshold = 1f
 
+    // Placement pixel-snaps via round(), so only re-place when the whole-pixel value changes.
+    private var lastPlacedOffsetX = 0f
     internal var offsetX = 0f
         private set(value) {
             if (field != value) {
                 field = value
-                invalidateNodePlacement?.invoke()
+                val rounded = round(value)
+                if (rounded != lastPlacedOffsetX) {
+                    lastPlacedOffsetX = rounded
+                    invalidateNodePlacement?.invoke()
+                }
             }
         }
 
+    private var lastPlacedOffsetY = 0f
     internal var offsetY = 0f
         private set(value) {
             if (field != value) {
                 field = value
-                invalidateNodePlacement?.invoke()
+                val rounded = round(value)
+                if (rounded != lastPlacedOffsetY) {
+                    lastPlacedOffsetY = rounded
+                    invalidateNodePlacement?.invoke()
+                }
             }
         }
 
@@ -140,6 +151,38 @@ class COUIOverscrollEffect : OverscrollEffect {
         offsetY = sign(rawTouchAccumulationY) * SpringMath.obtainDampingDistance(normalized, scrollRangeV)
     }
 
+    // Inverse of the damping curve: re-derive raw accumulation from offset when a drag takes over a spring.
+    private fun syncRawAccumulationFromOffsetX() {
+        rawTouchAccumulationX = sign(offsetX) * SpringMath.obtainTouchDistance(offsetX, scrollRangeH)
+    }
+
+    private fun syncRawAccumulationFromOffsetY() {
+        rawTouchAccumulationY = sign(offsetY) * SpringMath.obtainTouchDistance(offsetY, scrollRangeV)
+    }
+
+    // Reclaims a stale offset once the child can scroll again in the accumulated direction (e.g. pagination); otherwise applyToFling swallows the next fling.
+    private fun unwindStaleOffsetX(consumedDelta: Float) {
+        if (abs(offsetX) <= offsetThreshold || consumedDelta == 0f) return
+        if (rawTouchAccumulationX == 0f) syncRawAccumulationFromOffsetX()
+        if (sign(consumedDelta) != sign(rawTouchAccumulationX)) return
+        if (abs(rawTouchAccumulationX) <= abs(consumedDelta)) {
+            resetStateX()
+        } else {
+            applyDragX(-consumedDelta)
+        }
+    }
+
+    private fun unwindStaleOffsetY(consumedDelta: Float) {
+        if (abs(offsetY) <= offsetThreshold || consumedDelta == 0f) return
+        if (rawTouchAccumulationY == 0f) syncRawAccumulationFromOffsetY()
+        if (sign(consumedDelta) != sign(rawTouchAccumulationY)) return
+        if (abs(rawTouchAccumulationY) <= abs(consumedDelta)) {
+            resetStateY()
+        } else {
+            applyDragY(-consumedDelta)
+        }
+    }
+
     private fun startSpringAnimationX(initialVelocity: Float = 0f) {
         if (abs(offsetX) <= offsetThreshold && initialVelocity == 0f) {
             resetStateX()
@@ -147,27 +190,16 @@ class COUIOverscrollEffect : OverscrollEffect {
         }
         animationJobX?.cancel()
         animationJobX = launchAnimation?.invoke {
-            springEngineX.start(startValue = offsetX, targetValue = 0f, initialVel = initialVelocity)
-            var lastFrameTimeNanos = -1L
-            var isFinished = false
-            try {
-                while (!isFinished && isActive) {
-                    isFinished = withFrameNanos { frameTimeNanos ->
-                        if (lastFrameTimeNanos == -1L) {
-                            lastFrameTimeNanos = frameTimeNanos
-                            return@withFrameNanos false
-                        }
-                        val dt = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
-                        lastFrameTimeNanos = frameTimeNanos
-                        val finished = springEngineX.step(dt)
-                        offsetX = springEngineX.currentPos.toFloat()
-                        rawTouchAccumulationX = sign(offsetX) * SpringMath.obtainTouchDistance(offsetX, scrollRangeH)
-                        finished
-                    }
-                }
-            } finally {
-                if (abs(offsetX) <= offsetThreshold) resetStateX()
-            }
+            springEngineX.runSettleAnimation(
+                startValue = offsetX,
+                initialVelocity = initialVelocity,
+                onFrame = { currentPos ->
+                    offsetX = currentPos
+                },
+                onSettle = {
+                    if (abs(offsetX) <= offsetThreshold) resetStateX()
+                },
+            )
         }
     }
 
@@ -178,27 +210,16 @@ class COUIOverscrollEffect : OverscrollEffect {
         }
         animationJobY?.cancel()
         animationJobY = launchAnimation?.invoke {
-            springEngineY.start(startValue = offsetY, targetValue = 0f, initialVel = initialVelocity)
-            var lastFrameTimeNanos = -1L
-            var isFinished = false
-            try {
-                while (!isFinished && isActive) {
-                    isFinished = withFrameNanos { frameTimeNanos ->
-                        if (lastFrameTimeNanos == -1L) {
-                            lastFrameTimeNanos = frameTimeNanos
-                            return@withFrameNanos false
-                        }
-                        val dt = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
-                        lastFrameTimeNanos = frameTimeNanos
-                        val finished = springEngineY.step(dt)
-                        offsetY = springEngineY.currentPos.toFloat()
-                        rawTouchAccumulationY = sign(offsetY) * SpringMath.obtainTouchDistance(offsetY, scrollRangeV)
-                        finished
-                    }
-                }
-            } finally {
-                if (abs(offsetY) <= offsetThreshold) resetStateY()
-            }
+            springEngineY.runSettleAnimation(
+                startValue = offsetY,
+                initialVelocity = initialVelocity,
+                onFrame = { currentPos ->
+                    offsetY = currentPos
+                },
+                onSettle = {
+                    if (abs(offsetY) <= offsetThreshold) resetStateY()
+                },
+            )
         }
     }
 
@@ -217,14 +238,21 @@ class COUIOverscrollEffect : OverscrollEffect {
     ): Offset {
         if (source != NestedScrollSource.UserInput) {
             val consumed = performScroll(delta)
+            // A running spring settles to zero on its own; only reclaim when it was interrupted.
+            if (animationJobY?.isActive != true) unwindStaleOffsetY(consumed.y)
+            if (animationJobX?.isActive != true) unwindStaleOffsetX(consumed.x)
             updateOverScrollState()
             return consumed
         }
 
         val bypassY = shouldBypassForPullToRefreshY()
 
-        // Cancel running animations for non-bypassed axes
-        if (!bypassY) animationJobY?.cancel()
+        // Resync raw accumulation, then cancel running springs the drag is taking over.
+        if (!bypassY) {
+            if (animationJobY?.isActive == true) syncRawAccumulationFromOffsetY()
+            animationJobY?.cancel()
+        }
+        if (animationJobX?.isActive == true) syncRawAccumulationFromOffsetX()
         animationJobX?.cancel()
 
         // Y-axis pre-scroll: consume from overscroll first when scrolling back toward center
@@ -271,6 +299,9 @@ class COUIOverscrollEffect : OverscrollEffect {
         val adjustedDelta = Offset(performScrollDeltaX, performScrollDeltaY)
         val scrollConsumed = performScroll(adjustedDelta)
         val scrollRemaining = adjustedDelta - scrollConsumed
+
+        if (!bypassY || animationJobY?.isActive != true) unwindStaleOffsetY(scrollConsumed.y)
+        unwindStaleOffsetX(scrollConsumed.x)
 
         if (scrollRemaining.y != 0f && !bypassY) applyDragY(scrollRemaining.y)
         if (scrollRemaining.x != 0f) applyDragX(scrollRemaining.x)
@@ -358,9 +389,15 @@ private class COUIOverscrollEffectNode(
         effect.resetAll()
     }
 
+    private var cachedDensity: Density? = null
+    private var cachedWindowInfo: WindowInfo? = null
+
     private fun updateScrollRange() {
         val density = currentValueOf(LocalDensity)
         val windowInfo = currentValueOf(LocalWindowInfo)
+        if (density == cachedDensity && windowInfo == cachedWindowInfo) return
+        cachedDensity = density
+        cachedWindowInfo = windowInfo
         with(density) {
             effect.scrollRangeV = windowInfo.containerDpSize.height.toPx()
             effect.scrollRangeH = windowInfo.containerDpSize.width.toPx()

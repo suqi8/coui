@@ -14,7 +14,11 @@ import com.suqi8.coui.kmp.shader.isRuntimeShaderSupported as coreIsRuntimeShader
 /** Back-compat re-export. New code should use `com.suqi8.coui.kmp.shader.RuntimeShader`. */
 typealias RuntimeShader = com.suqi8.coui.kmp.shader.RuntimeShader
 
-/** Back-compat re-export. */
+/**
+ * Back-compat re-export.
+ *
+ * @param shaderString The AGSL/SkSL shader source code to compile into the [RuntimeShader].
+ */
 fun RuntimeShader(shaderString: String): RuntimeShader = com.suqi8.coui.kmp.shader.RuntimeShader(shaderString)
 
 /** Back-compat re-export. */

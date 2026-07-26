@@ -6,12 +6,14 @@ on:
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"
+      - "AGENTS.md"
       - "docs/**"
   pull_request:
     branches: ["main"]
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"
+      - "AGENTS.md"
       - "docs/**"
 
 permissions:
@@ -23,7 +25,7 @@ jobs:
       matrix:
         include:
           - target: "iosSimulatorArm64Test"
-            os: macos-latest
+            os: macos-26
           - target: "desktopTest"
             os: ubuntu-latest
           - target: "assembleAndroidTest"
@@ -33,7 +35,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -42,7 +44,7 @@ jobs:
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Run check
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-26'
         run: ./gradlew check
       - name: Run test
         run: ./gradlew ${{ matrix.target }}

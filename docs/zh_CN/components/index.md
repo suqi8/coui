@@ -21,6 +21,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [NavigationBar](../components/navigationbar)               | 底部导航组件           | 主要页面切换         |
 | [NavigationRail](../components/navigationrail)             | 侧边导航组件           | 主要页面切换（大屏）  |
 | [TabRow](../components/tabrow)                             | 水平标签页切换栏       | 内容分类浏览         |
+| [BreadcrumbBar](../components/breadcrumbbar)               | 水平面包屑导航栏       | 文件路径导航、位置轨迹 |
 | [Card](../components/card)                                 | 包含相关信息的容器     | 信息展示、内容分组   |
 | [BasicComponent](../components/basiccomponent)             | 通用基础组件           | 自定义组件开发       |
 | [Button](../components/button)                             | 触发操作的交互元素     | 表单提交、操作确认   |
@@ -35,6 +36,8 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [ProgressIndicator](../components/progressindicator)       | 展示操作进度状态       | 加载中、进度展示     |
 | [Snackbar](../components/snackbar)                         | 底部临时消息条组件     | 状态提示、操作结果   |
+| [Tooltip](../components/tooltip)                           | 悬停或长按显示的简短标签 | 图标按钮标签、元素提示 |
+| [Badge](../components/badge)                               | 锚点上的小型状态叠加     | 未读数、状态圆点       |
 | [Icon](../components/icon)                                 | 图标展示组件           | 图标按钮、状态指示   |
 | [FloatingActionButton](../components/floatingactionbutton) | 悬浮操作按钮           | 主要操作、快捷功能   |
 | [FloatingToolbar](../components/floatingtoolbar)           | 悬浮工具栏             | 快捷操作、信息展示   |

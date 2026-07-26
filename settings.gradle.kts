@@ -47,6 +47,7 @@ include(":coui-blur")
 include(":coui-squircle")
 include(":coui-icons")
 include(":coui-navigation3-ui")
+include(":coui-nav")
 
 include(":baselineprofile")
 

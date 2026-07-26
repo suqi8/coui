@@ -21,6 +21,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [NavigationBar](../components/navigationbar)               | Bottom navigation component                | Main page switching                   |
 | [NavigationRail](../components/navigationrail)             | Side navigation component                  | Main page switching (Large screen)    |
 | [TabRow](../components/tabrow)                             | Horizontal tab bar                         | Content category browsing             |
+| [BreadcrumbBar](../components/breadcrumbbar)               | Horizontal breadcrumb navigation bar         | File path navigation, location trail   |
 | [Card](../components/card)                                 | Container with related information         | Information display, content grouping |
 | [BasicComponent](../components/basiccomponent)             | Universal base component                   | Custom component development          |
 | [Button](../components/button)                             | Interactive element for triggering actions | Form submission, action confirmation  |
@@ -35,6 +36,8 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [ProgressIndicator](../components/progressindicator)       | Displays operation progress status         | Loading, progress display             |
 | [Snackbar](../components/snackbar)                         | Temporary message bar for brief feedback   | Operation result, status notification |
+| [Tooltip](../components/tooltip)                           | Brief label shown on hover or long press   | Icon button labels, element hints     |
+| [Badge](../components/badge)                               | Small status overlay on an anchor          | Unread counts, status dots            |
 | [Icon](../components/icon)                                 | Icon display component                     | Icon buttons, status indicators       |
 | [FloatingActionButton](../components/floatingactionbutton) | Floating action button                     | Primary actions, quick functions      |
 | [FloatingToolbar](../components/floatingtoolbar)           | Floating toolbar                           | Quick actions, information display    |

@@ -8,7 +8,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.LocalPullToRefreshState
 import com.suqi8.coui.kmp.basic.PullToRefreshState
@@ -142,11 +140,17 @@ private class OverscrollNode(
     private var animationJob: Job? = null
     private val offsetThreshold = 1f
 
+    private var lastPlacedOffset = 0f
     var offset = 0f
         private set(value) {
             if (field != value) {
                 field = value
-                if (isAttached) invalidatePlacement()
+                // Placement pixel-snaps via round(), so only re-place when the whole-pixel value changes.
+                val rounded = round(value)
+                if (rounded != lastPlacedOffset) {
+                    lastPlacedOffset = rounded
+                    if (isAttached) invalidatePlacement()
+                }
             }
         }
 
@@ -214,38 +218,16 @@ private class OverscrollNode(
 
         animationJob?.cancel()
         animationJob = coroutineScope.launch {
-            springEngine.start(
+            springEngine.runSettleAnimation(
                 startValue = offset,
-                targetValue = 0.0f,
-                initialVel = initialVelocity,
+                initialVelocity = initialVelocity,
+                onFrame = { currentPos ->
+                    offset = currentPos
+                },
+                onSettle = {
+                    if (abs(offset) <= offsetThreshold) resetState()
+                },
             )
-
-            var lastFrameTimeNanos = -1L
-            var isFinished = false
-
-            try {
-                while (!isFinished && isActive) {
-                    isFinished = withFrameNanos { frameTimeNanos ->
-                        if (lastFrameTimeNanos == -1L) {
-                            lastFrameTimeNanos = frameTimeNanos
-                            return@withFrameNanos false
-                        }
-                        val dt = (frameTimeNanos - lastFrameTimeNanos) / 1_000_000_000f
-                        lastFrameTimeNanos = frameTimeNanos
-
-                        val finished = springEngine.step(dt)
-
-                        offset = springEngine.currentPos.toFloat()
-                        rawTouchAccumulation = sign(offset) * SpringMath.obtainTouchDistance(offset, scrollRange)
-
-                        finished
-                    }
-                }
-            } finally {
-                if (abs(offset) <= offsetThreshold) {
-                    resetState()
-                }
-            }
         }
     }
 
@@ -262,6 +244,23 @@ private class OverscrollNode(
         val normalized = min(abs(rawTouchAccumulation) / scrollRange, 1.0f)
         val dampedDist = SpringMath.obtainDampingDistance(normalized, scrollRange)
         offset = sign(rawTouchAccumulation) * dampedDist
+    }
+
+    /** Inverse of the damping curve: re-derive [rawTouchAccumulation] from [offset] when a drag takes over a spring. */
+    private fun syncRawAccumulationFromOffset() {
+        rawTouchAccumulation = sign(offset) * SpringMath.obtainTouchDistance(offset, scrollRange)
+    }
+
+    /** Reclaims a stale offset once the child can scroll again in the accumulated direction (e.g. pagination); otherwise [onPreFling] swallows the next fling. */
+    private fun unwindStaleOffset(consumedDelta: Float) {
+        if (abs(offset) <= offsetThreshold || consumedDelta == 0f) return
+        if (rawTouchAccumulation == 0f) syncRawAccumulationFromOffset()
+        if (sign(consumedDelta) != sign(rawTouchAccumulation)) return
+        if (abs(rawTouchAccumulation) <= abs(consumedDelta)) {
+            resetState()
+        } else {
+            applyDrag(-consumedDelta)
+        }
     }
 
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
@@ -290,6 +289,8 @@ private class OverscrollNode(
             return dispatcher.dispatchPreScroll(available, source)
         }
 
+        // Resync raw accumulation when a drag takes over a running spring.
+        if (animationJob?.isActive == true) syncRawAccumulationFromOffset()
         animationJob?.cancel()
 
         val parentConsumed = if (nestedScrollToParent) {
@@ -337,10 +338,15 @@ private class OverscrollNode(
         }
 
         if (shouldBypassForPullToRefresh() || source != NestedScrollSource.UserInput) {
+            // A running spring settles to zero on its own; only reclaim when it was interrupted.
+            if (animationJob?.isActive != true) {
+                unwindStaleOffset(if (isVertical) consumed.y else consumed.x)
+            }
             return dispatcher.dispatchPostScroll(consumed, available, source)
         }
 
         animationJob?.cancel()
+        unwindStaleOffset(if (isVertical) consumed.y else consumed.x)
 
         val parentConsumed = if (nestedScrollToParent) {
             dispatcher.dispatchPostScroll(consumed, available, source)

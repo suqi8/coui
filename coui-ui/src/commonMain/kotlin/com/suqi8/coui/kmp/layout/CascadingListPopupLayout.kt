@@ -42,7 +42,6 @@ import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.anim.folmeSpring
 import com.suqi8.coui.kmp.basic.DropdownColors
@@ -106,6 +105,9 @@ internal fun CascadingListPopupLayout(
     val enterFraction = remember { Animatable(0f) }
     val enterAlpha = remember { Animatable(0f) }
     val dimProgress = remember { Animatable(0f) }
+    // Two tracks: a depth-0 gesture may start while the depth-1 collapse is still settling.
+    val backEnterProgress = remember { Animatable(0f) }
+    val backExpandProgress = remember { Animatable(0f) }
 
     var expandedItem by remember { mutableStateOf<DropdownItem?>(null) }
     // Outlives [expandedItem] until the collapse spring settles so the secondary stays subcomposed.
@@ -131,6 +133,8 @@ internal fun CascadingListPopupLayout(
     LaunchedEffect(show) {
         if (show) {
             internalVisible.value = true
+            backEnterProgress.snapTo(0f)
+            backExpandProgress.snapTo(0f)
             launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
             snapshotFlow { primarySize to hostMeasured }
                 .first { (size, ready) -> size != IntSize.Zero && ready }
@@ -144,6 +148,8 @@ internal fun CascadingListPopupLayout(
             enterAlpha.animateTo(0f, ListPopupDefaults.AlphaExitAnimationSpec)
             enterFraction.stop()
             dimProgress.stop()
+            backEnterProgress.snapTo(0f)
+            backExpandProgress.snapTo(0f)
             internalVisible.value = false
             currentOnDismissFinished?.invoke()
         }
@@ -151,7 +157,10 @@ internal fun CascadingListPopupLayout(
 
     LaunchedEffect(expandedItem) {
         val item = expandedItem
-        if (item != null) displayedItem = item
+        if (item != null) {
+            displayedItem = item
+            backExpandProgress.snapTo(0f)
+        }
         val target = if (item != null) 1f else 0f
         val mainSpec = if (target == 1f) {
             folmeSpring(EXPAND_SPRING_DAMPING, EXPAND_SPRING_RESPONSE)
@@ -162,7 +171,11 @@ internal fun CascadingListPopupLayout(
             expandFraction.animateTo(target, mainSpec)
             // Settle on the main spring — the slower arrowRotation would otherwise hold the
             // secondary subcomposed past visibility.
-            if (target == 0f) displayedItem = null
+            if (target == 0f) {
+                displayedItem = null
+                // Only after the collapse settles — clearing earlier jumps the effective values.
+                backExpandProgress.snapTo(0f)
+            }
         }
         launch {
             primaryScale.animateTo(
@@ -217,23 +230,15 @@ internal fun CascadingListPopupLayout(
             state = backState,
             isBackEnabled = show,
             onBackCancelled = {
-                // Reset whichever tree the gesture drove; depth cannot change mid-gesture.
+                // Reset whichever track the gesture drove; depth cannot change mid-gesture.
                 coroutineScope.launch {
                     if (expandedItem != null) {
-                        val mainSpec = folmeSpring<Float>(EXPAND_SPRING_DAMPING, EXPAND_SPRING_RESPONSE)
-                        val arrowSpec = folmeSpring<Float>(MAIN_SPRING_DAMPING, ARROW_EXPAND_SPRING_RESPONSE)
-                        joinAll(
-                            launch { expandFraction.animateTo(1f, mainSpec) },
-                            launch { primaryScale.animateTo(PRIMARY_SHRUNK_SCALE, mainSpec) },
-                            launch { maskAlpha.animateTo(1f, mainSpec) },
-                            launch { arrowRotation.animateTo(arrowEndDeg, arrowSpec) },
+                        backExpandProgress.animateTo(
+                            0f,
+                            folmeSpring(EXPAND_SPRING_DAMPING, EXPAND_SPRING_RESPONSE),
                         )
                     } else {
-                        joinAll(
-                            launch { enterFraction.animateTo(1f, ListPopupDefaults.ResetAnimationSpec) },
-                            launch { enterAlpha.animateTo(1f, ListPopupDefaults.AlphaEnterAnimationSpec) },
-                            launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) },
-                        )
+                        backEnterProgress.animateTo(0f, ListPopupDefaults.ResetAnimationSpec)
                     }
                 }
             },
@@ -255,18 +260,13 @@ internal fun CascadingListPopupLayout(
                         transitionState is NavigationEventTransitionState.InProgress &&
                         transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
                     ) {
-                        val inv = 1f - transitionState.latestEvent.progress
+                        val progress = transitionState.latestEvent.progress
                         if (expandedItem != null) {
                             // Preview secondary → primary collapse along the expand-tree.
-                            expandFraction.snapTo(inv)
-                            primaryScale.snapTo(1f + (PRIMARY_SHRUNK_SCALE - 1f) * inv)
-                            maskAlpha.snapTo(inv)
-                            arrowRotation.snapTo(arrowEndDeg * inv)
+                            backExpandProgress.snapTo(progress)
                         } else {
                             // Preview popup → spawn corner retreat along the entry tree.
-                            enterFraction.snapTo(inv)
-                            enterAlpha.snapTo(inv)
-                            dimProgress.snapTo(inv)
+                            backEnterProgress.snapTo(progress)
                         }
                     }
                 }
@@ -285,7 +285,7 @@ internal fun CascadingListPopupLayout(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .graphicsLayer { alpha = dimProgress.value }
+                            .graphicsLayer { alpha = dimProgress.value * (1f - backEnterProgress.value) }
                             .background(dimColor),
                     )
                 }
@@ -338,12 +338,12 @@ internal fun CascadingListPopupLayout(
                         maxHeight = maxHeight,
                         minWidth = minWidth,
                         dropdownColors = dropdownColors,
-                        enterFraction = { enterFraction.value },
-                        enterAlpha = { enterAlpha.value },
-                        primaryScale = { primaryScale.value },
-                        maskAlpha = { maskAlpha.value },
-                        expandFraction = { expandFraction.value },
-                        arrowRotation = { arrowRotation.value },
+                        enterFraction = { enterFraction.value * (1f - backEnterProgress.value) },
+                        enterAlpha = { enterAlpha.value * (1f - backEnterProgress.value) },
+                        primaryScale = { 1f + (primaryScale.value - 1f) * (1f - backExpandProgress.value) },
+                        maskAlpha = { maskAlpha.value * (1f - backExpandProgress.value) },
+                        expandFraction = { expandFraction.value * (1f - backExpandProgress.value) },
+                        arrowRotation = { arrowRotation.value * (1f - backExpandProgress.value) },
                         layoutInfo = layoutInfo,
                         layoutDirection = layoutDirection,
                         surfaceColor = surfaceColor,

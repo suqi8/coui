@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastRoundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -55,7 +56,6 @@ import kotlinx.coroutines.sync.withLock
 import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 /**
  * Defines how to scroll the scrollable component and how to display a scrollbar for it.
@@ -270,7 +270,7 @@ private fun ScrollBar(
         SliderAdapter(adapter, 0, minThumbPx, reverseLayout, isVertical, coroutineScope)
     }
     LaunchedEffect(containerSize, totalTrackPaddingPx) {
-        sliderAdapter.trackSize = (containerSize - totalTrackPaddingPx.roundToInt()).coerceAtLeast(0)
+        sliderAdapter.trackSize = (containerSize - totalTrackPaddingPx.fastRoundToInt()).coerceAtLeast(0)
     }
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -563,8 +563,8 @@ private class SliderAdapter(
 
 private val SliderAdapter.thumbPixelRange: IntRange
     get() {
-        val start = position.roundToInt()
-        val endExclusive = start + thumbSize.roundToInt()
+        val start = position.fastRoundToInt()
+        val endExclusive = start + thumbSize.fastRoundToInt()
         return start until endExclusive
     }
 
@@ -580,7 +580,7 @@ private class ScrollStateAdapter(
     override val viewportSize: Double get() = scrollState.viewportSize.toDouble()
 
     override suspend fun scrollTo(scrollOffset: Double) {
-        scrollState.scrollTo(scrollOffset.roundToInt())
+        scrollState.scrollTo(scrollOffset.fastRoundToInt())
     }
 }
 

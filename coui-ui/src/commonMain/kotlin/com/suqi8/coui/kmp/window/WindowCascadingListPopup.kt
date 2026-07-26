@@ -17,6 +17,7 @@ import com.suqi8.coui.kmp.basic.ListPopupDefaults
 import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.layout.CascadingListPopupLayout
 import com.suqi8.coui.kmp.utils.RemovePlatformDialogDefaultEffects
+import com.suqi8.coui.kmp.utils.WindowNavigationEventScope
 import com.suqi8.coui.kmp.utils.platformDialogProperties
 
 /**
@@ -63,7 +64,9 @@ fun WindowCascadingListPopup(
                     properties = platformDialogProperties(),
                 ) {
                     RemovePlatformDialogDefaultEffects()
-                    hostContent()
+                    WindowNavigationEventScope {
+                        hostContent()
+                    }
                 }
             }
         },
