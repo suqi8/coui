@@ -1,13 +1,13 @@
-# miuix-nav
+# coui-nav
 
-`miuix-nav` 是一个自研的 Compose Multiplatform 导航运行时，核心模型为**连续栈深度**。整条返回栈由单个 `Animatable<Float>`（`animatedTop`）驱动；每个 entry 的视觉是其相对深度的纯函数。由此，连续出入栈、完全自定义的 float 驱动转场、以及 1:1 跟手的手势返回都自然成立。它**零依赖** `androidx.navigation3`。
+`coui-nav` 是一个自研的 Compose Multiplatform 导航运行时，核心模型为**连续栈深度**。整条返回栈由单个 `Animatable<Float>`（`animatedTop`）驱动；每个 entry 的视觉是其相对深度的纯函数。由此，连续出入栈、完全自定义的 float 驱动转场、以及 1:1 跟手的手势返回都自然成立。它**零依赖** `androidx.navigation3`。
 
 ## 安装
 
 在 `build.gradle.kts` 中添加依赖：
 
 ```kotlin
-implementation("top.yukonga.miuix.kmp:miuix-nav:<version>")
+implementation("top.yukonga.miuix.kmp:coui-nav:<version>")
 ```
 
 为路由层级标注 `@Serializable`，使返回栈能在配置变更与进程死亡后保存与恢复。
@@ -358,11 +358,11 @@ v1 核心**不提供**内置结果通道（`NavController` 上没有 `navigateFo
 // observeResult(requestKey)：在调用方屏幕以 SharedFlow 收集结果。
 ```
 
-把这套思路（或 `SavedStateHandle` 风格的持有者）移植到你自己的 app 层即可；它被有意排除在 `miuix-nav` v1 之外，以保持运行时是一个纯粹的深度驱动栈。
+把这套思路（或 `SavedStateHandle` 风格的持有者）移植到你自己的 app 层即可；它被有意排除在 `coui-nav` v1 之外，以保持运行时是一个纯粹的深度驱动栈。
 
 ## 范围与扩展边界（v1）
 
-`miuix-nav` v1 有意做成一个**单一、扁平的返回栈**。以下能力在 v1 中**明确不支持**，延后到 v2+；请勿提前依赖：
+`coui-nav` v1 有意做成一个**单一、扁平的返回栈**。以下能力在 v1 中**明确不支持**，延后到 v2+；请勿提前依赖：
 
 | 能力 | v1 状态 |
 | :-- | :-- |

@@ -1,13 +1,13 @@
-# miuix-nav
+# coui-nav
 
-`miuix-nav` is a self-contained Compose Multiplatform navigation runtime with **continuous stack depth** as its core model. The whole back stack is driven by a single `Animatable<Float>` (`animatedTop`); every entry's visuals are a pure function of its relative depth. This makes continuous push/pop, fully custom float-driven transitions, and 1:1 gesture back fall out naturally. It has **zero dependency** on `androidx.navigation3`.
+`coui-nav` is a self-contained Compose Multiplatform navigation runtime with **continuous stack depth** as its core model. The whole back stack is driven by a single `Animatable<Float>` (`animatedTop`); every entry's visuals are a pure function of its relative depth. This makes continuous push/pop, fully custom float-driven transitions, and 1:1 gesture back fall out naturally. It has **zero dependency** on `androidx.navigation3`.
 
 ## Setup
 
 Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
-implementation("top.yukonga.miuix.kmp:miuix-nav:<version>")
+implementation("top.yukonga.miuix.kmp:coui-nav:<version>")
 ```
 
 Annotate your route hierarchy with `@Serializable` so the back stack can be saved and restored across configuration changes and process death.
@@ -358,11 +358,11 @@ The recommended shape is a `requestKey`-addressed bus alongside the stack — us
 // observeResult(requestKey): collect the result as a SharedFlow on the caller screen.
 ```
 
-Port that approach (or a `SavedStateHandle`-style holder) into your own app layer; it is intentionally left out of `miuix-nav` v1 so the runtime stays a pure depth-driven stack.
+Port that approach (or a `SavedStateHandle`-style holder) into your own app layer; it is intentionally left out of `coui-nav` v1 so the runtime stays a pure depth-driven stack.
 
 ## Scope and extension boundaries (v1)
 
-`miuix-nav` v1 is deliberately a **single, flat back stack**. The following are explicitly **not supported in v1** and are deferred to v2+; do not build on them yet:
+`coui-nav` v1 is deliberately a **single, flat back stack**. The following are explicitly **not supported in v1** and are deferred to v2+; do not build on them yet:
 
 | Capability | v1 status |
 | :-- | :-- |

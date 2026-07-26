@@ -207,7 +207,7 @@ val annotated = buildAnnotatedString {
     append("Miuix 文档站")
     addLink(
         LinkAnnotation.Url(
-            url = "https://compose-coui-ui.github.io/miuix/",
+            url = "https://suqi8.github.io/coui/",
             styles = TextLinkStyles(
                 SpanStyle(color = COUITheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             )

@@ -21,7 +21,7 @@ repositories {
 ```
 
 2. Check the latest version on Maven Central:
-   [![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/miuix-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
+   [![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
 
 3. Add dependencies to your project's `build.gradle.kts`:
 
@@ -29,13 +29,13 @@ Miuix is composed of several modules that can be used independently:
 
 | Module             | Description                                          |
 | ------------------ | ---------------------------------------------------- |
-| `miuix-ui`         | Core UI component library                            |
-| `miuix-preference` | Preference components library, depends on `miuix-ui` |
-| `miuix-icons`      | Extended icon library, can be used independently     |
-| `miuix-blur`       | Blur effect library, can be used independently       |
-| `miuix-squircle`   | Squircle shapes library, can be used independently   |
+| `coui-ui`         | Core UI component library                            |
+| `coui-preference` | Preference components library, depends on `coui-ui` |
+| `coui-icons`      | Extended icon library, can be used independently     |
+| `coui-blur`       | Blur effect library, can be used independently       |
+| `coui-squircle`   | Squircle shapes library, can be used independently   |
 | `coui-nav`        | Navigation library, can be used independently        |
-| `miuix-shader`     | Low-level runtime shader / render effect abstraction |
+| `coui-shader`     | Low-level runtime shader / render effect abstraction |
 
 - For Compose Multiplatform projects:
 
@@ -43,15 +43,15 @@ Miuix is composed of several modules that can be used independently:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:miuix-ui:<version>")
-            // Optional: Add miuix-preference for preference components
-            implementation("io.github.suqi8.coui.kmp:miuix-preference:<version>")
-            // Optional: Add miuix-icons for more icons
-            implementation("io.github.suqi8.coui.kmp:miuix-icons:<version>")
-            // Optional: Add miuix-blur for blur effects
-            implementation("io.github.suqi8.coui.kmp:miuix-blur:<version>")
-            // Optional: Add miuix-squircle for squircle (smooth rounded corner) shapes
-            implementation("io.github.suqi8.coui.kmp:miuix-squircle:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:<version>")
+            // Optional: Add coui-preference for preference components
+            implementation("io.github.suqi8.coui.kmp:coui-preference:<version>")
+            // Optional: Add coui-icons for more icons
+            implementation("io.github.suqi8.coui.kmp:coui-icons:<version>")
+            // Optional: Add coui-blur for blur effects
+            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
+            // Optional: Add coui-squircle for squircle (smooth rounded corner) shapes
+            implementation("io.github.suqi8.coui.kmp:coui-squircle:<version>")
             // Optional: Add coui-nav for navigation
             implementation("io.github.suqi8.coui.kmp:coui-nav:<version>")
         }
@@ -63,15 +63,15 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation("io.github.suqi8.coui.kmp:miuix-ui-android:<version>")
-    // Optional: Add miuix-preference for preference components
-    implementation("io.github.suqi8.coui.kmp:miuix-preference-android:<version>")
-    // Optional: Add miuix-icons for more icons
-    implementation("io.github.suqi8.coui.kmp:miuix-icons-android:<version>")
-    // Optional: Add miuix-blur for blur effects (requires minSdk 33)
-    implementation("io.github.suqi8.coui.kmp:miuix-blur-android:<version>")
-    // Optional: Add miuix-squircle for squircle (smooth rounded corner) shapes
-    implementation("io.github.suqi8.coui.kmp:miuix-squircle-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-ui-android:<version>")
+    // Optional: Add coui-preference for preference components
+    implementation("io.github.suqi8.coui.kmp:coui-preference-android:<version>")
+    // Optional: Add coui-icons for more icons
+    implementation("io.github.suqi8.coui.kmp:coui-icons-android:<version>")
+    // Optional: Add coui-blur for blur effects (requires minSdk 33)
+    implementation("io.github.suqi8.coui.kmp:coui-blur-android:<version>")
+    // Optional: Add coui-squircle for squircle (smooth rounded corner) shapes
+    implementation("io.github.suqi8.coui.kmp:coui-squircle-android:<version>")
     // Optional: Add coui-nav for navigation
     implementation("io.github.suqi8.coui.kmp:coui-nav-android:<version>")
 }
@@ -80,26 +80,26 @@ dependencies {
 - For other projects, add platform-specific dependencies as needed:
 
 ```kotlin
-implementation("io.github.suqi8.coui.kmp:miuix-ui-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-js:<version>")
-// Optional: Add miuix-preference
-implementation("io.github.suqi8.coui.kmp:miuix-preference-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-js:<version>")
-// Optional: Add miuix-blur
-implementation("io.github.suqi8.coui.kmp:miuix-blur-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-js:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-js:<version>")
+// Optional: Add coui-preference
+implementation("io.github.suqi8.coui.kmp:coui-preference-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-js:<version>")
+// Optional: Add coui-blur
+implementation("io.github.suqi8.coui.kmp:coui-blur-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-js:<version>")
 // Optional: Add coui-nav
 implementation("io.github.suqi8.coui.kmp:coui-nav-iosarm64:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-iossimulatorarm64:<version>")
@@ -107,20 +107,20 @@ implementation("io.github.suqi8.coui.kmp:coui-nav-macosarm64:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-desktop:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-wasmjs:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-js:<version>")
-// Optional: Add miuix-icons
-implementation("io.github.suqi8.coui.kmp:miuix-icons-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-js:<version>")
-// Optional: Add miuix-squircle
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-js:<version>")
+// Optional: Add coui-icons
+implementation("io.github.suqi8.coui.kmp:coui-icons-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-js:<version>")
+// Optional: Add coui-squircle
+implementation("io.github.suqi8.coui.kmp:coui-squircle-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-js:<version>")
 ```
 
 ## Basic Usage
@@ -170,5 +170,5 @@ all implemented based on this and therefore need to be wrapped by this component
 
 ## API Documentation
 
-- View the [API Documentation](/miuix/dokka/index.html){target="\_blank"},
+- View the [API Documentation](/coui/dokka/index.html){target="\_blank"},
   generated using Dokka, which contains detailed information about all APIs.

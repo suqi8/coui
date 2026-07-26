@@ -21,7 +21,7 @@ repositories {
 ```
 
 2. 检查 Maven Central 当前最新版本：
-   [![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/miuix-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
+   [![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
 
 3. 在项目的 build.gradle.kts 中添加依赖：
 
@@ -29,12 +29,12 @@ Miuix 由多个可独立使用的模块组成：
 
 | 模块 | 说明 |
 |---|---|
-| `miuix-ui` | 核心 UI 组件库（自动包含 `miuix-core`） |
-| `miuix-preference` | Preference 组件（SwitchPreference、CheckboxPreference 等），依赖 `miuix-ui` |
-| `miuix-icons` | 扩展图标库，可独立使用，也可与 `miuix-ui` 同时使用（自动包含 `miuix-core`） |
-| `miuix-blur` | 模糊效果库，可独立使用 |
-| `miuix-squircle` | 平滑圆角形状，可独立使用（已由 `miuix-ui` 传递包含） |
-| `miuix-shader` | 底层运行时着色器 / 渲染效果抽象，已由 `miuix-blur` / `miuix-squircle` 传递包含 |
+| `coui-ui` | 核心 UI 组件库（自动包含 `coui-core`） |
+| `coui-preference` | Preference 组件（SwitchPreference、CheckboxPreference 等），依赖 `coui-ui` |
+| `coui-icons` | 扩展图标库，可独立使用，也可与 `coui-ui` 同时使用（自动包含 `coui-core`） |
+| `coui-blur` | 模糊效果库，可独立使用 |
+| `coui-squircle` | 平滑圆角形状，可独立使用（已由 `coui-ui` 传递包含） |
+| `coui-shader` | 底层运行时着色器 / 渲染效果抽象，已由 `coui-blur` / `coui-squircle` 传递包含 |
 | `coui-nav` | 自包含导航库，可独立使用 |
 
 - 在 Compose Multiplatform 项目目录的 build.gradle.kts 中：
@@ -43,15 +43,15 @@ Miuix 由多个可独立使用的模块组成：
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:miuix-ui:<version>")
-            // 可选：添加 miuix-preference 以获取 Preference 组件
-            implementation("io.github.suqi8.coui.kmp:miuix-preference:<version>")
-            // 可选：添加 miuix-icons 以获取更多图标
-            implementation("io.github.suqi8.coui.kmp:miuix-icons:<version>")
-            // 可选：添加 miuix-blur 以获取模糊效果
-            implementation("io.github.suqi8.coui.kmp:miuix-blur:<version>")
-            // 可选：添加 miuix-squircle 以获取平滑圆角形状
-            implementation("io.github.suqi8.coui.kmp:miuix-squircle:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:<version>")
+            // 可选：添加 coui-preference 以获取 Preference 组件
+            implementation("io.github.suqi8.coui.kmp:coui-preference:<version>")
+            // 可选：添加 coui-icons 以获取更多图标
+            implementation("io.github.suqi8.coui.kmp:coui-icons:<version>")
+            // 可选：添加 coui-blur 以获取模糊效果
+            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
+            // 可选：添加 coui-squircle 以获取平滑圆角形状
+            implementation("io.github.suqi8.coui.kmp:coui-squircle:<version>")
             // 可选：添加 coui-nav 以获取导航支持
             implementation("io.github.suqi8.coui.kmp:coui-nav:<version>")
         }
@@ -63,15 +63,15 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation("io.github.suqi8.coui.kmp:miuix-ui-android:<version>")
-    // 可选：添加 miuix-preference 以获取 Preference 组件
-    implementation("io.github.suqi8.coui.kmp:miuix-preference-android:<version>")
-    // 可选：添加 miuix-icons 以获取更多图标
-    implementation("io.github.suqi8.coui.kmp:miuix-icons-android:<version>")
-    // 可选：添加 miuix-blur 以获取模糊效果（需要 minSdk 33）
-    implementation("io.github.suqi8.coui.kmp:miuix-blur-android:<version>")
-    // 可选：添加 miuix-squircle 以获取平滑圆角形状
-    implementation("io.github.suqi8.coui.kmp:miuix-squircle-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-ui-android:<version>")
+    // 可选：添加 coui-preference 以获取 Preference 组件
+    implementation("io.github.suqi8.coui.kmp:coui-preference-android:<version>")
+    // 可选：添加 coui-icons 以获取更多图标
+    implementation("io.github.suqi8.coui.kmp:coui-icons-android:<version>")
+    // 可选：添加 coui-blur 以获取模糊效果（需要 minSdk 33）
+    implementation("io.github.suqi8.coui.kmp:coui-blur-android:<version>")
+    // 可选：添加 coui-squircle 以获取平滑圆角形状
+    implementation("io.github.suqi8.coui.kmp:coui-squircle-android:<version>")
     // 可选：添加 coui-nav 以获取导航支持
     implementation("io.github.suqi8.coui.kmp:coui-nav-android:<version>")
 }
@@ -80,26 +80,26 @@ dependencies {
 - 在其他常规项目中使用，则只需要根据需要添加对应平台后缀的依赖即可：
 
 ```kotlin
-implementation("io.github.suqi8.coui.kmp:miuix-ui-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-ui-js:<version>")
-// 可选：添加 miuix-preference
-implementation("io.github.suqi8.coui.kmp:miuix-preference-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-preference-js:<version>")
-// 可选：添加 miuix-blur
-implementation("io.github.suqi8.coui.kmp:miuix-blur-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-blur-js:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-ui-js:<version>")
+// 可选：添加 coui-preference
+implementation("io.github.suqi8.coui.kmp:coui-preference-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-preference-js:<version>")
+// 可选：添加 coui-blur
+implementation("io.github.suqi8.coui.kmp:coui-blur-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-blur-js:<version>")
 // 可选：添加 coui-nav
 implementation("io.github.suqi8.coui.kmp:coui-nav-iosarm64:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-iossimulatorarm64:<version>")
@@ -107,20 +107,20 @@ implementation("io.github.suqi8.coui.kmp:coui-nav-macosarm64:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-desktop:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-wasmjs:<version>")
 implementation("io.github.suqi8.coui.kmp:coui-nav-js:<version>")
-// 可选：添加 miuix-icons
-implementation("io.github.suqi8.coui.kmp:miuix-icons-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-icons-js:<version>")
-// 可选：添加 miuix-squircle
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-iosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-iossimulatorarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-macosarm64:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-desktop:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-wasmjs:<version>")
-implementation("io.github.suqi8.coui.kmp:miuix-squircle-js:<version>")
+// 可选：添加 coui-icons
+implementation("io.github.suqi8.coui.kmp:coui-icons-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-icons-js:<version>")
+// 可选：添加 coui-squircle
+implementation("io.github.suqi8.coui.kmp:coui-squircle-iosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-iossimulatorarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-macosarm64:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-desktop:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-wasmjs:<version>")
+implementation("io.github.suqi8.coui.kmp:coui-squircle-js:<version>")
 ```
 
 ## 基本用法
@@ -169,5 +169,5 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 
 ## API 文档
 
-- 查看 [API 文档](/miuix/dokka/index.html){target="_blank"}，此文档使用 Dokka 生成，包含了所有 API
+- 查看 [API 文档](/coui/dokka/index.html){target="_blank"}，此文档使用 Dokka 生成，包含了所有 API
   的详细信息。
