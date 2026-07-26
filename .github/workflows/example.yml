@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -64,15 +66,16 @@ jobs:
           echo "kotlin.daemon.jvmargs=-Xmx6g" >> gradle.properties
           echo "kotlin.native.jvmArgs=-Xmx6g" >> gradle.properties
       - name: Decode android signing key
-        if: matrix.platformEx == 'android universal' && secrets.SIGNING_KEY != ''
-        run: echo ${{ secrets.SIGNING_KEY }} | base64 -d > keystore.jks
+        if: matrix.platformEx == 'android universal' && env.SIGNING_KEY != ''
+        shell: bash
+        run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
       - name: Build ${{ matrix.platform }} platform
         run: ${{ matrix.build-command }}
       - name: Build ${{ matrix.platformEx }} platform
         if: matrix.platformEx == 'android universal'
         run: ${{ matrix.build-commandEx }}
         env:
-          KEYSTORE_PATH: ${{ secrets.SIGNING_KEY != '' && '../../keystore.jks' || '' }}
+          KEYSTORE_PATH: ${{ env.SIGNING_KEY != '' && '../../keystore.jks' || '' }}
           KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
