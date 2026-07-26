@@ -13,6 +13,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-26, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
         include:
@@ -20,29 +21,29 @@ jobs:
             platform: macos arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
             artifact-path: example/macos/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg
-            artifact-name: Miuix-darwin-arm64-dmg.dmg
+            artifact-name: COUI-darwin-arm64-dmg.dmg
             archive: false
           - os: ubuntu-latest
             platform: linux x64
             platformEx: android universal
             build-command: ./gradlew createReleaseDistributable
             build-commandEx: ./gradlew assembleDebug && ./gradlew assembleRelease
-            artifact-path: example/desktop/build/compose/binaries/main-release/app/Miuix
+            artifact-path: example/desktop/build/compose/binaries/main-release/app/COUI
             artifact-pathEx: example/android/build/outputs/apk/release/*.apk
-            artifact-name: Miuix-linux-x64-bin
-            artifact-nameEx: Miuix-android-universal-apk.apk
+            artifact-name: COUI-linux-x64-bin
+            artifact-nameEx: COUI-android-universal-apk.apk
             archive: true
           - os: ubuntu-24.04-arm
             platform: linux arm64
             build-command: ./gradlew createReleaseDistributable
-            artifact-path: example/desktop/build/compose/binaries/main-release/app/Miuix
-            artifact-name: Miuix-linux-arm64-bin
+            artifact-path: example/desktop/build/compose/binaries/main-release/app/COUI
+            artifact-name: COUI-linux-arm64-bin
             archive: true
           - os: windows-latest
             platform: windows x64
             build-command: ./gradlew createReleaseDistributable
-            artifact-path: example/desktop/build/compose/binaries/main-release/app/Miuix
-            artifact-name: Miuix-windows-x64-exe
+            artifact-path: example/desktop/build/compose/binaries/main-release/app/COUI
+            artifact-name: COUI-windows-x64-exe
             archive: true
     steps:
       - name: Checkout Sources
@@ -61,8 +62,9 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8" >> gradle.properties
           echo "kotlin.daemon.jvmargs=-Xmx6g" >> gradle.properties
+          echo "kotlin.native.jvmArgs=-Xmx6g" >> gradle.properties
       - name: Decode android signing key
-        if: matrix.platformEx == 'android universal'
+        if: matrix.platformEx == 'android universal' && secrets.SIGNING_KEY != ''
         run: echo ${{ secrets.SIGNING_KEY }} | base64 -d > keystore.jks
       - name: Build ${{ matrix.platform }} platform
         run: ${{ matrix.build-command }}
@@ -70,7 +72,7 @@ jobs:
         if: matrix.platformEx == 'android universal'
         run: ${{ matrix.build-commandEx }}
         env:
-          KEYSTORE_PATH: "../../keystore.jks"
+          KEYSTORE_PATH: ${{ secrets.SIGNING_KEY != '' && '../../keystore.jks' || '' }}
           KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -81,13 +83,13 @@ jobs:
         if: matrix.platformEx == 'android universal'
         run: mv ${{ matrix.artifact-pathEx }} ${{ matrix.artifact-nameEx }}
         shell: bash
-      - name: Upload Miuix ${{ matrix.platform }} artifact
+      - name: Upload COUI ${{ matrix.platform }} artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ matrix.artifact-name }}
           archive: ${{ matrix.archive }}
-      - name: Upload Miuix ${{ matrix.platformEx }} artifact
+      - name: Upload COUI ${{ matrix.platformEx }} artifact
         if: matrix.platformEx == 'android universal'
         uses: actions/upload-artifact@v7
         with:
@@ -105,22 +107,22 @@ jobs:
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/Miuix.xcarchive" \
+            -archivePath "$RUNNER_TEMP/COUI.xcarchive" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGN_ENTITLEMENTS="" \
             DEVELOPMENT_TEAM=""
-          APP="$RUNNER_TEMP/Miuix.xcarchive/Products/Applications/Miuix.app"
+          APP=$(ls -d "$RUNNER_TEMP/COUI.xcarchive/Products/Applications/"*.app | head -n 1)
           mkdir -p "$RUNNER_TEMP/Payload"
           cp -R "$APP" "$RUNNER_TEMP/Payload/"
-          ( cd "$RUNNER_TEMP" && zip -r -y "$GITHUB_WORKSPACE/Miuix-ios-arm64-unsigned.ipa" Payload )
+          ( cd "$RUNNER_TEMP" && zip -r -y "$GITHUB_WORKSPACE/COUI-ios-arm64-unsigned.ipa" Payload )
       - name: Upload unsigned iOS IPA artifact
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v7
         with:
-          name: Miuix-ios-arm64-unsigned.ipa
-          path: Miuix-ios-arm64-unsigned.ipa
+          name: COUI-ios-arm64-unsigned.ipa
+          path: COUI-ios-arm64-unsigned.ipa
           archive: false
 
   post_telegram:
