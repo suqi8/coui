@@ -38,6 +38,9 @@ export default defineConfig({
     },
   },
   cleanUrls: true,
+  // The dokka API reference lives in public/ as raw static HTML, invisible to
+  // the dead-link checker which only knows VitePress pages.
+  ignoreDeadLinks: [/\/dokka\//],
   themeConfig: {
     logo: "/Icon.webp",
     socialLinks: [
