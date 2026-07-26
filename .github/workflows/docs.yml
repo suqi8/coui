@@ -2,6 +2,15 @@ name: Build Docs Page
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "coui-ui/src/**"
+      - "coui-preference/src/**"
+      - "example/shared/src/**"
+      - "example/web/src/**"
+      - ".github/workflows/docs.yml"
 
 permissions:
   contents: read
