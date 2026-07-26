@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -65,8 +65,8 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt

@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.suqi8.coui.kmp.basic.Badge
 import com.suqi8.coui.kmp.basic.BadgeBox
 import com.suqi8.coui.kmp.basic.BadgeDefaults
@@ -30,6 +29,7 @@ import com.suqi8.coui.kmp.basic.SmallTitle
 import com.suqi8.coui.kmp.basic.Stepper
 import com.suqi8.coui.kmp.icon.COUIIcons
 import com.suqi8.coui.kmp.icon.extended.Settings
+import kotlinx.coroutines.delay
 
 fun LazyListScope.badgeSection() {
     item(key = "badge") {

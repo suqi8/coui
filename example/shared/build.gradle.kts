@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -72,7 +72,7 @@ kotlin {
                 implementation(projects.couiNavigation3Ui)
                 implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.aboutlibraries.core)
-                implementation(libs.jetbrains.androidx.navigationevent)
+                implementation(libs.androidx.navigationevent)
                 implementation(libs.kotlinx.serialization.core)
             }
         }

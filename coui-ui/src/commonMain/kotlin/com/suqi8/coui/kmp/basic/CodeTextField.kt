@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -39,11 +39,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.squircle.squircleBackground
 import com.suqi8.coui.kmp.squircle.squircleBorder
 import com.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * A [CodeTextField] component with COUI style.

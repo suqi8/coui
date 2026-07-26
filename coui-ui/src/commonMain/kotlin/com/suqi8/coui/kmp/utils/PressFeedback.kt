@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.utils
@@ -24,8 +24,8 @@ import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.PointerInputModifierNode
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.interfaces.HoldDownInteraction
+import kotlinx.coroutines.launch
 
 @Stable
 data class SinkFeedback(

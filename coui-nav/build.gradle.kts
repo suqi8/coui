@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -48,11 +48,11 @@ kotlin {
         browser()
     }
 
-    applyMiuixSourceSetHierarchy()
+    applyCOUISourceSetHierarchy()
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.miuixSquircle)
+            implementation(projects.couiSquircle)
             implementation(libs.androidx.navigationevent)
             implementation(libs.jetbrains.compose.foundation)
             implementation(libs.jetbrains.lifecycle.runtime)

@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -27,9 +27,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.theme.LocalTextStyles
-import com.suqi8.coui.kmp.theme.COUITheme
 
 /**
  * A [Text] component with COUI style.

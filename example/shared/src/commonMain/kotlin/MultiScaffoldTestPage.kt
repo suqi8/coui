@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -21,9 +21,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import component.BackNavigationIcon
-import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.SmallTitle
 import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
@@ -32,6 +31,7 @@ import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.utils.scrollEndHaptic
+import component.BackNavigationIcon
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 
@@ -58,7 +58,7 @@ fun MultiScaffoldTestPage(
 
     Scaffold(
         topBar = {
-            BlurredBar(backdrop, blurActive, topAppBarScrollBehavior) {
+            BlurredBar(backdrop, blurActive) {
                 AdaptiveTopAppBar(
                     title = "Multi-Scaffold Test",
                     showTopAppBar = appState.showTopAppBar,
@@ -90,7 +90,7 @@ fun MultiScaffoldTestPage(
                 .verticalScroll(scrollState)
                 .padding(
                     top = innerPadding.calculateTopPadding(),
-                    start = if (isWideScreen) 0.dp else WindowInsets.displayCutout.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr),
+                    start = WindowInsets.displayCutout.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr),
                     end = WindowInsets.displayCutout.asPaddingValues().calculateRightPadding(LayoutDirection.Ltr),
                     bottom = if (isWideScreen) {
                         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + padding.calculateBottomPadding() + 12.dp

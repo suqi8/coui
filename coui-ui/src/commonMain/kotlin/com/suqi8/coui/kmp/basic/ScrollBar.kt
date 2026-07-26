@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -42,9 +42,10 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
@@ -53,8 +54,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.abs
 
 /**
@@ -287,7 +286,8 @@ private fun ScrollBar(
     )
     // COUI expands the pressed thumb symmetrically: the end inset shrinks from
     // coui_scrollbar_drawable_default_inset (5.5dp) to coui_scrollbar_drawable_pressed_inset (4dp).
-    val dragEndPadding = (endPadding - (ScrollBarDefaults.EndPadding - ScrollBarDefaults.DragEndPadding)).coerceAtLeast(0.dp)
+    val dragEndPaddingRaw = endPadding - (ScrollBarDefaults.EndPadding - ScrollBarDefaults.DragEndPadding)
+    val dragEndPadding = if (dragEndPaddingRaw < 0.dp) 0.dp else dragEndPaddingRaw
     val animatedEndPaddingPx by animateFloatAsState(
         targetValue = with(density) { if (isHighlighted) dragEndPadding.toPx() else endPadding.toPx() },
         animationSpec = highlightAnimSpec,

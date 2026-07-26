@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.runtime.Stable
@@ -16,8 +16,8 @@ data class AppState(
     val showFPSMonitor: Boolean = false,
     val showTopAppBar: Boolean = true,
     val showNavigationBar: Boolean = true,
-    val showNavigationBarBadge: Boolean = false,
     val navigationBarMode: Int = 0,
+    val navigationRailMode: Int = 0,
     val useFloatingNavigationBar: Boolean = false,
     val floatingNavigationBarPosition: Int = 0,
     val floatingNavigationBarStyle: Int = 0,
@@ -30,14 +30,12 @@ data class AppState(
     val enableScrollEndHaptic: Boolean = true,
     val enableCornerClip: Boolean = true,
     val enableDim: Boolean = true,
-    val blockInputDuringTransition: Boolean = false,
-    val enableSwipeBack: Boolean = false,
-    val navTransitionStyle: Int = 0,
+    val blockInputDuringTransition: Boolean = true,
+    val popDirectionFollowsSwipeEdge: Boolean = false,
     // Squircle
     val enableSquircle: Boolean = true,
     // Blur
     val enableBlur: Boolean = true,
-    val blurStyle: Int = 0,
 )
 
 val LocalAppState = compositionLocalOf<AppState> {

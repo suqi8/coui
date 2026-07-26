@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -45,16 +45,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import component.BackNavigationIcon
-import component.blend.ColorBlendToken
-import component.effect.BgEffectBackground
-import misc.VersionInfo
-import navigation3.Route
-import org.jetbrains.compose.resources.painterResource
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.CardDefaults
 import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.SmallTopAppBar
@@ -75,6 +69,12 @@ import com.suqi8.coui.kmp.preference.SwitchPreference
 import com.suqi8.coui.kmp.shared.generated.resources.Res
 import com.suqi8.coui.kmp.shared.generated.resources.ic_launcher
 import com.suqi8.coui.kmp.theme.COUITheme
+import component.BackNavigationIcon
+import component.blend.ColorBlendToken
+import component.effect.BgEffectBackground
+import misc.VersionInfo
+import navigation3.Route
+import org.jetbrains.compose.resources.painterResource
 import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.pageContentPadding

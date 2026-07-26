@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.suqi8.coui.kmp.basic.ButtonDefaults
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.HorizontalDivider
@@ -32,9 +31,10 @@ import com.suqi8.coui.kmp.overlay.OverlayDialog
 import com.suqi8.coui.kmp.overlay.OverlayLoadingDialog
 import com.suqi8.coui.kmp.overlay.OverlaySecurityDialog
 import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.window.WindowDialog
+import kotlinx.coroutines.delay
 
 fun LazyListScope.dialogSection() {
     item(key = "dialog") {

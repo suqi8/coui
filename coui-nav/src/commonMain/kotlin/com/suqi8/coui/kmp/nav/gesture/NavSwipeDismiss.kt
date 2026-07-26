@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.gesture
@@ -15,7 +15,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.nav.runtime.NavSettleSink
 import com.suqi8.coui.kmp.nav.runtime.anchoredProgress
 import com.suqi8.coui.kmp.nav.runtime.commitVelocityFloor
@@ -29,6 +28,7 @@ import com.suqi8.coui.kmp.nav.transition.NavMotion
 import com.suqi8.coui.kmp.nav.transition.NavSettlePhase
 import com.suqi8.coui.kmp.nav.transition.NavSwipeDirection
 import com.suqi8.coui.kmp.nav.transition.NavSwipeEdge
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**

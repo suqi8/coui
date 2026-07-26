@@ -1,12 +1,12 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.gesture
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
-import kotlinx.coroutines.flow.Flow
 import com.suqi8.coui.kmp.nav.runtime.snapToFinger
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Drives `animatedTop` from a predictive-back [NavBackEvent] stream, implementing the finger-

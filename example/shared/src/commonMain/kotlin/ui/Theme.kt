@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package ui
@@ -9,8 +9,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.suqi8.coui.kmp.theme.ColorSchemeMode
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.ColorSchemeMode
 import com.suqi8.coui.kmp.theme.ThemeColorSpec
 import com.suqi8.coui.kmp.theme.ThemeController
 import com.suqi8.coui.kmp.theme.ThemePaletteStyle

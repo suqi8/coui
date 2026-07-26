@@ -11,16 +11,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.RichTooltipBox
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TooltipBox
-import top.yukonga.miuix.kmp.basic.rememberTooltipState
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.Info
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.RichTooltipBox
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.TooltipBox
+import com.suqi8.coui.kmp.basic.rememberTooltipState
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.icon.extended.Info
 
 fun LazyListScope.tooltipSection() {
     item(key = "tooltip") {
@@ -41,7 +41,7 @@ fun LazyListScope.tooltipSection() {
                 ) {
                     TooltipBox(text = "Edit") {
                         IconButton(onClick = {}) {
-                            Icon(imageVector = MiuixIcons.Edit, contentDescription = "Edit")
+                            Icon(imageVector = COUIIcons.Edit, contentDescription = "Edit")
                         }
                     }
                     RichTooltipBox(
@@ -53,7 +53,7 @@ fun LazyListScope.tooltipSection() {
                         state = richState,
                     ) {
                         IconButton(onClick = {}) {
-                            Icon(imageVector = MiuixIcons.Info, contentDescription = "Rich tooltip")
+                            Icon(imageVector = COUIIcons.Info, contentDescription = "Rich tooltip")
                         }
                     }
                 }

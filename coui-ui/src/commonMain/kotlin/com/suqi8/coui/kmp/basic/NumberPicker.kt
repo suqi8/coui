@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
-import kotlinx.coroutines.flow.distinctUntilChanged
 import com.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
 
 /**

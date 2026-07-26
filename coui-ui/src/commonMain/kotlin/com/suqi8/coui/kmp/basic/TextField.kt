@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -81,8 +81,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.suqi8.coui.kmp.squircle.squircleBackground
 import com.suqi8.coui.kmp.squircle.squircleBorder
-import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.math.roundToInt
 
 /**

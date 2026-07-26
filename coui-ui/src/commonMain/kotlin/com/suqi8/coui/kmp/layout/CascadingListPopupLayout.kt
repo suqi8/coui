@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.layout
@@ -41,8 +41,6 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.anim.folmeSpring
 import com.suqi8.coui.kmp.basic.DropdownColors
 import com.suqi8.coui.kmp.basic.DropdownDefaults
@@ -53,8 +51,10 @@ import com.suqi8.coui.kmp.basic.ListPopupLayoutInfo
 import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.basic.popupSurfaceColor
 import com.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
-import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 internal val CascadingPopupCornerRadius = 16.dp
 

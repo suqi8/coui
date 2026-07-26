@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.runtime
@@ -6,9 +6,9 @@ package com.suqi8.coui.kmp.nav.runtime
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.runtime.MonotonicFrameClock
-import kotlinx.coroutines.runBlocking
 import com.suqi8.coui.kmp.nav.transition.NavMotion
 import com.suqi8.coui.kmp.nav.transition.NavSettleSpec
+import kotlinx.coroutines.runBlocking
 import kotlin.math.min
 import kotlin.test.Test
 import kotlin.test.assertEquals

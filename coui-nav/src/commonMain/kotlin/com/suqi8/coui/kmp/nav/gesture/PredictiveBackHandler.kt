@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.gesture
@@ -13,6 +13,8 @@ import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEventHandler
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import com.suqi8.coui.kmp.nav.runtime.NavDriverSpec
+import com.suqi8.coui.kmp.nav.transition.NavSwipeEdge
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -20,8 +22,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.nav.runtime.NavDriverSpec
-import com.suqi8.coui.kmp.nav.transition.NavSwipeEdge
 
 /**
  * Payload emitted by the [PredictiveBackHandler] progress [Flow].

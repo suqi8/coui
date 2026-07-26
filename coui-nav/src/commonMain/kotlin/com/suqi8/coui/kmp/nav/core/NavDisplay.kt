@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.core
@@ -40,8 +40,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventDispatcherOwner
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.nav.gesture.PredictiveBackHandler
 import com.suqi8.coui.kmp.nav.gesture.drivePredictiveBack
 import com.suqi8.coui.kmp.nav.gesture.navSwipeDismissImpl
@@ -73,6 +71,8 @@ import com.suqi8.coui.kmp.nav.transition.NavSwipeDirection
 import com.suqi8.coui.kmp.nav.transition.NavTransition
 import com.suqi8.coui.kmp.nav.transition.NavTransitions
 import com.suqi8.coui.kmp.squircle.absoluteSquircleClip
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
 
 /**

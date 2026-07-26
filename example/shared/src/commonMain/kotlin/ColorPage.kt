@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -23,9 +23,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.CardDefaults
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.SmallTitle
 import com.suqi8.coui.kmp.basic.Text
@@ -35,8 +35,8 @@ import com.suqi8.coui.kmp.blur.layerBackdrop
 import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import com.suqi8.coui.kmp.squircle.squircleBackground
 import com.suqi8.coui.kmp.squircle.squircleBorder
-import com.suqi8.coui.kmp.theme.Colors
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.Colors
 import com.suqi8.coui.kmp.theme.darkColorScheme
 import com.suqi8.coui.kmp.theme.lightColorScheme
 import com.suqi8.coui.kmp.theme.platformDynamicColors
@@ -76,7 +76,7 @@ fun ColorPage(
 
     Scaffold(
         topBar = {
-            BlurredBar(backdrop, blurActive, topAppBarScrollBehavior) {
+            BlurredBar(backdrop, blurActive) {
                 AdaptiveTopAppBar(
                     title = "Color",
                     showTopAppBar = appState.showTopAppBar,

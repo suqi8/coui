@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -33,10 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import component.BackNavigationIcon
-import kotlinx.coroutines.delay
-import com.suqi8.coui.kmp.basic.HorizontalDivider
 import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.HorizontalDivider
 import com.suqi8.coui.kmp.basic.PullToRefresh
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.VerticalScrollBar
@@ -47,6 +45,8 @@ import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import com.suqi8.coui.kmp.preference.WindowDropdownPreference
 import com.suqi8.coui.kmp.theme.COUITheme
+import component.BackNavigationIcon
+import kotlinx.coroutines.delay
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding

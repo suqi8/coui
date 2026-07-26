@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -63,12 +63,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.delay
 import com.suqi8.coui.kmp.icon.COUIIcons
 import com.suqi8.coui.kmp.icon.basic.Search
-import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.utils.hasFocusReassignBug
+import kotlinx.coroutines.delay
 
 /**
  * A [SearchBar] component with COUI style.

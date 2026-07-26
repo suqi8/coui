@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,8 +12,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.drop
 import com.suqi8.coui.kmp.squircle.LocalSquircleEnabled
+import kotlinx.coroutines.flow.drop
 import ui.AppTheme
 import ui.keyColorFor
 

@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package utils
@@ -22,16 +22,6 @@ fun shouldShowSplitPane(): Boolean {
 
 @Composable
 fun shouldShowThreePanes(): Boolean {
-    val windowInfo = LocalWindowInfo.current
-    val density = LocalDensity.current
-    return with(density) {
-        val widthDp = windowInfo.containerSize.width.toDp()
-        widthDp >= 1200.dp
-    }
-}
-
-@Composable
-fun shouldExpandNavigationRail(): Boolean {
     val windowInfo = LocalWindowInfo.current
     val density = LocalDensity.current
     return with(density) {

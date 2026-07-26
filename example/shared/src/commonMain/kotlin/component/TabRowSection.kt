@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -16,13 +16,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.SmallTitle
 import com.suqi8.coui.kmp.basic.TabRow
 import com.suqi8.coui.kmp.basic.TabRowDefaults
 import com.suqi8.coui.kmp.basic.TabRowWithContour
 import com.suqi8.coui.kmp.basic.Text
+import kotlinx.coroutines.launch
 
 fun LazyListScope.tabRowSection() {
     item(key = "tabRow") {

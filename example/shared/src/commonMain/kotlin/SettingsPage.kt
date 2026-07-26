@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -18,11 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import misc.VersionInfo
-import navigation3.Route
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.ScrollBehavior
 import com.suqi8.coui.kmp.basic.SmallTitle
@@ -38,6 +36,8 @@ import com.suqi8.coui.kmp.preference.SwitchPreference
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.theme.ThemeColorSpec
 import com.suqi8.coui.kmp.theme.ThemePaletteStyle
+import misc.VersionInfo
+import navigation3.Route
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding

@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.liquid
@@ -29,12 +29,10 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -60,20 +58,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import component.animation.DampedDragAnimation
-import component.animation.InteractiveHighlight
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.basic.BadgedBox
 import com.suqi8.coui.kmp.basic.Icon
 import com.suqi8.coui.kmp.basic.NavigationItem
 import com.suqi8.coui.kmp.basic.Text
@@ -87,18 +77,23 @@ import com.suqi8.coui.kmp.blur.highlight.LightSource
 import com.suqi8.coui.kmp.blur.layerBackdrop
 import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import com.suqi8.coui.kmp.blur.sensor.rememberDeviceTilt
-import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalContentColor
 import com.suqi8.coui.kmp.utils.Platform
 import com.suqi8.coui.kmp.utils.platform
+import component.animation.DampedDragAnimation
+import component.animation.InteractiveHighlight
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.launch
 import ui.isInDarkTheme
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 private val LocalIosTabScale = staticCompositionLocalOf { { 1f } }
 
@@ -127,64 +122,40 @@ private const val LIGHT_REF_X = 0.5f
 private const val LIGHT_REF_Y = 0.7f
 private const val GRAVITY_DIR_THRESHOLD_SQ = 0.01f // |g_xy| > 0.1, ≈ 6° tilt
 
-// 3° quantization step for the gravity direction: finer changes are imperceptible.
-private val GRAVITY_ANGLE_STEP_RAD = (3.0 * PI / 180.0).toFloat()
-
-/**
- * In-screen-plane gravity direction angle (radians, quantized to 3° steps).
- *
- * Returned as [State] so the read can be deferred to the draw phase: the sensor writes tilt
- * state unthrottled (~50Hz), and a composition-time read would recompose the whole caller
- * scope on every tick. The derivedStateOf equality check then drops draw invalidations to
- * quantization-step crossings.
- */
-@Composable
-private fun rememberQuantizedGravityAngle(): State<Float> {
-    val tiltState = rememberDeviceTilt()
-    return remember(tiltState) {
-        derivedStateOf {
-            val tilt = tiltState.value
-            val gx = tilt.gravityX
-            val gy = tilt.gravityY
-            val gMagSq = gx * gx + gy * gy
-            if (gMagSq > GRAVITY_DIR_THRESHOLD_SQ) {
-                (atan2(gy, gx) / GRAVITY_ANGLE_STEP_RAD).roundToInt() * GRAVITY_ANGLE_STEP_RAD
-            } else {
-                // Near-flat: the in-plane gravity direction is unstable, pin to (0, -1).
-                (-PI / 2).toFloat()
-            }
-        }
-    }
-}
-
-/**
- * [base] with its `dualPeak` primary light rotated to the gravity angle plus [extraDegrees].
- * Read `.value` only at draw time (see [rememberQuantizedGravityAngle]); the rotated copy is
- * cached, re-allocating only when the angle crosses a quantization step.
- */
+/** Tracks gravity for a `dualPeak` highlight's primary light, with an extra UV-clockwise offset on top. */
 @Composable
 private fun rememberGravityRotatedHighlight(
     base: Highlight,
-    extraDegrees: Float,
-): State<Highlight> {
-    val gravityAngle = rememberQuantizedGravityAngle()
-    return remember(gravityAngle, base, extraDegrees) {
-        derivedStateOf {
-            val baseStyle = base.style as BloomStroke
-            val basePrimary = baseStyle.primaryLight
-            val rad = gravityAngle.value + (extraDegrees * PI / 180.0).toFloat()
-            base.copy(
-                style = baseStyle.copy(
-                    primaryLight = basePrimary.copy(
-                        position = LightPosition(
-                            x = LIGHT_REF_X + cos(rad),
-                            y = LIGHT_REF_Y + sin(rad),
-                            z = basePrimary.position.z,
-                        ),
-                    ),
-                ),
-            )
+    extraDegrees: Float = 0f,
+): Highlight {
+    val baseStyle = base.style as BloomStroke
+    val tilt by rememberDeviceTilt()
+    val rotatedPrimary = remember(tilt, baseStyle.primaryLight, extraDegrees) {
+        val basePrimary = baseStyle.primaryLight
+        val gx = tilt.gravityX
+        val gy = tilt.gravityY
+        val gMagSq = gx * gx + gy * gy
+        val (lx0, ly0) = if (gMagSq > GRAVITY_DIR_THRESHOLD_SQ) {
+            val invMag = 1f / sqrt(gMagSq)
+            (gx * invMag) to (gy * invMag)
+        } else {
+            0f to -1f
         }
+        val rad = extraDegrees * PI / 180.0
+        val c = cos(rad).toFloat()
+        val s = sin(rad).toFloat()
+        val lx = c * lx0 - s * ly0
+        val ly = s * lx0 + c * ly0
+        basePrimary.copy(
+            position = LightPosition(
+                x = LIGHT_REF_X + lx,
+                y = LIGHT_REF_Y + ly,
+                z = basePrimary.position.z,
+            ),
+        )
+    }
+    return remember(base, rotatedPrimary) {
+        base.copy(style = baseStyle.copy(primaryLight = rotatedPrimary))
     }
 }
 
@@ -196,7 +167,6 @@ internal fun IosLiquidGlassNavigationBar(
     backdrop: LayerBackdrop?,
     isBlurActive: Boolean,
     modifier: Modifier = Modifier,
-    badge: (Int) -> (@Composable () -> Unit)? = { null },
 ) {
     val isDark = isInDarkTheme()
     val pillShape = remember { CircleShape }
@@ -293,8 +263,7 @@ internal fun IosLiquidGlassNavigationBar(
         }
     }
 
-    // Keyed on dampedDrag: the position lambda captures it; a stale capture would freeze the press spot.
-    val interactiveHighlight = remember(animationScope, isLtr, dampedDrag) {
+    val interactiveHighlight = remember(animationScope, isLtr) {
         InteractiveHighlight(
             animationScope = animationScope,
             position = { layerSize, _ ->
@@ -310,7 +279,6 @@ internal fun IosLiquidGlassNavigationBar(
         )
     }
 
-    // Read .value only inside highlight lambdas (draw phase), never in composition.
     val baseHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = -45f)
     val pillHighlight = rememberGravityRotatedHighlight(iosIndicatorSpecular, extraDegrees = 90f)
 
@@ -336,7 +304,6 @@ internal fun IosLiquidGlassNavigationBar(
                         role = Role.Tab,
                         onClick = { currentIndex = index },
                     )
-                    .semantics { selected = index == currentIndex }
                     .weight(1f)
                     .fillMaxHeight()
                     .graphicsLayer {
@@ -347,14 +314,11 @@ internal fun IosLiquidGlassNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(1.dp, Alignment.CenterVertically),
                 horizontalAlignment = CenterHorizontally,
             ) {
-                BadgedBox(badge = { badge(index)?.invoke() }) {
-                    Icon(
-                        modifier = Modifier.size(22.dp),
-                        imageVector = item.icon,
-                        // Decorative: the adjacent label names the item; avoids TalkBack double-read.
-                        contentDescription = null,
-                    )
-                }
+                Icon(
+                    modifier = Modifier.size(22.dp),
+                    imageVector = item.icon,
+                    contentDescription = item.label,
+                )
                 Text(
                     text = item.label,
                     fontSize = 11.sp,
@@ -376,7 +340,6 @@ internal fun IosLiquidGlassNavigationBar(
             CompositionLocalProvider(LocalContentColor provides tabContentColor) {
                 Row(
                     modifier = Modifier
-                        .selectableGroup()
                         .onSizeChanged { coords ->
                             totalWidthPx = coords.width.toFloat()
                             val contentWidthPx = totalWidthPx - with(density) { 8.dp.toPx() }
@@ -388,8 +351,7 @@ internal fun IosLiquidGlassNavigationBar(
                             shadow = Shadow(
                                 radius = 10.dp,
                                 color = Color.Black,
-                                // Lighter in light theme to avoid a visible gray fringe.
-                                alpha = if (isDark) 0.2f else 0.1f,
+                                alpha = 0.2f,
                             ),
                         )
                         .clickable(
@@ -403,8 +365,6 @@ internal fun IosLiquidGlassNavigationBar(
                                     backdrop = backdrop,
                                     shape = { pillShape },
                                     effects = {
-                                        // 24dp lens refraction + 16dp press-scale reach, raised before blur() reads it.
-                                        padding = maxOf(padding, 40.dp.toPx())
                                         vibrancy()
                                         blur(
                                             4.dp.toPx(),
@@ -415,7 +375,7 @@ internal fun IosLiquidGlassNavigationBar(
                                             refractionAmount = 24.dp.toPx(),
                                         )
                                     },
-                                    highlight = { baseHighlight.value.copy(alpha = 0.75f) },
+                                    highlight = { baseHighlight.copy(alpha = 0.75f) },
                                     layerBlock = {
                                         val width = size.width.coerceAtLeast(1f)
                                         val s = lerp(1f, 1f + 16.dp.toPx() / width, dampedDrag.pressProgress)
@@ -495,7 +455,7 @@ internal fun IosLiquidGlassNavigationBar(
                                         chromaticAberration = 0.5f,
                                     )
                                 },
-                                highlight = { pillHighlight.value.copy(alpha = dampedDrag.pressProgress) },
+                                highlight = { pillHighlight.copy(alpha = dampedDrag.pressProgress) },
                                 layerBlock = {
                                     scaleX = dampedDrag.scaleX
                                     scaleY = dampedDrag.scaleY

@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -73,15 +73,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.suqi8.coui.kmp.squircle.squircleBackground
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalContentColor
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
-import com.suqi8.coui.kmp.squircle.squircleBackground
-import com.suqi8.coui.kmp.theme.LocalContentColor
-import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.jvm.JvmInline
 import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds

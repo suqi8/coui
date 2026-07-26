@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package utils
@@ -51,7 +51,6 @@ import com.suqi8.coui.kmp.icon.extended.Forward
 import com.suqi8.coui.kmp.icon.extended.GridView
 import com.suqi8.coui.kmp.icon.extended.Help
 import com.suqi8.coui.kmp.icon.extended.Hide
-import com.suqi8.coui.kmp.icon.extended.Home
 import com.suqi8.coui.kmp.icon.extended.HorizontalSplit
 import com.suqi8.coui.kmp.icon.extended.Image
 import com.suqi8.coui.kmp.icon.extended.Import
@@ -211,7 +210,6 @@ val COUIIcons.All: Map<String, List<ImageVector>>
             COUIIcons.Light.GridView,
             COUIIcons.Light.Help,
             COUIIcons.Light.Hide,
-            COUIIcons.Light.Home,
             COUIIcons.Light.HorizontalSplit,
             COUIIcons.Light.Image,
             COUIIcons.Light.Import,
@@ -369,7 +367,6 @@ val COUIIcons.All: Map<String, List<ImageVector>>
             COUIIcons.Normal.GridView,
             COUIIcons.Normal.Help,
             COUIIcons.Normal.Hide,
-            COUIIcons.Normal.Home,
             COUIIcons.Normal.HorizontalSplit,
             COUIIcons.Normal.Image,
             COUIIcons.Normal.Import,
@@ -527,7 +524,6 @@ val COUIIcons.All: Map<String, List<ImageVector>>
             COUIIcons.Regular.GridView,
             COUIIcons.Regular.Help,
             COUIIcons.Regular.Hide,
-            COUIIcons.Regular.Home,
             COUIIcons.Regular.HorizontalSplit,
             COUIIcons.Regular.Image,
             COUIIcons.Regular.Import,
@@ -685,7 +681,6 @@ val COUIIcons.All: Map<String, List<ImageVector>>
             COUIIcons.Medium.GridView,
             COUIIcons.Medium.Help,
             COUIIcons.Medium.Hide,
-            COUIIcons.Medium.Home,
             COUIIcons.Medium.HorizontalSplit,
             COUIIcons.Medium.Image,
             COUIIcons.Medium.Import,
@@ -843,7 +838,6 @@ val COUIIcons.All: Map<String, List<ImageVector>>
             COUIIcons.Demibold.GridView,
             COUIIcons.Demibold.Help,
             COUIIcons.Demibold.Hide,
-            COUIIcons.Demibold.Home,
             COUIIcons.Demibold.HorizontalSplit,
             COUIIcons.Demibold.Image,
             COUIIcons.Demibold.Import,

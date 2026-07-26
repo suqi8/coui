@@ -1,12 +1,12 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.gesture
 
 import androidx.navigationevent.NavigationEvent
+import com.suqi8.coui.kmp.nav.runtime.NavDriverSpec
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import com.suqi8.coui.kmp.nav.runtime.NavDriverSpec
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

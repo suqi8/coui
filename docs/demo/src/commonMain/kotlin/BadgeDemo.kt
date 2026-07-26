@@ -15,16 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Badge
-import top.yukonga.miuix.kmp.basic.BadgedBox
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Email
-import top.yukonga.miuix.kmp.icon.extended.Favorites
-import top.yukonga.miuix.kmp.icon.extended.Messages
-import top.yukonga.miuix.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.basic.Badge
+import com.suqi8.coui.kmp.basic.BadgedBox
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Email
+import com.suqi8.coui.kmp.icon.extended.Favorites
+import com.suqi8.coui.kmp.icon.extended.Messages
+import com.suqi8.coui.kmp.icon.extended.Settings
 
 @Composable
 fun BadgeDemo() {
@@ -54,28 +54,28 @@ fun BadgeDemo() {
                     ) {
                         BadgedBox(badge = { Badge() }) {
                             Icon(
-                                imageVector = MiuixIcons.Messages,
+                                imageVector = COUIIcons.Messages,
                                 contentDescription = "Messages",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
                         BadgedBox(badge = { Badge { Text("8") } }) {
                             Icon(
-                                imageVector = MiuixIcons.Email,
+                                imageVector = COUIIcons.Email,
                                 contentDescription = "Email",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
                         BadgedBox(badge = { Badge { Text("99+") } }) {
                             Icon(
-                                imageVector = MiuixIcons.Settings,
+                                imageVector = COUIIcons.Settings,
                                 contentDescription = "Settings",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
                         BadgedBox(badge = { Badge { Text("5") } }) {
                             Icon(
-                                imageVector = MiuixIcons.Favorites,
+                                imageVector = COUIIcons.Favorites,
                                 contentDescription = "Favorites",
                                 modifier = Modifier.size(28.dp),
                             )

@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.animation
@@ -28,6 +28,7 @@ import androidx.compose.ui.util.fastFirstOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -116,7 +117,9 @@ internal class DampedDragAnimation(
             withFrameMillis { }
             if (value != targetValue) {
                 val threshold = (valueRange.endInclusive - valueRange.start) * 0.025f
-                snapshotFlow { valueAnimation.value }.first { abs(it - valueAnimation.targetValue) < threshold }
+                snapshotFlow { valueAnimation.value }
+                    .filter { abs(it - valueAnimation.targetValue) < threshold }
+                    .first()
             }
             launch { pressProgressAnimation.animateTo(0f, pressProgressAnimationSpec) }
             launch { scaleXAnimation.animateTo(initialScale, scaleXAnimationSpec) }

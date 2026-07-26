@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.effect
@@ -13,10 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
 import com.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import ui.isInDarkTheme
 import utils.shouldShowSplitPane
 import kotlin.math.floor

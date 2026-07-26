@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -29,8 +29,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import component.BackNavigationIcon
-import navigation3.Route
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.DropdownImpl
 import com.suqi8.coui.kmp.basic.HorizontalDivider
@@ -38,7 +37,6 @@ import com.suqi8.coui.kmp.basic.Icon
 import com.suqi8.coui.kmp.basic.IconButton
 import com.suqi8.coui.kmp.basic.ListPopupColumn
 import com.suqi8.coui.kmp.basic.ListPopupDefaults
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.PopupPositionProvider
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.Text
@@ -51,9 +49,11 @@ import com.suqi8.coui.kmp.icon.COUIIcons
 import com.suqi8.coui.kmp.icon.extended.Edit
 import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.window.WindowListPopup
+import component.BackNavigationIcon
+import navigation3.Route
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding

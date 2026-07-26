@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -56,12 +56,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.theme.LocalColors
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.theme.COUITheme.isDynamicColor
+import com.suqi8.coui.kmp.theme.LocalColors
 import com.suqi8.coui.kmp.utils.CouiHapticEffect
 import com.suqi8.coui.kmp.utils.rememberCouiHaptic
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**

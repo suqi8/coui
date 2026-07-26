@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -41,14 +41,10 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import component.SearchBarFake
-import component.SearchPager
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
 import com.suqi8.coui.kmp.basic.Scaffold
 import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.basic.VerticalScrollBar
@@ -60,6 +56,10 @@ import com.suqi8.coui.kmp.icon.extended.ExpandMore
 import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import com.suqi8.coui.kmp.theme.COUITheme
 import com.suqi8.coui.kmp.theme.COUITheme.colorScheme
+import component.SearchBarFake
+import component.SearchPager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import utils.AdaptiveTopAppBar
 import utils.All
 import utils.BlurredBar

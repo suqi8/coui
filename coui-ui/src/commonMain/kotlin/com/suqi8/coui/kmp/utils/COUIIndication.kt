@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.utils
@@ -18,10 +18,10 @@ import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
+import com.suqi8.coui.kmp.interfaces.HoldDownInteraction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.interfaces.HoldDownInteraction
 
 // COUI state layer tokens (colors.xml): coui_color_hover #14000000 / coui_color_hover_dark
 // #26FFFFFF, coui_color_press #1F000000 / coui_color_press_dark #33FFFFFF.

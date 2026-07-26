@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -57,7 +57,7 @@ kotlin {
             api(projects.couiSquircle)
             api(libs.jetbrains.compose.foundation)
 
-            implementation(libs.jetbrains.androidx.navigationevent)
+            implementation(libs.androidx.navigationevent)
             implementation(libs.jetbrains.compose.window.size)
 
             implementation(libs.materialKolor.utilities) // Material Color for Multiplatform

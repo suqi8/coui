@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -16,7 +16,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.ButtonDefaults
 import com.suqi8.coui.kmp.basic.Card
 import com.suqi8.coui.kmp.basic.SmallTitle
@@ -24,6 +23,7 @@ import com.suqi8.coui.kmp.basic.SnackbarDuration
 import com.suqi8.coui.kmp.basic.SnackbarHostState
 import com.suqi8.coui.kmp.basic.SnackbarResult
 import com.suqi8.coui.kmp.basic.TextButton
+import kotlinx.coroutines.launch
 
 fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
     item(key = "snackbar") {
@@ -69,7 +69,7 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         text = "Short (4s)",
                         onClick = {
                             scope.launch {
-                                snackbarHostState.showSnackbar("This message stays for 4 seconds.")
+                                snackbarHostState.showSnackbar("This is a short message")
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -79,7 +79,7 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         onClick = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "This is a longer message that stays for 10 seconds.",
+                                    message = "This is a long message to display more text content",
                                     duration = SnackbarDuration.Long,
                                 )
                             }
@@ -96,7 +96,7 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         onClick = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "This message uses a custom 2-second duration.",
+                                    message = "This message will last for 2 seconds",
                                     duration = SnackbarDuration.Custom(2000L),
                                 )
                             }
@@ -110,7 +110,7 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                             scope.launch {
                                 text = "Action: Alive"
                                 val result = snackbarHostState.showSnackbar(
-                                    message = "This message has an action button.",
+                                    message = "This message has an action",
                                     actionLabel = "Undo",
                                     duration = SnackbarDuration.Short,
                                 )
@@ -133,7 +133,7 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         onClick = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "Tap the close button to dismiss this message.",
+                                    message = "This message can be removed via the close button",
                                     withDismissAction = true,
                                     duration = SnackbarDuration.Long,
                                 )
@@ -146,28 +146,9 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         onClick = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "This message stays until you dismiss it manually.",
+                                    message = "Indefinite message, dismiss manually",
                                     withDismissAction = true,
                                     duration = SnackbarDuration.Indefinite,
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    TextButton(
-                        text = "Action + Close",
-                        onClick = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = "This message has both an action and a close button.",
-                                    actionLabel = "Undo",
-                                    withDismissAction = true,
-                                    duration = SnackbarDuration.Long,
                                 )
                             }
                         },

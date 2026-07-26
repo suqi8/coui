@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.layout
@@ -59,13 +59,13 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import kotlinx.coroutines.launch
 import com.suqi8.coui.kmp.basic.Text
 import com.suqi8.coui.kmp.overlay.OverlayDialog
 import com.suqi8.coui.kmp.squircle.squircleSurface
-import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.window.WindowDialog
+import kotlinx.coroutines.launch
 
 /**
  * Internal shared layout logic for [OverlayDialog] and [WindowDialog].
@@ -112,7 +112,9 @@ internal fun DialogContentLayout(
     onDismissFinished: (() -> Unit)? = null,
     defaultWindowInsetsPadding: Boolean = true,
     forceCentered: Boolean = false,
-    cornerRadius: Dp = DialogDefaults.CornerRadius,
+    maxWidth: Dp = DialogDefaults.MaxWidth,
+    largeScreen: Boolean? = null,
+    cornerRadius: Dp? = null,
     topInset: Dp? = null,
     content: @Composable () -> Unit,
 ) {
@@ -124,7 +126,7 @@ internal fun DialogContentLayout(
     val density = LocalDensity.current
     val imeInsets = WindowInsets.ime
     val keyboardController = LocalSoftwareKeyboardController.current
-    val isCentered = forceCentered || DialogDefaults.isLargeScreen()
+    val isCentered = forceCentered || (largeScreen ?: DialogDefaults.isLargeScreen())
 
     LaunchedEffect(show) {
         // Snapshot at launch so a window-resize crossing the breakpoint mid-animation does not
@@ -256,6 +258,8 @@ internal fun DialogContentLayout(
         }
 
         DialogContent(
+            maxWidth = maxWidth,
+            largeScreen = largeScreen,
             title = title,
             titleColor = titleColor,
             summary = summary,
@@ -296,14 +300,17 @@ internal fun DialogContent(
     onDismissRequest: (() -> Unit)?,
     modifier: Modifier = Modifier,
     forceCentered: Boolean = false,
-    cornerRadius: Dp = DialogDefaults.CornerRadius,
+    maxWidth: Dp = DialogDefaults.MaxWidth,
+    largeScreen: Boolean? = null,
+    cornerRadius: Dp? = null,
     topInset: Dp? = null,
     content: @Composable () -> Unit,
 ) {
+    val resolvedCornerRadius = cornerRadius ?: DialogDefaults.CornerRadius
     val density = LocalDensity.current
     val windowInfo = LocalWindowInfo.current
     val windowHeight = windowInfo.containerDpSize.height
-    val isCentered = forceCentered || DialogDefaults.isLargeScreen()
+    val isCentered = forceCentered || (largeScreen ?: DialogDefaults.isLargeScreen())
     val contentAlignment = remember(isCentered) {
         if (isCentered) Alignment.Center else Alignment.BottomCenter
     }
@@ -331,7 +338,7 @@ internal fun DialogContent(
     }
 
     val contentModifier = modifier
-        .widthIn(max = DialogDefaults.MaxWidth)
+        .widthIn(max = maxWidth)
         .heightIn(max = if (isCentered) windowHeight * (2f / 3f) else Dp.Unspecified)
         .onGloballyPositioned { coordinates ->
             dialogHeightPx.intValue = coordinates.size.height
@@ -357,7 +364,7 @@ internal fun DialogContent(
         }
         // COUI panels carry no blanket inside padding; the title/summary/buttons each bring
         // their own margins so button bars can span the full panel width.
-        .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
+        .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
 
     Box(
         modifier = Modifier

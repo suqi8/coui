@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.suqi8.coui.kmp.overlay.OverlayDialog
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.COUIPopupUtils
+import com.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.COUIPopupHost
 import com.suqi8.coui.kmp.utils.LocalDialogStates
 import com.suqi8.coui.kmp.utils.LocalPopupStates
 import com.suqi8.coui.kmp.utils.LocalRootDialogStates
 import com.suqi8.coui.kmp.utils.LocalRootPopupStates
-import com.suqi8.coui.kmp.utils.COUIPopupUtils
-import com.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.COUIPopupHost
 
 /**
  * A [Scaffold] component with COUI style.

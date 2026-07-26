@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -63,14 +63,14 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.basic.SearchCleanup
+import com.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.basic.SearchCleanup
-import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.roundToInt
 
 /**

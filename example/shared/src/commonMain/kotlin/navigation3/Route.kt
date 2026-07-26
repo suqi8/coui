@@ -1,13 +1,13 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package navigation
+package navigation3
 
+import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
-import top.yukonga.miuix.kmp.nav.core.NavKey
 
 /**
- * Type-safe navigation keys for the app, backed by miuix-nav.
+ * Type-safe navigation keys for Navigation3.
  * Each destination is a NavKey (data object/data class) and can be saved/restored in the back stack.
  */
 @Serializable
@@ -29,10 +29,4 @@ sealed interface Route : NavKey {
 
     @Serializable
     data object MultiScaffold : Route
-
-    @Serializable
-    data object NestedNav : Route
-
-    @Serializable
-    data object OverscrollLoadMore : Route
 }

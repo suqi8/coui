@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -38,8 +38,8 @@ import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import com.suqi8.coui.kmp.preference.SliderPreference
 import com.suqi8.coui.kmp.preference.SwitchPreference
 import com.suqi8.coui.kmp.preference.WindowDropdownPreference
-import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
 import com.suqi8.coui.kmp.utils.overScrollVertical
 import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import com.suqi8.coui.kmp.window.WindowBottomSheet

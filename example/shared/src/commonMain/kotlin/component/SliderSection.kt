@@ -1,11 +1,10 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,7 +42,6 @@ fun LazyListScope.sliderSection() {
                 onValueChange = { sliderValue = it },
                 title = "Normal",
                 valueText = "${(sliderValue * 100).toInt()}%",
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var stepsValue by remember { mutableFloatStateOf(100f) }
             SliderPreference(
@@ -54,7 +52,6 @@ fun LazyListScope.sliderSection() {
                 valueRange = 0f..200f,
                 steps = 199,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var stepsWithKeyPointsValue by remember { mutableFloatStateOf(5f) }
             SliderPreference(
@@ -66,7 +63,6 @@ fun LazyListScope.sliderSection() {
                 steps = 7,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 showKeyPoints = true,
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var customKeyPointsValue by remember { mutableFloatStateOf(25f) }
             SliderPreference(
@@ -78,9 +74,8 @@ fun LazyListScope.sliderSection() {
                 showKeyPoints = true,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 keyPoints = listOf(0f, 25f, 50f, 75f, 100f),
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
-            val disabledValue = 0.7f
+            val disabledValue by remember { mutableFloatStateOf(0.7f) }
             SliderPreference(
                 value = disabledValue,
                 onValueChange = {},
@@ -103,7 +98,6 @@ fun LazyListScope.sliderSection() {
                 onValueChange = { rangeValue = it },
                 title = "Range",
                 valueText = "${(rangeValue.start * 100).toInt()}% - ${(rangeValue.endInclusive * 100).toInt()}%",
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var rangeStepsValue by remember { mutableStateOf(2f..8f) }
             RangeSliderPreference(
@@ -115,7 +109,6 @@ fun LazyListScope.sliderSection() {
                 steps = 7,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 showKeyPoints = true,
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var customRangeValue by remember { mutableStateOf(20f..80f) }
             RangeSliderPreference(
@@ -127,7 +120,6 @@ fun LazyListScope.sliderSection() {
                 showKeyPoints = true,
                 hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                 keyPoints = listOf(0f, 20f, 40f, 60f, 80f, 100f),
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
             )
             var disabledRangeValue by remember { mutableStateOf(0.3f..0.7f) }
             RangeSliderPreference(
@@ -232,7 +224,7 @@ fun LazyListScope.sliderSection() {
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                val disabledVerticalValue = 0.7f
+                val disabledVerticalValue by remember { mutableFloatStateOf(0.7f) }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1f),

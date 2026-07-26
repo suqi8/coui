@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.layout
@@ -75,16 +75,16 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import com.suqi8.coui.kmp.anim.folmeSpring
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.squircle.squircleSurface
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.LocalDismissState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.anim.folmeSpring
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.squircle.squircleSurface
-import com.suqi8.coui.kmp.theme.LocalDismissState
-import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.coroutines.cancellation.CancellationException
 
 /**

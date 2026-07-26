@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.state
@@ -21,12 +21,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
-import kotlinx.serialization.Serializable
 import com.suqi8.coui.kmp.nav.core.NavBackStack
 import com.suqi8.coui.kmp.nav.core.NavDisplay
 import com.suqi8.coui.kmp.nav.core.NavDisplayEffects
 import com.suqi8.coui.kmp.nav.core.NavKey
 import com.suqi8.coui.kmp.nav.core.rememberNavBackStack
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 
 @Serializable

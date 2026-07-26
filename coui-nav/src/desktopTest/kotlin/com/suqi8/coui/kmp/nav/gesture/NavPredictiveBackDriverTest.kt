@@ -1,13 +1,13 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.nav.gesture
 
 import androidx.compose.animation.core.Animatable
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
 import com.suqi8.coui.kmp.nav.runtime.NavDriverSpec
 import com.suqi8.coui.kmp.nav.transition.NavSwipeEdge
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

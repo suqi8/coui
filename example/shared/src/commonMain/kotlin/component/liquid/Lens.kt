@@ -1,4 +1,4 @@
-// Copyright 2026, compose-coui-ui contributors
+// Copyright 2026, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.liquid
@@ -134,7 +134,7 @@ float circleMap(float x) {
 half4 main(float2 coord) {
     float2 halfSize = size * 0.5;
     float2 centeredCoord = (coord + offset) - halfSize;
-    float radius = radiusAt(centeredCoord, cornerRadii);
+    float radius = radiusAt(coord, cornerRadii);
 
     float sd = sdRoundedRect(centeredCoord, halfSize, radius);
     if (-sd >= refractionHeight) {
@@ -171,7 +171,7 @@ float circleMap(float x) {
 half4 main(float2 coord) {
     float2 halfSize = size * 0.5;
     float2 centeredCoord = (coord + offset) - halfSize;
-    float radius = radiusAt(centeredCoord, cornerRadii);
+    float radius = radiusAt(coord, cornerRadii);
 
     float sd = sdRoundedRect(centeredCoord, halfSize, radius);
     if (-sd >= refractionHeight) {

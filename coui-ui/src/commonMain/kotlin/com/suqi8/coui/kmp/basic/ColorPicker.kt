@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package com.suqi8.coui.kmp.basic
@@ -1213,7 +1213,7 @@ private fun ColorSlider(
                     dragOffset = x
                     val newValue = handleSliderInteraction(x, sliderWidthPxState, sliderHeightPx)
                     onValueChangedState.value(newValue)
-                    hapticState.reset(newValue, 0f..1f, value)
+                    hapticState.reset(newValue)
                 },
             ),
     ) {

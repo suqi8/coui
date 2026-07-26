@@ -1,4 +1,4 @@
-// Copyright 2025, compose-coui-ui contributors
+// Copyright 2025, compose-miuix-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import kotlin.js.ExperimentalWasmJsInterop
@@ -7,12 +7,8 @@ import kotlin.js.ExperimentalWasmJsInterop
 @JsFun(
     """
         function hideLoading() {
-            if (window.__miuixLoading) {
-                window.__miuixLoading.finish();
-            } else {
-                const el = document.getElementById('loading');
-                if (el) el.style.display = 'none';
-            }
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('composeApp').style.display = 'block';
         }
     """,
 )
@@ -37,20 +33,6 @@ private external fun hideLoading()
 )
 private external fun getCssVar(name: String): Double
 
-@OptIn(ExperimentalWasmJsInterop::class)
-@JsFun(
-    """
-        function setFontProgress(done, total) {
-            if (window.__miuixLoading && window.__miuixLoading.fontProgress) {
-                window.__miuixLoading.fontProgress(done, total);
-            }
-        }
-    """,
-)
-private external fun setFontProgress(done: Int, total: Int)
-
 fun platformHideLoading() = hideLoading()
 
 fun platformGetCssVar(name: String): Double = getCssVar(name)
-
-fun platformSetFontProgress(done: Int, total: Int) = setFontProgress(done, total)

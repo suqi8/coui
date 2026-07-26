@@ -15,13 +15,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.BreadcrumbBar
-import top.yukonga.miuix.kmp.basic.BreadcrumbItem
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.joinToPath
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.BreadcrumbBar
+import com.suqi8.coui.kmp.basic.BreadcrumbItem
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.joinToPath
+import com.suqi8.coui.kmp.theme.COUITheme
 
 fun LazyListScope.breadcrumbBarSection() {
     item(key = "breadcrumbBar") {
@@ -65,11 +65,11 @@ fun LazyListScope.breadcrumbBarSection() {
                 )
                 Text(
                     text = "Full path: ${items.joinToPath()}",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Text(
                     text = "Current: ${items.subList(0, highlightIndex + 1).joinToPath()}",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
                 )
                 BreadcrumbBar(
                     items = items,
