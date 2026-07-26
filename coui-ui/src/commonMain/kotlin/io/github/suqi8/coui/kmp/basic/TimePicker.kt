@@ -100,13 +100,10 @@ fun TimePicker(
     val onHourChange = remember {
         { newHour: Int ->
             val time = currentValue
+            // Wheel shows 1..12; map back to 24-hour form keeping the current half of the day.
             val hour = when {
                 currentIs24Hour -> newHour
-
-                // Wheel shows 1..12; 12 AM maps to 0 and 12 PM maps to 12,
-                // keeping the current half of the day (COUITimeLimitPicker).
                 time.hour < 12 -> newHour % 12
-
                 else -> newHour % 12 + 12
             }
             currentOnValueChange(TimeValue(hour, time.minute))
@@ -225,8 +222,7 @@ private fun WheelWithUnit(
             itemHeight = itemHeight,
         )
         if (unit.isNotEmpty()) {
-            // COUI draws the unit at the selected value's trailing edge:
-            // selected value width / 2 (9dp) + 4dp margin from the wheel center.
+            // COUI draws the unit at the selected value's trailing edge, offset from the wheel center.
             Text(
                 text = unit,
                 modifier = Modifier

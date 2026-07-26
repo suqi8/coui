@@ -27,25 +27,17 @@ import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * A standalone rounded card that recommends related settings, mirroring COUIRecommendedPreference
- * ("You might be looking for:" card at the bottom of ColorOS settings pages).
+ * A standalone rounded card that recommends related settings, mirroring COUIRecommendedPreference.
  *
- * The card is a couiRoundCornerM (12dp) rounded container filled with couiColorContainer4,
- * holding a small secondary header followed by one tappable text row per [RecommendedItem]
- * (coui_recommended_preference_layout.xml + item_recommended_head_textview.xml /
- * item_recommended_common_textview.xml). Rows draw the standard COUI press overlay while pressed
- * and are clipped by the card silhouette. Nothing is rendered when [items] is empty, matching
- * COUIRecommendedPreference.setData() hiding the preference for an empty list.
+ * The card holds a small secondary header followed by one tappable text row per
+ * [RecommendedItem]. Nothing is rendered when [items] is empty. Callers place the card like any
+ * other card block, e.g. with 16dp horizontal outer margins.
  *
- * Callers place the card like any other card block, e.g. with 16dp horizontal outer margins; the
- * COUI 32dp text inset from the screen edge is 16dp card margin + the 16dp [insideMargin].
- *
- * @param title The header text of the card (COUI recommendedHeaderTitle, e.g.
- *   "You might be looking for:").
+ * @param title The header text of the card, e.g. "You might be looking for:".
  * @param items The recommended entries of the card. Build the list inside a `remember` block to
  *   keep it stable across recompositions.
  * @param modifier The modifier to be applied to the [RecommendedPreference].
- * @param cornerRadius The corner radius of the card (COUI recommendedCardBgRadius).
+ * @param cornerRadius The corner radius of the card.
  * @param colors The [RecommendedPreferenceColors] of the [RecommendedPreference].
  * @param insideMargin The horizontal margin between the card edge and the texts.
  */
@@ -58,24 +50,18 @@ fun RecommendedPreference(
     colors: RecommendedPreferenceColors = RecommendedPreferenceDefaults.recommendedPreferenceColors(),
     insideMargin: PaddingValues = RecommendedPreferenceDefaults.InsideMargin,
 ) {
-    // COUIRecommendedPreference.setData() hides the preference when the list is empty.
     if (items.isEmpty()) return
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // squircleSurface also masks the children, so the row press overlays are clipped
-            // by the card corners like COUICardListSelectedItemLayout clips its mask effect.
+            // squircleSurface also masks the children, clipping the row press overlays to the card corners.
             .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(insideMargin)
-                // item_recommended_head_textview.xml: 16dp card top padding
-                // (recommended_recyclerView_padding_top), 20dp min text height
-                // (recommended_preference_list_item_height_head) and 8dp bottom margin
-                // (recommended_preference_list_item_head_bottom_margin).
                 .padding(
                     top = RecommendedPreferenceDefaults.HeaderTopPadding,
                     bottom = RecommendedPreferenceDefaults.HeaderBottomSpacing,
@@ -85,7 +71,6 @@ fun RecommendedPreference(
         ) {
             Text(
                 text = title,
-                // COUI couiTextAppearanceSmallButton: 12sp, sans-serif-medium.
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = colors.titleColor,
@@ -98,18 +83,13 @@ fun RecommendedPreference(
                     .fillMaxWidth()
                     .then(
                         if (onClick != null) {
-                            // COUI marks the recommended rows as buttons for accessibility
-                            // (COUIAccessibilityUtil.BUTTON_CLASS_NAME).
+                            // COUI marks the recommended rows as buttons for accessibility.
                             Modifier.clickable(role = Role.Button) { onClick() }
                         } else {
                             Modifier
                         },
                     )
                     .padding(insideMargin)
-                    // item_recommended_common_textview.xml: 10dp vertical text padding
-                    // (recommended_preference_list_item_common_margin_vertical); the last row
-                    // additionally keeps the 8dp card bottom padding
-                    // (recommended_recyclerView_padding_bottom).
                     .padding(
                         top = RecommendedPreferenceDefaults.ItemVerticalPadding,
                         bottom = if (index == items.lastIndex) {
@@ -123,7 +103,6 @@ fun RecommendedPreference(
             ) {
                 Text(
                     text = item.text,
-                    // COUI couiTextAppearanceButton: 14sp, sans-serif-medium.
                     fontSize = COUITheme.textStyles.body2.fontSize,
                     fontWeight = FontWeight.Medium,
                     color = colors.itemColor,
@@ -151,9 +130,8 @@ object RecommendedPreferenceDefaults {
     val CornerRadius = 12.dp
 
     /**
-     * The default horizontal margin between the card edge and the texts. COUI insets the texts
-     * 32dp from the item edge (recommended_recyclerView_padding_start), which is the 16dp card
-     * margin plus this 16dp in-card inset.
+     * The default horizontal margin between the card edge and the texts
+     * (COUI recommended_recyclerView_padding_start minus the 16dp card margin).
      */
     val InsideMargin = PaddingValues(horizontal = 16.dp)
 
@@ -179,12 +157,8 @@ object RecommendedPreferenceDefaults {
     val BottomPadding = 8.dp
 
     /**
-     * The default [RecommendedPreferenceColors].
-     *
-     * [containerColor] follows couiColorContainer4 (#0A000000 light / #14FFFFFF dark), the COUI
-     * default recommendedCardBgColor, which has no dedicated role in the scheme; the theme is
-     * inferred from the background luminance like the COUI press tint. [titleColor] follows
-     * couiColorSecondNeutral and [itemColor] follows couiColorPrimaryNeutral.
+     * The default [RecommendedPreferenceColors]. [containerColor] follows COUI couiColorContainer4
+     * (#0A000000 light / #14FFFFFF dark), inferred from the background luminance.
      */
     @Composable
     fun recommendedPreferenceColors(

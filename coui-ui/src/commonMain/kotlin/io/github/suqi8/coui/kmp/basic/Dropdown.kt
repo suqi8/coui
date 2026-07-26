@@ -123,8 +123,7 @@ fun DropdownImpl(
     }
 
     // COUI DefaultAdapter.setDescription always paints the description with
-    // couiColorLabelSecondary — it has no selected or disabled variant, unlike the title
-    // which goes through coui_popup_list_window_item_tint_selector.
+    // couiColorLabelSecondary — no selected or disabled variant, unlike the title selector.
     val summaryColor = if (isSelected) dropdownColors.selectedSummaryColor else dropdownColors.summaryColor
 
     val containerModifier = remember(dialogMode, additionalTopPadding, additionalBottomPadding) {
@@ -176,9 +175,8 @@ fun DropdownImpl(
                 Text(
                     text = item.text,
                     fontSize = COUITheme.textStyles.body1.fontSize,
-                    // COUI popup rows are regular weight (coui_popup_list_window_item.xml:
-                    // textFontWeight=400, sans-serif-regular); dialog single-choice rows use
-                    // medium (couiTextAppearanceHeadline6, sans-serif-medium).
+                    // COUI popup rows are regular weight (coui_popup_list_window_item.xml
+                    // textFontWeight=400); dialog single-choice rows use medium (couiTextAppearanceHeadline6).
                     fontWeight = if (dialogMode) FontWeight.Medium else FontWeight.Normal,
                     color = titleColor,
                 )
@@ -193,11 +191,10 @@ fun DropdownImpl(
         }
 
         if (hasSubmenu) {
-            // COUI tints the expandable indicator through the status-icon selector:
-            // couiColorLabelTertiary by default and couiColorLabelTheme while expanded
-            // (DefaultAdapter.setStateIcon -> coui_popup_list_window_item_status_icon_tint_selector).
-            // The chevron is intentionally static — only the cloned header in the secondary
-            // popup rotates during expansion.
+            // COUI tints the expandable indicator via the status-icon selector
+            // (coui_popup_list_window_item_status_icon_tint_selector: couiColorLabelTertiary default,
+            // couiColorLabelTheme while expanded). The chevron is intentionally static —
+            // only the cloned header in the secondary popup rotates during expansion.
             val chevronColor = when {
                 !enabled -> COUITheme.colorScheme.disabledOnSecondaryVariant
                 isSelected -> dropdownColors.selectedContentColor
@@ -454,11 +451,9 @@ object DropdownDefaults {
 
     /**
      * Default popup row colors, matching COUI coui_popup_list_window_item_tint_selector
-     * (default couiColorLabelPrimary, selected couiColorLabelTheme, disabled
-     * couiColorLabelTertiary) and the status-icon selector (selected couiColorLabelTheme).
-     * Summary rows always use couiColorLabelSecondary (DefaultAdapter.setDescription applies
-     * no selected variant), and rows are transparent — the popup surface provides the fill
-     * (COUI row backgrounds are press-mask COUIMaskEffectDrawables, not solid colors).
+     * (default couiColorLabelPrimary, selected couiColorLabelTheme, disabled couiColorLabelTertiary).
+     * Summaries always use couiColorLabelSecondary, and row containers stay transparent —
+     * the popup surface provides the fill.
      */
     @Composable
     fun dropdownColors(

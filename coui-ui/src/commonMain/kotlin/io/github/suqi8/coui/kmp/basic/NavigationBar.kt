@@ -66,9 +66,7 @@ import io.github.suqi8.coui.kmp.utils.platform
  * A [NavigationBar] that with 2 to 5 items.
  *
  * @param modifier The modifier to be applied to the [NavigationBar].
- * @param color The color of the [NavigationBar]. COUI tab navigation uses a solid bar slightly
- * lighter than the page base (coui_tab_navigation_view_bg: #FAFAFA light / #1F1F1F dark), which
- * colorScheme.background mirrors.
+ * @param color The color of the [NavigationBar]. COUI `coui_tab_navigation_view_bg`.
  * @param showDivider Whether to show the divider line between the [NavigationBar] and the content.
  * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [NavigationBar].
  * @param mode The mode for displaying items in the [NavigationBar]. It can show icons, text or both.
@@ -97,15 +95,11 @@ fun NavigationBar(
             .background(color),
     ) {
         if (showDivider) {
-            // COUINavigationView.addCompatibilityTopDivider: a couiColorDivider view of
-            // coui_navigation_shadow_height (0.33dp) sits at the top edge of the bar.
-            // HorizontalDivider defaults already match (0.33dp, colorScheme.dividerLine).
+            // COUINavigationView.addCompatibilityTopDivider; HorizontalDivider defaults already match.
             HorizontalDivider()
         }
         Row(
-            // COUINavigationMenuView.onMeasure: available width = bar width minus
-            // coui_tool_navigation_edge_item_padding (12dp) on both edges, then divided equally
-            // between the items; the bar background and divider stay full width.
+            // COUINavigationMenuView.onMeasure: 12dp edge padding, items divide the rest equally.
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = NavigationBarDefaults.HorizontalPadding),
@@ -161,20 +155,14 @@ fun RowScope.NavigationBarItem(
     val isPressed by interactionSource.collectIsPressedAsState()
     val colorScheme = COUITheme.colorScheme
 
-    // COUI tab navigation (navigationType="tab", the type real ColorOS bottom tab bars use):
-    // label color follows the coui_navigation_tab_color selector - selected
-    // couiColorPrimaryNeutral (#E6000000 / #E6FFFFFF -> onSurfaceContainer), otherwise
-    // couiColorSecondNeutral (#8A000000 / #8AFFFFFF -> onSurfaceSecondary). The selector has no
-    // pressed entry and ColorStateLists switch instantly, so the label is not animated. Disabled
-    // mirrors the tool selector entry couiColorLabelTertiary (-> disabledOnSurface).
+    // COUI coui_navigation_tab_color selector: no pressed entry, switches instantly (not animated).
     val labelColor = when {
         !enabled -> colorScheme.disabledOnSurface
         selected -> colorScheme.onSurfaceContainer
         else -> colorScheme.onSurfaceSecondary
     }
-    // Tab icons are stateful selector drawables (e.g. tab_alarm_selector_color): the selected
-    // variant is drawn at 0.9 black and shown for state_selected OR state_pressed, the
-    // unselected variant at 0.54 black, cross-faded with enter/exitFadeDuration = 180ms.
+    // COUI tab icon selector: selected variant shown for state_selected OR state_pressed,
+    // cross-faded over 180ms.
     val iconTargetTint = when {
         !enabled -> colorScheme.disabledOnSurface
         selected || isPressed -> colorScheme.onSurfaceContainer
@@ -185,18 +173,11 @@ fun RowScope.NavigationBarItem(
         animationSpec = tween(durationMillis = NavigationBarDefaults.IconFadeDurationMillis, easing = LinearEasing),
         label = "navigationItemIconTint",
     )
-    // Tab items have no press mask or ripple: COUINavigationView.inflateMenu enables the
-    // COUIMaskEffectDrawable press shadow only for navigationType == tool, and the item
-    // background is otherwise null (no itemBackground/itemRippleColor in the COUI style).
-    // Selection itself has no motion either: the item theme COUINavigationView_NoAnimation sets
-    // motionDurationLong1 = durationLong = 0 and both material labels share one text size.
-    // COUI labels use sans-serif-medium in all states (coui_navigation_item_layout.xml).
+    // COUI labels use sans-serif-medium in all states (coui_navigation_item_layout.xml); tab items
+    // have no press mask, ripple or selection motion.
     val fontWeight = FontWeight.Medium
     val mode = LocalNavigationBarDisplayMode.current
 
-    // coui_navigation_item_layout.xml: the item cell is a 56dp-high FrameLayout (fl_root) with
-    // coui_navigation_item_half_gap (2dp) start/end margins; icon and label are centered
-    // horizontally and pinned vertically by COUINavigationItemView.topToBottom().
     Box(
         modifier = modifier
             .height(NavigationBarDefaults.ItemHeight)
@@ -213,8 +194,7 @@ fun RowScope.NavigationBarItem(
     ) {
         when (mode) {
             NavigationBarDisplayMode.IconAndText -> {
-                // topToBottom(): icon top = coui_navigation_icon_margin_top (9dp); label bottom
-                // = itemHeight - icon_margin_top(9) + text_margin_top(2) = itemHeight - 7dp.
+                // COUINavigationItemView.topToBottom(): icon pinned to the top, label to the bottom.
                 Image(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -239,8 +219,7 @@ fun RowScope.NavigationBarItem(
             }
 
             NavigationBarDisplayMode.IconWithSelectedLabel -> {
-                // Not a COUI mode; kept as a COUI extension. The icon slides between the
-                // COUI anchored position and the cell center while the label fades.
+                // Extension mode: the icon slides towards the cell center while the label fades.
                 val centeredIconPadding = (NavigationBarDefaults.ItemHeight - NavigationBarDefaults.IconSize) / 2
                 val iconTopPadding by animateDpAsState(
                     targetValue = if (selected) NavigationBarDefaults.IconTopPadding else centeredIconPadding,
@@ -278,8 +257,7 @@ fun RowScope.NavigationBarItem(
             }
 
             NavigationBarDisplayMode.TextOnly -> {
-                // COUI horizontal (large-screen) items center the label vertically and use
-                // coui_navigation_item_large_text_size.
+                // COUI horizontal (large-screen) items center the label vertically.
                 Text(
                     modifier = Modifier.align(Alignment.Center),
                     text = label,
@@ -491,10 +469,7 @@ object NavigationBarDefaults {
     /** The top padding of the icon (COUI coui_navigation_icon_margin_top). */
     val IconTopPadding = 9.dp
 
-    /**
-     * The bottom padding of the label. COUINavigationItemView.topToBottom() anchors the label
-     * bottom at icon_margin_top(9) - text_margin_top(2) = 7dp above the cell bottom.
-     */
+    /** The bottom padding of the label (COUINavigationItemView.topToBottom(): 9dp - 2dp). */
     val LabelBottomPadding = 7.dp
 
     /** The label font size (COUI coui_navigation_item_text_size). */
@@ -503,10 +478,7 @@ object NavigationBarDefaults {
     /** The text-only font size (COUI coui_navigation_item_large_text_size). */
     val TextFontSize = 14.sp
 
-    /**
-     * The icon cross-fade duration. COUI tab icons are stateful selector drawables with
-     * enterFadeDuration/exitFadeDuration = 180ms between the selected and unselected variants.
-     */
+    /** The icon cross-fade duration (COUI tab icon selector enter/exitFadeDuration, 180ms). */
     val IconFadeDurationMillis = 180
 }
 

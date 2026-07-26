@@ -103,7 +103,7 @@ internal fun SecurityDialogContentLayout(
     val currentOnLinkClick by rememberUpdatedState(onLinkClick)
 
     LaunchedEffect(show) {
-        // COUISecurityAlertDialogBuilder.setChecked applies the initial state on each show.
+        // COUI re-applies the initial checkbox state on each show.
         if (show) checked.value = currentInitialChecked
     }
 
@@ -135,8 +135,7 @@ internal fun SecurityDialogContentLayout(
                         append(statement)
                     } else {
                         append(statement.substring(0, linkIndex))
-                        // COUIClickableSpan: couiColorLink at rest, 30% alpha while pressed
-                        // (coui_clickable_text_color_pressed #4d2660f5), no underline.
+                        // COUI link: accent color at rest, 30% alpha while pressed, no underline.
                         val linkStyles = TextLinkStyles(
                             style = SpanStyle(color = linkColor),
                             pressedStyle = SpanStyle(color = linkColor.copy(alpha = linkColor.alpha * 0.3f)),
@@ -153,9 +152,6 @@ internal fun SecurityDialogContentLayout(
                 }
             }
             Text(
-                // coui_security_alertdialog_statement: 12sp couiColorSecondNeutral, 10dp top /
-                // 6dp bottom margins, lineSpacingMultiplier 1.2, start-aligned, 24dp side
-                // margins (the dialog inside margin width).
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = DialogDefaults.insideMargin.width)
@@ -171,9 +167,7 @@ internal fun SecurityDialogContentLayout(
             val hapticFeedback = LocalHapticFeedback.current
             val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
             Row(
-                // COUICheckBox row starts 20dp from the panel edge
-                // (coui_alert_dialog_checkbox_margin_left) so the 24dp drawable's inner ring
-                // lines up with the 24dp text edge.
+                // COUI aligns the checkbox drawable's inner ring with the text edge.
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = CheckboxRowMarginStart, end = DialogDefaults.insideMargin.width)
@@ -196,8 +190,6 @@ internal fun SecurityDialogContentLayout(
                     onClick = null,
                 )
                 Text(
-                    // COUICheckBox text: 12sp couiColorSecondNeutral, 8dp from the drawable
-                    // (coui_checkbox_margin_between_text_drawable).
                     modifier = Modifier.padding(start = CheckboxTextGap),
                     text = checkboxText,
                     fontSize = CheckboxFontSize,
@@ -206,10 +198,8 @@ internal fun SecurityDialogContentLayout(
             }
         }
         Row(
-            // COUI horizontal button bar (COUIButtonBarLayout): spans the full panel width with
-            // a 58dp min height (coui_alert_dialog_button_height); the gap above it comes from
-            // the custom panel's 8dp bottom padding (coui_alert_dialog_customer_layout_padding_bottom)
-            // and the panel bottom inset is carried by the buttons' own 22dp bottom padding.
+            // COUI horizontal button bar: spans the full panel width; the panel bottom
+            // inset is carried by the buttons' own paddings.
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = ButtonBarMarginTop)
@@ -224,8 +214,7 @@ internal fun SecurityDialogContentLayout(
                 colors = ButtonDefaults.textButtonColorsBorderless(),
             )
             Box(
-                // COUIAlertDialogBottomButtonDivider: 0.33dp couiColorDivider hairline inset
-                // 12dp from the bar top and 21dp from the bar bottom.
+                // COUI hairline divider between the bar buttons.
                 modifier = Modifier
                     .padding(top = ButtonDividerInsetTop, bottom = ButtonDividerInsetBottom)
                     .width(ButtonDividerWidth)
@@ -285,10 +274,7 @@ private val StatementFontSize = 12.sp
 /** COUI coui_security_alert_dialog_checkbox_text_size. */
 private val CheckboxFontSize = 12.sp
 
-/**
- * COUI statement lineSpacingMultiplier is 1.2; with sans-serif font metrics
- * (ascent + descent = 1.172 x size) that resolves to ~1.41 x fontSize.
- */
+/** COUI statement lineSpacingMultiplier 1.2, resolved against sans-serif font metrics. */
 private val StatementLineHeight = 1.41f.em
 
 /** COUI statement android:layout_marginTop. */
@@ -303,19 +289,16 @@ private val CheckboxRowMarginStart = 20.dp
 /** COUI coui_checkbox_margin_between_text_drawable. */
 private val CheckboxTextGap = 8.dp
 
-/**
- * COUI coui_alert_dialog_customer_layout_padding_bottom: the custom panel (statement/checkbox)
- * pads 8dp before the horizontal button bar, which itself carries no top margin.
- */
+/** COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the button bar. */
 private val ButtonBarMarginTop = 8.dp
 
 /** COUI coui_alert_dialog_button_height: the min height of the horizontal button bar. */
 private val ButtonBarMinHeight = 58.dp
 
 /**
- * COUI dialog bar buttons pad 24dp horizontally (coui_alert_dialog_button_horizontal_padding)
- * and 12dp top / 22dp bottom (coui_bottom_alert_dialog_horizontal_button_padding_top/
- * bottom_extra_new), so the panel bottom inset is carried by the buttons themselves.
+ * COUI dialog bar button paddings (coui_alert_dialog_button_horizontal_padding and
+ * coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new); the panel
+ * bottom inset is carried by the buttons themselves.
  */
 private val DialogButtonInsideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp)
 

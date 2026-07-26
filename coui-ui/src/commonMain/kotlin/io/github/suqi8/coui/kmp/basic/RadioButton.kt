@@ -42,22 +42,11 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.SinkFeedback
 import io.github.suqi8.coui.kmp.utils.pressable
 
-// COUI radio toggle easings. Every property animator in the decompiled AVDs shares one curve per
-// direction: coui_btn_radio_off_to_on_animation.xml uses pathInterpolator "M0,0 c0.3,0 0.1,1 1,1"
-// and coui_btn_radio_on_to_off_animation.xml uses "M0,0 c0.33,0 0.67,1 1,1".
-private val CouiRadioSelectEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
-private val CouiRadioDeselectEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
-
 /**
  * A [RadioButton] component with COUI style.
  *
- * Visuals follow the COUI radio drawables (24dp viewport): unselected is an outline ring
- * (coui_btn_radio_off.xml), selected is a primary disc with a solid center dot stacked on top
- * (coui_btn_radio_on.xml). The selected state is two solid fills rather than a punched-out
- * annulus, so the center dot stays opaque over any background, including in dark mode. Toggling
- * replays the decompiled COUI AVD transitions (coui_btn_radio_off_to_on_animation.xml /
- * coui_btn_radio_on_to_off_animation.xml): the ring and disc cross-fade while pulsing
- * 1 -> 1.08 -> 1, and the center dot grows from / shrinks to the middle.
+ * Unselected is an outline ring, selected is a primary disc with a solid center dot; toggling
+ * replays the COUI AVD transitions (cross-fade with a 1 -> 1.08 -> 1 pulse).
  *
  * @param selected Whether the [RadioButton] is currently selected.
  * @param onClick The callback to be called when the [RadioButton] is clicked. The caller is
@@ -84,8 +73,7 @@ fun RadioButton(
     val unselectedColor = colors.unselectedColor(enabled)
     val centerColor = colors.centerColor(enabled)
 
-    // _R_G_STROKE_PATH: the unselected ring fades out over 300ms when selecting and back in over
-    // 267ms when deselecting.
+    // The unselected ring fades out when selecting and back in when deselecting.
     val ringAlphaState = transition.animateFloat(
         transitionSpec = {
             if (targetState) {
@@ -97,7 +85,7 @@ fun RadioButton(
         label = "RingAlpha",
     ) { if (it) 0f else 1f }
 
-    // _R_G_OUT_CIRCLE_PATH: the primary disc fades in over 300ms and out over 200ms.
+    // The primary disc fades in and out.
     val discAlphaState = transition.animateFloat(
         transitionSpec = {
             if (targetState) {
@@ -109,8 +97,7 @@ fun RadioButton(
         label = "DiscAlpha",
     ) { if (it) 1f else 0f }
 
-    // _R_G_INNER_CIRCLE: the center dot scales up from the middle over 300ms and back down over
-    // 267ms.
+    // The center dot scales up from the middle and back down.
     val centerScaleState = transition.animateFloat(
         transitionSpec = {
             if (targetState) {
@@ -122,7 +109,7 @@ fun RadioButton(
         label = "CenterScale",
     ) { if (it) 1f else 0f }
 
-    // _R_G_INNER_CIRCLE_PATH: the center dot fades in over 300ms and out over 200ms.
+    // The center dot fades in and out.
     val centerAlphaState = transition.animateFloat(
         transitionSpec = {
             if (targetState) {
@@ -134,10 +121,8 @@ fun RadioButton(
         label = "CenterAlpha",
     ) { if (it) 1f else 0f }
 
-    // _R_G_STROKE / _R_G_OUT_CIRCLE group scale: both AVDs pulse the ring and disc
-    // 1 -> 1.08 (150ms) -> 1 (150ms) on every toggle. A same-endpoint keyframe animation never
-    // runs through updateTransition, so the pulse is driven by an Animatable on state changes
-    // (same pattern as the Switch thumb squash). The inner circle group has no pulse.
+    // Both AVDs pulse the ring and disc 1 -> 1.08 -> 1 on every toggle; a same-endpoint keyframe
+    // animation never runs through updateTransition, so drive it with an Animatable.
     val bounceScale = remember { Animatable(1f) }
     var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(selected) {
@@ -185,7 +170,6 @@ fun RadioButton(
     Box(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
-            // COUI radio drawables (coui_btn_radio_*.xml) have a 24dp intrinsic size.
             .requiredSize(24.dp)
             .pressable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -195,8 +179,7 @@ fun RadioButton(
             )
             .clip(capsuleShape)
             .drawWithCache {
-                // COUI radio geometry in a 24dp viewport: ring r=9.2 stroke=1.3
-                // (coui_btn_radio_off.xml), disc r=10 and center dot r=6 (coui_btn_radio_on.xml).
+                // COUI radio geometry in a 24dp viewport (coui_btn_radio_off/on.xml).
                 val ringRadius = size.minDimension * (9.2f / 24f)
                 val ringStrokeWidth = size.minDimension * (1.3f / 24f)
                 val discRadius = size.minDimension * (10f / 24f)
@@ -205,8 +188,7 @@ fun RadioButton(
                     val bounce = bounceScale.value
                     val ringAlpha = ringAlphaState.value
                     if (ringAlpha > 0f) {
-                        // The group scale pulse also scales the rendered stroke width, matching
-                        // VectorDrawable's matrix-scaled strokes.
+                        // The group scale pulse also scales the rendered stroke width.
                         drawCircle(
                             color = unselectedColor,
                             radius = ringRadius * bounce,
@@ -242,15 +224,10 @@ object RadioButtonDefaults {
     fun radioButtonColors(
         selectedColor: Color = COUITheme.colorScheme.primary,
         disabledSelectedColor: Color = COUITheme.colorScheme.disabledPrimary,
-        // couiColorLabelTertiary (coui_btn_radio_off.xml ring stroke).
         unselectedColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        // couiColorQuarternaryNeutral (coui_btn_radio_off_disabled.xml ring stroke).
         disabledUnselectedColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
-        // The COUI selected center is hardcoded #ffffff with no night variant
-        // (coui_btn_radio_on.xml), so it stays white in dark mode.
+        // The COUI selected center is hardcoded #ffffff with no night variant.
         centerColor: Color = Color.White,
-        // coui_btn_radio_color_on_disabled (#8affffff light / #29ffffff night), which is exactly
-        // the disabledOnPrimaryButton pair (coui_btn_radio_on_disabled.xml center).
         disabledCenterColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): RadioButtonColors = remember(
         selectedColor,
@@ -289,3 +266,7 @@ data class RadioButtonColors(
     @Stable
     internal fun centerColor(enabled: Boolean): Color = if (enabled) centerColor else disabledCenterColor
 }
+
+// COUI radio toggle easings (coui_btn_radio_off_to_on / on_to_off animation path interpolators).
+private val CouiRadioSelectEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+private val CouiRadioDeselectEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)

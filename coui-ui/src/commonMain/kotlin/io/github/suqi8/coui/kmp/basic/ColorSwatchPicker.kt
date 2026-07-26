@@ -91,8 +91,7 @@ private fun ColorSwatchCell(
     ringColor: Color,
     onClick: () -> Unit,
 ) {
-    // COUI fades the selection ring in over 280ms and out over 150ms
-    // with a cubic-bezier(0.33, 0, 0.67, 1) interpolator.
+    // Selection ring fade, asymmetric in/out durations (COUI UxColorSelectableView).
     val ringAlpha by animateFloatAsState(
         targetValue = if (selected) 1f else 0f,
         animationSpec = tween(
@@ -118,12 +117,12 @@ private fun ColorSwatchCell(
         contentAlignment = Alignment.Center,
     ) {
         Canvas(modifier = Modifier.size(cellSize)) {
-            // Color dot: 34dp filled circle centered in the 44dp cell.
+            // Color dot centered in the cell
             drawCircle(
                 color = color,
                 radius = swatchSize.toPx() / 2f,
             )
-            // Selection ring: 2dp stroke circle at the cell bounds, alpha animated.
+            // Selection ring at the cell bounds, alpha animated
             if (ringAlpha > 0f) {
                 val strokePx = ringStrokeWidth.toPx()
                 drawCircle(
@@ -137,8 +136,11 @@ private fun ColorSwatchCell(
     }
 }
 
-/** Contains default values used by [ColorSwatchPicker]. */
+/**
+ * Contains default values used by [ColorSwatchPicker].
+ */
 object ColorSwatchPickerDefaults {
+
     /** The diameter of each color dot (COUI ux_icon_color_select_inside). */
     val SwatchSize: Dp = 34.dp
 

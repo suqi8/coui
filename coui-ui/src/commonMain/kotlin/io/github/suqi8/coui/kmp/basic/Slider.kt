@@ -303,6 +303,8 @@ fun Slider(
  * @param showKeyPoints Whether to show the key points (step indicators) on the slider. Only works when [keyPoints] is not null.
  * @param keyPoints Custom key point values to display on the slider. If null, uses step positions from [steps] parameter.
  *   Values should be within [valueRange].
+ * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
+ *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
  */
 @Composable
 fun VerticalSlider(
@@ -843,13 +845,7 @@ fun RangeSlider(
 }
 
 /**
- * Internal slider track renderer.
- *
- * Rendering follows COUISeekBar.onDraw: the inactive track is a stadium whose thickness
- * grows from the rest size to [TrackEnlargeScale]x while dragging, the active track keeps
- * a constant thickness with its end cap centered on the thumb, and the thumb is a circle
- * with a drop shadow. Cap centers are inset by [TrackCapInsetRatio] x thickness so that
- * the enlarged track stays inside the slider bounds along the main axis.
+ * Internal slider track renderer, following the COUISeekBar.onDraw rendering model.
  */
 @Composable
 private fun SliderTrack(
@@ -981,11 +977,7 @@ private fun SliderTrack(
 }
 
 /**
- * Internal range slider track renderer.
- *
- * Shares the COUISeekBar rendering model with [SliderTrack]: enlarging inactive track
- * while dragging, constant-thickness active range with cap centers on the thumbs, and
- * shadowed circular thumbs.
+ * Internal range slider track renderer, sharing the COUISeekBar rendering model with [SliderTrack].
  */
 @Composable
 private fun RangeSliderTrack(
@@ -1346,17 +1338,10 @@ private fun resolveValueFromFraction(
     }
 }
 
-/**
- * COUISeekBar: couiSeekBarBackGroundEnlargeScale, default BACKGROUND_RADIUS_SCALE = 1.4f.
- * While dragging, the inactive track thickness grows to this multiple of the rest size
- * (20dp -> 28dp with the default track height).
- */
+/** The inactive track thickness multiplier while dragging (COUISeekBar BACKGROUND_RADIUS_SCALE). */
 private val TrackEnlargeScale = 1.4f
 
-/**
- * COUISeekBar: mPaddingHorizontal = (backgroundHeight * enlargeScale) / 2, so cap centers
- * are inset by 0.7 x track thickness and the enlarged track exactly fills the bounds.
- */
+/** Cap center inset as a fraction of track thickness (COUISeekBar mPaddingHorizontal). */
 private val TrackCapInsetRatio = TrackEnlargeScale / 2f
 
 /** COUISeekBar: coui_seekbar_thumb_radius (6dp) over track height (20dp). */
@@ -1365,16 +1350,10 @@ private val ThumbRadiusRatio = 0.3f
 /** COUISeekBar: coui_seekbar_thumb_max_radius (8dp) over coui_seekbar_thumb_radius (6dp). */
 private val ThumbPressedScale = 8f / 6f
 
-/**
- * COUISeekBar: touch enlarge/release animators run for 183ms with
- * COUIEaseInterpolator = PathInterpolator(0.33, 0, 0.67, 1).
- */
+/** COUISeekBar touch enlarge/release animators: 183ms with COUIEaseInterpolator. */
 private val TrackGrowAnimationSpec = tween<Float>(durationMillis = 183, easing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f))
 
-/**
- * COUISeekBar: thumb radius spring is COUISpringForce(response = 0.2, bounce = 0),
- * i.e. stiffness = (2pi / 0.2)^2 = 987, critically damped.
- */
+/** COUISeekBar thumb radius spring (COUISpringForce response 0.2f / bounce 0f). */
 private val ThumbScaleAnimationSpec = spring<Float>(dampingRatio = 1f, stiffness = 987f)
 
 /** COUISeekBar style: couiSeekBarThumbShadowSize = 4dp (shadow blur radius). */
@@ -1387,9 +1366,8 @@ private val ThumbShadowOffsetY = 2.dp
 private val ThumbShadowColor = Color(0x1A000000)
 
 /**
- * Draws the slider thumb as a circle with a soft drop shadow, following COUISeekBar.drawThumb:
- * Paint.setShadowLayer(4dp, 0, 2dp, #1A000000), approximated with a radial gradient halo.
- * The shadow is skipped when the slider is disabled, matching the source.
+ * Draws the slider thumb as a circle with a soft drop shadow (COUISeekBar.drawThumb);
+ * the shadow is skipped when the slider is disabled.
  */
 private fun DrawScope.drawThumbWithShadow(
     center: Offset,

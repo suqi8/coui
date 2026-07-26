@@ -24,11 +24,10 @@ import io.github.suqi8.coui.kmp.basic.SwitchDefaults
 /**
  * A switch with a title, a summary and a loading state, mirroring COUISwitchLoadingPreference.
  *
- * While [isLoading] is `true` the switch thumb shows the COUI loading spinner
- * (COUISwitch loading style, coui_preference_widget_switchload.xml) and neither the row nor the
- * switch can be toggled — COUISwitch swallows touch while loading. The usual flow is: the user
- * taps the row, [onCheckedChange] fires, the caller flips [isLoading] on, performs the
- * asynchronous work, then updates [checked] and turns [isLoading] off again.
+ * While [isLoading] is `true` the switch thumb shows the COUI loading spinner and neither the
+ * row nor the switch can be toggled. The usual flow is: the user taps the row, [onCheckedChange]
+ * fires, the caller flips [isLoading] on, performs the asynchronous work, then updates [checked]
+ * and turns [isLoading] off again.
  *
  * @param checked The checked state of the [SwitchLoadingPreference].
  * @param onCheckedChange The callback when the checked state of the [SwitchLoadingPreference] is
@@ -79,10 +78,6 @@ fun SwitchLoadingPreference(
         endActions = {
             Row(
                 modifier = Modifier
-                    // The 8dp here plus the 8dp BasicComponent center-end spacer keeps a
-                    // 16dp minimum gap between the text block and the switch, matching
-                    // COUI android_preference_switch_margin_left (16dp) in
-                    // coui_preference_widget_switchload.xml.
                     .padding(end = 8.dp)
                     .align(Alignment.CenterVertically)
                     .weight(1f, fill = false),
@@ -99,8 +94,6 @@ fun SwitchLoadingPreference(
         },
         bottomAction = bottomAction,
         onClick = {
-            // COUISwitchLoadingPreference.onClick() only drives the switch loading animation;
-            // while loading the switch swallows input, so the row is inert too.
             currentOnCheckedChange.takeIf { enabled && !isLoading }?.invoke(!checked)
         },
         role = Role.Switch,

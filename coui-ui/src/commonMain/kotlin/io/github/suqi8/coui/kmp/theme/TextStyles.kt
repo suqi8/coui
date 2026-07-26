@@ -167,8 +167,7 @@ private val Body2: TextStyle
             fontSize = 14.sp,
         )
 
-// COUI couiTextAppearanceButtonL (Widget.COUI.Button.Large / alert dialog buttons): 16sp,
-// sans-serif-medium.
+/** COUI: couiTextAppearanceButtonL 16sp, sans-serif-medium. */
 private val Button: TextStyle
     get() =
         TextStyle(

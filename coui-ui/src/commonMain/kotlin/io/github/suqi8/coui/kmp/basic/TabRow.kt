@@ -71,29 +71,25 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
- * A [TabRow] with COUI (ColorOS 16) segment button styling, without the container capsule.
+ * A [TabRow] with COUI style, without the container capsule.
  *
- * COUI has no flat, full-bleed segmented control, so this variant renders the COUI segment button
- * (see [TabRowWithContour]) without the container fill: only the sliding capsule indicator with its
- * drop shadow, on a transparent background by default. Geometry, springs, typography and press
- * feedback are identical to [TabRowWithContour] with a zero contour inset.
+ * Renders the COUI segment button (see [TabRowWithContour]) without the container fill: only the
+ * sliding capsule indicator with its drop shadow, on a transparent background by default.
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow].
  * @param onTabSelected The callback when a tab is selected.
  * @param modifier The modifier to be applied to the [TabRow].
- * @param colors The colors of the [TabRow]. The container background defaults to transparent.
- * @param minWidth The minimum width of a tab in [TabRow].
- * @param maxWidth The maximum width of a tab in [TabRow]. COUI segments have no maximum width and
- *   expand to fill the row, hence the [Dp.Infinity] default.
+ * @param colors The colors of the [TabRow].
+ * @param minWidth The minimum width of the tab in [TabRow].
+ * @param maxWidth The maximum width of the tab in [TabRow].
  * @param height The height of the [TabRow].
- * @param cornerRadius The corner radius of the sliding indicator. COUI draws a capsule (half the
- *   indicator height).
- * @param itemSpacing The spacing between tabs. COUI segments are adjacent (0dp).
+ * @param cornerRadius The corner radius of the sliding indicator in [TabRow].
+ * @param itemSpacing The spacing between tabs in [TabRow].
  * @param contentAlignment The content alignment of the tab in [TabRow].
- * @param listState The [LazyListState] used when the tabs overflow and the row becomes scrollable.
- * @param interactionSource The [MutableInteractionSource] to be used for the tabs.
- * @param indication The [Indication] to be used for the tabs.
+ * @param listState The [LazyListState] to be used for the [TabRow].
+ * @param interactionSource The [MutableInteractionSource] to be used for the [TabRow].
+ * @param indication The [Indication] to be used for the [TabRow].
  */
 @Composable
 @NonRestartableComposable
@@ -135,17 +131,8 @@ fun TabRow(
 /**
  * A [TabRowWithContour] with COUI style.
  *
- * A faithful port of the ColorOS 16 segmented control (COUISegmentButtonLayout, default
- * `SegmentButton` style): a 40dp capsule container with a 4dp inset on all sides, adjacent
- * segments measured from their label width (12dp horizontal text padding, at least 52dp) and
- * distributed to fill the row, a sliding capsule indicator (white in light themes) whose drop
- * shadow is drawn only outside the indicator, and 14sp labels that switch to medium weight when
- * selected. The indicator position and width animate with independent critically damped
- * COUISpringForce(response 0.3, bounce 0) springs; label colors crossfade through
- * COUIMoveEaseInterpolator over 300ms; pressing a segment scales its label, and pressing the
- * selected segment also scales the indicator.
- *
- * For the `SegmentButton.Tiny` style, pass [TabRowDefaults.TabRowWithContourTinyHeight],
+ * A port of the ColorOS 16 segmented control (COUISegmentButtonLayout, default `SegmentButton`
+ * style). For the `SegmentButton.Tiny` style, pass [TabRowDefaults.TabRowWithContourTinyHeight],
  * [TabRowDefaults.TabRowWithContourTinyCornerRadius] and
  * [TabRowDefaults.TabRowWithContourTinyPadding].
  *
@@ -154,19 +141,16 @@ fun TabRow(
  * @param onTabSelected The callback when a tab is selected.
  * @param modifier The modifier to be applied to the [TabRow].
  * @param colors The colors of the [TabRow].
- * @param minWidth The minimum width of a tab in [TabRow]. COUI `coui_segment_min_width` (52dp).
- * @param maxWidth The maximum width of a tab in [TabRow]. COUI segments have no maximum width and
- *   expand to fill the row, hence the [Dp.Infinity] default.
+ * @param minWidth The minimum width of the tab in [TabRow].
+ * @param maxWidth The maximum width of the tab in [TabRow].
  * @param height The height of the [TabRow].
- * @param cornerRadius The corner radius of the sliding indicator. COUI draws a capsule, i.e. half
- *   the indicator height; the container corner radius is derived by adding [contourPadding].
- * @param contourPadding The inset between the container capsule and the sliding indicator on all
- *   sides. COUI `SegmentButton` style `android:padding` (4dp).
- * @param itemSpacing The spacing between tabs. COUI segments are adjacent (0dp).
+ * @param cornerRadius The corner radius of the sliding indicator in [TabRow].
+ * @param contourPadding The inset between the container capsule and the sliding indicator.
+ * @param itemSpacing The spacing between tabs in [TabRow].
  * @param contentAlignment The content alignment of the tab in [TabRow].
- * @param listState The [LazyListState] used when the tabs overflow and the row becomes scrollable.
- * @param interactionSource The [MutableInteractionSource] to be used for the tabs.
- * @param indication The [Indication] to be used for the tabs.
+ * @param listState The [LazyListState] to be used for the [TabRow].
+ * @param interactionSource The [MutableInteractionSource] to be used for the [TabRow].
+ * @param indication The [Indication] to be used for the [TabRow].
  */
 @Composable
 @NonRestartableComposable
@@ -207,11 +191,7 @@ fun TabRowWithContour(
 }
 
 /**
- * Shared implementation of the COUI segment button.
- *
- * Rendering follows COUISegmentButtonLayout.onDraw exactly: the container capsule is painted
- * first, then the indicator shadow pass clipped to the outside of the indicator
- * (Region.Op.DIFFERENCE), then the indicator fill, and finally the labels are composed on top.
+ * Shared implementation of the COUI segment button, following COUISegmentButtonLayout.onDraw.
  */
 @Composable
 private fun SegmentButtonRow(
@@ -256,8 +236,7 @@ private fun SegmentButtonRow(
         val spacingPx = with(density) { itemSpacing.roundToPx() }
         val segmentPaddingPx = with(density) { SegmentPaddingHorizontal.roundToPx() }
 
-        // Segment widths: max(label width + 2 * 12dp, 52dp) per segment, then distributed to fill
-        // the row with COUISegmentButtonLayout.calculateChildrenWidths.
+        // COUISegmentButtonLayout.calculateChildrenWidths: natural label widths distributed to fill the row.
         val segmentWidthsPx = remember(
             tabs,
             viewportPx,
@@ -288,8 +267,7 @@ private fun SegmentButtonRow(
             }
         }
 
-        // Initialized from the current selection so the very first frame already shows the
-        // indicator at rest; the springs take over on selection changes.
+        // Initialized from the current selection so the first frame shows the indicator at rest.
         val indicatorCenterX = remember {
             val index = selectedTabIndex.coerceIn(0, max(0, segmentWidthsPx.lastIndex))
             Animatable(
@@ -333,8 +311,7 @@ private fun SegmentButtonRow(
             lastSettledSelectedTabIndex = selectedTabIndex
         }
 
-        // COUIPressFeedbackHelper on the indicator: pressing the selected segment scales the
-        // indicator around its center.
+        // COUIPressFeedbackHelper: pressing the selected segment scales the indicator around its center.
         LaunchedEffect(selectedSegmentPressed, selectedTabIndex, segmentWidthsPx, height, contourPadding) {
             val target = if (selectedSegmentPressed && segmentWidthsPx.isNotEmpty()) {
                 val index = selectedTabIndex.coerceIn(0, segmentWidthsPx.lastIndex)
@@ -390,10 +367,8 @@ private fun SegmentButtonRow(
                         RoundRect(Rect(Offset.Zero, size), CornerRadius(containerRadius)),
                     )
                     clipPath(containerPath) {
-                        // 2. Indicator shadow, clipped to the outside of the indicator
-                        // (drawIndicator with Region.Op.DIFFERENCE): shadowLayer 1dp blur,
-                        // dx 0, dy 2dp. The 1dp blur is approximated with a half-alpha
-                        // penumbra pass around the umbra capsule.
+                        // 2. Indicator shadow, clipped outside the indicator (Region.Op.DIFFERENCE);
+                        // the 1dp blur is approximated with a half-alpha penumbra pass.
                         clipPath(indicatorPath, clipOp = ClipOp.Difference) {
                             val shadowDy = IndicatorShadowOffsetY.toPx()
                             val shadowBlur = IndicatorShadowBlurRadius.toPx()
@@ -475,8 +450,7 @@ private fun SegmentTab(
         animationSpec = SegmentButtonSpring,
         label = "segmentPressScale",
     )
-    // Label color crossfades through COUIMoveEaseInterpolator over 300ms; the font weight switches
-    // instantly (COUISegmentButtonLayout.setSelectedAt swaps couiTextButtonM/couiTextBodyM).
+    // COUISegmentButtonLayout.setSelectedAt: color crossfades over 300ms, weight switches instantly.
     val textColor by animateColorAsState(
         targetValue = color,
         animationSpec = tween(TextColorAnimationDuration, easing = TextColorEasing),
@@ -515,12 +489,10 @@ private fun SegmentTab(
 }
 
 /**
- * Resolve the widths of all segments.
+ * Resolve the widths of all segments (COUISegmentButtonLayout.onMeasure).
  *
- * COUISegmentButtonLayout.onMeasure with an exact width always distributes the available width
- * with [distributeSegmentWidths] (and ellipsizes labels when segments end up narrower than their
- * text). As a COUI adaptation, when the row cannot give every segment [minWidthPx] the segments
- * keep their natural widths and the row scrolls instead.
+ * When the row cannot give every segment [minWidthPx] the segments keep their natural widths and
+ * the row scrolls instead.
  */
 private fun computeSegmentWidths(
     naturalWidths: List<Int>,
@@ -537,10 +509,8 @@ private fun computeSegmentWidths(
 }
 
 /**
- * Faithful port of COUISegmentButtonLayout.calculateChildrenWidths: when every segment's natural
- * width is below the fair share the row is divided equally; otherwise narrow segments keep their
- * natural width and the remaining space is split evenly among the wider ones, with any leftover
- * spread over all but the widest segment.
+ * Distribute the available width among segments (COUISegmentButtonLayout.calculateChildrenWidths):
+ * narrow segments keep their natural width and the remaining space is split among the wider ones.
  */
 private fun distributeSegmentWidths(
     naturalWidths: List<Int>,
@@ -585,96 +555,74 @@ private fun distributeSegmentWidths(
 object TabRowDefaults {
 
     /**
-     * The default height of the [TabRow].
-     *
-     * Matches the COUI `SegmentButton` style height (40dp) so both variants share one geometry.
+     * The default height of the [TabRow]. COUI `SegmentButton` style height (40dp).
      */
     val TabRowHeight = 40.dp
 
     /**
-     * The default height of the [TabRowWithContour].
-     *
-     * COUI `SegmentButton` default style: `android:layout_height` 40dp (used as-is by
-     * com.android.settings segment button layouts).
+     * The default height of the [TabRowWithContour]. COUI `SegmentButton` style height (40dp).
      */
     val TabRowWithContourHeight = 40.dp
 
     /**
-     * The height of the `SegmentButton.Tiny` COUI style (32dp), for use as [TabRowWithContour]'s
+     * The height of the COUI `SegmentButton.Tiny` style (32dp), for use as [TabRowWithContour]'s
      * `height` together with [TabRowWithContourTinyPadding] and [TabRowWithContourTinyCornerRadius].
      */
     val TabRowWithContourTinyHeight = 32.dp
 
     /**
-     * The default corner radius of the sliding indicator in [TabRow].
-     *
-     * With no contour inset the indicator spans the full 40dp height; COUI draws capsules
-     * (radius = height / 2), hence 20dp.
+     * The default corner radius of the sliding indicator in [TabRow]. COUI draws capsules
+     * (radius = height / 2), hence 20dp for the full 40dp height.
      */
     val TabRowCornerRadius = 20.dp
 
     /**
-     * The default corner radius of the sliding indicator in [TabRowWithContour].
-     *
-     * COUISegmentButtonLayout draws capsules (radius = height / 2): 16dp matches the 32dp
-     * indicator at the default 40dp container height with its 4dp inset; the container capsule
-     * radius (20dp) is derived by adding the inset back.
+     * The default corner radius of the sliding indicator in [TabRowWithContour]. Half the 32dp
+     * indicator height (40dp container minus the 4dp inset on both sides).
      */
     val TabRowWithContourCornerRadius = 16.dp
 
     /**
-     * The indicator corner radius of the `SegmentButton.Tiny` COUI style: (32dp - 2 * 2dp) / 2.
+     * The indicator corner radius of the COUI `SegmentButton.Tiny` style: (32dp - 2 * 2dp) / 2.
      */
     val TabRowWithContourTinyCornerRadius = 14.dp
 
     /**
      * The default inset between the container and the indicator in [TabRowWithContour].
-     *
      * COUI `SegmentButton` style `android:padding` (4dp).
      */
     val TabRowWithContourPadding = 4.dp
 
     /**
-     * The contour inset of the `SegmentButton.Tiny` COUI style (`android:padding` 2dp).
+     * The contour inset of the COUI `SegmentButton.Tiny` style (`android:padding` 2dp).
      */
     val TabRowWithContourTinyPadding = 2.dp
 
     /**
-     * The default minimum width of a tab in [TabRow].
-     *
-     * COUI `coui_segment_min_width` (52dp).
+     * The default minimum width of the tab in [TabRow]. COUI `coui_segment_min_width` (52dp).
      */
     val TabRowMinWidth = 52.dp
 
     /**
-     * The default minimum width of a tab in [TabRowWithContour].
-     *
+     * The default minimum width of the tab in [TabRowWithContour].
      * COUI `coui_segment_min_width` (52dp).
      */
     val TabRowWithContourMinWidth = 52.dp
 
     /**
-     * The default maximum width of a tab in [TabRow].
-     *
-     * COUI segments have no maximum width: with a fixed row width the segments expand to fill it.
+     * The default maximum width of the tab in [TabRow]. COUI segments have no maximum width.
      */
     val TabRowMaxWidth = Dp.Infinity
 
     /**
-     * The default maximum width of a tab in [TabRowWithContour].
-     *
-     * COUI segments have no maximum width: with a fixed row width the segments expand to fill it.
+     * The default maximum width of the tab in [TabRowWithContour]. COUI segments have no maximum width.
      */
     val TabRowWithContourMaxWidth = Dp.Infinity
 
     /**
-     * The default colors for the [TabRow] and [TabRowWithContour].
-     *
-     * Defaults follow COUISegmentButtonLayout: the container uses
-     * `coui_color_segment_button_background` (#0F000000 light / #1FFFFFFF dark), the sliding
-     * indicator uses `coui_color_segment_button_indicator` (#FFFFFF light / #1AFFFFFF dark), and
-     * both the selected and unselected labels default to `couiColorLabelPrimary` (onSurface) —
-     * the selected state is distinguished by the indicator and the medium font weight.
+     * The default colors for the [TabRow] and [TabRowWithContour], following
+     * COUISegmentButtonLayout: both label states default to `couiColorLabelPrimary` — the
+     * selected state is distinguished by the indicator and the medium font weight.
      */
     @Composable
     fun tabRowColors(
@@ -715,9 +663,8 @@ data class TabRowColors(
 }
 
 /**
- * The COUI segment button spring: COUISpringForce(response = 0.3f, bounce = 0f), which maps to a
- * critically damped spring with stiffness (2 * PI / 0.3)^2 ~= 438.65. COUISegmentButtonLayout uses
- * it for the indicator position/width springs and (via COUIPressFeedbackHelper) the press scale.
+ * COUISpringForce(response = 0.3f, bounce = 0f): a critically damped spring with stiffness
+ * (2 * PI / 0.3)^2 ~= 438.65, used for the indicator springs and the press scale.
  */
 private val SegmentButtonSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 

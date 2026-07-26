@@ -176,10 +176,7 @@ enum class PressFeedbackType {
     /** No feedback effect. */
     None,
 
-    /**
-     * Animates the fill towards the pressed color while pressed
-     * (COUI card press feedback, COUICardListSelectedItemLayout).
-     */
+    /** Animates the fill towards the pressed color while pressed (COUI: COUICardListSelectedItemLayout). */
     Tint,
 
     /** Sinks slightly when pressed. */

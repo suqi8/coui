@@ -50,8 +50,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 /**
  * An entry of a [ListPreference] / [MultiSelectListPreference] selection panel.
  *
- * @param text The text of the entry (COUI select dialog text1: 16sp, medium).
- * @param summary The optional summary shown below the text (COUI summary_text2).
+ * @param text The text of the entry.
+ * @param summary The optional summary shown below the text.
  * @param enabled Whether the entry can be selected.
  */
 @Immutable
@@ -62,24 +62,22 @@ data class ListPreferenceEntry(
 )
 
 /**
- * A list preference with COUI style, mirroring ColorOS's COUIListPreference: a preference row
- * showing the selected entry as trailing assignment text, which opens a bottom sheet
- * single-choice panel (COUIAlertDialog_BottomAssignment with coui_select_dialog_singlechoice
- * rows) when clicked. Tapping an entry commits the selection and dismisses the panel; the
- * cancel button or an outside tap dismisses without changes.
+ * A list preference with a single-choice selection panel, mirroring COUIListPreference.
+ *
+ * The preference row shows the selected entry as trailing assignment text and opens a bottom
+ * sheet single-choice panel when clicked. Tapping an entry commits the selection and dismisses
+ * the panel; the cancel button or an outside tap dismisses without changes.
  *
  * @param entries The list of [ListPreferenceEntry] to choose from.
  * @param selectedIndex The index of the selected entry, or -1 when nothing is selected.
  * @param onSelectedIndexChange The callback when an entry is selected in the panel.
  * @param title The title of the [ListPreference].
- * @param cancelButtonText The label of the cancel button at the bottom of the panel
- *   (COUI dialog_cancel).
+ * @param cancelButtonText The label of the cancel button at the bottom of the panel.
  * @param modifier The modifier to be applied to the [ListPreference].
  * @param titleColor The color of the title.
  * @param summary The summary of the [ListPreference].
  * @param summaryColor The color of the summary.
- * @param dialogTitle The title of the selection panel. Defaults to [title], matching the COUI
- *   dialog title fallback.
+ * @param dialogTitle The title of the selection panel. Defaults to [title].
  * @param colors The [ListPreferenceColors] used by the selection panel rows.
  * @param startAction The [Composable] content on the start side of the [ListPreference].
  * @param bottomAction The [Composable] content at the bottom of the [ListPreference].
@@ -190,9 +188,6 @@ fun ListPreference(
                                 setExpanded(false)
                             },
                         ) {
-                            // COUI single-choice panels mark the selected row with a
-                            // primary-tinted check at the row end; the slot is always
-                            // reserved like the COUI radio_layout.
                             SelectedCheckIndicator(
                                 visible = selected,
                                 enabled = entry.enabled,
@@ -218,9 +213,8 @@ fun ListPreference(
 }
 
 /**
- * The trailing assignment text + popup indicator of a [ListPreference] /
- * [MultiSelectListPreference] row (COUI Preference_COUI_COUIWithPopupIcon:
- * assignment-in-right layout plus the coui_pop_up_next widget).
+ * The trailing assignment text and popup indicator of a [ListPreference] /
+ * [MultiSelectListPreference] row (COUI assignment-in-right layout).
  */
 @Composable
 internal fun RowScope.PreferenceValueEndActions(
@@ -232,8 +226,6 @@ internal fun RowScope.PreferenceValueEndActions(
     } else {
         COUITheme.colorScheme.disabledOnSecondaryVariant
     }
-    // COUI assignment/status text color (coui_preference_secondary_text_color):
-    // couiColorSecondNeutral when enabled, couiColorLabelTertiary when disabled.
     val valueColor = if (enabled) {
         COUITheme.colorScheme.onSurfaceSecondary
     } else {
@@ -243,10 +235,6 @@ internal fun RowScope.PreferenceValueEndActions(
         Text(
             text = valueText,
             modifier = Modifier
-                // COUI assignment-in-right metrics: 162dp max width
-                // (coui_preference_status_text_max_width), 16dp min gap from the title
-                // block (8dp here + the 8dp BasicComponent center-end spacer) and 4dp gap
-                // to the indicator (support_preference_image_margin_start).
                 .padding(start = 8.dp, end = 4.dp)
                 .weight(1f, fill = false),
             fontSize = COUITheme.textStyles.body2.fontSize,
@@ -261,9 +249,8 @@ internal fun RowScope.PreferenceValueEndActions(
 }
 
 /**
- * A row of the bottom sheet selection panel (COUI coui_select_dialog_singlechoice /
- * coui_select_dialog_multichoice): text and optional summary on the start side, a selection
- * indicator slot at the end, and a hairline divider below every row but the last.
+ * A row of the bottom sheet selection panel: text and optional summary on the start side, a
+ * selection indicator slot at the end, and a hairline divider below every row but the last.
  *
  * @param checked When null the row uses single-choice semantics ([Role.RadioButton]);
  *   otherwise it uses toggleable checkbox semantics with this checked value.
@@ -300,23 +287,18 @@ internal fun SelectPanelItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                // COUI coui_delete_alert_dialog_button_height row minimum.
                 .heightIn(min = ListPreferenceDefaults.PanelItemMinHeight)
                 .then(interactionModifier)
-                // COUI alert_dialog_single_list_padding_vertical.
                 .padding(vertical = ListPreferenceDefaults.PanelItemVerticalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    // COUI coui_dialog_layout_margin_horizontal gap between the text block
-                    // and the selection indicator.
                     .padding(end = ListPreferenceDefaults.PanelItemIndicatorSpacing),
             ) {
                 Text(
                     text = text,
-                    // COUI couiTextAppearanceHeadline6: 16sp, sans-serif-medium.
                     fontSize = COUITheme.textStyles.headline2.fontSize,
                     fontWeight = FontWeight.Medium,
                     color = colors.itemTextColor(enabled),
@@ -324,7 +306,6 @@ internal fun SelectPanelItem(
                 summary?.let {
                     Text(
                         text = it,
-                        // COUI coui_alert_dialog_content_panel_padding_top.
                         modifier = Modifier.padding(top = ListPreferenceDefaults.PanelItemSummarySpacing),
                         fontSize = COUITheme.textStyles.body2.fontSize,
                         color = colors.itemSummaryColor(enabled),
@@ -334,7 +315,6 @@ internal fun SelectPanelItem(
             endContent()
         }
         if (showDivider) {
-            // COUI item_divider: hairline couiColorDivider between adjacent rows only.
             HorizontalDivider()
         }
     }
@@ -400,8 +380,7 @@ object ListPreferenceDefaults {
     val ButtonBarBottomPadding = 12.dp
 
     /**
-     * The default [ListPreferenceColors]: panel row text on couiColorPrimaryNeutral, summary
-     * on couiColorSecondNeutral and the selected check on the theme primary color.
+     * The default [ListPreferenceColors] of the selection panel rows.
      */
     @Composable
     fun listPreferenceColors(

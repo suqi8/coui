@@ -89,7 +89,10 @@ import kotlinx.coroutines.launch
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding.
  * @param forceCentered When true, the dialog is centered with the center-dialog transitions
  *   regardless of window size (COUI Center-style dialogs, e.g. the rotating loading dialog).
- * @param cornerRadius The corner radius of the dialog panel.
+ * @param maxWidth The maximum width of the dialog.
+ * @param largeScreen Optional override for the large-screen presentation (centered scale/fade
+ *   instead of bottom slide-in). If null, detected from the window size.
+ * @param cornerRadius Optional corner radius override. If null, [DialogDefaults.CornerRadius].
  * @param topInset Optional top inset override. If null, calculated from window insets.
  * @param content The content of the dialog.
  */
@@ -136,8 +139,6 @@ internal fun DialogContentLayout(
             if (enableWindowDim) {
                 launch { dimProgress.animateTo(1f, tween(EnterDurationMillis, easing = DialogEnterEasing)) }
             }
-            // COUI coui_bottom_dialog_enter / coui_center_dialog_enter: 250ms,
-            // pathInterpolator(0.3, 0, 0.1, 1).
             animationProgress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(EnterDurationMillis, easing = DialogEnterEasing),
@@ -147,8 +148,6 @@ internal fun DialogContentLayout(
             if (imeInsets.getBottom(density) > 0) {
                 keyboardController?.hide()
             }
-            // COUI coui_bottom_dialog_exit: 250ms translate; coui_center_dialog_exit: 150ms alpha.
-            // Both use pathInterpolator(0.3, 0, 1, 1).
             val exitDuration = if (centeredAtStart) CenterExitDurationMillis else BottomExitDurationMillis
             if (enableWindowDim) {
                 launch { dimProgress.animateTo(0f, tween(exitDuration, easing = DialogExitEasing)) }
@@ -224,8 +223,7 @@ internal fun DialogContentLayout(
             )
         }
 
-        // Off-screen distance below the dialog (nav bar + caption bar + outer margin), used so the
-        // enter slide starts exactly at the bottom screen edge (COUI fromYDelta 100% of self).
+        // Off-screen distance below the dialog so the enter slide starts at the bottom screen edge.
         val slideBottomPadding = if (isCentered) {
             0.dp
         } else {
@@ -236,15 +234,13 @@ internal fun DialogContentLayout(
         val contentModifier = modifier.graphicsLayer {
             val progress = animationProgress.value
             if (isCentered) {
-                // COUI coui_center_dialog_enter scales 0.8 -> 1 while fading in;
-                // coui_center_dialog_exit only fades out (scale stays at rest).
+                // COUI: enter scales 0.8 -> 1 while fading in; exit only fades out.
                 val scale = if (show) 0.8f + 0.2f * progress else 1f
                 scaleX = scale
                 scaleY = scale
                 alpha = progress
             } else {
-                // COUI coui_bottom_dialog_enter translates by the dialog's own height (100% self);
-                // coui_bottom_dialog_exit translates to the parent bottom (100%p).
+                // COUI: enter slides by the dialog's own height; exit slides to the parent bottom.
                 val heightPx = dialogHeightPx.intValue
                 val distance = if (show && heightPx > 0) {
                     heightPx + slideBottomPadding.toPx()
@@ -257,8 +253,6 @@ internal fun DialogContentLayout(
         }
 
         DialogContent(
-            maxWidth = maxWidth,
-            largeScreen = largeScreen,
             title = title,
             titleColor = titleColor,
             summary = summary,
@@ -272,6 +266,8 @@ internal fun DialogContentLayout(
             onDismissRequest = requestDismiss,
             modifier = contentModifier,
             forceCentered = forceCentered,
+            maxWidth = maxWidth,
+            largeScreen = largeScreen,
             cornerRadius = cornerRadius,
             topInset = topInset,
             content = {
@@ -361,8 +357,7 @@ internal fun DialogContent(
         .pointerInput(Unit) {
             detectTapGestures { /* Consume click */ }
         }
-        // COUI panels carry no blanket inside padding; the title/summary/buttons each bring
-        // their own margins so button bars can span the full panel width.
+        // COUI panels carry no blanket inside padding; each slot brings its own margins.
         .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
 
     Box(
@@ -397,8 +392,7 @@ internal fun DialogContent(
         ) {
             val titleMultiline = remember { mutableStateOf(false) }
             val summaryMultiline = remember { mutableStateOf(false) }
-            // COUIAlertDialogMaxLinearLayout swaps the 18dp message scroll paddings for 8dp once
-            // the title or the message wraps to more than one line (a "tall" dialog).
+            // COUI swaps the message scroll paddings for the tall variant once the title or message wraps.
             val messagePadding = if (titleMultiline.value || summaryMultiline.value) {
                 MessagePaddingVerticalTall
             } else {
@@ -406,17 +400,11 @@ internal fun DialogContent(
             }
             title?.let {
                 Text(
-                    // COUI title_template: 24dp top margin (coui_no_message_alert_dialog_title_margin_top,
-                    // from insideMargin.height), 24dp side margins (coui_alert_dialog_message_padding_left,
-                    // from insideMargin.width) and 6dp bottom margin
-                    // (coui_no_message_alert_dialog_title_margin_bottom, applied by the builder for
-                    // every non-tiny dialog).
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = insideMargin.width)
                         .padding(top = insideMargin.height, bottom = TitleMarginBottom),
                     text = it,
-                    // COUIDialogTextAppearance.Title: 18sp medium, lineSpacingMultiplier 1.1.
                     fontSize = COUITheme.textStyles.title4.fontSize,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
@@ -427,19 +415,13 @@ internal fun DialogContent(
             }
             summary?.let {
                 Text(
-                    // COUI message scroll view pads 18dp above and below the message
-                    // (coui_alert_dialog_scroll_padding_top/bottom_message_tallDialog; both drop
-                    // to 8dp on tall dialogs) and the message itself pads 24dp horizontally
-                    // (coui_alert_dialog_message_padding_left, from insideMargin.width).
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = insideMargin.width)
                         .padding(vertical = messagePadding),
                     text = it,
-                    // COUI dialog message uses couiTextAppearanceArticleBody (14sp, spacing 1.1).
                     fontSize = COUITheme.textStyles.body2.fontSize,
-                    // COUIAlertDialogMessageView centers a single line and start-aligns
-                    // once the message wraps.
+                    // COUI centers a single-line message and start-aligns once it wraps.
                     textAlign = if (summaryMultiline.value) TextAlign.Start else TextAlign.Center,
                     lineHeight = DialogLineHeight,
                     color = summaryColor,
@@ -472,8 +454,7 @@ object DialogDefaults {
     fun titleColor() = COUITheme.colorScheme.onBackground
 
     /**
-     * The default color of the summary. COUI dialog messages use couiColorLabelPrimary
-     * (#E6000000 light / #E6FFFFFF dark), the same label color as the title.
+     * The default color of the summary. COUI uses the same primary label color as the title.
      */
     @Composable
     fun summaryColor() = COUITheme.colorScheme.onBackground
@@ -485,31 +466,28 @@ object DialogDefaults {
     fun backgroundColor() = COUITheme.colorScheme.background
 
     /**
-     * The dialog panel corner radius. COUIAlertDialogMaxLinearLayout clips the panel with the
-     * couiRoundCornerXLRadius/XXLRadius smooth-corner tokens; the standard alert dialog resolves
-     * couiRoundCornerXXLRadius = 19dp (`coui_round_corner_xxl_radius`, plain equivalent 24dp),
-     * which the squircle extension reproduces.
+     * The default corner radius of the dialog panel. COUI smooth-corner token
+     * `coui_round_corner_xxl_radius`, reproduced by the squircle surface.
      */
     val CornerRadius = 19.dp
 
     /**
      * The default upper bound on dialog content width. Keeps dialogs from stretching across
-     * tablet / desktop windows. Matches COUI `coui_dialog_max_width` (392dp).
+     * tablet / desktop windows. COUI `coui_dialog_max_width`.
      */
     val MaxWidth = 392.dp
 
     /**
-     * The default margin outside the dialog. Matches COUI
-     * `coui_dialog_layout_margin_horizontal` (16dp) / `coui_dialog_layout_margin_vertical` (24dp).
+     * The default margin outside the dialog.
+     * COUI `coui_dialog_layout_margin_horizontal` / `coui_dialog_layout_margin_vertical`.
      */
     val outsideMargin = DpSize(16.dp, 24.dp)
 
     /**
-     * The default margin for the built-in title and summary texts. Width matches COUI
-     * `coui_alert_dialog_message_padding_left` (24dp title/message side margins); height
-     * matches `coui_no_message_alert_dialog_title_margin_top` (24dp above the title).
-     * The content slot is not padded by this value: COUI button bars span the full panel
-     * width and carry their own paddings (24dp horizontal, 12dp top, 22dp bottom).
+     * The default margin for the built-in title and summary texts: width is their horizontal
+     * padding (COUI `coui_alert_dialog_message_padding_left`), height is the top padding above
+     * the title (`coui_no_message_alert_dialog_title_margin_top`). The content slot is left
+     * unpadded so COUI-style button bars can span the full panel width.
      */
     val insideMargin = DpSize(24.dp, 24.dp)
 }
@@ -529,23 +507,14 @@ private val BottomExitDurationMillis = 250
 /** COUI coui_center_dialog_exit alpha duration. */
 private val CenterExitDurationMillis = 150
 
-/**
- * COUI dialog title/message lineSpacingMultiplier is 1.1; with Roboto/sans-serif font metrics
- * (ascent + descent = 1.172 x size) that resolves to ~1.29 x fontSize.
- */
+/** COUI dialog title/message lineSpacingMultiplier 1.1, resolved against sans-serif font metrics. */
 private val DialogLineHeight = 1.29f.em
 
-/**
- * COUI coui_no_message_alert_dialog_title_margin_bottom: COUIAlertDialogBuilder.initTitle
- * applies the 6dp bottom margin for every non-tiny dialog, with or without a message.
- */
+/** COUI coui_no_message_alert_dialog_title_margin_bottom, applied for every non-tiny dialog. */
 private val TitleMarginBottom = 6.dp
 
 /** COUI coui_alert_dialog_scroll_padding_top/bottom_message_tallDialog (the resting values). */
 private val MessagePaddingVertical = 18.dp
 
-/**
- * COUI coui_alert_dialog_scroll_padding_top/bottom_message: COUIAlertDialogMaxLinearLayout
- * switches the message scroll paddings to 8dp when the title or message is multiline.
- */
+/** COUI message scroll padding once the title or message is multiline (a tall dialog). */
 private val MessagePaddingVerticalTall = 8.dp

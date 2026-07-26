@@ -73,14 +73,14 @@ private fun opaqueOver(fg: Color, bg: Color): Color {
  */
 private fun ensureOpaqueOver(fg: Color, bg: Color): Color = if (fg.alpha >= 1f) fg else opaqueOver(fg, bg)
 
-/** Maps Monet color roles to MIUIX color scheme.
+/** Maps Monet color roles to COUI color scheme.
  *
  * This function flattens colors with alpha transparency over appropriate background colors
  * to ensure all colors in the resulting [Colors] are opaque.
  *
  * @param roles The Monet color roles.
  * @param dark Whether the color scheme is for dark mode.
- * @return The mapped MIUIX [Colors].
+ * @return The mapped COUI [Colors].
  */
 internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Colors {
     val baseSurface = roles.surface

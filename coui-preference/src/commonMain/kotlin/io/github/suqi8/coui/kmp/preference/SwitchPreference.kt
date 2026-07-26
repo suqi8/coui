@@ -69,10 +69,6 @@ fun SwitchPreference(
         endActions = {
             Row(
                 modifier = Modifier
-                    // The 8dp here plus the 8dp BasicComponent center-end spacer keeps a
-                    // 16dp minimum gap between the text block and the switch, matching
-                    // COUI android_preference_switch_margin_left (16dp) in
-                    // coui_preference_widget_switch.xml.
                     .padding(end = 8.dp)
                     .align(Alignment.CenterVertically)
                     .weight(1f, fill = false),

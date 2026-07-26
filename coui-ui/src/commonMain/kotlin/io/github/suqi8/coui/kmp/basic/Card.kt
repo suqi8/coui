@@ -84,8 +84,7 @@ fun Card(
  * @param insideMargin The margin inside the [Card].
  * @param colors [CardColors] that will be used to resolve the color(s) used for the [Card].
  * @param pressFeedbackType The press feedback type of the [Card]. Defaults to
- *   [PressFeedbackType.Tint], the COUI card press feedback that animates the fill towards
- *   [CardColors.pressedColor] while pressed or held down.
+ *   [PressFeedbackType.Tint], which animates the fill towards [CardColors.pressedColor].
  * @param showIndication Whether to show indication of the [Card].
  * @param holdDownState Whether the [Card] is in a hold-down state.
  * @param onClick The callback to be invoked when the [Card] is clicked.
@@ -119,13 +118,7 @@ fun Card(
         }
     }
 
-    // COUI card press feedback (ColorOS 16 COUICardListSelectedItemLayout): the card fill animates
-    // towards couiColorCardPressed while pressed, driven by the critically damped COUI spring
-    // (COUISpringForce response 0.3s / bounce 0, i.e. stiffness (2 * PI / 0.3)^2 ~= 438.65) of the
-    // COUIMaskEffectDrawable press animator; releasing early keeps the press-in animation running
-    // until 70% progress before it fades out. Cards never scale on press: ListSelectedItemLayout
-    // ships an opt-in scale effect that ColorOS 16 never enables, and the legacy 150ms/367ms tween
-    // pair is @Deprecated dead code. A locked press (setIsSelected) maps to [holdDownState].
+    // COUI card press feedback (COUICardListSelectedItemLayout): fill animates towards pressedColor.
     val tintEnabled = pressFeedbackType == PressFeedbackType.Tint
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHeldDown by interactionSource.collectIsHeldDownAsState()
@@ -137,8 +130,7 @@ fun Card(
             tintProgress.animateTo(1f, CardPressFeedbackSpring)
         } else if (tintProgress.value > 0f) {
             if (tintProgress.value < PressedTintMinVisibleProgress) {
-                // COUIMaskEffectDrawable.animateToProgressUntil: keep the press-in animation
-                // running until the tint is clearly visible, then reverse from there.
+                // Keep the press-in animation running until the tint is clearly visible.
                 try {
                     tintProgress.animateTo(1f, CardPressFeedbackSpring) {
                         if (value >= PressedTintMinVisibleProgress) throw CardPressTintThresholdReached()
@@ -234,15 +226,7 @@ private fun BasicCard(
 object CardDefaults {
 
     /**
-     * The default corner radius of the [Card].
-     *
-     * COUI card lists resolve their radius from the couiRoundCornerM attr, which the ColorOS 16
-     * Settings theme maps to coui_round_corner_m = 12dp (COUICardListSelectedItemLayout constructor,
-     * settings sources line 332: getDimensionPixelOffset(couiCardRadius, getAttrDimens(context,
-     * couiRoundCornerM)); styles.xml line 11804). The 17dp coui_card_list_os_16_1_radius_17_dp dimen
-     * only exists in the unshipped uxdesign 16.1 library and is not consumed by Settings, so 12dp is
-     * the ground-truth card radius. Verified against device screenshots: at density 3.5 the corner
-     * arc height of the Wi-Fi settings card is ~30px = ~8.6dp, matching a 12dp squircle corner.
+     * The default corner radius of the [Card] (COUI coui_round_corner_m).
      */
     val CornerRadius = 12.dp
 
@@ -253,9 +237,6 @@ object CardDefaults {
 
     /**
      * The default colors width of the [Card].
-     *
-     * [pressedColor] follows couiColorCardPressed (#E6E6E6 light / #33FFFFFF dark), the fill a
-     * COUI card animates towards while pressed.
      */
     @Composable
     fun defaultColors(
@@ -276,8 +257,7 @@ object CardDefaults {
  *
  * @param color The background color of the card.
  * @param contentColor The content color of the card.
- * @param pressedColor The fill color the card animates towards while pressed, used by
- *   [PressFeedbackType.Tint] (couiColorCardPressed).
+ * @param pressedColor The fill color the card animates towards while pressed (couiColorCardPressed).
  */
 @Immutable
 data class CardColors(
@@ -286,17 +266,10 @@ data class CardColors(
     val pressedColor: Color,
 )
 
-/**
- * The COUI card press feedback spring: COUISpringForce(response = 0.3f, bounce = 0f), which maps to
- * a critically damped spring with stiffness (2 * PI / 0.3)^2 ~= 438.65. Drives the press tint of
- * COUICardListSelectedItemLayout (the COUIMaskEffectDrawable press StateEffectAnimator).
- */
+/** The COUI card press feedback spring (COUISpringForce response 0.3f / bounce 0f). */
 private val CardPressFeedbackSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 
-/**
- * A release before the press tint reaches this progress defers the fade-out until it does, so
- * quick taps still flash visibly (COUIMaskEffectDrawable DEFAULT_MIN_PROGRESS_FOR_TOUCH_ENTER_ANIMATION).
- */
+/** The minimum press tint progress before a release may fade out (COUIMaskEffectDrawable). */
 private val PressedTintMinVisibleProgress = 0.7f
 
 /** Thrown to stop the deferred press-in tint animation once [PressedTintMinVisibleProgress] is reached. */

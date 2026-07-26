@@ -109,11 +109,8 @@ fun SearchBar(
             ) {
                 inputField()
             }
-            // COUISearchBar edit-state transition: the background resize runs for 450ms
-            // (DEFAULT_SEARCH_VIEW_OFFSET/SCALE_CHANGE_DURATION), the functional button slides
-            // 30dp (coui_search_bar_functional_button_offset_distance) over 400ms
-            // (DEFAULT_SEARCH_VIEW_BUTTON_OFFSET_DURATION) and fades over 350ms
-            // (DEFAULT_BUTTON_ALPHA_CHANGE_DURATION), all with COUIMoveEaseInterpolator.
+            // COUISearchBar edit-state transition: background resize, button slide and fade,
+            // all with COUIMoveEaseInterpolator.
             if (outsideEndAction != null) {
                 AnimatedVisibility(
                     visible = expanded,
@@ -130,12 +127,6 @@ fun SearchBar(
                         ) +
                         fadeOut(animationSpec = tween(ActionAlphaDurationMillis, easing = MoveEase)),
                 ) {
-                    // COUISearchBar functional button: laid out at backgroundRect.right +
-                    // coui_search_bar_functional_button_start_gap (8dp), with a 12dp internal
-                    // ripple text padding (text_ripple_bg_padding_horizontal) -> 20dp visual gap
-                    // from the capsule. The input field margin already contributes 16dp, so add
-                    // 4dp more. End side: coui_search_bar_functional_button_end_gap_compat (4dp)
-                    // + 12dp ripple padding -> the text sits 16dp from the container edge.
                     Box(
                         modifier = Modifier.padding(
                             start = ActionExtraStartPadding,
@@ -210,15 +201,11 @@ fun InputField(
     val currentOnSearch by rememberUpdatedState(onSearch)
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val internalInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    // COUISearchBarDrawingProxyDrawable.setBackgroundRect always uses a corner radius of
-    // rect.height() / 2 (a capsule; smooth round rect on OS16). The fixed 18dp radius
-    // (coui_search_view_corner / coui_searchview_corner_rect_bg) belongs to the legacy
-    // COUISearchViewAnimate only.
+    // COUISearchBarDrawingProxyDrawable.setBackgroundRect: corner radius = rect.height() / 2.
     val capsuleShape = CircleShape
 
     val actualLeadingIcon = leadingIcon ?: {
-        // coui_search_view_icon: 20dp glyph filled with couiColorSecondNeutral
-        // (#8A000000 light / #8AFFFFFF dark).
+        // coui_search_view_icon: 20dp glyph filled with couiColorSecondNeutral.
         Icon(
             modifier = Modifier.padding(start = SearchBarDefaults.LeadingIconStartPadding, end = SearchBarDefaults.LeadingIconEndPadding),
             imageVector = COUIIcons.Basic.Search,
@@ -233,10 +220,8 @@ fun InputField(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            // Clear button: a 36dp circular touch target (coui_search_bar_inner_search_icon_size)
-            // holding an 18dp filled circle with a white cross, matching
-            // ic_edit_text_delete_search_view (36dp vector, 9dp-radius circle filled with
-            // couiColorHintNeutral #42000000 light / #4DFFFFFF dark).
+            // Clear button: a 36dp circular touch target holding an 18dp filled circle with a
+            // white cross (ic_edit_text_delete_search_view).
             val clearCircleColor = colors.clearIconColor
             Box(
                 modifier = Modifier
@@ -249,8 +234,7 @@ fun InputField(
             ) {
                 Canvas(modifier = Modifier.size(SearchBarDefaults.TrailingIconVisualSize)) {
                     drawCircle(color = clearCircleColor)
-                    // Cross geometry from ic_edit_text_delete_search_view: 8.2dp span,
-                    // 1.6dp stroke, butt caps, always white (no night variant in COUI).
+                    // ic_edit_text_delete_search_view cross: 8.2dp span, 1.6dp stroke, always white.
                     val half = 4.1.dp.toPx()
                     val stroke = 1.6.dp.toPx()
                     drawLine(
@@ -276,8 +260,7 @@ fun InputField(
     val textAlpha = remember { Animatable(1f) }
 
     val textColor = LocalContentColor.current
-    // COUI input text: 16sp regular (couiEditTextTextAppearance = couiTextAppearanceHeadline6
-    // 16sp with fontFamily overridden to sans-serif-regular).
+    // COUI input text: 16sp regular (couiEditTextTextAppearance).
     val inputTextStyle = COUITheme.textStyles.main
         .copy(fontSize = SearchBarDefaults.InputFieldFontSize)
         .merge(textStyle)
@@ -319,9 +302,8 @@ fun InputField(
         keyboardActions = KeyboardActions(onSearch = { currentOnSearch(query) }),
         interactionSource = internalInteractionSource,
         decorationBox = { innerTextField ->
-            // COUISearchBar capsule: coui_search_view_selector_color_normal, a translucent
-            // 8% black (#14000000) in light and 10% white (#1AFFFFFF) in dark — NOT a solid
-            // gray. The page background shows through it on real devices.
+            // COUISearchBar capsule: coui_search_view_selector_color_normal (translucent, the
+            // page background shows through).
             Box(
                 modifier = Modifier
                     .background(
@@ -344,8 +326,7 @@ fun InputField(
                         val mergedLabelStyle = remember(textStyle) {
                             TextStyle(fontSize = SearchBarDefaults.InputFieldFontSize).merge(textStyle)
                         }
-                        // Hint text: couiColorLabelSecondary (#8A000000 light / #8AFFFFFF dark),
-                        // from Widget.COUI.EditText android:textColorHint.
+                        // Hint text: couiColorLabelSecondary (Widget.COUI.EditText textColorHint).
                         Text(
                             text = labelText,
                             style = mergedLabelStyle,
@@ -379,105 +360,66 @@ fun InputField(
     }
 }
 
-/** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
-private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
-
-/** COUISearchBar DEFAULT_SEARCH_VIEW_OFFSET/SCALE_CHANGE_DURATION = 450ms. */
-private val BackgroundResizeDurationMillis = 450
-
-/** COUISearchBar DEFAULT_SEARCH_VIEW_BUTTON_OFFSET_DURATION = 400ms. */
-private val ActionOffsetDurationMillis = 400
-
-/** COUISearchBar DEFAULT_BUTTON_ALPHA_CHANGE_DURATION = 350ms. */
-private val ActionAlphaDurationMillis = 350
-
-/** COUISearchBar coui_search_bar_functional_button_offset_distance = 30dp. */
-private val ActionSlideDistance = 30.dp
-
-/**
- * Extra start padding for the outside end action. COUISearchBar lays out the functional button at
- * backgroundRect.right + coui_search_bar_functional_button_start_gap (8dp) and the button text has
- * a 12dp ripple padding (text_ripple_bg_padding_horizontal), giving a 20dp visual gap from the
- * capsule; the input field margin already provides 16dp, so 4dp remains.
- */
-private val ActionExtraStartPadding = 4.dp
-
-/**
- * End padding for the outside end action: coui_search_bar_functional_button_end_gap_compat (4dp) +
- * 12dp ripple text padding = the action text sits 16dp from the container edge.
- */
-private val ActionEndPadding = 16.dp
-
 /** Contains default values used by [SearchBar] and [InputField]. */
 object SearchBarDefaults {
     /**
      * The default inside margin of the [SearchBar].
-     * Horizontal: coui_search_bar_responsive_horizontal_padding_compat = 16dp.
-     * Vertical: (coui_search_view_height=52dp - coui_search_bar_normal_background_height=40dp) / 2 = 6dp.
+     * COUI `coui_search_bar_responsive_horizontal_padding_compat` (16dp) x (52dp - 40dp) / 2.
      */
     val InsideMargin = DpSize(16.dp, 6.dp)
 
     /**
      * The default minimum height of the [InputField] background capsule.
-     * Matches coui_search_bar_normal_background_height = 40dp.
+     * COUI `coui_search_bar_normal_background_height` (40dp).
      */
     val InputFieldMinHeight = 40.dp
 
     /**
      * The default font size for the [InputField] text and label.
-     * Matches coui_search_view_input_text_size = 16sp (couiEditTextTextAppearance is also 16sp).
+     * COUI `coui_search_view_input_text_size` (16sp).
      */
     val InputFieldFontSize = 16.sp
 
     /**
-     * The start padding for the default leading icon (20dp visual glyph).
-     * COUISearchBar places a 36dp icon container (coui_search_bar_inner_search_icon_size) at
-     * coui_search_bar_inner_search_icon_start_gap = 4dp from the background edge and centers the
-     * 20dp glyph (coui_search_view_icon) inside: 4 + (36 - 20) / 2 = 12dp.
+     * The start padding for the default leading icon: the COUI 4dp icon container start gap plus
+     * (36dp container - 20dp glyph) / 2.
      */
     val LeadingIconStartPadding = 12.dp
 
     /**
-     * The end padding for the default leading icon.
-     * The edit frame starts right after the 36dp icon container, so the gap between the 20dp
-     * glyph and the text is (36 - 20) / 2 = 8dp (equals coui_search_view_hint_padding_start).
+     * The end padding for the default leading icon: (36dp container - 20dp glyph) / 2, equal to
+     * COUI `coui_search_view_hint_padding_start`.
      */
     val LeadingIconEndPadding = 8.dp
 
     /**
      * The start padding for the default trailing (clear) button touch target.
-     * Matches coui_search_bar_edittext_end_gap = 4dp.
+     * COUI `coui_search_bar_edittext_end_gap` (4dp).
      */
     val TrailingIconStartPadding = 4.dp
 
     /**
      * The end padding for the default trailing (clear) button touch target.
-     * Matches coui_search_bar_non_instant_search_inner_gap = 4dp.
+     * COUI `coui_search_bar_non_instant_search_inner_gap` (4dp).
      */
     val TrailingIconEndPadding = 4.dp
 
     /**
      * The circular touch target size of the default trailing (clear) button.
-     * Matches coui_search_bar_inner_search_icon_size = 36dp.
+     * COUI `coui_search_bar_inner_search_icon_size` (36dp).
      */
     val TrailingIconTouchTargetSize = 36.dp
 
     /**
-     * The visual circle size of the default trailing (clear) button.
-     * Matches the 9dp-radius circle of ic_edit_text_delete_search_view (36dp vector).
+     * The visual circle size of the default trailing (clear) button, matching the 9dp-radius
+     * circle of ic_edit_text_delete_search_view.
      */
     val TrailingIconVisualSize = 18.dp
 
     /**
-     * Creates a [SearchBarColors] with the default colors of the [InputField].
-     *
-     * COUISearchBar references:
-     * - backgroundColor: coui_search_view_selector_color_normal = #14000000 light / #1AFFFFFF
-     *   dark (translucent, the page background shows through). The secondaryContainer slot is
-     *   exact in light; dark (#26FFFFFF) is the closest theme slot.
-     * - labelColor (hint): couiColorLabelSecondary = #8A000000 / #8AFFFFFF (exact).
-     * - iconColor (search glyph): couiColorSecondNeutral = #8A000000 / #8AFFFFFF (exact).
-     * - clearIconColor (clear circle fill): couiColorHintNeutral = #42000000 / #4DFFFFFF (exact).
+     * Creates a [SearchBarColors] with the default colors of the [InputField], following
+     * COUISearchBar (`coui_search_view_selector_color_normal` capsule, couiColorLabelSecondary
+     * hint, couiColorSecondNeutral glyph, couiColorHintNeutral clear circle).
      */
     @Composable
     fun searchBarColors(
@@ -510,3 +452,30 @@ data class SearchBarColors(
     val iconColor: Color,
     val clearIconColor: Color,
 )
+
+/** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
+private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+/** COUISearchBar DEFAULT_SEARCH_VIEW_OFFSET/SCALE_CHANGE_DURATION (450ms). */
+private val BackgroundResizeDurationMillis = 450
+
+/** COUISearchBar DEFAULT_SEARCH_VIEW_BUTTON_OFFSET_DURATION (400ms). */
+private val ActionOffsetDurationMillis = 400
+
+/** COUISearchBar DEFAULT_BUTTON_ALPHA_CHANGE_DURATION (350ms). */
+private val ActionAlphaDurationMillis = 350
+
+/** COUI `coui_search_bar_functional_button_offset_distance` (30dp). */
+private val ActionSlideDistance = 30.dp
+
+/**
+ * Extra start padding for the outside end action: the COUI 20dp visual gap from the capsule
+ * (8dp button start gap + 12dp ripple text padding) minus the 16dp input field margin.
+ */
+private val ActionExtraStartPadding = 4.dp
+
+/**
+ * End padding for the outside end action: `coui_search_bar_functional_button_end_gap_compat`
+ * (4dp) + 12dp ripple text padding.
+ */
+private val ActionEndPadding = 16.dp

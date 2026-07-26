@@ -82,14 +82,12 @@ import kotlin.math.roundToInt
  * @param dividerColor The color of the hairline divider revealed at the bottom edge while collapsing.
  * @param navigationIcon The [Composable] content that represents the navigation icon.
  * @param actions The [Composable] content that represents the action icons.
- *   Following COUI, action icons should be 24dp with ~48dp touch targets.
  * @param scrollBehavior The [ScrollBehavior] that controls the behavior of the [TopAppBar].
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding to the [TopAppBar].
  * @param showDivider Whether to draw the bottom hairline divider that fades in as the bar collapses.
  * @param hideSubtitleOnCollapse Whether the subtitle fades out while the bar collapses
- *   (COUICollapsableAppBarLayout subtitleHideEnable, default true). When false, the
- *   subtitle stays fully opaque and slides into the collapsed bar, with the collapsed
- *   title shifted up to keep a 3.5dp gap above it.
+ *   (COUICollapsableAppBarLayout `subtitleHideEnable`). When false, the subtitle stays fully
+ *   opaque and slides into the collapsed bar.
  * @param titlePadding The horizontal padding of the [TopAppBar]'s title & large title.
  * @param navigationIconPadding The start padding of the navigation icon.
  * @param actionIconPadding The end padding of the action icons.
@@ -168,7 +166,6 @@ fun TopAppBar(
  * @param dividerColor The color of the hairline divider revealed at the bottom edge on scroll.
  * @param navigationIcon The [Composable] content that represents the navigation icon.
  * @param actions The [Composable] content that represents the action icons.
- *   Following COUI, action icons should be 24dp with ~48dp touch targets.
  * @param scrollBehavior The [ScrollBehavior] that controls the behavior of the [SmallTopAppBar].
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding to the [SmallTopAppBar].
  * @param showDivider Whether to draw the bottom hairline divider that fades in as content scrolls
@@ -253,8 +250,7 @@ fun SmallTopAppBar(
  *   [ExitUntilCollapsedScrollBehavior]
  * @param snapAnimationSpec an optional [AnimationSpec] that defines how the top app bar snaps
  *   to either fully collapsed or fully extended state when a fling or a drag scrolled it into
- *   an intermediate position. The default mirrors COUI's snap (AppBarLayout scroll flag
- *   SCROLL_FLAG_SNAP with a DecelerateInterpolator offset animator).
+ *   an intermediate position.
  * @param flingAnimationSpec an optional [DecayAnimationSpec] that defined how to fling the top
  *   app bar when the user flings the app bar itself, or the content below it
  */
@@ -400,10 +396,7 @@ class TopAppBarState(
 object TopAppBarDefaults {
     /**
      * The default horizontal padding of the title and large title.
-     *
-     * Follows COUI's expanded app bar title margin on phone-width (compact)
-     * windows (coui_appbar_title_expanded_margin_start/end_compat = 16dp;
-     * medium windows use 24dp and expanded windows 40dp).
+     * COUI `coui_appbar_title_expanded_margin_start/end_compat` (16dp).
      */
     val TitlePadding = 16.dp
 
@@ -418,38 +411,26 @@ object TopAppBarDefaults {
 
     /**
      * The default expanded height of the [TopAppBar] when no subtitle is present.
-     *
-     * Matches COUI's fixed expanded app bar height
-     * (coui_appbar_title_expanded_height = 107dp = 52dp pinned toolbar + 55dp
-     * collapsible range). Used as the minimum expanded height; the bar grows
-     * beyond it when the measured title content requires more space.
+     * COUI `coui_appbar_title_expanded_height` (107dp); the bar grows beyond it when the
+     * measured title content requires more space.
      */
     val ExpandedHeight = 107.dp
 
     /**
      * The top padding of the expanded large title, measured from the top of the bar.
-     *
-     * Matches COUI's expanded app bar title top margin
-     * (coui_appbar_title_expanded_margin_top = 54dp with expandedTitleGravity
-     * "start|top"), which sits 2dp below the pinned 52dp toolbar area.
+     * COUI `coui_appbar_title_expanded_margin_top` (54dp).
      */
     val LargeTitleTopPadding = 54.dp
 
     /**
      * The vertical center height used for [SmallTopAppBar] layout.
-     *
-     * Matches COUI's toolbar height (coui_appbar_title_toolbar_height /
-     * toolbar_min_height = 52dp); the title is vertically centered within it.
+     * COUI `coui_appbar_title_toolbar_height` (52dp).
      */
     val SmallTopAppBarCenterHeight = 52.dp
 
     /**
      * The bottom padding below the large title block when the bar is expanded.
-     *
-     * Follows COUI's coui_appbar_start_padding_bottom = 12dp, which interpolates
-     * to coui_appbar_end_padding_bottom = 0dp as the bar collapses. The
-     * interpolation is part of the bar height animation: the expanded height
-     * includes this padding while the collapsed height (52dp) does not.
+     * COUI `coui_appbar_start_padding_bottom` (12dp, interpolates to 0dp as the bar collapses).
      */
     val LargeTitleBottomPadding = 12.dp
 
@@ -458,24 +439,19 @@ object TopAppBarDefaults {
 
     /**
      * The vertical gap between the title and the subtitle.
-     *
-     * Matches COUI's coui_appbar_subtitle_collapsed_margin_top = 3.5dp.
+     * COUI `coui_appbar_subtitle_collapsed_margin_top` (3.5dp).
      */
     val SubtitleMarginTop = 3.5.dp
 
     /**
      * The horizontal gap between the navigation icon and the collapsed title.
-     *
-     * Matches COUI's coui_toolbar_gap_between_navigation_and_title = 4dp.
+     * COUI `coui_toolbar_gap_between_navigation_and_title` (4dp).
      */
     val NavigationIconGap = 4.dp
 
     /**
      * The horizontal gap between the title and the action icons.
-     *
-     * Matches COUI's coui_toolbar_gap_before_menu = 8dp. Action icons should be
-     * 24dp (coui_toolbar_menu_icon_size) with ~48dp touch targets
-     * (coui_action_menu_item_min_width) and no extra spacing between items.
+     * COUI `coui_toolbar_gap_before_menu` (8dp).
      */
     val ActionIconGap = 8.dp
 }
@@ -728,9 +704,8 @@ private fun TopAppBarLayout(
         }
     }
 
-    // COUI's CollapsingTextHelper lerps the text size from the expanded 32dp
-    // (COUIAppbarTitleStyle.Expanded) down to the collapsed 18dp; replicate it as a
-    // scale factor applied around the title's top-start corner.
+    // CollapsingTextHelper lerps the text size from expanded 32dp to collapsed 18dp; replicated
+    // as a scale factor around the title's top-start corner.
     val largeTitleFontSize = COUITheme.textStyles.title1.fontSize
     val collapsedTitleScale = remember(largeTitleFontSize) {
         if (largeTitleFontSize.value > 0f) {
@@ -762,8 +737,8 @@ private fun TopAppBarLayout(
             ) {
                 navigationIcon()
             }
-            // Collapsed title: COUIAppbarTitleStyle.Collapsed (18dp, medium). Only shown
-            // once the bar is fully collapsed; until then the large title morphs into it.
+            // Collapsed title: only shown once the bar is fully collapsed; until then the
+            // large title morphs into it.
             Box(Modifier.layoutId("title")) {
                 Text(
                     text = title,
@@ -782,9 +757,8 @@ private fun TopAppBarLayout(
             ) {
                 actions()
             }
-            // Expanded title: COUIAppbarTitleStyle.Expanded (32dp, sans-serif-semibold,
-            // maxLines = 1). Position and scale are driven by the collapse fraction in
-            // the placement pass, mirroring the CollapsingTextHelper SCALE mode.
+            // Expanded title: position and scale are driven by the collapse fraction in the
+            // placement pass (CollapsingTextHelper SCALE mode).
             Box(Modifier.layoutId("largeTitle")) {
                 Text(
                     text = largeTitle,
@@ -797,10 +771,8 @@ private fun TopAppBarLayout(
                 )
             }
             if (subtitle.isNotEmpty()) {
-                // Subtitle: 14dp (coui_appbar_subtitle_text_size). COUI renders it as a
-                // single subtitle content view that rides the scroll below the large
-                // title; its alpha and collapsed position are driven in the placement
-                // pass (COUICollapsableAppBarLayout.adjustSubtitleIfNeed).
+                // Subtitle: alpha and collapsed position are driven in the placement pass
+                // (COUICollapsableAppBarLayout.adjustSubtitleIfNeed).
                 Box(Modifier.layoutId("subtitle")) {
                     Text(
                         text = subtitle,
@@ -871,10 +843,8 @@ private fun TopAppBarLayout(
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
         val actionIconPaddingPx = actionIconPadding.roundToPx()
 
-        // Collapsed title bounds: start-aligned after the navigation icon (COUI
-        // collapsedTitleGravity = START|CENTER_VERTICAL with a 4dp gap after the
-        // navigation icon and an 8dp gap before the action icons); falls back to
-        // the title margin on sides without an icon.
+        // Collapsed title bounds: start-aligned after the navigation icon; falls back to the
+        // title margin on sides without an icon.
         val hasNavigationIcon = navigationIconPlaceable.width > navigationIconPaddingPx
         val hasActions = actionIconsPlaceable.width > actionIconPaddingPx
         val collapsedTitleX = if (hasNavigationIcon) {
@@ -916,13 +886,8 @@ private fun TopAppBarLayout(
         val largeTitleBottomPaddingPx = TopAppBarDefaults.LargeTitleBottomPadding.roundToPx()
         val subtitleHeight = subtitlePlaceable?.height ?: 0
 
-        // Expanded bar height: COUI fixes it at 107dp (52dp pinned toolbar + 54dp
-        // expanded title margin top + the 32dp title line) and, when a subtitle
-        // content view is present, grows it by exactly the subtitle height
-        // (COUICollapsableAppBarLayout.onMeasure: height = toolbarHeight +
-        // subtitleViewHeight). The 12dp expanded bottom padding
-        // (coui_appbar_start_padding_bottom, -> 0dp when collapsed) is folded into
-        // this height, so the padding interpolation rides the bar height change.
+        // Expanded bar height (COUICollapsableAppBarLayout.onMeasure): the fixed 107dp grows by
+        // the subtitle height, with the 12dp expanded bottom padding folded in.
         val expandedContentHeight = largeTitleTop + largeTitlePlaceable.height +
             (subtitlePlaceable?.let { subtitleMarginTopPx + it.height } ?: 0)
         val expandedBarHeight = maxOf(
@@ -945,11 +910,8 @@ private fun TopAppBarLayout(
         val easedFraction = CollapsingTitleEasing.transform(collapseFraction)
 
         val verticalCenter = collapsedHeight / 2
-        // Collapsed title: vertically centered in the 52dp toolbar area. When the
-        // subtitle stays visible at full collapse, COUI pins the subtitle's bottom to
-        // the toolbar's bottom edge and shifts the title up so it sits 3.5dp above it
-        // (COUICollapsingToolbarLayout.translateTitleIfNeed offsets the collapsed
-        // bounds by (toolbarHeight - titleHeight) / 2 - subtitleHeight - 3.5dp).
+        // Collapsed title: vertically centered in the toolbar area; shifted up above a subtitle
+        // that stays visible at full collapse (COUICollapsingToolbarLayout.translateTitleIfNeed).
         val subtitleVisibleWhenCollapsed = subtitlePlaceable != null && !hideSubtitleOnCollapse
         val collapsedTitleY = if (subtitleVisibleWhenCollapsed) {
             (collapsedHeight - subtitleHeight - subtitleMarginTopPx - titlePlaceable.height).coerceAtLeast(0)
@@ -957,15 +919,8 @@ private fun TopAppBarLayout(
             verticalCenter - titlePlaceable.height / 2
         }
 
-        // Large title morph: COUI lerps the title's draw position between the expanded
-        // and collapsed slots inside the collapsing layout's own (scrolled) frame
-        // (CollapsingTextHelper.calculateOffsets: currentDrawX/Y =
-        // lerp(expandedDraw, collapsedDraw, ease(fraction))), while the whole layout
-        // rides the raw scroll offset. The collapsed slot sits at
-        // collapsedTitleY + expansion in that frame, so the eased lerp is shifted by
-        // the raw offset; both position and text size use COUIEaseInterpolator
-        // (COUICollapsingToolbarLayout.resetTextHelperInterpolator sets it as the
-        // position and text size interpolator).
+        // Large title morph (CollapsingTextHelper.calculateOffsets): eased lerp between the
+        // expanded and collapsed slots, shifted by the raw scroll offset.
         val largeTitleX = lerp(titlePaddingPx.toFloat(), collapsedTitleX.toFloat(), easedFraction)
         val largeTitleY =
             lerp(largeTitleTop.toFloat(), (collapsedTitleY + expansion).toFloat(), easedFraction) + offsetPx
@@ -989,13 +944,8 @@ private fun TopAppBarLayout(
                 y = verticalCenter - actionIconsPlaceable.height / 2,
             )
 
-            // Subtitle: sits at the bottom of the expanded bar, lifted by the 12dp
-            // expanded bottom padding that linearly interpolates to 0dp while
-            // collapsing (COUICollapsableAppBarLayout.adjustSubtitleIfNeed:
-            // translationY = (endPaddingBottom - startPaddingBottom) * (1 - fraction)),
-            // so it rides the scroll 1:1 and lands flush with the collapsed 52dp
-            // toolbar's bottom edge. Alpha fades out linearly only when the subtitle
-            // hides on collapse (subtitleHideEnable: alpha = 1 - fraction, else 1).
+            // Subtitle (COUICollapsableAppBarLayout.adjustSubtitleIfNeed): rides the scroll 1:1,
+            // lifted by the interpolating bottom padding; fades out only when hideSubtitleOnCollapse.
             subtitlePlaceable?.placeRelativeWithLayer(
                 x = titlePaddingPx,
                 y = expandedBarHeight - subtitleHeight -
@@ -1004,10 +954,8 @@ private fun TopAppBarLayout(
                 alpha = if (hideSubtitleOnCollapse) 1f - collapseFraction else 1f
             }
 
-            // Large title: a single text that continuously translates and scales into
-            // the collapsed title; it is swapped for the dedicated collapsed title only
-            // at full collapse, mirroring CollapsingTextHelper's isClose(fraction, 1)
-            // switch to the collapsed size/typeface.
+            // Large title: translates and scales into the collapsed title; swapped for the
+            // dedicated collapsed title only at full collapse.
             largeTitlePlaceable.placeRelativeWithLayer(
                 x = largeTitleX.roundToInt(),
                 y = largeTitleY.roundToInt(),
@@ -1098,8 +1046,7 @@ private fun SmallTopAppBarLayout(
             ) {
                 navigationIcon()
             }
-            // Title: TextAppearance.COUI.Toolbar.SecondTitle (18dp, sans-serif-medium,
-            // viewStart alignment).
+            // Title: TextAppearance.COUI.Toolbar.SecondTitle (18dp, medium, viewStart alignment).
             Box(Modifier.layoutId("title")) {
                 Text(
                     text = title,
@@ -1119,7 +1066,7 @@ private fun SmallTopAppBarLayout(
                 actions()
             }
             if (subtitle.isNotEmpty()) {
-                // Subtitle: 14dp (coui_toolbar_subtitle_text_size), single line.
+                // Subtitle: coui_toolbar_subtitle_text_size, single line.
                 Box(Modifier.layoutId("subtitle")) {
                     Text(
                         text = subtitle,
@@ -1195,10 +1142,8 @@ private fun SmallTopAppBarLayout(
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
         val actionIconPaddingPx = actionIconPadding.roundToPx()
 
-        // Title bounds: start-aligned after the navigation icon (COUIToolbar lays the
-        // title out at viewStart with a 4dp gap after the navigation icon and an 8dp
-        // gap before the action icons); falls back to the title margin on sides
-        // without an icon.
+        // Title bounds: start-aligned after the navigation icon (COUIToolbar viewStart layout);
+        // falls back to the title margin on sides without an icon.
         val hasNavigationIcon = navigationIconPlaceable.width > navigationIconPaddingPx
         val hasActions = actionIconsPlaceable.width > actionIconPaddingPx
         val titleX = if (hasNavigationIcon) {
@@ -1277,45 +1222,27 @@ private fun SmallTopAppBarLayout(
     }
 }
 
-/**
- * The collapsed title text size.
- *
- * COUI: coui_appbar_title_collapsed_text_size = 18dp
- * (COUIAppbarTitleStyle.Collapsed) and TextAppearance.COUI.Toolbar.SecondTitle
- * (18dp, sans-serif-medium).
- */
+/** COUI `coui_appbar_title_collapsed_text_size` (18dp, sans-serif-medium). */
 private val CollapsedTitleTextSize = 18.sp
 
 /**
- * The interpolator applied to the collapsing title's position and scale,
- * mirroring COUIEaseInterpolator = cubic-bezier(0.33, 0, 0.67, 1) that
- * COUICollapsingToolbarLayout installs on the CollapsingTextHelper.
+ * COUIEaseInterpolator: cubic-bezier(0.33, 0, 0.67, 1), applied to the collapsing title's
+ * position and scale.
  */
 private val CollapsingTitleEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
 /**
- * The duration of the snap animation that settles the bar to fully expanded or
- * collapsed after a drag or fling ends in an intermediate position.
- *
- * COUI sets AppBarLayout scroll flags scroll|exitUntilCollapsed|snap (
- * COUICollapsableAppBarLayout.DEFAULT_SCROLL_FLAG = 19) and snaps at the midpoint
- * (AppBarLayout.BaseBehavior.calculateSnapOffset). The zero-velocity offset
- * animator runs for ((distance / barHeight) + 1) * 150ms capped at 600ms
- * (AppBarLayout.BaseBehavior.animateOffsetTo); for the app bar's <=27.5dp snap
- * distance over a ~140dp bar this lands at 150-180ms.
+ * The duration of the snap animation that settles the bar after a drag or fling
+ * (AppBarLayout.BaseBehavior.animateOffsetTo for the app bar's snap distance).
  */
 private val SnapAnimationDuration = 180
 
-/**
- * The easing of the snap animation, mirroring the DecelerateInterpolator that
- * AppBarLayout.BaseBehavior installs on its offset animator.
- */
+/** The DecelerateInterpolator that AppBarLayout.BaseBehavior installs on its offset animator. */
 private val SnapAnimationEasing = Easing { fraction -> 1f - (1f - fraction) * (1f - fraction) }
 
 /**
- * The collapsed fraction at which the morphing large title is swapped for the
- * dedicated collapsed title (COUI's CollapsingTextHelper re-lays the text out
- * with the collapsed size/typeface only when isClose(fraction, 1f)).
+ * The collapsed fraction at which the morphing large title is swapped for the dedicated
+ * collapsed title (CollapsingTextHelper isClose(fraction, 1f)).
  */
 private val CollapsedTitleSwapFraction = 0.9999f
 

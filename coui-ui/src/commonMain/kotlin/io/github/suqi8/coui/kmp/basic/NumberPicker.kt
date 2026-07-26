@@ -247,14 +247,11 @@ fun NumberPicker(
                 }
 
                 val distanceFromCenter = i.toFloat() - centerItemOffset
-                // COUI completes the focus-to-normal transition within half an item height of
-                // the center (2x distance coefficient in COUINumberPicker.gradualChangeTextSize
-                // and gradualChange); farther items keep the normal size and color. Items are
-                // never faded out per-item: the normal color carries its own alpha.
+                // COUI completes the focus-to-normal transition within half an item of the center;
+                // items are never faded out per-item (the normal color carries its own alpha).
                 val transition = (abs(distanceFromCenter) * 2f).coerceIn(0f, 1f)
 
-                // Focus text is 20dp and normal text is 16dp in COUI
-                // (coui_numberpicker_textSize_big/small), so the scale floor is 16/20 = 0.8.
+                // COUI focus text is 20dp and normal text is 16dp, so the scale floor is 0.8.
                 val scale = 1f - 0.2f * transition
                 val yOffset = distanceFromCenter * itemHeightPx
 

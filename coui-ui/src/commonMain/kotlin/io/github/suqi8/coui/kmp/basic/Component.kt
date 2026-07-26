@@ -192,8 +192,7 @@ fun BasicComponent(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.End,
                         ) {
-                            // Center every end action vertically so trailing value text
-                            // lines up with taller siblings (e.g. the 24dp popup indicator).
+                            // Center end actions vertically so trailing value text lines up with taller siblings.
                             Row(verticalAlignment = Alignment.CenterVertically) { it() }
                         }
                     }

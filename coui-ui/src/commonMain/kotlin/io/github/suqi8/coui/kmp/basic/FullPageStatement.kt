@@ -82,9 +82,6 @@ fun FullPageStatement(
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
-        // Title block: coui_full_page_statement_text_button_padding (12dp) top margin,
-        // coui_full_page_statement_content_margin (12dp) bottom margin and
-        // coui_full_page_statement_text_button_padding_horizontal (24dp) side margins.
         Text(
             text = title,
             modifier = Modifier
@@ -99,8 +96,7 @@ fun FullPageStatement(
             color = colors.titleColor,
             textAlign = TextAlign.Center,
         )
-        // Statement body: vertical fading edges like the COUIMaxHeightScrollView host
-        // (android:fadingEdgeLength = coui_full_page_statement_scroll_fade_length, 46dp).
+        // Statement body with vertical fading edges, like the COUIMaxHeightScrollView host.
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -181,8 +177,7 @@ fun FullPageStatement(
                     )
                 }
                 if (secondaryButtonText != null) {
-                    // COUI txt_exit is a bare TextView (16sp, sans-serif-medium, accent color)
-                    // with no fill and no press overlay.
+                    // COUI txt_exit is a bare accent-colored TextView with no fill and no press overlay.
                     val interactionSource = remember { MutableInteractionSource() }
                     Text(
                         text = secondaryButtonText,
@@ -205,6 +200,7 @@ fun FullPageStatement(
     }
 }
 
+/** Contains default values used by [FullPageStatement]. */
 object FullPageStatementDefaults {
 
     /** Top margin of the title (COUI coui_full_page_statement_text_button_padding). */
@@ -283,6 +279,13 @@ object FullPageStatementDefaults {
     }
 }
 
+/**
+ * Colors used by a [FullPageStatement].
+ *
+ * @param titleColor The color of the title.
+ * @param contentColor The color of the statement text.
+ * @param secondaryButtonColor The color of the exit text button.
+ */
 @Immutable
 data class FullPageStatementColors(
     val titleColor: Color,

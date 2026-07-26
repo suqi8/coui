@@ -18,10 +18,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 /**
  * A [SmallTitle] with COUI style.
  *
- * Typography follows the COUI category title (`Widget.COUI.List.Category.Title` ->
- * `couiTextAppearanceSmallButton`): 12sp, sans-serif-medium, line spacing multiplier 1.0.
- * The style is overridden locally instead of changing the shared `subtitle` text style,
- * which is used by other components.
+ * Typography follows the COUI category title (couiTextAppearanceSmallButton: 12sp sans-serif-medium).
  *
  * @param text The text to be displayed in the [SmallTitle].
  * @param modifier The modifier to be applied to the [SmallTitle].
@@ -37,15 +34,12 @@ fun SmallTitle(
     insideMargin: PaddingValues = SmallTitleDefaults.InsideMargin,
 ) {
     Text(
-        modifier =
-        modifier
+        modifier = modifier
             .padding(insideMargin)
             .heightIn(min = SmallTitleDefaults.MinHeight)
             .wrapContentHeight(),
         text = text,
-        // COUI couiTextAppearanceSmallButton: 12sp sans-serif-medium.
-        style =
-        COUITheme.textStyles.subtitle.copy(
+        style = COUITheme.textStyles.subtitle.copy(
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
         ),
@@ -56,24 +50,13 @@ fun SmallTitle(
 /** Contains default values used by [SmallTitle]. */
 object SmallTitleDefaults {
     /**
-     * The default inside margin of the [SmallTitle].
-     *
-     * COUI category title metrics (com.android.settings ground truth):
-     * horizontal 32dp = 16dp page margin + 16dp card content inset
-     * (support_preference_category_layout_title_margin_start_large), vertical 8dp
-     * (support_preference_category_layout_title_margin_end_new, applied as both the
-     * top and bottom margin of the category title). The remaining 16dp card-to-title
-     * gap comes from the spacing between cards (coui_preference_category_margintop_large),
-     * so stack `Card` blocks with 16dp vertical spacing to reproduce the COUI rhythm:
-     * card -> 16dp + 8dp -> title line -> 8dp -> next card.
+     * The default inside margin of the [SmallTitle] (COUI category title metrics:
+     * 16dp page margin + 16dp card content inset horizontally, 8dp vertically).
      */
     val InsideMargin = PaddingValues(32.dp, 8.dp)
 
     /**
-     * The default minimum text height of the [SmallTitle].
-     *
-     * COUI `Widget.COUI.List.Category.Title` sets `android:minHeight` to
-     * `coui_preference_category_text_height` (16dp) with `center_vertical` gravity.
+     * The default minimum text height of the [SmallTitle] (COUI coui_preference_category_text_height).
      */
     val MinHeight = 16.dp
 }

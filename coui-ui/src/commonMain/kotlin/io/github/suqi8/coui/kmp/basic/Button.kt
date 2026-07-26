@@ -54,9 +54,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param colors The [ButtonColors] of the [Button].
  * @param insideMargin The margin inside the [Button].
  * @param interactionSource The [MutableInteractionSource] to be used for the [Button].
- * @param indication The [Indication] to be used for the [Button]. Defaults to `null` because the
- *   COUI press feedback (scale + press tint) is built into the button itself — COUIButton disables
- *   its ripple layer for filled buttons.
+ * @param indication The [Indication] to be used for the [Button]. Defaults to `null` because
+ *   the COUI press feedback (scale + press tint) is built into the button itself.
  * @param content The [Composable] content of the [Button].
  */
 @Composable
@@ -83,11 +82,7 @@ fun Button(
     val containerColor = if (enabled) colors.color else colors.disabledColor
     val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
 
-    // COUI press feedback (ColorOS 16 COUIButton), driven by two critically damped springs
-    // (COUISpringForce response 0.3s / bounce 0, i.e. stiffness (2 * PI / 0.3)^2 ~= 438.65):
-    //  - COUIPressFeedbackHelper scales the view towards a size dependent end ratio (0.92..0.98).
-    //  - COUIMaskEffectDrawable draws couiColorPress over the fill (under the label); releasing
-    //    early keeps the tint animating in until 70% progress before it fades out.
+    // COUI press feedback: scale (COUIPressFeedbackHelper) + press tint (COUIMaskEffectDrawable).
     val isPressed by interactionSource.collectIsPressedAsState()
     val scaleProgress by animateFloatAsState(
         targetValue = if (enabled && isPressed) 1f else 0f,
@@ -99,12 +94,10 @@ fun Button(
         if (enabled && isPressed) {
             tintProgress.animateTo(1f, PressFeedbackSpring)
         } else if (!enabled) {
-            // COUIMaskEffectDrawable resets the mask without animation when disabled.
             tintProgress.snapTo(0f)
         } else if (tintProgress.value > 0f) {
             if (tintProgress.value < PressedTintMinVisibleProgress) {
-                // COUIMaskEffectDrawable.animateToProgressUntil: keep the press-in animation
-                // running until the tint is clearly visible, then reverse from there.
+                // Keep the press-in animation running until the tint is clearly visible.
                 try {
                     tintProgress.animateTo(1f, PressFeedbackSpring) {
                         if (value >= PressedTintMinVisibleProgress) throw PressTintThresholdReached()
@@ -116,7 +109,6 @@ fun Button(
             tintProgress.animateTo(0f, PressFeedbackSpring)
         }
     }
-    // couiColorPress: #1F000000 in light themes, #33FFFFFF in dark themes.
     val pressTint = if (COUITheme.colorScheme.background.luminance() < 0.5f) PressedTintDark else PressedTintLight
     val fillColor = if (tintProgress.value > 0f) {
         pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(containerColor)
@@ -164,9 +156,8 @@ fun Button(
  * @param minHeight The minimum height of the [TextButton].
  * @param colors The [TextButtonColors] of the [TextButton].
  * @param insideMargin The margin inside the [TextButton].
- * @param textStyle The [TextStyle] of the label. Defaults to the 16sp COUI button style
- *   (couiTextAppearanceButtonL); pass a 14sp style together with the `Small` metrics from
- *   [ButtonDefaults] to get the COUI Widget.COUI.Button.Small size tier.
+ * @param textStyle The [TextStyle] of the label. Pass a 14sp style together with the `Small`
+ *   metrics from [ButtonDefaults] to get the COUI small size tier.
  * @param interactionSource The [MutableInteractionSource] to be used for the [TextButton].
  * @param indication The [Indication] to be used for the [TextButton]. Defaults to `null` because
  *   the COUI press feedback (scale + press tint) is built into the button itself.
@@ -216,15 +207,14 @@ fun TextButton(
 object ButtonDefaults {
 
     /**
-     * The smallest scale a button shrinks to while pressed. COUIPressFeedbackHelper uses this end
-     * ratio for surfaces up to 48 x 48dp and eases towards 0.98 for larger surfaces.
+     * The smallest scale a button shrinks to while pressed (COUIPressFeedbackHelper end ratio
+     * for surfaces up to 48 x 48dp).
      */
     val PressedScale = 0.92f
 
     /**
-     * The legacy COUIButton `brightness` attribute value. ColorOS 16 COUIButton reads it but never
-     * applies it (dead code); press feedback tints the fill with couiColorPress instead. Retained
-     * for source compatibility only and no longer used by [Button].
+     * The legacy COUIButton `brightness` attribute value. Retained for source compatibility only
+     * and no longer used by [Button].
      */
     val PressedBrightness = 0.8f
 
@@ -241,30 +231,28 @@ object ButtonDefaults {
     val MinHeight = 44.dp
 
     /**
-     * The default corner radius applied for all buttons. COUI buttons are height-derived capsules
-     * (radius = height / 2); 22.dp matches the 44.dp default min height on the squircle path.
+     * The default corner radius applied for all buttons (COUI height-derived capsule:
+     * radius = [MinHeight] / 2).
      */
     val CornerRadius = 22.dp
 
     /**
-     * The default inside margin applied for all buttons. COUI buttons have horizontal padding only;
-     * the height is driven by [MinHeight] with content centered.
+     * The default inside margin applied for all buttons.
      */
     val InsideMargin = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
 
     /**
-     * The min width of the small size tier (COUI Widget.COUI.Button.Small coui_btn_small_width_min).
+     * The min width of the small size tier (COUI coui_btn_small_width_min).
      */
     val MinWidthSmall = 52.dp
 
     /**
-     * The min height of the small size tier (COUI Widget.COUI.Button.Small coui_btn_small_height_min).
+     * The min height of the small size tier (COUI coui_btn_small_height_min).
      */
     val MinHeightSmall = 28.dp
 
     /**
-     * The corner radius of the small size tier. Widget.COUI.Button.Small keeps drawableRadius at
-     * -1dp, i.e. a height-derived capsule: 14.dp matches the 28.dp small min height.
+     * The corner radius of the small size tier (COUI height-derived capsule: radius = [MinHeightSmall] / 2).
      */
     val CornerRadiusSmall = 14.dp
 
@@ -381,11 +369,7 @@ data class TextButtonColors(
     val disabledTextColor: Color,
 )
 
-/**
- * The COUI press feedback spring: COUISpringForce(response = 0.3f, bounce = 0f), which maps to a
- * critically damped spring with stiffness (2 * PI / 0.3)^2 ~= 438.65. Shared by the press scale
- * (COUIPressFeedbackHelper) and the press tint (COUIMaskEffectDrawable) animations.
- */
+/** The COUI press feedback spring (COUISpringForce response 0.3f / bounce 0f). */
 private val PressFeedbackSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 
 /** couiColorPress in light themes (coui_color_press #1F000000). */
@@ -394,10 +378,7 @@ private val PressedTintLight = Color(0x1F000000)
 /** couiColorPress in dark themes (coui_color_press_dark #33FFFFFF). */
 private val PressedTintDark = Color(0x33FFFFFF)
 
-/**
- * A release before the press tint reaches this progress defers the fade-out until it does, so
- * quick taps still flash visibly (COUIMaskEffectDrawable DEFAULT_MIN_PROGRESS_FOR_TOUCH_ENTER_ANIMATION).
- */
+/** The minimum press tint progress before a release may fade out (COUIMaskEffectDrawable). */
 private val PressedTintMinVisibleProgress = 0.7f
 
 /** Thrown to stop the deferred press-in tint animation once [PressedTintMinVisibleProgress] is reached. */
@@ -415,11 +396,7 @@ private val PressedScaleMaxAreaDp2 = 328f * 220f
 /** The pressed end scale of the largest surfaces (COUIPressFeedbackHelper MAX_SCALE_END_RATIO). */
 private val PressedScaleMax = 0.98f
 
-/**
- * The scale a surface of [size] shrinks to when fully pressed: [ButtonDefaults.PressedScale] for
- * areas up to 48 x 48dp, easing towards [PressedScaleMax] at 328 x 220dp
- * (COUIPressFeedbackHelper.getCardScaleRatio).
- */
+/** The scale a surface of [size] shrinks to when fully pressed (COUIPressFeedbackHelper.getCardScaleRatio). */
 private fun Density.pressedScaleEndRatio(size: Size): Float {
     val area = size.width.toDp().value * size.height.toDp().value
     return when {

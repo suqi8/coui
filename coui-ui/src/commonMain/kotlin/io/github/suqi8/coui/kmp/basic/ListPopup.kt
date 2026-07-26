@@ -203,47 +203,43 @@ interface PopupPositionProvider {
 
 object ListPopupDefaults {
     /**
-     * Scale/clip-reveal fraction spring, shared by enter and exit.
-     * Source: COUI DefaultScreenAnimationController / SmallScreenAnimationController main-menu
-     * enter COUISpringForce(response = 0.35, bounce = 0.2) -> stiffness = (2 * PI / 0.35)^2,
-     * dampingRatio = 1 - bounce. COUI's exit scale uses response 0.3 / bounce 0 instead; this
-     * shared spec keeps the enter parameters (exit is gated by [AlphaExitAnimationSpec] anyway).
+     * Scale/clip-reveal fraction spring, shared by enter and exit (COUI main-menu enter
+     * COUISpringForce response 0.35 / bounce 0.2; COUI's exit scale spring is gated by
+     * [AlphaExitAnimationSpec] anyway, so the enter parameters are kept).
      */
     val FractionAnimationSpec = spring(dampingRatio = 0.8f, stiffness = 322.27f, visibilityThreshold = 0.0001f)
 
     /**
-     * Content alpha enter spring.
-     * Source: COUI main-menu enter alpha COUISpringForce(response = 0.35, bounce = 0.2);
-     * [folmeSpring] applies the same stiffness = (2 * PI / response)^2 mapping.
+     * Content alpha enter spring (COUI main-menu enter alpha COUISpringForce
+     * response 0.35 / bounce 0.2, mapped by [folmeSpring]).
      */
     val AlphaEnterAnimationSpec = folmeSpring<Float>(damping = 0.8f, response = 0.35f)
 
     /**
-     * Content alpha exit spring; also the master timing for unmounting the popup.
-     * Source: COUI main-menu exit alpha COUISpringForce(response = 0.25, bounce = 0),
-     * critically damped. The Compose default visibility threshold (0.01) settles once the
-     * fade is visually complete, instead of COUI's far smaller equilibrium threshold that
-     * would leave a long invisible tap-blocking tail.
+     * Content alpha exit spring; also the master timing for unmounting the popup
+     * (COUI main-menu exit alpha COUISpringForce response 0.25 / bounce 0). The Compose
+     * default visibility threshold avoids COUI's long invisible tap-blocking tail.
      */
     val AlphaExitAnimationSpec = folmeSpring<Float>(damping = 1f, response = 0.25f)
 
+    /** Default animation spec driving the background dim while entering. */
     val DimEnterAnimationSpec = tween<Float>(durationMillis = 300, easing = SinOutEasing)
+
+    /** Default animation spec driving the background dim while exiting. */
     val DimExitAnimationSpec = tween<Float>(durationMillis = 150, easing = SinOutEasing)
 
     /** Re-enter spring used when a cancelled back gesture restores the popup; matches [FractionAnimationSpec]. */
     val ResetAnimationSpec = spring(dampingRatio = 0.8f, stiffness = 322.27f, visibilityThreshold = 0.0001f)
 
     /**
-     * Default minimum width of the popup. Also matches the lower clamp inside
-     * [ListPopupColumn]'s width measurement.
-     * Source: coui_popup_list_window_min_width (178dp)
+     * Default minimum width of the popup (COUI coui_popup_list_window_min_width).
+     * Also matches the lower clamp inside [ListPopupColumn]'s width measurement.
      */
     val MinWidth = 178.dp
 
     /**
-     * Default maximum width of the popup window. Also matches the upper clamp inside
-     * [ListPopupColumn]'s width measurement.
-     * Source: coui_popup_list_window_max_width (232dp)
+     * Default maximum width of the popup window (COUI coui_popup_list_window_max_width).
+     * Also matches the upper clamp inside [ListPopupColumn]'s width measurement.
      */
     val MaxWidth = 232.dp
 
@@ -253,6 +249,13 @@ object ListPopupDefaults {
      */
     val MinPopupHeight = 50.dp
 
+    /**
+     * Creates a [PopupPositionProvider] that anchors the popup directly below (or above when there
+     * is no room) the anchor, used by dropdown-style list popups.
+     *
+     * @param verticalMargin The extra vertical margin between the popup and the anchor.
+     * @param horizontalMargin The extra horizontal margin applied to the popup.
+     */
     fun dropdownPositionProvider(
         verticalMargin: Dp = 8.dp,
         horizontalMargin: Dp = 0.dp,
@@ -297,8 +300,10 @@ object ListPopupDefaults {
         override fun getMargins(): PaddingValues = margins
     }
 
+    /** Default dropdown [PopupPositionProvider] created by [dropdownPositionProvider]. */
     val DropdownPositionProvider: PopupPositionProvider = dropdownPositionProvider()
 
+    /** A [PopupPositionProvider] that anchors the popup to a corner of the anchor for context menus. */
     val ContextMenuPositionProvider = object : PopupPositionProvider {
         override fun calculatePosition(
             anchorBounds: IntRect,
@@ -373,31 +378,17 @@ private val PopupSurfaceLight = Color.White
 private val PopupSurfaceDark = Color(0xFF333333)
 
 /**
- * Resolves the COUI popup container color for the current theme. The popup floats above
+ * Resolves the COUI popup container color for the current theme: the popup floats above
  * arbitrary content, so COUI uses the opaque couiColorSurfaceTop pair (#FFFFFF / #333333)
- * instead of the translucent dark card color (COUIPopupListWindow.createContentView reads
- * couiPopupWindowBackground, falling back to coui_popup_window_background which fills with
- * ?couiColorSurfaceTop).
+ * instead of the translucent dark card color (coui_popup_window_background).
  */
 @Composable
 internal fun popupSurfaceColor(): Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) PopupSurfaceDark else PopupSurfaceLight
 
 /**
- * Drop shadow of the popup container.
- *
- * Verified chain (OS16 / drawable-v36 resources): the popup background is NOT a 9-patch —
- * coui_popup_window_background is a plain `<shape>` filled with ?couiColorSurfaceTop (the
- * legacy coui_popup_window_bg.9.png with a baked-in shadow is orphaned, referenced only by
- * public.xml). The shadow instead comes from RoundFrameLayout.setClipMode(OUTLINE_CLIP) →
- * ShadowUtils.setElevationToView(view, SHADOW_LV4) on OPlus devices, which installs a
- * black outline ambient+spot shadow (coui_shadow_color_lv4 alpha 66/255) with an
- * OplusView-overridden light source (light_y -1466.66dp, light_r 6666.66dp) — a huge,
- * near-overhead diffuse light. The rendered result is a large, soft, evenly surrounding
- * halo with only a slight downward bias, calibrated to blur ~26.66dp at ~13.7% black
- * (COUI shadow token table), offset down by the caster elevation
- * (coui_shadow_elevation_four = 3.33dp). Non-OPlus fallback: elevation 30dp + spot
- * #80000000. Shared with the cascading popup surfaces so main and cascading menus cast
- * identical shadows.
+ * Drop shadow of the popup container, calibrated to COUI SHADOW_LV4: 26.66dp blur at 13.7% black
+ * (coui_shadow_color_lv4), offset down 3.33dp (coui_shadow_elevation_four).
+ * Shared with the cascading popup surfaces so main and cascading menus cast identical shadows.
  */
 internal val PopupShadow: Shadow = Shadow(
     radius = 26.66.dp,
@@ -412,6 +403,14 @@ internal fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
     return TransformOrigin(safeX, safeY)
 }
 
+/**
+ * Describes how the popup is placed relative to its anchor, used to drive the directional reveal
+ * and transform origin.
+ *
+ * @property showBelow Whether the popup is shown below the anchor.
+ * @property showAbove Whether the popup is shown above the anchor.
+ * @property isRightAligned Whether the popup is aligned to the right edge of the anchor.
+ */
 @Immutable
 data class PopupLayoutPosition(
     val showBelow: Boolean,
@@ -419,6 +418,15 @@ data class PopupLayoutPosition(
     val isRightAligned: Boolean,
 )
 
+/**
+ * The resolved layout information for a list popup, produced by [rememberListPopupLayoutInfo].
+ *
+ * @property windowBounds Bounds of the safe area of the window the popup is placed within.
+ * @property popupMargin The (extra) margins applied around the popup content.
+ * @property effectiveTransformOrigin The transform origin in window coordinates used to scale the popup from its anchor corner.
+ * @property localTransformOrigin The transform origin local to the popup content used by its [graphicsLayer] scaling.
+ * @property popupLayoutPosition The resolved [PopupLayoutPosition] describing how the popup is placed relative to its anchor.
+ */
 @Immutable
 data class ListPopupLayoutInfo(
     val windowBounds: IntRect,
@@ -428,6 +436,14 @@ data class ListPopupLayoutInfo(
     val popupLayoutPosition: PopupLayoutPosition,
 )
 
+/**
+ * Computes and remembers the [ListPopupLayoutInfo] for a list popup from its anchor and content size.
+ *
+ * @param alignment The [PopupPositionProvider.Align] of the popup relative to the window.
+ * @param popupPositionProvider The [PopupPositionProvider] that computes the popup offset and margins.
+ * @param parentBounds The bounds of the anchor (parent) component in window coordinates.
+ * @param popupContentSize The measured size of the popup content; [IntSize.Zero] before it is measured.
+ */
 @Composable
 fun rememberListPopupLayoutInfo(
     alignment: PopupPositionProvider.Align,
@@ -622,6 +638,19 @@ fun rememberListPopupLayoutInfo(
     )
 }
 
+/**
+ * The scaling, fading and clip-revealing container that hosts a list popup's content.
+ *
+ * @param popupContentSize The last reported size of the content, compared against the latest
+ *   measurement to avoid redundant [onPopupContentSizeChange] callbacks.
+ * @param onPopupContentSizeChange Called when the measured content size changes.
+ * @param fractionProgress Provides the current scale/clip-reveal fraction (0 → 1) of the popup.
+ * @param alphaProgress Provides the current alpha (0 → 1) of the popup content.
+ * @param popupLayoutPosition The [PopupLayoutPosition] describing the popup's spawn direction.
+ * @param localTransformOrigin The transform origin local to the content used while scaling.
+ * @param modifier The modifier to be applied to the popup container.
+ * @param content The content of the popup.
+ */
 @Composable
 fun ListPopupContent(
     popupContentSize: IntSize,

@@ -55,6 +55,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param showDivider Whether to show the divider line between the [NavigationRail] and the content.
  * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [NavigationRail].
  * @param minWidth The minimum width of the [NavigationRail].
+ * @param mode The mode for displaying items in the [NavigationRail]. It can show icons, text or both.
  * @param content The content of the [NavigationRail], usually [NavigationRailItem]s.
  */
 @Composable

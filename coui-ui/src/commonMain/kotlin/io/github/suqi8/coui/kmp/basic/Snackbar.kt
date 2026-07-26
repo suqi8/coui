@@ -360,15 +360,13 @@ fun SnackbarHost(
  *
  * @param data data of the [Snackbar]
  * @param modifier modifier to be applied to the [Snackbar]
- * @param icon optional leading icon, laid out in a 30dp box (COUI coui_snack_bar_icon_width/height)
- *   with 16dp vertical clearance (coui_snack_bar_icon_margin_top_horizontal), mirroring
- *   COUISnackBar's iv_snack_bar_icon slot. Pass it through [SnackbarHost]'s `content` lambda:
- *   `SnackbarHost(state) { Snackbar(it, icon = { ... }) }`.
+ * @param icon optional leading icon, mirroring COUISnackBar's iv_snack_bar_icon slot. Pass it
+ *   through [SnackbarHost]'s `content` lambda: `SnackbarHost(state) { Snackbar(it, icon = { ... }) }`.
  * @param cornerRadius corner radius of the [Snackbar] when the message spans multiple lines
  * @param singleLineCornerRadius corner radius of the [Snackbar] when the message fits on a single line
  * @param colors colors of the [Snackbar]
  * @param insideMargin margin inside the [Snackbar]; the end margin is replaced by a 4dp action
- *   margin when the action button is the trailing element (COUI coui_snack_bar_action_margin_horizontal_end)
+ *   margin when the action button is the trailing element
  */
 @Composable
 fun Snackbar(
@@ -555,7 +553,8 @@ private val SnackbarActionSpacing = 16.dp
 /** The padding of the action press area (COUI text_ripple_bg_padding_horizontal/vertical). */
 private val SnackbarActionPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
 
-// COUISnackBar.animateSpring: COUISpringForce with bounce 0 (damping ratio 1) and response 0.3s on
-// show / 0.25s on dismiss; COUISpringForce.setResponse maps response to stiffness = (2PI / response)^2.
+/** COUISnackBar.animateSpring show spring: COUISpringForce(response = 0.3f, bounce = 0f). */
 private val SnackbarShowAnimationSpec = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
+
+/** COUISnackBar.animateSpring dismiss spring: COUISpringForce(response = 0.25f, bounce = 0f). */
 private val SnackbarDismissAnimationSpec = spring<Float>(dampingRatio = 1f, stiffness = 631.65f)

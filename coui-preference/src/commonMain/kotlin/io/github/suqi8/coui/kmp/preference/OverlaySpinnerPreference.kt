@@ -194,8 +194,6 @@ fun OverlaySpinnerPreference(
     } else {
         COUITheme.colorScheme.disabledOnSecondaryVariant
     }
-    // COUI assignment/status text color (coui_preference_secondary_text_color):
-    // couiColorSecondNeutral when enabled, couiColorLabelTertiary when disabled.
     val valueColor = if (actualEnabled) {
         COUITheme.colorScheme.onSurfaceSecondary
     } else {
@@ -236,11 +234,6 @@ fun OverlaySpinnerPreference(
                 Text(
                     text = selectedValueText,
                     modifier = Modifier
-                        // COUI assignment-in-right metrics: 162dp max width
-                        // (coui_preference_status_text_max_width), 16dp min gap from the
-                        // title block (support_preference_title_margin_end_in_right; 8dp
-                        // here + the 8dp BasicComponent center-end spacer) and 4dp gap to
-                        // the indicator (support_preference_image_margin_start).
                         .widthIn(max = 162.dp)
                         .padding(start = 8.dp, end = 4.dp)
                         .weight(1f, fill = false),
@@ -439,8 +432,6 @@ fun OverlaySpinnerPreference(
     } else {
         COUITheme.colorScheme.disabledOnSecondaryVariant
     }
-    // COUI assignment/status text color (coui_preference_secondary_text_color):
-    // couiColorSecondNeutral when enabled, couiColorLabelTertiary when disabled.
     val valueColor = if (actualEnabled) {
         COUITheme.colorScheme.onSurfaceSecondary
     } else {
@@ -481,11 +472,6 @@ fun OverlaySpinnerPreference(
                 Text(
                     text = selectedValueText,
                     modifier = Modifier
-                        // COUI assignment-in-right metrics: 162dp max width
-                        // (coui_preference_status_text_max_width), 16dp min gap from the
-                        // title block (support_preference_title_margin_end_in_right; 8dp
-                        // here + the 8dp BasicComponent center-end spacer) and 4dp gap to
-                        // the indicator (support_preference_image_margin_start).
                         .widthIn(max = 162.dp)
                         .padding(start = 8.dp, end = 4.dp)
                         .weight(1f, fill = false),

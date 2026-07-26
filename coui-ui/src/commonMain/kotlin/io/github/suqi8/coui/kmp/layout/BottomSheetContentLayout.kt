@@ -146,8 +146,8 @@ internal fun BottomSheetContentLayout(
     val sheetHeightPx = remember { mutableIntStateOf(0) }
 
     LaunchedEffect(show) {
-        // COUIBottomSheetDialog samples the panel/container heights when the enter/exit
-        // animation starts; mirror that with a one-shot read (no recomposition subscription).
+        // COUI samples the panel/container heights when the animation starts; mirror that
+        // with a one-shot read (no recomposition subscription).
         val containerPx = with(density) { windowInfo.containerDpSize.height.toPx() }
         val peekPx = with(density) { PanelPeekHeight.toPx() }
         val travelPx = sheetHeightPx.intValue.takeIf { it > 0 }?.toFloat() ?: containerPx
@@ -252,11 +252,8 @@ internal fun BottomSheetContentLayout(
         }
 
         if (enableWindowDim) {
-            // COUI dims via the `panel_outside` view (design_bottom_sheet_dialog.xml) filled with
-            // coui_color_mask (#33000000 light / #99000000 dark == windowDimming black 0.2/0.6);
-            // its alpha is driven by a spring with the same response as the panel slide
-            // (COUIBottomSheetDialog.doAlphaSpringAnimaion), which multiplying by
-            // `animationProgress` reproduces here.
+            // COUI drives the mask alpha with the same spring as the panel slide,
+            // which multiplying by `animationProgress` reproduces here.
             val baseColor = COUITheme.colorScheme.windowDimming
             Box(
                 modifier = Modifier
@@ -597,9 +594,7 @@ private fun BottomSheetColumn(
 ) {
     val density = LocalDensity.current
     val imeInsets = WindowInsets.ime
-    // COUIPanelPercentFrameLayout width: compact windows keep the full width, medium/expanded
-    // windows re-measure the panel to a 6-column span of the COUI responsive layout grid.
-    // `sheetMaxWidth` acts as an additional caller-supplied cap on top of that.
+    // COUI grid width plus `sheetMaxWidth` as an additional caller-supplied cap.
     val windowSize = LocalWindowInfo.current.containerDpSize
     val effectiveMaxWidth = remember(windowSize, sheetMaxWidth) {
         min(sheetMaxWidth, couiPanelMaxWidth(windowSize))
@@ -698,18 +693,14 @@ private fun BoxScope.OverscrollBackground(
 private val CouiEaseEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
 /**
- * Peek height used by COUIBottomSheetDialog.getTranslationResponse() to normalize the panel
- * travel fraction (coui_panel_default_peek_height_in_gesture = 82dp — the gesture-navigation
- * default on ColorOS phones; the button-navigation value is 66dp).
+ * Peek height used to normalize the panel travel fraction.
+ * COUI `coui_panel_default_peek_height_in_gesture`.
  */
 private val PanelPeekHeight = 82.dp
 
 /**
- * Spring spec of the COUI panel slide (COUIBottomSheetDialog.doTranslationAndScaleSpringAnimaion):
- * COUISpringForce with bounce 0 (damping ratio 1) and response from getTranslationResponse() —
- * interpolated between 0.25s and 0.45s (enter) / 0.4s (exit) by the travel fraction
- * `(travel - peek) / (container - peek)`. COUISpringForce.setResponse maps response to stiffness
- * as (2π/response)², which is exactly what [folmeSpring] does.
+ * Spring spec of the COUI panel slide: damping ratio 1, response interpolated between 0.25s
+ * and 0.45s (enter) / 0.4s (exit) by the travel fraction `(travel - peek) / (container - peek)`.
  */
 private fun <T> couiPanelSlideSpring(
     entering: Boolean,
@@ -724,17 +715,9 @@ private fun <T> couiPanelSlideSpring(
 }
 
 /**
- * Maximum panel width from the COUI responsive layout grid. The panel spans 6 grid columns
- * (design_bottom_sheet_dialog.xml gridNumber = grid_guide_column_bottom_sheet_dialog = 6,
- * re-measured by COUIPercentWidthFrameLayout via COUIResponsiveUtils.calculateWidth):
- * - Compact window (< 600dp wide): percent re-measure is disabled
- *   (COUIPanelPercentFrameLayout.onMeasure) — the panel fills the window width.
- * - 8-column grid (LayoutGridSystem: Medium* / ExpandedLandPortrait / ExpandedPortrait classes;
- *   margin 24dp, gutter 8dp): 6 columns + 5 gutters = 0.75 x width - 38dp.
- * - 12-column grid (Expanded class; margin 40dp, gutter 12dp):
- *   6 columns + 5 gutters = 0.5 x width - 46dp.
- * Size classes follow the COUI breakpoints: width 600/840dp, height 480/900dp, and the
- * ExpandedPortrait carve-out (height > width, width < 960dp).
+ * Maximum panel width from the COUI responsive layout grid: full width on compact windows
+ * (< 600dp), otherwise a 6-column span of the 8-column (margin 24dp, gutter 8dp) or
+ * 12-column (margin 40dp, gutter 12dp) grid, chosen by the COUI window size classes.
  */
 private fun couiPanelMaxWidth(windowSize: DpSize): Dp {
     val width = windowSize.width.value
@@ -759,12 +742,9 @@ private fun CoroutineScope.animateHandlePressRelease(pressAlpha: Animatable<Floa
 }
 
 /**
- * Drag handle strip at the top of the sheet, matching the COUI panel drag view
- * (coui_panel_view_layout.xml): a fixed 36x4dp capsule bar (coui_panel_drag_view) whose top
- * sits 12dp below the panel top (4dp shadow margin + 8dp drag view top padding). The bar
- * itself never deforms; pressing or dragging fades in a 70x20dp rounded (16dp) press
- * background behind it (coui_pannel_press_shadow_bg via COUIPanelPressHelper), centered on
- * the bar. Drag amounts are forwarded into [dragSnapChannel].
+ * Drag handle strip at the top of the sheet, matching the COUI panel drag view: a fixed
+ * capsule bar that never deforms; pressing or dragging fades in a rounded press background
+ * centered behind it. Drag amounts are forwarded into [dragSnapChannel].
  *
  * Press/release fading is delegated to [animateHandlePressDown] / [animateHandlePressRelease]
  * so the same launch is not rewritten in each of the four entry points
@@ -783,8 +763,7 @@ private fun DragHandleArea(
     val pressAlpha = remember { Animatable(0f) }
     val handleShape = remember { RoundedCornerShape(2.dp) }
     val pressShape = remember { RoundedCornerShape(16.dp) }
-    // COUI couiColorPress: #1F000000 in light theme (12% black); no dedicated slot in the
-    // COUI color scheme, so derive it from onSurface for automatic light/dark adaptation.
+    // COUI couiColorPress has no dedicated scheme slot; derive it from onSurface.
     val pressColor = COUITheme.colorScheme.onSurface.copy(alpha = 0.12f)
 
     Box(
@@ -830,13 +809,11 @@ private fun DragHandleArea(
                     onSettle(velocity)
                 },
             )
-            // 4dp top inset (coui_panel_drag_view_shadow_margin_top) leaves a 20dp content
-            // band whose center matches the COUI bar center (14dp below the panel top).
+            // COUI coui_panel_drag_view_shadow_margin_top: aligns the band center with the bar center.
             .padding(top = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // Press feedback background (coui_pannel_press_shadow_bg): 70x20dp, 16dp corners,
-        // faded in/out by COUIPanelPressHelper while the handle is touched.
+        // COUI press feedback background, faded in/out while the handle is touched.
         Box(
             modifier = Modifier
                 .width(70.dp)
@@ -846,7 +823,7 @@ private fun DragHandleArea(
                     drawRect(pressColor.copy(alpha = pressColor.alpha * pressAlpha.value))
                 },
         )
-        // Drag bar (coui_panel_drag_view): fixed 36x4dp capsule, no press deformation.
+        // COUI drag bar: a fixed capsule, no press deformation.
         Box(
             modifier = Modifier
                 .width(36.dp)
@@ -932,11 +909,8 @@ private suspend fun CoroutineScope.animateDismissOffScreen(
 object BottomSheetDefaults {
 
     /**
-     * The default background color of the bottom sheet.
-     *
-     * COUI tints the panel with `couiColorSurface` (#FFFFFF light / #1E1E1E dark —
-     * COUIBottomSheetDialog.initThemeResources / DefaultBottomSheetDialog style), which the
-     * COUI `background` slot matches exactly in both modes.
+     * The default background color of the bottom sheet. COUI tints the panel with
+     * `couiColorSurface`, which the `background` slot matches in both modes.
      */
     @Composable
     fun backgroundColor() = COUITheme.colorScheme.background
@@ -948,23 +922,16 @@ object BottomSheetDefaults {
     fun dragHandleColor() = COUITheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.2f)
 
     /**
-     * The default corner radius of the top corners of the bottom sheet.
-     *
-     * COUIPanelPercentFrameLayout.initAttr uses `couiRoundCornerXL` = 20dp; on devices with
-     * smooth (G2) corners the equivalent pair is 16dp radius + weight 1.1, whose plain-arc
-     * equivalent in the COUI corner token table is the same 20dp. The squircle surface used
-     * by the sheet supplies the G2 smoothing on top of this radius. The bottom corners are
-     * square, matching the outline that COUI extends off-screen by
-     * `coui_bottom_sheet_bg_top_corner_radius`.
+     * The default corner radius of the top corners of the bottom sheet. COUI `couiRoundCornerXL`,
+     * with the squircle surface supplying the smooth-corner shape; the bottom corners are square,
+     * matching the outline COUI extends off-screen.
      */
     val cornerRadius = 20.dp
 
     /**
-     * The default maximum width cap of the bottom sheet.
-     *
-     * Unbounded by default: the effective width is governed by the COUI responsive layout
-     * grid (full width on compact windows, a 6-column grid span on medium/expanded windows).
-     * Pass a finite value to additionally cap the width.
+     * The default maximum width cap of the bottom sheet. Unbounded by default: the effective
+     * width is governed by the COUI responsive layout grid (full width on compact windows,
+     * a 6-column grid span on medium/expanded windows). Pass a finite value to cap it further.
      */
     val maxWidth = Dp.Infinity
 

@@ -82,8 +82,7 @@ internal fun CascadingPrimaryContent(
                 scaleY = s
                 this.transformOrigin = transformOrigin
             }
-            // Shadow must sit outside the clip-reveal: popupClipReveal hard-clips its inner
-            // draw content to the popup shape, which would erase any shadow drawn inside it.
+            // Draw the shadow outside popupClipReveal's hard clip so it is not erased.
             .dropShadow(shape = shape, shadow = PopupShadow)
             .popupClipReveal(enterFraction, popupLayoutPosition, CascadingPopupCornerRadius, isSquircleEnabled())
             .background(color = surfaceColor),
@@ -128,10 +127,7 @@ internal fun CascadingPrimaryContent(
                     }
                     if (entryIndex != lastEntryIdx) {
                         key("divider", entry) {
-                            // COUI popup group divider: a full-bleed 4dp band
-                            // (coui_popup_list_group_divider_height) tinted with
-                            // coui_popup_list_group_divider_color (#14000000 in both light
-                            // and dark — no values-night override), no extra margins.
+                            // COUI popup group divider: a full-bleed band without extra margins.
                             HorizontalDivider(
                                 thickness = DropdownDefaults.PopupGroupDividerThickness,
                                 color = DropdownDefaults.PopupGroupDividerColor,
@@ -366,10 +362,7 @@ internal fun CascadingSecondaryColumn(
             dropdownColors = dropdownColors,
             onClick = onHeaderClick,
         )
-        // COUI separates the cloned submenu header from its children with the default
-        // hairline divider (coui_popup_list_divider_height 0.33dp, couiColorDivider,
-        // 16dp horizontal insets) — DefaultAdapter.getDividerView returns the default
-        // divider for the position right after a header row.
+        // COUI separates the cloned submenu header from its children with the default hairline divider.
         HorizontalDivider(
             modifier = Modifier
                 .padding(horizontal = 16.dp),

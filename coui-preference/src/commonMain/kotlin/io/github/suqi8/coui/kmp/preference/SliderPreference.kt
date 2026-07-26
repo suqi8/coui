@@ -120,8 +120,6 @@ fun SliderPreference(
             {
                 Row(
                     modifier = Modifier
-                        // COUI jump widget: 4dp gap (support_preference_image_margin_start)
-                        // between the status text area and the arrow.
                         .padding(end = 4.dp)
                         .align(Alignment.CenterVertically)
                         .weight(1f, fill = false),
@@ -131,8 +129,6 @@ fun SliderPreference(
                         Text(
                             text = valueText,
                             fontSize = COUITheme.textStyles.body2.fontSize,
-                            // COUI status text color (coui_preference_secondary_text_color):
-                            // couiColorSecondNeutral, couiColorLabelTertiary when disabled.
                             color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
                         )
                     }
@@ -253,8 +249,6 @@ fun RangeSliderPreference(
             {
                 Row(
                     modifier = Modifier
-                        // COUI jump widget: 4dp gap (support_preference_image_margin_start)
-                        // between the status text area and the arrow.
                         .padding(end = 4.dp)
                         .align(Alignment.CenterVertically)
                         .weight(1f, fill = false),
@@ -264,8 +258,6 @@ fun RangeSliderPreference(
                         Text(
                             text = valueText,
                             fontSize = COUITheme.textStyles.body2.fontSize,
-                            // COUI status text color (coui_preference_secondary_text_color):
-                            // couiColorSecondNeutral, couiColorLabelTertiary when disabled.
                             color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
                         )
                     }
@@ -314,9 +306,7 @@ private fun RowScope.SliderPreferenceArrowIcon(
     }
     Image(
         modifier = Modifier
-            // Native box of COUI coui_btn_next_normal.xml (12x24dp, 1.4dp stroke).
-            // RTL mirroring is handled by the icon itself (autoMirror, matching the
-            // android:autoMirrored="true" COUI selector).
+            // RTL mirroring is handled by the icon itself (autoMirror).
             .size(width = 12.dp, height = 24.dp)
             .align(Alignment.CenterVertically),
         imageVector = COUIIcons.Basic.ArrowRight,

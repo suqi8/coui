@@ -66,17 +66,12 @@ internal fun LoadingDialogContentLayout(
         enableWindowDim = enableWindowDim,
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
-        // COUIAlertDialog.Rotating extends COUIAlertDialog.Center.Rotate: always centered
-        // with the center-dialog scale/fade transitions, never bottom-assigned.
+        // COUI rotating dialogs are always centered with the center-dialog transitions.
         forceCentered = true,
-        // Loading dialogs clip with couiRoundCornerMRadius instead of the XXL dialog token.
         cornerRadius = LoadingDialogDefaults.CornerRadius,
         topInset = topInset,
     ) {
         Column(
-            // coui_progress_dialog_rotating.xml: FrameLayout 152dp wide (coui_spinner_layout_width,
-            // also contentMaxWidth coui_loading_alert_dialog_max_width), minHeight 120dp
-            // (coui_spinner_layout_min_height), body centered.
             modifier = Modifier
                 .width(LoadingDialogDefaults.CardWidth)
                 .heightIn(min = LoadingDialogDefaults.CardMinHeight),
@@ -85,15 +80,11 @@ internal fun LoadingDialogContentLayout(
         ) {
             if (text != null) {
                 InfiniteProgressIndicator(
-                    // Spinner 26dp with 26dp top / 16dp bottom margins
-                    // (coui_spinner_loading_anim_width/height, coui_spinner_margin_top/bottom).
                     modifier = Modifier.padding(top = SpinnerMarginTop, bottom = SpinnerMarginBottom),
                     color = spinnerColor,
                     size = LoadingDialogDefaults.SpinnerSize,
                 )
                 Text(
-                    // progress_tips: couiTextBodyS (14sp), centered, 16dp horizontal and
-                    // 26dp bottom margins (coui_spinner_text_margin_horizontal/bottom).
                     modifier = Modifier
                         .padding(horizontal = TextMarginHorizontal)
                         .padding(bottom = TextMarginBottom),
@@ -103,7 +94,7 @@ internal fun LoadingDialogContentLayout(
                     color = textColor,
                 )
             } else {
-                // Without a message the spinner simply centers inside the 152x120 card.
+                // Without a message the spinner simply centers inside the card.
                 InfiniteProgressIndicator(
                     color = spinnerColor,
                     size = LoadingDialogDefaults.SpinnerSize,
@@ -124,9 +115,8 @@ object LoadingDialogDefaults {
     val CardMinHeight = 120.dp
 
     /**
-     * The corner radius of the loading card. Loading dialogs clip with the
-     * couiRoundCornerMRadius token (`coui_round_corner_m_radius`, 9dp) instead of the
-     * XXL radius used by regular alert dialogs.
+     * The corner radius of the loading card. COUI `coui_round_corner_m_radius`, used
+     * instead of the XXL radius of regular alert dialogs.
      */
     val CornerRadius = 9.dp
 
@@ -143,9 +133,8 @@ object LoadingDialogDefaults {
     fun textColor() = COUITheme.colorScheme.onBackground
 
     /**
-     * The default color of the spinner. The COUI rotating lottie
-     * (`coui_rotating_loading.json`) strokes black/white at 85% opacity, which the
-     * primary label color reproduces in both themes.
+     * The default color of the spinner. The COUI rotating animation strokes the primary
+     * label color equivalent in both themes.
      */
     @Composable
     fun spinnerColor() = COUITheme.colorScheme.onBackground

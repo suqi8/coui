@@ -22,30 +22,23 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-// COUI state layer tokens (colors.xml): coui_color_hover #14000000 / coui_color_hover_dark
-// #26FFFFFF, coui_color_press #1F000000 / coui_color_press_dark #33FFFFFF.
+// COUI: coui_color_hover #14000000 / #26FFFFFF, coui_color_press #1F000000 / #33FFFFFF.
 private const val HOVER_ALPHA_LIGHT = 0x14 / 255f
 private const val HOVER_ALPHA_DARK = 0x26 / 255f
 private const val PRESS_ALPHA_LIGHT = 0x1F / 255f
 private const val PRESS_ALPHA_DARK = 0x33 / 255f
 
-// Real COUI focus feedback is a COUIStrokeDrawable stroke ring; keep the translucent layer
-// as an approximation.
+// COUI focus feedback is a stroke ring (COUIStrokeDrawable); approximated as a translucent layer.
 private const val FOCUS_ALPHA_DELTA = 0.08f
 
-// COUIMaskEffectDrawable animates its state layers with COUISpringForce response 0.3 / bounce 0
-// -> stiffness (2 * PI / 0.3)^2 = 438.65, damping ratio 1 (critically damped).
+// COUI: COUISpringForce response 0.3 / bounce 0 -> stiffness (2 * PI / 0.3)^2 = 438.65, damping ratio 1.
 private val StateLayerSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 
 /**
- * COUI default [Indication] that draws a rectangular COUI state layer overlay.
+ * COUI default [Indication] that draws a rectangular state layer overlay when pressed or hovered.
  *
- * The overlay follows the COUI press/hover tokens: black at 12.2% (press, `coui_color_press`)
- * / 7.8% (hover, `coui_color_hover`) in light theme, and white at 20% (press,
- * `coui_color_press_dark`) / 14.9% (hover, `coui_color_hover_dark`) in dark theme. The theme
- * is inferred from the luminance of [color] — the content color (e.g. `onBackground`), which
- * is bright in dark theme. State transitions animate with the COUI mask effect spring
- * (response 0.3 / bounce 0).
+ * The dark theme variant is selected by the luminance of [color] — the content color
+ * (e.g. `onBackground`), which is bright in dark theme.
  */
 @Immutable
 class COUIIndication(

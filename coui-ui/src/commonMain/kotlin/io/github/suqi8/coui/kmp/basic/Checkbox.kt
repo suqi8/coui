@@ -50,57 +50,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.SinkFeedback
 import io.github.suqi8.coui.kmp.utils.pressable
 
-// COUI checkbox geometry, expressed as fractions of the 24dp drawable viewport
-// (decompiled coui_btn_check_*.xml / coui_btn_part_check_*.xml).
-private val ViewportSize = 24f
-
-// Checked state (coui_btn_check_on_normal.xml): 18x18 rounded square at inset 3,
-// outer corner radius 4, filled with couiColorPrimary.
-private val FillInsetFraction = 3f / ViewportSize
-private val FillSizeFraction = 18f / ViewportSize
-private val FillCornerRadiusFraction = 4f / ViewportSize
-
-// Unchecked state (coui_btn_check_off_normal.xml): 1.3 stroke whose centerline is the
-// 16.4x16.4 rounded rect at inset 3.8 with corner radius 3.2. The centerline is inset in
-// the asset itself, so the outline is never clipped by the shape clip.
-private val RingInsetFraction = 3.8f / ViewportSize
-private val RingSizeFraction = 16.4f / ViewportSize
-private val RingCornerRadiusFraction = 3.2f / ViewportSize
-private val RingStrokeWidthFraction = 1.3f / ViewportSize
-
-// Checkmark centerline derived from the filled outline in coui_btn_check_on_normal.xml
-// (M10.831,14.318 L17.033,8 L18,8.985 ... L7,12.386 L7.967,11.401): both ends are the
-// flat cap midpoints, the elbow is the intersection of the two arm centerlines, and the
-// outline thickness is 1.38 with butt caps and a rounded outer elbow.
-private val CheckStrokeWidthFraction = 1.38f / ViewportSize
-private val CheckStartPoint = Offset(7.4835f / ViewportSize, 11.8935f / ViewportSize)
-private val CheckMiddlePoint = Offset(10.831f / ViewportSize, 15.3035f / ViewportSize)
-private val CheckEndPoint = Offset(17.5165f / ViewportSize, 8.4925f / ViewportSize)
-
-// Indeterminate state (coui_btn_part_check_on_normal.xml): 10x1.6 bar (M7,11.866h10v1.6)
-// centered in the square, revealed from the left in the part AVDs.
-private val BarStartFraction = 7f / ViewportSize
-private val BarLengthFraction = 10f / ViewportSize
-private val BarThicknessFraction = 1.6f / ViewportSize
-
-// Shared easing of the COUI checkbox AVDs ($coui_checkbox_*): cubic-bezier(0.3, 0, 0.1, 1).
-private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
-
-// Every COUI checkbox AVD pops all layers 1 -> 1.08 -> 1 (150ms up + 150ms down).
-private val PopPeakScale = 1.08f
-private val PopHalfDurationMillis = 150
-
-// Clip proportional to the drawn square: corner radius 4 on the 18-wide square, scaled
-// up to the 24dp layout box (24 * 4 / 18). Drawing stays inside the square, so this only
-// bounds press-feedback overdraw with a matching corner geometry.
-private val CheckboxClipShape = RoundedCornerShape((ViewportSize * 4f / 18f).dp)
-
 /**
  * A [Checkbox] component with COUI style, supporting three states: On, Off, and Indeterminate.
- *
- * Visuals follow the COUI checkbox: a rounded square that is outlined when unchecked,
- * filled with a trimmed checkmark when checked, and filled with a centered bar when
- * indeterminate.
  *
  * @param state The current [ToggleableState] of the [Checkbox].
  * @param onClick The callback to be called when the [Checkbox] is clicked. The caller is
@@ -123,9 +74,7 @@ fun Checkbox(
 
     val transition = updateTransition(state, label = "CheckboxTransition")
 
-    // Fill alpha timeline from the COUI AVDs: fades in over the first 150ms when leaving
-    // Off, holds for 150ms and fades out over the last 150ms when returning to Off, and
-    // stays opaque between On and Indeterminate.
+    // Fill alpha timeline from the COUI AVDs.
     val fillFractionState = transition.animateFloat(
         transitionSpec = {
             if (targetState != ToggleableState.Off) {
@@ -140,16 +89,13 @@ fun Checkbox(
         label = "FillFraction",
     ) { if (it != ToggleableState.Off) 1f else 0f }
 
-    // Checkmark trim: trimPathEnd runs 0 <-> 1 over the full 300ms in every COUI
-    // transition that involves the checkmark; trimPathStart stays 0.
+    // Checkmark trim: trimPathEnd runs 0 <-> 1 over the full 300ms.
     val checkFractionState = transition.animateFloat(
         transitionSpec = { tween(durationMillis = 300, easing = CouiCheckboxEasing) },
         label = "CheckFraction",
     ) { if (it == ToggleableState.On) 1f else 0f }
 
-    // Indeterminate bar reveal from the part AVD clip-path morphs: grows over 300ms from
-    // Off, holds 100ms then grows over 200ms from On, retracts over 200ms towards On and
-    // over 300ms towards Off.
+    // Indeterminate bar reveal from the part AVD clip-path morphs.
     val barFractionState = transition.animateFloat(
         transitionSpec = {
             when {
@@ -180,9 +126,7 @@ fun Checkbox(
         popScale.animateTo(1f, tween(PopHalfDurationMillis, easing = CouiCheckboxEasing))
     }
 
-    // COUI keeps each layer's own color and crossfades layers instead of morphing colors:
-    // the outline keeps the unchecked color while the fill, checkmark and bar keep the
-    // checked colors throughout every transition.
+    // COUI crossfades layers instead of morphing colors.
     val ringColor = colors.uncheckedBackgroundColor(enabled)
     val fillColor = colors.checkedBackgroundColor(enabled)
     val markColor = colors.checkedForegroundColor(enabled)
@@ -218,7 +162,6 @@ fun Checkbox(
     Box(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
-            // COUI checkbox drawables (coui_btn_check_*.xml) have a 24dp intrinsic size.
             .requiredSize(24.dp)
             .pressable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -258,8 +201,6 @@ fun Checkbox(
                     scale(scale = popScale.value) {
                         val fillFraction = fillFractionState.value
                         if (fillFraction < 1f) {
-                            // Unchecked outline sits beneath the fill, matching the COUI
-                            // AVD layer stack; the opaque fill fully covers it.
                             drawRoundRect(
                                 color = ringColor,
                                 topLeft = ringTopLeft,
@@ -396,3 +337,38 @@ data class CheckboxColors(
 
     internal fun uncheckedBackgroundColor(enabled: Boolean): Color = if (enabled) uncheckedBackgroundColor else disabledUncheckedBackgroundColor
 }
+
+// COUI checkbox geometry, expressed as fractions of the 24dp drawable viewport (coui_btn_check_*.xml).
+private val ViewportSize = 24f
+
+// Checked state (coui_btn_check_on_normal.xml): 18x18 rounded square at inset 3, corner radius 4.
+private val FillInsetFraction = 3f / ViewportSize
+private val FillSizeFraction = 18f / ViewportSize
+private val FillCornerRadiusFraction = 4f / ViewportSize
+
+// Unchecked state (coui_btn_check_off_normal.xml): 1.3 stroke on the 16.4x16.4 rounded rect at inset 3.8.
+private val RingInsetFraction = 3.8f / ViewportSize
+private val RingSizeFraction = 16.4f / ViewportSize
+private val RingCornerRadiusFraction = 3.2f / ViewportSize
+private val RingStrokeWidthFraction = 1.3f / ViewportSize
+
+// Checkmark centerline derived from the filled outline in coui_btn_check_on_normal.xml.
+private val CheckStrokeWidthFraction = 1.38f / ViewportSize
+private val CheckStartPoint = Offset(7.4835f / ViewportSize, 11.8935f / ViewportSize)
+private val CheckMiddlePoint = Offset(10.831f / ViewportSize, 15.3035f / ViewportSize)
+private val CheckEndPoint = Offset(17.5165f / ViewportSize, 8.4925f / ViewportSize)
+
+// Indeterminate state (coui_btn_part_check_on_normal.xml): 10x1.6 centered bar revealed from the left.
+private val BarStartFraction = 7f / ViewportSize
+private val BarLengthFraction = 10f / ViewportSize
+private val BarThicknessFraction = 1.6f / ViewportSize
+
+// Shared easing of the COUI checkbox AVDs: cubic-bezier(0.3, 0, 0.1, 1).
+private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+// Every COUI checkbox AVD pops all layers 1 -> 1.08 -> 1 (150ms up + 150ms down).
+private val PopPeakScale = 1.08f
+private val PopHalfDurationMillis = 150
+
+// Clip proportional to the drawn square, scaled up to the 24dp layout box (24 * 4 / 18).
+private val CheckboxClipShape = RoundedCornerShape((ViewportSize * 4f / 18f).dp)

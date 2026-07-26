@@ -58,18 +58,14 @@ import kotlinx.coroutines.launch
 internal val CascadingPopupCornerRadius = 16.dp
 
 /**
- * Vertical overlap between the main menu anchor row and the secondary menu. The secondary's
- * top edge sits this much above the anchor row's top edge.
- * Source: coui_popup_list_window_vertical_overlap_between_main_and_sub_menu (14dp),
- * consumed by PopupMenuLocateHelper.setupSubMenuLocateRule (small-screen branch).
+ * Vertical overlap between the anchor row's top edge and the secondary menu's top edge.
+ * COUI `coui_popup_list_window_vertical_overlap_between_main_and_sub_menu`.
  */
 internal val MainSubMenuVerticalOverlap = 14.dp
 
 /**
- * Minimum gap reserved above the secondary menu inside the available area; the secondary's
- * max height is the available height minus this gap.
- * Source: coui_popup_list_window_min_gap_to_top (12dp), consumed by
- * PopupMenuLocateHelper.prepareShowSubMenu (small-screen branch).
+ * Minimum gap reserved above the secondary menu inside the available area.
+ * COUI `coui_popup_list_window_min_gap_to_top`.
  */
 internal val SubMenuMinGapToTop = 12.dp
 
@@ -461,8 +457,7 @@ private fun CascadingMorphSubLayout(
             )
         }
 
-        // COUI caps the secondary menu at the available height minus min_gap_to_top so a gap
-        // to the window top remains even for tall submenus (PopupMenuLocateHelper.prepareShowSubMenu).
+        // COUI caps the secondary menu so a gap to the window top remains even for tall submenus.
         val secondaryMaxHeightPx = (resolvedMaxHeightPx - SubMenuMinGapToTop.roundToPx())
             .coerceAtLeast(0)
 
@@ -586,7 +581,7 @@ internal fun computeSecondaryRect(
     secondarySize: IntSize,
     windowBounds: IntRect,
     layoutDirection: LayoutDirection,
-    verticalOverlapPx: Int = 0,
+    verticalOverlapPx: Int,
 ): IntRect {
     val ltr = layoutDirection == LayoutDirection.Ltr
     // Leading-edge align; fall back to the opposite edge if the trailing side overflows.
@@ -608,9 +603,8 @@ internal fun computeSecondaryRect(
             else -> (windowBounds.right - secondarySize.width).coerceAtLeast(windowBounds.left)
         }
     }
-    // COUI small-screen rule: the secondary top edge overlaps the anchor row by
-    // [verticalOverlapPx]; when that would overflow, pin to the window bottom
-    // (PopupMenuLocateHelper.setupSubMenuLocateRule#getOffsetY).
+    // COUI small-screen rule: overlap the anchor row top by [verticalOverlapPx];
+    // pin to the window bottom on overflow.
     val preferredTop = anchor.top - verticalOverlapPx
     val top = if (preferredTop + secondarySize.height <= windowBounds.bottom) {
         preferredTop

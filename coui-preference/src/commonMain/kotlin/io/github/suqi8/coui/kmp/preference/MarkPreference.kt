@@ -25,15 +25,9 @@ import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
 /**
  * A single-select row with a selection mark, mirroring COUIMarkPreference.
  *
- * The mark renders the COUI 16 coui_btn_check_mark selector, which resolves to the radio
- * drawables (coui_btn_radio_on / coui_btn_radio_off, 24dp): a primary disc with a solid center
- * dot when [checked], and an outline ring otherwise. The mark itself is not clickable
- * (coui_preference_widget_mark.xml sets clickable="false") — the whole row is the click target.
- * COUI places the mark at the end of the row by default (TAIL_MARK); use [markLocation] to move
- * it to the start (HEAD_MARK).
- *
- * Rows are meant to be used as a single-select group: clicking a row invokes [onClick] and the
- * caller moves the checked state to that row.
+ * The mark itself is not clickable — the whole row is the click target. Rows are meant to be
+ * used as a single-select group: clicking a row invokes [onClick] and the caller moves the
+ * checked state to that row.
  *
  * @param title The title of the [MarkPreference].
  * @param checked Whether this row currently carries the mark.
@@ -42,12 +36,10 @@ import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
  * @param titleColor The color of the title.
  * @param summary The summary of the [MarkPreference].
  * @param summaryColor The color of the summary.
- * @param markColors The [RadioButtonColors] of the mark. The COUI 16 mark shares the radio toggle
- *   drawables, so it shares [RadioButtonDefaults.radioButtonColors] too.
+ * @param markColors The [RadioButtonColors] of the mark.
  * @param startAction The [Composable] content on the start side of the [MarkPreference].
  * @param endActions The [Composable] content on the end side of the [MarkPreference].
- * @param markLocation The location of the mark, [MarkLocation.End] (COUI TAIL_MARK, default) or
- *   [MarkLocation.Start] (COUI HEAD_MARK).
+ * @param markLocation The location of the mark, [MarkLocation.End] or [MarkLocation.Start].
  * @param bottomAction The [Composable] content at the bottom of the [MarkPreference].
  * @param insideMargin The margin inside the [MarkPreference].
  * @param holdDownState Used to determine whether it is in the pressed state.
@@ -121,10 +113,6 @@ fun MarkPreference(
             if (markLocation == MarkLocation.End) {
                 Row(
                     modifier = Modifier
-                        // The 8dp here plus the 8dp BasicComponent center-end spacer keeps a
-                        // 16dp minimum gap between the text block and the mark, matching COUI
-                        // coui_preference_widget_mark_margin_left (16dp) in
-                        // coui_preference_widget_mark.xml.
                         .padding(start = 8.dp)
                         .align(Alignment.CenterVertically),
                 ) {
@@ -153,8 +141,6 @@ private fun MarkPreferenceMark(
     markColors: RadioButtonColors,
     modifier: Modifier = Modifier,
 ) {
-    // The mark widget itself is non-interactive (coui_preference_widget_mark.xml sets
-    // focusable="false" / clickable="false"); the row handles clicks.
     RadioButton(
         modifier = modifier,
         selected = checked,
@@ -166,7 +152,7 @@ private fun MarkPreferenceMark(
 
 /**
  * The location of the mark in a [MarkPreference]: [End] maps to COUI TAIL_MARK (default),
- * [Start] maps to COUI HEAD_MARK.
+ * [Start] to HEAD_MARK.
  */
 enum class MarkLocation {
     Start,

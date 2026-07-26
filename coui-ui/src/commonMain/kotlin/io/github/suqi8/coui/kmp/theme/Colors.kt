@@ -337,9 +337,8 @@ class Colors(
     )
 }
 
+/** COUI light scheme. COUI: coui_color_blue #0066FF; gray page surface, white cards and dialog panels. */
 fun lightColorScheme(
-    // ColorOS 16 (COUI) light scheme. Values reverse-engineered from com.oplus.uxdesign /
-    // com.coloros.alarmclock; see docs/coui-retheme-spec.md. primary = coui_color_blue #0066FF.
     primary: Color = Color(0xFF0066FF),
     onPrimary: Color = Color.White,
     primaryVariant: Color = Color(0xFF0066FF),
@@ -370,8 +369,6 @@ fun lightColorScheme(
     tertiaryContainer: Color = Color(0x260066FF),
     onTertiaryContainer: Color = Color(0xFF0066FF),
     tertiaryContainerVariant: Color = Color(0x260066FF),
-    // ColorOS layers white cards on a gray base: surface = gray page, surfaceContainer/Variant = white card,
-    // background = solid dialog/sheet panel (kept white, not gray). See docs/coui-retheme-spec.md §1.
     background: Color = Color.White,
     onBackground: Color = Color(0xE6000000),
     onBackgroundVariant: Color = Color(0x8A000000),
@@ -451,9 +448,8 @@ fun lightColorScheme(
     sliderBackground,
 )
 
+/** COUI dark scheme. COUI: coui_color_blue_dark #247CFF; pure black page surface, translucent white cards. */
 fun darkColorScheme(
-    // ColorOS 16 (COUI) dark scheme. primary = coui_color_blue_dark #247CFF; page surface is pure
-    // black (AMOLED), cards are translucent white. See docs/coui-retheme-spec.md.
     primary: Color = Color(0xFF247CFF),
     onPrimary: Color = Color.White,
     primaryVariant: Color = Color(0xFF247CFF),

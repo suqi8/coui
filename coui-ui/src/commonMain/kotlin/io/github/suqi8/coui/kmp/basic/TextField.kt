@@ -115,14 +115,11 @@ enum class TextFieldMode { Rectangle, Line, None }
  *   [TextFieldMode.Rectangle]).
  * @param label The label (hint) to be displayed when the [TextField] is empty.
  * @param useLabelAsPlaceholder Whether the label behaves as a plain placeholder that
- *   disappears once text is entered. `true` (default) matches ColorOS Settings, where
- *   every COUIEditText is created with couiHintEnabled=false (HintDisable styles).
- *   Set to `false` to enable the COUI HintAnim floating-label animation, where the
- *   label shrinks to 10sp and floats up when the field is focused or filled.
+ *   disappears once text is entered (COUI default). Set to `false` to enable the COUI
+ *   HintAnim floating-label animation.
  * @param justShowFocusLine Only used by [TextFieldMode.Line]: hide the resting
  *   underline and show just the focused expanding line, mirroring
- *   COUIInputPreference couiJustShowFocusLine (default true in ColorOS Settings
- *   card-preference inputs).
+ *   COUIInputPreference couiJustShowFocusLine.
  * @param enabled Whether the [TextField] is enabled.
  * @param readOnly Whether the [TextField] is read-only.
  * @param isError Whether the [TextField] is in error state. Turning this on tints
@@ -606,21 +603,24 @@ object TextFieldDefaults {
     /** The default corner radius of the [TextField] (COUI coui_textinput_corner_radius). */
     val CornerRadius = 10.dp
 
-    /** The default inside margin of the [TextField] in [TextFieldMode.Rectangle].
+    /**
+     * The default inside margin of the [TextField] in [TextFieldMode.Rectangle].
      * From COUI Widget.COUI.EditText.HintAnim.Rectangle: paddingLeft 16dp / rectModePaddingTop 12dp /
      * paddingBottom 12dp (COUI paddingRight is 10dp to leave room for the trailing delete icon;
      * the symmetric [DpSize] API keeps 16dp on both sides).
      */
     val InsideMargin = DpSize(16.dp, 12.dp)
 
-    /** The default inside margin of the [TextField] in [TextFieldMode.Line].
+    /**
+     * The default inside margin of the [TextField] in [TextFieldMode.Line].
      * From COUI Widget.COUI.EditText.HintAnim.Line.HintDisable (the style ColorOS Settings
      * uses for dialog inputs): horizontal padding 0dp,
      * coui_input_edit_text_no_title_padding_top / _bottom 15dp.
      */
     val LineInsideMargin = DpSize(0.dp, 15.dp)
 
-    /** The default inside margin of the [TextField] in [TextFieldMode.None].
+    /**
+     * The default inside margin of the [TextField] in [TextFieldMode.None].
      * From COUI Widget.COUI.EditText base style: vertical padding 9dp.
      */
     val NoneInsideMargin = DpSize(0.dp, 9.dp)
@@ -641,8 +641,10 @@ object TextFieldDefaults {
     /** The default border width when the [TextField] is not focused (COUI coui_textinput_stroke_width). */
     internal val UnfocusedBorderWidth = 0.33.dp
 
-    /** The label font size when the label is floating above the text
-     * (COUI collapsedTextSize = coui_textinput_hint_text_size: 10sp). */
+    /**
+     * The label font size when the label is floating above the text
+     * (COUI collapsedTextSize = coui_textinput_hint_text_size: 10sp).
+     */
     internal val LabelFontSizeFloating = 10.dp
 
     /** Horizontal amplitude of the error shake animation (COUI coui_edit_text_shake_amplitude). */

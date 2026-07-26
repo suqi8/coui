@@ -19,10 +19,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 /**
  * A divider is a thin line that groups content in lists and layouts.
  *
- * For COUI card lists, place one divider between each pair of adjacent rows inside a
- * [Card] (never after the last row) and inset it with
- * `Modifier.padding(horizontal = DividerDefaults.CardInset)`. See [DividerDefaults.CardInset]
- * for the icon-row variant.
+ * For COUI card lists, place one divider between each pair of adjacent rows inside a [Card]
+ * (never after the last row) and inset it with [DividerDefaults.CardInset].
  *
  * @param modifier the [Modifier] to be applied to this divider line.
  * @param thickness thickness of this divider line. Using [Dp.Hairline] will produce a single pixel
@@ -71,9 +69,6 @@ object DividerDefaults {
 
     /**
      * Default thickness of the divider line (COUI coui_list_divider_height).
-     *
-     * COUI draws it as max(1px, 0.33dp) overlapping the bottom edge of the row above,
-     * so it does not add to the row height.
      */
     val Thickness = 0.33.dp
 
@@ -84,16 +79,8 @@ object DividerDefaults {
 
     /**
      * Recommended horizontal inset for a [HorizontalDivider] placed between rows inside a [Card]
-     * (COUI card list rule, verified against com.android.settings):
-     *
-     * - A divider is drawn only between adjacent rows (COUI head/middle positions); never after
-     *   the last row of a card and never around a single-row card.
-     * - Text-only rows: inset both sides by [CardInset] (16dp from the card edge, matching the
-     *   row content padding — COUI aligns the divider start with the title and insets the end by
-     *   coui_preference_divider_default_horizontal_padding).
-     * - Rows with a leading icon: keep the end inset at [CardInset] but align the start inset
-     *   with the title text start (16dp + icon size + 16dp gap; 68dp from the card edge for the
-     *   standard 36dp icon layout, cf. coui_list_card_divider_margin_start).
+     * (COUI coui_preference_divider_default_horizontal_padding). For rows with a leading icon,
+     * align the start inset with the title text start instead.
      *
      * Usage: `HorizontalDivider(Modifier.padding(horizontal = DividerDefaults.CardInset))`.
      */

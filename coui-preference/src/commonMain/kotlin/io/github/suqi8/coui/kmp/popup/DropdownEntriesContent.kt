@@ -43,10 +43,6 @@ internal fun DropdownEntriesPopupContent(
             }
         }
         if (entryIdx != lastEntryIdx) {
-            // COUI popup group divider: a full-bleed 4dp band
-            // (coui_popup_list_group_divider_height) tinted with
-            // coui_popup_list_group_divider_color (#14000000 in both light and dark —
-            // the resource has no values-night override), no extra margins.
             HorizontalDivider(
                 thickness = DropdownDefaults.PopupGroupDividerThickness,
                 color = DropdownDefaults.PopupGroupDividerColor,
@@ -82,7 +78,6 @@ internal fun LazyListScope.dropdownEntriesDialogItems(
         }
         if (entryIdx != lastEntryIdx) {
             item(key = "divider-$entryIdx") {
-                // Same COUI group divider treatment as the popup variant.
                 HorizontalDivider(
                     thickness = DropdownDefaults.PopupGroupDividerThickness,
                     color = DropdownDefaults.PopupGroupDividerColor,

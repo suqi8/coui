@@ -2,26 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
@@ -115,7 +115,6 @@ private fun StepperButton(
     contentColor: Color,
     onClick: () -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     IconButton(
         onClick = onClick,
         enabled = enabled,
@@ -128,30 +127,27 @@ private fun StepperButton(
             modifier = Modifier.size(StepperDefaults.ButtonSize),
             contentAlignment = Alignment.Center,
         ) {
-            // Draw the minus/plus glyph with simple strokes so no icon dependency is needed.
-            // Geometry matches COUI ic_minus_sign / ic_plus_sign: a 1.6dp round-cap stroke
-            // spanning 15.2dp (8.4..23.6) inside the 32dp button.
-            androidx.compose.foundation.Canvas(
-                modifier = Modifier.size(StepperDefaults.GlyphSize),
-            ) {
-                val strokeW = StepperDefaults.GlyphStrokeWidth.toPx()
+            // COUI ic_minus_sign / ic_plus_sign: a 1.6dp round-cap stroke spanning 15.2dp
+            // (8.4..23.6) inside the 32dp button, drawn directly to avoid an icon dependency.
+            Canvas(modifier = Modifier.size(StepperDefaults.GlyphSize)) {
+                val strokeWidth = StepperDefaults.GlyphStrokeWidth.toPx()
                 val cx = size.width / 2f
                 val cy = size.height / 2f
-                val half = (size.minDimension - strokeW) / 2f
+                val half = (size.minDimension - strokeWidth) / 2f
                 drawLine(
                     color = contentColor,
-                    start = androidx.compose.ui.geometry.Offset(cx - half, cy),
-                    end = androidx.compose.ui.geometry.Offset(cx + half, cy),
-                    strokeWidth = strokeW,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    start = Offset(cx - half, cy),
+                    end = Offset(cx + half, cy),
+                    strokeWidth = strokeWidth,
+                    cap = StrokeCap.Round,
                 )
                 if (symbol == StepperSymbol.Plus) {
                     drawLine(
                         color = contentColor,
-                        start = androidx.compose.ui.geometry.Offset(cx, cy - half),
-                        end = androidx.compose.ui.geometry.Offset(cx, cy + half),
-                        strokeWidth = strokeW,
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        start = Offset(cx, cy - half),
+                        end = Offset(cx, cy + half),
+                        strokeWidth = strokeWidth,
+                        cap = StrokeCap.Round,
                     )
                 }
             }
@@ -162,19 +158,19 @@ private fun StepperButton(
 /** Contains default values used by [Stepper]. */
 object StepperDefaults {
     /** The diameter of each stepper button (COUI stepper_button_size). */
-    val ButtonSize: Dp = 32.dp
+    val ButtonSize = 32.dp
 
     /** The visual extent of the +/- glyph inside each button (COUI ic_minus_sign / ic_plus_sign span 8.4..23.6dp). */
-    val GlyphSize: Dp = 15.2.dp
+    val GlyphSize = 15.2.dp
 
     /** The stroke width of the +/- glyph (COUI ic_minus_sign / ic_plus_sign strokeWidth). */
-    val GlyphStrokeWidth: Dp = 1.6.dp
+    val GlyphStrokeWidth = 1.6.dp
 
     /** The spacing between buttons and the indicator (COUI indicator horizontal margin). */
-    val Spacing: Dp = 12.dp
+    val Spacing = 12.dp
 
     /** The minimum width reserved for the value indicator (COUI indicator minWidth). */
-    val IndicatorMinWidth: Dp = 44.dp
+    val IndicatorMinWidth = 44.dp
 
     /** The default text style of the value indicator (COUIStepperViewTextDefStyle: 18sp, sans-serif-medium). */
     @Composable
@@ -202,12 +198,12 @@ object StepperDefaults {
  * @param contentColor The color of the glyphs and the value when enabled.
  * @param disabledContentColor The color of the glyphs and the value when disabled.
  */
-@androidx.compose.runtime.Immutable
+@Immutable
 data class StepperColors(
     val buttonColor: Color,
     val contentColor: Color,
     val disabledContentColor: Color,
 ) {
-    @androidx.compose.runtime.Stable
+    @Stable
     internal fun contentColor(enabled: Boolean): Color = if (enabled) contentColor else disabledContentColor
 }

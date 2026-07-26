@@ -122,6 +122,7 @@ fun LoadingButton(
     }
 }
 
+/** Contains default values used by [LoadingButton]. */
 object LoadingButtonDefaults {
 
     /** The radius of each loading dot (COUI coui_loading_btn_circle_radius). */

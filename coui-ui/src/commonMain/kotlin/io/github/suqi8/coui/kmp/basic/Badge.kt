@@ -92,11 +92,11 @@ fun BadgeBox(
     content: @Composable () -> Unit,
 ) {
     Layout(
+        modifier = modifier,
         content = {
             Box { content() }
             Box { badge() }
         },
-        modifier = modifier,
     ) { measurables, constraints ->
         val overhangPx = overhang.roundToPx()
         val outsetPx = maxOf(overhangPx, 0)
@@ -221,6 +221,7 @@ private fun badgeWidth(count: Int, height: Dp): Dp {
     return if (base > height) base else height
 }
 
+/** Contains default values used by [Badge] and [BadgeBox]. */
 object BadgeDefaults {
 
     /** The diameter of the plain dot form (COUI coui_dot_diameter). */

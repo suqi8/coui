@@ -249,8 +249,10 @@ object InputViewDefaults {
     /** The corner radius of the card (COUI couiRoundCornerM = coui_round_corner_m). */
     val CornerRadius = 12.dp
 
-    /** The horizontal content padding inside the card (COUI coui_single_input_card_view.xml
-     * paddingStart/End 32dp minus the 16dp coui_preference_input_margin_horizontal card inset). */
+    /**
+     * The horizontal content padding inside the card (COUI coui_single_input_card_view.xml
+     * paddingStart/End 32dp minus the 16dp coui_preference_input_margin_horizontal card inset).
+     */
     val ContentPadding = 16.dp
 
     /** The top padding of the title (COUI coui_input_preference_single_title_padding_top). */
@@ -262,13 +264,17 @@ object InputViewDefaults {
     /** The minimum height of the title (COUI coui_inputView_title_minheight). */
     val TitleMinHeight = 22.dp
 
-    /** The vertical padding of the field without a title
-     * (COUI coui_input_edit_text_no_title_padding_top / _bottom). */
+    /**
+     * The vertical padding of the field without a title
+     * (COUI coui_input_edit_text_no_title_padding_top / _bottom).
+     */
     val FieldPaddingVertical = 15.dp
 
-    /** The bottom padding of the field when a title is shown
+    /**
+     * The bottom padding of the field when a title is shown
      * (COUI coui_input_preference_single_title_padding_bottom; top padding is 0,
-     * coui_input_edit_text_has_title_padding_top). */
+     * coui_input_edit_text_has_title_padding_top).
+     */
     val FieldPaddingBottomWithTitle = 12.dp
 
     /** The vertical padding of the multi-line field (COUI coui_card_multi_edittext_padding). */
@@ -295,8 +301,10 @@ object InputViewDefaults {
     /** The default maximum number of lines (COUIInputView / COUICardMultiInputView MAX_LINE). */
     val MaxLines: Int = 5
 
-    /** The default text style of the title
-     * (COUI COUIInputTitleStyle / couiTextAppearanceHeadline6: 16sp, sans-serif-medium). */
+    /**
+     * The default text style of the title
+     * (COUI COUIInputTitleStyle / couiTextAppearanceHeadline6: 16sp, sans-serif-medium).
+     */
     @Composable
     fun titleTextStyle(): TextStyle = COUITheme.textStyles.headline2.copy(fontWeight = FontWeight.Medium)
 

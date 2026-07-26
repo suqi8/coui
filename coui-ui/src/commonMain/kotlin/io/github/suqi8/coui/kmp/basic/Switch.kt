@@ -72,7 +72,7 @@ import kotlin.math.roundToInt
  * @param colors The [SwitchColors] of the [Switch].
  * @param enabled Whether the [Switch] is enabled.
  * @param isLoading Whether the [Switch] is in the COUI loading state: the thumb shrinks away and
- * is replaced by a spinning gradient arc; touch input is swallowed while loading.
+ *   is replaced by a spinning gradient arc; touch input is swallowed while loading.
  */
 @Composable
 fun Switch(
@@ -88,18 +88,13 @@ fun Switch(
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
 
-    // COUI fires the OPLUS linear-motor toggle waveform (302) on switch toggle; off-ColorOS this
-    // falls back to the closest standard haptic.
     val couiHaptic = rememberCouiHaptic()
 
     val capsuleShape = CircleShape
-    // COUI toggle interpolator: PathInterpolatorCompat.create(0.3f, 0f, 0.1f, 1f), set on the
-    // toggle AnimatorSet so every child animator (translation, stretch, bar color) inherits it
-    // (COUISwitch.animateWhenStateChanged()).
+    // COUI toggle interpolator, shared by every child animator (COUISwitch.animateWhenStateChanged()).
     val couiToggleEasing = remember { CubicBezierEasing(0.3f, 0f, 0.1f, 1f) }
 
-    // COUI switch is tap-driven: the thumb only animates between the off/on positions on toggle,
-    // it never tracks the finger (COUISwitch.onTouchEvent has no ACTION_MOVE).
+    // COUI switch is tap-driven: the thumb never tracks the finger.
     val thumbOffset = remember {
         Animatable(
             if (checked) SwitchDefaults.ThumbEndOffset else SwitchDefaults.ThumbStartOffset,
@@ -107,10 +102,7 @@ fun Switch(
         )
     }
 
-    // COUI thumb stretch ("tail drag"): on toggle, circleScaleX goes 1.0 -> 1.3 over 133ms, then
-    // back to 1.0 over 250ms after a 133ms start delay, so the stretch ends exactly with the
-    // 383ms translation (COUISwitch.animateWhenStateChanged()). It is NOT a press effect:
-    // onTouchEvent only drives the press mask color, never the thumb geometry.
+    // COUI thumb stretch ("tail drag"), played on toggle only (COUISwitch.animateWhenStateChanged()).
     val thumbSquash = remember { Animatable(1f) }
     var isFirstComposition by remember { mutableStateOf(true) }
     LaunchedEffect(checked) {
@@ -118,8 +110,7 @@ fun Switch(
             isFirstComposition = false
             return@LaunchedEffect
         }
-        // A new toggle cancel()s and end()s the running AnimatorSet first, snapping translation
-        // and stretch to their settled values before restarting (COUISwitch.setChecked()).
+        // A new toggle snaps the running animation to its settled values first (COUISwitch.setChecked()).
         thumbOffset.snapTo(if (checked) SwitchDefaults.ThumbStartOffset else SwitchDefaults.ThumbEndOffset)
         thumbSquash.snapTo(1f)
         launch {
@@ -141,10 +132,7 @@ fun Switch(
         animationSpec = tween(durationMillis = 450, easing = couiToggleEasing),
     )
 
-    // COUI press/hover feedback is a translucent overlay on the track tint (coui_color_press 12% /
-    // coui_color_hover 7.8%), composited over the bar color. The overlay tone follows the scheme
-    // (black in light, white in dark), so derive it from onSurface (COUISwitch.drawBar() +
-    // configStateEffectAnimator()).
+    // COUI press/hover feedback: translucent overlay over the bar color (coui_color_press / coui_color_hover).
     val overlayTone = COUITheme.colorScheme.onSurface
     val pressOverlayState = animateColorAsState(
         when {
@@ -155,17 +143,7 @@ fun Switch(
         },
     )
 
-    // COUI loading (COUISwitch.startLoading()/stopLoading(), non-themed path —
-    // coui_switch_theme_enable is false on ColorOS 16):
-    // - enter (initStartLoadingAnimator): the thumb shrinks away about its centre (circleScale
-    //   1 -> 0, 433ms) while the spinner fades in and grows over it (loadingAlpha 0 -> 1 and
-    //   loadingScale 0.5 -> 1, both 550ms), all three on the 0.3/0/0.1/1 path interpolator;
-    //   loadingRotation spins 0 -> 360 per 800ms, restarting forever, with
-    //   COUILinearInterpolator (a plain LinearInterpolator).
-    // - exit (stopLoading() + initStopLoadingAnimator): the rotation animator is cancelled so
-    //   the spinner freezes, the thumb snaps back instantly (setCircleScale(1.0f), no
-    //   animation), and the spinner fades out (loadingAlpha 1 -> 0, 100ms, same interpolator).
-    // The track keeps its regular bar color throughout.
+    // COUI loading state (COUISwitch.startLoading()/stopLoading()).
     val thumbScale = remember { Animatable(1f) }
     val loadingAlpha = remember { Animatable(0f) }
     val loadingScale = remember { Animatable(0.5f) }
@@ -231,10 +209,8 @@ fun Switch(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .offset {
-                    // COUISwitch.setOuterCircleRectF(): the leading edge (the one facing the
-                    // target position) follows circleTranslation exactly, while the trailing
-                    // edge sits at leading -/+ outerCircleWidth * circleScaleX — the whole
-                    // stretch extends backwards, against the direction of travel (tail drag).
+                    // The stretch extends backwards, against the direction of travel
+                    // (COUISwitch.setOuterCircleRectF()).
                     val thumbPx = SwitchDefaults.ThumbSize.roundToPx()
                     val stretchedPx = (thumbPx * thumbSquash.value).roundToInt()
                     val restingLeft = thumbOffset.value.roundToPx()
@@ -242,10 +218,7 @@ fun Switch(
                     IntOffset(left, 0)
                 }
                 .layout { measurable, _ ->
-                    // Stretch by resizing the node instead of scaling it: COUISwitch widens the
-                    // thumb RectF while keeping the corner radius at outerCircleWidth / 2, so
-                    // the stretched thumb is a capsule (not an ellipse) and the drop shadow
-                    // follows the stretched outline like the paint shadow layer does.
+                    // Stretch by resizing instead of scaling so the thumb stays a capsule.
                     val thumbPx = SwitchDefaults.ThumbSize.roundToPx()
                     val stretchedPx = (thumbPx * thumbSquash.value).roundToInt()
                     val placeable = measurable.measure(Constraints.fixed(stretchedPx, thumbPx))
@@ -256,26 +229,20 @@ fun Switch(
                 modifier = Modifier
                     .matchParentSize()
                     .graphicsLayer {
-                        // COUI loading hides the thumb by scaling it about its centre
-                        // (drawOuterCircle applies canvas.scale(circleScale)); the paint shadow
-                        // layer belongs to the same paint, so the shadow collapses with it.
+                        // COUI loading hides the thumb by scaling it about its centre.
                         scaleX = thumbScale.value
                         scaleY = thumbScale.value
                     }
                     .then(
                         if (enabled) {
-                            // COUI thumb shadow: COUISwitch.setPaintShadowLayer() applies
-                            // setShadowLayer(8px, 0, 4px, argb(25, 0, 0, 0)) to the outer-circle
-                            // paint; setEnabled(false) clears the layer, so no shadow when disabled.
+                            // COUISwitch clears the shadow layer when disabled.
                             Modifier.dropShadow(shape = CircleShape, shadow = SwitchDefaults.ThumbShadow)
                         } else {
                             Modifier
                         },
                     )
                     .drawBehind {
-                        // ColorOS 16 COUISwitch draws the thumb as a single round rect with corner
-                        // radius outerCircleWidth / 2 (drawOuterCircle) — a circle at rest, a capsule
-                        // while stretched; the inner-circle fields are vestigial and never drawn.
+                        // A circle at rest, a capsule while stretched (COUISwitch.drawOuterCircle).
                         drawRoundRect(
                             color = thumbColorState.value,
                             cornerRadius = CornerRadius(size.height / 2f),
@@ -286,22 +253,14 @@ fun Switch(
                 modifier = Modifier
                     .matchParentSize()
                     .drawBehind {
-                        // COUISwitch.drawLoading(): the loading drawable is stamped over the thumb
-                        // rect (mOuterCircleRectF), scaled by loadingScale and rotated by
-                        // loadingRotation about the thumb centre, with loadingAlpha applied.
-                        // switch_loading.png (40x40 white arc, identical in com.oplus.uxdesign):
-                        // stroke width 8/40 of the side, centre-line diameter 32/40 (the outer
-                        // edge touches the thumb bounds), a hard butt-capped head, and an alpha
-                        // tail fading linearly to fully transparent over a ~312 deg sweep,
-                        // leaving ~48 deg of the ring empty.
+                        // COUISwitch.drawLoading(): arc geometry follows switch_loading.png
+                        // (stroke 8/40, centre-line diameter 32/40, ~312 deg alpha-tail sweep).
                         val alpha = loadingAlpha.value
                         if (alpha > 0f) {
                             val side = size.minDimension
                             val strokeWidth = side * 0.2f
                             val arcDiameter = side * 0.8f
                             val topLeft = Offset((size.width - arcDiameter) / 2f, (size.height - arcDiameter) / 2f)
-                            // The PNG is plain #ffffff, matching the thumb color, so consume the
-                            // themed thumb color to stay correct off-ColorOS.
                             val color = thumbColorState.value
                             val brush = Brush.sweepGradient(
                                 0f to color.copy(alpha = 0f),
@@ -353,11 +312,8 @@ object SwitchDefaults {
     val Travel: Dp = ThumbEndOffset - ThumbStartOffset
 
     /**
-     * The drop shadow under the thumb while the [Switch] is enabled.
-     *
-     * COUISwitch.setPaintShadowLayer() hardcodes setShadowLayer(8px, 0px, 4px, argb(25, 0, 0, 0));
-     * at the 3.5x (560 dpi) ColorOS reference density that is a 2.29dp blur with a 1.14dp
-     * downward offset. The layer is cleared while the switch is disabled.
+     * The drop shadow under the thumb while the [Switch] is enabled
+     * (COUISwitch.setPaintShadowLayer at the 3.5x ColorOS reference density).
      */
     val ThumbShadow: Shadow = Shadow(
         radius = 2.29.dp,
@@ -366,11 +322,7 @@ object SwitchDefaults {
     )
 
     /**
-     * The default colors for the [Switch].
-     *
-     * COUISwitch keeps the thumb white in both states: outerCircleColor and
-     * outerUnCheckedCircleColor both resolve to #ffffff, so the dynamic-color branch
-     * uses the same color for the checked and unchecked thumb.
+     * The default colors for the [Switch]. COUISwitch keeps the thumb white in both states.
      */
     @Composable
     fun switchColors(

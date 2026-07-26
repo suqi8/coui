@@ -67,8 +67,6 @@ fun ArrowPreference(
         endActions = {
             Row(
                 modifier = Modifier
-                    // COUI coui_preference_widget_jump.xml: the jump arrow keeps a 4dp
-                    // start margin (support_preference_image_margin_start) from the text.
                     .padding(end = 4.dp)
                     .align(Alignment.CenterVertically)
                     .weight(1f, fill = false),
@@ -97,9 +95,7 @@ private fun RowScope.ArrowPreferenceEndAction(
     }
     Image(
         modifier = Modifier
-            // Native box of COUI coui_btn_next_normal.xml (12x24dp, 1.4dp stroke).
-            // RTL mirroring is handled by the icon itself (autoMirror, matching the
-            // android:autoMirrored="true" COUI selector).
+            // RTL mirroring is handled by the icon itself (autoMirror).
             .size(width = 12.dp, height = 24.dp)
             .align(Alignment.CenterVertically),
         imageVector = COUIIcons.Basic.ArrowRight,
@@ -110,8 +106,7 @@ private fun RowScope.ArrowPreferenceEndAction(
 
 object ArrowPreferenceDefaults {
     /**
-     * The default color of the arrow. COUI coui_btn_next strokes with
-     * couiColorLabelTertiary, which maps to onSurfaceVariantActions.
+     * The default color of the arrow (COUI coui_btn_next, couiColorLabelTertiary).
      */
     @Composable
     fun endActionColors(): EndActionColors {

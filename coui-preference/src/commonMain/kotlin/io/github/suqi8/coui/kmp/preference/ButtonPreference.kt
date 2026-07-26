@@ -26,10 +26,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 /**
  * A preference row with a small inline button at the end, mirroring COUIButtonPreference.
  *
- * The button follows the COUI small button style (couiSmallButtonColorStyle ->
- * Widget.COUI.Button.Small, coui_preference_widget_button.xml): a 52x28dp minimum capsule filled
- * with the theme accent (couiColorContainerTheme) and a 14sp medium label
- * (couiColorLabelOnColor). The button click is independent from the row click.
+ * The button follows the COUI small button style and its click is independent from the row click.
  *
  * @param title The title of the [ButtonPreference].
  * @param buttonText The label of the inline button.
@@ -133,8 +130,6 @@ private fun ButtonPreferenceEndAction(
     ) {
         Text(
             text = buttonText,
-            // COUI small button label: coui_btn_small_text_size 14sp, sans-serif-medium
-            // (Widget.COUI.Button.Small textAppearance couiTextAppearanceButton).
             fontSize = COUITheme.textStyles.body2.fontSize,
             fontWeight = FontWeight.Medium,
         )
@@ -149,19 +144,14 @@ object ButtonPreferenceDefaults {
     /** The minimum height of the inline button (COUI coui_btn_small_height_min). */
     val ButtonMinHeight = 28.dp
 
-    /**
-     * The corner radius of the inline button. COUIButton drawableRadius is -1dp
-     * (auto capsule) in Widget.COUI.Button.Small, i.e. [ButtonMinHeight] / 2.
-     */
+    /** The corner radius of the inline button (COUI auto capsule, [ButtonMinHeight] / 2). */
     val ButtonCornerRadius = 14.dp
 
     /** The margin inside the inline button (Widget.COUI.Button.Small padding 12dp/4dp). */
     val ButtonInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
 
     /**
-     * The default [ButtonColors] of the inline button: theme accent fill
-     * (couiSmallButtonColorStyle drawableColor couiColorContainerTheme) with the on-color label
-     * (coui_btn_default_text_color -> couiColorLabelOnColor).
+     * The default [ButtonColors] of the inline button (COUI theme accent fill with on-color label).
      */
     @Composable
     fun buttonColors(

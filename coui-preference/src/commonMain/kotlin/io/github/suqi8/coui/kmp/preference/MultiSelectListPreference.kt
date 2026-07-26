@@ -37,12 +37,13 @@ import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * A multi-select list preference with COUI style, mirroring ColorOS's
- * COUIMultiSelectListPreference: a preference row showing the selected entries as trailing
- * assignment text, which opens a bottom sheet multi-choice panel
- * (coui_select_dialog_multichoice rows with a trailing checkbox) when clicked. Toggling rows
- * only updates a pending selection; the confirm button commits it, while the cancel button or
- * an outside tap dismisses the panel without changes.
+ * A multi-select list preference with a multi-choice selection panel, mirroring
+ * COUIMultiSelectListPreference.
+ *
+ * The preference row shows the selected entries as trailing assignment text and opens a bottom
+ * sheet multi-choice panel when clicked. Toggling rows only updates a pending selection; the
+ * confirm button commits it, while the cancel button or an outside tap dismisses the panel
+ * without changes.
  *
  * @param entries The list of [ListPreferenceEntry] to choose from.
  * @param selectedIndices The indices of the selected entries.
@@ -55,8 +56,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param titleColor The color of the title.
  * @param summary The summary of the [MultiSelectListPreference].
  * @param summaryColor The color of the summary.
- * @param dialogTitle The title of the selection panel. Defaults to [title], matching the COUI
- *   dialog title fallback.
+ * @param dialogTitle The title of the selection panel. Defaults to [title].
  * @param colors The [ListPreferenceColors] used by the selection panel rows.
  * @param checkboxColors The [CheckboxColors] of the row checkboxes.
  * @param startAction The [Composable] content on the start side of the [MultiSelectListPreference].
@@ -115,8 +115,7 @@ fun MultiSelectListPreference(
     val handleClick = remember(actualEnabled) {
         {
             if (actualEnabled) {
-                // COUI commits the multi-choice selection only on the positive button, so
-                // the pending state restarts from the committed selection on every open.
+                // Restart the pending selection from the committed one on every open.
                 pendingSelection.value = currentSelectedIndices
                 setExpanded(true)
                 isHoldDown.value = true
@@ -186,8 +185,7 @@ fun MultiSelectListPreference(
                                 }
                             },
                         ) {
-                            // COUI multi-choice panels end each row with a COUICheckBox;
-                            // the row itself handles the toggle interaction.
+                            // The row itself handles the toggle interaction.
                             Checkbox(
                                 state = ToggleableState(checked),
                                 onClick = null,
@@ -197,8 +195,6 @@ fun MultiSelectListPreference(
                         }
                     }
                 }
-                // COUI alert dialog button bar: two borderless primary-tinted text buttons
-                // split by a hairline vertical divider (COUIButtonBarLayout).
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

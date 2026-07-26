@@ -28,8 +28,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * A [FloatingActionButton] component with COUI style.
  *
  * While pressed, the whole button springs down to [FloatingActionButtonDefaults.PressedScale]
- * (COUI `COUIStateEffectDrawable.enableScaleEffect` -> `COUIPressFeedbackHelper`, spring
- * response 0.3 / bounce 0); the pressed tint overlay comes from `LocalIndication`.
+ * (COUIPressFeedbackHelper); the pressed tint overlay comes from `LocalIndication`.
  *
  * @param onClick The callback when the [FloatingActionButton] is clicked.
  * @param modifier The modifier to be applied to the [FloatingActionButton].
@@ -59,7 +58,7 @@ fun FloatingActionButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressScale by animateFloatAsState(
         targetValue = if (isPressed) FloatingActionButtonDefaults.PressedScale else 1f,
-        // COUISpringForce: response 0.3 -> stiffness (2 * PI / 0.3)^2 = 438.65, bounce 0 -> damping 1.
+        // The COUI press feedback spring (COUISpringForce response 0.3f / bounce 0f).
         animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
         label = "fabPressScale",
     )
@@ -97,19 +96,9 @@ object FloatingActionButtonDefaults {
     /** The default minimum height of the [FloatingActionButton] (COUI coui_floating_button_size). */
     val MinHeight = 56.dp
 
-    /**
-     * The default shadow elevation of the [FloatingActionButton].
-     *
-     * COUI 16 applies a constant elevation via `ShadowUtils.setElevationToFloatingActionButton`
-     * with `support_shadow_size_level_three` (12dp) on the standard light model; the old
-     * `coui_floating_button_close/open_elevation` dimens (5/8dp) are no longer referenced.
-     */
+    /** The default shadow elevation of the [FloatingActionButton] (COUI support_shadow_size_level_three). */
     val ShadowElevation = 12.dp
 
-    /**
-     * The scale the button springs down to while pressed (COUI `COUIPressFeedbackHelper`
-     * base scale end ratio 0.92; COUI interpolates 0.92..0.98 by view area, a 56dp
-     * button resolves to ~0.925).
-     */
+    /** The scale the button springs down to while pressed (COUIPressFeedbackHelper end ratio). */
     val PressedScale = 0.92f
 }

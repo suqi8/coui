@@ -49,11 +49,7 @@ internal fun MorphHeaderRow(
     dropdownColors: DropdownColors,
     onClick: () -> Unit,
 ) {
-    // Title/summary keep the regular palette (COUI tints the header title through the item
-    // selector with groupState ignored -> couiColorLabelPrimary), but the chevron goes theme
-    // colored while expanded: DefaultAdapter.getTintColorByState(stateIcon = true) resolves
-    // the STATE_SELECTED entry of the status-icon selector (couiColorLabelTheme) whenever
-    // groupState != 0, which is always true for the expanded submenu header (groupState == 2).
+    // COUI: title/summary keep the regular palette; only the chevron is theme-tinted while expanded.
     val backgroundColor = dropdownColors.containerColor
     val backgroundColorState = rememberUpdatedState(backgroundColor)
     val titleColor = dropdownColors.contentColor
@@ -92,9 +88,7 @@ internal fun MorphHeaderRow(
                         Text(
                             text = triggerItem.text,
                             fontSize = COUITheme.textStyles.body1.fontSize,
-                            // Deliberately medium while regular popup rows are weight 400:
-                            // COUI DefaultAdapter applies MEDIUM_TYPEFACE to the expanded
-                            // submenu header row (groupState == 2, position 0).
+                            // COUI applies a medium typeface to the expanded submenu header row.
                             fontWeight = FontWeight.Medium,
                             color = titleColor,
                         )
@@ -138,10 +132,8 @@ internal fun MorphHeaderRow(
         val frac = expandFraction()
         val padTop = lerp(anchorPaddingTopPx.toFloat(), intrinsicTop.toFloat(), frac).toInt()
 
-        // Same min-height rule as DropdownImpl popup rows (COUI DefaultAdapter
-        // .configItemVerticalPadding): the content area is at least PopupItemMinHeight minus
-        // the middle paddings. Applying it to the inner row keeps the clone's height and
-        // vertical centering identical to the primary row it mirrors.
+        // COUI popup-row min content height, so the clone's height and centering
+        // match the primary row it mirrors.
         val minContentHeight = (
             DropdownDefaults.PopupItemMinHeight.roundToPx() -
                 2 * DropdownDefaults.MiddleVerticalPadding.roundToPx()

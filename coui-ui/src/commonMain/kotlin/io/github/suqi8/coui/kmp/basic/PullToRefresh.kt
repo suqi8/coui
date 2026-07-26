@@ -98,7 +98,7 @@ import kotlin.math.sin
  * @param topAppBarScrollBehavior An optional [ScrollBehavior] for a `TopAppBar` to coordinate
  * scrolling between the app bar and the pull-to-refresh gesture.
  * @param color The color of the refresh indicator. If [Color.Unspecified], the theme
- * primary color is used (COUI loading views tint with couiColorPrimary).
+ * primary color is used.
  * @param circleSize The size of the refresh indicator's animated circle.
  * @param refreshTexts A list of strings representing the text shown in different states.
  * @param refreshTextStyle The [TextStyle] for the refresh indicator text.
@@ -122,8 +122,7 @@ fun PullToRefresh(
     val overScrollState = LocalOverScrollState.current
     val currentOnRefresh by rememberUpdatedState(onRefresh)
 
-    // COUI ships no pull-to-refresh container; the indicator follows COUILoadingView theming
-    // (Widget.COUI.COUILoadingView: couiLoadingViewColor = couiColorPrimary).
+    // The indicator follows COUILoadingView theming (couiLoadingViewColor = couiColorPrimary).
     val indicatorColor = color.takeOrElse { COUITheme.colorScheme.primary }
 
     LaunchedEffect(isRefreshing) {
@@ -864,8 +863,7 @@ internal val LocalPullToRefreshState = staticCompositionLocalOf<PullToRefreshSta
 object PullToRefreshDefaults {
     /**
      * The default color of the refresh indicator. [Color.Unspecified] makes [PullToRefresh]
-     * fall back to the theme primary color, matching COUI loading views
-     * (Widget.COUI.COUILoadingView: couiLoadingViewColor = couiColorPrimary).
+     * fall back to the theme primary color (COUI `couiLoadingViewColor` = couiColorPrimary).
      */
     val color: Color = Color.Unspecified
 
