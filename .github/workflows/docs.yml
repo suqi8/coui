@@ -29,12 +29,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
       - name: Build Docs
         run: |
-          ./gradlew :miuix-ui:dokkaGenerate -Prelease
+          ./gradlew :coui-ui:dokkaGenerate -Prelease
           mkdir -p ./docs/public/dokka
-          mv ./miuix-ui/build/dokka/html/* ./docs/public/dokka
+          mv ./coui-ui/build/dokka/html/* ./docs/public/dokka
           ./gradlew :docs:demo:jsBrowserDistribution
           mkdir -p ./docs/public/compose
           mv ./docs/demo/build/dist/js/productionExecutable/* ./docs/public/compose
+          ./gradlew :example:web:wasmJsBrowserDistribution
+          mkdir -p ./docs/public/example
+          mv ./example/web/build/dist/wasmJs/productionExecutable/* ./docs/public/example
           ./gradlew :docs:iconGen:generateIcons
           cd ./docs
           yarn install
