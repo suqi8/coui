@@ -1,13 +1,13 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.highlight
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.rememberTiltLight
+import com.suqi8.coui.kmp.blur.highlight.BloomStroke
+import com.suqi8.coui.kmp.blur.highlight.Highlight
+import com.suqi8.coui.kmp.blur.highlight.rememberTiltLight
 
 /**
  * Resolves a [Highlight] for the given [container] and theme, optionally driving its two

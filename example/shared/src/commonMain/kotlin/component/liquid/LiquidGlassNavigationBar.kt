@@ -1,4 +1,4 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component.liquid
@@ -69,23 +69,23 @@ import component.animation.InteractiveHighlight
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.highlight.LightPosition
-import top.yukonga.miuix.kmp.blur.highlight.LightSource
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.sensor.rememberDeviceTilt
-import top.yukonga.miuix.kmp.theme.LocalContentColor
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.Platform
-import top.yukonga.miuix.kmp.utils.platform
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.blur.LayerBackdrop
+import com.suqi8.coui.kmp.blur.blur
+import com.suqi8.coui.kmp.blur.drawBackdrop
+import com.suqi8.coui.kmp.blur.highlight.BloomStroke
+import com.suqi8.coui.kmp.blur.highlight.Highlight
+import com.suqi8.coui.kmp.blur.highlight.LightPosition
+import com.suqi8.coui.kmp.blur.highlight.LightSource
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.blur.sensor.rememberDeviceTilt
+import com.suqi8.coui.kmp.theme.LocalContentColor
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.Platform
+import com.suqi8.coui.kmp.utils.platform
 import ui.isInDarkTheme
 import kotlin.math.PI
 import kotlin.math.abs
@@ -170,9 +170,9 @@ internal fun IosLiquidGlassNavigationBar(
 ) {
     val isDark = isInDarkTheme()
     val pillShape = remember { CircleShape }
-    val accentColor = MiuixTheme.colorScheme.primary
-    val tabContentColor = MiuixTheme.colorScheme.onSurface
-    val surfaceContainer = MiuixTheme.colorScheme.surfaceContainer
+    val accentColor = COUITheme.colorScheme.primary
+    val tabContentColor = COUITheme.colorScheme.onSurface
+    val surfaceContainer = COUITheme.colorScheme.surfaceContainer
     val containerColor = if (isBlurActive) surfaceContainer.copy(alpha = 0.4f) else surfaceContainer
 
     val tabsBackdrop = rememberLayerBackdrop()

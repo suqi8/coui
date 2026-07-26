@@ -1,4 +1,4 @@
-<!-- Copyright 2025, compose-miuix-ui contributors -->
+<!-- Copyright 2025, compose-coui-ui contributors -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # ColorOS 16 (COUI) Retheme Spec
@@ -6,7 +6,7 @@
 > miuix → COUI 换肤的唯一权威规范。来源于对 ColorOS 16(OnePlus PJE110, V16.0.0)系统应用的逆向取证:
 > `com.oplus.uxdesign`(设计语言主库)、`com.coloros.alarmclock`、运行时实测。逆向产物见 `D:\AndroidStudioProjects\jadx\work\`。
 >
-> **策略:只改值,不重命名主题类/色槽。** 组件读 `MiuixTheme.colorScheme.*` / `textStyles.*`,绝不硬编码 `Color(0x...)`。
+> **策略:只改值,不重命名主题类/色槽。** 组件读 `COUITheme.colorScheme.*` / `textStyles.*`,绝不硬编码 `Color(0x...)`。
 > 约定:`#RRGGBB` / `#AARRGGBB`;L=浅色 D=深色;透明度前缀 12%=`1F` 15%=`26` 30%=`4D` 40%=`66`。
 
 ## 0. 主色(四方互证)
@@ -23,10 +23,11 @@ ColorOS = **灰底 + 白卡**;miuix 现状 = 白底 + 浅灰面。已确认 miui
 
 | 色槽 | 消费者(已 grep 确认) | COUI 目标 L | COUI 目标 D |
 | :-- | :-- | :-- | :-- |
-| `surface` | **Scaffold 页面底**、Surface、TopAppBar、NavigationBar/Rail、TabRow 底 | `#F0F1F2`(灰底) | `#000000`(纯黑 AMOLED) |
-| `surfaceContainer` | **Card**、ListPopup、Dropdown、FloatingToolbar、CascadingPopup | `#FFFFFF`(白卡) | `#1AFFFFFF`(10% 白) |
+| `surface` | **Scaffold 页面底**、Surface、TopAppBar、NavigationRail、TabRow 底 | `#F0F1F2`(灰底) | `#000000`(纯黑 AMOLED) |
+| `surfaceContainer` | **Card**、FloatingToolbar | `#FFFFFF`(白卡) | `#1AFFFFFF`(10% 白) |
+| (popup 专用,非色槽) | ListPopup / Dropdown / CascadingPopup 容器已改走 `popupSurfaceColor()`(couiColorSurfaceTop) | `#FFFFFF` | `#333333`(不透明,coui_color_surface_top values-night) |
 | `surfaceVariant` | (卡片同义) | `#FFFFFF` | `#1AFFFFFF` |
-| `background` | **仅 Dialog / BottomSheet 面板背景** | `#FFFFFF`(白面板,**勿刷灰**) | `#1E1E1E` |
+| `background` | **Dialog / BottomSheet 面板背景**、NavigationBar 底(COUI tab 栏 9-patch 实测 #FAFAFA/#1F1F1F,比页面底更亮) | `#FFFFFF`(白面板,**勿刷灰**) | `#1E1E1E` |
 
 > **校正综合研究的 §8.1**:研究建议把 `background` 也设灰 `#F0F1F2` 是错的——`background` 只被对话框/底部表单当面板背景用,刷灰会让弹窗发灰。`background` 应保持白/elevated。页面"灰底"由 `surface` 承担。
 
@@ -94,7 +95,7 @@ ColorOS = **灰底 + 白卡**;miuix 现状 = 白底 + 浅灰面。已确认 miui
 
 | 落点 | 现值 | 目标 | COUI 来源 | 置信 |
 | :-- | :-- | :-- | :-- | :-- |
-| `CardDefaults.CornerRadius` | 16dp | **17dp** | coui_card_list_os_16_1_radius_17_dp | 高 |
+| `CardDefaults.CornerRadius` | 16dp | **12dp** | couiRoundCornerM=coui_round_corner_m=12dp(settings 实际消费值;17dp 为 uxdesign 16.1 未消费 token,见 §9.5) | 高 |
 | `ButtonDefaults.CornerRadius` | 16dp | **21.5dp**(胶囊=44/2) | coui_btn_drawable_radius_large | 高 |
 | `TextFieldDefaults.CornerRadius` | 16dp | **10dp** | coui_textinput_corner_radius | 中 |
 | `DialogContentLayout.kt` 底角 `coerceAtLeast(32.dp)` | 32dp | **33dp** | coui_dialog_os_16_1_radius_33_dp | 高 |
@@ -114,12 +115,12 @@ ColorOS = **灰底 + 白卡**;miuix 现状 = 白底 + 浅灰面。已确认 miui
 | `ButtonDefaults.InsideMargin` 水平 | 16dp | **12dp** | coui_btn_padding_horizontal | 中 |
 | `SliderDefaults.MinHeight`(轨道厚) | 28dp | **20dp** | coui_seekbar_progress_height | 高 |
 | `SliderDefaults.KeyPointRadius` | 3.855dp | **3.0dp** | coui_section_seekbar_tick_mark_radius | 中 |
-| ⚠`Component.kt` `heightIn(min=56.dp)` | 56dp | **60dp** | coui_list_item_normal_height | 高 |
+| ⚠`Component.kt` `heightIn(min=…)` | 56dp | **48dp**(修订,原定 60) | support_preference_min_height=48(设置页 preference 行;coui_list_item_normal_height=60 属通用列表,设置页实测 48+首尾 2,见 §9.1) | 高·修订 |
 | `BasicComponentDefaults.InsideMargin` 水平 | 16dp | ✓ | coui_list_item_left/right_padding | 高 |
-| `BasicComponentDefaults.InsideMargin` 垂直 | 16dp | (可选)10dp | support_preference_text_content_padding | 中·flag |
+| `BasicComponentDefaults.InsideMargin` 垂直 | 16dp | **10dp** | support_preference_text_content_padding_top/bottom=10(§9.1) | 高 |
 | `TopAppBarDefaults.CollapsedHeight` | 52dp | ✓ | coui_toolbar_height | 高 |
-| `TopAppBarDefaults.TitlePadding` | 26dp | **24dp** | coui_appbar_title_margin_start | 中 |
-| `SmallTitleDefaults.InsideMargin` | (28,8) | (32,12) | support_preference_category_* | 中·flag |
+| `TopAppBarDefaults.TitlePadding` | 26dp | **16dp**(手机 compact 档) | coui_appbar_title_expanded_margin_start_compat(COUICollapsingToolbarLayout 响应式选值; 24=medium/40=expanded) | 高 |
+| `SmallTitleDefaults.InsideMargin` | (28,8) | **(32,8)**(修订,曾误定 (32,12)) | category 标题实测:水平 32=16 页边+16 卡内,上下各 8(title_margin_end_new=8;12 是 margintop_small 误用),见 §9.3 | 高·修订 |
 | `IconButtonDefaults.MinWidth/Height` | 40dp | **48dp** | coui_toolbar_back_view_tiny_width | 中 |
 | `FloatingActionButtonDefaults.MinWidth/Height` | 60dp | **56dp** | coui_floating_button_normal_size | 中 |
 
@@ -161,3 +162,78 @@ Switch / Slider / Checkbox / RadioButton / Button 的所有 accent 态都读 `co
 4. windowDimming 浅色 0.3→0.2,遮罩变浅。
 5. FloatingToolbar 50→24 设计分歧;Switch/Slider 几何需重算数学。
 6. 字体角色映射不定,Subtitle 字重 COUI 偏 medium 无干净 token。
+
+## 9. 页面设计系统(卡片 / 分割线 / 节奏)— 设置页 ground truth
+
+> 证据源:`E:\AndroidStudioProjects\jadx\work\com.android.settings\`(V16.0.0 内置 COUI support-preference 库反编译)
+> 与真机截图 `_shots\wifi.png`(1264px 宽,density=3.5,页边距 56px/3.5=16dp 整除自证)。
+> 核心类:`cardlist/COUICardListHelper` + `COUICardListSelectedItemLayout`(卡片分组与圆角/padding)、
+> `preference/COUIPreferenceItemDecoration` + `COUIRecyclerView.COUIDividerItemDecoration` + `COUIPreference`(分割线)、
+> `COUIPreferenceCategory`(分组标题)。以下所有 dp 值均三方互证(代码消费点 + dimens + 像素实测)。
+
+### 9.1 卡片分组(cardlist)
+
+分组算法(`COUICardListHelper.getPositionInGroup`):以 **category 内可见项** 为一组——单条=FULL、首条=HEAD、末条=TAIL、其余=MIDDLE。
+
+| 规则 | 值 | COUI 来源(代码消费点已核) | 实测 | miuix 落点 |
+| :-- | :-- | :-- | :-- | :-- |
+| 卡片水平页边距 | **16dp**(tiny 12dp) | coui_preference_card_margin_horizontal(COUICardListSelectedItemLayout.init) | 56px ✓ | example:`Card(Modifier.padding(horizontal = 16.dp))` |
+| 卡片圆角 | 名义 **12dp**(见下注) | couiCardRadius attr → couiRoundCornerM=coui_round_corner_m=12dp(COUICardListSelectedItemLayout 构造 L332;settings styles.xml L11804) | wifi 页弧高 30px≈8.6dp ✓ 吻合 12dp squircle | `CardDefaults.CornerRadius=12dp` ✓ 已对齐(§9.5 已定案) |
+| 首/尾行额外 padding | **+2dp** | coui_list_card_head_or_tail_padding(setPadding:HEAD 顶+2 / TAIL 底+2 / FULL 上下各+2 / MIDDLE 无) | 首尾行 50px×3.5=175px=48+2 ✓ | 列表卡建议 `Card(insideMargin = PaddingValues(vertical = 2.dp))` 或首末行自加 |
+| 行最小高度 | **48dp** | support_preference_min_height(coui_preference.xml minHeight) | 行高 175px=50dp(48+2 首行) ✓ | `BasicComponent heightIn(min=48.dp)` ✓ 已对齐 |
+| 行内容水平 padding | 距卡边 **16dp** | support_preference_title_padding_start/end=32(从全宽 item 计,含 16 页边距) | 文本起点 112px=32dp 距屏 ✓ | `BasicComponentDefaults.InsideMargin` 水平 16dp ✓ |
+| 行文本区垂直 padding | **10dp** | support_preference_text_content_padding_top/bottom=10 | — | `BasicComponentDefaults.InsideMargin` 垂直 10dp ✓ |
+| title↔summary 行间 | **2dp** | support_preference_margin_between_line(coui_preference.xml summary marginTop) | — | BasicComponent summary `padding(top=2.dp)` ✓ |
+| 卡片背景 | #FFFFFF / #1AFFFFFF | couiColorCardBackground = coui_color_card_background/_dark | 白卡 ✓ | `surfaceContainer` ✓ §2 |
+
+> 圆角注:卡片圆角在 OS16 上由 `OplusPathAdapter` 平滑曲线绘制(RoundCornerUtil.getSmoothStyleType()==1,平滑权重系统默认 1.7),名义半径取 couiRoundCornerM。卡片矩形为 `[16dp, 0, width-16dp, height]`——item 视图占满全宽,卡面向内绘制,涟漪/选中态(COUIStateEffectDrawable)被裁剪在卡path 内。
+
+### 9.2 行间分割线
+
+**规则(COUIPreference.drawDivider,已核源码):`positionInGroup ∈ {HEAD, MIDDLE}` 时在该行底部画一条——即卡内相邻两行之间恰好一条,末行之后、单行卡(FULL)一律不画。** 开关 `couiShowDivider` 默认 **true**。
+
+| 属性 | 值 | COUI 来源 | 实测(wifi.png) |
+| :-- | :-- | :-- | :-- |
+| 厚度 | **0.33dp**,绘制时 `max(1px, 0.33dp)` | coui_list_divider_height(COUIDividerItemDecoration.init) | 1px ✓ |
+| 绘制方式 | onDrawOver 叠画在行底边上,**不占布局高度** | COUIDividerItemDecoration.onDrawOver | ✓ |
+| 颜色 | **#1F000000 / #33FFFFFF** | couiColorDivider = coui_color_divider/_dark | 白卡上 RGB(223)=12% 黑 ✓ = `dividerLine` §2 |
+| start inset | **动态对齐 title 文本起点**(getDividerStartAlignView()=mTitleView) | COUIPreferenceItemDecoration.getDividerInsetStart | 无 icon 行:距卡边 16dp ✓;wifi 自定义 icon 行:距卡边 48dp ✓ |
+| — 无 icon 行 | 距卡边 **16dp**(=距屏 32dp) | 即 title padding start | 112px ✓ |
+| — 标准 icon 行 | 距卡边 **68dp**(=距屏 84dp) | 16+icon36+gap16(coui_preference_icon_margin_right=16,ex_divider_preference_icon_size=36);静态 token coui_list_card_divider_margin_start=84 即此值(本 apk 代码无直接消费,由动态对齐达成) | — |
+| end inset | 距卡边 **16dp**(=距屏 32dp),固定 | coui_preference_divider_default_horizontal_padding=32(getDividerEndInset;EndAlignView=null) = coui_list_card_divider_margin_end=32 | 1151px→56px=16dp ✓ |
+| RTL | start/end 镜像交换 | onDrawOver z2 分支 | — |
+| 按压态 | 按压行上下两条分割线 alpha 过渡(setPressDividerPos/Alpha) | COUIDividerItemDecoration | 未复刻(可选) |
+
+> ⚠ `coui_list_item_divider_left/right_margin=18dp` 在本 apk **无任何代码消费点**(遗留 token),**勿用 18dp**——正确值是距卡边 16dp。
+>
+> **miuix 落点**:`HorizontalDivider(Modifier.padding(horizontal = DividerDefaults.CardInset))`(CardInset=16dp,已加,KDoc 含 icon 行规则);example 现有手拼写法已符合。末行后不画由使用侧保证(仅在相邻行之间插入)。
+
+### 9.3 分组标题(category)
+
+| 规则 | 值 | COUI 来源 | 实测 |
+| :-- | :-- | :-- | :-- |
+| category 容器与上一卡间距(topMargin) | **16dp** 默认 | coui_preference_category_margintop_large(top_margin_type=0 默认;small=12/zero=0 attr 可切) | 参与 48.3dp 合成 ✓ |
+| 标题字体 | **12sp sans-serif-medium** | couiTextAppearanceSmallButton(Widget.COUI.List.Category.Title) | 字形高 10.9dp ✓ |
+| 标题颜色 | #8A000000 / #8AFFFFFF | couiColorSecondNeutral = coui_color_secondary_neutral/_dark | ✓ = `onBackgroundVariant`(SmallTitle 现用)✓ |
+| 标题上下 margin | **各 8dp**(minHeight 16dp) | support_preference_category_layout_title_margin_end_new=8(titleType=0 默认,上下同值) | ✓ |
+| 标题 start | 距屏 **32dp** = 距卡边 16dp | support_preference_category_layout_title_margin_start_large=32(margin_start_type=1 默认) | 字形沿 117px≈33.4dp ✓ |
+| **卡→卡(带标题)合成** | 16 + 8 + 行盒(~16) + 8 ≈ **48dp** | 上述四项相加 | 169px=48.3dp ✓✓ |
+| **卡→卡(无标题 category)** | **16dp** | 仅剩容器 topMargin | — |
+
+**miuix 落点**:`SmallTitleDefaults.InsideMargin = PaddingValues(32.dp, 8.dp)`(已改,水平 32=16 页边+16 卡内对齐);16dp 卡间距由卡片间隔提供(example 惯例 `Card(Modifier.padding(bottom = 16.dp))`),合成 卡→标题文本 24dp / 标题文本→卡 8dp,与 COUI 完全一致。
+
+### 9.4 页面节奏
+
+| 位置 | 值 | COUI 来源 | 实测 |
+| :-- | :-- | :-- | :-- |
+| toolbar 高度 | 52dp(无附加 padding) | toolbar_min_height=52,top/bottom_padding=0 | 卡顶 364px = 状态栏 40 + toolbar 52 + 12 ✓ |
+| 页顶:toolbar 底 → 第一张卡 | **12dp** | coui_list_to_ex_top_padding=12(旧 ListView paddingTop / coui_preference_category_layout_tiny paddingTop / 别名 support_preference_category_padding_top;appbar 页由首项 spacer=appbar 高 + 12 达成) | ✓ |
+| 页底:最后一张卡 → 内容末 | **32dp** | coui_list_to_ex_bottom_padding=32(旧 ListView paddingBottom;COUIBottomPreference=invisible 32dp 脚垫,别名 support_preference_foot_preference_padding_bottom) | — |
+
+**miuix 落点**:页面滚动容器 `contentPadding = PaddingValues(top = 12.dp, bottom = 32.dp)`(example LazyColumn / Scaffold 内容区)。
+
+### 9.5 分歧与备注
+
+1. **卡片圆角 12 vs 17(已定案:12dp)**:settings 内置 COUI 库的真实消费链为 `COUICardListSelectedItemLayout` 构造(L332)`couiCardRadius` attr 缺省取 `couiRoundCornerM`,settings 主题(styles.xml L11804)映射到 `coui_round_corner_m=12dp`;`coui_card_list_os_16_1_radius_17_dp` 仅存在于 uxdesign 16.1 新库、settings apk 内不存在且无消费点。真机 wifi 页像素复核(density 3.5):卡角弧高 ≈30px≈8.6dp,与 12dp squircle 弧高(≈12×0.71≈8.5dp)吻合,17dp 会得到 ≈15dp 弧高、与实测不符。`CardDefaults.CornerRadius` 已 17→12dp 回退。
+2. 按压行分割线 alpha 过渡、卡片选中/涟漪态(COUIStateEffectDrawable)未复刻,不影响静态视觉。
+3. 首/尾行 +2dp 属**卡内**空间(计入行高 48→50),不是卡外间距;Compose 侧最简落点是列表卡 `insideMargin = PaddingValues(vertical = 2.dp)`,example 待接入。

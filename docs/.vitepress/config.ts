@@ -41,7 +41,7 @@ export default defineConfig({
   themeConfig: {
     logo: "/Icon.webp",
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/compose-miuix-ui/miuix' }
+      { icon: 'github', link: 'https://github.com/compose-coui-ui/miuix' }
     ],
     search: {
       provider: "local",
@@ -88,7 +88,7 @@ export default defineConfig({
     },
     plugins: [
       GitChangelog({
-        repoURL: () => "https://github.com/compose-miuix-ui/miuix",
+        repoURL: () => "https://github.com/compose-coui-ui/miuix",
       }),
       GitChangelogMarkdownSection({
         sections: {

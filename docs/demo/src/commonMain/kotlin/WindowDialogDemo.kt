@@ -1,10 +1,11 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,10 +18,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.LocalDismissState
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.window.WindowDialog
 
 @Composable
 fun WindowDialogDemo() {
@@ -46,7 +48,7 @@ fun WindowDialogDemo() {
                 )
                 WindowDialog(
                     title = "WindowDialog Title",
-                    summary = "This is a window-level dialog that does not require MiuixPopupHost.",
+                    summary = "This is a window-level dialog that does not require COUIPopupHost.",
                     show = showDialog,
                     onDismissRequest = { showDialog = false },
                 ) {
@@ -55,6 +57,11 @@ fun WindowDialogDemo() {
                         text = "Confirm",
                         onClick = { dismiss?.invoke() },
                         modifier = Modifier.fillMaxWidth(),
+                        // COUI dialog bar button: 58dp bar height, 24dp horizontal and
+                        // 12dp top / 22dp bottom paddings carry the panel bottom inset.
+                        minHeight = 58.dp,
+                        insideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp),
+                        colors = ButtonDefaults.textButtonColorsBorderless(),
                     )
                 }
             }

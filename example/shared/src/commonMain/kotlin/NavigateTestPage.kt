@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -31,28 +31,29 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
 import navigation3.Route
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownImpl
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.ListPopupDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.LocalDismissState
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowListPopup
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.DropdownImpl
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.ListPopupColumn
+import com.suqi8.coui.kmp.basic.ListPopupDefaults
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.PopupPositionProvider
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.window.WindowListPopup
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -69,7 +70,7 @@ fun NavTestPage(
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.surface
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
             drawRect(surfaceColor)
@@ -79,8 +80,8 @@ fun NavTestPage(
         null
     }
     val blurActive = appState.enableBlur && blurSupported
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
 
     Scaffold(
@@ -126,7 +127,8 @@ fun NavTestPage(
                 item(key = "nav_push") {
                     Card(
                         modifier = Modifier
-                            .padding(all = 12.dp),
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 12.dp, bottom = 16.dp),
                     ) {
                         val navigator = LocalNavigator.current
                         ArrowPreference(
@@ -138,7 +140,7 @@ fun NavTestPage(
                 item(key = "nav_layout") {
                     Card(
                         modifier = Modifier
-                            .padding(horizontal = 12.dp),
+                            .padding(horizontal = 16.dp),
                     ) {
                         ArrowPreference(
                             title = "Long Long Long Long Long Title",
@@ -153,6 +155,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Title",
                             summary = "Long Long Long Long Long Summary",
@@ -166,6 +169,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Title",
                             summary = "Summary",
@@ -180,6 +184,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Long Long Long Long Long Title",
                             summary = "Summary",
@@ -194,6 +199,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Title",
                             summary = "Long Long Long Long Long Summary",
@@ -205,6 +211,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Long Long Long Long Long Title",
                             summary = "Summary",
@@ -213,6 +220,7 @@ fun NavTestPage(
                             },
                             enabled = true,
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Title",
                             summary = "Long Long Long Long Long Summary",
@@ -247,9 +255,9 @@ fun TopBarActions() {
         holdDownState = topPopupHoldDown.value,
     ) {
         Icon(
-            imageVector = MiuixIcons.Edit,
+            imageVector = COUIIcons.Edit,
             contentDescription = "WindowListPopup",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
         )
     }
     WindowListPopup(

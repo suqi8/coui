@@ -2,9 +2,9 @@
 
 Miuix 提供了一系列工具函数，帮助您更高效地开发应用程序。以下是主要工具函数的详细介绍和使用示例。
 
-## 弹出窗口工具 (MiuixPopupUtils)
+## 弹出窗口工具 (COUIPopupUtils)
 
-`MiuixPopupUtils` 是一个用于显示对话框布局和弹出窗口布局的工具类。该类已经集成到 `Scaffold` 组件中，可以直接使用。
+`COUIPopupUtils` 是一个用于显示对话框布局和弹出窗口布局的工具类。该类已经集成到 `Scaffold` 组件中，可以直接使用。
 
 每个 `Scaffold` 会自动管理独立的弹出层状态，多个嵌套或并列的 `Scaffold` 无需额外配置即可正常工作。
 
@@ -112,10 +112,10 @@ LazyColumn(
 
 ### 通过 OverscrollFactory（主题级集成）
 
-`MiuixOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的弹簧物理效果，但以主题级别集成。两个 `MiuixTheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 Miuix 越界回弹效果。
+`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的弹簧物理效果，但以主题级别集成。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 Miuix 越界回弹效果。
 
 ```kotlin
-// 无需额外修饰符 —— MiuixTheme 已自动提供越界回弹效果
+// 无需额外修饰符 —— COUITheme 已自动提供越界回弹效果
 LazyColumn {
     items(list) { item -> ItemRow(item) }
 }
@@ -137,7 +137,7 @@ CompositionLocalProvider(LocalOverscrollFactory provides null) {
 }
 ```
 
-显式使用 `MiuixOverscrollEffect`（例如与自定义 `Modifier.overscroll()` 配合）：
+显式使用 `COUIOverscrollEffect`（例如与自定义 `Modifier.overscroll()` 配合）：
 
 ```kotlin
 val overscrollEffect = rememberOverscrollEffect()
@@ -152,7 +152,7 @@ LazyColumn(
 
 **与 `overScrollVertical()` 的对比：**
 
-| 特性 | `overScrollVertical()` | `MiuixOverscrollFactory` |
+| 特性 | `overScrollVertical()` | `COUIOverscrollFactory` |
 | :--- | :---: | :---: |
 | 使用方式 | 每个组件手动添加 `Modifier` | 主题级别，自动生效 |
 | 物理效果 | 相同弹簧物理 | 相同弹簧物理 |
@@ -160,7 +160,7 @@ LazyColumn(
 | 内容未超出容器时仍可触发 | ✅ | ❌ |
 | 需要逐个组件手动添加修饰符 | ✅ | ❌ |
 
-> **限制说明：** `MiuixOverscrollFactory` 通过接收可滚动组件到达滚动边界后无法消耗的剩余 delta 来工作。如果内容未超出容器高度（例如 `LazyColumn` 的所有条目均能在屏幕内完整显示），可滚动组件不会到达真正的边界，`applyToScroll` 不会收到非零剩余量，越界回弹效果将**无法触发**。此类场景请改用 `overScrollVertical()`。
+> **限制说明：** `COUIOverscrollFactory` 通过接收可滚动组件到达滚动边界后无法消耗的剩余 delta 来工作。如果内容未超出容器高度（例如 `LazyColumn` 的所有条目均能在屏幕内完整显示），可滚动组件不会到达真正的边界，`applyToScroll` 不会收到非零剩余量，越界回弹效果将**无法触发**。此类场景请改用 `overScrollVertical()`。
 
 ## 滚动到边界触觉反馈 (Modifier.scrollEndHaptic())
 

@@ -1,4 +1,4 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -22,20 +22,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.MoreCircle
-import top.yukonga.miuix.kmp.icon.extended.SelectAll
-import top.yukonga.miuix.kmp.icon.extended.Sort
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.icon.extended.MoreCircle
+import com.suqi8.coui.kmp.icon.extended.SelectAll
+import com.suqi8.coui.kmp.icon.extended.Sort
+import com.suqi8.coui.kmp.menu.OverlayIconDropdownMenu
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun OverlayIconDropdownMenuDemo() {
@@ -89,15 +89,15 @@ fun OverlayIconDropdownMenuDemo() {
                         actions = {
                             OverlayIconDropdownMenu(entry = actionEntry) {
                                 Icon(
-                                    imageVector = MiuixIcons.Edit,
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    imageVector = COUIIcons.Edit,
+                                    tint = COUITheme.colorScheme.onBackground,
                                     contentDescription = "Action menu",
                                 )
                             }
                             OverlayIconDropdownMenu(entry = sortEntry) {
                                 Icon(
-                                    imageVector = MiuixIcons.Sort,
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    imageVector = COUIIcons.Sort,
+                                    tint = COUITheme.colorScheme.onBackground,
                                     contentDescription = "Sort",
                                 )
                             }
@@ -106,8 +106,8 @@ fun OverlayIconDropdownMenuDemo() {
                                 collapseOnSelection = false,
                             ) {
                                 Icon(
-                                    imageVector = MiuixIcons.SelectAll,
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    imageVector = COUIIcons.SelectAll,
+                                    tint = COUITheme.colorScheme.onBackground,
                                     contentDescription = "Multiple selection",
                                 )
                             }
@@ -116,8 +116,8 @@ fun OverlayIconDropdownMenuDemo() {
                                 enabled = false,
                             ) {
                                 Icon(
-                                    imageVector = MiuixIcons.MoreCircle,
-                                    tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                                    imageVector = COUIIcons.MoreCircle,
+                                    tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                                     contentDescription = "More",
                                 )
                             }

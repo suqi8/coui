@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.Text
 ```
 
 ## 基本用法
@@ -27,21 +27,21 @@ Miuix 提供了多种预定义的文本样式：
 ```kotlin
 Text(
     text = "标题文本",
-    style = MiuixTheme.textStyles.headline1
+    style = COUITheme.textStyles.headline1
 )
 
 Text(
     text = "小标题文本",
-    style = MiuixTheme.textStyles.subtitle
+    style = COUITheme.textStyles.subtitle
 )
 Text(
     text = "摘要文本",
-    style = MiuixTheme.textStyles.body2
+    style = COUITheme.textStyles.body2
 )
 
 Text(
     text = "正文文本",
-    style = MiuixTheme.textStyles.main
+    style = COUITheme.textStyles.main
 )
 
 ```
@@ -51,17 +51,17 @@ Text(
 ```kotlin
 Text(
     text = "默认颜色文本",
-    color = MiuixTheme.colorScheme.onBackground
+    color = COUITheme.colorScheme.onBackground
 )
 
 Text(
     text = "主题色文本",
-    color = MiuixTheme.colorScheme.primary
+    color = COUITheme.colorScheme.primary
 )
 
 Text(
     text = "次要文本",
-    color = MiuixTheme.colorScheme.onSurfaceContainerVariant
+    color = COUITheme.colorScheme.onSurfaceContainerVariant
 )
 ```
 
@@ -88,7 +88,7 @@ Text(
 | maxLines       | Int            | 最大行数                 | Int.MAX_VALUE              | 否       |
 | minLines       | Int            | 最小行数                 | 1                          | 否       |
 | onTextLayout   | ((TextLayoutResult) -> Unit)? | 文本布局完成后的回调 | null                       | 否       |
-| style          | TextStyle      | 文本样式                 | MiuixTheme.textStyles.main | 否       |
+| style          | TextStyle      | 文本样式                 | COUITheme.textStyles.main | 否       |
 
 ### Text（AnnotatedString）属性
 
@@ -112,7 +112,7 @@ Text(
 | minLines       | Int                            | 最小行数                       | 1                          | 否       |
 | inlineContent  | Map<String, InlineTextContent> | 内联可组合项的映射             | mapOf()                    | 否       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | 文本布局完成后的回调           | {}                         | 否       |
-| style          | TextStyle                      | 文本样式                       | MiuixTheme.textStyles.main | 否       |
+| style          | TextStyle                      | 文本样式                       | COUITheme.textStyles.main | 否       |
 
 ## 进阶用法
 
@@ -145,7 +145,7 @@ Text(
 ```kotlin
 Text(
     buildAnnotatedString {
-        withStyle(style = SpanStyle(color = MiuixTheme.colorScheme.primary)) {
+        withStyle(style = SpanStyle(color = COUITheme.colorScheme.primary)) {
             append("Miuix ")
         }
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -188,8 +188,8 @@ Text(
     text = "随滚动渐变的文本",
     color = {
         lerp(
-            MiuixTheme.colorScheme.onSurface,
-            MiuixTheme.colorScheme.primary,
+            COUITheme.colorScheme.onSurface,
+            COUITheme.colorScheme.primary,
             (scrollState.value / 500f).coerceIn(0f, 1f),
         )
     },
@@ -207,9 +207,9 @@ val annotated = buildAnnotatedString {
     append("Miuix 文档站")
     addLink(
         LinkAnnotation.Url(
-            url = "https://compose-miuix-ui.github.io/miuix/",
+            url = "https://compose-coui-ui.github.io/miuix/",
             styles = TextLinkStyles(
-                SpanStyle(color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                SpanStyle(color = COUITheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             )
         ),
         start = start,

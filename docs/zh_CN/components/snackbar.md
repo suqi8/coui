@@ -11,11 +11,11 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Snackbar
-import top.yukonga.miuix.kmp.basic.SnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.SnackbarDuration
-import top.yukonga.miuix.kmp.basic.SnackbarResult
+import com.suqi8.coui.kmp.basic.Snackbar
+import com.suqi8.coui.kmp.basic.SnackbarHost
+import com.suqi8.coui.kmp.basic.SnackbarHostState
+import com.suqi8.coui.kmp.basic.SnackbarDuration
+import com.suqi8.coui.kmp.basic.SnackbarResult
 ```
 
 ## 基本用法
@@ -112,19 +112,23 @@ fun SnackbarHost(
 fun Snackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = SnackbarDefaults.CornerRadius,
+    singleLineCornerRadius: Dp = SnackbarDefaults.SingleLineCornerRadius,
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
     insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
 ```
 
-| 参数名       | 类型           | 说明                     | 默认值                            | 是否必须 |
-| ------------ | -------------- | ------------------------ | --------------------------------- | -------- |
-| data         | SnackbarData   | 包含消息与操作信息的数据 | -                                 | 是       |
-| modifier     | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                      | 否       |
-| cornerRadius | Dp             | Snackbar 的圆角半径      | SnackbarDefaults.CornerRadius     | 否       |
-| colors       | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
-| insideMargin | PaddingValues  | Snackbar 内容区域的内边距 | SnackbarDefaults.InsideMargin    | 否       |
+| 参数名                 | 类型           | 说明                     | 默认值                            | 是否必须 |
+| ---------------------- | -------------- | ------------------------ | --------------------------------- | -------- |
+| data                   | SnackbarData   | 包含消息与操作信息的数据 | -                                 | 是       |
+| modifier               | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                      | 否       |
+| icon                   | (@Composable () -> Unit)? | 可选前置图标，布局在 30.dp 容器内（通过 `SnackbarHost` 的 `content` 插槽传入） | null | 否       |
+| cornerRadius           | Dp             | 消息为多行时的圆角半径   | SnackbarDefaults.CornerRadius     | 否       |
+| singleLineCornerRadius | Dp             | 消息为单行时的圆角半径   | SnackbarDefaults.SingleLineCornerRadius | 否 |
+| colors                 | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
+| insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（当操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
 
 ### SnackbarColors 与 SnackbarDefaults
 
@@ -143,21 +147,25 @@ data class SnackbarColors(
 
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
-    containerColor = MiuixTheme.colorScheme.surfaceContainerHighest,
-    contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-    actionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
-    dismissActionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
+    containerColor = COUITheme.colorScheme.surfaceContainerHighest,
+    contentColor = COUITheme.colorScheme.onSurfaceContainer,
+    actionContentColor = COUITheme.colorScheme.primary,
+    dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
 )
 ```
 
 #### 常量
 
-`SnackbarDefaults` 同时提供 `Snackbar` 使用的默认圆角与内边距：
+`SnackbarDefaults` 同时提供 `Snackbar` 使用的默认圆角、文字样式与内边距：
 
-| 常量名       | 类型          | 说明                      | 默认值                                              |
-| ------------ | ------------- | ------------------------- | --------------------------------------------------- |
-| CornerRadius | Dp            | Snackbar 的默认圆角半径   | 16.dp                                               |
-| InsideMargin | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 12.dp, vertical = 8.dp)  |
+| 常量名                 | 类型          | 说明                      | 默认值                                               |
+| ---------------------- | ------------- | ------------------------- | ---------------------------------------------------- |
+| CornerRadius           | Dp            | 消息为多行时的圆角半径    | 16.dp                                                |
+| SingleLineCornerRadius | Dp            | 消息为单行时的圆角半径    | 24.dp                                                |
+| InsideMargin           | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 16.dp, vertical = 10.dp)  |
+| IconSize               | Dp            | 可选前置图标容器的尺寸    | 30.dp                                                |
+
+`SnackbarDefaults.textStyle()` 返回消息与操作按钮使用的默认文字样式（14sp、Medium 字重）。
 
 ## SnackbarDuration 与 SnackbarResult
 

@@ -2,7 +2,7 @@
 title: WindowIconCascadingDropdownMenu
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at window level
 hostComponent: None
 popupHost: None
@@ -19,9 +19,9 @@ popupHost: None
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.menu.WindowIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.menu.WindowIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage
@@ -79,7 +79,7 @@ Scaffold(
             title = "Library",
             actions = {
                 WindowIconCascadingDropdownMenu(entries = entries) {
-                    Icon(imageVector = MiuixIcons.Tune, contentDescription = "Adjust")
+                    Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
                 }
             }
         )
@@ -108,7 +108,7 @@ val entry = DropdownEntry(
 )
 
 WindowIconCascadingDropdownMenu(entry = entry) {
-    Icon(imageVector = MiuixIcons.Tune, contentDescription = "Adjust")
+    Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
 }
 ```
 
@@ -121,7 +121,7 @@ WindowIconCascadingDropdownMenu(
     entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false,
 ) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "More")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 

@@ -1,10 +1,11 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -34,25 +35,26 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
 import kotlinx.coroutines.delay
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.PullToRefresh
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.preference.WindowDropdownPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
 import utils.pageScrollModifiers
 import utils.rememberBlurBackdrop
 
-private val DropdownListTopShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-private val DropdownListBottomShape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+private val DropdownListTopShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+private val DropdownListBottomShape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
 
 @Composable
 fun PullToRefreshPage(
@@ -63,11 +65,11 @@ fun PullToRefreshPage(
     val isWideScreen = LocalIsWideScreen.current
     var isRefreshing by rememberSaveable { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
 
     val dropdownOptions = remember { listOf("Option 1", "Option 2", "Option 3", "Option 4") }
     var dropdownSelectedOption by remember { mutableIntStateOf(0) }
@@ -138,12 +140,12 @@ fun PullToRefreshPage(
                                 isLast -> DropdownListBottomShape
                                 else -> RectangleShape
                             }
-                            Box(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 12.dp)
+                                    .padding(horizontal = 16.dp)
                                     .clip(shape)
-                                    .background(MiuixTheme.colorScheme.surfaceContainer),
+                                    .background(COUITheme.colorScheme.surfaceContainer),
                             ) {
                                 if (i % 2 == 0) {
                                     OverlayDropdownPreference(
@@ -163,6 +165,9 @@ fun PullToRefreshPage(
                                             dropdownSelectedOption = newOption
                                         },
                                     )
+                                }
+                                if (!isLast) {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 }
                             }
                         }

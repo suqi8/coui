@@ -9,9 +9,9 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator // Linear progress bar
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator // Circular progress indicator
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator // Infinite spinning indicator
+import com.suqi8.coui.kmp.basic.LinearProgressIndicator // Linear progress bar
+import com.suqi8.coui.kmp.basic.CircularProgressIndicator // Circular progress indicator
+import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator // Infinite spinning indicator
 ```
 
 ## Basic Usage
@@ -97,7 +97,7 @@ CircularProgressIndicator(progress = null)
 | ------------- | ----------------------- | ---------------------------------------------- | --------------------------------------------------------------------- | -------- |
 | modifier      | Modifier                | Modifier applied to the progress indicator     | Modifier                                                              | No       |
 | progress      | Float?                  | Current progress value, null for indeterminate | null                                                                  | No       |
-| colors        | ProgressIndicatorColors | Color configuration for the progress indicator | ProgressIndicatorDefaults.progressIndicatorColors()                   | No       |
+| colors        | ProgressIndicatorColors | Color configuration for the progress indicator | ProgressIndicatorDefaults.circularProgressIndicatorColors()           | No       |
 | strokeWidth   | Dp                      | Stroke width of the circular track             | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth | No       |
 | size          | Dp                      | Size of the circular indicator                 | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize        | No       |
 
@@ -119,18 +119,23 @@ The ProgressIndicatorDefaults object provides default values and color configura
 
 | Constant Name                                   | Type | Default Value | Description                                     |
 | ----------------------------------------------- | ---- | ------------- | ----------------------------------------------- |
-| DefaultLinearProgressIndicatorHeight            | Dp   | 6.dp          | Default height of linear progress bar           |
-| DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 4.dp          | Default stroke width of circular indicator      |
+| DefaultLinearProgressIndicatorHeight            | Dp   | 4.dp          | Default height of linear progress bar           |
+| DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 3.dp          | Default stroke width of circular indicator      |
 | DefaultCircularProgressIndicatorSize            | Dp   | 30.dp         | Default size of circular indicator              |
-| DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.dp          | Default stroke width of infinite indicator      |
+| DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.67.dp       | Default stroke width of infinite indicator      |
 | DefaultInfiniteProgressIndicatorOrbitingDotSize | Dp   | 2.dp          | Default orbiting dot size of infinite indicator |
-| DefaultInfiniteProgressIndicatorSize            | Dp   | 20.dp         | Default size of infinite indicator              |
+| DefaultInfiniteProgressIndicatorSize            | Dp   | 18.dp         | Default size of infinite indicator              |
+| LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp          | Stroke width of the large circular tier         |
+| LargeCircularProgressIndicatorSize              | Dp   | 40.dp         | Size of the large circular tier                 |
+| LargeInfiniteProgressIndicatorStrokeWidth       | Dp   | 3.33.dp       | Stroke width of the large infinite tier         |
+| LargeInfiniteProgressIndicatorSize              | Dp   | 26.dp         | Size of the large infinite tier                 |
 
 #### Methods
 
-| Method Name               | Type                    | Description                                        |
-| ------------------------- | ----------------------- | -------------------------------------------------- |
-| progressIndicatorColors() | ProgressIndicatorColors | Creates default color configuration for indicators |
+| Method Name                       | Type                    | Description                                                       |
+| --------------------------------- | ----------------------- | ----------------------------------------------------------------- |
+| progressIndicatorColors()         | ProgressIndicatorColors | Creates default color configuration for linear indicators         |
+| circularProgressIndicatorColors() | ProgressIndicatorColors | Creates default color configuration for the circular indicator    |
 
 ### ProgressIndicatorColors Class
 
@@ -203,7 +208,7 @@ Button(
 
 ```kotlin
 InfiniteProgressIndicator(
-    color = MiuixTheme.colorScheme.primary,
+    color = COUITheme.colorScheme.primary,
     size = 40.dp,
     strokeWidth = 3.dp,
     orbitingDotSize = 4.dp

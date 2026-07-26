@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.CheckboxPreference
-import top.yukonga.miuix.kmp.preference.CheckboxLocation
+import com.suqi8.coui.kmp.preference.CheckboxPreference
+import com.suqi8.coui.kmp.preference.CheckboxLocation
 ```
 
 ## 基本用法
@@ -123,7 +123,7 @@ CheckboxPreference(
     endActions = {
         Text(
             text = if (backupEnabled) "已启用" else "未启用",
-            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.onSurfaceVariantActions,
             modifier = Modifier.padding(end = 6.dp)
         )
     }
@@ -187,17 +187,17 @@ var customChecked by remember { mutableStateOf(false) }
 CheckboxPreference(
     title = "自定义颜色",
     titleColor = BasicComponentDefaults.titleColor(
-        color = MiuixTheme.colorScheme.primary
+        color = COUITheme.colorScheme.primary
     ),
     summary = "使用自定义颜色的复选框",
     summaryColor = BasicComponentDefaults.summaryColor(
-        color = MiuixTheme.colorScheme.secondary
+        color = COUITheme.colorScheme.secondary
     ),
     checked = customChecked,
     onCheckedChange = { customChecked = it },
     checkboxColors = CheckboxDefaults.checkboxColors(
         checkedForegroundColor = Color.Red,
-        checkedBackgroundColor = MiuixTheme.colorScheme.secondary
+        checkedBackgroundColor = COUITheme.colorScheme.secondary
     )
 )
 ```

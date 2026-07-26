@@ -2,11 +2,11 @@
 title: OverlayIconCascadingDropdownMenu
 requiresScaffoldHost: true
 prerequisites:
-  - Must be used within `Scaffold` to provide `MiuixPopupHost`
+  - Must be used within `Scaffold` to provide `COUIPopupHost`
   - Using outside `Scaffold` will cause popup content not to render
   - Multiple nested or side-by-side `Scaffold`s are supported without extra configuration
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayIconCascadingDropdownMenu
@@ -18,15 +18,15 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger Prerequisite
-This component depends on `Scaffold` providing `MiuixPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
+This component depends on `Scaffold` providing `COUIPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
 :::
 
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.menu.OverlayIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.menu.OverlayIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage
@@ -84,7 +84,7 @@ Scaffold(
             title = "Library",
             actions = {
                 OverlayIconCascadingDropdownMenu(entries = entries) {
-                    Icon(imageVector = MiuixIcons.Tune, contentDescription = "Adjust")
+                    Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
                 }
             }
         )
@@ -114,7 +114,7 @@ val entry = DropdownEntry(
 
 Scaffold {
     OverlayIconCascadingDropdownMenu(entry = entry) {
-        Icon(imageVector = MiuixIcons.Tune, contentDescription = "Adjust")
+        Icon(imageVector = COUIIcons.Tune, contentDescription = "Adjust")
     }
 }
 ```
@@ -128,7 +128,7 @@ OverlayIconCascadingDropdownMenu(
     entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false,
 ) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "More")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 

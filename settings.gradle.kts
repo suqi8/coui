@@ -1,9 +1,9 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:Suppress("UnstableApiUsage")
 
-rootProject.name = "compose-miuix-ui"
+rootProject.name = "compose-coui-ui"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
@@ -39,14 +39,14 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-include(":miuix-core")
-include(":miuix-ui")
-include(":miuix-preference")
-include(":miuix-shader")
-include(":miuix-blur")
-include(":miuix-squircle")
-include(":miuix-icons")
-include(":miuix-navigation3-ui")
+include(":coui-core")
+include(":coui-ui")
+include(":coui-preference")
+include(":coui-shader")
+include(":coui-blur")
+include(":coui-squircle")
+include(":coui-icons")
+include(":coui-navigation3-ui")
 
 include(":baselineprofile")
 

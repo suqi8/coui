@@ -1,0 +1,178 @@
+// Copyright 2026, compose-coui-ui contributors
+// SPDX-License-Identifier: Apache-2.0
+
+package com.suqi8.coui.kmp.preference
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.BasicComponentColors
+import com.suqi8.coui.kmp.basic.BasicComponentDefaults
+import com.suqi8.coui.kmp.basic.Button
+import com.suqi8.coui.kmp.basic.ButtonColors
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
+
+/**
+ * A preference row with a small inline button at the end, mirroring COUIButtonPreference.
+ *
+ * The button follows the COUI small button style (couiSmallButtonColorStyle ->
+ * Widget.COUI.Button.Small, coui_preference_widget_button.xml): a 52x28dp minimum capsule filled
+ * with the theme accent (couiColorContainerTheme) and a 14sp medium label
+ * (couiColorLabelOnColor). The button click is independent from the row click.
+ *
+ * @param title The title of the [ButtonPreference].
+ * @param buttonText The label of the inline button.
+ * @param onButtonClick The callback when the inline button is clicked.
+ * @param modifier The modifier to be applied to the [ButtonPreference].
+ * @param titleColor The color of the title.
+ * @param summary The summary of the [ButtonPreference].
+ * @param summaryColor The color of the summary.
+ * @param startAction The [Composable] content on the start side of the [ButtonPreference].
+ * @param endActions The [Composable] content on the end side of the [ButtonPreference],
+ *   placed before the button.
+ * @param bottomAction The [Composable] content at the bottom of the [ButtonPreference].
+ * @param buttonColors The [ButtonColors] of the inline button.
+ * @param buttonMinWidth The minimum width of the inline button.
+ * @param buttonMinHeight The minimum height of the inline button.
+ * @param buttonCornerRadius The corner radius of the inline button.
+ * @param buttonInsideMargin The margin inside the inline button.
+ * @param insideMargin The margin inside the [ButtonPreference].
+ * @param onClick The callback when the row (not the button) is clicked.
+ * @param holdDownState Used to determine whether it is in the pressed state.
+ * @param enabled Whether the [ButtonPreference] and its button are enabled.
+ */
+@Composable
+@NonRestartableComposable
+fun ButtonPreference(
+    title: String,
+    buttonText: String,
+    onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    titleColor: BasicComponentColors = BasicComponentDefaults.titleColor(),
+    summary: String? = null,
+    summaryColor: BasicComponentColors = BasicComponentDefaults.summaryColor(),
+    startAction: @Composable (() -> Unit)? = null,
+    endActions: @Composable RowScope.() -> Unit = {},
+    bottomAction: (@Composable () -> Unit)? = null,
+    buttonColors: ButtonColors = ButtonPreferenceDefaults.buttonColors(),
+    buttonMinWidth: Dp = ButtonPreferenceDefaults.ButtonMinWidth,
+    buttonMinHeight: Dp = ButtonPreferenceDefaults.ButtonMinHeight,
+    buttonCornerRadius: Dp = ButtonPreferenceDefaults.ButtonCornerRadius,
+    buttonInsideMargin: PaddingValues = ButtonPreferenceDefaults.ButtonInsideMargin,
+    insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    onClick: (() -> Unit)? = null,
+    holdDownState: Boolean = false,
+    enabled: Boolean = true,
+) {
+    BasicComponent(
+        modifier = modifier,
+        insideMargin = insideMargin,
+        title = title,
+        titleColor = titleColor,
+        summary = summary,
+        summaryColor = summaryColor,
+        startAction = startAction,
+        endActions = {
+            Row(
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .align(Alignment.CenterVertically)
+                    .weight(1f, fill = false),
+            ) {
+                endActions()
+            }
+            ButtonPreferenceEndAction(
+                buttonText = buttonText,
+                onButtonClick = onButtonClick,
+                enabled = enabled,
+                buttonColors = buttonColors,
+                buttonMinWidth = buttonMinWidth,
+                buttonMinHeight = buttonMinHeight,
+                buttonCornerRadius = buttonCornerRadius,
+                buttonInsideMargin = buttonInsideMargin,
+            )
+        },
+        bottomAction = bottomAction,
+        onClick = onClick,
+        holdDownState = holdDownState,
+        enabled = enabled,
+    )
+}
+
+@Composable
+private fun ButtonPreferenceEndAction(
+    buttonText: String,
+    onButtonClick: () -> Unit,
+    enabled: Boolean,
+    buttonColors: ButtonColors,
+    buttonMinWidth: Dp,
+    buttonMinHeight: Dp,
+    buttonCornerRadius: Dp,
+    buttonInsideMargin: PaddingValues,
+) {
+    Button(
+        onClick = onButtonClick,
+        enabled = enabled,
+        cornerRadius = buttonCornerRadius,
+        minWidth = buttonMinWidth,
+        minHeight = buttonMinHeight,
+        colors = buttonColors,
+        insideMargin = buttonInsideMargin,
+    ) {
+        Text(
+            text = buttonText,
+            // COUI small button label: coui_btn_small_text_size 14sp, sans-serif-medium
+            // (Widget.COUI.Button.Small textAppearance couiTextAppearanceButton).
+            fontSize = COUITheme.textStyles.body2.fontSize,
+            fontWeight = FontWeight.Medium,
+        )
+    }
+}
+
+object ButtonPreferenceDefaults {
+
+    /** The minimum width of the inline button (COUI coui_btn_small_width_min). */
+    val ButtonMinWidth = 52.dp
+
+    /** The minimum height of the inline button (COUI coui_btn_small_height_min). */
+    val ButtonMinHeight = 28.dp
+
+    /**
+     * The corner radius of the inline button. COUIButton drawableRadius is -1dp
+     * (auto capsule) in Widget.COUI.Button.Small, i.e. [ButtonMinHeight] / 2.
+     */
+    val ButtonCornerRadius = 14.dp
+
+    /** The margin inside the inline button (Widget.COUI.Button.Small padding 12dp/4dp). */
+    val ButtonInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+
+    /**
+     * The default [ButtonColors] of the inline button: theme accent fill
+     * (couiSmallButtonColorStyle drawableColor couiColorContainerTheme) with the on-color label
+     * (coui_btn_default_text_color -> couiColorLabelOnColor).
+     */
+    @Composable
+    fun buttonColors(
+        color: Color = COUITheme.colorScheme.primary,
+        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        contentColor: Color = COUITheme.colorScheme.onPrimary,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
+    ): ButtonColors = ButtonDefaults.buttonColors(
+        color = color,
+        disabledColor = disabledColor,
+        contentColor = contentColor,
+        disabledContentColor = disabledContentColor,
+    )
+}

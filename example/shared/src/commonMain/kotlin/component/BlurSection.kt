@@ -1,4 +1,4 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -34,23 +34,23 @@ import component.effect.BgEffectBackground
 import component.highlight.HighlightConfig
 import component.highlight.rememberContainerHighlight
 import org.jetbrains.compose.resources.painterResource
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurBlendMode
-import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.SliderPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.shared.generated.resources.Res
-import top.yukonga.miuix.kmp.shared.generated.resources.blur_test_bg
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.blur.BlendColorEntry
+import com.suqi8.coui.kmp.blur.BlurBlendMode
+import com.suqi8.coui.kmp.blur.BlurDefaults
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.blur.textureBlur
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.preference.SliderPreference
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.shared.generated.resources.Res
+import com.suqi8.coui.kmp.shared.generated.resources.blur_test_bg
+import com.suqi8.coui.kmp.theme.COUITheme
 import ui.isInDarkTheme
 import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
@@ -78,7 +78,7 @@ private fun BlurDemo() {
     val isInDark = isInDarkTheme()
 
     val backdrop = rememberLayerBackdrop()
-    val surface = MiuixTheme.colorScheme.surface.copy(alpha = 0.6f)
+    val surface = COUITheme.colorScheme.surface.copy(alpha = 0.6f)
 
     var tiltDriven by remember { mutableStateOf(true) }
     val containers = HighlightConfig.Container.entries
@@ -111,11 +111,11 @@ private fun BlurDemo() {
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 16.dp),
     ) {
         // Preview area
         Card(
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = 16.dp),
         ) {
             Box(
                 modifier = Modifier
@@ -156,13 +156,13 @@ private fun BlurDemo() {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "Texture Blur | R=${blurRadiusX.toInt()}",
-                            style = MiuixTheme.textStyles.headline2,
+                            style = COUITheme.textStyles.headline2,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = "${currentBlend.first} | ${containerItems[containerIndex]}",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            style = COUITheme.textStyles.body2,
+                            color = COUITheme.colorScheme.onSurfaceVariantActions,
                         )
                     }
                 }
@@ -174,6 +174,8 @@ private fun BlurDemo() {
                 selectedIndex = blendModeIndex,
                 onSelectedIndexChange = { blendModeIndex = it },
             )
+
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
 
             OverlayDropdownPreference(
                 title = "Highlight",
@@ -242,7 +244,7 @@ private fun ForegroundBlurDemo() {
     val dynamicBackground = remember { mutableStateOf(true) }
 
     val backdrop = rememberLayerBackdrop()
-    val onBackground = MiuixTheme.colorScheme.onBackground
+    val onBackground = COUITheme.colorScheme.onBackground
     val logoBlend = remember(isInDark) {
         if (isInDark) {
             listOf(
@@ -276,10 +278,10 @@ private fun ForegroundBlurDemo() {
     var isOs3Effect by remember { mutableStateOf(true) }
 
     Column(
-        modifier = Modifier.padding(horizontal = 12.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
     ) {
         Card(
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = 16.dp),
         ) {
             BgEffectBackground(
                 dynamicBackground = dynamicBackground.value,
@@ -292,7 +294,7 @@ private fun ForegroundBlurDemo() {
             ) {
                 // Foreground blur text
                 Text(
-                    text = "Foreground Blur\nMiuix Demo",
+                    text = "Foreground Blur\nCOUI Demo",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Black,
                     textAlign = TextAlign.Center,
@@ -324,12 +326,16 @@ private fun ForegroundBlurDemo() {
                 onSelectedIndexChange = { isOs3Effect = (it == 1) },
             )
 
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
             OverlayDropdownPreference(
                 title = "Blend Mode",
                 items = blendModeItems,
                 selectedIndex = blendModeIndex,
                 onSelectedIndexChange = { blendModeIndex = it },
             )
+
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
 
             SwitchPreference(
                 title = "Dynamic Background",

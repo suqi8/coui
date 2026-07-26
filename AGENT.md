@@ -1,6 +1,6 @@
 # COUI16 AGENT Guide
 
-本文件汇总后续 AI 在本仓库里应遵守的核心规则。本仓库基于 [Miuix](https://github.com/compose-miuix-ui/miuix) 改造，目标是**就地演进成一套 COUI（ColorOS 设计语言）Compose Multiplatform 组件库**。
+本文件汇总后续 AI 在本仓库里应遵守的核心规则。本仓库基于 [Miuix](https://github.com/compose-coui-ui/miuix) 改造，目标是**就地演进成一套 COUI（ColorOS 设计语言）Compose Multiplatform 组件库**。
 
 > 工程规范（构建命令、代码风格、API 约定、性能约束）见 `CLAUDE.md`，那份仍然有效，写 COUI 组件时**必须同时遵守**。本文件只补充「COUI 改造」这条主线：项目定位、设计来源、逆向校准工作流。
 
@@ -18,7 +18,7 @@
 
 ## 2. 项目定位（已确认）
 
-- 本仓库由 `git clone` 自上游 Miuix（`origin = compose-miuix-ui/miuix`），是改造基底。
+- 本仓库由 `git clone` 自上游 Miuix（`origin = compose-coui-ui/miuix`），是改造基底。
 - **定位：就地改造成 coui 库。** Miuix 作为基底，不再单独对齐上游；最终可改包名 / Maven 坐标为 coui。
 - **改动深度：主题换肤优先（渐进）。** 先调 `theme/` 层默认值让现有组件整体呈现 COUI 观感，之后再按需逐个深挖组件。先不做大规模组件重构，除非某个组件的结构/交互和 ColorOS 差异大到换肤补不平。
 - 目标设计系统：**COUI 16 = ColorOS 16 的设计语言**（仓库目录名 `COUI16` 即源于此）。
@@ -53,18 +53,18 @@ COUI 控件资源历史上常以 `couiXxx` / `coloros_xxx` / `oplus_xxx` 命名�
 
 ## 4. Miuix → COUI 的换肤抓手（先看清，再动手）
 
-Miuix 的视觉语言**高度集中在 `theme/` 层**，组件全部走 `MiuixTheme.colorScheme.*` / `MiuixTheme.textStyles.*` 取色取字，从不硬编码颜色 —— 这是换肤的核心利好，改默认值即可全局生效。
+Miuix 的视觉语言**高度集中在 `theme/` 层**，组件全部走 `COUITheme.colorScheme.*` / `COUITheme.textStyles.*` 取色取字，从不硬编码颜色 —— 这是换肤的核心利好，改默认值即可全局生效。
 
 | 抓手 | 文件 | 改什么 |
 | :--- | :--- | :--- |
-| 配色 | `miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/theme/Colors.kt` | `lightColorScheme()` / `darkColorScheme()` 的默认色值（约 50 个色槽）。当前主色是 HyperOS 蓝 `#3482FF`，COUI 应换成 ColorOS 主色 |
+| 配色 | `coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/theme/Colors.kt` | `lightColorScheme()` / `darkColorScheme()` 的默认色值（约 50 个色槽）。当前主色是 HyperOS 蓝 `#3482FF`，COUI 应换成 ColorOS 主色 |
 | 字体 | `…/theme/TextStyles.kt` | `Main/Body/Title/...` 的 `fontSize` / `fontWeight` / `lineHeight`。当前主字号 17sp |
-| 形状 | 各组件 `ComponentDefaults.CornerRadius` + `miuix-squircle/` | COUI 圆角偏大且是连续曲率（squircle）；本仓库已内置 `miuix-squircle`，校准 squircle 平滑度参数即可 |
+| 形状 | 各组件 `ComponentDefaults.CornerRadius` + `coui-squircle/` | COUI 圆角偏大且是连续曲率（squircle）；本仓库已内置 `coui-squircle`，校准 squircle 平滑度参数即可 |
 | 动效 | `…/anim/` | 缓动曲线 / 时长 |
 
-**取色取字断言（来自真实代码，写组件时照此模式）**：组件如 `basic/Button.kt` 通过 `ButtonDefaults.buttonColors()` 取 `MiuixTheme.colorScheme.secondaryVariant` 等，形状走 `Modifier.squircleSurface(color, cornerRadius)`。所以「换主色」= 改 `Colors.kt` 默认值；「换某控件配色」= 改该组件的 `XxxDefaults.xxxColors()` 默认引用的色槽；**任何情况下都不在组件里写死 `Color(0x...)`**。
+**取色取字断言（来自真实代码，写组件时照此模式）**：组件如 `basic/Button.kt` 通过 `ButtonDefaults.buttonColors()` 取 `COUITheme.colorScheme.secondaryVariant` 等，形状走 `Modifier.squircleSurface(color, cornerRadius)`。所以「换主色」= 改 `Colors.kt` 默认值；「换某控件配色」= 改该组件的 `XxxDefaults.xxxColors()` 默认引用的色槽；**任何情况下都不在组件里写死 `Color(0x...)`**。
 
-> ⚠️ 命名现状：色槽 / 主题类目前仍叫 `MiuixTheme` / `Colors` / `lightColorScheme`。换肤阶段**不重命名**，只改值，避免一次性大改爆炸。重命名为 `CouiTheme` 等留到后续「改包名 / 坐标」专项再做。
+> ⚠️ 命名现状：色槽 / 主题类目前仍叫 `COUITheme` / `Colors` / `lightColorScheme`。换肤阶段**不重命名**，只改值，避免一次性大改爆炸。重命名为 `CouiTheme` 等留到后续「改包名 / 坐标」专项再做。
 
 ## 5. 设计 token 必须先逆向的判定
 
@@ -189,7 +189,7 @@ adb exec-out screencap -p > D:\AndroidStudioProjects\jadx\work\_shots\settings.p
 | 全局字号 / 字重 | `TextStyles.kt` → `Main` / `Body*` / `Title*` 等私有 `val` | |
 | 控件圆角 | 对应组件的 `XxxDefaults.CornerRadius`（如 `ButtonDefaults.CornerRadius`） | 配合 squircle |
 | 控件尺寸 / 内边距 | 对应组件的 `XxxDefaults.MinWidth/MinHeight/InsideMargin` | |
-| squircle 平滑度 | `miuix-squircle/` 模块参数 | 全局连续曲率 |
+| squircle 平滑度 | `coui-squircle/` 模块参数 | 全局连续曲率 |
 | 单控件配色 | 该组件 `XxxDefaults.xxxColors()` 默认引用的色槽 | 不在组件体内写死颜色 |
 
 改完同一改动要顺带检查（见 `CLAUDE.md`「Modifying a Component」）：

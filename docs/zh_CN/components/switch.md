@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Switch
+import com.suqi8.coui.kmp.basic.Switch
 ```
 
 ## 基本用法
@@ -51,7 +51,7 @@ Switch(
 | modifier        | Modifier             | 应用于开关的修饰符       | Modifier                      | 否       |
 | colors          | SwitchColors         | 开关的颜色配置           | SwitchDefaults.switchColors() | 否       |
 | enabled         | Boolean              | 开关是否可交互           | true                          | 否       |
-| isLoading       | Boolean              | 滑块是否显示加载转圈(COUI 加载样式) | false                | 否       |
+| isLoading       | Boolean              | 是否处于 COUI 加载态:滑块缩小消失并被旋转的渐变弧取代,期间不响应点击 | false                | 否       |
 
 ### SwitchDefaults 对象
 

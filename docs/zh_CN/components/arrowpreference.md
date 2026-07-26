@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.ArrowPreference
 ```
 
 ## 基本用法
@@ -103,8 +103,8 @@ ArrowPreferenceDefaults 对象提供右侧箭头图标的默认颜色配置。
 ### 箭头着色说明
 
 - 右侧箭头图标始终显示，并根据 `enabled` 自动着色。
-- 当 `enabled = true` 时使用 `MiuixTheme.colorScheme.onSurfaceVariantActions`。
-- 当 `enabled = false` 时使用 `MiuixTheme.colorScheme.disabledOnSecondaryVariant`。
+- 当 `enabled = true` 时使用 `COUITheme.colorScheme.onSurfaceVariantActions`。
+- 当 `enabled = false` 时使用 `COUITheme.colorScheme.disabledOnSecondaryVariant`。
 
 ## 进阶用法
 
@@ -116,9 +116,9 @@ ArrowPreference(
     summary = "查看和修改您的个人资料",
     startAction = {
         Icon(
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "个人图标",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

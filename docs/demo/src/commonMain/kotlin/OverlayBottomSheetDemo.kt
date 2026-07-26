@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -17,17 +17,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.icon.extended.Ok
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Close
+import com.suqi8.coui.kmp.icon.extended.Ok
+import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun OverlayBottomSheetDemo() {
@@ -61,18 +61,18 @@ fun OverlayBottomSheetDemo() {
                         startAction = {
                             IconButton(onClick = { showBottomSheet = false }) {
                                 Icon(
-                                    imageVector = MiuixIcons.Close,
+                                    imageVector = COUIIcons.Close,
                                     contentDescription = "Cancel",
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.onBackground,
                                 )
                             }
                         },
                         endAction = {
                             IconButton(onClick = { showBottomSheet = false }) {
                                 Icon(
-                                    imageVector = MiuixIcons.Ok,
+                                    imageVector = COUIIcons.Ok,
                                     contentDescription = "Confirm",
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.onBackground,
                                 )
                             }
                         },

@@ -1,6 +1,6 @@
 # Squircle Shapes
 
-`miuix-squircle` is a standalone library that provides squircle (continuous-corner)
+`coui-squircle` is a standalone library that provides squircle (continuous-corner)
 rounded-rectangle shapes for Compose Multiplatform. It exposes `Modifier` extensions
 for fill / clip / border and a low-level `Path` builder. The library supports
 Android, Desktop (JVM), iOS, macOS, and Web (WasmJs/Js).
@@ -22,13 +22,13 @@ manual gating. See [Global Toggle](#global-toggle) for the runtime opt-out.
 
 ## Setup
 
-Add the `miuix-squircle` dependency to your project:
+Add the `coui-squircle` dependency to your project:
 
 ```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("top.yukonga.miuix.kmp:miuix-squircle:<version>")
+            implementation("com.suqi8.coui.kmp:coui-squircle:<version>")
         }
     }
 }
@@ -38,7 +38,7 @@ For Android-only projects:
 
 ```kotlin
 dependencies {
-    implementation("top.yukonga.miuix.kmp:miuix-squircle-android:<version>")
+    implementation("com.suqi8.coui.kmp:coui-squircle-android:<version>")
 }
 ```
 
@@ -62,13 +62,13 @@ need consistency.
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.squircle.squircleBackground
+import com.suqi8.coui.kmp.squircle.squircleBackground
 
 Box(
     modifier = Modifier
         .size(120.dp, 80.dp)
         .squircleBackground(
-            color = MiuixTheme.colorScheme.primaryVariant,
+            color = COUITheme.colorScheme.primaryVariant,
             cornerRadius = 20.dp,
         ),
 )
@@ -84,7 +84,7 @@ let children overflow or paint their own corners.
 
 ```kotlin
 Modifier.squircleBackground(
-    color = MiuixTheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primaryVariant,
     cornerRadius = 16.dp,
 )
 ```
@@ -97,7 +97,7 @@ the same offscreen layer as the fill, so there is no double-pass cost.
 
 ```kotlin
 Modifier.squircleSurface(
-    color = MiuixTheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primaryVariant,
     cornerRadius = 16.dp,
 )
 ```
@@ -126,11 +126,11 @@ width so it lines up with a same-radius `squircleBackground` / `squircleSurface`
 Path-based (no shader required); cheaper than the shader variants.
 
 ```kotlin
-import top.yukonga.miuix.kmp.squircle.squircleBorder
+import com.suqi8.coui.kmp.squircle.squircleBorder
 
 Modifier.squircleBorder(
     width = 1.dp,
-    color = MiuixTheme.colorScheme.outline,
+    color = COUITheme.colorScheme.outline,
     cornerRadius = 16.dp,
 )
 ```
@@ -143,7 +143,7 @@ Every shader-backed modifier has a per-corner overload that matches
 
 ```kotlin
 Modifier.squircleSurface(
-    color = MiuixTheme.colorScheme.secondaryVariant,
+    color = COUITheme.colorScheme.secondaryVariant,
     topStart = 24.dp,
     topEnd = 24.dp,
     bottomEnd = 0.dp,
@@ -166,7 +166,7 @@ squircle look.
 
 ```kotlin
 Modifier.squircleBackground(
-    color = MiuixTheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primaryVariant,
     cornerRadius = 24.dp,
     extension = 1.2f,
 )
@@ -182,7 +182,7 @@ non-shader Shape, etc.), build the path directly:
 
 ```kotlin
 import androidx.compose.ui.graphics.Path
-import top.yukonga.miuix.kmp.squircle.addSquircleRect
+import com.suqi8.coui.kmp.squircle.addSquircleRect
 
 val path = Path().apply {
     addSquircleRect(
@@ -203,7 +203,7 @@ modifier. Set it to `false` to force the `RoundedCornerShape` fallback at
 runtime — useful for visual preferences or A/B comparisons:
 
 ```kotlin
-import top.yukonga.miuix.kmp.squircle.LocalSquircleEnabled
+import com.suqi8.coui.kmp.squircle.LocalSquircleEnabled
 
 CompositionLocalProvider(LocalSquircleEnabled provides userPrefersRoundedRects) {
     AppContent()
@@ -221,7 +221,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
     val path = remember { Path() }
     Box(
         Modifier
-            .squircleBackground(MiuixTheme.colorScheme.surface, cornerRadius)
+            .squircleBackground(COUITheme.colorScheme.surface, cornerRadius)
             .drawWithContent {
                 drawContent()
                 path.rewind()
@@ -231,7 +231,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
                     cornerRadius = cornerRadius.toPx(),
                     squircleEnabled = squircleEnabled,
                 )
-                drawPath(path, MiuixTheme.colorScheme.outline, style = Stroke(1.dp.toPx()))
+                drawPath(path, COUITheme.colorScheme.outline, style = Stroke(1.dp.toPx()))
             },
     )
 }

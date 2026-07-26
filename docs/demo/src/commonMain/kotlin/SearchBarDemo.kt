@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -18,13 +18,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.ui.unit.sp
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.BasicComponentDefaults
+import com.suqi8.coui.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.SearchBar
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun SearchBarDemo() {
@@ -56,6 +59,7 @@ fun SearchBarDemo() {
                     )
                 },
                 outsideEndAction = {
+                    // COUI functional button: 14sp sans-serif-medium, accent blue.
                     Text(
                         modifier = Modifier
                             .clickable(
@@ -66,7 +70,8 @@ fun SearchBarDemo() {
                                 searchValue = ""
                             },
                         text = "Cancel",
-                        color = MiuixTheme.colorScheme.primary,
+                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+                        color = COUITheme.colorScheme.primary,
                     )
                 },
                 expanded = expanded,

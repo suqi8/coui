@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -58,14 +58,14 @@ import androidx.compose.ui.zIndex
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.basic.Search
-import top.yukonga.miuix.kmp.icon.basic.SearchCleanup
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.basic.Search
+import com.suqi8.coui.kmp.icon.basic.SearchCleanup
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.overScrollVertical
 import utils.SearchStatus
 
 // Search Pager Composable
@@ -110,7 +110,7 @@ fun SearchStatus.SearchPager(
         label = "SearchPagerSurfaceAlpha",
     )
 
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.surface
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +133,7 @@ fun SearchStatus.SearchPager(
                 }
                 .then(
                     if (!searchStatus.isCollapsed()) {
-                        Modifier.background(MiuixTheme.colorScheme.surface)
+                        Modifier.background(COUITheme.colorScheme.surface)
                     } else {
                         Modifier
                     },
@@ -145,7 +145,7 @@ fun SearchStatus.SearchPager(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .background(MiuixTheme.colorScheme.surface),
+                        .background(COUITheme.colorScheme.surface),
                 ) {
                     expandBar(searchStatus, onSearchStatusChange)
                 }
@@ -158,7 +158,7 @@ fun SearchStatus.SearchPager(
                 Text(
                     text = "Cancel",
                     fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.primary,
+                    color = COUITheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(end = 16.dp, bottom = 6.dp)
                         .clickable(
@@ -229,12 +229,12 @@ fun SearchBar(
         label = searchStatus.label,
         leadingIcon = {
             Icon(
-                imageVector = MiuixIcons.Basic.Search,
+                imageVector = COUIIcons.Basic.Search,
                 contentDescription = "back",
                 modifier = Modifier
                     .size(44.dp)
                     .padding(start = 16.dp, end = 8.dp),
-                tint = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                tint = COUITheme.colorScheme.onSurfaceContainerHigh,
             )
         },
         trailingIcon = {
@@ -244,8 +244,8 @@ fun SearchBar(
                 exit = fadeOut() + scaleOut(),
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Basic.SearchCleanup,
-                    tint = MiuixTheme.colorScheme.onSurface,
+                    imageVector = COUIIcons.Basic.SearchCleanup,
+                    tint = COUITheme.colorScheme.onSurface,
                     contentDescription = "Clean",
                     modifier = Modifier
                         .size(44.dp)
@@ -260,7 +260,7 @@ fun SearchBar(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(bottom = 6.dp)
             .focusRequester(focusRequester),
         onSearch = {},
@@ -292,17 +292,17 @@ fun SearchBarFake(
         label = label,
         leadingIcon = {
             Icon(
-                imageVector = MiuixIcons.Basic.Search,
+                imageVector = COUIIcons.Basic.Search,
                 contentDescription = "Search",
                 modifier = Modifier
                     .size(44.dp)
                     .padding(start = 16.dp, end = 8.dp),
-                tint = MiuixTheme.colorScheme.onSurfaceContainerHigh,
+                tint = COUITheme.colorScheme.onSurfaceContainerHigh,
             )
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
             .padding(top = searchBarTopPadding, bottom = 6.dp),
         onSearch = { },
         enabled = false,

@@ -1,6 +1,6 @@
 # RadioButton
 
-`RadioButton` is a basic selection component in Miuix, supporting two states: selected and unselected. When selected, it displays an animated checkmark indicator. When unselected, no indicator is shown. It is suitable for single selection scenarios where only one option can be chosen from a group.
+`RadioButton` is a basic selection component in Miuix, supporting two states: selected and unselected. When selected, it displays a filled disc with a center dot; when unselected, it shows an outline ring. It is suitable for single selection scenarios where only one option can be chosen from a group.
 
 <div style="position: relative; height: 220px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=radioButton" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.RadioButton
+import com.suqi8.coui.kmp.basic.RadioButton
 ```
 
 ## Basic Usage
@@ -69,10 +69,14 @@ The RadioButtonDefaults object provides default color configurations for the Rad
 
 ### RadioButtonColors Class
 
-| Property Name         | Type  | Description                                     |
-| --------------------- | ----- | ----------------------------------------------- |
-| selectedColor         | Color | Checkmark color when selected                   |
-| disabledSelectedColor | Color | Checkmark color when disabled and selected      |
+| Property Name           | Type  | Description                                      |
+| ----------------------- | ----- | ------------------------------------------------ |
+| selectedColor           | Color | Disc fill color when selected                    |
+| disabledSelectedColor   | Color | Disc fill color when disabled and selected       |
+| unselectedColor         | Color | Outline ring color when unselected               |
+| disabledUnselectedColor | Color | Outline ring color when disabled and unselected  |
+| centerColor             | Color | Center dot color when selected                   |
+| disabledCenterColor     | Color | Center dot color when disabled and selected      |
 
 ## Advanced Usage
 

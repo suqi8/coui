@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.getValue
@@ -18,64 +17,72 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TabRow
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.TabRow
+import com.suqi8.coui.kmp.basic.TabRowDefaults
+import com.suqi8.coui.kmp.basic.TabRowWithContour
+import com.suqi8.coui.kmp.basic.Text
 
 fun LazyListScope.tabRowSection() {
     item(key = "tabRow") {
         SmallTitle(text = "TabRow")
-        val tabTexts = remember { listOf("Tab 1", "Tab 2", "Tab 3") }
-        val tabTexts1 = remember { listOf("Tab 1", "Tab 2", "Tab 3", "Tab 4", "Tab 5", "Tab 6") }
-        var selectedTabIndex by remember { mutableIntStateOf(0) }
-        val tabListState = rememberLazyListState()
+        val framelessTabs = remember { listOf("Day", "Week", "Month") }
+        var framelessSelected by remember { mutableIntStateOf(0) }
         TabRow(
-            tabs = tabTexts,
-            selectedTabIndex = selectedTabIndex,
-            onTabSelected = {
-                selectedTabIndex = it
-            },
-            listState = tabListState,
+            tabs = framelessTabs,
+            selectedTabIndex = framelessSelected,
+            onTabSelected = { framelessSelected = it },
             modifier = Modifier
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
         )
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
             insideMargin = PaddingValues(16.dp),
         ) {
+            // COUI segment button, as used by the special access page in ColorOS Settings.
+            val segmentTabs = remember { listOf("All", "Allowed", "Denied") }
             val scope = rememberCoroutineScope()
-            val pagerState = rememberPagerState(pageCount = { tabTexts1.size })
-            val contourTabListState = rememberLazyListState()
+            val pagerState = rememberPagerState(pageCount = { segmentTabs.size })
             TabRowWithContour(
-                tabs = tabTexts1,
+                tabs = segmentTabs,
                 selectedTabIndex = pagerState.currentPage,
                 onTabSelected = {
                     scope.launch {
                         pagerState.animateScrollToPage(it)
                     }
                 },
-                listState = contourTabListState,
             )
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp),
+                    .padding(top = 12.dp)
+                    .padding(bottom = 16.dp),
                 userScrollEnabled = true,
                 key = { it },
                 pageContent = { page ->
                     Text(
-                        text = "Content of ${tabTexts1[page]}",
+                        text = "Content of ${segmentTabs[page]}",
                         modifier = Modifier
                             .fillMaxWidth(),
                     )
                 },
+            )
+            // SegmentButton.Tiny variant (32dp height, 2dp contour inset).
+            val tinyTabs = remember { listOf("Photo", "Video", "Portrait", "Pano") }
+            var tinySelected by remember { mutableIntStateOf(0) }
+            TabRowWithContour(
+                tabs = tinyTabs,
+                selectedTabIndex = tinySelected,
+                onTabSelected = { tinySelected = it },
+                height = TabRowDefaults.TabRowWithContourTinyHeight,
+                cornerRadius = TabRowDefaults.TabRowWithContourTinyCornerRadius,
+                contourPadding = TabRowDefaults.TabRowWithContourTinyPadding,
             )
         }
     }

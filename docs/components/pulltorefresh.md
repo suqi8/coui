@@ -6,13 +6,13 @@
 This component is only available in touch-enabled environments.
 :::
 
-For a demo, see the DropDowns page of the <a href="https://compose-miuix-ui.github.io/miuix-jsCanvas/" target="_blank" rel="noopener noreferrer">Miuix Example</a>.
+For a demo, see the DropDowns page of the <a href="https://compose-coui-ui.github.io/miuix-jsCanvas/" target="_blank" rel="noopener noreferrer">Miuix Example</a>.
 
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import com.suqi8.coui.kmp.basic.PullToRefresh
+import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
 ```
 
 ## Basic Usage
@@ -75,7 +75,7 @@ PullToRefresh has the following states:
 | pullToRefreshState      | PullToRefreshState     | PullToRefresh state            | rememberPullToRefreshState()           | No       |
 | contentPadding          | PaddingValues          | Content padding                | PaddingValues(0.dp)                    | No       |
 | topAppBarScrollBehavior | ScrollBehavior         | Top app bar scroll behavior    | null                                   | No       |
-| color                   | Color                  | Indicator color                | PullToRefreshDefaults.color            | No       |
+| color                   | Color                  | Indicator color (Unspecified falls back to theme primary) | PullToRefreshDefaults.color            | No       |
 | circleSize              | Dp                     | Indicator circle size          | PullToRefreshDefaults.circleSize       | No       |
 | refreshTexts            | List\<String>          | Text list for different states | PullToRefreshDefaults.refreshTexts     | No       |
 | refreshTextStyle        | TextStyle              | Refresh text style             | PullToRefreshDefaults.refreshTextStyle | No       |
@@ -98,8 +98,8 @@ PullToRefreshDefaults provides default values for the component.
 
 | Property Name    | Type          | Description             | Default Value                                                                             |
 | ---------------- | ------------- | ----------------------- | ----------------------------------------------------------------------------------------- |
-| color            | Color         | Default indicator color | Color.Gray                                                                                |
-| circleSize       | Dp            | Default indicator size  | 20.dp                                                                                     |
+| color            | Color         | Default indicator color | Color.Unspecified (falls back to the theme primary color)                                 |
+| circleSize       | Dp            | Default indicator size  | 19.dp                                                                                     |
 | refreshTexts     | List\<String> | Default text list       | ["Pull down to refresh", "Release to refresh", "Refreshing...", "Refreshed successfully"] |
 | refreshTextStyle | TextStyle     | Default text style      | TextStyle(fontSize = 14.sp, fontWeight = Bold, color = color)                             |
 

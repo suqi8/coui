@@ -6,13 +6,13 @@
 此组件仅适用于支持触控的环境!
 :::
 
-如需示例，请查看 <a href="https://compose-miuix-ui.github.io/miuix-jsCanvas/" target="_blank">Miuix Example</a> 的 DropDowns 页。
+如需示例，请查看 <a href="https://compose-coui-ui.github.io/miuix-jsCanvas/" target="_blank">Miuix Example</a> 的 DropDowns 页。
 
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
+import com.suqi8.coui.kmp.basic.PullToRefresh
+import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
 ```
 
 ## 基本用法
@@ -75,7 +75,7 @@ PullToRefresh 组件有以下几种状态：
 | pullToRefreshState      | PullToRefreshState     | 下拉刷新状态控制器       | rememberPullToRefreshState()           | 否       |
 | contentPadding          | PaddingValues          | 内容区的内边距           | PaddingValues(0.dp)                    | 否       |
 | topAppBarScrollBehavior | ScrollBehavior         | 顶部应用栏滚动行为       | null                                   | 否       |
-| color                   | Color                  | 刷新指示器的颜色         | PullToRefreshDefaults.color            | 否       |
+| color                   | Color                  | 刷新指示器的颜色（Unspecified 回退到主题主色） | PullToRefreshDefaults.color            | 否       |
 | circleSize              | Dp                     | 刷新指示器圆圈的大小     | PullToRefreshDefaults.circleSize       | 否       |
 | refreshTexts            | List\<String>          | 不同状态下显示的文本列表 | PullToRefreshDefaults.refreshTexts     | 否       |
 | refreshTextStyle        | TextStyle              | 刷新文本的样式           | PullToRefreshDefaults.refreshTextStyle | 否       |
@@ -100,8 +100,8 @@ PullToRefreshDefaults 提供下拉刷新组件的默认值。
 
 | 属性名           | 类型          | 说明                 | 默认值                                                                                    |
 | ---------------- | ------------- | -------------------- | ----------------------------------------------------------------------------------------- |
-| color            | Color         | 刷新指示器的默认颜色 | Color.Gray                                                                                |
-| circleSize       | Dp            | 指示器圆圈的默认大小 | 20.dp                                                                                     |
+| color            | Color         | 刷新指示器的默认颜色 | Color.Unspecified（回退到主题主色）                                                       |
+| circleSize       | Dp            | 指示器圆圈的默认大小 | 19.dp                                                                                     |
 | refreshTexts     | List\<String> | 默认的刷新文本列表   | ["Pull down to refresh", "Release to refresh", "Refreshing...", "Refreshed successfully"] |
 | refreshTextStyle | TextStyle     | 默认的文本样式       | TextStyle(fontSize = 14.sp, fontWeight = Bold, color = color)                             |
 

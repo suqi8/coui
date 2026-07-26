@@ -11,11 +11,11 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Snackbar
-import top.yukonga.miuix.kmp.basic.SnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.SnackbarDuration
-import top.yukonga.miuix.kmp.basic.SnackbarResult
+import com.suqi8.coui.kmp.basic.Snackbar
+import com.suqi8.coui.kmp.basic.SnackbarHost
+import com.suqi8.coui.kmp.basic.SnackbarHostState
+import com.suqi8.coui.kmp.basic.SnackbarDuration
+import com.suqi8.coui.kmp.basic.SnackbarResult
 ```
 
 ## Basic Usage
@@ -112,19 +112,23 @@ In most cases you can keep the default `content` which uses the built‑in `Snac
 fun Snackbar(
     data: SnackbarData,
     modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = SnackbarDefaults.CornerRadius,
+    singleLineCornerRadius: Dp = SnackbarDefaults.SingleLineCornerRadius,
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
     insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
 ```
 
-| Parameter Name | Type           | Description                                | Default Value                     | Required |
-| -------------- | -------------- | ------------------------------------------ | --------------------------------- | -------- |
-| data           | SnackbarData   | Data describing message and actions        | -                                 | Yes      |
-| modifier       | Modifier       | Modifier applied to the Snackbar container | Modifier                          | No       |
-| cornerRadius   | Dp             | Corner radius of the Snackbar              | SnackbarDefaults.CornerRadius     | No       |
-| colors         | SnackbarColors | Color configuration for the Snackbar       | SnackbarDefaults.snackbarColors() | No       |
-| insideMargin   | PaddingValues  | Inner padding of the Snackbar content      | SnackbarDefaults.InsideMargin     | No       |
+| Parameter Name         | Type           | Description                                                | Default Value                           | Required |
+| ---------------------- | -------------- | ---------------------------------------------------------- | --------------------------------------- | -------- |
+| data                   | SnackbarData   | Data describing message and actions                        | -                                       | Yes      |
+| modifier               | Modifier       | Modifier applied to the Snackbar container                 | Modifier                                | No       |
+| icon                   | (@Composable () -> Unit)? | Optional leading icon shown in a 30.dp box (pass it through the `content` lambda of `SnackbarHost`) | null | No       |
+| cornerRadius           | Dp             | Corner radius when the message spans multiple lines        | SnackbarDefaults.CornerRadius           | No       |
+| singleLineCornerRadius | Dp             | Corner radius when the message fits on a single line       | SnackbarDefaults.SingleLineCornerRadius | No       |
+| colors                 | SnackbarColors | Color configuration for the Snackbar                       | SnackbarDefaults.snackbarColors()       | No       |
+| insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element) | SnackbarDefaults.InsideMargin | No       |
 
 ### SnackbarColors and SnackbarDefaults
 
@@ -143,21 +147,25 @@ You can create a color configuration via `SnackbarDefaults.snackbarColors`:
 
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
-    containerColor = MiuixTheme.colorScheme.surfaceContainerHighest,
-    contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-    actionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
-    dismissActionContentColor = MiuixTheme.colorScheme.onSurfaceContainerHighest,
+    containerColor = COUITheme.colorScheme.surfaceContainerHighest,
+    contentColor = COUITheme.colorScheme.onSurfaceContainer,
+    actionContentColor = COUITheme.colorScheme.primary,
+    dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
 )
 ```
 
 #### Constants
 
-`SnackbarDefaults` also exposes the default corner radius and inside margin used by `Snackbar`:
+`SnackbarDefaults` also exposes the default corner radii, text style and inside margin used by `Snackbar`:
 
-| Constant Name | Type          | Description                                | Default Value                                          |
-| ------------- | ------------- | ------------------------------------------ | ------------------------------------------------------ |
-| CornerRadius  | Dp            | Default corner radius of the Snackbar      | 16.dp                                                  |
-| InsideMargin  | PaddingValues | Default inner padding of the Snackbar      | PaddingValues(horizontal = 12.dp, vertical = 8.dp)     |
+| Constant Name          | Type          | Description                                              | Default Value                                       |
+| ---------------------- | ------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| CornerRadius           | Dp            | Corner radius when the message spans multiple lines      | 16.dp                                               |
+| SingleLineCornerRadius | Dp            | Corner radius when the message fits on a single line     | 24.dp                                               |
+| InsideMargin           | PaddingValues | Default inner padding of the Snackbar                    | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
+| IconSize               | Dp            | Size of the optional leading icon box                    | 30.dp                                               |
+
+`SnackbarDefaults.textStyle()` returns the default text style of the message and action label (14sp, medium weight).
 
 ## SnackbarDuration and SnackbarResult
 

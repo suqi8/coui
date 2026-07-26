@@ -2,7 +2,7 @@
 title: WindowSpinnerPreference
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at the window layer
 hostComponent: None
 popupHost: None
@@ -23,9 +23,9 @@ This component does not rely on `Scaffold` and can be used in any Composable sco
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.preference.WindowSpinnerPreference
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage

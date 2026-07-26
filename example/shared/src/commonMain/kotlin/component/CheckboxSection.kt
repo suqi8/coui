@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -16,25 +16,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.preference.CheckboxLocation
-import top.yukonga.miuix.kmp.preference.CheckboxPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Checkbox
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.preference.CheckboxLocation
+import com.suqi8.coui.kmp.preference.CheckboxPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 
 fun LazyListScope.checkboxSection() {
     item(key = "checkbox") {
         SmallTitle(text = "Checkbox")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             CheckboxRow()
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             CheckboxPreferenceEndDemo()
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             CheckboxPreferenceDemo()
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             CheckboxPreference(
                 title = "Disabled Checkbox",
                 checked = true,
@@ -109,8 +113,8 @@ private fun CheckboxPreferenceEndDemo() {
         endActions = {
             Text(
                 text = "$checked",
-                fontSize = MiuixTheme.textStyles.body2.fontSize,
-                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                fontSize = COUITheme.textStyles.body2.fontSize,
+                color = COUITheme.colorScheme.onSurfaceVariantActions,
             )
         },
         onCheckedChange = { checked = it },

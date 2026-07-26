@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -17,10 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.CircularProgressIndicator
+import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator
+import com.suqi8.coui.kmp.basic.LinearProgressIndicator
+import com.suqi8.coui.kmp.basic.SmallTitle
 
 fun LazyListScope.progressIndicatorSection() {
     item(key = "progressIndicator") {
@@ -38,22 +38,22 @@ fun LazyListScope.progressIndicatorSection() {
         LinearProgressIndicator(
             progress = animatedProgressValue,
             modifier = Modifier
-                .padding(horizontal = 15.dp)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = 12.dp),
         )
         progressValues.forEach { progressValue ->
             LinearProgressIndicator(
                 progress = progressValue,
                 modifier = Modifier
-                    .padding(horizontal = 15.dp) // Increased from 12.dp.
+                    .padding(horizontal = 16.dp)
                     .padding(bottom = 12.dp),
             )
         }
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             CircularProgressIndicator(

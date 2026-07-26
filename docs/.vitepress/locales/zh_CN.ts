@@ -19,7 +19,7 @@ export default defineConfig({
 
         footer: {
             message: "基于 Apache-2.0 许可发布",
-            copyright: `版权所有 © 2024-${new Date().getFullYear()} compose-miuix-ui`,
+            copyright: `版权所有 © 2024-${new Date().getFullYear()} compose-coui-ui`,
         },
 
         nav: [
@@ -94,6 +94,7 @@ export default defineConfig({
                         { text: "SearchBar", link: "/zh_CN/components/searchbar" },
                         { text: "ColorPalette", link: "/zh_CN/components/colorpalette" },
                         { text: "ColorPicker", link: "/zh_CN/components/colorpicker" },
+                        { text: "ColorSwatchPicker", link: "/zh_CN/components/colorswatchpicker" },
                     ],
                 },
                 {

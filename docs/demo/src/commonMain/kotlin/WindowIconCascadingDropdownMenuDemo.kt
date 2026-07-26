@@ -1,4 +1,4 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -21,18 +21,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.MoreCircle
-import top.yukonga.miuix.kmp.icon.extended.Tune
-import top.yukonga.miuix.kmp.menu.WindowIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.MoreCircle
+import com.suqi8.coui.kmp.icon.extended.Tune
+import com.suqi8.coui.kmp.menu.WindowIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun WindowIconCascadingDropdownMenuDemo() {
@@ -96,8 +96,8 @@ fun WindowIconCascadingDropdownMenuDemo() {
                         actions = {
                             WindowIconCascadingDropdownMenu(entries = entries) {
                                 Icon(
-                                    imageVector = MiuixIcons.Tune,
-                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    imageVector = COUIIcons.Tune,
+                                    tint = COUITheme.colorScheme.onBackground,
                                     contentDescription = "Adjust",
                                 )
                             }
@@ -106,8 +106,8 @@ fun WindowIconCascadingDropdownMenuDemo() {
                                 enabled = false,
                             ) {
                                 Icon(
-                                    imageVector = MiuixIcons.MoreCircle,
-                                    tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                                    imageVector = COUIIcons.MoreCircle,
+                                    tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                                     contentDescription = "More",
                                 )
                             }

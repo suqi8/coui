@@ -2,11 +2,11 @@
 title: OverlayBottomSheet
 requiresScaffoldHost: true
 prerequisites:
-  - Must be used within `Scaffold` to provide `MiuixPopupHost`
+  - Must be used within `Scaffold` to provide `COUIPopupHost`
   - Using outside `Scaffold` will cause popup content not to render
   - Multiple nested or side-by-side `Scaffold`s are supported without extra configuration
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayBottomSheet
@@ -18,14 +18,14 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger Prerequisite
-This component depends on `Scaffold` providing `MiuixPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
+This component depends on `Scaffold` providing `COUIPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
 :::
 
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import com.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## Basic Usage
@@ -85,8 +85,8 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 
 | Property Name | Type   | Description                          |
 | ------------- | ------ | ------------------------------------ |
-| cornerRadius  | Dp     | Default corner radius (28.dp)        |
-| maxWidth      | Dp     | Default maximum width (640.dp)       |
+| cornerRadius  | Dp     | Default corner radius (20.dp, COUI couiRoundCornerXL) |
+| maxWidth      | Dp     | Default width cap (Dp.Infinity; width follows the COUI responsive grid) |
 | outsideMargin | DpSize | Default bottom sheet external margin |
 | insideMargin  | DpSize | Default bottom sheet internal margin |
 
@@ -113,8 +113,8 @@ Scaffold {
     OverlayBottomSheet(
         show = showBottomSheet,
         title = "Custom Style",
-        backgroundColor = MiuixTheme.colorScheme.surfaceVariant,
-        dragHandleColor = MiuixTheme.colorScheme.primary,
+        backgroundColor = COUITheme.colorScheme.surfaceVariant,
+        dragHandleColor = COUITheme.colorScheme.primary,
         outsideMargin = DpSize(16.dp, 0.dp),
         insideMargin = DpSize(32.dp, 16.dp),
         onDismissRequest = { showBottomSheet = false }
@@ -257,7 +257,7 @@ Scaffold {
     ) {
         Card(
             colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.secondaryContainer,
+                color = COUITheme.colorScheme.secondaryContainer,
             ),
         ) {
             TextField(

@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.ArrowPreference
 ```
 
 ## Basic Usage
@@ -103,8 +103,8 @@ The ArrowPreferenceDefaults object provides default color configuration for the 
 ### Arrow Tint
 
 - The trailing arrow icon is always shown and tinted automatically.
-- Tint uses `MiuixTheme.colorScheme.onSurfaceVariantActions` when `enabled = true`.
-- Tint uses `MiuixTheme.colorScheme.disabledOnSecondaryVariant` when `enabled = false`.
+- Tint uses `COUITheme.colorScheme.onSurfaceVariantActions` when `enabled = true`.
+- Tint uses `COUITheme.colorScheme.disabledOnSecondaryVariant` when `enabled = false`.
 
 ## Advanced Usage
 
@@ -116,9 +116,9 @@ ArrowPreference(
     summary = "View and edit your profile",
     startAction = {
         Icon(
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "Personal Icon",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

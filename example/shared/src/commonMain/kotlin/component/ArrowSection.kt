@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
@@ -19,19 +20,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Contacts
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SliderPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.basic.TextField
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Contacts
+import com.suqi8.coui.kmp.overlay.OverlayDialog
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.SliderPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 
 fun LazyListScope.arrowSection() {
     item(key = "arrow") {
@@ -42,8 +44,8 @@ fun LazyListScope.arrowSection() {
         SmallTitle(text = "Arrow")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             ArrowPreference(
                 title = "Arrow",
@@ -52,21 +54,22 @@ fun LazyListScope.arrowSection() {
                         modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Icon(
-                            imageVector = MiuixIcons.Contacts,
+                            imageVector = COUIIcons.Contacts,
                             contentDescription = "Personal",
-                            tint = MiuixTheme.colorScheme.onBackground,
+                            tint = COUITheme.colorScheme.onBackground,
                         )
                     }
                 },
                 endActions = {
                     Text(
                         text = "End",
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        fontSize = COUITheme.textStyles.body2.fontSize,
+                        color = COUITheme.colorScheme.onSurfaceVariantActions,
                     )
                 },
                 onClick = {},
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             SliderPreference(
                 title = "Volume",
                 valueText = "${(volume * 100).toInt()}%",
@@ -78,13 +81,14 @@ fun LazyListScope.arrowSection() {
                 },
                 holdDownState = volumeDialogHoldDown.value,
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
                 title = "Disabled Arrow",
                 endActions = {
                     Text(
                         text = "End",
-                        fontSize = MiuixTheme.textStyles.body2.fontSize,
-                        color = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                        fontSize = COUITheme.textStyles.body2.fontSize,
+                        color = COUITheme.colorScheme.disabledOnSecondaryVariant,
                     )
                 },
                 enabled = false,
@@ -118,7 +122,11 @@ private fun SliderDialog(
         content = {
             var text by remember { mutableStateOf(((volumeState() * 100).toInt()).toString()) }
             TextField(
-                modifier = Modifier.padding(bottom = 16.dp),
+                // The dialog content slot is unpadded (COUI button bars span the panel), so
+                // custom content brings its own 24dp side margins.
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 16.dp),
                 value = text,
                 maxLines = 1,
                 onValueChange = { newValue ->
@@ -133,7 +141,14 @@ private fun SliderDialog(
                     }
                 },
             )
-            Row(horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                // COUI assignment-style pill buttons keep 24dp side and bottom margins.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 TextButton(
                     text = "Cancel",
                     onClick = { showDialog.value = false },

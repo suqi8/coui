@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.ui.Alignment
@@ -9,8 +9,8 @@ import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import org.jetbrains.compose.resources.painterResource
-import top.yukonga.miuix.kmp.shared.generated.resources.Res
-import top.yukonga.miuix.kmp.shared.generated.resources.icon
+import com.suqi8.coui.kmp.shared.generated.resources.Res
+import com.suqi8.coui.kmp.shared.generated.resources.icon
 import java.awt.Dimension
 
 fun main() = application {
@@ -23,7 +23,7 @@ fun main() = application {
         state = state,
         onCloseRequest = ::exitApplication,
         alwaysOnTop = isHotReloadMode,
-        title = "Miuix",
+        title = "COUI",
         icon = painterResource(Res.drawable.icon),
     ) {
         window.minimumSize = Dimension(300, 600)

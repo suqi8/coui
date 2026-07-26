@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.ColorPicker
+import com.suqi8.coui.kmp.basic.ColorPicker
 ```
 
 ## 基本用法
@@ -187,7 +187,7 @@ Surface {
     ) {
         Text(
             text = "选择颜色",
-            style = MiuixTheme.textStyles.title2
+            style = COUITheme.textStyles.title2
         )
         Spacer(modifier = Modifier.height(16.dp))
         ColorPicker(

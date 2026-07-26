@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.animation.AnimatedContent
@@ -79,42 +79,42 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import navigation3.Navigator
 import navigation3.Route
-import top.yukonga.miuix.kmp.basic.FabPosition
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailDisplayMode
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Create
-import top.yukonga.miuix.kmp.icon.extended.Delete
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.HorizontalSplit
-import top.yukonga.miuix.kmp.icon.extended.Image
-import top.yukonga.miuix.kmp.icon.extended.Link
-import top.yukonga.miuix.kmp.icon.extended.More
-import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.FabPosition
+import com.suqi8.coui.kmp.basic.FloatingActionButton
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarItem
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationBarDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationBarItem
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.NavigationRail
+import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationRailItem
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SnackbarHost
+import com.suqi8.coui.kmp.basic.SnackbarHostState
+import com.suqi8.coui.kmp.basic.ToolbarPosition
+import com.suqi8.coui.kmp.blur.BlendColorEntry
+import com.suqi8.coui.kmp.blur.BlurDefaults
+import com.suqi8.coui.kmp.blur.LayerBackdrop
+import com.suqi8.coui.kmp.blur.highlight.Highlight
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.blur.textureBlur
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Create
+import com.suqi8.coui.kmp.icon.extended.Delete
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.icon.extended.HorizontalSplit
+import com.suqi8.coui.kmp.icon.extended.Image
+import com.suqi8.coui.kmp.icon.extended.Link
+import com.suqi8.coui.kmp.icon.extended.More
+import com.suqi8.coui.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.theme.COUITheme
 import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.FPSMonitor
@@ -128,7 +128,7 @@ private object UIConstants {
     const val COLOR_PAGE_INDEX = 2
     const val TEXT_STYLE_PAGE_INDEX = 3
     const val PAGE_COUNT = 5
-    const val GITHUB_URL = "https://github.com/compose-miuix-ui/miuix"
+    const val GITHUB_URL = "https://github.com/compose-coui-ui/coui"
 
     val PAGE_TITLES = listOf("Home", "Icon", "Color", "TextStyle", "Settings")
 }
@@ -187,11 +187,11 @@ fun AppContent(
 
     val navigationItems = remember {
         listOf(
-            NavigationItem(UIConstants.PAGE_TITLES[0], MiuixIcons.HorizontalSplit),
-            NavigationItem(UIConstants.PAGE_TITLES[1], MiuixIcons.Create),
-            NavigationItem(UIConstants.PAGE_TITLES[2], MiuixIcons.Image),
-            NavigationItem(UIConstants.PAGE_TITLES[3], MiuixIcons.Edit),
-            NavigationItem(UIConstants.PAGE_TITLES[4], MiuixIcons.Settings),
+            NavigationItem(UIConstants.PAGE_TITLES[0], COUIIcons.HorizontalSplit),
+            NavigationItem(UIConstants.PAGE_TITLES[1], COUIIcons.Create),
+            NavigationItem(UIConstants.PAGE_TITLES[2], COUIIcons.Image),
+            NavigationItem(UIConstants.PAGE_TITLES[3], COUIIcons.Edit),
+            NavigationItem(UIConstants.PAGE_TITLES[4], COUIIcons.Settings),
         )
     }
 
@@ -320,7 +320,7 @@ private fun WideScreenContent(
     val appState = LocalAppState.current
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
     val page = mainPagerState.selectedPage
     Row {
         if (appState.showNavigationBar) {
@@ -383,7 +383,7 @@ private fun CompactScreenLayout(
     padding: PaddingValues,
     mainPagerState: MainPagerState,
 ) {
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.surface
     val appState = LocalAppState.current
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
@@ -440,7 +440,9 @@ private fun NavigationBar(
 ) {
     val appState = LocalAppState.current
     val blurActive = appState.enableBlur && backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    // COUI tab navigation bar is slightly lighter than the page base; keep in sync with the
+    // NavigationBar default (colorScheme.background).
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.background
     val page = mainPagerState.selectedPage
 
     AnimatedVisibility(
@@ -463,7 +465,7 @@ private fun NavigationBar(
                                 blurRadius = 25f,
                                 colors = BlurDefaults.blurColors(
                                     blendColors = listOf(
-                                        BlendColorEntry(color = MiuixTheme.colorScheme.surface.copy(0.8f)),
+                                        BlendColorEntry(color = COUITheme.colorScheme.surface.copy(0.8f)),
                                     ),
                                 ),
                             )
@@ -496,7 +498,7 @@ private fun NavigationBar(
             }
         }
         if (appState.useFloatingNavigationBar) {
-            val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
+            val floatingBarColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surfaceContainer
             val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
             val isDark = isInDarkTheme()
             val floatingHighlight = remember(isDark) {
@@ -520,7 +522,7 @@ private fun NavigationBar(
                                 blurRadius = 25f,
                                 colors = BlurDefaults.blurColors(
                                     blendColors = listOf(
-                                        BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(0.6f)),
+                                        BlendColorEntry(color = COUITheme.colorScheme.surfaceContainer.copy(0.6f)),
                                     ),
                                 ),
                                 highlight = floatingHighlight,
@@ -559,8 +561,8 @@ private fun FloatingActionButton(
             },
         ) {
             Icon(
-                imageVector = MiuixIcons.Link,
-                tint = MiuixTheme.colorScheme.onPrimary,
+                imageVector = COUIIcons.Link,
+                tint = COUITheme.colorScheme.onPrimary,
                 contentDescription = "GitHub",
             )
         }
@@ -578,31 +580,31 @@ private fun FloatingToolbar(
         exit = fadeOut(),
     ) {
         FloatingToolbar(
-            color = MiuixTheme.colorScheme.primary,
+            color = COUITheme.colorScheme.primary,
             cornerRadius = 20.dp,
         ) {
             AnimatedContent(
                 targetState = floatingToolbarOrientation,
             ) { orientation ->
-                val iconTint = MiuixTheme.colorScheme.onPrimary
+                val iconTint = COUITheme.colorScheme.onPrimary
                 val content = @Composable {
                     IconButton(onClick = { /* Action 1 */ }) {
                         Icon(
-                            MiuixIcons.Edit,
+                            COUIIcons.Edit,
                             contentDescription = "Edit",
                             tint = iconTint,
                         )
                     }
                     IconButton(onClick = { /* Action 2 */ }) {
                         Icon(
-                            MiuixIcons.Delete,
+                            COUIIcons.Delete,
                             contentDescription = "Delete",
                             tint = iconTint,
                         )
                     }
                     IconButton(onClick = { /* Action 3 */ }) {
                         Icon(
-                            MiuixIcons.More,
+                            COUIIcons.More,
                             contentDescription = "More",
                             tint = iconTint,
                         )

@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.ui.unit.DpSize
@@ -20,7 +20,7 @@ fun main() {
             override fun applicationShouldTerminateAfterLastWindowClosed(sender: NSApplication): Boolean = true
         }
     Window(
-        title = "Miuix",
+        title = "COUI",
         size = DpSize(420.dp, 840.dp),
     ) {
         window.minSize = CGSizeMake(300.0, 600.0)

@@ -2,7 +2,7 @@
 
 `Icon` is a fundamental icon component in Miuix used to display various vector icons, bitmap icons, or custom drawn content in the interface. It provides multiple ways to render icons to accommodate different icon resource types.
 
-By default, `tint` resolves to `LocalContentColor.current`, so the icon follows the content color provided by parent components such as `Button` or `Surface`. Pass an explicit `Color` (for example `MiuixTheme.colorScheme.onBackground`) when you need to override that, or `Color.Unspecified` to disable tinting and keep the source colors.
+By default, `tint` resolves to `LocalContentColor.current`, so the icon follows the content color provided by parent components such as `Button` or `Surface`. Pass an explicit `Color` (for example `COUITheme.colorScheme.onBackground`) when you need to override that, or `Color.Unspecified` to disable tinting and keep the source colors.
 
 `Icon` is an opinionated component designed for **single-color** icons that should be tinted to match their surroundings. If you need to render a multicolored image untouched, or an image that should not follow the recommended icon size, use `androidx.compose.foundation.Image` instead. For a clickable icon, wrap it with `IconButton`.
 
@@ -13,7 +13,7 @@ By default, `tint` resolves to `LocalContentColor.current`, so the icon follows 
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Icon
 ```
 
 ## Basic Usage
@@ -22,7 +22,7 @@ The Icon component can be used to display icons:
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites"
 )
 ```
@@ -35,7 +35,7 @@ Miuix Icon supports multiple types of icon resources:
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Settings,
+    imageVector = COUIIcons.Settings,
     contentDescription = "Settings Icon"
 )
 ```
@@ -67,7 +67,7 @@ Icon(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Contacts,
+    imageVector = COUIIcons.Contacts,
     contentDescription = "Personal Icon",
     tint = Color.Red
 )
@@ -77,7 +77,7 @@ Icon(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites",
     tint = Color.Unspecified // Disable tinting and keep the source colors
 )
@@ -129,7 +129,7 @@ This overload defers the tint color read to the draw phase via a [`ColorProducer
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites",
     modifier = Modifier.size(32.dp)
 )
@@ -142,7 +142,7 @@ Button(
     onClick = { /* Handle click event */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Save,
+        imageVector = COUIIcons.Save,
         contentDescription = "Download Icon"
     )
     Spacer(modifier = Modifier.width(8.dp))
@@ -154,7 +154,7 @@ Button(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Info,
+    imageVector = COUIIcons.Info,
     contentDescription = "Warning Icon",
     tint = Color(0xFFFFA500),
     modifier = Modifier
@@ -176,7 +176,7 @@ var isSelected by remember { mutableStateOf(false) }
 
 IconButton(onClick = { isSelected = !isSelected }) {
     Icon(
-        imageVector = if (isSelected) MiuixIcons.FavoritesFill else MiuixIcons.Favorites,
+        imageVector = if (isSelected) COUIIcons.FavoritesFill else COUIIcons.Favorites,
         contentDescription = "Favorites",
     )
 }
@@ -189,11 +189,11 @@ For tint colors that change every frame (animations, gesture-driven values, sele
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }
 val tint by animateColorAsState(
-    if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onBackground,
+    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.onBackground,
 )
 
 Icon(
-    painter = rememberVectorPainter(MiuixIcons.Favorites),
+    painter = rememberVectorPainter(COUIIcons.Favorites),
     tint = { tint },
     contentDescription = "Favorites",
 )

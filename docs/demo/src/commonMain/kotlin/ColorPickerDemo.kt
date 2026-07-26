@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -17,9 +17,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.ColorPicker
-import top.yukonga.miuix.kmp.basic.SliderDefaults
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.ColorPicker
+import com.suqi8.coui.kmp.basic.SliderDefaults
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun ColorPickerDemo() {
@@ -37,7 +37,7 @@ fun ColorPickerDemo() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val miuixColor = MiuixTheme.colorScheme.primary
+            val miuixColor = COUITheme.colorScheme.primary
             var selectedColor by remember { mutableStateOf(miuixColor) }
             ColorPicker(
                 color = selectedColor,

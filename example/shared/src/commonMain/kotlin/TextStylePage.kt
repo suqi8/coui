@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -23,17 +23,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import lazyfont.LazyText
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -57,9 +57,9 @@ fun TextStylePage(
 ) {
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
 
-    val textStyles = MiuixTheme.textStyles
+    val textStyles = COUITheme.textStyles
 
     val styleEntries = remember(textStyles) {
         listOf(
@@ -74,7 +74,7 @@ fun TextStylePage(
             TextStyleEntry("paragraph", textStyles.paragraph, "17sp / lineHeight 1.2em"),
             TextStyleEntry("body1", textStyles.body1, "16sp"),
             TextStyleEntry("body2", textStyles.body2, "14sp"),
-            TextStyleEntry("button", textStyles.button, "17sp"),
+            TextStyleEntry("button", textStyles.button, "16sp / Medium"),
             TextStyleEntry("footnote1", textStyles.footnote1, "13sp"),
             TextStyleEntry("footnote2", textStyles.footnote2, "11sp"),
         )
@@ -82,7 +82,7 @@ fun TextStylePage(
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
 
     Scaffold(
         topBar = {
@@ -98,7 +98,7 @@ fun TextStylePage(
         },
     ) { innerPadding ->
         val lazyListState = rememberLazyListState()
-        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)
+        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen, extraTop = 12.dp)
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyColumn(
                 state = lazyListState,
@@ -114,8 +114,8 @@ fun TextStylePage(
                 }
                 item(key = "title_card") {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -132,8 +132,8 @@ fun TextStylePage(
                 }
                 item(key = "headline_card") {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -150,8 +150,8 @@ fun TextStylePage(
                 }
                 item(key = "body_card") {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -168,8 +168,8 @@ fun TextStylePage(
                 }
                 item(key = "footnote_card") {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -186,8 +186,8 @@ fun TextStylePage(
                 }
                 item(key = "all_card") {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -222,33 +222,33 @@ private fun TextStyleItem(entry: TextStyleEntry) {
         ) {
             LazyText(
                 text = entry.name,
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurface,
+                style = COUITheme.textStyles.footnote1,
+                color = COUITheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
             LazyText(
                 text = entry.description,
-                style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = COUITheme.textStyles.footnote2,
+                color = COUITheme.colorScheme.onSurfaceVariantSummary,
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         LazyText(
             text = SAMPLE_TEXT_CN,
             style = entry.style,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = COUITheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(2.dp))
         LazyText(
             text = SAMPLE_TEXT_EN,
             style = entry.style,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = COUITheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(2.dp))
         LazyText(
             text = SAMPLE_TEXT_NUM,
             style = entry.style,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = COUITheme.colorScheme.onSurfaceVariantSummary,
         )
     }
 }

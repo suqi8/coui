@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Button
+import com.suqi8.coui.kmp.basic.Button
 ```
 
 ## Basic Usage
@@ -103,6 +103,7 @@ Button(
 | minWidth          | Dp                        | Minimum width of the button       | ButtonDefaults.MinWidth           | No       |
 | minHeight         | Dp                        | Minimum height of the button      | ButtonDefaults.MinHeight          | No       |
 | insideMargin      | PaddingValues             | Internal padding of the button    | ButtonDefaults.InsideMargin       | No       |
+| textStyle         | TextStyle                 | Text style of the label (pass a 14sp style with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.button | No       |
 | interactionSource | MutableInteractionSource? | Interaction source for the button | null                              | No       |
 | indication        | Indication?               | Indication for click interactions | LocalIndication.current           | No       |
 
@@ -118,6 +119,10 @@ The ButtonDefaults object provides default values and color configurations for b
 | MinHeight     | Dp            | Minimum height of the button   | 44.dp                |
 | CornerRadius  | Dp            | Corner radius of the button    | 22.dp                |
 | InsideMargin  | PaddingValues | Internal padding of the button | PaddingValues(horizontal = 12.dp, vertical = 0.dp) |
+| MinWidthSmall | Dp            | Minimum width of the small size tier (COUI Widget.COUI.Button.Small) | 52.dp |
+| MinHeightSmall | Dp           | Minimum height of the small size tier | 28.dp |
+| CornerRadiusSmall | Dp        | Corner radius of the small size tier (height-derived capsule) | 14.dp |
+| InsideMarginSmall | PaddingValues | Internal padding of the small size tier | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
 
 #### Methods
 
@@ -138,7 +143,7 @@ Button(
     onClick = { /* Handle click event */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
     Spacer(modifier = Modifier.width(8.dp))

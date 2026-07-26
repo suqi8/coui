@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Button
+import com.suqi8.coui.kmp.basic.Button
 ```
 
 ## 基本用法
@@ -103,6 +103,7 @@ Button(
 | minWidth          | Dp                        | 按钮最小宽度         | ButtonDefaults.MinWidth           | 否       |
 | minHeight         | Dp                        | 按钮最小高度         | ButtonDefaults.MinHeight          | 否       |
 | insideMargin      | PaddingValues             | 按钮内部边距         | ButtonDefaults.InsideMargin       | 否       |
+| textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 14sp 样式可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
 | indication        | Indication?               | 点击交互的反馈效果   | LocalIndication.current           | 否       |
 
@@ -118,6 +119,10 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 | MinHeight    | Dp            | 按钮的最小高度 | 44.dp                |
 | CornerRadius | Dp            | 按钮的圆角半径 | 22.dp                |
 | InsideMargin | PaddingValues | 按钮的内部边距 | PaddingValues(horizontal = 12.dp, vertical = 0.dp) |
+| MinWidthSmall | Dp           | 小尺寸档的最小宽度（COUI Widget.COUI.Button.Small） | 52.dp |
+| MinHeightSmall | Dp          | 小尺寸档的最小高度 | 28.dp |
+| CornerRadiusSmall | Dp       | 小尺寸档的圆角半径（随高度的胶囊） | 14.dp |
+| InsideMarginSmall | PaddingValues | 小尺寸档的内部边距 | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
 
 #### 方法
 
@@ -138,7 +143,7 @@ Button(
     onClick = { /* 处理点击事件 */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
     Spacer(modifier = Modifier.width(8.dp))

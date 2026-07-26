@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package ui
@@ -9,11 +9,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.ThemeColorSpec
-import top.yukonga.miuix.kmp.theme.ThemeController
-import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
+import com.suqi8.coui.kmp.theme.ColorSchemeMode
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.ThemeColorSpec
+import com.suqi8.coui.kmp.theme.ThemeController
+import com.suqi8.coui.kmp.theme.ThemePaletteStyle
 
 val LocalColorMode = compositionLocalOf { 0 }
 
@@ -40,7 +40,7 @@ fun AppTheme(
     CompositionLocalProvider(
         LocalColorMode provides colorMode,
     ) {
-        MiuixTheme(
+        COUITheme(
             controller = controller,
             content = content,
         )

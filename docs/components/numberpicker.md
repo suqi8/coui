@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.NumberPicker
+import com.suqi8.coui.kmp.basic.NumberPicker
 ```
 
 ## Basic Usage
@@ -66,10 +66,10 @@ NumberPicker(
 | enabled          | Boolean            | Whether the picker is enabled for user interaction                       | true                       | No       |
 | range            | IntRange           | The range of selectable values                                           | 0..10                      | No       |
 | label            | (Int) -> String    | Converts a value to its display string                                   | { it.toString() }          | No       |
-| visibleItemCount | Int                | Number of visible items. Must be odd and at least 3                      | 5                          | No       |
+| visibleItemCount | Int                | Number of visible items. Must be odd and at least 3                      | 3                          | No       |
 | wrapAround       | Boolean            | Whether the picker wraps around (infinite scrolling)                     | false                      | No       |
 | colors           | NumberPickerColors | Color configuration of the picker                                        | NumberPickerDefaults.colors() | No       |
-| textStyle        | TextStyle          | Text style for picker items                                              | MiuixTheme.textStyles.title1 | No       |
+| textStyle        | TextStyle          | Text style for picker items                                              | COUITheme.textStyles.title1 | No       |
 | itemHeight       | Dp                 | The height of each item in the picker                                    | NumberPickerDefaults.ItemHeight | No       |
 
 ### NumberPickerDefaults Object

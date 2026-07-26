@@ -9,8 +9,8 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.HorizontalDivider // Horizontal divider
-import top.yukonga.miuix.kmp.basic.VerticalDivider   // Vertical divider
+import com.suqi8.coui.kmp.basic.HorizontalDivider // Horizontal divider
+import com.suqi8.coui.kmp.basic.VerticalDivider   // Vertical divider
 ```
 
 ## Basic Usage
@@ -63,10 +63,11 @@ The DividerDefaults object provides default values for the divider components.
 
 #### Constants
 
-| Constant Name | Type  | Description                  | Default Value                      |
-| ------------- | ----- | ---------------------------- | ---------------------------------- |
-| Thickness     | Dp    | Default thickness of divider | 0.33.dp                            |
-| DividerColor  | Color | Default color of divider     | MiuixTheme.colorScheme.dividerLine |
+| Constant Name | Type  | Description                                            | Default Value                      |
+| ------------- | ----- | ------------------------------------------------------ | ---------------------------------- |
+| Thickness     | Dp    | Default thickness of divider                           | 0.33.dp                            |
+| DividerColor  | Color | Default color of divider                               | COUITheme.colorScheme.dividerLine |
+| CardInset     | Dp    | Recommended horizontal inset inside a Card (COUI rule) | 16.dp                              |
 
 ## Advanced Usage
 
@@ -94,15 +95,19 @@ Column {
 }
 ```
 
-### Divider with Padding
+### Divider Between Card Rows
+
+Following the COUI card list rule, place a divider only between adjacent rows inside a card
+(never after the last row) and inset it by `DividerDefaults.CardInset` on both sides. For rows
+with a leading icon, increase the start inset so the divider aligns with the title text start:
 
 ```kotlin
-Column {
-    Text("Content Above")
+Card {
+    BasicComponent(title = "First Row")
     HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = DividerDefaults.CardInset)
     )
-    Text("Content Below")
+    BasicComponent(title = "Second Row")
 }
 ```
 

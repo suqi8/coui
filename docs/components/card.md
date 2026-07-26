@@ -9,8 +9,8 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.utils.PressFeedbackType // If using interactive card
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.utils.PressFeedbackType // If using interactive card
 ```
 
 ## Basic Usage
@@ -33,7 +33,7 @@ Card {
 | colors            | CardColors                         | Card color configuration                  | CardDefaults.defaultColors() | No       | All         |
 | cornerRadius      | Dp                                 | Card corner radius                        | CardDefaults.CornerRadius    | No       | All         |
 | insideMargin      | PaddingValues                      | Card inner padding                        | CardDefaults.InsideMargin    | No       | All         |
-| pressFeedbackType | PressFeedbackType                  | Feedback type when pressed                | PressFeedbackType.None       | No       | Interactive |
+| pressFeedbackType | PressFeedbackType                  | Feedback type when pressed                | PressFeedbackType.Tint       | No       | Interactive |
 | showIndication    | Boolean                            | Show indication on interaction            | false                        | No       | Interactive |
 | holdDownState     | Boolean                            | Whether the card is in the pressed state  | false                        | No       | Interactive |
 | onClick           | (() -> Unit)?                      | Callback when clicked                     | null                         | No       | Interactive |
@@ -52,7 +52,7 @@ The CardDefaults object provides default values and color configurations for the
 
 | Constant Name | Type          | Description        | Default Value       |
 | ------------- | ------------- | ------------------ | ------------------- |
-| CornerRadius  | Dp            | Card corner radius | 17.dp               |
+| CornerRadius  | Dp            | Card corner radius | 12.dp               |
 | InsideMargin  | PaddingValues | Card inner padding | PaddingValues(0.dp) |
 
 #### Methods
@@ -63,10 +63,20 @@ The CardDefaults object provides default values and color configurations for the
 
 ### CardColors Class
 
-| Property Name | Type  | Description                      |
-| ------------- | ----- | -------------------------------- |
-| color         | Color | Default background color of card |
-| contentColor  | Color | Default content color of card    |
+| Property Name | Type  | Description                                                          |
+| ------------- | ----- | -------------------------------------------------------------------- |
+| color         | Color | Default background color of card                                     |
+| contentColor  | Color | Default content color of card                                        |
+| pressedColor  | Color | Fill color the card animates towards while pressed (Tint feedback)   |
+
+### PressFeedbackType Options
+
+| Option | Description                                                                                        |
+| ------ | -------------------------------------------------------------------------------------------------- |
+| None   | No press feedback                                                                                  |
+| Tint   | Animates the fill towards `pressedColor` while pressed or held down (COUI card feedback, default)  |
+| Sink   | Sinks (scales down) slightly when pressed                                                          |
+| Tilt   | Tilts based on the touch position when pressed                                                     |
 
 
 ## Advanced Usage
@@ -78,7 +88,7 @@ Card(
     cornerRadius = 8.dp,
     insideMargin = PaddingValues(16.dp),
     colors = CardDefaults.defaultColors(
-        color = MiuixTheme.colorScheme.primaryVariant
+        color = COUITheme.colorScheme.primaryVariant
     ),
 ) {
     Text("Custom Style Card")
@@ -94,7 +104,7 @@ Card(
 ) {
     Text(
         text = "Card Title",
-        style = MiuixTheme.textStyles.title2
+        style = COUITheme.textStyles.title2
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(
@@ -141,11 +151,22 @@ LazyColumn {
 ```kotlin
 Card(
     modifier = Modifier.padding(16.dp),
-    pressFeedbackType = PressFeedbackType.Sink, // Set press feedback to sink effect
-    showIndication = true, // Show indication on click
+    // pressFeedbackType defaults to PressFeedbackType.Tint: the fill animates
+    // towards CardColors.pressedColor while pressed (COUI card press feedback)
     onClick = {/* Handle click event */ },
     onLongPress = {/* Handle long press event */ }
 ) {
     Text("Interactive Card")
+}
+```
+
+```kotlin
+Card(
+    modifier = Modifier.padding(16.dp),
+    pressFeedbackType = PressFeedbackType.Sink, // Set press feedback to sink effect
+    showIndication = true, // Show indication on click
+    onClick = {/* Handle click event */ },
+) {
+    Text("Interactive Card (Sink)")
 }
 ```

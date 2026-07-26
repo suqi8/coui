@@ -2,7 +2,7 @@
 
 `Icon` 是 Miuix 中的基础图标组件，用于在界面中展示各种矢量图标、位图图标或自定义绘制内容。它提供了多种绘制图标的方式，适应不同的图标资源类型。
 
-`tint` 的默认值是 `LocalContentColor.current`，因此图标会跟随父级组件（如 `Button`、`Surface`）提供的内容颜色。若需要覆盖该颜色，传入显式的 `Color`（例如 `MiuixTheme.colorScheme.onBackground`）；若想保留资源本身的颜色而不做着色，传入 `Color.Unspecified`。
+`tint` 的默认值是 `LocalContentColor.current`，因此图标会跟随父级组件（如 `Button`、`Surface`）提供的内容颜色。若需要覆盖该颜色，传入显式的 `Color`（例如 `COUITheme.colorScheme.onBackground`）；若想保留资源本身的颜色而不做着色，传入 `Color.Unspecified`。
 
 `Icon` 是为**单色图标**设计的组件，会根据所处场景对图标着色。如果要原样渲染多色图片，或图片不应遵循推荐图标尺寸，请使用 `androidx.compose.foundation.Image`。需要点击交互的图标，请使用 `IconButton`。
 
@@ -13,7 +13,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Icon
 ```
 
 ## 基本用法
@@ -22,7 +22,7 @@ Icon 组件可以用于显示图标：
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites"
 )
 ```
@@ -35,7 +35,7 @@ Miuix Icon 支持多种类型的图标资源：
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Settings,
+    imageVector = COUIIcons.Settings,
     contentDescription = "设置图标"
 )
 ```
@@ -67,7 +67,7 @@ Icon(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Contacts,
+    imageVector = COUIIcons.Contacts,
     contentDescription = "人像图标",
     tint = Color.Red
 )
@@ -77,7 +77,7 @@ Icon(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites",
     tint = Color.Unspecified // 关闭着色，保留图标自身颜色
 )
@@ -129,7 +129,7 @@ Icon(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Favorites,
+    imageVector = COUIIcons.Favorites,
     contentDescription = "Favorites",
     modifier = Modifier.size(32.dp)
 )
@@ -142,7 +142,7 @@ Button(
     onClick = { /* 处理点击事件 */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Save,
+        imageVector = COUIIcons.Save,
         contentDescription = "下载图标"
     )
     Spacer(modifier = Modifier.width(8.dp))
@@ -154,7 +154,7 @@ Button(
 
 ```kotlin
 Icon(
-    imageVector = MiuixIcons.Info,
+    imageVector = COUIIcons.Info,
     contentDescription = "警告图标",
     tint = Color(0xFFFFA500),
     modifier = Modifier
@@ -176,7 +176,7 @@ var isSelected by remember { mutableStateOf(false) }
 
 IconButton(onClick = { isSelected = !isSelected }) {
     Icon(
-        imageVector = if (isSelected) MiuixIcons.FavoritesFill else MiuixIcons.Favorites,
+        imageVector = if (isSelected) COUIIcons.FavoritesFill else COUIIcons.Favorites,
         contentDescription = if (isSelected) "喜欢" else "不喜欢",
     )
 }
@@ -189,11 +189,11 @@ IconButton(onClick = { isSelected = !isSelected }) {
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }
 val tint by animateColorAsState(
-    if (isSelected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onBackground,
+    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.onBackground,
 )
 
 Icon(
-    painter = rememberVectorPainter(MiuixIcons.Favorites),
+    painter = rememberVectorPainter(COUIIcons.Favorites),
     tint = { tint },
     contentDescription = "Favorites",
 )

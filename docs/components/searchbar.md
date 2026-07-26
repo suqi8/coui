@@ -11,8 +11,8 @@ suggestions display.
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.SearchBar
+import com.suqi8.coui.kmp.basic.InputField
 ```
 
 ## Basic Usage
@@ -68,6 +68,7 @@ SearchBar(
 | label             | String                    | Placeholder text when empty          | ""                   | No       |
 | enabled           | Boolean                   | Whether search field is enabled      | true                 | No       |
 | textStyle         | TextStyle?                | Style of text in search box          | null                 | No       |
+| colors            | SearchBarColors           | Colors of the input field            | SearchBarDefaults.searchBarColors() | No       |
 | leadingIcon       | @Composable (() -> Unit)? | Leading icon                         | default search icon  | No       |
 | trailingIcon      | @Composable (() -> Unit)? | Trailing icon                        | default clear button | No       |
 | interactionSource | MutableInteractionSource? | Interaction source                   | null                 | No       |
@@ -78,15 +79,32 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 
 #### Constants
 
-| Constant Name         | Type     | Description                              | Default Value      |
-| --------------------- | -------- | ---------------------------------------- | ------------------ |
-| InsideMargin          | DpSize   | Internal padding of the SearchBar        | DpSize(12.dp, 0.dp)|
-| InputFieldMinHeight   | Dp       | Minimum height of the InputField         | 45.dp              |
-| InputFieldFontSize    | TextUnit | Font size for the InputField label       | 17.sp              |
-| LeadingIconStartPadding | Dp     | Start padding for default leading icon   | 16.dp              |
-| LeadingIconEndPadding | Dp       | End padding for default leading icon     | 8.dp               |
-| TrailingIconStartPadding | Dp    | Start padding for default trailing icon  | 8.dp               |
-| TrailingIconEndPadding | Dp      | End padding for default trailing icon    | 16.dp              |
+| Constant Name              | Type     | Description                                        | Default Value      |
+| -------------------------- | -------- | -------------------------------------------------- | ------------------ |
+| InsideMargin               | DpSize   | Internal padding of the SearchBar                  | DpSize(16.dp, 6.dp)|
+| InputFieldMinHeight        | Dp       | Minimum height of the InputField background        | 40.dp              |
+| InputFieldFontSize         | TextUnit | Font size for the InputField text and label        | 16.sp              |
+| LeadingIconStartPadding    | Dp       | Start padding for default leading icon             | 12.dp              |
+| LeadingIconEndPadding      | Dp       | End padding for default leading icon               | 8.dp               |
+| TrailingIconStartPadding   | Dp       | Start padding for default clear button             | 4.dp               |
+| TrailingIconEndPadding     | Dp       | End padding for default clear button               | 4.dp               |
+| TrailingIconTouchTargetSize | Dp      | Circular touch target size of default clear button | 36.dp              |
+| TrailingIconVisualSize     | Dp       | Visual circle size of default clear button         | 18.dp              |
+
+#### Methods
+
+| Method Name       | Type            | Description                             |
+| ----------------- | --------------- | --------------------------------------- |
+| searchBarColors() | SearchBarColors | Creates the default input field colors  |
+
+### SearchBarColors Class
+
+| Property Name   | Type  | Description                                                                       |
+| --------------- | ----- | --------------------------------------------------------------------------------- |
+| backgroundColor | Color | Capsule background (translucent; secondaryContainer, 8% black / 15% white)        |
+| labelColor      | Color | Label (hint) text color (onSurfaceSecondary, 54% black / 54% white)               |
+| iconColor       | Color | Tint of the default leading search icon (onSurfaceSecondary)                      |
+| clearIconColor  | Color | Fill of the default clear button circle (onSurfaceContainerHigh)                  |
 
 ## Advanced Usage
 
@@ -107,7 +125,7 @@ SearchBar(
             leadingIcon = {
                 Icon(
                     modifier = Modifier.padding(start = 12.dp, end = 8.dp),
-                    imageVector = MiuixIcons.Search,
+                    imageVector = COUIIcons.Search,
                     contentDescription = "Search"
                 )
             }
@@ -175,9 +193,9 @@ SearchBar(
     expanded = expanded,
     onExpandedChange = { expanded = it },
     outsideEndAction = {
+        // The SearchBar already provides COUI-accurate spacing around this slot.
         Text(
             modifier = Modifier
-                .padding(start = 12.dp)
                 .clickable(
                     interactionSource = null,
                     indication = null
@@ -186,7 +204,8 @@ SearchBar(
                     searchText = ""
                 },
             text = "Cancel",
-            color = MiuixTheme.colorScheme.primary
+            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+            color = COUITheme.colorScheme.primary
         )
     }
 ) {

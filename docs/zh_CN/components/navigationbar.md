@@ -13,11 +13,11 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationBarItem
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarItem
+import com.suqi8.coui.kmp.basic.NavigationBarDisplayMode
 ```
 
 ## 基本用法
@@ -29,7 +29,7 @@ NavigationBar 组件可用于创建固定在底部的导航菜单：
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("首页", "我的", "设置")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
     bottomBar = {
@@ -54,7 +54,7 @@ FloatingNavigationBar 组件可用于创建悬浮在底部的导航菜单：
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("首页", "我的", "设置")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
     bottomBar = {
@@ -76,7 +76,7 @@ Scaffold(
 
 ### 选中状态
 
-`NavigationBarItem` 会自动处理选中项的视觉样式，选中项将显示粗体文本并高亮图标/文本。`FloatingNavigationBarItem` 在选中时高亮图标。
+`NavigationBarItem` 遵循 COUI tab 导航的状态模型：选中项的图标与标签以完整标签色显示，未选中项呈暗化色；图标在两种状态间以 180ms 交叉淡变过渡，标签颜色则瞬时切换。标签始终使用 Medium 字重；按压未选中项时图标会预览选中色。`FloatingNavigationBarItem` 在选中时高亮图标。
 
 ## 属性
 
@@ -85,7 +85,7 @@ Scaffold(
 | 属性名                     | 类型                    | 说明                       | 默认值                                | 是否必须 |
 | -------------------------- | ----------------------- | -------------------------- | ------------------------------------- | -------- |
 | modifier                   | Modifier                | 应用于导航栏的修饰符       | Modifier                              | 否       |
-| color                      | Color                   | 导航栏背景颜色             | MiuixTheme.colorScheme.surface        | 否       |
+| color                      | Color                   | 导航栏背景颜色             | COUITheme.colorScheme.background     | 否       |
 | showDivider                | Boolean                 | 是否显示顶部分割线         | true                                  | 否       |
 | defaultWindowInsetsPadding | Boolean                 | 是否应用默认窗口嵌入边距   | true                                  | 否       |
 | mode                       | NavigationBarDisplayMode   | 导航项的显示模式           | NavigationBarDisplayMode.IconAndText     | 否       |
@@ -107,7 +107,7 @@ Scaffold(
 | 属性名                     | 类型                      | 说明                               | 默认值                                  | 是否必须 |
 | -------------------------- | ------------------------- | ---------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                  | 应用于导航栏的修饰符               | Modifier                                | 否       |
-| color                      | Color                     | 导航栏背景颜色                     | MiuixTheme.colorScheme.surfaceContainer | 否       |
+| color                      | Color                     | 导航栏背景颜色                     | COUITheme.colorScheme.surfaceContainer | 否       |
 | cornerRadius               | Dp                        | 导航栏的圆角半径                   | FloatingToolbarDefaults.CornerRadius    | 否       |
 | horizontalAlignment        | Alignment.Horizontal      | 导航栏在其父容器中的水平对齐方式   | CenterHorizontally                      | 否       |
 | horizontalOutSidePadding   | Dp                        | 导航栏外部的水平内边距             | FloatingNavigationBarDefaults.HorizontalOutSidePadding | 否       |
@@ -135,15 +135,15 @@ NavigationBarDefaults 对象提供了 NavigationBar 和 NavigationBarItem 组件
 
 | 常量名                 | 类型     | 说明                       | 默认值 |
 | ---------------------- | -------- | -------------------------- | ------ |
-| ItemHeight             | Dp       | 项目高度                   | 64.dp  |
-| IconSize               | Dp       | 图标尺寸                   | 26.dp  |
+| ItemHeight             | Dp       | 项目单元高度               | 56.dp  |
+| HorizontalPadding      | Dp       | 栏两侧的水平内边距         | 12.dp  |
+| ItemHorizontalPadding  | Dp       | 项目单元内部水平内边距     | 2.dp   |
+| IconSize               | Dp       | 图标尺寸                   | 24.dp  |
+| IconTopPadding         | Dp       | 图标顶部内边距             | 9.dp   |
+| LabelBottomPadding     | Dp       | 标签底部内边距             | 7.dp   |
+| LabelFontSize          | TextUnit | 标签字号                   | 10.sp  |
 | TextFontSize           | TextUnit | 字号（TextOnly 模式）      | 14.sp  |
-| LabelFontSize          | TextUnit | 标签字号                   | 12.sp  |
-| IconTopPadding         | Dp       | 图标顶部内边距             | 8.dp   |
-| BottomPadding          | Dp       | 标签底部内边距             | 8.dp   |
-| SelectedPressedAlpha   | Float    | 选中项按压时的透明度       | 0.5f   |
-| UnselectedPressedAlpha | Float    | 未选中项按压时的透明度     | 0.6f   |
-| UnselectedAlpha        | Float    | 未选中项的透明度           | 0.4f   |
+| IconFadeDurationMillis | Int      | 图标状态间交叉淡变时长     | 180    |
 
 ### FloatingNavigationBarDefaults 对象
 
@@ -212,7 +212,7 @@ NavigationBar(
 
 ```kotlin
 FloatingNavigationBar(
-    color = MiuixTheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.primaryContainer,
     cornerRadius = 28.dp
 ) {
     // ... items ...
@@ -236,7 +236,7 @@ FloatingNavigationBar(
 
 ```kotlin
 val pages = listOf("首页", "我的", "设置")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
 Scaffold(
@@ -262,7 +262,7 @@ Scaffold(
     ) {
         Text(
             text = "当前页面：${pages[selectedIndex]}",
-            style = MiuixTheme.textStyles.title1
+            style = COUITheme.textStyles.title1
         )
     }
 }
@@ -272,7 +272,7 @@ Scaffold(
 
 ```kotlin
 val pages = listOf("首页", "我的", "设置")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
 Scaffold(
@@ -298,7 +298,7 @@ Scaffold(
     ) {
         Text(
             text = "当前页面：${pages[selectedIndex]}",
-            style = MiuixTheme.textStyles.title1
+            style = COUITheme.textStyles.title1
         )
     }
 }

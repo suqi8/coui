@@ -4,14 +4,14 @@ Miuix 提供了一套丰富的内置图标系统，满足大多数应用的主�
 
 ## 安装
 
-基础的 `miuix-ui` 库仅包含少量核心图标。如需使用完整的 Miuix 图标库，您需要将 `miuix-icons` 依赖添加到您的项目中。
+基础的 `coui-ui` 库仅包含少量核心图标。如需使用完整的 Miuix 图标库，您需要将 `coui-icons` 依赖添加到您的项目中。
 
 ```kotlin
 // build.gradle.kts
 commonMain.dependencies {
-    implementation("top.yukonga.miuix.kmp:miuix-ui:<version>")
+    implementation("com.suqi8.coui.kmp:coui-ui:<version>")
     // 添加扩展图标库
-    implementation("top.yukonga.miuix.kmp:miuix-icons:<version>")
+    implementation("com.suqi8.coui.kmp:coui-icons:<version>")
 }
 ```
 
@@ -24,10 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Ok
-import top.yukonga.miuix.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Ok
+import com.suqi8.coui.kmp.icon.extended.Settings
 ```
 
 然后，你可以像下面这样使用图标：
@@ -35,21 +35,21 @@ import top.yukonga.miuix.kmp.icon.extended.Settings
 ```kotlin
 // 使用 Ok 图标 (默认为 Regular 粗细)
 Icon(
-    imageVector = MiuixIcons.Ok,
+    imageVector = COUIIcons.Ok,
     contentDescription = "Ok",
     modifier = Modifier.size(24.dp)
 )
 
 // 使用 Settings 图标
 Icon(
-    imageVector = MiuixIcons.Settings,
+    imageVector = COUIIcons.Settings,
     contentDescription = "Settings",
     modifier = Modifier.size(24.dp)
 )
 
 // 使用特定粗细 (例如 Light)
 Icon(
-    imageVector = MiuixIcons.Light.Settings,
+    imageVector = COUIIcons.Light.Settings,
     contentDescription = "Settings (Light)",
     modifier = Modifier.size(24.dp)
 )
@@ -59,11 +59,11 @@ Icon(
 
 Miuix 图标支持五种粗细，对应字体源 `misymbol_vf.ttf` 的 5 个命名实例：
 
-- `MiuixIcons.Light`: 细图标 (wght=250)
-- `MiuixIcons.Normal`: 偏细图标 (wght=305)
-- `MiuixIcons.Regular`: 常规图标 (wght=330) - 直接访问 `MiuixIcons.IconName` 时的默认值
-- `MiuixIcons.Medium`: 偏粗图标 (wght=430)
-- `MiuixIcons.Demibold`: 粗图标 (wght=500)
+- `COUIIcons.Light`: 细图标 (wght=250)
+- `COUIIcons.Normal`: 偏细图标 (wght=305)
+- `COUIIcons.Regular`: 常规图标 (wght=330) - 直接访问 `COUIIcons.IconName` 时的默认值
+- `COUIIcons.Medium`: 偏粗图标 (wght=430)
+- `COUIIcons.Demibold`: 粗图标 (wght=500)
 
 ## 可用图标
 

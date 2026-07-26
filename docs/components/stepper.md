@@ -5,8 +5,8 @@ A stepper lets the user adjust an integer value in fixed increments using a minu
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Stepper
-import top.yukonga.miuix.kmp.basic.StepperDefaults
+import com.suqi8.coui.kmp.basic.Stepper
+import com.suqi8.coui.kmp.basic.StepperDefaults
 ```
 
 ## Basic Usage
@@ -42,17 +42,18 @@ Stepper(
 | Constant          | Type | Default Value |
 | ----------------- | ---- | ------------- |
 | ButtonSize        | Dp   | 32.dp         |
-| GlyphSize         | Dp   | 18.dp         |
-| Spacing           | Dp   | 4.dp          |
-| IndicatorMinWidth | Dp   | 40.dp         |
+| GlyphSize         | Dp   | 15.2.dp       |
+| GlyphStrokeWidth  | Dp   | 1.6.dp        |
+| Spacing           | Dp   | 12.dp         |
+| IndicatorMinWidth | Dp   | 44.dp         |
 
 ### `stepperColors()` factory
 
 | Parameter            | Type  | Default                                   |
 | -------------------- | ----- | ----------------------------------------- |
-| buttonColor          | Color | MiuixTheme.colorScheme.secondaryContainer |
-| contentColor         | Color | MiuixTheme.colorScheme.onSurface          |
-| disabledContentColor | Color | MiuixTheme.colorScheme.disabledOnSurface  |
+| buttonColor          | Color | COUITheme.colorScheme.secondaryContainer |
+| contentColor         | Color | COUITheme.colorScheme.onSurface          |
+| disabledContentColor | Color | COUITheme.colorScheme.disabledOnSurface  |
 
 ## Behavior
 

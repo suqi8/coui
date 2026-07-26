@@ -2,7 +2,7 @@
 title: WindowListPopup
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at window level
 hostComponent: None
 popupHost: None
@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowListPopup
 
-`WindowListPopup` is a popup list component that renders at the window level using `Dialog`. Unlike `OverlayListPopup`, it does not require a `Scaffold` or `MiuixPopupHost`.
+`WindowListPopup` is a popup list component that renders at the window level using `Dialog`. Unlike `OverlayListPopup`, it does not require a `Scaffold` or `COUIPopupHost`.
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -19,8 +19,8 @@ popupHost: None
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.window.WindowListPopup
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
+import com.suqi8.coui.kmp.window.WindowListPopup
+import com.suqi8.coui.kmp.basic.ListPopupColumn
 ```
 
 ## Basic Usage

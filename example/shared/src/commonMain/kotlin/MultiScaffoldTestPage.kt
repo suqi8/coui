@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -22,16 +22,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 
@@ -42,7 +42,7 @@ fun MultiScaffoldTestPage(
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.surface
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
             drawRect(surfaceColor)
@@ -52,8 +52,8 @@ fun MultiScaffoldTestPage(
         null
     }
     val blurActive = appState.enableBlur && blurSupported
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
 
     Scaffold(
@@ -106,12 +106,12 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(MiuixTheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.surfaceVariant),
                 ) {
                     Column {
                         SmallTitle(text = "Top Left")
                         Card(
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             OverlayDropdownPreference(
                                 title = "Dropdown",
@@ -126,12 +126,12 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(MiuixTheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.surfaceVariant),
                 ) {
                     Column {
                         SmallTitle(text = "Top Right")
                         Card(
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             OverlayDropdownPreference(
                                 title = "Dropdown",
@@ -151,12 +151,12 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(MiuixTheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.surfaceVariant),
                 ) {
                     Column {
                         SmallTitle(text = "Bottom Left")
                         Card(
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             OverlayDropdownPreference(
                                 title = "Dropdown",
@@ -171,12 +171,12 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(MiuixTheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.surfaceVariant),
                 ) {
                     Column {
                         SmallTitle(text = "Bottom Right")
                         Card(
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             OverlayDropdownPreference(
                                 title = "Dropdown",

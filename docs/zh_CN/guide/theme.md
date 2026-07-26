@@ -2,16 +2,16 @@
 
 Miuix 提供了一套完整的主题系统，使您能够轻松地在整个应用中保持一致的设计风格。整个主题系统由颜色方案和文本样式组成。
 
-## 使用 MiuixTheme
+## 使用 COUITheme
 
-使用 `ThemeController` 控制配色模式，然后用 `MiuixTheme` 包裹内容：
+使用 `ThemeController` 控制配色模式，然后用 `COUITheme` 包裹内容：
 
 ```kotlin
 @Composable
 fun App() {
     // 可用模式：System、Light、Dark、MonetSystem、MonetLight、MonetDark
     val controller = remember { ThemeController(ColorSchemeMode.System) }
-    MiuixTheme(controller = controller) { /* 内容 */ }
+    COUITheme(controller = controller) { /* 内容 */ }
 }
 ```
 
@@ -34,7 +34,7 @@ fun App() {
               // keyColor = Color(0xFF3482FF) // 可选：自定义种子颜色
           )
       }
-      MiuixTheme(controller = controller) { /* 内容 */ }
+      COUITheme(controller = controller) { /* 内容 */ }
   }
   ```
 
@@ -51,7 +51,7 @@ fun App() {
           colorSpec = ThemeColorSpec.Spec2025
       )
   }
-  MiuixTheme(controller = controller) { /* 内容 */ }
+  COUITheme(controller = controller) { /* 内容 */ }
   ```
 
   ::: tip 提示
@@ -87,13 +87,13 @@ fun App() {
 
 - **直接使用**
 
-  直接传入颜色方案到 `MiuixTheme(colors = ...)`，用于在不使用 Controller 的情况下完全自定义：
+  直接传入颜色方案到 `COUITheme(colors = ...)`，用于在不使用 Controller 的情况下完全自定义：
 
   ```kotlin
   @Composable
   fun AppWithColors() {
       val colors = lightColorScheme() // 或 darkColorScheme()
-      MiuixTheme(colors = colors) { /* 内容 */ }
+      COUITheme(colors = colors) { /* 内容 */ }
   }
   ```
 
@@ -145,15 +145,15 @@ fun App() {
 | Spec2021 | 原始 Material Design 3 颜色规范 |
 | Spec2025 | 2025 更新版颜色规范（仅 TonalSpot、Neutral、Vibrant、Expressive 支持） |
 
-## MiuixTheme 对象
+## COUITheme 对象
 
-通过 `MiuixTheme` 对象访问当前主题值：
+通过 `COUITheme` 对象访问当前主题值：
 
 ```kotlin
-val colors = MiuixTheme.colorScheme
-val textStyles = MiuixTheme.textStyles
-val mode = MiuixTheme.colorSchemeMode
-val isDynamic = MiuixTheme.isDynamicColor
+val colors = COUITheme.colorScheme
+val textStyles = COUITheme.textStyles
+val mode = COUITheme.colorSchemeMode
+val isDynamic = COUITheme.isDynamicColor
 ```
 
 | 属性 | 类型 | 说明 |
@@ -182,7 +182,7 @@ val customTextStyles = defaultTextStyles(
 )
 
 val controller = remember { ThemeController(ColorSchemeMode.Light) }
-MiuixTheme(
+COUITheme(
     controller = controller,
     textStyles = customTextStyles
 ) {
@@ -198,7 +198,7 @@ MiuixTheme(
 @Composable
 fun MyApp() {
     val controller = remember { ThemeController(ColorSchemeMode.System) }
-    MiuixTheme(controller = controller) {
+    COUITheme(controller = controller) {
         // 应用内容
     }
 }

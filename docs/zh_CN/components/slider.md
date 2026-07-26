@@ -11,9 +11,9 @@ Miuix 还提供了 `VerticalSlider` 用于垂直方向的滑块，以及 `RangeS
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Slider
-import top.yukonga.miuix.kmp.basic.VerticalSlider
-import top.yukonga.miuix.kmp.basic.RangeSlider
+import com.suqi8.coui.kmp.basic.Slider
+import com.suqi8.coui.kmp.basic.VerticalSlider
+import com.suqi8.coui.kmp.basic.RangeSlider
 ```
 
 ## 基本用法

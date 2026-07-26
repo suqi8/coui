@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -16,9 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Surface
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun SurfaceDemo() {
@@ -40,14 +40,14 @@ fun SurfaceDemo() {
                 modifier = Modifier
                     .size(height = 200.dp, width = 400.dp)
                     .padding(16.dp),
-                color = MiuixTheme.colorScheme.background,
+                color = COUITheme.colorScheme.background,
                 shape = RoundedCornerShape(16.dp),
                 shadowElevation = 4.dp,
             ) {
                 Text(
                     text = "Surface Example\n\n" +
                         "Size: height = 200.dp, width = 400.dp\n" +
-                        "color: MiuixTheme.colorScheme.background\n" +
+                        "color: COUITheme.colorScheme.background\n" +
                         "shape: RoundedCornerShape(16.dp)\n" +
                         "shadowElevation: 4.dp\n" +
                         "isSystemInDarkTheme: ${isSystemInDarkTheme()}",

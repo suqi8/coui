@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.utils.PressFeedbackType // 如果使用交互式卡片
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.utils.PressFeedbackType // 如果使用交互式卡片
 ```
 
 ## 基本用法
@@ -34,7 +34,7 @@ Card {
 | colors            | CardColors                         | 卡片颜色配置             | CardDefaults.defaultColors() | 否       | 所有     |
 | cornerRadius      | Dp                                 | 卡片圆角半径             | CardDefaults.CornerRadius    | 否       | 所有     |
 | insideMargin      | PaddingValues                      | 卡片内部边距             | CardDefaults.InsideMargin    | 否       | 所有     |
-| pressFeedbackType | PressFeedbackType                  | 按压反馈类型             | PressFeedbackType.None       | 否       | 交互式   |
+| pressFeedbackType | PressFeedbackType                  | 按压反馈类型             | PressFeedbackType.Tint       | 否       | 交互式   |
 | showIndication    | Boolean                            | 显示点击指示效果         | false                        | 否       | 交互式   |
 | holdDownState     | Boolean                            | 卡片是否处于按下状态     | false                        | 否       | 交互式   |
 | onClick           | (() -> Unit)?                      | 点击事件回调             | null                         | 否       | 交互式   |
@@ -53,7 +53,7 @@ CardDefaults 对象提供了卡片组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值              |
 | ------------ | ------------- | -------------- | ------------------- |
-| CornerRadius | Dp            | 卡片的圆角半径 | 17.dp               |
+| CornerRadius | Dp            | 卡片的圆角半径 | 12.dp               |
 | InsideMargin | PaddingValues | 卡片的内部边距 | PaddingValues(0.dp) |
 
 #### 方法
@@ -63,10 +63,20 @@ CardDefaults 对象提供了卡片组件的默认值和颜色配置。
 | defaultColors() | CardColors | 卡片的默认颜色 |
 
 ### CardColors 类
-| 属性名       | 类型  | 说明           |
-| ------------ | ----- | -------------- |
-| color        | Color | 卡片的背景颜色 |
-| contentColor | Color | 卡片的内容颜色 |
+| 属性名       | 类型  | 说明                                     |
+| ------------ | ----- | ---------------------------------------- |
+| color        | Color | 卡片的背景颜色                           |
+| contentColor | Color | 卡片的内容颜色                           |
+| pressedColor | Color | 按压时背景过渡到的颜色（Tint 反馈使用）  |
+
+### PressFeedbackType 选项
+
+| 选项 | 说明                                                                  |
+| ---- | --------------------------------------------------------------------- |
+| None | 无按压反馈                                                            |
+| Tint | 按压或保持按下时背景过渡到 `pressedColor`（COUI 卡片按压反馈，默认）  |
+| Sink | 按压时轻微下沉（缩小）                                                |
+| Tilt | 按压时根据触摸位置倾斜                                                |
 
 ## 进阶用法
 
@@ -77,7 +87,7 @@ Card(
     cornerRadius = 8.dp,
     insideMargin = PaddingValues(16.dp),
     colors = CardDefaults.defaultColors(
-        color = MiuixTheme.colorScheme.primaryVariant
+        color = COUITheme.colorScheme.primaryVariant
     ),
 ) {
     Text("自定义样式卡片")
@@ -93,7 +103,7 @@ Card(
 ) {
     Text(
         text = "卡片标题",
-        style = MiuixTheme.textStyles.title2
+        style = COUITheme.textStyles.title2
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text(
@@ -140,11 +150,22 @@ LazyColumn {
 ```kotlin
 Card(
     modifier = Modifier.padding(16.dp),
-    pressFeedbackType = PressFeedbackType.Sink, // 设置按压反馈为下沉动画效果
-    showIndication = true, // 显示点击时的视觉反馈效果
+    // pressFeedbackType 默认为 PressFeedbackType.Tint：按压时背景过渡到
+    // CardColors.pressedColor（COUI 卡片按压反馈）
     onClick = { /* 处理点击事件 */ },
     onLongPress = { /* 处理长按事件 */ }
 ) {
     Text("可交互的卡片")
+}
+```
+
+```kotlin
+Card(
+    modifier = Modifier.padding(16.dp),
+    pressFeedbackType = PressFeedbackType.Sink, // 设置按压反馈为下沉动画效果
+    showIndication = true, // 显示点击时的视觉反馈效果
+    onClick = { /* 处理点击事件 */ },
+) {
+    Text("可交互的卡片（下沉）")
 }
 ```

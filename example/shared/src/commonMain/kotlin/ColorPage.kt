@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -23,23 +23,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.squircle.squircleBackground
-import top.yukonga.miuix.kmp.squircle.squircleBorder
-import top.yukonga.miuix.kmp.theme.Colors
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.darkColorScheme
-import top.yukonga.miuix.kmp.theme.lightColorScheme
-import top.yukonga.miuix.kmp.theme.platformDynamicColors
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.squircle.squircleBackground
+import com.suqi8.coui.kmp.squircle.squircleBorder
+import com.suqi8.coui.kmp.theme.Colors
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.darkColorScheme
+import com.suqi8.coui.kmp.theme.lightColorScheme
+import com.suqi8.coui.kmp.theme.platformDynamicColors
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -63,11 +63,11 @@ fun ColorPage(
 ) {
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
 
     val lightColors = remember { lightColorScheme() }
     val darkColors = remember { darkColorScheme() }
@@ -88,7 +88,7 @@ fun ColorPage(
         },
     ) { innerPadding ->
         val lazyListState = rememberLazyListState()
-        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)
+        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen, extraTop = 12.dp)
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyColumn(
                 state = lazyListState,
@@ -102,18 +102,18 @@ fun ColorPage(
                 item(key = "current") {
                     SmallTitle("Current Theme Colors")
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
-                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
-                        ColorsPreview(MiuixTheme.colorScheme)
+                        ColorsPreview(COUITheme.colorScheme)
                     }
                 }
                 item(key = "light") {
                     SmallTitle("Light Theme Colors")
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                         colors = CardDefaults.defaultColors(color = lightColors.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
@@ -124,7 +124,7 @@ fun ColorPage(
                 item(key = "dynamic_light") {
                     SmallTitle("Dynamic Light Colors")
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                         colors = CardDefaults.defaultColors(color = dynLight.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
@@ -135,7 +135,7 @@ fun ColorPage(
                 item(key = "dark") {
                     SmallTitle("Dark Theme Colors")
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                         colors = CardDefaults.defaultColors(color = darkColors.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
@@ -146,7 +146,7 @@ fun ColorPage(
                 item(key = "dynamic_dark") {
                     SmallTitle("Dynamic Dark Colors")
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         colors = CardDefaults.defaultColors(color = dynDark.surfaceContainer),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
@@ -154,7 +154,7 @@ fun ColorPage(
                         ColorsPreview(dynDark)
                     }
                 }
-                item { Spacer(modifier = Modifier.height(12.dp)) }
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
             VerticalScrollBar(
                 adapter = rememberScrollBarAdapter(lazyListState),

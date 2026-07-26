@@ -10,7 +10,7 @@ ColorPalette 是一个 HSV 带有透明度滑条的网格调色盘组件，可�
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.ColorPalette
+import com.suqi8.coui.kmp.basic.ColorPalette
 ```
 
 ## 基本用法
@@ -113,7 +113,7 @@ Surface {
     ) {
         Text(
             text = "选择颜色",
-            style = MiuixTheme.textStyles.title2
+            style = COUITheme.textStyles.title2
         )
         Spacer(modifier = Modifier.height(16.dp))
         ColorPalette(

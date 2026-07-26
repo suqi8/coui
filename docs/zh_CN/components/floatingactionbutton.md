@@ -11,7 +11,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import com.suqi8.coui.kmp.basic.FloatingActionButton
 ```
 
 ## 基本用法
@@ -23,7 +23,7 @@ FloatingActionButton(
     onClick = { /* 处理点击事件 */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Add,
+        imageVector = COUIIcons.Add,
         contentDescription = "添加"
     )
 }
@@ -42,10 +42,11 @@ FloatingActionButton(
 | onClick                    | () -> Unit             | 点击按钮时触发的回调     | -                              | 是       |
 | modifier                   | Modifier               | 应用于按钮的修饰符       | Modifier                       | 否       |
 | shape                      | Shape                  | 按钮的形状               | CircleShape           | 否       |
-| containerColor             | Color                  | 按钮的背景颜色           | MiuixTheme.colorScheme.primary | 否       |
+| containerColor             | Color                  | 按钮的背景颜色           | COUITheme.colorScheme.primary | 否       |
 | shadowElevation            | Dp                     | 按钮的阴影高度           | FloatingActionButtonDefaults.ShadowElevation | 否       |
 | minWidth                   | Dp                     | 按钮的最小宽度           | FloatingActionButtonDefaults.MinWidth        | 否       |
 | minHeight                  | Dp                     | 按钮的最小高度           | FloatingActionButtonDefaults.MinHeight       | 否       |
+| interactionSource          | MutableInteractionSource? | 按钮的交互源          | null                           | 否       |
 | content                    | @Composable () -> Unit | 按钮内容区域的可组合函数 | -                              | 是       |
 
 ### FloatingActionButtonDefaults 对象
@@ -54,11 +55,12 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 
 #### 常量
 
-| 常量名          | 类型 | 说明         | 默认值 |
-| --------------- | ---- | ------------ | ------ |
-| MinWidth        | Dp   | 按钮最小宽度 | 56.dp  |
-| MinHeight       | Dp   | 按钮最小高度 | 56.dp  |
-| ShadowElevation | Dp   | 按钮阴影高度 | 5.dp   |
+| 常量名          | 类型  | 说明               | 默认值 |
+| --------------- | ----- | ------------------ | ------ |
+| MinWidth        | Dp    | 按钮最小宽度       | 56.dp  |
+| MinHeight       | Dp    | 按钮最小高度       | 56.dp  |
+| ShadowElevation | Dp    | 按钮阴影高度       | 12.dp  |
+| PressedScale    | Float | 按压时的按钮缩放值 | 0.92f  |
 
 ## 进阶用法
 
@@ -70,7 +72,7 @@ FloatingActionButton(
     containerColor = Color.Red
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites",
         tint = Color.White
     )
@@ -91,7 +93,7 @@ FloatingActionButton(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Icon(
-            imageVector = MiuixIcons.Add,
+            imageVector = COUIIcons.Add,
             contentDescription = "添加",
             tint = Color.White
         )
@@ -110,7 +112,7 @@ Scaffold(
             onClick = { /* 处理点击事件 */ }
         ) {
             Icon(
-                imageVector = MiuixIcons.Add,
+                imageVector = COUIIcons.Add,
                 contentDescription = "添加"
             )
         }
@@ -143,7 +145,7 @@ FloatingActionButton(
     minHeight = animatedSize
 ) {
     Icon(
-        imageVector = if (expanded) MiuixIcons.Remove else MiuixIcons.Add,
+        imageVector = if (expanded) COUIIcons.Remove else COUIIcons.Add,
         contentDescription = if (expanded) "移除" else "添加",
         tint = Color.White
     )

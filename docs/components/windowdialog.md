@@ -2,7 +2,7 @@
 title: WindowDialog
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at window level
 hostComponent: None
 popupHost: None
@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowDialog
 
-`WindowDialog` is a window-level dialog component. It renders using platform `Dialog` and does not require `Scaffold` or `MiuixPopupHost`. It supports large-screen optimized animations, system back gesture dismissal, and a composition local to request dismiss from inside content.
+`WindowDialog` is a window-level dialog component. It renders using platform `Dialog` and does not require `Scaffold` or `COUIPopupHost`. It supports large-screen optimized animations, system back gesture dismissal, and a composition local to request dismiss from inside content.
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -23,8 +23,8 @@ This component is independent of `Scaffold` and can be used in any composable sc
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.window.WindowDialog
-import top.yukonga.miuix.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.window.WindowDialog
+import com.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## Basic Usage
@@ -69,7 +69,7 @@ WindowDialog(
 | onDismissRequest           | (() -> Unit)?          | Called when the user requests dismissal (outside tap or back) | null                                   | No       |
 | onDismissFinished          | (() -> Unit)?          | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null              | No       |
 | outsideMargin              | DpSize                 | Outer margin (window edges)                                   | DialogDefaults.outsideMargin     | No       |
-| insideMargin               | DpSize                 | Inner padding for dialog content                              | DialogDefaults.insideMargin      | No       |
+| insideMargin               | DpSize                 | Margin for the built-in title/summary texts (width = horizontal padding, height = padding above the title); the content slot is unpadded | DialogDefaults.insideMargin      | No       |
 | defaultWindowInsetsPadding | Boolean                | Apply default insets padding (IME, nav, caption)              | true                                   | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                      | Yes      |
 
@@ -77,10 +77,12 @@ WindowDialog(
 
 #### Properties
 
-| Name          | Type   | Description                      |
-| ------------- | ------ | -------------------------------- |
-| outsideMargin | DpSize | Default outer margin for dialog  |
-| insideMargin  | DpSize | Default inner padding for dialog |
+| Name          | Type   | Description                               |
+| ------------- | ------ | ----------------------------------------- |
+| CornerRadius  | Dp     | Dialog panel corner radius (19.dp)        |
+| MaxWidth      | Dp     | Maximum dialog content width (392.dp)     |
+| outsideMargin | DpSize | Default outer margin for dialog (16, 24)  |
+| insideMargin  | DpSize | Default margin for the built-in title/summary texts (24, 24); the content slot is unpadded |
 
 #### Functions
 

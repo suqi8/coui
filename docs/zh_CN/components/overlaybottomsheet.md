@@ -2,11 +2,11 @@
 title: OverlayBottomSheet
 requiresScaffoldHost: true
 prerequisites:
-  - 必须在 `Scaffold` 中使用以提供 `MiuixPopupHost`
+  - 必须在 `Scaffold` 中使用以提供 `COUIPopupHost`
   - 未在 `Scaffold` 中使用将导致弹出内容无法渲染
   - 支持多个嵌套或并列的 `Scaffold`，无需额外配置
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayBottomSheet
@@ -18,13 +18,13 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger 使用前提
-此组件依赖 `Scaffold` 提供的 `MiuixPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
+此组件依赖 `Scaffold` 提供的 `COUIPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
 :::
 
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
 ```
 
 ## 基本用法
@@ -82,8 +82,8 @@ Scaffold {
 
 | 属性名        | 类型   | 说明                  |
 | ------------- | ------ | --------------------- |
-| cornerRadius  | Dp     | 默认圆角半径 (28.dp)  |
-| maxWidth      | Dp     | 默认最大宽度 (640.dp) |
+| cornerRadius  | Dp     | 默认圆角半径 (20.dp，COUI couiRoundCornerXL) |
+| maxWidth      | Dp     | 默认宽度上限 (Dp.Infinity，实际宽度由 COUI 响应式栅格决定) |
 | outsideMargin | DpSize | 底部抽屉外部默认边距  |
 | insideMargin  | DpSize | 底部抽屉内部默认边距  |
 
@@ -110,8 +110,8 @@ Scaffold {
     OverlayBottomSheet(
         show = showBottomSheet,
         title = "自定义样式",
-        backgroundColor = MiuixTheme.colorScheme.surfaceVariant,
-        dragHandleColor = MiuixTheme.colorScheme.primary,
+        backgroundColor = COUITheme.colorScheme.surfaceVariant,
+        dragHandleColor = COUITheme.colorScheme.primary,
         outsideMargin = DpSize(16.dp, 0.dp),
         insideMargin = DpSize(32.dp, 16.dp),
         onDismissRequest = { showBottomSheet = false }
@@ -254,7 +254,7 @@ Scaffold {
         onDismissRequest = { showBottomSheet = false }
     ) {
         Card(
-            color = MiuixTheme.colorScheme.secondaryContainer,
+            color = COUITheme.colorScheme.secondaryContainer,
         ) {
             TextField(
                 modifier = Modifier.padding(vertical = 12.dp),

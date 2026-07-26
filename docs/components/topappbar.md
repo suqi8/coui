@@ -11,10 +11,10 @@ This component is typically used in conjunction with the `Scaffold` component to
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.rememberTopAppBarState
+import com.suqi8.coui.kmp.basic.TopAppBar
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
 
 ## Basic Usage
@@ -28,12 +28,12 @@ Scaffold(
             title = "Title",
             navigationIcon = {
                 IconButton(onClick = { /* Handle click event */ }) {
-                    Icon(MiuixIcons.Back, contentDescription = "Back")
+                    Icon(COUIIcons.Back, contentDescription = "Back")
                 }
             },
             actions = {
                 IconButton(onClick = { /* Handle click event */ }) {
-                    Icon(MiuixIcons.More, contentDescription = "More")
+                    Icon(COUIIcons.More, contentDescription = "More")
                 }
             }
         )
@@ -51,12 +51,12 @@ Scaffold(
             largeTitle = "Large Title", // If not specified, title value will be used
             navigationIcon = {
                 IconButton(onClick = { /* Handle click event */ }) {
-                    Icon(MiuixIcons.Back, contentDescription = "Back")
+                    Icon(COUIIcons.Back, contentDescription = "Back")
                 }
             },
             actions = {
                 IconButton(onClick = { /* Handle click event */ }) {
-                    Icon(MiuixIcons.More, contentDescription = "More")
+                    Icon(COUIIcons.More, contentDescription = "More")
                 }
             }
         )
@@ -69,7 +69,7 @@ Scaffold(
 TopAppBar supports changing its display state when content scrolls:
 
 ```kotlin
-val scrollBehavior = MiuixScrollBehavior()
+val scrollBehavior = COUIScrollBehavior()
 
 Scaffold(
     topBar = {
@@ -102,9 +102,9 @@ Scaffold(
 ```kotlin
 TopAppBar(
     title = "Title",
-    color = MiuixTheme.colorScheme.primary,
-    titleColor = MiuixTheme.colorScheme.onPrimary,
-    largeTitleColor = MiuixTheme.colorScheme.onPrimary
+    color = COUITheme.colorScheme.primary,
+    titleColor = COUITheme.colorScheme.onPrimary,
+    largeTitleColor = COUITheme.colorScheme.onPrimary
 )
 ```
 
@@ -135,16 +135,19 @@ TopAppBar(
 | -------------------------- | ------------------------------- | ---------------------------------------------- | ------------------------------- | -------- |
 | title                      | String                          | Top bar title                                  | -                               | Yes      |
 | modifier                   | Modifier                        | Modifier applied to the top bar                | Modifier                        | No       |
-| color                      | Color                           | Top bar background color                       | MiuixTheme.colorScheme.surface  | No       |
-| titleColor                 | Color                           | Color of the collapsed small title text        | MiuixTheme.colorScheme.onSurface | No       |
+| color                      | Color                           | Top bar background color                       | COUITheme.colorScheme.surface  | No       |
+| titleColor                 | Color                           | Color of the collapsed small title text        | COUITheme.colorScheme.onSurface | No       |
 | largeTitle                 | String                          | Large title text                               | title                           | No       |
-| largeTitleColor            | Color                           | Color of the expanded large title text         | MiuixTheme.colorScheme.onSurface | No       |
+| largeTitleColor            | Color                           | Color of the expanded large title text         | COUITheme.colorScheme.onSurface | No       |
 | subtitle                   | String                          | Subtitle text displayed below the title bar    | ""                              | No       |
-| subtitleColor              | Color                           | Color of the subtitle text                     | MiuixTheme.colorScheme.onSurfaceVariantSummary | No       |
+| subtitleColor              | Color                           | Color of the subtitle text                     | COUITheme.colorScheme.onSurfaceVariantSummary | No       |
+| dividerColor               | Color                           | Color of the bottom hairline divider revealed while collapsing | COUITheme.colorScheme.dividerLine | No       |
 | navigationIcon             | @Composable () -> Unit          | Composable function for navigation icon area   | {}                              | No       |
-| actions                    | @Composable RowScope.() -> Unit | Composable function for action buttons area    | {}                              | No       |
+| actions                    | @Composable RowScope.() -> Unit | Composable function for action buttons area (24dp icons recommended) | {}                              | No       |
 | scrollBehavior             | ScrollBehavior?                 | Controls top bar scroll behavior               | null                            | No       |
 | defaultWindowInsetsPadding | Boolean                         | Whether to apply default window insets padding | true                            | No       |
+| showDivider                | Boolean                         | Whether to draw the bottom hairline divider that fades in as the bar collapses | true | No       |
+| hideSubtitleOnCollapse     | Boolean                         | Whether the subtitle fades out while the bar collapses; when false it stays opaque and slides into the collapsed bar below the title | true | No       |
 | titlePadding          | Dp                              | Horizontal content padding                     | TopAppBarDefaults.TitlePadding | No       |
 | navigationIconPadding      | Dp                              | Start padding of the navigation icon           | TopAppBarDefaults.NavigationIconPadding | No       |
 | actionIconPadding          | Dp                              | End padding of the action icons                | TopAppBarDefaults.ActionIconPadding | No       |
@@ -156,14 +159,16 @@ TopAppBar(
 | -------------------------- | ------------------------------- | ---------------------------------------------- | ------------------------------- | -------- |
 | title                      | String                          | Top bar title                                  | -                               | Yes      |
 | modifier                   | Modifier                        | Modifier applied to the top bar                | Modifier                        | No       |
-| color                      | Color                           | Top bar background color                       | MiuixTheme.colorScheme.surface  | No       |
-| titleColor                 | Color                           | Color of the title text                        | MiuixTheme.colorScheme.onSurface | No       |
+| color                      | Color                           | Top bar background color                       | COUITheme.colorScheme.surface  | No       |
+| titleColor                 | Color                           | Color of the title text                        | COUITheme.colorScheme.onSurface | No       |
 | subtitle                   | String                          | Subtitle text displayed below the title bar    | ""                              | No       |
-| subtitleColor              | Color                           | Color of the subtitle text                     | MiuixTheme.colorScheme.onSurfaceVariantSummary | No       |
+| subtitleColor              | Color                           | Color of the subtitle text                     | COUITheme.colorScheme.onSurfaceVariantSummary | No       |
+| dividerColor               | Color                           | Color of the bottom hairline divider revealed on scroll | COUITheme.colorScheme.dividerLine | No       |
 | navigationIcon             | @Composable () -> Unit          | Composable function for navigation icon area   | {}                              | No       |
-| actions                    | @Composable RowScope.() -> Unit | Composable function for action buttons area    | {}                              | No       |
+| actions                    | @Composable RowScope.() -> Unit | Composable function for action buttons area (24dp icons recommended) | {}                              | No       |
 | scrollBehavior             | ScrollBehavior?                 | Controls top bar scroll behavior               | null                            | No       |
 | defaultWindowInsetsPadding | Boolean                         | Whether to apply default window insets padding | true                            | No       |
+| showDivider                | Boolean                         | Whether to draw the bottom hairline divider as content scrolls beneath the bar (requires scrollBehavior) | true | No       |
 | titlePadding          | Dp                              | Horizontal content padding                     | TopAppBarDefaults.TitlePadding | No       |
 | navigationIconPadding      | Dp                              | Start padding of the navigation icon           | TopAppBarDefaults.NavigationIconPadding | No       |
 | actionIconPadding          | Dp                              | End padding of the action icons                | TopAppBarDefaults.ActionIconPadding | No       |
@@ -177,26 +182,30 @@ The TopAppBarDefaults object provides default values for TopAppBar and SmallTopA
 
 | Constant Name             | Type | Description                                        | Default Value |
 | ------------------------- | ---- | -------------------------------------------------- | ------------- |
-| TitlePadding    | Dp   | Horizontal padding of the title and large title    | 26.dp         |
+| TitlePadding    | Dp   | Horizontal padding of the title and large title    | 16.dp         |
+| LargeTitleTopPadding | Dp | Top padding of the expanded large title           | 54.dp         |
 | NavigationIconPadding      | Dp   | Start padding of the navigation icon              | 16.dp         |
 | ActionIconPadding          | Dp   | End padding of the action icons                   | 16.dp         |
 | CollapsedHeight            | Dp   | Collapsed height of the TopAppBar                 | 52.dp         |
-| SmallTopAppBarCenterHeight | Dp   | Vertical center height for SmallTopAppBar layout  | 50.dp         |
-| LargeTitleBottomPadding    | Dp   | Bottom padding below the large title when no subtitle is present | 4.dp |
-| SubtitleBottomPadding      | Dp   | Bottom padding below the subtitle (both large and small) | 8.dp  |
+| ExpandedHeight             | Dp   | Minimum expanded height of the TopAppBar without a subtitle | 107.dp |
+| SmallTopAppBarCenterHeight | Dp   | Vertical center height for SmallTopAppBar layout  | 52.dp         |
+| LargeTitleBottomPadding    | Dp   | Bottom padding below the large title block when expanded (interpolates to 0.dp as the bar collapses) | 12.dp |
+| SubtitleBottomPadding      | Dp   | Bottom padding below the subtitle when it overflows the collapsed bar | 8.dp  |
+| SubtitleMarginTop          | Dp   | Vertical gap between the title and the subtitle   | 3.5.dp        |
+| NavigationIconGap          | Dp   | Horizontal gap between the navigation icon and the collapsed title | 4.dp |
+| ActionIconGap              | Dp   | Horizontal gap between the title and the action icons | 8.dp      |
 
 ### ScrollBehavior
 
-MiuixScrollBehavior is a configuration object used to control the scroll behavior of the top bar.
+COUIScrollBehavior is a configuration object used to control the scroll behavior of the top bar.
 
 #### rememberTopAppBarState
 
 Used to create and remember TopAppBarState:
 
 ```kotlin
-val scrollBehavior = MiuixScrollBehavior(
+val scrollBehavior = COUIScrollBehavior(
     state = rememberTopAppBarState(),
-    snapAnimationSpec = spring(stiffness = 2500f),
     canScroll = { true }
 )
 ```
@@ -205,7 +214,7 @@ val scrollBehavior = MiuixScrollBehavior(
 | ------------------ | --------------------------- | -------------------------- | ------------------------------------------------ |
 | state              | TopAppBarState              | rememberTopAppBarState()   | State object controlling scroll state            |
 | canScroll          | () -> Boolean               | { true }                   | Callback to control whether scrolling is allowed |
-| snapAnimationSpec  | AnimationSpec\<Float>?      | spring(stiffness = 2500f)  | Defines snap animation after scrolling           |
+| snapAnimationSpec  | AnimationSpec\<Float>?      | 180ms decelerate tween     | Defines the snap to fully expanded/collapsed when scrolling stops midway |
 | flingAnimationSpec | DecayAnimationSpec\<Float>? | rememberSplineBasedDecay() | Defines decay animation for fling                |
 
 ## Advanced Usage
@@ -224,7 +233,7 @@ TopAppBar(
 
 ```kotlin
 var isScrollingEnabled by remember { mutableStateOf(true) }
-val scrollBehavior = MiuixScrollBehavior(
+val scrollBehavior = COUIScrollBehavior(
     snapAnimationSpec = tween(durationMillis = 100),
     flingAnimationSpec = rememberSplineBasedDecay(),
     canScroll = { isScrollingEnabled } // Can dynamically control whether scrolling is allowed
@@ -249,9 +258,9 @@ Box(modifier = Modifier.fillMaxSize()) {
             navigationIcon = {
                 IconButton(onClick = { useSmallTopBar = false }) {
                     Icon(
-                        imageVector = MiuixIcons.Back,
+                        imageVector = COUIIcons.Back,
                         contentDescription = "Switch to Large Title",
-                        tint = MiuixTheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.onBackground
                     )
                 }
             }
@@ -263,9 +272,9 @@ Box(modifier = Modifier.fillMaxSize()) {
             navigationIcon = {
                 IconButton(onClick = { useSmallTopBar = true }) {
                     Icon(
-                        imageVector = MiuixIcons.Back,
+                        imageVector = COUIIcons.Back,
                         contentDescription = "Switch to Small Title",
-                        tint = MiuixTheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.onBackground
                     )
                 }
             }

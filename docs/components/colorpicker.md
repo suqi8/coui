@@ -11,7 +11,7 @@ with haptic feedback and real-time color preview.
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.ColorPicker
+import com.suqi8.coui.kmp.basic.ColorPicker
 ```
 
 ## Basic Usage
@@ -192,7 +192,7 @@ Surface {
     ) {
         Text(
             text = "Select Color",
-            style = MiuixTheme.textStyles.title2
+            style = COUITheme.textStyles.title2
         )
         Spacer(modifier = Modifier.height(16.dp))
         ColorPicker(

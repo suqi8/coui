@@ -1,0 +1,26 @@
+// Copyright 2026, compose-coui-ui contributors
+// SPDX-License-Identifier: Apache-2.0
+
+package com.suqi8.coui.kmp.blur.internal
+
+import androidx.compose.ui.graphics.RenderEffect
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import com.suqi8.coui.kmp.shader.RuntimeShader
+import com.suqi8.coui.kmp.shader.asAndroidRuntimeShader
+
+internal actual fun RenderEffect?.chain(other: RenderEffect): RenderEffect = if (this != null) {
+    android.graphics.RenderEffect.createChainEffect(
+        other.asAndroidRenderEffect(),
+        this.asAndroidRenderEffect(),
+    ).asComposeRenderEffect()
+} else {
+    other
+}
+
+internal actual fun runtimeShaderEffect(
+    runtimeShader: RuntimeShader,
+    uniformShaderName: String,
+): RenderEffect = android.graphics.RenderEffect.createRuntimeShaderEffect(
+    runtimeShader.asAndroidRuntimeShader(),
+    uniformShaderName,
+).asComposeRenderEffect()

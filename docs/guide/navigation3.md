@@ -1,6 +1,6 @@
 # Navigation3 Support
 
-`miuix-navigation3-ui` provides UI implementation for `androidx.navigation3`, adapting to Miuix design style and transitions.
+`coui-navigation3-ui` provides UI implementation for `androidx.navigation3`, adapting to Miuix design style and transitions.
 
 ## Setup
 
@@ -8,7 +8,7 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 implementation("androidx.navigation3:navigation3-runtime:<navigation3-version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui:<version>")
 ```
 
 ::: warning

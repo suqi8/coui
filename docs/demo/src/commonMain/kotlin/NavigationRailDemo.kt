@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -20,17 +20,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailDisplayMode
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Contacts
-import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.VerticalSplit
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.NavigationRail
+import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationRailItem
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Contacts
+import com.suqi8.coui.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.icon.extended.VerticalSplit
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun NavigationRailDemo() {
@@ -50,9 +50,9 @@ fun NavigationRailDemo() {
         ) {
             val pages = listOf("Home", "Profile", "Settings")
             val items = listOf(
-                NavigationItem("Home", MiuixIcons.VerticalSplit),
-                NavigationItem("Profile", MiuixIcons.Contacts),
-                NavigationItem("Settings", MiuixIcons.Settings),
+                NavigationItem("Home", COUIIcons.VerticalSplit),
+                NavigationItem("Profile", COUIIcons.Contacts),
+                NavigationItem("Settings", COUIIcons.Settings),
             )
             var selectedIndex by remember { mutableIntStateOf(0) }
 
@@ -85,7 +85,7 @@ fun NavigationRailDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex]}",
-                                style = MiuixTheme.textStyles.title1,
+                                style = COUITheme.textStyles.title1,
                             )
                         }
                     }

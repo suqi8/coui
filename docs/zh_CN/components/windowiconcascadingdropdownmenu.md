@@ -2,7 +2,7 @@
 title: WindowIconCascadingDropdownMenu
 requiresScaffoldHost: false
 prerequisites:
-  - 可在任何位置使用，不需要 `Scaffold` 或 `MiuixPopupHost`
+  - 可在任何位置使用，不需要 `Scaffold` 或 `COUIPopupHost`
   - 在窗口级别渲染
 hostComponent: None
 popupHost: None
@@ -19,9 +19,9 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.menu.WindowIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.menu.WindowIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法
@@ -79,7 +79,7 @@ Scaffold(
             title = "图库",
             actions = {
                 WindowIconCascadingDropdownMenu(entries = entries) {
-                    Icon(imageVector = MiuixIcons.Tune, contentDescription = "调整")
+                    Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
                 }
             }
         )
@@ -108,7 +108,7 @@ val entry = DropdownEntry(
 )
 
 WindowIconCascadingDropdownMenu(entry = entry) {
-    Icon(imageVector = MiuixIcons.Tune, contentDescription = "调整")
+    Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
 }
 ```
 
@@ -121,7 +121,7 @@ WindowIconCascadingDropdownMenu(
     entry = DropdownEntry(items = listOf(DropdownItem(text = "选项 1"))),
     enabled = false,
 ) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "更多")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "更多")
 }
 ```
 

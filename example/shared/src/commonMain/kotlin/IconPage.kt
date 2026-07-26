@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -45,21 +45,21 @@ import component.SearchBarFake
 import component.SearchPager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.ExpandLess
-import top.yukonga.miuix.kmp.icon.extended.ExpandMore
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.ExpandLess
+import com.suqi8.coui.kmp.icon.extended.ExpandMore
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.COUITheme.colorScheme
 import utils.AdaptiveTopAppBar
 import utils.All
 import utils.BlurredBar
@@ -69,8 +69,8 @@ import utils.pageScrollModifiers
 import utils.rememberBlurBackdrop
 import kotlin.time.Duration.Companion.milliseconds
 
-private val IconListTopShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-private val IconListBottomShape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+private val IconListTopShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
+private val IconListBottomShape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
 
 @Composable
 fun IconsPage(
@@ -78,7 +78,7 @@ fun IconsPage(
 ) {
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val dynamicTopPadding by remember(topAppBarScrollBehavior) {
         derivedStateOf { 12.dp * (1f - topAppBarScrollBehavior.state.collapsedFraction) }
     }
@@ -90,7 +90,7 @@ fun IconsPage(
     val density = LocalDensity.current
 
     // Icon data
-    val allIcons = remember { MiuixIcons.All }
+    val allIcons = remember { COUIIcons.All }
     val regularIcons = remember(allIcons) { allIcons["Regular"] ?: emptyList() }
     val weightVariants: List<Pair<String, List<ImageVector>>> = remember(allIcons) {
         listOf("Light", "Normal", "Regular", "Medium", "Demibold").map { name ->
@@ -183,7 +183,7 @@ fun IconsPage(
                 ) { i ->
                     val index = filteredIndices[i]
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     ) {
                         BasicComponent(
                             title = iconNames[index],
@@ -231,11 +231,11 @@ fun IconsPage(
                 contentPadding = contentPadding,
             ) {
                 item(key = "iconsHeader") {
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
+                            .padding(horizontal = 16.dp)
                             .clip(IconListTopShape)
                             .background(colorScheme.surfaceContainer)
                             .padding(horizontal = 16.dp)
@@ -245,12 +245,12 @@ fun IconsPage(
                         Text(
                             text = "Name",
                             modifier = Modifier.weight(1f),
-                            style = MiuixTheme.textStyles.footnote1,
+                            style = COUITheme.textStyles.footnote1,
                             color = colorScheme.onSurfaceVariantActions,
                         )
                         Text(
                             text = "Tap to compare weights",
-                            style = MiuixTheme.textStyles.footnote2,
+                            style = COUITheme.textStyles.footnote2,
                             color = colorScheme.onSurfaceVariantActions,
                         )
                     }
@@ -266,7 +266,7 @@ fun IconsPage(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp)
+                            .padding(horizontal = 16.dp)
                             .clip(shape)
                             .background(colorScheme.surfaceContainer)
                             .clickable { expandedIndex = if (expanded) -1 else index }
@@ -278,7 +278,7 @@ fun IconsPage(
                             Text(
                                 text = iconNames[index],
                                 modifier = Modifier.weight(1f),
-                                style = MiuixTheme.textStyles.body2,
+                                style = COUITheme.textStyles.body2,
                                 color = colorScheme.onSurface,
                             )
                             Icon(
@@ -289,7 +289,7 @@ fun IconsPage(
                             )
                             Spacer(modifier = Modifier.size(8.dp))
                             Icon(
-                                imageVector = if (expanded) MiuixIcons.ExpandLess else MiuixIcons.ExpandMore,
+                                imageVector = if (expanded) COUIIcons.ExpandLess else COUIIcons.ExpandMore,
                                 contentDescription = if (expanded) "Collapse" else "Expand",
                                 tint = colorScheme.onSurfaceVariantActions,
                                 modifier = Modifier.size(18.dp),
@@ -316,7 +316,7 @@ fun IconsPage(
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = label,
-                                            style = MiuixTheme.textStyles.footnote2,
+                                            style = COUITheme.textStyles.footnote2,
                                             color = colorScheme.onSurfaceVariantActions,
                                             textAlign = TextAlign.Center,
                                             maxLines = 1,
@@ -327,7 +327,7 @@ fun IconsPage(
                         }
                     }
                 }
-                item { Spacer(modifier = Modifier.height(12.dp)) }
+                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
             VerticalScrollBar(
                 adapter = rememberScrollBarAdapter(lazyListState),

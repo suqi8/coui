@@ -2,11 +2,11 @@
 title: OverlayIconCascadingDropdownMenu
 requiresScaffoldHost: true
 prerequisites:
-  - 必须在 `Scaffold` 中使用以提供 `MiuixPopupHost`
+  - 必须在 `Scaffold` 中使用以提供 `COUIPopupHost`
   - 未在 `Scaffold` 中使用将导致弹出内容无法渲染
   - 支持多个嵌套或并列的 `Scaffold`，无需额外配置
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayIconCascadingDropdownMenu
@@ -18,15 +18,15 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger 使用前提
-此组件依赖 `Scaffold` 提供的 `MiuixPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
+此组件依赖 `Scaffold` 提供的 `COUIPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
 :::
 
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.menu.OverlayIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.menu.OverlayIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法
@@ -84,7 +84,7 @@ Scaffold(
             title = "图库",
             actions = {
                 OverlayIconCascadingDropdownMenu(entries = entries) {
-                    Icon(imageVector = MiuixIcons.Tune, contentDescription = "调整")
+                    Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
                 }
             }
         )
@@ -114,7 +114,7 @@ val entry = DropdownEntry(
 
 Scaffold {
     OverlayIconCascadingDropdownMenu(entry = entry) {
-        Icon(imageVector = MiuixIcons.Tune, contentDescription = "调整")
+        Icon(imageVector = COUIIcons.Tune, contentDescription = "调整")
     }
 }
 ```
@@ -128,7 +128,7 @@ OverlayIconCascadingDropdownMenu(
     entry = DropdownEntry(items = listOf(DropdownItem(text = "选项 1"))),
     enabled = false,
 ) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "更多")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "更多")
 }
 ```
 

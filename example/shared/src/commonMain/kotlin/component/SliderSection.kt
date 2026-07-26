@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -20,21 +20,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SliderDefaults
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalSlider
-import top.yukonga.miuix.kmp.preference.RangeSliderPreference
-import top.yukonga.miuix.kmp.preference.SliderPreference
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.SliderDefaults
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalSlider
+import com.suqi8.coui.kmp.preference.RangeSliderPreference
+import com.suqi8.coui.kmp.preference.SliderPreference
 
 fun LazyListScope.sliderSection() {
     item(key = "slider") {
         SmallTitle(text = "Slider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var sliderValue by remember { mutableFloatStateOf(0.3f) }
             SliderPreference(
@@ -89,8 +89,8 @@ fun LazyListScope.sliderSection() {
         SmallTitle(text = "RangeSlider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var rangeValue by remember { mutableStateOf(0.2f..0.8f) }
             RangeSliderPreference(
@@ -135,14 +135,13 @@ fun LazyListScope.sliderSection() {
         SmallTitle(text = "VerticalSlider")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(vertical = 12.dp),
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

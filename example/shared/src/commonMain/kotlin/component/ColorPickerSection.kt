@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -19,17 +20,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.ColorPalette
-import top.yukonga.miuix.kmp.basic.ColorPicker
-import top.yukonga.miuix.kmp.basic.ColorSpace
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.ColorPalette
+import com.suqi8.coui.kmp.basic.ColorPicker
+import com.suqi8.coui.kmp.basic.ColorSpace
+import com.suqi8.coui.kmp.basic.ColorSwatchPicker
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextField
+import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.round
 
 fun LazyListScope.colorPickerSection() {
+    item(key = "colorSwatchPicker") {
+        SmallTitle(text = "ColorSwatchPicker")
+        ColorSwatchPickerCard()
+    }
+
     item(key = "colorPicker-HSV") {
         SmallTitle(text = "ColorPicker (HSV)")
         ColorPickerCard(colorSpace = ColorSpace.HSV)
@@ -52,8 +59,8 @@ fun LazyListScope.colorPickerSection() {
 
     item(key = "colorPalette") {
         SmallTitle(text = "ColorPalette")
-        val miuixColor = MiuixTheme.colorScheme.primary
-        var selectedColor by remember { mutableStateOf(miuixColor) }
+        val couiColor = COUITheme.colorScheme.primary
+        var selectedColor by remember { mutableStateOf(couiColor) }
         var colorHex by remember(selectedColor) {
             mutableStateOf(
                 selectedColor.toArgb().toHexString(HexFormat.UpperCase),
@@ -63,8 +70,8 @@ fun LazyListScope.colorPickerSection() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
             insideMargin = PaddingValues(16.dp),
         ) {
             Row(
@@ -93,9 +100,38 @@ fun LazyListScope.colorPickerSection() {
 }
 
 @Composable
+private fun ColorSwatchPickerCard() {
+    val swatchColors = remember {
+        listOf(
+            Color(0xFF0066FF),
+            Color(0xFF24B232),
+            Color(0xFFF08222),
+            Color(0xFFDB382C),
+            Color(0xFFDB9A00),
+            Color(0xFF8A8A8A),
+        )
+    }
+    var selectedIndex by remember { mutableIntStateOf(0) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
+        insideMargin = PaddingValues(16.dp),
+    ) {
+        ColorSwatchPicker(
+            colors = swatchColors,
+            selectedIndex = selectedIndex,
+            onSwatchSelected = { selectedIndex = it },
+        )
+    }
+}
+
+@Composable
 private fun ColorPickerCard(colorSpace: ColorSpace) {
-    val miuixColor = MiuixTheme.colorScheme.primary
-    var selectedColor by remember { mutableStateOf(miuixColor) }
+    val couiColor = COUITheme.colorScheme.primary
+    var selectedColor by remember { mutableStateOf(couiColor) }
     var colorHex by remember(selectedColor) {
         mutableStateOf(
             selectedColor.toArgb().toHexString(HexFormat.UpperCase),
@@ -105,8 +141,8 @@ private fun ColorPickerCard(colorSpace: ColorSpace) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         insideMargin = PaddingValues(16.dp),
     ) {
         Row(

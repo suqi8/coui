@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.IconButton
 ```
 
 ## Basic Usage
@@ -21,7 +21,7 @@ IconButton(
     onClick = { /* Handle click event */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
 }
@@ -37,7 +37,7 @@ IconButton(
     enabled = false
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
 }
@@ -56,7 +56,7 @@ Scaffold {
         holdDownState = showDialog
     ) {
         Icon(
-            imageVector = MiuixIcons.Favorites,
+            imageVector = COUIIcons.Favorites,
             contentDescription = "Favorites"
         )
     }
@@ -109,7 +109,7 @@ IconButton(
     backgroundColor = Color.LightGray.copy(alpha = 0.3f)
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
 }
@@ -125,7 +125,7 @@ IconButton(
     cornerRadius = 12.dp
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites"
     )
 }
@@ -142,8 +142,8 @@ Surface {
             onClick = { /* Handle click event */ }
         ) {
             Icon(
-                imageVector = MiuixIcons.Add,
-                tint = MiuixTheme.colorScheme.onBackground,
+                imageVector = COUIIcons.Add,
+                tint = COUITheme.colorScheme.onBackground,
                 contentDescription = "Add"
             )
         }
@@ -161,9 +161,9 @@ IconButton(
     onClick = { isLiked = !isLiked }
 ) {
     Icon(
-        imageVector = if (isLiked) MiuixIcons.FavoritesFill else MiuixIcons.Favorites,
+        imageVector = if (isLiked) COUIIcons.FavoritesFill else COUIIcons.Favorites,
         contentDescription = if (isLiked) "Like" else "Unlike",
-        tint = if (isLiked) Color.Red else MiuixTheme.colorScheme.onBackground
+        tint = if (isLiked) Color.Red else COUITheme.colorScheme.onBackground
     )
 }
 ```

@@ -2,11 +2,11 @@
 title: OverlayDialog
 requiresScaffoldHost: true
 prerequisites:
-  - Must be used within `Scaffold` to provide `MiuixPopupHost`
+  - Must be used within `Scaffold` to provide `COUIPopupHost`
   - Using outside `Scaffold` will cause popup content not to render
   - Multiple nested or side-by-side `Scaffold`s are supported without extra configuration
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayDialog
@@ -18,13 +18,13 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger Prerequisite
-This component depends on `Scaffold` providing `MiuixPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
+This component depends on `Scaffold` providing `COUIPopupHost` to render popup content. It must be used within `Scaffold`, otherwise popup content will not render correctly.
 :::
 
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import com.suqi8.coui.kmp.overlay.OverlayDialog
 ```
 
 ## Basic Usage
@@ -72,7 +72,7 @@ Scaffold {
 | onDismissRequest           | (() -> Unit)?          | Called when the user requests dismissal (outside tap or back) | null                                  | No       |
 | onDismissFinished          | (() -> Unit)?          | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null              | No       |
 | outsideMargin              | DpSize                 | Dialog external margin                                        | DialogDefaults.outsideMargin     | No       |
-| insideMargin               | DpSize                 | Dialog internal content margin                                | DialogDefaults.insideMargin      | No       |
+| insideMargin               | DpSize                 | Margin for the built-in title/summary texts (width = horizontal padding, height = padding above the title); the content slot is unpadded | DialogDefaults.insideMargin      | No       |
 | defaultWindowInsetsPadding | Boolean                | Whether to apply default window insets padding                | true                                  | No       |
 | renderInRootScaffold       | Boolean                | Whether to render the dialog in the root (outermost) Scaffold. When true, the dialog covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                     | Yes      |
@@ -83,10 +83,12 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 
 #### Properties
 
-| Property Name | Type   | Description                    |
-| ------------- | ------ | ------------------------------ |
-| outsideMargin | DpSize | Default dialog external margin |
-| insideMargin  | DpSize | Default dialog internal margin |
+| Property Name | Type   | Description                             |
+| ------------- | ------ | --------------------------------------- |
+| CornerRadius  | Dp     | Dialog panel corner radius (19.dp)      |
+| MaxWidth      | Dp     | Maximum dialog content width (392.dp)   |
+| outsideMargin | DpSize | Default dialog external margin (16, 24) |
+| insideMargin  | DpSize | Default margin for the built-in title/summary texts (24, 24); the content slot is unpadded |
 
 #### Functions
 
@@ -247,7 +249,7 @@ Scaffold {
     ) {
         Card(
             colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.secondaryContainer,
+                color = COUITheme.colorScheme.secondaryContainer,
             ),
         ) {
             OverlayDropdownPreference(

@@ -2,7 +2,7 @@
 title: WindowBottomSheet
 requiresScaffoldHost: false
 prerequisites:
-  - 可以在任何地方使用，不需要 `Scaffold` 或 `MiuixPopupHost`
+  - 可以在任何地方使用，不需要 `Scaffold` 或 `COUIPopupHost`
   - 在窗口层级渲染
 hostComponent: None
 popupHost: None
@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowBottomSheet
 
-`WindowBottomSheet` 是窗口级的底部抽屉组件。它使用平台 `Dialog` 渲染，不依赖 `Scaffold` 或 `MiuixPopupHost`。支持大屏优化的动效、系统返回手势关闭，以及在内容内部通过组合局部请求关闭。
+`WindowBottomSheet` 是窗口级的底部抽屉组件。它使用平台 `Dialog` 渲染，不依赖 `Scaffold` 或 `COUIPopupHost`。支持大屏优化的动效、系统返回手势关闭，以及在内容内部通过组合局部请求关闭。
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -23,8 +23,8 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
-import top.yukonga.miuix.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.window.WindowBottomSheet
+import com.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## 基本用法
@@ -85,8 +85,8 @@ WindowBottomSheet(
 
 | 属性名        | 类型   | 说明                  |
 | ------------- | ------ | --------------------- |
-| cornerRadius  | Dp     | 默认圆角半径 (28.dp)  |
-| maxWidth      | Dp     | 默认最大宽度 (640.dp) |
+| cornerRadius  | Dp     | 默认圆角半径 (20.dp，COUI couiRoundCornerXL) |
+| maxWidth      | Dp     | 默认宽度上限 (Dp.Infinity，实际宽度由 COUI 响应式栅格决定) |
 | outsideMargin | DpSize | 底部抽屉外部默认边距  |
 | insideMargin  | DpSize | 底部抽屉内部默认边距  |
 

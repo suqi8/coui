@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -16,17 +16,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Delete
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.ToolbarPosition
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Delete
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun FloatingToolbarDemo() {
@@ -60,16 +60,16 @@ fun FloatingToolbarDemo() {
                                     // or Column
                                     IconButton(onClick = { /* Action 1 */ }) {
                                         Icon(
-                                            imageVector = MiuixIcons.Edit,
+                                            imageVector = COUIIcons.Edit,
                                             contentDescription = "Edit",
-                                            tint = MiuixTheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.onBackground,
                                         )
                                     }
                                     IconButton(onClick = { /* Action 2 */ }) {
                                         Icon(
-                                            imageVector = MiuixIcons.Delete,
+                                            imageVector = COUIIcons.Delete,
                                             contentDescription = "Delete",
-                                            tint = MiuixTheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.onBackground,
                                         )
                                     }
                                 }
@@ -100,16 +100,16 @@ fun FloatingToolbarDemo() {
                                     // or Column
                                     IconButton(onClick = { /* Action 1 */ }) {
                                         Icon(
-                                            imageVector = MiuixIcons.Edit,
+                                            imageVector = COUIIcons.Edit,
                                             contentDescription = "Edit",
-                                            tint = MiuixTheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.onBackground,
                                         )
                                     }
                                     IconButton(onClick = { /* Action 2 */ }) {
                                         Icon(
-                                            imageVector = MiuixIcons.Delete,
+                                            imageVector = COUIIcons.Delete,
                                             contentDescription = "Delete",
-                                            tint = MiuixTheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.onBackground,
                                         )
                                     }
                                 }

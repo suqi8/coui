@@ -3,16 +3,16 @@
 Miuix provides a complete theme system that allows you to easily maintain a consistent design style
 throughout your application. The theme system consists of color schemes and text styles.
 
-## Using MiuixTheme
+## Using COUITheme
 
-Use `ThemeController` to control the color scheme mode, then wrap your content with `MiuixTheme`:
+Use `ThemeController` to control the color scheme mode, then wrap your content with `COUITheme`:
 
 ```kotlin
 @Composable
 fun App() {
     // Available modes: System, Light, Dark, MonetSystem, MonetLight, MonetDark
     val controller = remember { ThemeController(ColorSchemeMode.System) }
-    MiuixTheme(controller = controller) { /* Content */ }
+    COUITheme(controller = controller) { /* Content */ }
 }
 ```
 
@@ -35,7 +35,7 @@ fun App() {
               // keyColor = Color(0xFF3482FF) // Optional: Custom seed color
           )
       }
-      MiuixTheme(controller = controller) { /* Content */ }
+      COUITheme(controller = controller) { /* Content */ }
   }
   ```
 
@@ -52,7 +52,7 @@ fun App() {
           colorSpec = ThemeColorSpec.Spec2025
       )
   }
-  MiuixTheme(controller = controller) { /* Content */ }
+  COUITheme(controller = controller) { /* Content */ }
   ```
 
   ::: tip
@@ -88,13 +88,13 @@ fun App() {
 
 - **Direct Usage**
 
-  Provide a color scheme directly to `MiuixTheme(colors = ...)` for full customization without a controller:
+  Provide a color scheme directly to `COUITheme(colors = ...)` for full customization without a controller:
 
   ```kotlin
   @Composable
   fun AppWithColors() {
       val colors = lightColorScheme() // or darkColorScheme()
-      MiuixTheme(colors = colors) { /* Content */ }
+      COUITheme(colors = colors) { /* Content */ }
   }
   ```
 
@@ -146,15 +146,15 @@ The `ThemeController` manages the current color scheme of the Miuix theme.
 | Spec2021 | Original Material Design 3 color specification |
 | Spec2025 | Updated 2025 color specification (only supported by TonalSpot, Neutral, Vibrant, Expressive) |
 
-## MiuixTheme Object
+## COUITheme Object
 
-Access the current theme values through the `MiuixTheme` object:
+Access the current theme values through the `COUITheme` object:
 
 ```kotlin
-val colors = MiuixTheme.colorScheme
-val textStyles = MiuixTheme.textStyles
-val mode = MiuixTheme.colorSchemeMode
-val isDynamic = MiuixTheme.isDynamicColor
+val colors = COUITheme.colorScheme
+val textStyles = COUITheme.textStyles
+val mode = COUITheme.colorSchemeMode
+val isDynamic = COUITheme.isDynamicColor
 ```
 
 | Property | Type | Description |
@@ -183,7 +183,7 @@ val customTextStyles = defaultTextStyles(
 )
 
 val controller = remember { ThemeController(ColorSchemeMode.Light) }
-MiuixTheme(
+COUITheme(
     controller = controller,
     textStyles = customTextStyles
 ) {
@@ -199,7 +199,7 @@ Following the system's dark mode is built-in. Use `ColorSchemeMode.System`:
 @Composable
 fun MyApp() {
     val controller = remember { ThemeController(ColorSchemeMode.System) }
-    MiuixTheme(controller = controller) {
+    COUITheme(controller = controller) {
         // Application content
     }
 }

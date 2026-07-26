@@ -4,7 +4,7 @@
 
 ## 使用方式
 
-- 在组合函数中通过 `MiuixTheme.colorScheme.<名称>` 访问。
+- 在组合函数中通过 `COUITheme.colorScheme.<名称>` 访问。
 - 以下展示的颜色适用于非 Monet 模式。
 
 ## 所有颜色

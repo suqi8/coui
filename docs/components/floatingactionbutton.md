@@ -11,7 +11,7 @@ This component is typically used in conjunction with the `Scaffold` component to
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import com.suqi8.coui.kmp.basic.FloatingActionButton
 ```
 
 ## Basic Usage
@@ -23,7 +23,7 @@ FloatingActionButton(
     onClick = { /* Handle click event */ }
 ) {
     Icon(
-        imageVector = MiuixIcons.Add,
+        imageVector = COUIIcons.Add,
         contentDescription = "Add"
     )
 }
@@ -42,10 +42,11 @@ Since this component is typically used for the most common actions, it does not 
 | onClick                    | () -> Unit             | Callback triggered when clicked     | -                              | Yes      |
 | modifier                   | Modifier               | Modifier applied to the button      | Modifier                       | No       |
 | shape                      | Shape                  | Shape of the button                 | CircleShape           | No       |
-| containerColor             | Color                  | Background color of the button      | MiuixTheme.colorScheme.primary | No       |
+| containerColor             | Color                  | Background color of the button      | COUITheme.colorScheme.primary | No       |
 | shadowElevation            | Dp                     | Shadow elevation of the button      | FloatingActionButtonDefaults.ShadowElevation | No       |
 | minWidth                   | Dp                     | Minimum width of the button         | FloatingActionButtonDefaults.MinWidth  | No       |
 | minHeight                  | Dp                     | Minimum height of the button        | FloatingActionButtonDefaults.MinHeight | No       |
+| interactionSource          | MutableInteractionSource? | Interaction source of the button | null                           | No       |
 | content                    | @Composable () -> Unit | Composable content of the button    | -                              | Yes      |
 
 ### FloatingActionButtonDefaults Object
@@ -54,11 +55,12 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 
 #### Constants
 
-| Constant Name   | Type | Description                    | Default Value |
-| --------------- | ---- | ------------------------------ | ------------- |
-| MinWidth        | Dp   | Minimum width of the button    | 56.dp         |
-| MinHeight       | Dp   | Minimum height of the button   | 56.dp         |
-| ShadowElevation | Dp   | Shadow elevation of the button | 5.dp          |
+| Constant Name   | Type  | Description                              | Default Value |
+| --------------- | ----- | ---------------------------------------- | ------------- |
+| MinWidth        | Dp    | Minimum width of the button              | 56.dp         |
+| MinHeight       | Dp    | Minimum height of the button             | 56.dp         |
+| ShadowElevation | Dp    | Shadow elevation of the button           | 12.dp         |
+| PressedScale    | Float | Scale of the button while pressed        | 0.92f         |
 
 ## Advanced Usage
 
@@ -70,7 +72,7 @@ FloatingActionButton(
     containerColor = Color.Red
 ) {
     Icon(
-        imageVector = MiuixIcons.Favorites,
+        imageVector = COUIIcons.Favorites,
         contentDescription = "Favorites",
         tint = Color.White
     )
@@ -91,7 +93,7 @@ FloatingActionButton(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Icon(
-            imageVector = MiuixIcons.Add,
+            imageVector = COUIIcons.Add,
             contentDescription = "Add",
             tint = Color.White
         )
@@ -110,7 +112,7 @@ Scaffold(
             onClick = { /* Handle click event */ }
         ) {
             Icon(
-                imageVector = MiuixIcons.Add,
+                imageVector = COUIIcons.Add,
                 contentDescription = "Add"
             )
         }
@@ -143,7 +145,7 @@ FloatingActionButton(
     minHeight = animatedSize
 ) {
     Icon(
-        imageVector = if (expanded) MiuixIcons.Remove else MiuixIcons.Add,
+        imageVector = if (expanded) COUIIcons.Remove else COUIIcons.Add,
         contentDescription = if (expanded) "Remove" else "Add",
         tint = Color.White
     )

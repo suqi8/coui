@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package utils
@@ -35,8 +35,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.roundToInt
 
 /**
@@ -92,7 +92,7 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
                     }
                 }
                 .background(
-                    color = MiuixTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+                    color = COUITheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(PillCorner),
                 )
                 .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -102,21 +102,21 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
             if (stats.avg == 0) {
                 Text(
                     text = "--",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceSecondary,
+                    style = COUITheme.textStyles.body2,
+                    color = COUITheme.colorScheme.onSurfaceSecondary,
                 )
             } else {
-                val secondary = MiuixTheme.colorScheme.onSurfaceSecondary
+                val secondary = COUITheme.colorScheme.onSurfaceSecondary
                 Text(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(color = secondary)) { append("AVG ") }
                         withStyle(SpanStyle(color = avgColor)) { append(stats.avg.toString()) }
                     },
-                    style = MiuixTheme.textStyles.body2,
+                    style = COUITheme.textStyles.body2,
                 )
                 Text(
                     text = "·",
-                    style = MiuixTheme.textStyles.body2,
+                    style = COUITheme.textStyles.body2,
                     color = secondary,
                 )
                 Text(
@@ -124,7 +124,7 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
                         withStyle(SpanStyle(color = secondary)) { append("LOW ") }
                         withStyle(SpanStyle(color = lowColor)) { append(stats.low1.toString()) }
                     },
-                    style = MiuixTheme.textStyles.body2,
+                    style = COUITheme.textStyles.body2,
                 )
             }
         }

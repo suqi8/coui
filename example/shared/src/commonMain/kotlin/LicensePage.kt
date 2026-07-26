@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -25,18 +25,18 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.shared.generated.resources.Res
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.shared.generated.resources.Res
+import com.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.Library
@@ -51,7 +51,7 @@ fun LicensePage(
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.surface
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
             drawRect(surfaceColor)
@@ -61,8 +61,8 @@ fun LicensePage(
         null
     }
     val blurActive = appState.enableBlur && blurSupported
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
 
     val libraries by produceState<List<Library>?>(initialValue = null) {
@@ -99,6 +99,7 @@ fun LicensePage(
             innerPadding,
             padding,
             isWideScreen,
+            extraTop = 12.dp,
             extraStart = WindowInsets.displayCutout.asPaddingValues().calculateLeftPadding(LayoutDirection.Ltr),
             extraEnd = WindowInsets.displayCutout.asPaddingValues().calculateRightPadding(LayoutDirection.Ltr),
         )
@@ -116,8 +117,8 @@ fun LicensePage(
                     items(libs, key = { it.uniqueId }) { library ->
                         Card(
                             modifier = Modifier
-                                .padding(horizontal = 12.dp)
-                                .padding(top = 12.dp),
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 16.dp),
                         ) {
                             ArrowPreference(
                                 title = library.name,
@@ -132,7 +133,7 @@ fun LicensePage(
                     }
                 }
                 item {
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
             VerticalScrollBar(

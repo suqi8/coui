@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.preference.SwitchPreference
 ```
 
 ## Basic Usage
@@ -88,9 +88,9 @@ SwitchPreference(
     onCheckedChange = { enabled = it },
     startAction = {
         Icon(
-            imageVector = MiuixIcons.Sort,
+            imageVector = COUIIcons.Sort,
             contentDescription = "Command Icon",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             modifier = Modifier.padding(end = 12.dp)
         )
     }
@@ -110,7 +110,7 @@ SwitchPreference(
     endActions = {
         Text(
             text = if (locationEnabled) "Enabled" else "Disabled",
-            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.onSurfaceVariantActions,
             modifier = Modifier.padding(end = 6.dp)
         )
     }
@@ -151,17 +151,17 @@ var customEnabled by remember { mutableStateOf(false) }
 SwitchPreference(
     title = "Custom Colors",
     titleColor = BasicComponentDefaults.titleColor(
-        color = MiuixTheme.colorScheme.primary
+        color = COUITheme.colorScheme.primary
     ),
     summary = "Switch with custom colors",
     summaryColor = BasicComponentDefaults.summaryColor(
-        color = MiuixTheme.colorScheme.secondary
+        color = COUITheme.colorScheme.secondary
     ),
     checked = customEnabled,
     onCheckedChange = { customEnabled = it },
     switchColors = SwitchDefaults.switchColors(
-        checkedThumbColor = MiuixTheme.colorScheme.primary,
-        checkedTrackColor = MiuixTheme.colorScheme.primary.copy(alpha = 0.2f)
+        checkedThumbColor = COUITheme.colorScheme.primary,
+        checkedTrackColor = COUITheme.colorScheme.primary.copy(alpha = 0.2f)
     )
 )
 ```

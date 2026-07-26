@@ -2,7 +2,7 @@
 title: WindowCascadingListPopup
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at window level
 hostComponent: None
 popupHost: None
@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowCascadingListPopup
 
-`WindowCascadingListPopup` is a popup list with two-level cascading menu support, rendered at the window level via `Dialog`. Unlike `OverlayCascadingListPopup`, it does not require a `Scaffold` or `MiuixPopupHost`. Items whose `DropdownItem.children` is non-empty become submenu triggers; cascading depth is limited to **2**.
+`WindowCascadingListPopup` is a popup list with two-level cascading menu support, rendered at the window level via `Dialog`. Unlike `OverlayCascadingListPopup`, it does not require a `Scaffold` or `COUIPopupHost`. Items whose `DropdownItem.children` is non-empty become submenu triggers; cascading depth is limited to **2**.
 
 <div style="position: relative; height: 410px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=windowCascadingListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -19,9 +19,9 @@ popupHost: None
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.window.WindowCascadingListPopup
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.window.WindowCascadingListPopup
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage

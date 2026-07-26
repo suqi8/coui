@@ -1,4 +1,4 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -9,9 +9,10 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import navigation3.Route
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.preference.ArrowPreference
 import kotlin.random.Random
 
 fun LazyListScope.otherPageSection() {
@@ -20,7 +21,7 @@ fun LazyListScope.otherPageSection() {
         SmallTitle(text = "Other")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 16.dp),
         ) {
             ArrowPreference(
                 title = "PullToRefresh Test",
@@ -29,11 +30,13 @@ fun LazyListScope.otherPageSection() {
                     navigator.push(Route.PullToRefresh)
                 },
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
                 title = "Navigation test",
                 summary = "Navigate to a Navigation Page",
                 onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
                 title = "MultiScaffold Test",
                 summary = "Navigate to a MultiScaffold Page",

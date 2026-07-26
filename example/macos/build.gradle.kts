@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
@@ -40,7 +40,7 @@ compose.desktop {
             packageName = BuildConfig.APPLICATION_NAME
             packageVersion = BuildConfig.APPLICATION_VERSION_NAME
 
-            macOS.iconFile = project.file("resources/Miuix.icns")
+            macOS.iconFile = project.file("resources/COUI.icns")
         }
     }
 }

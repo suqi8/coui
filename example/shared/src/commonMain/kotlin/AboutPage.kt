@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -51,29 +51,30 @@ import component.effect.BgEffectBackground
 import misc.VersionInfo
 import navigation3.Route
 import org.jetbrains.compose.resources.painterResource
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurBlendMode
-import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.shared.generated.resources.Res
-import top.yukonga.miuix.kmp.shared.generated.resources.ic_launcher
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.SmallTopAppBar
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.BlendColorEntry
+import com.suqi8.coui.kmp.blur.BlurBlendMode
+import com.suqi8.coui.kmp.blur.BlurDefaults
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.textureBlur
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.shared.generated.resources.Res
+import com.suqi8.coui.kmp.shared.generated.resources.ic_launcher
+import com.suqi8.coui.kmp.theme.COUITheme
 import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -85,7 +86,7 @@ import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 fun AboutPage(
     padding: PaddingValues,
 ) {
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
     val lazyListState = rememberLazyListState()
 
@@ -111,7 +112,7 @@ fun AboutPage(
     val barColor = if (blurActive) {
         Color.Transparent
     } else {
-        if (scrollProgress == 1f) MiuixTheme.colorScheme.surface else Color.Transparent
+        if (scrollProgress == 1f) COUITheme.colorScheme.surface else Color.Transparent
     }
 
     Scaffold(
@@ -121,7 +122,7 @@ fun AboutPage(
                     title = "About",
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
-                    titleColor = MiuixTheme.colorScheme.onSurface.copy(
+                    titleColor = COUITheme.colorScheme.onSurface.copy(
                         alpha = ((scrollProgress - 0.35f) / 0.65f).coerceIn(0f, 1f),
                     ),
                     defaultWindowInsetsPadding = false,
@@ -276,8 +277,8 @@ private fun AboutContent(
                             Modifier
                         },
                     ),
-                text = "Miuix for Compose",
-                color = MiuixTheme.colorScheme.onBackground,
+                text = "COUI for Compose",
+                color = COUITheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
                 fontSize = 35.sp,
             )
@@ -288,7 +289,7 @@ private fun AboutContent(
                         scaleX = 1 - (versionCodeProgress * 0.05f)
                         scaleY = 1 - (versionCodeProgress * 0.05f)
                     },
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                color = COUITheme.colorScheme.onSurfaceVariantSummary,
                 text = "v" + VersionInfo.VERSION_NAME + " (" + VersionInfo.VERSION_CODE + ")",
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -334,7 +335,7 @@ private fun AboutContent(
                         .padding(bottom = scrollPadding.calculateBottomPadding()),
                 ) {
                     Card(
-                        modifier = Modifier.padding(horizontal = 12.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp)
                             .then(
                                 if (backdrop != null) {
                                     Modifier
@@ -355,7 +356,7 @@ private fun AboutContent(
                                 },
                             ),
                         colors = CardDefaults.defaultColors(
-                            if (backdrop != null) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer,
+                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.surfaceContainer,
                             Color.Transparent,
                         ),
                     ) {
@@ -364,19 +365,20 @@ private fun AboutContent(
                             endActions = {
                                 Text(
                                     text = "GitHub",
-                                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                    fontSize = COUITheme.textStyles.body2.fontSize,
+                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
                                 )
                             },
-                            onClick = { uriHandler.openUri("https://github.com/compose-miuix-ui/miuix") },
+                            onClick = { uriHandler.openUri("https://github.com/compose-coui-ui/coui") },
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Join Group",
                             endActions = {
                                 Text(
                                     text = "Telegram",
-                                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                    fontSize = COUITheme.textStyles.body2.fontSize,
+                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
                                 )
                             },
                             onClick = { uriHandler.openUri("https://t.me/YuKongA13579") },
@@ -384,8 +386,8 @@ private fun AboutContent(
                     }
                     Card(
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
-                            .padding(top = 12.dp)
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 16.dp)
                             .then(
                                 if (backdrop != null) {
                                     Modifier
@@ -406,7 +408,7 @@ private fun AboutContent(
                                 },
                             ),
                         colors = CardDefaults.defaultColors(
-                            if (backdrop != null) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer,
+                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.surfaceContainer,
                             Color.Transparent,
                         ),
                     ) {
@@ -415,20 +417,21 @@ private fun AboutContent(
                             endActions = {
                                 Text(
                                     text = "Apache-2.0",
-                                    fontSize = MiuixTheme.textStyles.body2.fontSize,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                    fontSize = COUITheme.textStyles.body2.fontSize,
+                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
                                 )
                             },
                             onClick = {
                                 uriHandler.openUri("https://www.apache.org/licenses/LICENSE-2.0.txt")
                             },
                         )
+                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         ArrowPreference(
                             title = "Third Party Licenses",
                             onClick = { navigator.push(Route.License) },
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
@@ -483,7 +486,7 @@ private fun AboutContent(
 private fun ValueText(text: String) {
     Text(
         text = text,
-        fontSize = MiuixTheme.textStyles.body2.fontSize,
-        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+        fontSize = COUITheme.textStyles.body2.fontSize,
+        color = COUITheme.colorScheme.onSurfaceVariantActions,
     )
 }

@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -20,15 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.overlay.OverlayDialog
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.PressFeedbackType
 
 fun LazyListScope.cardSection() {
     item(key = "card") {
@@ -36,24 +35,20 @@ fun LazyListScope.cardSection() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
-            colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.primaryVariant,
-            ),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
             insideMargin = PaddingValues(16.dp),
-            pressFeedbackType = PressFeedbackType.None,
-            showIndication = true,
+            onClick = { println("Card click") },
         ) {
             Text(
-                color = MiuixTheme.colorScheme.onPrimaryVariant,
+                color = COUITheme.colorScheme.onSurface,
                 text = "Card",
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                color = MiuixTheme.colorScheme.onPrimaryVariant,
-                text = "ShowIndication: true",
+                color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                text = "PressFeedbackType: Tint (default)",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Normal,
             )
@@ -61,8 +56,8 @@ fun LazyListScope.cardSection() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Card(
@@ -72,15 +67,15 @@ fun LazyListScope.cardSection() {
                 onClick = { println("Card click") },
                 content = {
                     Text(
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.onSurface,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Sink",
-                        style = MiuixTheme.textStyles.paragraph,
+                        style = COUITheme.textStyles.paragraph,
                     )
                 },
             )
@@ -91,15 +86,15 @@ fun LazyListScope.cardSection() {
                 onLongPress = { println("Card long press") },
                 content = {
                     Text(
-                        color = MiuixTheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.onSurface,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
                         text = "PressFeedback\nType: Tilt",
-                        style = MiuixTheme.textStyles.paragraph,
+                        style = COUITheme.textStyles.paragraph,
                     )
                 },
             )
@@ -116,11 +111,9 @@ private fun LongPressHoldDownCardDemo() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
         insideMargin = PaddingValues(16.dp),
-        pressFeedbackType = PressFeedbackType.Sink,
-        showIndication = true,
         holdDownState = holdDown,
         onLongPress = {
             showDialog = true
@@ -128,15 +121,15 @@ private fun LongPressHoldDownCardDemo() {
         },
         content = {
             Text(
-                color = MiuixTheme.colorScheme.onSurface,
+                color = COUITheme.colorScheme.onSurface,
                 text = "Card",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                color = COUITheme.colorScheme.onSurfaceVariantSummary,
                 text = "Long press to show dialog",
-                style = MiuixTheme.textStyles.paragraph,
+                style = COUITheme.textStyles.paragraph,
             )
         },
     )
@@ -149,6 +142,12 @@ private fun LongPressHoldDownCardDemo() {
         onDismissFinished = { holdDown = false },
         content = {
             Row(
+                // The dialog content slot is unpadded (COUI button bars span the panel), so
+                // COUI assignment-style pill buttons keep 24dp side and bottom margins.
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 TextButton(

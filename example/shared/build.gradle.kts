@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
@@ -14,7 +14,7 @@ plugins {
     id("module.spotless")
 }
 
-val generatedSrcDir: Provider<Directory> = layout.buildDirectory.dir("generated/miuix-example")
+val generatedSrcDir: Provider<Directory> = layout.buildDirectory.dir("generated/coui-example")
 
 group = BuildConfig.LIBRARY_ID
 
@@ -57,19 +57,19 @@ kotlin {
         browser()
     }
 
-    applyMiuixSourceSetHierarchy()
+    applyCOUISourceSetHierarchy()
 
     sourceSets {
         commonMain {
             kotlin.srcDir(generatedSrcDir.map { it.dir("kotlin") })
             dependencies {
-                api(projects.miuixUi)
-                api(projects.miuixPreference)
+                api(projects.couiUi)
+                api(projects.couiPreference)
                 api(libs.jetbrains.compose.components.resources)
-                implementation(projects.miuixBlur)
-                implementation(projects.miuixSquircle)
-                implementation(projects.miuixIcons)
-                implementation(projects.miuixNavigation3Ui)
+                implementation(projects.couiBlur)
+                implementation(projects.couiSquircle)
+                implementation(projects.couiIcons)
+                implementation(projects.couiNavigation3Ui)
                 implementation(libs.androidx.navigation3.runtime)
                 implementation(libs.aboutlibraries.core)
                 implementation(libs.jetbrains.androidx.navigationevent)

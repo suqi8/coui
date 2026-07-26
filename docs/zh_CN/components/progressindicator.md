@@ -9,9 +9,9 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator // 线性进度条
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator // 环形进度条
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
+import com.suqi8.coui.kmp.basic.LinearProgressIndicator // 线性进度条
+import com.suqi8.coui.kmp.basic.CircularProgressIndicator // 环形进度条
+import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
 ```
 
 ## 基本用法
@@ -100,7 +100,7 @@ CircularProgressIndicator(progress = null)
 | ----------- | ----------------------- | ------------------------------ | --------------------------------------------------------------------- | -------- |
 | modifier    | Modifier                | 应用于进度条的修饰符           | Modifier                                                              | 否       |
 | progress    | Float?                  | 当前进度值，null表示不确定状态 | null                                                                  | 否       |
-| colors      | ProgressIndicatorColors | 进度条的颜色配置               | ProgressIndicatorDefaults.progressIndicatorColors()                   | 否       |
+| colors      | ProgressIndicatorColors | 进度条的颜色配置               | ProgressIndicatorDefaults.circularProgressIndicatorColors()           | 否       |
 | strokeWidth | Dp                      | 环形进度条的描边宽度           | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth | 否       |
 | size        | Dp                      | 环形进度条的大小               | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize        | 否       |
 
@@ -122,18 +122,23 @@ ProgressIndicatorDefaults 对象提供了进度指示器组件的默认值和颜
 
 | 常量名                                          | 类型 | 默认值 | 说明                     |
 | ----------------------------------------------- | ---- | ------ | ------------------------ |
-| DefaultLinearProgressIndicatorHeight            | Dp   | 6.dp   | 线性进度条的默认高度     |
-| DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 4.dp   | 环形进度条的默认描边宽度 |
+| DefaultLinearProgressIndicatorHeight            | Dp   | 4.dp   | 线性进度条的默认高度     |
+| DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 3.dp   | 环形进度条的默认描边宽度 |
 | DefaultCircularProgressIndicatorSize            | Dp   | 30.dp  | 环形进度条的默认大小     |
-| DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.dp   | 无限指示器的默认描边宽度 |
+| DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.67.dp | 无限指示器的默认描边宽度 |
 | DefaultInfiniteProgressIndicatorOrbitingDotSize | Dp   | 2.dp   | 无限指示器默认环绕点大小 |
-| DefaultInfiniteProgressIndicatorSize            | Dp   | 20.dp  | 无限指示器的默认大小     |
+| DefaultInfiniteProgressIndicatorSize            | Dp   | 18.dp  | 无限指示器的默认大小     |
+| LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp   | 大号环形进度条的描边宽度 |
+| LargeCircularProgressIndicatorSize              | Dp   | 40.dp  | 大号环形进度条的大小     |
+| LargeInfiniteProgressIndicatorStrokeWidth       | Dp   | 3.33.dp | 大号无限指示器的描边宽度 |
+| LargeInfiniteProgressIndicatorSize              | Dp   | 26.dp  | 大号无限指示器的大小     |
 
 #### 方法
 
 | 方法名                    | 类型                    | 说明                         |
 | ------------------------- | ----------------------- | ---------------------------- |
-| progressIndicatorColors() | ProgressIndicatorColors | 创建进度指示器的默认颜色配置 |
+| progressIndicatorColors()         | ProgressIndicatorColors | 创建线性进度指示器的默认颜色配置 |
+| circularProgressIndicatorColors() | ProgressIndicatorColors | 创建环形进度指示器的默认颜色配置 |
 
 ### ProgressIndicatorColors 类
 
@@ -206,7 +211,7 @@ Button(
 
 ```kotlin
 InfiniteProgressIndicator(
-    color = MiuixTheme.colorScheme.primary,
+    color = COUITheme.colorScheme.primary,
     size = 40.dp,
     strokeWidth = 3.dp,
     orbitingDotSize = 4.dp

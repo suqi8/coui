@@ -1,9 +1,9 @@
 # Blur Effects
 
-`miuix-blur` is a standalone blur effect library for Compose Multiplatform. It provides backdrop blur, color blending, and texture effects via Modifier extensions. The library supports Android, Desktop (JVM), iOS, macOS, and Web (WasmJs/Js).
+`coui-blur` is a standalone blur effect library for Compose Multiplatform. It provides backdrop blur, color blending, and texture effects via Modifier extensions. The library supports Android, Desktop (JVM), iOS, macOS, and Web (WasmJs/Js).
 
 ::: warning
-On Android, `miuix-blur` requires `minSdk` 33 (Android 13) or higher. All
+On Android, `coui-blur` requires `minSdk` 33 (Android 13) or higher. All
 effects (blur, blend, noise, highlight) rely on `RuntimeShader`, which is only
 available from API 33. Apps with a lower `minSdk` that still want to include
 this library should gate blur-related code paths with [the capability checks
@@ -12,13 +12,13 @@ described below](#runtime-capability-checks).
 
 ## Setup
 
-Add the `miuix-blur` dependency to your project:
+Add the `coui-blur` dependency to your project:
 
 ```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("top.yukonga.miuix.kmp:miuix-blur:<version>")
+            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
         }
     }
 }
@@ -28,7 +28,7 @@ For Android-only projects:
 
 ```kotlin
 dependencies {
-    implementation("top.yukonga.miuix.kmp:miuix-blur-android:<version>")
+    implementation("com.suqi8.coui.kmp:coui-blur-android:<version>")
 }
 ```
 
@@ -48,14 +48,14 @@ highlight effects.
 
 ### Runtime capability checks
 
-If your app has a lower `minSdk` than `miuix-blur` and you want to keep
+If your app has a lower `minSdk` than `coui-blur` and you want to keep
 shipping a single APK, gate blur usage with the capability checks below.
 On Android they map to `Build.VERSION.SDK_INT` comparisons; on Skiko-based
 targets (Desktop, iOS, macOS, Web) they always return `true`.
 
 ```kotlin
-import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
-import top.yukonga.miuix.kmp.shader.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.shader.isRenderEffectSupported
+import com.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 
 // True on API 32+ (and all non-Android targets). Useful when you only need
 // the backdrop scaffold (e.g. a chained ColorFilter via `colorFilter(...)`).
@@ -77,11 +77,11 @@ Applying a backdrop blur involves three steps:
 3. Apply `Modifier.textureBlur()` on the blur surface
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.BlurColors
-import top.yukonga.miuix.kmp.blur.BlurDefaults
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
-import top.yukonga.miuix.kmp.blur.textureBlur
+import com.suqi8.coui.kmp.blur.BlurColors
+import com.suqi8.coui.kmp.blur.BlurDefaults
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import com.suqi8.coui.kmp.blur.textureBlur
 
 // Step 1: Create a LayerBackdrop
 val backdrop = rememberLayerBackdrop()
@@ -140,9 +140,9 @@ Box(
 Use `BlurColors` to apply color adjustments and blend layers on top of the blur:
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.BlendColorEntry
-import top.yukonga.miuix.kmp.blur.BlurBlendMode
-import top.yukonga.miuix.kmp.blur.BlurColors
+import com.suqi8.coui.kmp.blur.BlendColorEntry
+import com.suqi8.coui.kmp.blur.BlurBlendMode
+import com.suqi8.coui.kmp.blur.BlurColors
 
 val colors = BlurColors(
     blendColors = listOf(
@@ -269,7 +269,7 @@ import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
 Text(
     text = "Frosted Text",
-    style = MiuixTheme.textStyles.title1,
+    style = COUITheme.textStyles.title1,
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
@@ -300,7 +300,7 @@ Box(
 For full control over the effect pipeline, use `Modifier.drawBackdrop()` with `BackdropEffectScope`:
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.drawBackdrop
+import com.suqi8.coui.kmp.blur.drawBackdrop
 
 Box(
     modifier = Modifier
@@ -397,7 +397,7 @@ A `Highlight` paints a thin glassy edge with two directional lights along a roun
 
 ```kotlin
 import androidx.compose.foundation.shape.RoundedCornerShape
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import com.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -415,9 +415,9 @@ Box(
 The `highlight` lambda runs inside the same `BackdropEffectScope` as `effects`, so its return value can change with state (e.g. press progress) and pick up the current `size` / `shape` automatically.
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.drawBackdrop
-import top.yukonga.miuix.kmp.blur.blur
-import top.yukonga.miuix.kmp.blur.highlight.Highlight
+import com.suqi8.coui.kmp.blur.drawBackdrop
+import com.suqi8.coui.kmp.blur.blur
+import com.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -457,9 +457,9 @@ Six presets are provided. Pick by card size and theme:
 Override individual fields on a token, or build a `BloomStroke` from scratch:
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.highlight.BloomStroke
-import top.yukonga.miuix.kmp.blur.highlight.LightPosition
-import top.yukonga.miuix.kmp.blur.highlight.LightSource
+import com.suqi8.coui.kmp.blur.highlight.BloomStroke
+import com.suqi8.coui.kmp.blur.highlight.LightPosition
+import com.suqi8.coui.kmp.blur.highlight.LightSource
 
 val custom = Highlight(
     width = 1.dp,
@@ -488,7 +488,7 @@ The two lights are restricted to opposite hemispheres by the shader: `primaryLig
 `rememberTiltLight` shifts a base position in real time using the device rotation sensor. On Android, this produces a parallax-like edge that follows device tilt; on Desktop / iOS / macOS / Web the tilt is always zero, so the lights stay anchored.
 
 ```kotlin
-import top.yukonga.miuix.kmp.blur.highlight.rememberTiltLight
+import com.suqi8.coui.kmp.blur.highlight.rememberTiltLight
 
 val baseStyle = Highlight.GlassStrokeMiddleLight.style as BloomStroke
 

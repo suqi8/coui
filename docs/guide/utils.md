@@ -2,9 +2,9 @@
 
 Miuix provides a series of utility functions to help you develop applications more efficiently. Below is a detailed introduction and usage examples of the main utility functions.
 
-## Popup Utilities (MiuixPopupUtils)
+## Popup Utilities (COUIPopupUtils)
 
-`MiuixPopupUtils` is a utility class for displaying dialog layout and popup layout. This class is already integrated into the `Scaffold` component and can be used directly.
+`COUIPopupUtils` is a utility class for displaying dialog layout and popup layout. This class is already integrated into the `Scaffold` component and can be used directly.
 
 Each `Scaffold` automatically manages its own isolated popup state, so multiple nested or side-by-side `Scaffold`s work correctly without any extra configuration.
 
@@ -112,10 +112,10 @@ LazyColumn(
 
 ### Via OverscrollFactory (Theme-Level Integration)
 
-`MiuixOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same spring-based overscroll physics as `overScrollVertical()`, but integrated at the theme level. It is already set as the default factory in both overloads of `MiuixTheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the Miuix overscroll effect automatically — no extra modifier required.
+`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same spring-based overscroll physics as `overScrollVertical()`, but integrated at the theme level. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the Miuix overscroll effect automatically — no extra modifier required.
 
 ```kotlin
-// No modifier needed — MiuixTheme provides the overscroll effect automatically
+// No modifier needed — COUITheme provides the overscroll effect automatically
 LazyColumn {
     items(list) { item -> ItemRow(item) }
 }
@@ -137,7 +137,7 @@ CompositionLocalProvider(LocalOverscrollFactory provides null) {
 }
 ```
 
-Use `MiuixOverscrollEffect` explicitly (e.g., to share with a custom `Modifier.overscroll()`):
+Use `COUIOverscrollEffect` explicitly (e.g., to share with a custom `Modifier.overscroll()`):
 
 ```kotlin
 val overscrollEffect = rememberOverscrollEffect()
@@ -152,7 +152,7 @@ LazyColumn(
 
 **Comparison with `overScrollVertical()`:**
 
-| Feature | `overScrollVertical()` | `MiuixOverscrollFactory` |
+| Feature | `overScrollVertical()` | `COUIOverscrollFactory` |
 | :--- | :---: | :---: |
 | How it's applied | `Modifier` per component | Theme-level, automatic |
 | Spring physics | Identical | Identical |
@@ -160,7 +160,7 @@ LazyColumn(
 | Triggers when content does not overflow container | ✅ | ❌ |
 | Requires a modifier on each component | ✅ | ❌ |
 
-> **Limitation:** `MiuixOverscrollFactory` works by receiving the delta that the scrollable component could not consume after reaching its scroll boundary. If the content does not overflow the container (e.g., a `LazyColumn` whose items all fit on screen), the scrollable component never reaches a boundary, so `applyToScroll` is never called with a non-zero remainder and the overscroll effect will **not** trigger. For such cases, use `overScrollVertical()` instead.
+> **Limitation:** `COUIOverscrollFactory` works by receiving the delta that the scrollable component could not consume after reaching its scroll boundary. If the content does not overflow the container (e.g., a `LazyColumn` whose items all fit on screen), the scrollable component never reaches a boundary, so `applyToScroll` is never called with a non-zero remainder and the overscroll effect will **not** trigger. For such cases, use `overScrollVertical()` instead.
 
 ## Scroll End Haptic Feedback (Modifier.scrollEndHaptic())
 

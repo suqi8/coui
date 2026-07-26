@@ -4,8 +4,8 @@ This page documents all text styles provided by Miuix, based on the actual imple
 
 ## Using Text Styles
 
-- Use `MiuixTheme.textStyles.<name>` in composables.
-- The color of all styles is set from `MiuixTheme.colorScheme.onBackground` at runtime.
+- Use `COUITheme.textStyles.<name>` in composables.
+- The color of all styles is set from `COUITheme.colorScheme.onBackground` at runtime.
 
 ## Styles
 
@@ -31,18 +31,18 @@ This page documents all text styles provided by Miuix, based on the actual imple
 ```kotlin
 Text(
     text = "Title",
-    style = MiuixTheme.textStyles.title2
+    style = COUITheme.textStyles.title2
 )
 
 Text(
     text = "Body",
-    style = MiuixTheme.textStyles.body1
+    style = COUITheme.textStyles.body1
 )
 ```
 
 ## Customization
 
-- Override styles via `defaultTextStyles(...)` and pass to `MiuixTheme(textStyles = ...)`.
+- Override styles via `defaultTextStyles(...)` and pass to `COUITheme(textStyles = ...)`.
 
 ```kotlin
 val customTextStyles = defaultTextStyles(
@@ -53,7 +53,7 @@ val customTextStyles = defaultTextStyles(
 )
 
 val controller = remember { ThemeController(ColorSchemeMode.System) }
-MiuixTheme(
+COUITheme(
     controller = controller,
     textStyles = customTextStyles
 ) { /* Content */ }

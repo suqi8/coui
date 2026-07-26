@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -22,26 +22,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.icon.extended.Ok
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.SliderPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.LocalDismissState
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import top.yukonga.miuix.kmp.window.WindowBottomSheet
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.CardDefaults
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.IconButton
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.TextField
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Close
+import com.suqi8.coui.kmp.icon.extended.Ok
+import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.preference.SliderPreference
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.preference.WindowDropdownPreference
+import com.suqi8.coui.kmp.theme.LocalDismissState
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.utils.overScrollVertical
+import com.suqi8.coui.kmp.utils.scrollEndHaptic
+import com.suqi8.coui.kmp.window.WindowBottomSheet
 
 private val BottomSheetDropdownOptions = listOf("Option 1", "Option 2")
 
@@ -57,8 +58,8 @@ fun LazyListScope.bottomSheetSection() {
         SmallTitle(text = "BottomSheet")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             ArrowPreference(
                 title = "BottomSheet (O)",
@@ -69,6 +70,7 @@ fun LazyListScope.bottomSheetSection() {
                 },
                 holdDownState = superBottomSheetHoldDown,
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
                 title = "BottomSheet (W)",
                 summary = "Click to show a WindowBottomSheet",
@@ -126,9 +128,9 @@ private fun SuperBottomSheetDemo(
                 onClick = onDismissRequest,
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Close,
+                    imageVector = COUIIcons.Close,
                     contentDescription = "Cancel",
-                    tint = MiuixTheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.onBackground,
                 )
             }
         },
@@ -137,9 +139,9 @@ private fun SuperBottomSheetDemo(
                 onClick = onDismissRequest,
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Ok,
+                    imageVector = COUIIcons.Ok,
                     contentDescription = "Confirm",
-                    tint = MiuixTheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.onBackground,
                 )
             }
         },
@@ -157,7 +159,7 @@ private fun SuperBottomSheetDemo(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
                     SwitchPreference(
@@ -166,6 +168,7 @@ private fun SuperBottomSheetDemo(
                         checked = allowDismiss,
                         onCheckedChange = { allowDismiss = it },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Enable NestedScroll",
                         summary = "Scroll content vs Drag sheet",
@@ -192,7 +195,7 @@ private fun SuperBottomSheetDemo(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
                     OverlayDropdownPreference(
@@ -201,6 +204,7 @@ private fun SuperBottomSheetDemo(
                         selectedIndex = dropdownSelectedIndex,
                         onSelectedIndexChange = onDropdownSelectedIndexChange,
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "SwitchPref",
                         checked = switchChecked,
@@ -244,9 +248,9 @@ private fun WindowBottomSheetDemo(
                 onClick = { dismissState?.invoke() },
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Close,
+                    imageVector = COUIIcons.Close,
                     contentDescription = "Cancel",
-                    tint = MiuixTheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.onBackground,
                 )
             }
         },
@@ -256,9 +260,9 @@ private fun WindowBottomSheetDemo(
                 onClick = { dismissState?.invoke() },
             ) {
                 Icon(
-                    imageVector = MiuixIcons.Ok,
+                    imageVector = COUIIcons.Ok,
                     contentDescription = "Confirm",
-                    tint = MiuixTheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.onBackground,
                 )
             }
         },
@@ -276,7 +280,7 @@ private fun WindowBottomSheetDemo(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
                     SwitchPreference(
@@ -285,6 +289,7 @@ private fun WindowBottomSheetDemo(
                         checked = allowDismiss,
                         onCheckedChange = { allowDismiss = it },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Enable NestedScroll",
                         summary = "Scroll content vs Drag sheet",
@@ -311,7 +316,7 @@ private fun WindowBottomSheetDemo(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
                     WindowDropdownPreference(
@@ -320,6 +325,7 @@ private fun WindowBottomSheetDemo(
                         selectedIndex = dropdownSelectedIndex,
                         onSelectedIndexChange = onDropdownSelectedIndexChange,
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "SwitchPref",
                         checked = switchChecked,

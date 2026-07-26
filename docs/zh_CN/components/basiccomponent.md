@@ -11,7 +11,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.BasicComponent
 ```
 
 ## 基本用法
@@ -46,9 +46,9 @@ BasicComponent(
     startAction = {
         Icon(
             modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "头像图标",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     onClick = { /* 处理点击事件 */ }
@@ -80,9 +80,9 @@ BasicComponent(
     startAction = {
         Icon(
             modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "头像图标",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     endActions = {
@@ -91,11 +91,11 @@ BasicComponent(
 ) {
     Text(
         text = "自定义标题",
-        style = MiuixTheme.textStyles.headline1
+        style = COUITheme.textStyles.headline1
     )
     Text(
         text = "自定义内容说明",
-        style = MiuixTheme.textStyles.body2
+        style = COUITheme.textStyles.body2
     )
 }
 ```
@@ -159,7 +159,7 @@ BasicComponentDefaults 对象提供了 BasicComponent 组件的默认值和颜�
 
 | 常量名       | 类型          | 说明           | 默认值               |
 | ------------ | ------------- | -------------- | -------------------- |
-| InsideMargin | PaddingValues | 组件的内部边距 | PaddingValues(16.dp) |
+| InsideMargin | PaddingValues | 组件的内部边距 | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 
 #### BasicComponentDefaults 方法
 
@@ -188,25 +188,25 @@ BasicComponent(
         startAction = {
         Icon(
         modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Play,
+            imageVector = COUIIcons.Play,
             contentDescription = "音量图标",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     endActions = {
         IconButton(onClick = { /* 减小音量 */ }) {
             Icon(
-                imageVector = MiuixIcons.Remove,
+                imageVector = COUIIcons.Remove,
                 contentDescription = "减小音量",
-                tint = MiuixTheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.onBackground
             )
         }
         Text("70%")
         IconButton(onClick = { /* 增大音量 */ }) {
             Icon(
-                imageVector = MiuixIcons.Add,
+                imageVector = COUIIcons.Add,
                 contentDescription = "增大音量",
-                tint = MiuixTheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.onBackground
             )
         }
     }

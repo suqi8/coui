@@ -131,7 +131,7 @@ export default {
     /* giscus */
     giscusTalk(
       {
-        repo: "compose-miuix-ui/miuix-giscus",
+        repo: "compose-coui-ui/miuix-giscus",
         repoId: "R_kgDOQo99Eg",
         category: "General",
         categoryId: "DIC_kwDOQo99Es4Cz0CR",

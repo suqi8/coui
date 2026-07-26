@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 package component
@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,12 +18,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Switch
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.Switch
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.theme.COUITheme
 
 fun LazyListScope.switchSection() {
     item(key = "switch") {
@@ -35,8 +37,8 @@ fun LazyListScope.switchSection() {
         SmallTitle(text = "Switch")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             Row(
                 modifier = Modifier
@@ -72,6 +74,7 @@ fun LazyListScope.switchSection() {
                     isLoading = true,
                 )
             }
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             SwitchPreference(
                 title = "Switch",
                 summary = "Click to expand a Switch",
@@ -86,21 +89,26 @@ fun LazyListScope.switchSection() {
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
-                SwitchPreference(
-                    title = "Switch",
-                    checked = superSwitchState.value,
-                    endActions = {
-                        Text(
-                            text = superSwitch.value,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                        )
-                    },
-                    onCheckedChange = {
-                        superSwitchState.value = it
-                        superSwitch.value = "$it"
-                    },
-                )
+                // Divider lives inside the animated block so it only shows when expanded.
+                Column {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    SwitchPreference(
+                        title = "Switch",
+                        checked = superSwitchState.value,
+                        endActions = {
+                            Text(
+                                text = superSwitch.value,
+                                color = COUITheme.colorScheme.onSurfaceVariantActions,
+                            )
+                        },
+                        onCheckedChange = {
+                            superSwitchState.value = it
+                            superSwitch.value = "$it"
+                        },
+                    )
+                }
             }
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             SwitchPreference(
                 title = "Disabled Switch",
                 checked = true,

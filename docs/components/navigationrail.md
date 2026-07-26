@@ -9,9 +9,9 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.NavigationRailDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationRail
+import com.suqi8.coui.kmp.basic.NavigationRailItem
+import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
 ```
 
 ## Basic Usage
@@ -21,7 +21,7 @@ The NavigationRail component can be used to create side navigation menus:
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("Home", "Profile", "Settings")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Row {
     NavigationRail {
@@ -52,7 +52,7 @@ Row {
 | -------------------------- | -------------------------------------- | --------------------------------------------- | --------------------------------- | -------- |
 | modifier                   | Modifier                               | Modifier applied to the rail                  | Modifier                          | No       |
 | header                     | @Composable (ColumnScope.() -> Unit)?  | Header content (e.g. FAB or Logo)             | null                              | No       |
-| color                      | Color                                  | Background color of the rail                  | MiuixTheme.colorScheme.surface    | No       |
+| color                      | Color                                  | Background color of the rail                  | COUITheme.colorScheme.surface    | No       |
 | showDivider                | Boolean                                | Show divider line between rail and content    | true                              | No       |
 | defaultWindowInsetsPadding | Boolean                                | Apply default window insets padding           | true                              | No       |
 | minWidth                   | Dp                                     | Minimum width of the rail                     | NavigationRailDefaults.MinWidth   | No       |

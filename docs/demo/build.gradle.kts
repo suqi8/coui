@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
@@ -25,11 +25,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.miuixUi)
-            api(projects.miuixPreference)
-            implementation(projects.miuixIcons)
+            api(projects.couiUi)
+            api(projects.couiPreference)
+            implementation(projects.couiIcons)
             implementation(libs.androidx.navigation3.runtime)
-            implementation(projects.miuixNavigation3Ui)
+            implementation(projects.couiNavigation3Ui)
         }
     }
 }

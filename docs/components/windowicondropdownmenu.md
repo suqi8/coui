@@ -2,7 +2,7 @@
 title: WindowIconDropdownMenu
 requiresScaffoldHost: false
 prerequisites:
-  - Can be used anywhere, does not require `Scaffold` or `MiuixPopupHost`
+  - Can be used anywhere, does not require `Scaffold` or `COUIPopupHost`
   - Renders at window level
 hostComponent: None
 popupHost: None
@@ -19,9 +19,9 @@ popupHost: None
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.menu.WindowIconDropdownMenu
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage
@@ -41,7 +41,7 @@ Scaffold(
             title = "Inbox",
             actions = {
                 WindowIconDropdownMenu(entry = entry) {
-                    Icon(imageVector = MiuixIcons.Edit, contentDescription = "Action menu")
+                    Icon(imageVector = COUIIcons.Edit, contentDescription = "Action menu")
                 }
             }
         )
@@ -64,7 +64,7 @@ val entry = DropdownEntry(
 )
 
 WindowIconDropdownMenu(entry = entry) {
-    Icon(imageVector = MiuixIcons.Sort, contentDescription = "Sort")
+    Icon(imageVector = COUIIcons.Sort, contentDescription = "Sort")
 }
 ```
 
@@ -87,7 +87,7 @@ val entry = DropdownEntry(
 )
 
 WindowIconDropdownMenu(entry = entry, collapseOnSelection = false) {
-    Icon(imageVector = MiuixIcons.SelectAll, contentDescription = "Multiple selection")
+    Icon(imageVector = COUIIcons.SelectAll, contentDescription = "Multiple selection")
 }
 ```
 
@@ -102,7 +102,7 @@ val entries = listOf(
 )
 
 WindowIconDropdownMenu(entries = entries) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "More")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 
@@ -115,7 +115,7 @@ WindowIconDropdownMenu(
     entry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1"))),
     enabled = false
 ) {
-    Icon(imageVector = MiuixIcons.MoreCircle, contentDescription = "More")
+    Icon(imageVector = COUIIcons.MoreCircle, contentDescription = "More")
 }
 ```
 

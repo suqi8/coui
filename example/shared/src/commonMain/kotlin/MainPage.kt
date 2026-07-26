@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -28,17 +28,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import component.arrowSection
+import component.badgeSection
 import component.basicComponentSection
 import component.blurSection
 import component.bottomSheetSection
 import component.buttonSection
 import component.cardSection
 import component.checkboxSection
+import component.chipSection
 import component.colorPickerSection
+import component.dateTimePickerSection
 import component.dialogSection
 import component.dropdownSection
+import component.fullPageStatementSection
+import component.inputViewSection
+import component.listPreferenceSection
 import component.numberPickerSection
 import component.otherPageSection
+import component.preferenceExtrasSection
 import component.progressIndicatorSection
 import component.radioButtonSection
 import component.sliderSection
@@ -47,28 +54,28 @@ import component.spinnerSection
 import component.switchSection
 import component.tabRowSection
 import component.textFieldSection
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.SelectAll
-import top.yukonga.miuix.kmp.icon.extended.Sort
-import top.yukonga.miuix.kmp.icon.extended.Tune
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.menu.OverlayIconCascadingDropdownMenu
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.SearchBar
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.SnackbarHostState
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.SelectAll
+import com.suqi8.coui.kmp.icon.extended.Sort
+import com.suqi8.coui.kmp.icon.extended.Tune
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.menu.OverlayIconCascadingDropdownMenu
+import com.suqi8.coui.kmp.menu.OverlayIconDropdownMenu
+import com.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -95,9 +102,9 @@ fun MainPage(
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
 
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = COUIScrollBehavior()
     val lazyListState = rememberLazyListState()
 
     var selectedIndex1 by remember { mutableIntStateOf(0) }
@@ -256,7 +263,7 @@ fun MainPage(
                             collapseOnSelection = true,
                         ) {
                             Icon(
-                                imageVector = MiuixIcons.Tune,
+                                imageVector = COUIIcons.Tune,
                                 contentDescription = "Tune",
                             )
                         }
@@ -265,7 +272,7 @@ fun MainPage(
                             collapseOnSelection = false,
                         ) {
                             Icon(
-                                imageVector = MiuixIcons.Sort,
+                                imageVector = COUIIcons.Sort,
                                 contentDescription = "Sort",
                             )
                         }
@@ -274,7 +281,7 @@ fun MainPage(
                             collapseOnSelection = false,
                         ) {
                             Icon(
-                                imageVector = MiuixIcons.SelectAll,
+                                imageVector = COUIIcons.SelectAll,
                                 contentDescription = "SelectAll",
                             )
                         }
@@ -283,7 +290,7 @@ fun MainPage(
             }
         },
     ) { innerPadding ->
-        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)
+        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen, extraTop = 12.dp)
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyColumn(
                 state = lazyListState,
@@ -297,7 +304,7 @@ fun MainPage(
                 item(key = "searchbar") {
                     SmallTitle(text = "SearchBar")
                     SearchBar(
-                        modifier = Modifier.padding(bottom = 12.dp),
+                        modifier = Modifier.padding(bottom = 16.dp),
                         inputField = {
                             InputField(
                                 query = searchValue,
@@ -309,17 +316,18 @@ fun MainPage(
                             )
                         },
                         outsideEndAction = {
+                            // COUI functional button: couiTextAppearanceButton 14sp
+                            // sans-serif-medium, couiColorPrimaryText (accent blue).
                             Text(
                                 modifier = Modifier
-                                    .padding(end = 12.dp)
                                     .clickable(
                                         interactionSource = null,
                                         indication = null,
                                         onClick = onCancelSearch,
                                     ),
                                 text = "Cancel",
-                                style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Bold),
-                                color = MiuixTheme.colorScheme.primary,
+                                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+                                color = COUITheme.colorScheme.primary,
                             )
                         },
                         expanded = expanded,
@@ -353,14 +361,21 @@ fun MainPage(
                     snackbarSection(snackbarHostState)
                     progressIndicatorSection()
                     textFieldSection()
+                    inputViewSection()
                     sliderSection()
                     tabRowSection()
                     numberPickerSection()
+                    dateTimePickerSection()
                     colorPickerSection()
                     cardSection()
+                    chipSection()
+                    badgeSection()
+                    preferenceExtrasSection()
+                    listPreferenceSection()
+                    fullPageStatementSection()
                     blurSection()
                     otherPageSection()
-                    item { Spacer(modifier = Modifier.height(12.dp)) }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }
             VerticalScrollBar(

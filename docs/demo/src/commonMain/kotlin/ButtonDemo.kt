@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -21,15 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Contacts
-import top.yukonga.miuix.kmp.icon.extended.Favorites
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Button
+import com.suqi8.coui.kmp.basic.ButtonDefaults
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.TextButton
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Contacts
+import com.suqi8.coui.kmp.icon.extended.Favorites
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun ButtonDemo() {
@@ -62,14 +62,14 @@ fun ButtonDemo() {
                     },
                 ) {
                     Icon(
-                        imageVector = MiuixIcons.Favorites,
+                        imageVector = COUIIcons.Favorites,
                         contentDescription = "Favorites",
                         tint = Color.Unspecified,
                         modifier = Modifier.size(24.dp),
                     )
                     Text(
                         text = buttonText1,
-                        style = MiuixTheme.textStyles.button,
+                        style = COUITheme.textStyles.button,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -92,15 +92,15 @@ fun ButtonDemo() {
                     colors = ButtonDefaults.buttonColorsPrimary(),
                 ) {
                     Icon(
-                        imageVector = MiuixIcons.Contacts,
+                        imageVector = COUIIcons.Contacts,
                         contentDescription = null,
-                        tint = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                        tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
                         modifier = Modifier.size(24.dp),
                     )
                     Text(
                         text = "Disabled Button",
-                        style = MiuixTheme.textStyles.button,
-                        color = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+                        style = COUITheme.textStyles.button,
+                        color = COUITheme.colorScheme.disabledOnSecondaryVariant,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }

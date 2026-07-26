@@ -5,7 +5,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.SliderPreference
+import com.suqi8.coui.kmp.preference.SliderPreference
 ```
 
 ## Basic Usage
@@ -111,9 +111,9 @@ SliderPreference(
     summary = "${(volume * 100).roundToInt()}%",
     startAction = {
         Icon(
-            imageVector = MiuixIcons.Basic.Audio,
+            imageVector = COUIIcons.Basic.Audio,
             contentDescription = "Volume Icon",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

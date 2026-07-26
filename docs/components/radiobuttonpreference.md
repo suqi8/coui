@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
+import com.suqi8.coui.kmp.preference.RadioButtonPreference
 ```
 
 ## Basic Usage
@@ -95,11 +95,11 @@ var selected by remember { mutableStateOf(false) }
 RadioButtonPreference(
     title = "Custom Colors",
     titleColor = BasicComponentDefaults.titleColor(
-        color = MiuixTheme.colorScheme.primary
+        color = COUITheme.colorScheme.primary
     ),
     summary = "RadioButton with custom colors",
     summaryColor = BasicComponentDefaults.summaryColor(
-        color = MiuixTheme.colorScheme.secondary
+        color = COUITheme.colorScheme.secondary
     ),
     selected = selected,
     onClick = { selected = !selected },

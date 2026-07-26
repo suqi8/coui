@@ -18,7 +18,7 @@ hero:
       link: /zh_CN/components/index
     - theme: alt
       text: GitHub
-      link: https://github.com/compose-miuix-ui/miuix
+      link: https://github.com/compose-coui-ui/miuix
 
 features:
   - icon: 🚀

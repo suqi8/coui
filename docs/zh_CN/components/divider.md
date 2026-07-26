@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.HorizontalDivider // 水平分割线
-import top.yukonga.miuix.kmp.basic.VerticalDivider  // 垂直分割线
+import com.suqi8.coui.kmp.basic.HorizontalDivider // 水平分割线
+import com.suqi8.coui.kmp.basic.VerticalDivider  // 垂直分割线
 ```
 
 ## 基本用法
@@ -63,10 +63,11 @@ DividerDefaults 对象提供了分割线组件的默认值。
 
 #### 常量
 
-| 常量名       | 类型  | 说明             | 默认值                             |
-| ------------ | ----- | ---------------- | ---------------------------------- |
-| Thickness    | Dp    | 分割线的默认厚度 | 0.33.dp                            |
-| DividerColor | Color | 分割线的默认颜色 | MiuixTheme.colorScheme.dividerLine |
+| 常量名       | 类型  | 说明                                     | 默认值                             |
+| ------------ | ----- | ---------------------------------------- | ---------------------------------- |
+| Thickness    | Dp    | 分割线的默认厚度                         | 0.33.dp                            |
+| DividerColor | Color | 分割线的默认颜色                         | COUITheme.colorScheme.dividerLine |
+| CardInset    | Dp    | 卡片内行间分割线的推荐水平缩进（COUI 规则） | 16.dp                              |
 
 ## 进阶用法
 
@@ -94,15 +95,18 @@ Column {
 }
 ```
 
-### 带内边距的分割线
+### 卡片内行间分割线
+
+遵循 COUI 卡片列表规则：仅在卡片内相邻两行之间放置分割线（末行之后不放），两侧缩进
+`DividerDefaults.CardInset`；带前置图标的行应加大起始缩进，使分割线与标题文本起点对齐：
 
 ```kotlin
-Column {
-    Text("上方内容")
+Card {
+    BasicComponent(title = "第一行")
     HorizontalDivider(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = DividerDefaults.CardInset)
     )
-    Text("下方内容")
+    BasicComponent(title = "第二行")
 }
 ```
 

@@ -33,12 +33,12 @@ Before committing, run `./gradlew spotlessCheck`; only run `./gradlew spotlessAp
 
 | Directory               | Purpose                                                       |
 | :---------------------- | :------------------------------------------------------------ |
-| `miuix-core/`           | Utilities + MiuixIcons base (depended on by `ui` and `icons`) |
-| `miuix-ui/`             | Main UI library                                               |
-| `miuix-preference/`     | Preference / menu / popup components                          |
-| `miuix-blur/`           | Blur effects (Android minSdk=33)                              |
-| `miuix-icons/`          | Extended icon resources                                       |
-| `miuix-navigation3-ui/` | Navigation 3 UI (depends on `miuix-squircle` for transition clip) |
+| `coui-core/`           | Utilities + COUIIcons base (depended on by `ui` and `icons`) |
+| `coui-ui/`             | Main UI library                                               |
+| `coui-preference/`     | Preference / menu / popup components                          |
+| `coui-blur/`           | Blur effects (Android minSdk=33)                              |
+| `coui-icons/`          | Extended icon resources                                       |
+| `coui-navigation3-ui/` | Navigation 3 UI (depends on `coui-squircle` for transition clip) |
 | `example/`              | Demo app                                                      |
 | `baselineprofile/`      | Android baseline profile generation                           |
 | `docs/`                 | VitePress documentation site                                  |
@@ -47,7 +47,7 @@ Before committing, run `./gradlew spotlessCheck`; only run `./gradlew spotlessAp
 
 ### Component Source Layout
 
-`miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/`:
+`coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/`:
 
 | Subdir        | Contents                                                        |
 | :------------ | :-------------------------------------------------------------- |
@@ -55,14 +55,14 @@ Before committing, run `./gradlew spotlessCheck`; only run `./gradlew spotlessAp
 | `overlay/`    | Scaffold-hosted overlays (OverlayDialog, OverlayBottomSheet, …) |
 | `window/`     | Platform window components (WindowDialog, WindowBottomSheet, …) |
 | `layout/`     | Shared layout primitives                                        |
-| `theme/`      | MiuixTheme, Colors, TextStyles, ThemeController, DynamicColors  |
+| `theme/`      | COUITheme, Colors, TextStyles, ThemeController, DynamicColors  |
 | `color/`      | Color utilities, Material Color                                 |
 | `anim/`       | Animation utilities                                             |
 | `utils/`      | General utilities                                               |
 | `icon/`       | Built-in basic icons (ArrowRight, Check, Search, …)             |
 | `interfaces/` | Shared interfaces                                               |
 
-`miuix-preference/src/commonMain/kotlin/top/yukonga/miuix/kmp/`:
+`coui-preference/src/commonMain/kotlin/com/suqi8/coui/kmp/`:
 
 | Subdir        | Contents                                                        |
 | :------------ | :-------------------------------------------------------------- |
@@ -93,7 +93,7 @@ commonMain
 - **License header** (required on all `.kt` and `.kts` files):
 
   ```
-  // Copyright $YEAR, compose-miuix-ui contributors
+  // Copyright $YEAR, compose-coui-ui contributors
   // SPDX-License-Identifier: Apache-2.0
   ```
 
@@ -144,10 +144,10 @@ object ButtonDefaults {
 
     @Composable
     fun buttonColors(                       // Color factories must be @Composable
-        color: Color = MiuixTheme.colorScheme.secondaryVariant,
-        disabledColor: Color = MiuixTheme.colorScheme.disabledSecondaryVariant,
-        contentColor: Color = MiuixTheme.colorScheme.onSecondaryVariant,
-        disabledContentColor: Color = MiuixTheme.colorScheme.disabledOnSecondaryVariant,
+        color: Color = COUITheme.colorScheme.secondaryVariant,
+        disabledColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
+        contentColor: Color = COUITheme.colorScheme.onSecondaryVariant,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
     ): ButtonColors = remember(color, disabledColor, contentColor, disabledContentColor) {
         ButtonColors(
             color = color,
@@ -178,8 +178,8 @@ data class ButtonColors(
 - **`@NonRestartableComposable`** on thin wrapper composables that fully delegate to other composables and read no state themselves; avoid on composables with multiple internal state reads (they benefit from smart recomposition)
 - **`@Immutable`** on color/style data classes
 - **Shapes**: Use `RoundedCornerShape(cornerRadius)` for rounded corners and `CircleShape` for capsules from `androidx.compose.foundation.shape`
-- **Theme colors**: Always use `MiuixTheme.colorScheme.*`, never hardcode colors
-- **Text styles**: Always use `MiuixTheme.textStyles.*` (e.g., `MiuixTheme.textStyles.button`)
+- **Theme colors**: Always use `COUITheme.colorScheme.*`, never hardcode colors
+- **Text styles**: Always use `COUITheme.textStyles.*` (e.g., `COUITheme.textStyles.button`)
 
 ## Critical Constraints
 
@@ -198,7 +198,7 @@ data class ButtonColors(
 
 ### Adding a New Component
 
-1. Create the `@Composable` function in `miuix-ui/src/commonMain/kotlin/top/yukonga/miuix/kmp/basic/` (or `preference/` in `miuix-preference` for preference components)
+1. Create the `@Composable` function in `coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/basic/` (or `preference/` in `coui-preference` for preference components)
 2. Follow API conventions above (parameter ordering, Defaults object, Colors data class)
 3. Add a demo section in `example/shared/src/commonMain/kotlin/component/`
 4. Register the demo in the example app
@@ -215,7 +215,7 @@ When changing a component's API, defaults, or behavior, check and update all rel
 ### Fixing Bugs
 
 1. Reproduce in the `example` app
-2. Fix in `miuix-ui/` or `miuix-preference/`
+2. Fix in `coui-ui/` or `coui-preference/`
 3. If platform-specific, verify the fix across affected platforms
 
 ## Git Commit Style

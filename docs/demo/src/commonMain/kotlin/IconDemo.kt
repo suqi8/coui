@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -16,14 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Contacts
-import top.yukonga.miuix.kmp.icon.extended.Edit
-import top.yukonga.miuix.kmp.icon.extended.Rename
-import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Contacts
+import com.suqi8.coui.kmp.icon.extended.Edit
+import com.suqi8.coui.kmp.icon.extended.Rename
+import com.suqi8.coui.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun IconDemo() {
@@ -48,22 +48,22 @@ fun IconDemo() {
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
                 ) {
                     Icon(
-                        imageVector = MiuixIcons.Contacts,
+                        imageVector = COUIIcons.Contacts,
                         contentDescription = "Personal",
-                        tint = MiuixTheme.colorScheme.onBackground,
+                        tint = COUITheme.colorScheme.onBackground,
                     )
                     Icon(
-                        imageVector = MiuixIcons.Settings,
+                        imageVector = COUIIcons.Settings,
                         contentDescription = "Settings",
-                        tint = MiuixTheme.colorScheme.onBackground,
+                        tint = COUITheme.colorScheme.onBackground,
                     )
                     Icon(
-                        imageVector = MiuixIcons.Edit,
+                        imageVector = COUIIcons.Edit,
                         contentDescription = "Blue Edit",
                         tint = Color.Blue,
                     )
                     Icon(
-                        imageVector = MiuixIcons.Rename,
+                        imageVector = COUIIcons.Rename,
                         contentDescription = "Green Rename",
                         tint = Color.Green,
                     )

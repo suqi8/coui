@@ -11,7 +11,7 @@ This project builds upon it to provide some extended components, enabling develo
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.BasicComponent
+import com.suqi8.coui.kmp.basic.BasicComponent
 ```
 
 ## Basic Usage
@@ -46,9 +46,9 @@ BasicComponent(
     startAction = {
         Icon(
             modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "Avatar Icon",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     onClick = { /* Handle click event */ }
@@ -80,9 +80,9 @@ BasicComponent(
     startAction = {
         Icon(
             modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Contacts,
+            imageVector = COUIIcons.Contacts,
             contentDescription = "Avatar Icon",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     endActions = {
@@ -91,11 +91,11 @@ BasicComponent(
 ) {
     Text(
         text = "Custom Title",
-        style = MiuixTheme.textStyles.headline1
+        style = COUITheme.textStyles.headline1
     )
     Text(
         text = "Custom content description",
-        style = MiuixTheme.textStyles.body2
+        style = COUITheme.textStyles.body2
     )
 }
 ```
@@ -159,7 +159,7 @@ The BasicComponentDefaults object provides default values and color configuratio
 
 | Constant Name | Type          | Description                       | Default Value        |
 | ------------- | ------------- | --------------------------------- | -------------------- |
-| InsideMargin  | PaddingValues | Internal padding of the component | PaddingValues(16.dp) |
+| InsideMargin  | PaddingValues | Internal padding of the component | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 
 #### BasicComponentDefaults Methods
 
@@ -188,25 +188,25 @@ BasicComponent(
     startAction = {
         Icon(
             modifier = Modifier.padding(end = 16.dp),
-            imageVector = MiuixIcons.Play,
+            imageVector = COUIIcons.Play,
             contentDescription = "Volume Icon",
-            tint = MiuixTheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.onBackground
         )
     },
     endActions = {
         IconButton(onClick = { /* Decrease volume */ }) {
             Icon(
-                imageVector = MiuixIcons.Remove,
+                imageVector = COUIIcons.Remove,
                 contentDescription = "Decrease Volume",
-                tint = MiuixTheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.onBackground
             )
         }
         Text("70%")
         IconButton(onClick = { /* Increase volume */ }) {
             Icon(
-                imageVector = MiuixIcons.Add,
+                imageVector = COUIIcons.Add,
                 contentDescription = "Increase Volume",
-                tint = MiuixTheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.onBackground
             )
         }
     }

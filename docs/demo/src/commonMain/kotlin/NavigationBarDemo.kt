@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import androidx.compose.foundation.background
@@ -18,19 +18,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationItem
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Contacts
-import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.VerticalSplit
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarItem
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationBarItem
+import com.suqi8.coui.kmp.basic.NavigationItem
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.Text
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Contacts
+import com.suqi8.coui.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.icon.extended.VerticalSplit
+import com.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun NavigationBarDemo() {
@@ -53,9 +53,9 @@ fun NavigationBarDemo() {
             ) {
                 val pages = listOf("Home", "Profile", "Settings")
                 val items = listOf(
-                    NavigationItem("Home", MiuixIcons.VerticalSplit),
-                    NavigationItem("Profile", MiuixIcons.Contacts),
-                    NavigationItem("Settings", MiuixIcons.Settings),
+                    NavigationItem("Home", COUIIcons.VerticalSplit),
+                    NavigationItem("Profile", COUIIcons.Contacts),
+                    NavigationItem("Settings", COUIIcons.Settings),
                 )
                 var selectedIndex1 by remember { mutableIntStateOf(0) }
                 var selectedIndex2 by remember { mutableIntStateOf(0) }
@@ -84,7 +84,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex1]}",
-                                style = MiuixTheme.textStyles.title1,
+                                style = COUITheme.textStyles.title1,
                             )
                         }
                     }
@@ -114,7 +114,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex2]}",
-                                style = MiuixTheme.textStyles.title1,
+                                style = COUITheme.textStyles.title1,
                             )
                         }
                     }

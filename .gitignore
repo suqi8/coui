@@ -51,3 +51,4 @@ example/ios/iosApp/Generated.xcconfig
 .coui-research.workflow.js
 .serena/
 .coui-verify.workflow.js
+.coui-audit.workflow.js

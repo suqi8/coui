@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="example [baseline]" type="AndroidBaselineProfileRunConfigurationType" factoryName="Android Baseline Profile Configuration Factory">
-    <module name="compose-miuix-ui.example.android" />
+    <module name="compose-coui-ui.example.android" />
     <option name="generateAllVariants" value="true" />
     <option name="CLEAR_LOGCAT" value="false" />
     <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />

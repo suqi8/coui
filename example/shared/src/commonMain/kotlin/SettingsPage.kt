@@ -1,4 +1,4 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 
 @file:OptIn(ExperimentalScrollBarApi::class)
@@ -20,23 +20,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import misc.VersionInfo
 import navigation3.Route
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.VerticalScrollBar
-import top.yukonga.miuix.kmp.basic.rememberScrollBarAdapter
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
-import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
-import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.interfaces.ExperimentalScrollBarApi
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.ThemeColorSpec
-import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
+import com.suqi8.coui.kmp.basic.Card
+import com.suqi8.coui.kmp.basic.HorizontalDivider
+import com.suqi8.coui.kmp.basic.COUIScrollBehavior
+import com.suqi8.coui.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.ScrollBehavior
+import com.suqi8.coui.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.VerticalScrollBar
+import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import com.suqi8.coui.kmp.blur.LayerBackdrop
+import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import com.suqi8.coui.kmp.blur.layerBackdrop
+import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import com.suqi8.coui.kmp.preference.ArrowPreference
+import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import com.suqi8.coui.kmp.preference.SwitchPreference
+import com.suqi8.coui.kmp.theme.COUITheme
+import com.suqi8.coui.kmp.theme.ThemeColorSpec
+import com.suqi8.coui.kmp.theme.ThemePaletteStyle
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding
@@ -64,8 +65,8 @@ fun SettingsPage(
     val isWideScreen = LocalIsWideScreen.current
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surface
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val topAppBarScrollBehavior = COUIScrollBehavior()
 
     Scaffold(
         topBar = {
@@ -104,7 +105,7 @@ private fun SettingsContent(
     val navigator = LocalNavigator.current
     val lazyListState = rememberLazyListState()
 
-    val contentPadding = pageContentPadding(padding, padding, isWideScreen)
+    val contentPadding = pageContentPadding(padding, padding, isWideScreen, extraTop = 12.dp)
     Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
         LazyColumn(
             state = lazyListState,
@@ -117,7 +118,9 @@ private fun SettingsContent(
         ) {
             item(key = "settingsUi") {
                 Card(
-                    modifier = Modifier.padding(12.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp),
                 ) {
                     SwitchPreference(
                         title = "Show FPS Monitor",
@@ -125,47 +128,62 @@ private fun SettingsContent(
                         onCheckedChange = { updateAppState { state -> state.copy(showFPSMonitor = it) } },
                     )
                     AnimatedVisibility(visible = isRuntimeShaderSupported()) {
-                        SwitchPreference(
-                            title = "Enable Squircle Shapes",
-                            checked = appState.enableSquircle,
-                            onCheckedChange = { updateAppState { state -> state.copy(enableSquircle = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable Squircle Shapes",
+                                checked = appState.enableSquircle,
+                                onCheckedChange = { updateAppState { state -> state.copy(enableSquircle = it) } },
+                            )
+                        }
                     }
                     AnimatedVisibility(visible = isRuntimeShaderSupported()) {
-                        SwitchPreference(
-                            title = "Enable Blur Effect",
-                            checked = appState.enableBlur,
-                            onCheckedChange = { updateAppState { state -> state.copy(enableBlur = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable Blur Effect",
+                                checked = appState.enableBlur,
+                                onCheckedChange = { updateAppState { state -> state.copy(enableBlur = it) } },
+                            )
+                        }
                     }
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Show TopAppBar",
                         checked = appState.showTopAppBar,
                         onCheckedChange = { updateAppState { state -> state.copy(showTopAppBar = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = if (isWideScreen) "Show NavigationRail" else "Show NavigationBar",
                         checked = appState.showNavigationBar,
                         onCheckedChange = { updateAppState { state -> state.copy(showNavigationBar = it) } },
                     )
                     AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && !appState.useFloatingNavigationBar) {
-                        OverlayDropdownPreference(
-                            title = "NavigationBar Mode",
-                            items = NavigationBarDisplayModeOptions,
-                            selectedIndex = appState.navigationBarMode,
-                            onSelectedIndexChange = { updateAppState { state -> state.copy(navigationBarMode = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            OverlayDropdownPreference(
+                                title = "NavigationBar Mode",
+                                items = NavigationBarDisplayModeOptions,
+                                selectedIndex = appState.navigationBarMode,
+                                onSelectedIndexChange = { updateAppState { state -> state.copy(navigationBarMode = it) } },
+                            )
+                        }
                     }
                     AnimatedVisibility(visible = appState.showNavigationBar && isWideScreen) {
-                        OverlayDropdownPreference(
-                            title = "NavigationRail Mode",
-                            items = NavigationRailDisplayModeOptions,
-                            selectedIndex = appState.navigationRailMode,
-                            onSelectedIndexChange = { updateAppState { state -> state.copy(navigationRailMode = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            OverlayDropdownPreference(
+                                title = "NavigationRail Mode",
+                                items = NavigationRailDisplayModeOptions,
+                                selectedIndex = appState.navigationRailMode,
+                                onSelectedIndexChange = { updateAppState { state -> state.copy(navigationRailMode = it) } },
+                            )
+                        }
                     }
                     AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen) {
                         Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Use FloatingNavigationBar",
                                 checked = appState.useFloatingNavigationBar,
@@ -173,6 +191,7 @@ private fun SettingsContent(
                             )
                             AnimatedVisibility(visible = appState.useFloatingNavigationBar) {
                                 Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingNavigationBar Style",
                                         items = FloatingNavigationBarStyleOptions,
@@ -181,6 +200,7 @@ private fun SettingsContent(
                                     )
                                     AnimatedVisibility(visible = appState.floatingNavigationBarStyle == 0) {
                                         Column {
+                                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                             OverlayDropdownPreference(
                                                 title = "FloatingNavigationBar Position",
                                                 items = FloatingNavigationBarPositionOptions,
@@ -193,6 +213,7 @@ private fun SettingsContent(
                             }
                         }
                     }
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Show FloatingToolbar",
                         checked = appState.showFloatingToolbar,
@@ -200,12 +221,14 @@ private fun SettingsContent(
                     )
                     AnimatedVisibility(visible = appState.showFloatingToolbar) {
                         Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
                                 title = "FloatingToolbar Position",
                                 items = FloatingToolbarPositionOptions,
                                 selectedIndex = appState.floatingToolbarPosition,
                                 onSelectedIndexChange = { updateAppState { state -> state.copy(floatingToolbarPosition = it) } },
                             )
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
                                 title = "FloatingToolbar Orientation",
                                 items = FloatingToolbarOrientationOptions,
@@ -214,29 +237,36 @@ private fun SettingsContent(
                             )
                         }
                     }
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Show FloatingActionButton",
                         checked = appState.showFloatingActionButton,
                         onCheckedChange = { updateAppState { state -> state.copy(showFloatingActionButton = it) } },
                     )
                     AnimatedVisibility(visible = appState.showFloatingActionButton) {
-                        OverlayDropdownPreference(
-                            title = "FloatingActionButton Position",
-                            items = FabPositionOptions,
-                            selectedIndex = appState.floatingActionButtonPosition,
-                            onSelectedIndexChange = { updateAppState { state -> state.copy(floatingActionButtonPosition = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            OverlayDropdownPreference(
+                                title = "FloatingActionButton Position",
+                                items = FabPositionOptions,
+                                selectedIndex = appState.floatingActionButtonPosition,
+                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingActionButtonPosition = it) } },
+                            )
+                        }
                     }
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Enable Scroll End Haptic",
                         checked = appState.enableScrollEndHaptic,
                         onCheckedChange = { updateAppState { state -> state.copy(enableScrollEndHaptic = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Enable Page User Scroll",
                         checked = appState.enablePageUserScroll,
                         onCheckedChange = { updateAppState { state -> state.copy(enablePageUserScroll = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlayDropdownPreference(
                         title = "Color Mode",
                         items = ColorModeOptions,
@@ -244,21 +274,26 @@ private fun SettingsContent(
                         onSelectedIndexChange = { updateAppState { state -> state.copy(colorMode = it) } },
                     )
                     AnimatedVisibility(visible = appState.colorMode in 3..5) {
-                        OverlayDropdownPreference(
-                            title = "Key Color",
-                            items = KeyColorOptions,
-                            selectedIndex = appState.seedIndex,
-                            onSelectedIndexChange = { updateAppState { state -> state.copy(seedIndex = it) } },
-                        )
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            OverlayDropdownPreference(
+                                title = "Key Color",
+                                items = KeyColorOptions,
+                                selectedIndex = appState.seedIndex,
+                                onSelectedIndexChange = { updateAppState { state -> state.copy(seedIndex = it) } },
+                            )
+                        }
                     }
                     AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
                         Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
                                 title = "Palette Style",
                                 items = PaletteStyleOptions,
                                 selectedIndex = appState.paletteStyle,
                                 onSelectedIndexChange = { updateAppState { state -> state.copy(paletteStyle = it) } },
                             )
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
                                 title = "Color Spec",
                                 items = ColorSpecOptions,
@@ -272,7 +307,7 @@ private fun SettingsContent(
             item(key = "settingsTransition") {
                 SmallTitle("Navigation3")
                 Card(
-                    modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                 ) {
                     SwitchPreference(
                         title = "Enable Corner Clip",
@@ -280,18 +315,21 @@ private fun SettingsContent(
                         checked = appState.enableCornerClip,
                         onCheckedChange = { updateAppState { state -> state.copy(enableCornerClip = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Enable Dim",
                         summary = "Dim the scene behind during transitions",
                         checked = appState.enableDim,
                         onCheckedChange = { updateAppState { state -> state.copy(enableDim = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Block Input During Transition",
                         summary = "Block touch input on the non-target scene",
                         checked = appState.blockInputDuringTransition,
                         onCheckedChange = { updateAppState { state -> state.copy(blockInputDuringTransition = it) } },
                     )
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Pop Follows Swipe Edge",
                         summary = "Pop animation direction follows the finger swipe edge",
@@ -303,7 +341,7 @@ private fun SettingsContent(
             item(key = "settingsAbout") {
                 SmallTitle("Other")
                 Card(
-                    modifier = Modifier.padding(horizontal = 12.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
                     ArrowPreference(
                         title = "About",
@@ -312,7 +350,7 @@ private fun SettingsContent(
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(12.dp)) }
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
         VerticalScrollBar(
             adapter = rememberScrollBarAdapter(lazyListState),

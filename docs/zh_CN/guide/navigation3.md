@@ -1,6 +1,6 @@
 # 导航支持
 
-`miuix-navigation3-ui` 提供了 `androidx.navigation3` 的 UI 实现，适配了 Miuix 的设计风格和过渡动画。
+`coui-navigation3-ui` 提供了 `androidx.navigation3` 的 UI 实现，适配了 Miuix 的设计风格和过渡动画。
 
 ## 配置
 
@@ -8,7 +8,7 @@
 
 ```kotlin
 implementation("androidx.navigation3:navigation3-runtime:<navigation3-version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui:<version>")
 ```
 
 ::: warning

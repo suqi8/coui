@@ -2,7 +2,7 @@
 title: WindowDropdownPreference
 requiresScaffoldHost: false
 prerequisites:
-  - 可以在任何地方使用，不需要 `Scaffold` 或 `MiuixPopupHost`
+  - 可以在任何地方使用，不需要 `Scaffold` 或 `COUIPopupHost`
   - 在窗口层级渲染
 hostComponent: None
 popupHost: None
@@ -23,9 +23,9 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.preference.WindowDropdownPreference
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法

@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Stepper
-import top.yukonga.miuix.kmp.basic.StepperDefaults
+import com.suqi8.coui.kmp.basic.Stepper
+import com.suqi8.coui.kmp.basic.StepperDefaults
 ```
 
 ## 基本用法
@@ -39,20 +39,21 @@ Stepper(
 
 ### StepperDefaults
 
-| 常量              | 类型 | 默认值 |
-| ----------------- | ---- | ------ |
-| ButtonSize        | Dp   | 32.dp  |
-| GlyphSize         | Dp   | 18.dp  |
-| Spacing           | Dp   | 4.dp   |
-| IndicatorMinWidth | Dp   | 40.dp  |
+| 常量              | 类型 | 默认值  |
+| ----------------- | ---- | ------- |
+| ButtonSize        | Dp   | 32.dp   |
+| GlyphSize         | Dp   | 15.2.dp |
+| GlyphStrokeWidth  | Dp   | 1.6.dp  |
+| Spacing           | Dp   | 12.dp   |
+| IndicatorMinWidth | Dp   | 44.dp   |
 
 ### `stepperColors()` 工厂
 
 | 参数                 | 类型  | 默认值                                    |
 | -------------------- | ----- | ----------------------------------------- |
-| buttonColor          | Color | MiuixTheme.colorScheme.secondaryContainer |
-| contentColor         | Color | MiuixTheme.colorScheme.onSurface          |
-| disabledContentColor | Color | MiuixTheme.colorScheme.disabledOnSurface  |
+| buttonColor          | Color | COUITheme.colorScheme.secondaryContainer |
+| contentColor         | Color | COUITheme.colorScheme.onSurface          |
+| disabledContentColor | Color | COUITheme.colorScheme.disabledOnSurface  |
 
 ## 行为
 

@@ -21,7 +21,7 @@ repositories {
 ```
 
 2. 检查 Maven Central 当前最新版本：
-   [![Maven Central](https://img.shields.io/maven-central/v/top.yukonga.miuix.kmp/miuix-ui)](https://search.maven.org/search?q=g:top.yukonga.miuix.kmp)
+   [![Maven Central](https://img.shields.io/maven-central/v/com.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:com.suqi8.coui.kmp)
 
 3. 在项目的 build.gradle.kts 中添加依赖：
 
@@ -29,11 +29,11 @@ Miuix 由多个可独立使用的模块组成：
 
 | 模块 | 说明 |
 |---|---|
-| `miuix-ui` | 核心 UI 组件库（自动包含 `miuix-core`） |
-| `miuix-preference` | Preference 组件（SwitchPreference、CheckboxPreference 等），依赖 `miuix-ui` |
-| `miuix-icons` | 扩展图标库，可独立使用，也可与 `miuix-ui` 同时使用（自动包含 `miuix-core`） |
-| `miuix-blur` | 模糊效果库，可独立使用 |
-| `miuix-navigation3-ui` | Navigation3 UI 库，可独立使用 |
+| `coui-ui` | 核心 UI 组件库（自动包含 `coui-core`） |
+| `coui-preference` | Preference 组件（SwitchPreference、CheckboxPreference 等），依赖 `coui-ui` |
+| `coui-icons` | 扩展图标库，可独立使用，也可与 `coui-ui` 同时使用（自动包含 `coui-core`） |
+| `coui-blur` | 模糊效果库，可独立使用 |
+| `coui-navigation3-ui` | Navigation3 UI 库，可独立使用 |
 
 - 在 Compose Multiplatform 项目目录的 build.gradle.kts 中：
 
@@ -41,15 +41,15 @@ Miuix 由多个可独立使用的模块组成：
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("top.yukonga.miuix.kmp:miuix-ui:<version>")
-            // 可选：添加 miuix-preference 以获取 Preference 组件
-            implementation("top.yukonga.miuix.kmp:miuix-preference:<version>")
-            // 可选：添加 miuix-icons 以获取更多图标
-            implementation("top.yukonga.miuix.kmp:miuix-icons:<version>")
-            // 可选：添加 miuix-blur 以获取模糊效果
-            implementation("top.yukonga.miuix.kmp:miuix-blur:<version>")
-            // 可选：添加 miuix-navigation3-ui 以获取 Navigation3 支持
-            implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:<version>")
+            implementation("com.suqi8.coui.kmp:coui-ui:<version>")
+            // 可选：添加 coui-preference 以获取 Preference 组件
+            implementation("com.suqi8.coui.kmp:coui-preference:<version>")
+            // 可选：添加 coui-icons 以获取更多图标
+            implementation("com.suqi8.coui.kmp:coui-icons:<version>")
+            // 可选：添加 coui-blur 以获取模糊效果
+            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
+            // 可选：添加 coui-navigation3-ui 以获取 Navigation3 支持
+            implementation("com.suqi8.coui.kmp:coui-navigation3-ui:<version>")
         }
     }
 }
@@ -59,55 +59,55 @@ kotlin {
 
 ```kotlin
 dependencies {
-    implementation("top.yukonga.miuix.kmp:miuix-ui-android:<version>")
-    // 可选：添加 miuix-preference 以获取 Preference 组件
-    implementation("top.yukonga.miuix.kmp:miuix-preference-android:<version>")
-    // 可选：添加 miuix-icons 以获取更多图标
-    implementation("top.yukonga.miuix.kmp:miuix-icons-android:<version>")
-    // 可选：添加 miuix-blur 以获取模糊效果（需要 minSdk 33）
-    implementation("top.yukonga.miuix.kmp:miuix-blur-android:<version>")
-    // 可选：添加 miuix-navigation3-ui 以获取 Navigation3 支持
-    implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-android:<version>")
+    implementation("com.suqi8.coui.kmp:coui-ui-android:<version>")
+    // 可选：添加 coui-preference 以获取 Preference 组件
+    implementation("com.suqi8.coui.kmp:coui-preference-android:<version>")
+    // 可选：添加 coui-icons 以获取更多图标
+    implementation("com.suqi8.coui.kmp:coui-icons-android:<version>")
+    // 可选：添加 coui-blur 以获取模糊效果（需要 minSdk 33）
+    implementation("com.suqi8.coui.kmp:coui-blur-android:<version>")
+    // 可选：添加 coui-navigation3-ui 以获取 Navigation3 支持
+    implementation("com.suqi8.coui.kmp:coui-navigation3-ui-android:<version>")
 }
 ```
 
 - 在其他常规项目中使用，则只需要根据需要添加对应平台后缀的依赖即可：
 
 ```kotlin
-implementation("top.yukonga.miuix.kmp:miuix-ui-iosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-ui-iossimulatorarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-ui-macosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-ui-desktop:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-ui-wasmjs:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-ui-js:<version>")
-// 可选：添加 miuix-preference
-implementation("top.yukonga.miuix.kmp:miuix-preference-iosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-preference-iossimulatorarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-preference-macosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-preference-desktop:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-preference-wasmjs:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-preference-js:<version>")
-// 可选：添加 miuix-blur
-implementation("top.yukonga.miuix.kmp:miuix-blur-iosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-blur-iossimulatorarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-blur-macosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-blur-desktop:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-blur-wasmjs:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-blur-js:<version>")
-// 可选：添加 miuix-navigation3-ui
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-iosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-iossimulatorarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-macosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-desktop:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-wasmjs:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui-js:<version>")
-// 可选：添加 miuix-icons
-implementation("top.yukonga.miuix.kmp:miuix-icons-iosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-icons-iossimulatorarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-icons-macosarm64:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-icons-desktop:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-icons-wasmjs:<version>")
-implementation("top.yukonga.miuix.kmp:miuix-icons-js:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-iosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-iossimulatorarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-macosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-desktop:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-wasmjs:<version>")
+implementation("com.suqi8.coui.kmp:coui-ui-js:<version>")
+// 可选：添加 coui-preference
+implementation("com.suqi8.coui.kmp:coui-preference-iosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-preference-iossimulatorarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-preference-macosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-preference-desktop:<version>")
+implementation("com.suqi8.coui.kmp:coui-preference-wasmjs:<version>")
+implementation("com.suqi8.coui.kmp:coui-preference-js:<version>")
+// 可选：添加 coui-blur
+implementation("com.suqi8.coui.kmp:coui-blur-iosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-blur-iossimulatorarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-blur-macosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-blur-desktop:<version>")
+implementation("com.suqi8.coui.kmp:coui-blur-wasmjs:<version>")
+implementation("com.suqi8.coui.kmp:coui-blur-js:<version>")
+// 可选：添加 coui-navigation3-ui
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-iosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-iossimulatorarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-macosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-desktop:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-wasmjs:<version>")
+implementation("com.suqi8.coui.kmp:coui-navigation3-ui-js:<version>")
+// 可选：添加 coui-icons
+implementation("com.suqi8.coui.kmp:coui-icons-iosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-icons-iossimulatorarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-icons-macosarm64:<version>")
+implementation("com.suqi8.coui.kmp:coui-icons-desktop:<version>")
+implementation("com.suqi8.coui.kmp:coui-icons-wasmjs:<version>")
+implementation("com.suqi8.coui.kmp:coui-icons-js:<version>")
 ```
 
 ## 基本用法
@@ -121,7 +121,7 @@ fun AppTheme(
 ) {
     // 可用模式: System, Light, Dark, MonetSystem, MonetLight, MonetDark
     val controller = remember { ThemeController(ColorSchemeMode.System) }
-    return MiuixTheme(
+    return COUITheme(
         controller = controller,
         content = content
     )

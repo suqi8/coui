@@ -43,6 +43,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [SearchBar](../components/searchbar)                       | 执行搜索的输入框       | 内容搜索、快速查找   |
 | [ColorPalette](../components/colorpalette)                 | 网格调色盘（含透明度） | 主题设置、颜色选择   |
 | [ColorPicker](../components/colorpicker)                   | 选择颜色的控件         | 主题设置、颜色选择   |
+| [ColorSwatchPicker](../components/colorswatchpicker)       | 圆点色板选择器（选中描边环） | 主题设置、颜色选择   |
 
 ## 扩展组件
 
@@ -54,15 +55,15 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [RadioButtonPreference](../components/radiobuttonpreference)   | 基于 BasicComponent 的单选组件                                                     | 单项选择、选项切换     |
 | [SliderPreference](../components/sliderpreference)             | 基于 BasicComponent 的滑块组件                                                     | 数值调节、音量/亮度    |
 | [RangeSliderPreference](../components/rangesliderpreference)   | 基于 BasicComponent 的范围滑块组件                                                 | 范围选择、价格筛选     |
-| [OverlayListPopup](../components/overlaylistpopup)             | 基于 BasicComponent 的列表弹窗组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 选项选择、功能列表     |
-| [OverlayCascadingListPopup](../components/overlaycascadinglistpopup) | 二级级联列表弹窗组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用）               | 子菜单、分组动作面板   |
-| [OverlayDropdownPreference](../components/overlaydropdownpreference) | 基于 BasicComponent 的下拉选择器组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 选项选择、功能列表     |
-| [OverlaySpinnerPreference](../components/overlayspinnerpreference) | 基于 BasicComponent 的高级选择器组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 进阶选项选择、功能列表 |
-| [OverlayDropdownMenu](../components/overlaydropdownmenu)       | 基于 BasicComponent 的动作菜单组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 动作菜单、多选场景     |
-| [OverlayIconDropdownMenu](../components/overlayicondropdownmenu) | 基于 IconButton 的动作菜单组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用）     | 工具栏动作、更多菜单   |
-| [OverlayIconCascadingDropdownMenu](../components/overlayiconcascadingdropdownmenu) | 基于 IconButton 的二级级联动作菜单组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 含子菜单的工具栏动作   |
-| [OverlayBottomSheet](../components/overlaybottomsheet)         | 基于 BasicComponent 的底部抽屉组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 底部抽屉、附加选项     |
-| [OverlayDialog](../components/overlaydialog)                   | 基于 BasicComponent 的对话弹窗组件（使用 MiuixPopupUtils，需在 `Scaffold` 中使用） | 提示、确认操作         |
+| [OverlayListPopup](../components/overlaylistpopup)             | 基于 BasicComponent 的列表弹窗组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 选项选择、功能列表     |
+| [OverlayCascadingListPopup](../components/overlaycascadinglistpopup) | 二级级联列表弹窗组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用）               | 子菜单、分组动作面板   |
+| [OverlayDropdownPreference](../components/overlaydropdownpreference) | 基于 BasicComponent 的下拉选择器组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 选项选择、功能列表     |
+| [OverlaySpinnerPreference](../components/overlayspinnerpreference) | 基于 BasicComponent 的高级选择器组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 进阶选项选择、功能列表 |
+| [OverlayDropdownMenu](../components/overlaydropdownmenu)       | 基于 BasicComponent 的动作菜单组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 动作菜单、多选场景     |
+| [OverlayIconDropdownMenu](../components/overlayicondropdownmenu) | 基于 IconButton 的动作菜单组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用）     | 工具栏动作、更多菜单   |
+| [OverlayIconCascadingDropdownMenu](../components/overlayiconcascadingdropdownmenu) | 基于 IconButton 的二级级联动作菜单组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 含子菜单的工具栏动作   |
+| [OverlayBottomSheet](../components/overlaybottomsheet)         | 基于 BasicComponent 的底部抽屉组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 底部抽屉、附加选项     |
+| [OverlayDialog](../components/overlaydialog)                   | 基于 BasicComponent 的对话弹窗组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 提示、确认操作         |
 | [WindowListPopup](../components/windowlistpopup)     | 窗口级列表弹窗组件                                                                 | 选项选择、功能列表     |
 | [WindowCascadingListPopup](../components/windowcascadinglistpopup) | 窗口级二级级联列表弹窗组件                                                         | 子菜单、分组动作面板   |
 | [WindowDropdownPreference](../components/windowdropdownpreference) | 窗口级下拉选择器组件                                                               | 选项选择、功能列表     |

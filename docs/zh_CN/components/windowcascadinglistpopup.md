@@ -2,7 +2,7 @@
 title: WindowCascadingListPopup
 requiresScaffoldHost: false
 prerequisites:
-  - 可以在任何地方使用，不需要 `Scaffold` 或 `MiuixPopupHost`
+  - 可以在任何地方使用，不需要 `Scaffold` 或 `COUIPopupHost`
   - 在窗口层级渲染
 hostComponent: None
 popupHost: None
@@ -10,7 +10,7 @@ popupHost: None
 
 # WindowCascadingListPopup
 
-`WindowCascadingListPopup` 是支持二级菜单的弹出列表组件，通过 `Dialog` 在窗口层级渲染。与 `OverlayCascadingListPopup` 不同，它不需要 `Scaffold` 或 `MiuixPopupHost`。`DropdownItem.children` 非空的项会成为子菜单触发行；级联深度限制为 **2 级**。
+`WindowCascadingListPopup` 是支持二级菜单的弹出列表组件，通过 `Dialog` 在窗口层级渲染。与 `OverlayCascadingListPopup` 不同，它不需要 `Scaffold` 或 `COUIPopupHost`。`DropdownItem.children` 非空的项会成为子菜单触发行；级联深度限制为 **2 级**。
 
 <div style="position: relative; height: 410px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowCascadingListPopup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -23,9 +23,9 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.window.WindowCascadingListPopup
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
+import com.suqi8.coui.kmp.window.WindowCascadingListPopup
+import com.suqi8.coui.kmp.basic.DropdownEntry
+import com.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法

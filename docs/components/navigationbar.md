@@ -13,11 +13,11 @@ These components are typically used in conjunction with the `Scaffold` component
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
-import top.yukonga.miuix.kmp.basic.FloatingNavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationBarDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationBar
+import com.suqi8.coui.kmp.basic.NavigationBarItem
+import com.suqi8.coui.kmp.basic.FloatingNavigationBar
+import com.suqi8.coui.kmp.basic.FloatingNavigationBarItem
+import com.suqi8.coui.kmp.basic.NavigationBarDisplayMode
 ```
 
 ## Basic Usage
@@ -29,7 +29,7 @@ The NavigationBar component can be used to create bottom navigation menus fixed 
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("Home", "Profile", "Settings")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
     bottomBar = {
@@ -54,7 +54,7 @@ The FloatingNavigationBar component can be used to create floating navigation me
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("Home", "Profile", "Settings")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Scaffold(
     bottomBar = {
@@ -76,7 +76,7 @@ Scaffold(
 
 ### Selected State
 
-`NavigationBarItem` automatically handles the visual style of the selected item, displaying it with bold text and highlighting the icon/text. `FloatingNavigationBarItem` highlights the icon when selected.
+`NavigationBarItem` follows the COUI tab navigation state model: the selected item shows the icon and label at full label color, unselected items are dimmed, and the icon cross-fades between the two states over 180ms while the label color switches instantly. Labels always use medium font weight; pressing an unselected item previews the selected icon color. `FloatingNavigationBarItem` highlights the icon when selected.
 
 ## Properties
 
@@ -85,7 +85,7 @@ Scaffold(
 | Property Name              | Type                     | Description                         | Default Value                         | Required |
 | -------------------------- | ------------------------ | ----------------------------------- | ------------------------------------- | -------- |
 | modifier                   | Modifier                 | Modifier applied to the nav bar     | Modifier                              | No       |
-| color                      | Color                    | Background color of the nav bar     | MiuixTheme.colorScheme.surface        | No       |
+| color                      | Color                    | Background color of the nav bar     | COUITheme.colorScheme.background     | No       |
 | showDivider                | Boolean                  | Show top divider line or not        | true                                  | No       |
 | defaultWindowInsetsPadding | Boolean                  | Apply default window insets padding | true                                  | No       |
 | mode                       | NavigationBarDisplayMode    | Display mode for items              | NavigationBarDisplayMode.IconAndText     | No       |
@@ -107,7 +107,7 @@ Scaffold(
 | Property Name              | Type                     | Description                             | Default Value                           | Required |
 | -------------------------- | ------------------------ | --------------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                 | Modifier applied to the nav bar         | Modifier                                | No       |
-| color                      | Color                    | Background color of the nav bar         | MiuixTheme.colorScheme.surfaceContainer | No       |
+| color                      | Color                    | Background color of the nav bar         | COUITheme.colorScheme.surfaceContainer | No       |
 | cornerRadius               | Dp                       | Corner radius of the nav bar            | FloatingToolbarDefaults.CornerRadius    | No       |
 | horizontalAlignment        | Alignment.Horizontal     | Horizontal alignment within its parent  | CenterHorizontally                      | No       |
 | horizontalOutSidePadding   | Dp                       | Horizontal padding outside the nav bar  | FloatingNavigationBarDefaults.HorizontalOutSidePadding | No       |
@@ -135,15 +135,15 @@ The NavigationBarDefaults object provides default values for NavigationBar and N
 
 | Constant Name          | Type     | Description                                  | Default Value |
 | ---------------------- | -------- | -------------------------------------------- | ------------- |
-| ItemHeight             | Dp       | Item height                                  | 64.dp         |
-| IconSize               | Dp       | Icon size                                    | 26.dp         |
+| ItemHeight             | Dp       | Item cell height                             | 56.dp         |
+| HorizontalPadding      | Dp       | Horizontal padding at both edges of the bar  | 12.dp         |
+| ItemHorizontalPadding  | Dp       | Horizontal padding inside each item cell     | 2.dp          |
+| IconSize               | Dp       | Icon size                                    | 24.dp         |
+| IconTopPadding         | Dp       | Top padding for the icon                     | 9.dp          |
+| LabelBottomPadding     | Dp       | Bottom padding for the label                 | 7.dp          |
+| LabelFontSize          | TextUnit | Label font size                              | 10.sp         |
 | TextFontSize           | TextUnit | Text font size (TextOnly mode)               | 14.sp         |
-| LabelFontSize          | TextUnit | Label font size                              | 12.sp         |
-| IconTopPadding         | Dp       | Top padding for the icon                     | 8.dp          |
-| BottomPadding          | Dp       | Bottom padding for the label                 | 8.dp          |
-| SelectedPressedAlpha   | Float    | Alpha value for selected item when pressed   | 0.5f          |
-| UnselectedPressedAlpha | Float    | Alpha value for unselected item when pressed | 0.6f          |
-| UnselectedAlpha        | Float    | Alpha value for unselected item              | 0.4f          |
+| IconFadeDurationMillis | Int      | Icon cross-fade duration between states      | 180           |
 
 ### FloatingNavigationBarDefaults Object
 
@@ -212,7 +212,7 @@ NavigationBar(
 
 ```kotlin
 FloatingNavigationBar(
-    color = MiuixTheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.primaryContainer,
     cornerRadius = 28.dp
 ) {
     // ... items ...
@@ -236,7 +236,7 @@ FloatingNavigationBar(
 
 ```kotlin
 val pages = listOf("Home", "Profile", "Settings")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
 Scaffold(
@@ -262,7 +262,7 @@ Scaffold(
     ) {
         Text(
             text = "Current Page: ${pages[selectedIndex]}",
-            style = MiuixTheme.textStyles.title1
+            style = COUITheme.textStyles.title1
         )
     }
 }
@@ -272,7 +272,7 @@ Scaffold(
 
 ```kotlin
 val pages = listOf("Home", "Profile", "Settings")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 var selectedIndex by remember { mutableStateOf(0) }
 
 Scaffold(
@@ -298,7 +298,7 @@ Scaffold(
     ) {
         Text(
             text = "Current Page: ${pages[selectedIndex]}",
-            style = MiuixTheme.textStyles.title1
+            style = COUITheme.textStyles.title1
         )
     }
 }

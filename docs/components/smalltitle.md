@@ -1,6 +1,6 @@
 # SmallTitle
 
-`SmallTitle` is a basic title component in Miuix used to create small-sized title text. It follows Miuix's design style with preset font size, weight, and padding.
+`SmallTitle` is a basic title component in Miuix used to create small-sized title text. It follows the COUI category title style (12sp, medium weight) with preset padding and a 16dp minimum text height.
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=smallTitle" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.SmallTitle
+import com.suqi8.coui.kmp.basic.SmallTitle
 ```
 
 ## Basic Usage
@@ -50,7 +50,7 @@ SmallTitle(
 | ------------- | ------------- | ----------------------------- | ------------------------------------------ | -------- |
 | text          | String        | Text content to display       | -                                          | Yes      |
 | modifier      | Modifier      | Modifier applied to component | Modifier                                   | No       |
-| textColor     | Color         | Title text color              | MiuixTheme.colorScheme.onBackgroundVariant | No       |
+| textColor     | Color         | Title text color              | COUITheme.colorScheme.onBackgroundVariant | No       |
 | insideMargin  | PaddingValues | Component internal padding    | SmallTitleDefaults.InsideMargin             | No       |
 
 ### SmallTitleDefaults Object
@@ -61,7 +61,8 @@ The SmallTitleDefaults object provides default values for SmallTitle components.
 
 | Constant Name | Type          | Description                | Default Value            |
 | ------------- | ------------- | -------------------------- | ------------------------ |
-| InsideMargin  | PaddingValues | Component internal padding | PaddingValues(28.dp, 8.dp)|
+| InsideMargin  | PaddingValues | Component internal padding | PaddingValues(32.dp, 8.dp)|
+| MinHeight     | Dp            | Minimum text height        | 16.dp                    |
 
 ## Advanced Usage
 

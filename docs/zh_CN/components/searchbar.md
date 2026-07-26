@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.InputField
+import com.suqi8.coui.kmp.basic.SearchBar
+import com.suqi8.coui.kmp.basic.InputField
 ```
 
 ## 基本用法
@@ -66,6 +66,7 @@ SearchBar(
 | label             | String                    | 搜索框为空时显示的提示文本 | ""       | 否    |
 | enabled           | Boolean                   | 是否启用搜索框       | true     | 否    |
 | textStyle         | TextStyle                 | 搜索框中文本的样式     | null     | 否    |
+| colors            | SearchBarColors           | 输入框的颜色配置      | SearchBarDefaults.searchBarColors() | 否    |
 | leadingIcon       | @Composable (() -> Unit)? | 前置图标          | 默认放大镜    | 否    |
 | trailingIcon      | @Composable (() -> Unit)? | 后置图标          | 默认清除按钮   | 否    |
 | interactionSource | MutableInteractionSource? | 交互源           | null     | 否    |
@@ -76,15 +77,32 @@ SearchBarDefaults 对象提供了 SearchBar 和 InputField 组件的默认值。
 
 #### 常量
 
-| 常量名                   | 类型     | 说明                        | 默认值              |
-| ------------------------ | -------- | --------------------------- | ------------------- |
-| InsideMargin             | DpSize   | SearchBar 的内部边距        | DpSize(12.dp, 0.dp) |
-| InputFieldMinHeight      | Dp       | InputField 的最小高度       | 45.dp               |
-| InputFieldFontSize       | TextUnit | InputField 标签字号         | 17.sp               |
-| LeadingIconStartPadding  | Dp       | 默认前置图标的起始内边距    | 16.dp               |
-| LeadingIconEndPadding    | Dp       | 默认前置图标的结束内边距    | 8.dp                |
-| TrailingIconStartPadding | Dp       | 默认后置图标的起始内边距    | 8.dp                |
-| TrailingIconEndPadding   | Dp       | 默认后置图标的结束内边距    | 16.dp               |
+| 常量名                      | 类型     | 说明                             | 默认值              |
+| --------------------------- | -------- | -------------------------------- | ------------------- |
+| InsideMargin                | DpSize   | SearchBar 的内部边距             | DpSize(16.dp, 6.dp) |
+| InputFieldMinHeight         | Dp       | InputField 背景的最小高度        | 40.dp               |
+| InputFieldFontSize          | TextUnit | InputField 文本与标签字号        | 16.sp               |
+| LeadingIconStartPadding     | Dp       | 默认前置图标的起始内边距         | 12.dp               |
+| LeadingIconEndPadding       | Dp       | 默认前置图标的结束内边距         | 8.dp                |
+| TrailingIconStartPadding    | Dp       | 默认清除按钮的起始内边距         | 4.dp                |
+| TrailingIconEndPadding      | Dp       | 默认清除按钮的结束内边距         | 4.dp                |
+| TrailingIconTouchTargetSize | Dp       | 默认清除按钮的圆形触摸目标尺寸   | 36.dp               |
+| TrailingIconVisualSize      | Dp       | 默认清除按钮的可见圆形尺寸       | 18.dp               |
+
+#### 方法
+
+| 方法名            | 类型            | 说明                     |
+| ----------------- | --------------- | ------------------------ |
+| searchBarColors() | SearchBarColors | 创建输入框的默认颜色配置 |
+
+### SearchBarColors 类
+
+| 属性名          | 类型  | 说明                                                              |
+| --------------- | ----- | ----------------------------------------------------------------- |
+| backgroundColor | Color | 胶囊背景色（半透明；secondaryContainer，8% 黑 / 15% 白）          |
+| labelColor      | Color | 提示（hint）文字颜色（onSurfaceSecondary，54% 黑 / 54% 白）       |
+| iconColor       | Color | 默认前置放大镜图标着色（onSurfaceSecondary）                      |
+| clearIconColor  | Color | 默认清除按钮圆形填充色（onSurfaceContainerHigh）                  |
 
 ## 进阶用法
 
@@ -105,7 +123,7 @@ SearchBar(
             leadingIcon = {
                 Icon(
                     modifier = Modifier.padding(start = 12.dp, end = 8.dp),
-                    imageVector = MiuixIcons.Search,
+                    imageVector = COUIIcons.Search,
                     contentDescription = "搜索"
                 )
             }
@@ -173,9 +191,9 @@ SearchBar(
     expanded = expanded,
     onExpandedChange = { expanded = it },
     outsideEndAction = {
+        // SearchBar 已按 COUI 规格提供该插槽两侧的间距
         Text(
             modifier = Modifier
-                .padding(start = 12.dp)
                 .clickable(
                     interactionSource = null,
                     indication = null
@@ -184,7 +202,8 @@ SearchBar(
                     searchText = ""
                 },
             text = "取消",
-            color = MiuixTheme.colorScheme.primary
+            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
+            color = COUITheme.colorScheme.primary
         )
     }
 ) {

@@ -11,9 +11,9 @@ This component is usually used in conjunction with `Scaffold`, placed in a speci
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
-import top.yukonga.miuix.kmp.basic.ToolbarPosition // Used for Scaffold
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import com.suqi8.coui.kmp.basic.ToolbarPosition // Used for Scaffold
 ```
 
 ## Basic Usage
@@ -27,10 +27,10 @@ Scaffold(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) { // or Column
                 IconButton(onClick = { /* Action 1 */ }) {
-                    Icon(MiuixIcons.Edit, contentDescription = "Edit")
+                    Icon(COUIIcons.Edit, contentDescription = "Edit")
                 }
                 IconButton(onClick = { /* Action 2 */ }) {
-                    Icon(MiuixIcons.Delete, contentDescription = "Delete")
+                    Icon(COUIIcons.Delete, contentDescription = "Delete")
                 }
             }
         }
@@ -58,7 +58,7 @@ Scaffold(
 | Property Name  | Type                    | Description              | Value                                   |
 | -------------- | ----------------------- | ------------------------ | --------------------------------------- |
 | CornerRadius   | Dp                      | Default corner radius    | 24.dp                                   |
-| defaultColor() | @Composable () -> Color | Default background color | MiuixTheme.colorScheme.surfaceContainer |
+| defaultColor() | @Composable () -> Color | Default background color | COUITheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | Default outside padding  | PaddingValues(12.dp, 8.dp)              |
 
 ### ToolbarPosition (for Scaffold)
@@ -71,7 +71,7 @@ Please refer to the `ToolbarPosition` options in the [Scaffold](../components/sc
 
 ```kotlin
 FloatingToolbar(
-    color = MiuixTheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.primaryContainer,
     cornerRadius = 16.dp,
     outSidePadding = PaddingValues(24.dp),
     showDivider = false
@@ -81,10 +81,10 @@ FloatingToolbar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) { // or Column
         IconButton(onClick = { /* Action 1 */ }) {
-            Icon(MiuixIcons.Edit, contentDescription = "Edit", tint = MiuixTheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Edit, contentDescription = "Edit", tint = COUITheme.colorScheme.onPrimaryContainer)
         }
         IconButton(onClick = { /* Action 2 */ }) {
-            Icon(MiuixIcons.Delete, contentDescription = "Delete", tint = MiuixTheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Delete, contentDescription = "Delete", tint = COUITheme.colorScheme.onPrimaryContainer)
         }
     }
 }
@@ -99,10 +99,10 @@ FloatingToolbar {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         IconButton(onClick = { /* Action 1 */ }) {
-            Icon(MiuixIcons.Edit, contentDescription = "Edit")
+            Icon(COUIIcons.Edit, contentDescription = "Edit")
         }
         IconButton(onClick = { /* Action 2 */ }) {
-            Icon(MiuixIcons.Delete, contentDescription = "Delete")
+            Icon(COUIIcons.Delete, contentDescription = "Delete")
         }
     }
 }

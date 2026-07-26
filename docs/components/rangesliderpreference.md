@@ -5,7 +5,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.RangeSliderPreference
+import com.suqi8.coui.kmp.preference.RangeSliderPreference
 ```
 
 ## Basic Usage
@@ -110,9 +110,9 @@ RangeSliderPreference(
     summary = "${frequencyRange.start.roundToInt()}Hz - ${frequencyRange.endInclusive.roundToInt()}Hz",
     startAction = {
         Icon(
-            imageVector = MiuixIcons.Basic.Audio,
+            imageVector = COUIIcons.Basic.Audio,
             contentDescription = "Frequency Icon",
-            tint = MiuixTheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.onBackground,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

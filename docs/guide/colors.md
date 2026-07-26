@@ -4,7 +4,7 @@ This page lists all colors in the Miuix color scheme with their default light an
 
 ## Accessing Colors
 
-- Use `MiuixTheme.colorScheme.<name>` in composables.
+- Use `COUITheme.colorScheme.<name>` in composables.
 - The colors shown below apply to non-Monet mode.
 
 ## Colors

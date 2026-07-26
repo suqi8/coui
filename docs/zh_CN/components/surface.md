@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Surface
+import com.suqi8.coui.kmp.basic.Surface
 ```
 
 ## 基本用法
@@ -21,7 +21,7 @@ Surface(
     modifier = Modifier
         .size(200.dp)
         .padding(16.dp),
-    color = MiuixTheme.colorScheme.background,
+    color = COUITheme.colorScheme.background,
     shape = RoundedCornerShape(16.dp),
     shadowElevation = 4.dp
 ) {
@@ -40,8 +40,8 @@ Surface(
 | --------------- | ---------------------- | ---------------------------- | --------------------------------- | -------- |
 | modifier        | Modifier               | 应用于 Surface 的修饰符      | Modifier                          | 否       |
 | shape           | Shape                  | Surface 的形状               | SurfaceDefaults.Shape             | 否       |
-| color           | Color                  | Surface 的背景颜色           | MiuixTheme.colorScheme.surface    | 否       |
-| contentColor    | Color                  | Surface 的内容颜色           | MiuixTheme.colorScheme.onSurface  | 否       |
+| color           | Color                  | Surface 的背景颜色           | COUITheme.colorScheme.surface    | 否       |
+| contentColor    | Color                  | Surface 的内容颜色           | COUITheme.colorScheme.onSurface  | 否       |
 | border          | BorderStroke?          | Surface 的边框样式           | null                              | 否       |
 | shadowElevation | Dp                     | Surface 的阴影高度           | SurfaceDefaults.ShadowElevation   | 否       |
 | content         | @Composable () -> Unit | Surface 内容区域的可组合函数 | -                                 | 是       |
@@ -77,7 +77,7 @@ Surface(
     onClick = { /* 处理点击事件 */ },
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = MiuixTheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.primaryContainer,
     shadowElevation = 4.dp
 ) {
     Box(
@@ -101,8 +101,8 @@ Surface(
 Surface(
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = CircleShape,
-    color = MiuixTheme.colorScheme.secondaryContainer,
-    border = BorderStroke(2.dp, MiuixTheme.colorScheme.secondary),
+    color = COUITheme.colorScheme.secondaryContainer,
+    border = BorderStroke(2.dp, COUITheme.colorScheme.secondary),
     shadowElevation = 8.dp
 ) {
     Box(
@@ -126,8 +126,8 @@ Surface(
 Surface(
     modifier = Modifier.fillMaxWidth().padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = MiuixTheme.colorScheme.surface,
-    border = BorderStroke(1.dp, MiuixTheme.colorScheme.outline.copy(alpha = 0.2f)),
+    color = COUITheme.colorScheme.surface,
+    border = BorderStroke(1.dp, COUITheme.colorScheme.outline.copy(alpha = 0.2f)),
     shadowElevation = 4.dp
 ) {
     Column(
@@ -135,12 +135,12 @@ Surface(
     ) {
         Text(
             text = "卡片标题",
-            style = MiuixTheme.textStyles.headline1
+            style = COUITheme.textStyles.headline1
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "这是卡片内容区域，可以放置各种组件和信息。Surface 组件提供了统一的视觉容器。",
-            style = MiuixTheme.textStyles.body1
+            style = COUITheme.textStyles.body1
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -164,7 +164,7 @@ Surface(
     enabled = isEnabled,
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = MiuixTheme.colorScheme.surface.copy(alpha = 0.6f),
+    color = COUITheme.colorScheme.surface.copy(alpha = 0.6f),
     shadowElevation = 1.dp
 ) {
     Box(

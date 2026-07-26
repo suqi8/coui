@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Text
+import com.suqi8.coui.kmp.basic.Text
 ```
 
 ## Basic Usage
@@ -27,21 +27,21 @@ Miuix provides multiple predefined text styles:
 ```kotlin
 Text(
     text = "Title Text",
-    style = MiuixTheme.textStyles.headline1
+    style = COUITheme.textStyles.headline1
 )
 
 Text(
     text = "Subtitle Text",
-    style = MiuixTheme.textStyles.subtitle
+    style = COUITheme.textStyles.subtitle
 )
 Text(
     text = "Summary Text",
-    style = MiuixTheme.textStyles.body2
+    style = COUITheme.textStyles.body2
 )
 
 Text(
     text = "Main Text",
-    style = MiuixTheme.textStyles.main
+    style = COUITheme.textStyles.main
 )
 
 ```
@@ -51,17 +51,17 @@ Text(
 ```kotlin
 Text(
     text = "Default Color Text",
-    color = MiuixTheme.colorScheme.onBackground
+    color = COUITheme.colorScheme.onBackground
 )
 
 Text(
     text = "Primary Color Text",
-    color = MiuixTheme.colorScheme.primary
+    color = COUITheme.colorScheme.primary
 )
 
 Text(
     text = "Secondary Text",
-    color = MiuixTheme.colorScheme.onSurfaceContainerVariant
+    color = COUITheme.colorScheme.onSurfaceContainerVariant
 )
 ```
 
@@ -88,7 +88,7 @@ Text(
 | maxLines       | Int            | Maximum number of lines                 | Int.MAX_VALUE              | No       |
 | minLines       | Int            | Minimum number of lines                 | 1                          | No       |
 | onTextLayout   | ((TextLayoutResult) -> Unit)? | Callback after layout | null                       | No       |
-| style          | TextStyle      | Text style                              | MiuixTheme.textStyles.main | No       |
+| style          | TextStyle      | Text style                              | COUITheme.textStyles.main | No       |
 
 ### Text (AnnotatedString) Properties
 
@@ -112,7 +112,7 @@ Text(
 | minLines       | Int                            | Minimum number of lines                       | 1                          | No       |
 | inlineContent  | Map<String, InlineTextContent> | Mapping for inserting inline composables      | mapOf()                    | No       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | Callback after text layout is completed       | {}                         | No       |
-| style          | TextStyle                      | Text style                                    | MiuixTheme.textStyles.main | No       |
+| style          | TextStyle                      | Text style                                    | COUITheme.textStyles.main | No       |
 
 ## Advanced Usage
 
@@ -145,7 +145,7 @@ Text(
 ```kotlin
 Text(
     buildAnnotatedString {
-        withStyle(style = SpanStyle(color = MiuixTheme.colorScheme.primary)) {
+        withStyle(style = SpanStyle(color = COUITheme.colorScheme.primary)) {
             append("Miuix ")
         }
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -188,8 +188,8 @@ Text(
     text = "Scroll-tinted text",
     color = {
         lerp(
-            MiuixTheme.colorScheme.onSurface,
-            MiuixTheme.colorScheme.primary,
+            COUITheme.colorScheme.onSurface,
+            COUITheme.colorScheme.primary,
             (scrollState.value / 500f).coerceIn(0f, 1f),
         )
     },
@@ -207,9 +207,9 @@ val annotated = buildAnnotatedString {
     append("Miuix Docs")
     addLink(
         LinkAnnotation.Url(
-            url = "https://compose-miuix-ui.github.io/miuix/",
+            url = "https://compose-coui-ui.github.io/miuix/",
             styles = TextLinkStyles(
-                SpanStyle(color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                SpanStyle(color = COUITheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             )
         ),
         start = start,

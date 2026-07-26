@@ -21,7 +21,7 @@ Each `Scaffold` automatically manages its own isolated popup state. Multiple nes
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Scaffold
+import com.suqi8.coui.kmp.basic.Scaffold
 ```
 
 ## Basic Usage
@@ -60,8 +60,8 @@ Scaffold(
 | floatingToolbar              | @Composable () -> Unit              | Floating toolbar                                                         | {}                                | No       |
 | floatingToolbarPosition      | ToolbarPosition                     | Position to display the floating toolbar                                 | ToolbarPosition.BottomCenter      | No       |
 | snackbarHost                 | @Composable () -> Unit              | Container for displaying Snackbar, Miuix does not provide this component | {}                                | No       |
-| popupHost                    | @Composable () -> Unit              | Container for displaying popup windows                                   | \{ MiuixPopupHost() }             | No       |
-| containerColor               | Color                               | Background color of the scaffold                                         | MiuixTheme.colorScheme.surface | No       |
+| popupHost                    | @Composable () -> Unit              | Container for displaying popup windows                                   | \{ COUIPopupHost() }             | No       |
+| containerColor               | Color                               | Background color of the scaffold                                         | COUITheme.colorScheme.surface | No       |
 | contentWindowInsets          | WindowInsets                        | Window insets passed to the content                                      | WindowInsets.systemBars.union(WindowInsets.displayCutout) | No       |
 | content                      | @Composable (PaddingValues) -> Unit | Main content area of the scaffold                                        | -                                 | Yes      |
 
@@ -92,7 +92,7 @@ Scaffold(
 ### Page Layout with Top Bar and Bottom Bar
 
 ```kotlin
-val topAppBarScrollBehavior = MiuixScrollBehavior(rememberTopAppBarState())
+val topAppBarScrollBehavior = COUIScrollBehavior(rememberTopAppBarState())
 
 Scaffold(
     topBar = {
@@ -100,7 +100,7 @@ Scaffold(
             title = "Title",
             navigationIcon = {
                 IconButton(onClick = { /* Handle navigation click */ }) {
-                    Icon(MiuixIcons.Back, contentDescription = "Back")
+                    Icon(COUIIcons.Back, contentDescription = "Back")
                 }
             },
             scrollBehavior = topAppBarScrollBehavior
@@ -108,8 +108,8 @@ Scaffold(
     },
     bottomBar = {
         val items = listOf(
-            NavigationItem("Home", MiuixIcons.VerticalSplit),
-            NavigationItem("Settings", MiuixIcons.Settings)
+            NavigationItem("Home", COUIIcons.VerticalSplit),
+            NavigationItem("Settings", COUIIcons.Settings)
         )
         var selectedItem by remember { mutableStateOf(0) }
         NavigationBar(
@@ -152,7 +152,7 @@ Scaffold(
         FloatingActionButton(
             onClick = { /* Handle click event */ }
         ) {
-            Icon(MiuixIcons.Add, contentDescription = "Add")
+            Icon(COUIIcons.Add, contentDescription = "Add")
         }
     },
     floatingActionButtonPosition = FabPosition.End,
@@ -188,7 +188,7 @@ Scaffold(
                 }
             }
         ) {
-            Icon(MiuixIcons.Info, contentDescription = "Show message")
+            Icon(COUIIcons.Info, contentDescription = "Show message")
         }
     },
     content = { paddingValues ->

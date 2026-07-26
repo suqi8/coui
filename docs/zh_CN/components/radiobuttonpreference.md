@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
+import com.suqi8.coui.kmp.preference.RadioButtonPreference
 ```
 
 ## 基本用法
@@ -95,11 +95,11 @@ var selected by remember { mutableStateOf(false) }
 RadioButtonPreference(
     title = "自定义颜色",
     titleColor = BasicComponentDefaults.titleColor(
-        color = MiuixTheme.colorScheme.primary
+        color = COUITheme.colorScheme.primary
     ),
     summary = "带自定义颜色的单选按钮",
     summaryColor = BasicComponentDefaults.summaryColor(
-        color = MiuixTheme.colorScheme.secondary
+        color = COUITheme.colorScheme.secondary
     ),
     selected = selected,
     onClick = { selected = !selected },

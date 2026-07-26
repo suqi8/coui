@@ -4,14 +4,14 @@ Miuix provides a rich built-in icon system that meets the primary design needs o
 
 ## Installation
 
-The basic `miuix-ui` library includes only a small set of essential icons. To access the full collection of Miuix icons, you need to add the `miuix-icons` dependency to your project.
+The basic `coui-ui` library includes only a small set of essential icons. To access the full collection of Miuix icons, you need to add the `coui-icons` dependency to your project.
 
 ```kotlin
 // build.gradle.kts
 commonMain.dependencies {
-    implementation("top.yukonga.miuix.kmp:miuix-ui:<version>")
+    implementation("com.suqi8.coui.kmp:coui-ui:<version>")
     // Add the extended icon library
-    implementation("top.yukonga.miuix.kmp:miuix-icons:<version>")
+    implementation("com.suqi8.coui.kmp:coui-icons:<version>")
 }
 ```
 
@@ -24,10 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Ok
-import top.yukonga.miuix.kmp.icon.extended.Settings
+import com.suqi8.coui.kmp.basic.Icon
+import com.suqi8.coui.kmp.icon.COUIIcons
+import com.suqi8.coui.kmp.icon.extended.Ok
+import com.suqi8.coui.kmp.icon.extended.Settings
 ```
 
 Then, you can use the icons as follows:
@@ -35,21 +35,21 @@ Then, you can use the icons as follows:
 ```kotlin
 // Use the Ok icon (defaults to Regular weight)
 Icon(
-    imageVector = MiuixIcons.Ok,
+    imageVector = COUIIcons.Ok,
     contentDescription = "Ok",
     modifier = Modifier.size(24.dp)
 )
 
 // Use the Settings icon
 Icon(
-    imageVector = MiuixIcons.Settings,
+    imageVector = COUIIcons.Settings,
     contentDescription = "Settings",
     modifier = Modifier.size(24.dp)
 )
 
 // Use a specific weight (e.g., Light)
 Icon(
-    imageVector = MiuixIcons.Light.Settings,
+    imageVector = COUIIcons.Light.Settings,
     contentDescription = "Settings (Light)",
     modifier = Modifier.size(24.dp)
 )
@@ -59,11 +59,11 @@ Icon(
 
 Miuix icons support five weights, matching the named instances of the source font `misymbol_vf.ttf`:
 
-- `MiuixIcons.Light`: Light weight icons (wght=250)
-- `MiuixIcons.Normal`: Lighter-than-regular icons (wght=305)
-- `MiuixIcons.Regular`: Regular weight icons (wght=330) - Default when accessing `MiuixIcons.IconName` directly
-- `MiuixIcons.Medium`: Heavier-than-regular icons (wght=430)
-- `MiuixIcons.Demibold`: Demibold weight icons (wght=500)
+- `COUIIcons.Light`: Light weight icons (wght=250)
+- `COUIIcons.Normal`: Lighter-than-regular icons (wght=305)
+- `COUIIcons.Regular`: Regular weight icons (wght=330) - Default when accessing `COUIIcons.IconName` directly
+- `COUIIcons.Medium`: Heavier-than-regular icons (wght=430)
+- `COUIIcons.Demibold`: Demibold weight icons (wght=500)
 
 ## Available Icons
 

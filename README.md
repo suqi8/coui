@@ -6,8 +6,8 @@ A UI library for Compose Multiplatform.
 
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-7F52FF)](https://kotlinlang.org/)
 [![Compose Multiplatform](https://img.shields.io/badge/compose-1.11.0-4285F4)](https://kotlinlang.org/compose-multiplatform/)
-[![Maven Central](https://img.shields.io/maven-central/v/top.yukonga.miuix.kmp/miuix-ui)](https://search.maven.org/search?q=g:top.yukonga.miuix.kmp)
-[![License](https://img.shields.io/github/license/compose-miuix-ui/miuix)](LICENSE)
+[![Maven Central](https://img.shields.io/maven-central/v/com.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:com.suqi8.coui.kmp)
+[![License](https://img.shields.io/github/license/compose-coui-ui/miuix)](LICENSE)
 
 ### Supported Platforms
 
@@ -20,19 +20,19 @@ A UI library for Compose Multiplatform.
 
 ### Demos
 
-[![JsCanvas](https://img.shields.io/badge/Demo-JsCanvas-F7DF1E?logo=javascript&logoColor=white)](https://compose-miuix-ui.github.io/miuix-jsCanvas/)
-[![WasmJs](https://img.shields.io/badge/Demo-WasmJs-654FF0?logo=webassembly&logoColor=white)](https://compose-miuix-ui.github.io/miuix-wasmJs/)
-[![Other](https://img.shields.io/badge/Demo-Other-white?logo=githubactions&logoColor=white)](https://github.com/compose-miuix-ui/miuix/actions/workflows/example.yml)
+[![JsCanvas](https://img.shields.io/badge/Demo-JsCanvas-F7DF1E?logo=javascript&logoColor=white)](https://compose-coui-ui.github.io/miuix-jsCanvas/)
+[![WasmJs](https://img.shields.io/badge/Demo-WasmJs-654FF0?logo=webassembly&logoColor=white)](https://compose-coui-ui.github.io/miuix-wasmJs/)
+[![Other](https://img.shields.io/badge/Demo-Other-white?logo=githubactions&logoColor=white)](https://github.com/compose-coui-ui/miuix/actions/workflows/example.yml)
 
 ### Modules
 
 | Module                 | Description                                                                                               |
 | ---------------------- | --------------------------------------------------------------------------------------------------------- |
-| `miuix-ui`             | Core UI component library (automatically includes `miuix-core`)                                           |
-| `miuix-preference`     | Preference components (SwitchPreference, CheckboxPreference, etc.), depends on `miuix-ui`                 |
-| `miuix-icons`          | Extended icon library, can be used independently or with `miuix-ui` (automatically includes `miuix-core`) |
-| `miuix-blur`           | Blur effect library, can be used independently                                                            |
-| `miuix-navigation3-ui` | Navigation3 UI library, can be used independently                                                         |
+| `coui-ui`             | Core UI component library (automatically includes `coui-core`)                                           |
+| `coui-preference`     | Preference components (SwitchPreference, CheckboxPreference, etc.), depends on `coui-ui`                 |
+| `coui-icons`          | Extended icon library, can be used independently or with `coui-ui` (automatically includes `coui-core`) |
+| `coui-blur`           | Blur effect library, can be used independently                                                            |
+| `coui-navigation3-ui` | Navigation3 UI library, can be used independently                                                         |
 
 ### Getting Started
 
@@ -40,15 +40,15 @@ A UI library for Compose Multiplatform.
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("top.yukonga.miuix.kmp:miuix-ui:<version>")
-            // Optional: Add miuix-preference for preference components
-            implementation("top.yukonga.miuix.kmp:miuix-preference:<version>")
-            // Optional: Add miuix-icons for more icons
-            implementation("top.yukonga.miuix.kmp:miuix-icons:<version>")
-            // Optional: Add miuix-blur for blur effects
-            implementation("top.yukonga.miuix.kmp:miuix-blur:<version>")
-            // Optional: Add miuix-navigation3-ui for navigation3 support
-            implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:<version>")
+            implementation("com.suqi8.coui.kmp:coui-ui:<version>")
+            // Optional: Add coui-preference for preference components
+            implementation("com.suqi8.coui.kmp:coui-preference:<version>")
+            // Optional: Add coui-icons for more icons
+            implementation("com.suqi8.coui.kmp:coui-icons:<version>")
+            // Optional: Add coui-blur for blur effects
+            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
+            // Optional: Add coui-navigation3-ui for navigation3 support
+            implementation("com.suqi8.coui.kmp:coui-navigation3-ui:<version>")
             // Other dependencies...
         }
         // Other sourceSets...
@@ -59,7 +59,7 @@ kotlin {
 
 ### Usage
 
-- Provide a color scheme via `MiuixTheme(colors = ...)`, e.g., `lightColorScheme()` or `darkColorScheme()`.
+- Provide a color scheme via `COUITheme(colors = ...)`, e.g., `lightColorScheme()` or `darkColorScheme()`.
 
 ```kotlin
 @Composable
@@ -67,7 +67,7 @@ fun AppTheme(
     content: @Composable () -> Unit
 ) {
     val colors = if (isSystemInDarkTheme()) darkColorScheme() else lightColorScheme()
-    return MiuixTheme(
+    return COUITheme(
         colors = colors,
         content = content
     )
@@ -87,7 +87,7 @@ fun AppTheme(
             keyColor = Color(0xFF3482FF)
         )
     }
-    return MiuixTheme(
+    return COUITheme(
         controller = controller,
         content = content
     )
@@ -98,13 +98,13 @@ fun AppTheme(
 
 <table>
   <tr>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/001.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/001.webp?raw=true" width="300" alt="Screenshot 001"/></a></td>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/002.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/002.webp?raw=true" width="300" alt="Screenshot 002"/></a></td>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/003.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/003.webp?raw=true" width="300" alt="Screenshot 003"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/001.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/001.webp?raw=true" width="300" alt="Screenshot 001"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/002.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/002.webp?raw=true" width="300" alt="Screenshot 002"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/003.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/003.webp?raw=true" width="300" alt="Screenshot 003"/></a></td>
   </tr>
   <tr>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/004.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/004.webp?raw=true" width="300" alt="Screenshot 004"/></a></td>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/005.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/005.webp?raw=true" width="300" alt="Screenshot 005"/></a></td>
-    <td><a href="https://github.com/compose-miuix-ui/miuix/blob/main/assets/006.webp?raw=true"><img src="https://github.com/compose-miuix-ui/miuix/blob/main/assets/006.webp?raw=true" width="300" alt="Screenshot 006"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/004.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/004.webp?raw=true" width="300" alt="Screenshot 004"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/005.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/005.webp?raw=true" width="300" alt="Screenshot 005"/></a></td>
+    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/006.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/006.webp?raw=true" width="300" alt="Screenshot 006"/></a></td>
   </tr>
 </table>

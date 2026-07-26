@@ -11,9 +11,9 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
-import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
-import top.yukonga.miuix.kmp.basic.ToolbarPosition // 用于 Scaffold
+import com.suqi8.coui.kmp.basic.FloatingToolbar
+import com.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import com.suqi8.coui.kmp.basic.ToolbarPosition // 用于 Scaffold
 ```
 
 ## 基本用法
@@ -27,10 +27,10 @@ Scaffold(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) { // 或 Column
                 IconButton(onClick = { /* 操作 1 */ }) {
-                    Icon(MiuixIcons.Edit, contentDescription = "编辑")
+                    Icon(COUIIcons.Edit, contentDescription = "编辑")
                 }
                 IconButton(onClick = { /* 操作 2 */ }) {
-                    Icon(MiuixIcons.Delete, contentDescription = "删除")
+                    Icon(COUIIcons.Delete, contentDescription = "删除")
                 }
             }
         }
@@ -58,7 +58,7 @@ Scaffold(
 | 属性名         | 类型                    | 说明           | 值                                      |
 | -------------- | ----------------------- | -------------- | --------------------------------------- |
 | CornerRadius   | Dp                      | 默认圆角半径   | 24.dp                                   |
-| defaultColor() | @Composable () -> Color | 默认背景颜色   | MiuixTheme.colorScheme.surfaceContainer |
+| defaultColor() | @Composable () -> Color | 默认背景颜色   | COUITheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | 默认外部内边距 | PaddingValues(12.dp, 8.dp)              |
 
 ### ToolbarPosition (用于 Scaffold)
@@ -71,7 +71,7 @@ Scaffold(
 
 ```kotlin
 FloatingToolbar(
-    color = MiuixTheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.primaryContainer,
     cornerRadius = 16.dp,
     outSidePadding = PaddingValues(24.dp),
     showDivider = false
@@ -81,10 +81,10 @@ FloatingToolbar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) { // 或 Column
         IconButton(onClick = { /* 操作 1 */ }) {
-            Icon(MiuixIcons.Edit, contentDescription = "编辑", tint = MiuixTheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Edit, contentDescription = "编辑", tint = COUITheme.colorScheme.onPrimaryContainer)
         }
         IconButton(onClick = { /* 操作 2 */ }) {
-            Icon(MiuixIcons.Delete, contentDescription = "删除", tint = MiuixTheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Delete, contentDescription = "删除", tint = COUITheme.colorScheme.onPrimaryContainer)
         }
     }
 }
@@ -99,10 +99,10 @@ FloatingToolbar {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         IconButton(onClick = { /* 操作 1 */ }) {
-            Icon(MiuixIcons.Edit, contentDescription = "编辑")
+            Icon(COUIIcons.Edit, contentDescription = "编辑")
         }
         IconButton(onClick = { /* 操作 2 */ }) {
-            Icon(MiuixIcons.Delete, contentDescription = "删除")
+            Icon(COUIIcons.Delete, contentDescription = "删除")
         }
     }
 }

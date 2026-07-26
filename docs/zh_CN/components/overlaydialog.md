@@ -2,11 +2,11 @@
 title: OverlayDialog
 requiresScaffoldHost: true
 prerequisites:
-  - 必须在 `Scaffold` 中使用以提供 `MiuixPopupHost`
+  - 必须在 `Scaffold` 中使用以提供 `COUIPopupHost`
   - 未在 `Scaffold` 中使用将导致弹出内容无法渲染
   - 支持多个嵌套或并列的 `Scaffold`，无需额外配置
 hostComponent: Scaffold
-popupHost: MiuixPopupHost
+popupHost: COUIPopupHost
 ---
 
 # OverlayDialog
@@ -18,13 +18,13 @@ popupHost: MiuixPopupHost
 </div>
 
 ::: danger 使用前提
-此组件依赖 `Scaffold` 提供的 `MiuixPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
+此组件依赖 `Scaffold` 提供的 `COUIPopupHost` 以显示弹出内容。必须在 `Scaffold` 中使用，否则弹出内容无法正常渲染。
 :::
 
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import com.suqi8.coui.kmp.overlay.OverlayDialog
 ```
 
 ## 基本用法
@@ -72,7 +72,7 @@ Scaffold {
 | onDismissRequest           | (() -> Unit)?          | 当用户请求关闭（点击遮罩层或返回手势）时触发 | null                                  | 否       |
 | onDismissFinished          | (() -> Unit)?          | 关闭动画完成后调用；若关闭过程被中途取消（例如 `show` 被设回 true），则不会触发 | null     | 否       |
 | outsideMargin              | DpSize                 | 对话框外部边距                               | DialogDefaults.outsideMargin     | 否       |
-| insideMargin               | DpSize                 | 对话框内部内容的边距                         | DialogDefaults.insideMargin      | 否       |
+| insideMargin               | DpSize                 | 内置标题/摘要文本的边距（宽 = 水平内边距，高 = 标题上方内边距）；content 插槽不加内边距 | DialogDefaults.insideMargin      | 否       |
 | defaultWindowInsetsPadding | Boolean                | 是否应用默认窗口插入内边距                   | true                                  | 否       |
 | renderInRootScaffold       | Boolean                | 是否在根（最外层）Scaffold 中渲染对话框。为 true 时，对话框覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染 | true | 否 |
 | content                    | @Composable () -> Unit | 对话框的内容                                 | -                                     | 是       |
@@ -81,10 +81,12 @@ Scaffold {
 
 #### 属性
 
-| 属性名        | 类型   | 说明               |
-| ------------- | ------ | ------------------ |
-| outsideMargin | DpSize | 对话框外部默认边距 |
-| insideMargin  | DpSize | 对话框内部默认边距 |
+| 属性名        | 类型   | 说明                           |
+| ------------- | ------ | ------------------------------ |
+| CornerRadius  | Dp     | 对话框面板圆角（19.dp）        |
+| MaxWidth      | Dp     | 对话框内容最大宽度（392.dp）   |
+| outsideMargin | DpSize | 对话框外部默认边距（16, 24）   |
+| insideMargin  | DpSize | 内置标题/摘要文本的默认边距（24, 24）；content 插槽不加内边距 |
 
 #### 函数
 
@@ -244,7 +246,7 @@ Scaffold {
         onDismissRequest = { showDialog = false } // 关闭对话框
     ) {
         Card(
-            color = MiuixTheme.colorScheme.secondaryContainer,
+            color = COUITheme.colorScheme.secondaryContainer,
         ) {
             OverlayDropdownPreference(
                 title = "下拉选择",

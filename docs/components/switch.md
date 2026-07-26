@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.Switch
+import com.suqi8.coui.kmp.basic.Switch
 ```
 
 ## Basic Usage
@@ -50,7 +50,7 @@ Switch(
 | modifier        | Modifier             | Modifier applied to the switch     | Modifier                      | No       |
 | colors          | SwitchColors         | Color configuration for the switch | SwitchDefaults.switchColors() | No       |
 | enabled         | Boolean              | Whether the switch is interactive  | true                          | No       |
-| isLoading       | Boolean              | Whether the thumb shows a loading spinner (COUI loading style) | false | No       |
+| isLoading       | Boolean              | Whether the switch is in the COUI loading state: the thumb shrinks away and is replaced by a spinning gradient arc; touch is swallowed | false | No       |
 
 ### SwitchDefaults Object
 

@@ -9,9 +9,9 @@
 ## 引入
 
 ```kotlin
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.basic.NavigationRailDisplayMode
+import com.suqi8.coui.kmp.basic.NavigationRail
+import com.suqi8.coui.kmp.basic.NavigationRailItem
+import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
 ```
 
 ## 基本用法
@@ -21,7 +21,7 @@ NavigationRail 组件可用于创建侧边导航菜单：
 ```kotlin
 var selectedIndex by remember { mutableStateOf(0) }
 val items = listOf("主页", "个人", "设置")
-val icons = listOf(MiuixIcons.VerticalSplit, MiuixIcons.Contacts, MiuixIcons.Settings)
+val icons = listOf(COUIIcons.VerticalSplit, COUIIcons.Contacts, COUIIcons.Settings)
 
 Row {
     NavigationRail {
@@ -52,7 +52,7 @@ Row {
 | -------------------------- | -------------------------------------- | --------------------------------------------- | --------------------------------- | -------- |
 | modifier                   | Modifier                               | 应用于 NavigationRail 的修饰符                | Modifier                          | 否       |
 | header                     | @Composable (ColumnScope.() -> Unit)?  | 头部内容（通常是 FAB 或 Logo）                | null                              | 否       |
-| color                      | Color                                  | NavigationRail 的背景颜色                     | MiuixTheme.colorScheme.surface    | 否       |
+| color                      | Color                                  | NavigationRail 的背景颜色                     | COUITheme.colorScheme.surface    | 否       |
 | showDivider                | Boolean                                | 是否在 NavigationRail 和内容之间显示分割线    | true                              | 否       |
 | defaultWindowInsetsPadding | Boolean                                | 是否对 NavigationRail 应用默认的窗口边距      | true                              | 否       |
 | minWidth                   | Dp                                     | NavigationRail 的最小宽度                     | NavigationRailDefaults.MinWidth   | 否       |
