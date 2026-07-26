@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 object BuildConfig {
-    const val LIBRARY_VERSION = "0.9.1"
+    const val LIBRARY_VERSION = "1.0.0"
     const val LIBRARY_ID = "io.github.suqi8.coui.kmp"
     const val APPLICATION_NAME = "COUI"
     const val APPLICATION_VERSION_NAME = "1.0.9"
