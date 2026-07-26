@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -19,16 +18,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Badge
-import com.suqi8.coui.kmp.basic.BadgeBox
-import com.suqi8.coui.kmp.basic.BadgeDefaults
-import com.suqi8.coui.kmp.basic.ButtonDefaults
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.LoadingButton
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.Stepper
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Settings
+import io.github.suqi8.coui.kmp.basic.Badge
+import io.github.suqi8.coui.kmp.basic.BadgeBox
+import io.github.suqi8.coui.kmp.basic.BadgeDefaults
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.LoadingButton
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.Stepper
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Settings
 import kotlinx.coroutines.delay
 
 fun LazyListScope.badgeSection() {

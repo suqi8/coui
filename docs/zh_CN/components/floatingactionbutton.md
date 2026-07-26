@@ -11,7 +11,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButton
 ```
 
 ## 基本用法

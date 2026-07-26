@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +20,11 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.ui.NavDisplay
-import com.suqi8.coui.kmp.basic.ButtonDefaults
-import com.suqi8.coui.kmp.basic.TextButton
-import com.suqi8.coui.kmp.theme.ColorSchemeMode
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.ThemeController
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.ColorSchemeMode
+import io.github.suqi8.coui.kmp.theme.ThemeController
 
 @Composable
 fun Demo(demoId: String? = null) {

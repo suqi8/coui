@@ -7,8 +7,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.MarkPreference
-import com.suqi8.coui.kmp.preference.MarkLocation
+import io.github.suqi8.coui.kmp.preference.MarkPreference
+import io.github.suqi8.coui.kmp.preference.MarkLocation
 ```
 
 ## 基本用法

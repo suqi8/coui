@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package utils
 
 import LocalAppState
@@ -20,18 +19,18 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.ScrollBehavior
-import com.suqi8.coui.kmp.basic.SmallTopAppBar
-import com.suqi8.coui.kmp.basic.TopAppBar
-import com.suqi8.coui.kmp.blur.BlendColorEntry
-import com.suqi8.coui.kmp.blur.BlurDefaults
-import com.suqi8.coui.kmp.blur.LayerBackdrop
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.blur.textureBlur
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.utils.overScrollVertical
-import com.suqi8.coui.kmp.utils.scrollEndHaptic
+import io.github.suqi8.coui.kmp.basic.ScrollBehavior
+import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.TopAppBar
+import io.github.suqi8.coui.kmp.blur.BlendColorEntry
+import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.LayerBackdrop
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.overScrollVertical
+import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 
 fun Modifier.pageScrollModifiers(
     enableScrollEndHaptic: Boolean,

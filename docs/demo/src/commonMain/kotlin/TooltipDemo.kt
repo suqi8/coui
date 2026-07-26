@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,15 +13,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.IconButton
-import com.suqi8.coui.kmp.basic.RichTooltipBox
-import com.suqi8.coui.kmp.basic.TooltipBox
-import com.suqi8.coui.kmp.basic.rememberTooltipState
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Edit
-import com.suqi8.coui.kmp.icon.extended.Info
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.IconButton
+import io.github.suqi8.coui.kmp.basic.RichTooltipBox
+import io.github.suqi8.coui.kmp.basic.TooltipBox
+import io.github.suqi8.coui.kmp.basic.rememberTooltipState
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Edit
+import io.github.suqi8.coui.kmp.icon.extended.Info
 
 @Composable
 fun TooltipDemo() {

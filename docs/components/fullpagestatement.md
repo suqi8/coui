@@ -7,8 +7,8 @@ The statement body takes all the space left between the title and the button are
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FullPageStatement
-import com.suqi8.coui.kmp.basic.FullPageStatementDefaults
+import io.github.suqi8.coui.kmp.basic.FullPageStatement
+import io.github.suqi8.coui.kmp.basic.FullPageStatementDefaults
 ```
 
 ## Basic Usage

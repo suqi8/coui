@@ -6,7 +6,7 @@ A UI library for Compose Multiplatform.
 
 [![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-7F52FF)](https://kotlinlang.org/)
 [![Compose Multiplatform](https://img.shields.io/badge/compose-1.11.0-4285F4)](https://kotlinlang.org/compose-multiplatform/)
-[![Maven Central](https://img.shields.io/maven-central/v/com.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:com.suqi8.coui.kmp)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
 [![License](https://img.shields.io/github/license/compose-coui-ui/miuix)](LICENSE)
 
 ### Supported Platforms
@@ -40,15 +40,15 @@ A UI library for Compose Multiplatform.
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.suqi8.coui.kmp:coui-ui:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:<version>")
             // Optional: Add coui-preference for preference components
-            implementation("com.suqi8.coui.kmp:coui-preference:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-preference:<version>")
             // Optional: Add coui-icons for more icons
-            implementation("com.suqi8.coui.kmp:coui-icons:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-icons:<version>")
             // Optional: Add coui-blur for blur effects
-            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
             // Optional: Add coui-navigation3-ui for navigation3 support
-            implementation("com.suqi8.coui.kmp:coui-navigation3-ui:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-navigation3-ui:<version>")
             // Other dependencies...
         }
         // Other sourceSets...

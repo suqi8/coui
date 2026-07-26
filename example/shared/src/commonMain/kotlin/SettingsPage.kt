@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.animation.AnimatedVisibility
@@ -18,24 +17,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.ScrollBehavior
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.VerticalScrollBar
-import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
-import com.suqi8.coui.kmp.blur.LayerBackdrop
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
-import com.suqi8.coui.kmp.preference.SwitchPreference
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.ThemeColorSpec
-import com.suqi8.coui.kmp.theme.ThemePaletteStyle
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.ScrollBehavior
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import io.github.suqi8.coui.kmp.blur.LayerBackdrop
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.ThemeColorSpec
+import io.github.suqi8.coui.kmp.theme.ThemePaletteStyle
 import misc.VersionInfo
 import navigation3.Route
 import utils.AdaptiveTopAppBar

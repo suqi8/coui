@@ -5,8 +5,8 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.ButtonPreference
-import com.suqi8.coui.kmp.preference.ButtonPreferenceDefaults
+import io.github.suqi8.coui.kmp.preference.ButtonPreference
+import io.github.suqi8.coui.kmp.preference.ButtonPreferenceDefaults
 ```
 
 ## Basic Usage

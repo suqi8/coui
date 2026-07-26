@@ -1,6 +1,5 @@
 // Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,11 +13,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
-import com.suqi8.coui.kmp.basic.PopupPositionProvider
-import com.suqi8.coui.kmp.basic.TextButton
-import com.suqi8.coui.kmp.window.WindowCascadingListPopup
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.window.WindowCascadingListPopup
 
 @Composable
 fun WindowCascadingListPopupDemo() {

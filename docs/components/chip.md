@@ -5,8 +5,8 @@ A capsule shaped, checkable filter tag mirroring ColorOS's COUIChip in its selec
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Chip
-import com.suqi8.coui.kmp.basic.ChipDefaults
+import io.github.suqi8.coui.kmp.basic.Chip
+import io.github.suqi8.coui.kmp.basic.ChipDefaults
 ```
 
 ## Basic Usage

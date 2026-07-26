@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,17 +20,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.utils.scrollEndHaptic
 import component.BackNavigationIcon
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 

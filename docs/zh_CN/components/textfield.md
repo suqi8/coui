@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TextField
-import com.suqi8.coui.kmp.basic.TextFieldMode
+import io.github.suqi8.coui.kmp.basic.TextField
+import io.github.suqi8.coui.kmp.basic.TextFieldMode
 ```
 
 ## 基本用法

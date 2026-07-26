@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.Text
 ```
 
 ## 基本用法

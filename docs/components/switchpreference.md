@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
 ```
 
 ## Basic Usage

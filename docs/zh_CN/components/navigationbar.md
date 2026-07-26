@@ -13,11 +13,11 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.NavigationBar
-import com.suqi8.coui.kmp.basic.NavigationBarItem
-import com.suqi8.coui.kmp.basic.FloatingNavigationBar
-import com.suqi8.coui.kmp.basic.FloatingNavigationBarItem
-import com.suqi8.coui.kmp.basic.NavigationBarDisplayMode
+import io.github.suqi8.coui.kmp.basic.NavigationBar
+import io.github.suqi8.coui.kmp.basic.NavigationBarItem
+import io.github.suqi8.coui.kmp.basic.FloatingNavigationBar
+import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarItem
+import io.github.suqi8.coui.kmp.basic.NavigationBarDisplayMode
 ```
 
 ## 基本用法

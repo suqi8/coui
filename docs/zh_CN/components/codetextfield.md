@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.CodeTextField
-import com.suqi8.coui.kmp.basic.CodeTextFieldDefaults
+import io.github.suqi8.coui.kmp.basic.CodeTextField
+import io.github.suqi8.coui.kmp.basic.CodeTextFieldDefaults
 ```
 
 ## 基本用法

@@ -24,9 +24,9 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.menu.OverlayDropdownMenu
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.menu.OverlayDropdownMenu
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage

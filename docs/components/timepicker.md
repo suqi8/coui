@@ -7,9 +7,9 @@ Times are represented by the plain `TimeValue` data class; the hour is always st
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TimePicker
-import com.suqi8.coui.kmp.basic.TimePickerDefaults
-import com.suqi8.coui.kmp.basic.TimeValue
+import io.github.suqi8.coui.kmp.basic.TimePicker
+import io.github.suqi8.coui.kmp.basic.TimePickerDefaults
+import io.github.suqi8.coui.kmp.basic.TimeValue
 ```
 
 ## Basic Usage

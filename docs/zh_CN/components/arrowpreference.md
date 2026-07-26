@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
 ```
 
 ## 基本用法

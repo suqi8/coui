@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.foundation.layout.Box
@@ -24,19 +23,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.VerticalScrollBar
-import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.shared.generated.resources.Res
-import com.suqi8.coui.kmp.theme.COUITheme
 import component.BackNavigationIcon
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.shared.generated.resources.Res
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.Library

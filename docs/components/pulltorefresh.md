@@ -11,8 +11,8 @@ For a demo, see the DropDowns page of the <a href="https://compose-coui-ui.githu
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.PullToRefresh
-import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
+import io.github.suqi8.coui.kmp.basic.PullToRefresh
+import io.github.suqi8.coui.kmp.basic.rememberPullToRefreshState
 ```
 
 ## Basic Usage

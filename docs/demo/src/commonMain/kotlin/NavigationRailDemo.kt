@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,17 +19,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.NavigationItem
-import com.suqi8.coui.kmp.basic.NavigationRail
-import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
-import com.suqi8.coui.kmp.basic.NavigationRailItem
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Contacts
-import com.suqi8.coui.kmp.icon.extended.Settings
-import com.suqi8.coui.kmp.icon.extended.VerticalSplit
-import com.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.NavigationItem
+import io.github.suqi8.coui.kmp.basic.NavigationRail
+import io.github.suqi8.coui.kmp.basic.NavigationRailDisplayMode
+import io.github.suqi8.coui.kmp.basic.NavigationRailItem
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Contacts
+import io.github.suqi8.coui.kmp.icon.extended.Settings
+import io.github.suqi8.coui.kmp.icon.extended.VerticalSplit
+import io.github.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun NavigationRailDemo() {

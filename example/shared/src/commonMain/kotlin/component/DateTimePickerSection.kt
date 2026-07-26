@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.padding
@@ -11,12 +10,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.DatePicker
-import com.suqi8.coui.kmp.basic.DateValue
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.TimePicker
-import com.suqi8.coui.kmp.basic.TimeValue
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.DatePicker
+import io.github.suqi8.coui.kmp.basic.DateValue
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.TimePicker
+import io.github.suqi8.coui.kmp.basic.TimeValue
 
 fun LazyListScope.dateTimePickerSection() {
     item(key = "datePicker") {

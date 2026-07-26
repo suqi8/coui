@@ -11,7 +11,7 @@ color preview.
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.ColorPalette
+import io.github.suqi8.coui.kmp.basic.ColorPalette
 ```
 
 ## Basic Usage

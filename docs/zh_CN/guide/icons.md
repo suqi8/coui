@@ -9,9 +9,9 @@ Miuix 提供了一套丰富的内置图标系统，满足大多数应用的主�
 ```kotlin
 // build.gradle.kts
 commonMain.dependencies {
-    implementation("com.suqi8.coui.kmp:coui-ui:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-ui:<version>")
     // 添加扩展图标库
-    implementation("com.suqi8.coui.kmp:coui-icons:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-icons:<version>")
 }
 ```
 
@@ -24,10 +24,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Ok
-import com.suqi8.coui.kmp.icon.extended.Settings
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Ok
+import io.github.suqi8.coui.kmp.icon.extended.Settings
 ```
 
 然后，你可以像下面这样使用图标：

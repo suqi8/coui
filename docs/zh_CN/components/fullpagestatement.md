@@ -7,8 +7,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FullPageStatement
-import com.suqi8.coui.kmp.basic.FullPageStatementDefaults
+import io.github.suqi8.coui.kmp.basic.FullPageStatement
+import io.github.suqi8.coui.kmp.basic.FullPageStatementDefaults
 ```
 
 ## 基本用法

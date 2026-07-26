@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,9 +16,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.CodeTextField
-import com.suqi8.coui.kmp.basic.InputView
-import com.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.CodeTextField
+import io.github.suqi8.coui.kmp.basic.InputView
+import io.github.suqi8.coui.kmp.basic.SmallTitle
 
 fun LazyListScope.inputViewSection() {
     item(key = "inputView") {

@@ -1,6 +1,5 @@
 // Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import com.android.build.api.dsl.ManagedVirtualDevice
 
 plugins {
@@ -24,7 +23,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    namespace = "com.suqi8.baselineprofile"
+    namespace = "io.github.suqi8.baselineprofile"
 
     targetProjectPath = ":example:android"
 

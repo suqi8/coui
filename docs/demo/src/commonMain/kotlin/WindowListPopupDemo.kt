@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,12 +13,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.DropdownImpl
-import com.suqi8.coui.kmp.basic.ListPopupColumn
-import com.suqi8.coui.kmp.basic.PopupPositionProvider
-import com.suqi8.coui.kmp.basic.TextButton
-import com.suqi8.coui.kmp.theme.LocalDismissState
-import com.suqi8.coui.kmp.window.WindowListPopup
+import io.github.suqi8.coui.kmp.basic.DropdownImpl
+import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.window.WindowListPopup
 
 @Composable
 fun WindowListPopupDemo() {

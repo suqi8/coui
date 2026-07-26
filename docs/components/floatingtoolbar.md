@@ -11,9 +11,9 @@ This component is usually used in conjunction with `Scaffold`, placed in a speci
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FloatingToolbar
-import com.suqi8.coui.kmp.basic.FloatingToolbarDefaults
-import com.suqi8.coui.kmp.basic.ToolbarPosition // Used for Scaffold
+import io.github.suqi8.coui.kmp.basic.FloatingToolbar
+import io.github.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import io.github.suqi8.coui.kmp.basic.ToolbarPosition // Used for Scaffold
 ```
 
 ## Basic Usage

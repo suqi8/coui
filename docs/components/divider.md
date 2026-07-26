@@ -9,8 +9,8 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.HorizontalDivider // Horizontal divider
-import com.suqi8.coui.kmp.basic.VerticalDivider   // Vertical divider
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider // Horizontal divider
+import io.github.suqi8.coui.kmp.basic.VerticalDivider   // Vertical divider
 ```
 
 ## Basic Usage

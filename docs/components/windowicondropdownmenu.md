@@ -19,9 +19,9 @@ popupHost: None
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.menu.WindowIconDropdownMenu
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.menu.WindowIconDropdownMenu
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage

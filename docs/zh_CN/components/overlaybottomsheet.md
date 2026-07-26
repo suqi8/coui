@@ -24,7 +24,7 @@ popupHost: COUIPopupHost
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
 ```
 
 ## 基本用法

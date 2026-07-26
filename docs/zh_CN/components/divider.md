@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.HorizontalDivider // 水平分割线
-import com.suqi8.coui.kmp.basic.VerticalDivider  // 垂直分割线
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider // 水平分割线
+import io.github.suqi8.coui.kmp.basic.VerticalDivider  // 垂直分割线
 ```
 
 ## 基本用法

@@ -7,9 +7,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.RecommendedPreference
-import com.suqi8.coui.kmp.preference.RecommendedItem
-import com.suqi8.coui.kmp.preference.RecommendedPreferenceDefaults
+import io.github.suqi8.coui.kmp.preference.RecommendedPreference
+import io.github.suqi8.coui.kmp.preference.RecommendedItem
+import io.github.suqi8.coui.kmp.preference.RecommendedPreferenceDefaults
 ```
 
 ## 基本用法

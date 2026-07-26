@@ -23,8 +23,8 @@ This component is independent of `Scaffold` and can be used in any composable sc
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.window.WindowDialog
-import com.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.window.WindowDialog
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## Basic Usage

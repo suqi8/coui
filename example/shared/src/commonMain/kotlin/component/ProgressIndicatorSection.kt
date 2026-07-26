@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.animation.core.RepeatMode
@@ -17,10 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.CircularProgressIndicator
-import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator
-import com.suqi8.coui.kmp.basic.LinearProgressIndicator
-import com.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator
+import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator
+import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator
+import io.github.suqi8.coui.kmp.basic.SmallTitle
 
 fun LazyListScope.progressIndicatorSection() {
     item(key = "progressIndicator") {

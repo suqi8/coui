@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.foundation.layout.Box
@@ -29,30 +28,30 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.DropdownImpl
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.IconButton
-import com.suqi8.coui.kmp.basic.ListPopupColumn
-import com.suqi8.coui.kmp.basic.ListPopupDefaults
-import com.suqi8.coui.kmp.basic.PopupPositionProvider
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.VerticalScrollBar
-import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Edit
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.LocalDismissState
-import com.suqi8.coui.kmp.window.WindowListPopup
 import component.BackNavigationIcon
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.DropdownImpl
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.IconButton
+import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Edit
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.window.WindowListPopup
 import navigation3.Route
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar

@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,15 +19,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.ColorPalette
-import com.suqi8.coui.kmp.basic.ColorPicker
-import com.suqi8.coui.kmp.basic.ColorSpace
-import com.suqi8.coui.kmp.basic.ColorSwatchPicker
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.TextField
-import com.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.ColorPalette
+import io.github.suqi8.coui.kmp.basic.ColorPicker
+import io.github.suqi8.coui.kmp.basic.ColorSpace
+import io.github.suqi8.coui.kmp.basic.ColorSwatchPicker
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.TextField
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.round
 
 fun LazyListScope.colorPickerSection() {

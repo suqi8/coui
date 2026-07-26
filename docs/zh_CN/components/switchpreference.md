@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
 ```
 
 ## 基本用法

@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TabRow // 标准样式（无外框）
-import com.suqi8.coui.kmp.basic.TabRowWithContour // 带轮廓样式（分段按钮）
+import io.github.suqi8.coui.kmp.basic.TabRow // 标准样式（无外框）
+import io.github.suqi8.coui.kmp.basic.TabRowWithContour // 带轮廓样式（分段按钮）
 ```
 
 ## 基本用法

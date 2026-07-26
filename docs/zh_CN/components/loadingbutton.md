@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.LoadingButton
-import com.suqi8.coui.kmp.basic.LoadingButtonDefaults
+import io.github.suqi8.coui.kmp.basic.LoadingButton
+import io.github.suqi8.coui.kmp.basic.LoadingButtonDefaults
 ```
 
 ## 基本用法

@@ -11,7 +11,7 @@ with haptic feedback and real-time color preview.
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.ColorPicker
+import io.github.suqi8.coui.kmp.basic.ColorPicker
 ```
 
 ## Basic Usage

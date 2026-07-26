@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,27 +21,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.CardDefaults
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.IconButton
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.TextField
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.Close
-import com.suqi8.coui.kmp.icon.extended.Ok
-import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
-import com.suqi8.coui.kmp.preference.SliderPreference
-import com.suqi8.coui.kmp.preference.SwitchPreference
-import com.suqi8.coui.kmp.preference.WindowDropdownPreference
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.LocalDismissState
-import com.suqi8.coui.kmp.utils.overScrollVertical
-import com.suqi8.coui.kmp.utils.scrollEndHaptic
-import com.suqi8.coui.kmp.window.WindowBottomSheet
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardDefaults
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.IconButton
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.TextField
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Close
+import io.github.suqi8.coui.kmp.icon.extended.Ok
+import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import io.github.suqi8.coui.kmp.preference.SliderPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.preference.WindowDropdownPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.utils.overScrollVertical
+import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
+import io.github.suqi8.coui.kmp.window.WindowBottomSheet
 
 private val BottomSheetDropdownOptions = listOf("Option 1", "Option 2")
 

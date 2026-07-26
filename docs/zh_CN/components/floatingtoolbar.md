@@ -11,9 +11,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FloatingToolbar
-import com.suqi8.coui.kmp.basic.FloatingToolbarDefaults
-import com.suqi8.coui.kmp.basic.ToolbarPosition // 用于 Scaffold
+import io.github.suqi8.coui.kmp.basic.FloatingToolbar
+import io.github.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import io.github.suqi8.coui.kmp.basic.ToolbarPosition // 用于 Scaffold
 ```
 
 ## 基本用法

@@ -11,8 +11,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.PullToRefresh
-import com.suqi8.coui.kmp.basic.rememberPullToRefreshState
+import io.github.suqi8.coui.kmp.basic.PullToRefresh
+import io.github.suqi8.coui.kmp.basic.rememberPullToRefreshState
 ```
 
 ## 基本用法

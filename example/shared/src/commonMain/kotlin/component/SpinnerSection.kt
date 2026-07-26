@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.padding
@@ -18,14 +17,14 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.preference.OverlaySpinnerPreference
-import com.suqi8.coui.kmp.preference.WindowSpinnerPreference
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.preference.OverlaySpinnerPreference
+import io.github.suqi8.coui.kmp.preference.WindowSpinnerPreference
 
 fun LazyListScope.spinnerSection() {
     item(key = "spinner") {

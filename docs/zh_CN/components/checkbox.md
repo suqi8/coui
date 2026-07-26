@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Checkbox
+import io.github.suqi8.coui.kmp.basic.Checkbox
 import androidx.compose.ui.state.ToggleableState
 ```
 

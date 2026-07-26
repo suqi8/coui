@@ -11,11 +11,11 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Snackbar
-import com.suqi8.coui.kmp.basic.SnackbarHost
-import com.suqi8.coui.kmp.basic.SnackbarHostState
-import com.suqi8.coui.kmp.basic.SnackbarDuration
-import com.suqi8.coui.kmp.basic.SnackbarResult
+import io.github.suqi8.coui.kmp.basic.Snackbar
+import io.github.suqi8.coui.kmp.basic.SnackbarHost
+import io.github.suqi8.coui.kmp.basic.SnackbarHostState
+import io.github.suqi8.coui.kmp.basic.SnackbarDuration
+import io.github.suqi8.coui.kmp.basic.SnackbarResult
 ```
 
 ## Basic Usage

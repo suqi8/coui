@@ -11,8 +11,8 @@ suggestions display.
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.SearchBar
-import com.suqi8.coui.kmp.basic.InputField
+import io.github.suqi8.coui.kmp.basic.SearchBar
+import io.github.suqi8.coui.kmp.basic.InputField
 ```
 
 ## Basic Usage

@@ -7,9 +7,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.DatePicker
-import com.suqi8.coui.kmp.basic.DatePickerDefaults
-import com.suqi8.coui.kmp.basic.DateValue
+import io.github.suqi8.coui.kmp.basic.DatePicker
+import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
+import io.github.suqi8.coui.kmp.basic.DateValue
 ```
 
 ## 基本用法

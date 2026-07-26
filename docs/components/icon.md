@@ -13,7 +13,7 @@ By default, `tint` resolves to `LocalContentColor.current`, so the icon follows 
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.Icon
 ```
 
 ## Basic Usage

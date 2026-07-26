@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.background
@@ -22,18 +21,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.ButtonDefaults
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.TextButton
-import com.suqi8.coui.kmp.overlay.OverlayDialog
-import com.suqi8.coui.kmp.overlay.OverlayLoadingDialog
-import com.suqi8.coui.kmp.overlay.OverlaySecurityDialog
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.LocalDismissState
-import com.suqi8.coui.kmp.window.WindowDialog
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.overlay.OverlayDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
+import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
 
 fun LazyListScope.dialogSection() {

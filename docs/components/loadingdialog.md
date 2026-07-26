@@ -14,11 +14,11 @@ Two variants are provided:
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlayLoadingDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
 // or
-import com.suqi8.coui.kmp.window.WindowLoadingDialog
+import io.github.suqi8.coui.kmp.window.WindowLoadingDialog
 
-import com.suqi8.coui.kmp.layout.LoadingDialogDefaults
+import io.github.suqi8.coui.kmp.layout.LoadingDialogDefaults
 ```
 
 ## Basic Usage

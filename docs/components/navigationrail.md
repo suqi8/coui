@@ -9,9 +9,9 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.NavigationRail
-import com.suqi8.coui.kmp.basic.NavigationRailItem
-import com.suqi8.coui.kmp.basic.NavigationRailDisplayMode
+import io.github.suqi8.coui.kmp.basic.NavigationRail
+import io.github.suqi8.coui.kmp.basic.NavigationRailItem
+import io.github.suqi8.coui.kmp.basic.NavigationRailDisplayMode
 ```
 
 ## Basic Usage

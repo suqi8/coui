@@ -5,8 +5,8 @@ A stepper lets the user adjust an integer value in fixed increments using a minu
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Stepper
-import com.suqi8.coui.kmp.basic.StepperDefaults
+import io.github.suqi8.coui.kmp.basic.Stepper
+import io.github.suqi8.coui.kmp.basic.StepperDefaults
 ```
 
 ## Basic Usage

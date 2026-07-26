@@ -5,8 +5,8 @@ A tip banner shown at the top of a page, mirroring ColorOS's COUIDefaultTopTips:
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TopTips
-import com.suqi8.coui.kmp.basic.TopTipsDefaults
+import io.github.suqi8.coui.kmp.basic.TopTips
+import io.github.suqi8.coui.kmp.basic.TopTipsDefaults
 ```
 
 ## Basic Usage

@@ -23,9 +23,9 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.window.WindowCascadingListPopup
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.window.WindowCascadingListPopup
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法

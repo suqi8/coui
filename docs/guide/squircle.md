@@ -28,7 +28,7 @@ Add the `coui-squircle` dependency to your project:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.suqi8.coui.kmp:coui-squircle:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-squircle:<version>")
         }
     }
 }
@@ -38,7 +38,7 @@ For Android-only projects:
 
 ```kotlin
 dependencies {
-    implementation("com.suqi8.coui.kmp:coui-squircle-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-squircle-android:<version>")
 }
 ```
 
@@ -62,7 +62,7 @@ need consistency.
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.squircle.squircleBackground
 
 Box(
     modifier = Modifier
@@ -126,7 +126,7 @@ width so it lines up with a same-radius `squircleBackground` / `squircleSurface`
 Path-based (no shader required); cheaper than the shader variants.
 
 ```kotlin
-import com.suqi8.coui.kmp.squircle.squircleBorder
+import io.github.suqi8.coui.kmp.squircle.squircleBorder
 
 Modifier.squircleBorder(
     width = 1.dp,
@@ -201,7 +201,7 @@ non-shader Shape, etc.), build the path directly:
 
 ```kotlin
 import androidx.compose.ui.graphics.Path
-import com.suqi8.coui.kmp.squircle.addSquircleRect
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 
 val path = Path().apply {
     addSquircleRect(
@@ -222,7 +222,7 @@ modifier. Set it to `false` to force the `RoundedCornerShape` fallback at
 runtime — useful for visual preferences or A/B comparisons:
 
 ```kotlin
-import com.suqi8.coui.kmp.squircle.LocalSquircleEnabled
+import io.github.suqi8.coui.kmp.squircle.LocalSquircleEnabled
 
 CompositionLocalProvider(LocalSquircleEnabled provides userPrefersRoundedRects) {
     AppContent()

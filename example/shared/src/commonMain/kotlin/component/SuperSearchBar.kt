@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.animation.AnimatedVisibility
@@ -58,14 +57,14 @@ import androidx.compose.ui.zIndex
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.InputField
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.basic.Search
-import com.suqi8.coui.kmp.icon.basic.SearchCleanup
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.utils.overScrollVertical
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.InputField
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.basic.Search
+import io.github.suqi8.coui.kmp.icon.basic.SearchCleanup
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.overScrollVertical
 import utils.SearchStatus
 
 // Search Pager Composable

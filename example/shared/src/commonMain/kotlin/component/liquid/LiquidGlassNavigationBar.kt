@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component.liquid
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
@@ -64,25 +63,25 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.NavigationItem
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.blur.LayerBackdrop
-import com.suqi8.coui.kmp.blur.blur
-import com.suqi8.coui.kmp.blur.drawBackdrop
-import com.suqi8.coui.kmp.blur.highlight.BloomStroke
-import com.suqi8.coui.kmp.blur.highlight.Highlight
-import com.suqi8.coui.kmp.blur.highlight.LightPosition
-import com.suqi8.coui.kmp.blur.highlight.LightSource
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.blur.sensor.rememberDeviceTilt
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.LocalContentColor
-import com.suqi8.coui.kmp.utils.Platform
-import com.suqi8.coui.kmp.utils.platform
 import component.animation.DampedDragAnimation
 import component.animation.InteractiveHighlight
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.NavigationItem
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.blur.LayerBackdrop
+import io.github.suqi8.coui.kmp.blur.blur
+import io.github.suqi8.coui.kmp.blur.drawBackdrop
+import io.github.suqi8.coui.kmp.blur.highlight.BloomStroke
+import io.github.suqi8.coui.kmp.blur.highlight.Highlight
+import io.github.suqi8.coui.kmp.blur.highlight.LightPosition
+import io.github.suqi8.coui.kmp.blur.highlight.LightSource
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.blur.sensor.rememberDeviceTilt
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.LocalContentColor
+import io.github.suqi8.coui.kmp.utils.Platform
+import io.github.suqi8.coui.kmp.utils.platform
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch

@@ -7,9 +7,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TimePicker
-import com.suqi8.coui.kmp.basic.TimePickerDefaults
-import com.suqi8.coui.kmp.basic.TimeValue
+import io.github.suqi8.coui.kmp.basic.TimePicker
+import io.github.suqi8.coui.kmp.basic.TimePickerDefaults
+import io.github.suqi8.coui.kmp.basic.TimeValue
 ```
 
 ## 基本用法

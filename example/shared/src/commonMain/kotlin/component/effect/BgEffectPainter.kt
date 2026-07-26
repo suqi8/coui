@@ -1,11 +1,10 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component.effect
 
 import androidx.compose.ui.graphics.Brush
-import com.suqi8.coui.kmp.blur.RuntimeShader
-import com.suqi8.coui.kmp.blur.asBrush
+import io.github.suqi8.coui.kmp.blur.RuntimeShader
+import io.github.suqi8.coui.kmp.blur.asBrush
 import kotlin.math.cos
 import kotlin.math.sin
 

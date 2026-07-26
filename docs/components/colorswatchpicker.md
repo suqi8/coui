@@ -5,8 +5,8 @@ A horizontal row of circular color swatches with an animated selection ring, mir
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.ColorSwatchPicker
-import com.suqi8.coui.kmp.basic.ColorSwatchPickerDefaults
+import io.github.suqi8.coui.kmp.basic.ColorSwatchPicker
+import io.github.suqi8.coui.kmp.basic.ColorSwatchPickerDefaults
 ```
 
 ## Basic Usage

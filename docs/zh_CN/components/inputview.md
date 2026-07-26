@@ -5,8 +5,8 @@ ColorOS「卡片输入」：白卡（12dp 圆角）内包含可选的 16sp 中�
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.InputView
-import com.suqi8.coui.kmp.basic.InputViewDefaults
+import io.github.suqi8.coui.kmp.basic.InputView
+import io.github.suqi8.coui.kmp.basic.InputViewDefaults
 ```
 
 ## 基本用法

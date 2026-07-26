@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.foundation.Image
@@ -45,33 +44,33 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.CardDefaults
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.ScrollBehavior
-import com.suqi8.coui.kmp.basic.SmallTopAppBar
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.VerticalScrollBar
-import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
-import com.suqi8.coui.kmp.blur.BlendColorEntry
-import com.suqi8.coui.kmp.blur.BlurBlendMode
-import com.suqi8.coui.kmp.blur.BlurDefaults
-import com.suqi8.coui.kmp.blur.isRuntimeShaderSupported
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.textureBlur
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
-import com.suqi8.coui.kmp.preference.ArrowPreference
-import com.suqi8.coui.kmp.preference.OverlayDropdownPreference
-import com.suqi8.coui.kmp.preference.SwitchPreference
-import com.suqi8.coui.kmp.shared.generated.resources.Res
-import com.suqi8.coui.kmp.shared.generated.resources.ic_launcher
-import com.suqi8.coui.kmp.theme.COUITheme
 import component.BackNavigationIcon
 import component.blend.ColorBlendToken
 import component.effect.BgEffectBackground
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardDefaults
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.ScrollBehavior
+import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import io.github.suqi8.coui.kmp.blur.BlendColorEntry
+import io.github.suqi8.coui.kmp.blur.BlurBlendMode
+import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.shared.generated.resources.Res
+import io.github.suqi8.coui.kmp.shared.generated.resources.ic_launcher
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import misc.VersionInfo
 import navigation3.Route
 import org.jetbrains.compose.resources.painterResource

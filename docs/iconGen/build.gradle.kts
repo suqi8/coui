@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 plugins {
     kotlin("jvm")
     id("module.kotlin-jvm-toolchain")
@@ -13,11 +12,11 @@ dependencies {
 
 val iconsSourceDir =
     rootProject.layout.projectDirectory
-        .dir("coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/icon")
+        .dir("coui-ui/src/commonMain/kotlin/io/github/suqi8/coui/kmp/icon")
         .asFile
 val extendedIconsSourceDir =
     rootProject.layout.projectDirectory
-        .dir("coui-icons/src/commonMain/kotlin/com/suqi8/coui/kmp/icon")
+        .dir("coui-icons/src/commonMain/kotlin/io/github/suqi8/coui/kmp/icon")
         .asFile
 val outputDir = project.file("../public/icons")
 val docFile = project.file("../guide/icons.md")
@@ -32,7 +31,7 @@ tasks.register<JavaExec>("generateIcons") {
     description = "Generate SVGs from Compose ImageVector definitions"
     dependsOn(tasks.named("classes"))
     classpath = mainClasspath
-    mainClass.set("com.suqi8.coui.docs.icongen.MainKt")
+    mainClass.set("io.github.suqi8.coui.docs.icongen.MainKt")
     outputs.dir(outputDir)
     args =
         listOf(

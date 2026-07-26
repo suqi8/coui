@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -20,13 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.SliderDefaults
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.VerticalSlider
-import com.suqi8.coui.kmp.preference.RangeSliderPreference
-import com.suqi8.coui.kmp.preference.SliderPreference
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.SliderDefaults
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.VerticalSlider
+import io.github.suqi8.coui.kmp.preference.RangeSliderPreference
+import io.github.suqi8.coui.kmp.preference.SliderPreference
 
 fun LazyListScope.sliderSection() {
     item(key = "slider") {

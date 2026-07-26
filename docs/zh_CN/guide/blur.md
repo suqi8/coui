@@ -17,7 +17,7 @@ Android 上 `coui-blur` 要求 `minSdk` 33（Android 13）或更高。模糊、�
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
         }
     }
 }
@@ -27,7 +27,7 @@ Android 项目：
 
 ```kotlin
 dependencies {
-    implementation("com.suqi8.coui.kmp:coui-blur-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-blur-android:<version>")
 }
 ```
 
@@ -50,8 +50,8 @@ dependencies {
 Skiko 系（Desktop / iOS / macOS / Web）始终返回 `true`。
 
 ```kotlin
-import com.suqi8.coui.kmp.shader.isRenderEffectSupported
-import com.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.shader.isRenderEffectSupported
+import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 
 // API 32+（以及所有非 Android 目标）为 true。仅需要背景记录支架时（例如
 // 通过 `colorFilter(...)` 链一个 ColorFilter）适用。
@@ -72,11 +72,11 @@ val blurAndBlendSupported = isRuntimeShaderSupported()
 3. 在模糊表面上应用 `Modifier.textureBlur()`
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.BlurColors
-import com.suqi8.coui.kmp.blur.BlurDefaults
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.blur.BlurColors
+import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.blur.textureBlur
 
 // 第 1 步：创建 LayerBackdrop
 val backdrop = rememberLayerBackdrop()
@@ -135,9 +135,9 @@ Box(
 使用 `BlurColors` 在模糊效果之上应用颜色调整和混合图层：
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.BlendColorEntry
-import com.suqi8.coui.kmp.blur.BlurBlendMode
-import com.suqi8.coui.kmp.blur.BlurColors
+import io.github.suqi8.coui.kmp.blur.BlendColorEntry
+import io.github.suqi8.coui.kmp.blur.BlurBlendMode
+import io.github.suqi8.coui.kmp.blur.BlurColors
 
 val colors = BlurColors(
     blendColors = listOf(
@@ -346,7 +346,7 @@ Box(
 如需完全控制效果管线，可使用 `Modifier.drawBackdrop()` 配合 `BackdropEffectScope`：
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.drawBackdrop
+import io.github.suqi8.coui.kmp.blur.drawBackdrop
 
 Box(
     modifier = Modifier
@@ -472,7 +472,7 @@ Box(
 
 ```kotlin
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.suqi8.coui.kmp.blur.highlight.Highlight
+import io.github.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -490,9 +490,9 @@ Box(
 `highlight` lambda 与 `effects` 共用同一个 `BackdropEffectScope`，其返回值可随状态变化（如按压进度），并自动复用当前的 `size` / `shape`。
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.drawBackdrop
-import com.suqi8.coui.kmp.blur.blur
-import com.suqi8.coui.kmp.blur.highlight.Highlight
+import io.github.suqi8.coui.kmp.blur.drawBackdrop
+import io.github.suqi8.coui.kmp.blur.blur
+import io.github.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -532,9 +532,9 @@ Box(
 可基于 token 覆盖单个字段，或从零构建 `BloomStroke`：
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.highlight.BloomStroke
-import com.suqi8.coui.kmp.blur.highlight.LightPosition
-import com.suqi8.coui.kmp.blur.highlight.LightSource
+import io.github.suqi8.coui.kmp.blur.highlight.BloomStroke
+import io.github.suqi8.coui.kmp.blur.highlight.LightPosition
+import io.github.suqi8.coui.kmp.blur.highlight.LightSource
 
 val custom = Highlight(
     width = 1.dp,
@@ -563,7 +563,7 @@ val custom = Highlight(
 `rememberTiltLight` 通过设备旋转传感器实时偏移基准位置。Android 上会产生跟随设备倾斜的视差边缘；Desktop / iOS / macOS / Web 上 tilt 始终为零，光斑保持静止。
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.highlight.rememberTiltLight
+import io.github.suqi8.coui.kmp.blur.highlight.rememberTiltLight
 
 val baseStyle = Highlight.GlassStrokeMiddleLight.style as BloomStroke
 

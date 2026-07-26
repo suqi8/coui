@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.RadioButtonPreference
+import io.github.suqi8.coui.kmp.preference.RadioButtonPreference
 ```
 
 ## Basic Usage

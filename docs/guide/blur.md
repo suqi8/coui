@@ -18,7 +18,7 @@ Add the `coui-blur` dependency to your project:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.suqi8.coui.kmp:coui-blur:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
         }
     }
 }
@@ -28,7 +28,7 @@ For Android-only projects:
 
 ```kotlin
 dependencies {
-    implementation("com.suqi8.coui.kmp:coui-blur-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-blur-android:<version>")
 }
 ```
 
@@ -54,8 +54,8 @@ On Android they map to `Build.VERSION.SDK_INT` comparisons; on Skiko-based
 targets (Desktop, iOS, macOS, Web) they always return `true`.
 
 ```kotlin
-import com.suqi8.coui.kmp.shader.isRenderEffectSupported
-import com.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.shader.isRenderEffectSupported
+import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 
 // True on API 32+ (and all non-Android targets). Useful when you only need
 // the backdrop scaffold (e.g. a chained ColorFilter via `colorFilter(...)`).
@@ -77,11 +77,11 @@ Applying a backdrop blur involves three steps:
 3. Apply `Modifier.textureBlur()` on the blur surface
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.BlurColors
-import com.suqi8.coui.kmp.blur.BlurDefaults
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import com.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.blur.BlurColors
+import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.blur.textureBlur
 
 // Step 1: Create a LayerBackdrop
 val backdrop = rememberLayerBackdrop()
@@ -140,9 +140,9 @@ Box(
 Use `BlurColors` to apply color adjustments and blend layers on top of the blur:
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.BlendColorEntry
-import com.suqi8.coui.kmp.blur.BlurBlendMode
-import com.suqi8.coui.kmp.blur.BlurColors
+import io.github.suqi8.coui.kmp.blur.BlendColorEntry
+import io.github.suqi8.coui.kmp.blur.BlurBlendMode
+import io.github.suqi8.coui.kmp.blur.BlurColors
 
 val colors = BlurColors(
     blendColors = listOf(
@@ -351,7 +351,7 @@ Box(
 For full control over the effect pipeline, use `Modifier.drawBackdrop()` with `BackdropEffectScope`:
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.drawBackdrop
+import io.github.suqi8.coui.kmp.blur.drawBackdrop
 
 Box(
     modifier = Modifier
@@ -477,7 +477,7 @@ A `Highlight` paints a thin glassy edge with two directional lights along a roun
 
 ```kotlin
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.suqi8.coui.kmp.blur.highlight.Highlight
+import io.github.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -495,9 +495,9 @@ Box(
 The `highlight` lambda runs inside the same `BackdropEffectScope` as `effects`, so its return value can change with state (e.g. press progress) and pick up the current `size` / `shape` automatically.
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.drawBackdrop
-import com.suqi8.coui.kmp.blur.blur
-import com.suqi8.coui.kmp.blur.highlight.Highlight
+import io.github.suqi8.coui.kmp.blur.drawBackdrop
+import io.github.suqi8.coui.kmp.blur.blur
+import io.github.suqi8.coui.kmp.blur.highlight.Highlight
 
 Box(
     modifier = Modifier
@@ -537,9 +537,9 @@ Six presets are provided. Pick by card size and theme:
 Override individual fields on a token, or build a `BloomStroke` from scratch:
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.highlight.BloomStroke
-import com.suqi8.coui.kmp.blur.highlight.LightPosition
-import com.suqi8.coui.kmp.blur.highlight.LightSource
+import io.github.suqi8.coui.kmp.blur.highlight.BloomStroke
+import io.github.suqi8.coui.kmp.blur.highlight.LightPosition
+import io.github.suqi8.coui.kmp.blur.highlight.LightSource
 
 val custom = Highlight(
     width = 1.dp,
@@ -568,7 +568,7 @@ The two lights are restricted to opposite hemispheres by the shader: `primaryLig
 `rememberTiltLight` shifts a base position in real time using the device rotation sensor. On Android, this produces a parallax-like edge that follows device tilt; on Desktop / iOS / macOS / Web the tilt is always zero, so the lights stay anchored.
 
 ```kotlin
-import com.suqi8.coui.kmp.blur.highlight.rememberTiltLight
+import io.github.suqi8.coui.kmp.blur.highlight.rememberTiltLight
 
 val baseStyle = Highlight.GlassStrokeMiddleLight.style as BloomStroke
 

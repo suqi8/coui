@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.utils.PressFeedbackType // 如果使用交互式卡片
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.utils.PressFeedbackType // 如果使用交互式卡片
 ```
 
 ## 基本用法

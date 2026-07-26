@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TopTips
-import com.suqi8.coui.kmp.basic.TopTipsDefaults
+import io.github.suqi8.coui.kmp.basic.TopTips
+import io.github.suqi8.coui.kmp.basic.TopTipsDefaults
 ```
 
 ## 基本用法

@@ -9,8 +9,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.CheckboxPreference
-import com.suqi8.coui.kmp.preference.CheckboxLocation
+import io.github.suqi8.coui.kmp.preference.CheckboxPreference
+import io.github.suqi8.coui.kmp.preference.CheckboxLocation
 ```
 
 ## 基本用法

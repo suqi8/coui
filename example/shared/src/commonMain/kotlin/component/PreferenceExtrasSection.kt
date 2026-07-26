@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.padding
@@ -11,14 +10,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.HorizontalDivider
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.preference.ButtonPreference
-import com.suqi8.coui.kmp.preference.MarkPreference
-import com.suqi8.coui.kmp.preference.RecommendedItem
-import com.suqi8.coui.kmp.preference.RecommendedPreference
-import com.suqi8.coui.kmp.preference.SwitchLoadingPreference
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.preference.ButtonPreference
+import io.github.suqi8.coui.kmp.preference.MarkPreference
+import io.github.suqi8.coui.kmp.preference.RecommendedItem
+import io.github.suqi8.coui.kmp.preference.RecommendedPreference
+import io.github.suqi8.coui.kmp.preference.SwitchLoadingPreference
 import kotlinx.coroutines.delay
 
 fun LazyListScope.preferenceExtrasSection() {

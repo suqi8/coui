@@ -24,8 +24,8 @@ popupHost: COUIPopupHost
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlayListPopup
-import com.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
+import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 ```
 
 ## 基本用法

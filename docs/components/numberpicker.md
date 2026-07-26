@@ -9,7 +9,7 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.NumberPicker
+import io.github.suqi8.coui.kmp.basic.NumberPicker
 ```
 
 ## Basic Usage

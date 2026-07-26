@@ -21,7 +21,7 @@ Each `Scaffold` automatically manages its own isolated popup state. Multiple nes
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.Scaffold
 ```
 
 ## Basic Usage

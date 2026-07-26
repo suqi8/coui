@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
@@ -67,7 +66,7 @@ kotlin {
 
 baselineProfile {
     filter {
-        include("com.suqi8.coui.kmp.**")
+        include("io.github.suqi8.coui.kmp.**")
     }
 }
 
@@ -79,43 +78,43 @@ val convertBaselineProfile by tasks.registering(ConvertBaselineProfileTask::clas
     outputFile.set(
         layout.projectDirectory.file("src/androidMain/baselineProfiles/baseline-prof.txt"),
     )
-    targetPackage.set("com/suqi8/coui/kmp/")
+    targetPackage.set("io/github/suqi8/coui/kmp/")
     excludePackages.set(
         listOf(
-            "com/suqi8/coui/kmp/icon/extended/",
-            "com/suqi8/coui/kmp/shared/",
+            "io/github/suqi8/coui/kmp/icon/extended/",
+            "io/github/suqi8/coui/kmp/shared/",
         ),
     )
     additionalOutputs.put(
-        "com/suqi8/coui/kmp/preference/",
+        "io/github/suqi8/coui/kmp/preference/",
         rootProject.layout.projectDirectory
             .file(
                 "coui-preference/src/androidMain/baselineProfiles/baseline-prof.txt",
             ).asFile.absolutePath,
     )
     additionalOutputs.put(
-        "com/suqi8/coui/kmp/blur/",
+        "io/github/suqi8/coui/kmp/blur/",
         rootProject.layout.projectDirectory
             .file(
                 "coui-blur/src/androidMain/baselineProfiles/baseline-prof.txt",
             ).asFile.absolutePath,
     )
     additionalOutputs.put(
-        "com/suqi8/coui/kmp/navigation3/ui/",
+        "io/github/suqi8/coui/kmp/navigation3/ui/",
         rootProject.layout.projectDirectory
             .file(
                 "coui-navigation3-ui/src/androidMain/baselineProfiles/baseline-prof.txt",
             ).asFile.absolutePath,
     )
     additionalOutputs.put(
-        "com/suqi8/coui/kmp/shader/",
+        "io/github/suqi8/coui/kmp/shader/",
         rootProject.layout.projectDirectory
             .file(
                 "coui-shader/src/androidMain/baselineProfiles/baseline-prof.txt",
             ).asFile.absolutePath,
     )
     additionalOutputs.put(
-        "com/suqi8/coui/kmp/squircle/",
+        "io/github/suqi8/coui/kmp/squircle/",
         rootProject.layout.projectDirectory
             .file(
                 "coui-squircle/src/androidMain/baselineProfiles/baseline-prof.txt",

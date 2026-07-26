@@ -7,10 +7,10 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.ListPreference
-import com.suqi8.coui.kmp.preference.ListPreferenceDefaults
-import com.suqi8.coui.kmp.preference.ListPreferenceEntry
-import com.suqi8.coui.kmp.preference.MultiSelectListPreference
+import io.github.suqi8.coui.kmp.preference.ListPreference
+import io.github.suqi8.coui.kmp.preference.ListPreferenceDefaults
+import io.github.suqi8.coui.kmp.preference.ListPreferenceEntry
+import io.github.suqi8.coui.kmp.preference.MultiSelectListPreference
 ```
 
 ## 基本用法

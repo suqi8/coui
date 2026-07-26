@@ -5,9 +5,9 @@ A hint red dot mirroring ColorOS's COUIHintRedDot, with three forms: a plain 6dp
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Badge
-import com.suqi8.coui.kmp.basic.BadgeBox
-import com.suqi8.coui.kmp.basic.BadgeDefaults
+import io.github.suqi8.coui.kmp.basic.Badge
+import io.github.suqi8.coui.kmp.basic.BadgeBox
+import io.github.suqi8.coui.kmp.basic.BadgeDefaults
 ```
 
 ## Basic Usage

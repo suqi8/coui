@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,15 +18,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.SnackbarDuration
+import io.github.suqi8.coui.kmp.basic.SnackbarHost
+import io.github.suqi8.coui.kmp.basic.SnackbarHostState
+import io.github.suqi8.coui.kmp.basic.SnackbarResult
+import io.github.suqi8.coui.kmp.basic.TextButton
 import kotlinx.coroutines.launch
-import com.suqi8.coui.kmp.basic.ButtonDefaults
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.SnackbarDuration
-import com.suqi8.coui.kmp.basic.SnackbarHost
-import com.suqi8.coui.kmp.basic.SnackbarHostState
-import com.suqi8.coui.kmp.basic.SnackbarResult
-import com.suqi8.coui.kmp.basic.TextButton
 
 @Composable
 fun SnackbarDemo() {

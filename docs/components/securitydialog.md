@@ -14,12 +14,12 @@ Two variants are provided:
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlaySecurityDialog
+import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
 // or
-import com.suqi8.coui.kmp.window.WindowSecurityDialog
+import io.github.suqi8.coui.kmp.window.WindowSecurityDialog
 
-import com.suqi8.coui.kmp.layout.SecurityDialogDefaults
-import com.suqi8.coui.kmp.layout.SecurityDialogColors
+import io.github.suqi8.coui.kmp.layout.SecurityDialogDefaults
+import io.github.suqi8.coui.kmp.layout.SecurityDialogColors
 ```
 
 ## Basic Usage

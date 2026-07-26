@@ -24,8 +24,8 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlayBottomSheet
-import com.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## Basic Usage

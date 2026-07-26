@@ -5,8 +5,8 @@ The ColorOS "card input": a white card (12dp corners) holding an optional 16sp m
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.InputView
-import com.suqi8.coui.kmp.basic.InputViewDefaults
+import io.github.suqi8.coui.kmp.basic.InputView
+import io.github.suqi8.coui.kmp.basic.InputViewDefaults
 ```
 
 ## Basic Usage

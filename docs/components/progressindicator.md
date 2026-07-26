@@ -9,9 +9,9 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.LinearProgressIndicator // Linear progress bar
-import com.suqi8.coui.kmp.basic.CircularProgressIndicator // Circular progress indicator
-import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator // Infinite spinning indicator
+import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator // Linear progress bar
+import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator // Circular progress indicator
+import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // Infinite spinning indicator
 ```
 
 ## Basic Usage

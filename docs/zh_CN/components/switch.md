@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Switch
+import io.github.suqi8.coui.kmp.basic.Switch
 ```
 
 ## 基本用法

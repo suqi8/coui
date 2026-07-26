@@ -7,9 +7,9 @@ Dates are represented by the plain `DateValue` data class, so no date/time libra
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.DatePicker
-import com.suqi8.coui.kmp.basic.DatePickerDefaults
-import com.suqi8.coui.kmp.basic.DateValue
+import io.github.suqi8.coui.kmp.basic.DatePicker
+import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
+import io.github.suqi8.coui.kmp.basic.DateValue
 ```
 
 ## Basic Usage

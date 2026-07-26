@@ -23,8 +23,8 @@ popupHost: None
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.window.WindowDialog
-import com.suqi8.coui.kmp.theme.LocalDismissState
+import io.github.suqi8.coui.kmp.window.WindowDialog
+import io.github.suqi8.coui.kmp.theme.LocalDismissState
 ```
 
 ## 基本用法

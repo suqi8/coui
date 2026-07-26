@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Stepper
-import com.suqi8.coui.kmp.basic.StepperDefaults
+import io.github.suqi8.coui.kmp.basic.Stepper
+import io.github.suqi8.coui.kmp.basic.StepperDefaults
 ```
 
 ## 基本用法

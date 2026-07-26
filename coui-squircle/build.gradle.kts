@@ -1,6 +1,5 @@
 // Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import kotlin.io.encoding.Base64
 import kotlin.math.sqrt
@@ -153,7 +152,7 @@ val bakeSquircleSdf by tasks.registering(BakeSquircleSdfTask::class) {
     size.set(512)
     halfRange.set(0.125f)
     bezierSamples.set(64)
-    packageName.set("com.suqi8.coui.kmp.squircle.internal")
+    packageName.set("io.github.suqi8.coui.kmp.squircle.internal")
     outputDir.set(layout.buildDirectory.dir("generated/baked-sdf"))
 }
 

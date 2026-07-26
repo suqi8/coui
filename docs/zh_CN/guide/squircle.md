@@ -25,7 +25,7 @@
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("com.suqi8.coui.kmp:coui-squircle:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-squircle:<version>")
         }
     }
 }
@@ -35,7 +35,7 @@ Android 项目：
 
 ```kotlin
 dependencies {
-    implementation("com.suqi8.coui.kmp:coui-squircle-android:<version>")
+    implementation("io.github.suqi8.coui.kmp:coui-squircle-android:<version>")
 }
 ```
 
@@ -58,7 +58,7 @@ dependencies {
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.squircle.squircleBackground
 
 Box(
     modifier = Modifier
@@ -119,7 +119,7 @@ Modifier.squircleClip(cornerRadius = 16.dp)
 shader），比 shader 变体更便宜。
 
 ```kotlin
-import com.suqi8.coui.kmp.squircle.squircleBorder
+import io.github.suqi8.coui.kmp.squircle.squircleBorder
 
 Modifier.squircleBorder(
     width = 1.dp,
@@ -190,7 +190,7 @@ Modifier.squircleBackground(
 
 ```kotlin
 import androidx.compose.ui.graphics.Path
-import com.suqi8.coui.kmp.squircle.addSquircleRect
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 
 val path = Path().apply {
     addSquircleRect(
@@ -211,7 +211,7 @@ modifier。置为 `false` 时所有 modifier 在运行时切换到 `RoundedCorne
 回退，适合用户偏好或 A/B 对比：
 
 ```kotlin
-import com.suqi8.coui.kmp.squircle.LocalSquircleEnabled
+import io.github.suqi8.coui.kmp.squircle.LocalSquircleEnabled
 
 CompositionLocalProvider(LocalSquircleEnabled provides userPrefersRoundedRects) {
     AppContent()

@@ -23,9 +23,9 @@ This component does not rely on `Scaffold` and can be used in any Composable sco
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.WindowSpinnerPreference
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.preference.WindowSpinnerPreference
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## Basic Usage

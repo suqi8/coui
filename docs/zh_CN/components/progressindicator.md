@@ -9,9 +9,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.LinearProgressIndicator // 线性进度条
-import com.suqi8.coui.kmp.basic.CircularProgressIndicator // 环形进度条
-import com.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
+import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator // 线性进度条
+import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator // 环形进度条
+import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
 ```
 
 ## 基本用法

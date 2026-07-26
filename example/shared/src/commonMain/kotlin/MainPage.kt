@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:OptIn(ExperimentalScrollBarApi::class)
 
 import androidx.compose.foundation.clickable
@@ -27,28 +26,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.suqi8.coui.kmp.basic.BasicComponent
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
-import com.suqi8.coui.kmp.basic.Icon
-import com.suqi8.coui.kmp.basic.InputField
-import com.suqi8.coui.kmp.basic.Scaffold
-import com.suqi8.coui.kmp.basic.SearchBar
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.SnackbarHostState
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.VerticalScrollBar
-import com.suqi8.coui.kmp.basic.rememberScrollBarAdapter
-import com.suqi8.coui.kmp.blur.layerBackdrop
-import com.suqi8.coui.kmp.icon.COUIIcons
-import com.suqi8.coui.kmp.icon.extended.SelectAll
-import com.suqi8.coui.kmp.icon.extended.Sort
-import com.suqi8.coui.kmp.icon.extended.Tune
-import com.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
-import com.suqi8.coui.kmp.menu.OverlayIconCascadingDropdownMenu
-import com.suqi8.coui.kmp.menu.OverlayIconDropdownMenu
-import com.suqi8.coui.kmp.theme.COUITheme
 import component.arrowSection
 import component.badgeSection
 import component.basicComponentSection
@@ -78,6 +55,28 @@ import component.switchSection
 import component.tabRowSection
 import component.textFieldSection
 import component.tooltipSection
+import io.github.suqi8.coui.kmp.basic.BasicComponent
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.InputField
+import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.basic.SearchBar
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.SnackbarHostState
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.SelectAll
+import io.github.suqi8.coui.kmp.icon.extended.Sort
+import io.github.suqi8.coui.kmp.icon.extended.Tune
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.menu.OverlayIconCascadingDropdownMenu
+import io.github.suqi8.coui.kmp.menu.OverlayIconDropdownMenu
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.BlurredBar
 import utils.pageContentPadding

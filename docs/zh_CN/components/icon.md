@@ -13,7 +13,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.Icon
 ```
 
 ## 基本用法

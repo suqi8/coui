@@ -9,8 +9,8 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.utils.PressFeedbackType // If using interactive card
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.utils.PressFeedbackType // If using interactive card
 ```
 
 ## Basic Usage

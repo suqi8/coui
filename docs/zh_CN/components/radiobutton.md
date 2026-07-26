@@ -9,7 +9,7 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.RadioButton
+import io.github.suqi8.coui.kmp.basic.RadioButton
 ```
 
 ## 基本用法

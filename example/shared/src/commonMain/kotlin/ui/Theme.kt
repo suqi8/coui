@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -9,11 +8,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import com.suqi8.coui.kmp.theme.COUITheme
-import com.suqi8.coui.kmp.theme.ColorSchemeMode
-import com.suqi8.coui.kmp.theme.ThemeColorSpec
-import com.suqi8.coui.kmp.theme.ThemeController
-import com.suqi8.coui.kmp.theme.ThemePaletteStyle
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.theme.ColorSchemeMode
+import io.github.suqi8.coui.kmp.theme.ThemeColorSpec
+import io.github.suqi8.coui.kmp.theme.ThemeController
+import io.github.suqi8.coui.kmp.theme.ThemePaletteStyle
 
 val LocalColorMode = compositionLocalOf { 0 }
 

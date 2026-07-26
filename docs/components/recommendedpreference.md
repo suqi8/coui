@@ -7,9 +7,9 @@ Nothing is rendered when `items` is empty, matching `COUIRecommendedPreference.s
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.RecommendedPreference
-import com.suqi8.coui.kmp.preference.RecommendedItem
-import com.suqi8.coui.kmp.preference.RecommendedPreferenceDefaults
+import io.github.suqi8.coui.kmp.preference.RecommendedPreference
+import io.github.suqi8.coui.kmp.preference.RecommendedItem
+import io.github.suqi8.coui.kmp.preference.RecommendedPreferenceDefaults
 ```
 
 ## Basic Usage

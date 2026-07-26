@@ -47,7 +47,7 @@
 | `com.android.systemui` | 状态栏 / 通知 / 控制中心：圆角、模糊、Toast/Snackbar 观感 |
 | `com.android.launcher` | 桌面 / 文件夹：动效曲线、squircle 圆角参数 |
 | `com.heytap.themestore` / `com.oplus.themestore` | 主题商店：强调色色板、动态取色参考 |
-| `com.suqi8.coui.uitest` | 用户自建的 COUI 测试 app（包前缀与 OShin `com.suqi8.*` 同源），可作落地验证场 |
+| `io.github.suqi8.coui.uitest` | 用户自建的 COUI 测试 app（包前缀与 OShin `io.github.suqi8.*` 同源），可作落地验证场 |
 
 COUI 控件资源历史上常以 `couiXxx` / `coloros_xxx` / `oplus_xxx` 命名（颜色、dimen、style）。framework 级 COUI 资源可能在 RRO overlay 里：`com.oplus.framework.res.overlay`、`com.oplus.framework.rro.oneplus`、`com.android.systemui.oplus.res.overlay`（`adb shell cmd overlay list | grep oplus` 查看）。
 
@@ -57,7 +57,7 @@ Miuix 的视觉语言**高度集中在 `theme/` 层**，组件全部走 `COUIThe
 
 | 抓手 | 文件 | 改什么 |
 | :--- | :--- | :--- |
-| 配色 | `coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/theme/Colors.kt` | `lightColorScheme()` / `darkColorScheme()` 的默认色值（约 50 个色槽）。当前主色是 HyperOS 蓝 `#3482FF`，COUI 应换成 ColorOS 主色 |
+| 配色 | `coui-ui/src/commonMain/kotlin/io/github/suqi8/coui/kmp/theme/Colors.kt` | `lightColorScheme()` / `darkColorScheme()` 的默认色值（约 50 个色槽）。当前主色是 HyperOS 蓝 `#3482FF`，COUI 应换成 ColorOS 主色 |
 | 字体 | `…/theme/TextStyles.kt` | `Main/Body/Title/...` 的 `fontSize` / `fontWeight` / `lineHeight`。当前主字号 17sp |
 | 形状 | 各组件 `ComponentDefaults.CornerRadius` + `coui-squircle/` | COUI 圆角偏大且是连续曲率（squircle）；本仓库已内置 `coui-squircle`，校准 squircle 平滑度参数即可 |
 | 动效 | `…/anim/` | 缓动曲线 / 时长 |

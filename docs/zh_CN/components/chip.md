@@ -5,8 +5,8 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Chip
-import com.suqi8.coui.kmp.basic.ChipDefaults
+import io.github.suqi8.coui.kmp.basic.Chip
+import io.github.suqi8.coui.kmp.basic.ChipDefaults
 ```
 
 ## 基本用法

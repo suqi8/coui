@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package utils
 
 import androidx.compose.foundation.background
@@ -10,7 +9,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import com.suqi8.coui.kmp.theme.COUITheme.colorScheme
+import io.github.suqi8.coui.kmp.theme.COUITheme.colorScheme
 
 @Stable
 data class SearchStatus(

@@ -1,12 +1,11 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component.liquid
 
 // Adapted from Kyant0/AndroidLiquidGlass — https://github.com/Kyant0/AndroidLiquidGlass (Apache 2.0).
 
-import com.suqi8.coui.kmp.blur.BackdropEffectScope
-import com.suqi8.coui.kmp.blur.colorControls
+import io.github.suqi8.coui.kmp.blur.BackdropEffectScope
+import io.github.suqi8.coui.kmp.blur.colorControls
 
 /** Lightweight stand-in for Kyant's `vibrancy()`. */
 fun BackdropEffectScope.vibrancy() {

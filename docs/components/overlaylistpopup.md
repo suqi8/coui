@@ -24,8 +24,8 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.overlay.OverlayListPopup
-import com.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
+import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 ```
 
 ## Basic Usage

@@ -11,10 +11,10 @@ This component is typically used in conjunction with the `Scaffold` component to
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TopAppBar
-import com.suqi8.coui.kmp.basic.SmallTopAppBar
-import com.suqi8.coui.kmp.basic.COUIScrollBehavior
-import com.suqi8.coui.kmp.basic.rememberTopAppBarState
+import io.github.suqi8.coui.kmp.basic.TopAppBar
+import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
 
 ## Basic Usage

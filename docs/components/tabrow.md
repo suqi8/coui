@@ -9,8 +9,8 @@
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.TabRow // Standard style (frameless)
-import com.suqi8.coui.kmp.basic.TabRowWithContour // Contour style (segment button)
+import io.github.suqi8.coui.kmp.basic.TabRow // Standard style (frameless)
+import io.github.suqi8.coui.kmp.basic.TabRowWithContour // Contour style (segment button)
 ```
 
 ## Basic Usage

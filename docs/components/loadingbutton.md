@@ -5,8 +5,8 @@ A text button with a built-in loading state, mirroring ColorOS's COUILoadingButt
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.LoadingButton
-import com.suqi8.coui.kmp.basic.LoadingButtonDefaults
+import io.github.suqi8.coui.kmp.basic.LoadingButton
+import io.github.suqi8.coui.kmp.basic.LoadingButtonDefaults
 ```
 
 ## Basic Usage

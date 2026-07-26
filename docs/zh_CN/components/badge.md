@@ -5,9 +5,9 @@
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.Badge
-import com.suqi8.coui.kmp.basic.BadgeBox
-import com.suqi8.coui.kmp.basic.BadgeDefaults
+import io.github.suqi8.coui.kmp.basic.Badge
+import io.github.suqi8.coui.kmp.basic.BadgeBox
+import io.github.suqi8.coui.kmp.basic.BadgeDefaults
 ```
 
 ## 基本用法

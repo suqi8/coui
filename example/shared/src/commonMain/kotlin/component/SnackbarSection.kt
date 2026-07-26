@@ -1,6 +1,5 @@
-// Copyright 2025, compose-miuix-ui contributors
+// Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -16,13 +15,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.ButtonDefaults
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.SnackbarDuration
-import com.suqi8.coui.kmp.basic.SnackbarHostState
-import com.suqi8.coui.kmp.basic.SnackbarResult
-import com.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.SnackbarDuration
+import io.github.suqi8.coui.kmp.basic.SnackbarHostState
+import io.github.suqi8.coui.kmp.basic.SnackbarResult
+import io.github.suqi8.coui.kmp.basic.TextButton
 import kotlinx.coroutines.launch
 
 fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {

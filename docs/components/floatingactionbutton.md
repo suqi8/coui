@@ -11,7 +11,7 @@ This component is typically used in conjunction with the `Scaffold` component to
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.basic.FloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButton
 ```
 
 ## Basic Usage

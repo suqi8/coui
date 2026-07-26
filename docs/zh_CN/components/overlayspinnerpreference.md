@@ -24,9 +24,9 @@ popupHost: COUIPopupHost
 ## 引入
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.OverlaySpinnerPreference
-import com.suqi8.coui.kmp.basic.DropdownEntry
-import com.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.preference.OverlaySpinnerPreference
+import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
 
 ## 基本用法

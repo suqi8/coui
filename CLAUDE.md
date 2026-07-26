@@ -47,7 +47,7 @@ Before committing, run `./gradlew spotlessCheck`; only run `./gradlew spotlessAp
 
 ### Component Source Layout
 
-`coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/`:
+`coui-ui/src/commonMain/kotlin/io/github/suqi8/coui/kmp/`:
 
 | Subdir        | Contents                                                        |
 | :------------ | :-------------------------------------------------------------- |
@@ -62,7 +62,7 @@ Before committing, run `./gradlew spotlessCheck`; only run `./gradlew spotlessAp
 | `icon/`       | Built-in basic icons (ArrowRight, Check, Search, …)             |
 | `interfaces/` | Shared interfaces                                               |
 
-`coui-preference/src/commonMain/kotlin/com/suqi8/coui/kmp/`:
+`coui-preference/src/commonMain/kotlin/io/github/suqi8/coui/kmp/`:
 
 | Subdir        | Contents                                                        |
 | :------------ | :-------------------------------------------------------------- |
@@ -198,7 +198,7 @@ data class ButtonColors(
 
 ### Adding a New Component
 
-1. Create the `@Composable` function in `coui-ui/src/commonMain/kotlin/com/suqi8/coui/kmp/basic/` (or `preference/` in `coui-preference` for preference components)
+1. Create the `@Composable` function in `coui-ui/src/commonMain/kotlin/io/github/suqi8/coui/kmp/basic/` (or `preference/` in `coui-preference` for preference components)
 2. Follow API conventions above (parameter ordering, Defaults object, Colors data class)
 3. Add a demo section in `example/shared/src/commonMain/kotlin/component/`
 4. Register the demo in the example app

@@ -1,6 +1,5 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 @file:Suppress("UnstableApiUsage")
 
 rootProject.name = "compose-coui-ui"

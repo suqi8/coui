@@ -7,8 +7,8 @@ Use a group of `MarkPreference` rows as a single-select list: clicking a row inv
 ## Import
 
 ```kotlin
-import com.suqi8.coui.kmp.preference.MarkPreference
-import com.suqi8.coui.kmp.preference.MarkLocation
+import io.github.suqi8.coui.kmp.preference.MarkPreference
+import io.github.suqi8.coui.kmp.preference.MarkLocation
 ```
 
 ## Basic Usage

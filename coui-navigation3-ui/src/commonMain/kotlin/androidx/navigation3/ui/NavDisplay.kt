@@ -92,7 +92,7 @@ import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEventTransitionState.Idle
 import androidx.navigationevent.NavigationEventTransitionState.InProgress
 import androidx.navigationevent.compose.NavigationEventState
-import com.suqi8.coui.kmp.squircle.absoluteSquircleClip
+import io.github.suqi8.coui.kmp.squircle.absoluteSquircleClip
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch

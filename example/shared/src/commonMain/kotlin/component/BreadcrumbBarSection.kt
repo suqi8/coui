@@ -1,6 +1,5 @@
-// Copyright 2026, compose-miuix-ui contributors
+// Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
 package component
 
 import androidx.compose.foundation.layout.Arrangement
@@ -15,13 +14,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.suqi8.coui.kmp.basic.BreadcrumbBar
-import com.suqi8.coui.kmp.basic.BreadcrumbItem
-import com.suqi8.coui.kmp.basic.Card
-import com.suqi8.coui.kmp.basic.SmallTitle
-import com.suqi8.coui.kmp.basic.Text
-import com.suqi8.coui.kmp.basic.joinToPath
-import com.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.basic.BreadcrumbBar
+import io.github.suqi8.coui.kmp.basic.BreadcrumbItem
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.joinToPath
+import io.github.suqi8.coui.kmp.theme.COUITheme
 
 fun LazyListScope.breadcrumbBarSection() {
     item(key = "breadcrumbBar") {
