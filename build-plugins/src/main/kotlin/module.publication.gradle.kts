@@ -39,8 +39,8 @@ val javadocJar by tasks.registering(Jar::class) {
     archiveClassifier.set("javadoc")
 }
 
-val projectUrl = "https://github.com/compose-coui-ui/coui"
-val githubPackagesUrl = "https://maven.pkg.github.com/compose-coui-ui/coui"
+val projectUrl = "https://github.com/suqi8/COUI"
+val githubPackagesUrl = "https://maven.pkg.github.com/suqi8/COUI"
 val sonatypePackageUrl = layout.buildDirectory.dir("publishing/mavenCentral")
 val localPackageUrl = layout.buildDirectory.dir("repository/local")
 
@@ -91,9 +91,9 @@ publishing {
             }
             developers {
                 developer {
-                    id.set("compose-coui-ui")
-                    name.set("compose-coui-ui")
-                    url.set("https://github.com/compose-coui-ui")
+                    id.set("suqi8")
+                    name.set("suqi8")
+                    url.set("https://github.com/suqi8")
                 }
             }
         }

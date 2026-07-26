@@ -16,7 +16,13 @@ spotless {
 
     kotlin {
         target("src/**/*.kt")
-        targetExclude("**/build/**/*.kt", "**/icon/**/*.kt")
+        targetExclude(
+            "**/build/**/*.kt",
+            "**/icon/**/*.kt",
+            "**/navigation3/ListUtils.kt",
+            "**/navigation3/scene/*.kt",
+            "**/navigation3/ui/*.kt",
+        )
         ktlint()
             .customRuleSets(listOf(composeKtlintRules))
             .editorConfigOverride(

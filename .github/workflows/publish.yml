@@ -5,14 +5,15 @@ on:
     branches: ["main"]
     tags: ["*"]
     paths:
-      - "miuix-core/**"
-      - "miuix-ui/**"
-      - "miuix-preference/**"
-      - "miuix-shader/**"
-      - "miuix-blur/**"
-      - "miuix-squircle/**"
-      - "miuix-icons/**"
-      - "miuix-nav/**"
+      - "coui-core/**"
+      - "coui-ui/**"
+      - "coui-preference/**"
+      - "coui-shader/**"
+      - "coui-blur/**"
+      - "coui-squircle/**"
+      - "coui-icons/**"
+      - "coui-nav/**"
+      - "coui-navigation3-ui/**"
       - "build-plugins/**"
       - "gradle/**"
       - "settings.gradle.kts"

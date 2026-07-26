@@ -1,3 +1,2 @@
-// Copyright $YEAR, compose-miuix-ui contributors
+// Copyright $YEAR, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
-
