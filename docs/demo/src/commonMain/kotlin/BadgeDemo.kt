@@ -15,10 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Badge
-import io.github.suqi8.coui.kmp.basic.BadgedBox
+import io.github.suqi8.coui.kmp.basic.BadgeBox
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.Icon
-import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Email
 import io.github.suqi8.coui.kmp.icon.extended.Favorites
@@ -51,28 +50,28 @@ fun BadgeDemo() {
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        BadgedBox(badge = { Badge() }) {
+                        BadgeBox(badge = { Badge() }) {
                             Icon(
                                 imageVector = COUIIcons.Messages,
                                 contentDescription = "Messages",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
-                        BadgedBox(badge = { Badge { Text("8") } }) {
+                        BadgeBox(badge = { Badge(count = 8) }) {
                             Icon(
                                 imageVector = COUIIcons.Email,
                                 contentDescription = "Email",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
-                        BadgedBox(badge = { Badge { Text("99+") } }) {
+                        BadgeBox(badge = { Badge(count = 99) }) {
                             Icon(
                                 imageVector = COUIIcons.Settings,
                                 contentDescription = "Settings",
                                 modifier = Modifier.size(28.dp),
                             )
                         }
-                        BadgedBox(badge = { Badge { Text("5") } }) {
+                        BadgeBox(badge = { Badge(count = 1000) }) {
                             Icon(
                                 imageVector = COUIIcons.Favorites,
                                 contentDescription = "Favorites",

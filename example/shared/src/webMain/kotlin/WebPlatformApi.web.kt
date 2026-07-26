@@ -32,6 +32,20 @@ private external fun hideLoading()
 )
 private external fun getCssVar(name: String): Double
 
+@OptIn(ExperimentalWasmJsInterop::class)
+@JsFun(
+    """
+        function setFontProgress(done, total) {
+            if (window.__couiLoading && window.__couiLoading.fontProgress) {
+                window.__couiLoading.fontProgress(done, total);
+            }
+        }
+    """,
+)
+private external fun setFontProgress(done: Int, total: Int)
+
 fun platformHideLoading() = hideLoading()
 
 fun platformGetCssVar(name: String): Double = getCssVar(name)
+
+fun platformSetFontProgress(done: Int, total: Int) = setFontProgress(done, total)

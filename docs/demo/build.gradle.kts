@@ -27,7 +27,8 @@ kotlin {
             api(projects.couiUi)
             api(projects.couiPreference)
             implementation(projects.couiIcons)
-            implementation(projects.couiNav)
+            implementation(projects.couiNavigation3Ui)
+            implementation(libs.androidx.navigation3.runtime)
         }
     }
 }
