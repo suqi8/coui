@@ -1,13 +1,15 @@
-## Miuix
+## COUI
 
-A UI library for Compose Multiplatform.
+A ColorOS-styled UI library for Compose Multiplatform, based on [Miuix](https://github.com/compose-miuix-ui/miuix).
 
+> Components are calibrated against ColorOS 16 (COUI) design: colors, metrics, motion curves and press feedback are transcribed from the real system implementation.
+>
 > This library is experimental. APIs may change without notice.
 
-[![Kotlin](https://img.shields.io/badge/kotlin-2.3.21-7F52FF)](https://kotlinlang.org/)
-[![Compose Multiplatform](https://img.shields.io/badge/compose-1.11.0-4285F4)](https://kotlinlang.org/compose-multiplatform/)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/coui-ui)](https://search.maven.org/search?q=g:io.github.suqi8.coui.kmp)
-[![License](https://img.shields.io/github/license/compose-coui-ui/miuix)](LICENSE)
+[![Kotlin](https://img.shields.io/badge/kotlin-2.4.10-7F52FF)](https://kotlinlang.org/)
+[![Compose Multiplatform](https://img.shields.io/badge/compose-1.11.1-4285F4)](https://kotlinlang.org/compose-multiplatform/)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.suqi8.coui.kmp/coui-ui)](https://central.sonatype.com/search?q=g:io.github.suqi8.coui.kmp)
+[![License](https://img.shields.io/github/license/suqi8/coui)](LICENSE)
 
 ### Supported Platforms
 
@@ -18,37 +20,37 @@ A UI library for Compose Multiplatform.
 ![JsCanvas](https://img.shields.io/badge/Web-JsCanvas-F7DF1E?logo=javascript&logoColor=white)
 ![WasmJs](https://img.shields.io/badge/Web-WasmJs-654FF0?logo=webassembly&logoColor=white)
 
-### Demos
+### Documentation & Demo
 
-[![JsCanvas](https://img.shields.io/badge/Demo-JsCanvas-F7DF1E?logo=javascript&logoColor=white)](https://compose-coui-ui.github.io/miuix-jsCanvas/)
-[![WasmJs](https://img.shields.io/badge/Demo-WasmJs-654FF0?logo=webassembly&logoColor=white)](https://compose-coui-ui.github.io/miuix-wasmJs/)
-[![Other](https://img.shields.io/badge/Demo-Other-white?logo=githubactions&logoColor=white)](https://github.com/compose-coui-ui/miuix/actions/workflows/example.yml)
+[![Docs](https://img.shields.io/badge/Docs-VitePress-3EAF7C?logo=vitepress&logoColor=white)](https://suqi8.github.io/coui/)
+[![WasmJs Demo](https://img.shields.io/badge/Demo-WasmJs-654FF0?logo=webassembly&logoColor=white)](https://suqi8.github.io/coui/example/)
+[![Other](https://img.shields.io/badge/Demo-Other-white?logo=githubactions&logoColor=white)](https://github.com/suqi8/coui/actions/workflows/example.yml)
 
 ### Modules
 
-| Module                 | Description                                                                                               |
-| ---------------------- | --------------------------------------------------------------------------------------------------------- |
-| `coui-ui`             | Core UI component library (automatically includes `coui-core`)                                           |
-| `coui-preference`     | Preference components (SwitchPreference, CheckboxPreference, etc.), depends on `coui-ui`                 |
-| `coui-icons`          | Extended icon library, can be used independently or with `coui-ui` (automatically includes `coui-core`) |
-| `coui-blur`           | Blur effect library, can be used independently                                                            |
-| `coui-navigation3-ui` | Navigation3 UI library, can be used independently                                                         |
+| Module                 | Description                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| `coui-ui`              | Core UI component library (automatically includes `coui-core`)                                          |
+| `coui-preference`      | Preference components (SwitchPreference, CheckboxPreference, etc.), depends on `coui-ui`                |
+| `coui-icons`           | Extended icon library, can be used independently or with `coui-ui` (automatically includes `coui-core`) |
+| `coui-blur`            | Blur effect library, can be used independently                                                          |
+| `coui-navigation3-ui`  | Navigation3 UI library, can be used independently                                                       |
 
 ### Getting Started
 
-```diff
+```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:coui-ui:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:1.0.0")
             // Optional: Add coui-preference for preference components
-            implementation("io.github.suqi8.coui.kmp:coui-preference:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-preference:1.0.0")
             // Optional: Add coui-icons for more icons
-            implementation("io.github.suqi8.coui.kmp:coui-icons:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-icons:1.0.0")
             // Optional: Add coui-blur for blur effects
-            implementation("io.github.suqi8.coui.kmp:coui-blur:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-blur:1.0.0")
             // Optional: Add coui-navigation3-ui for navigation3 support
-            implementation("io.github.suqi8.coui.kmp:coui-navigation3-ui:<version>")
+            implementation("io.github.suqi8.coui.kmp:coui-navigation3-ui:1.0.0")
             // Other dependencies...
         }
         // Other sourceSets...
@@ -94,17 +96,8 @@ fun AppTheme(
 }
 ```
 
-### Screenshots
+### Credits
 
-<table>
-  <tr>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/001.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/001.webp?raw=true" width="300" alt="Screenshot 001"/></a></td>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/002.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/002.webp?raw=true" width="300" alt="Screenshot 002"/></a></td>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/003.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/003.webp?raw=true" width="300" alt="Screenshot 003"/></a></td>
-  </tr>
-  <tr>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/004.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/004.webp?raw=true" width="300" alt="Screenshot 004"/></a></td>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/005.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/005.webp?raw=true" width="300" alt="Screenshot 005"/></a></td>
-    <td><a href="https://github.com/compose-coui-ui/miuix/blob/main/assets/006.webp?raw=true"><img src="https://github.com/compose-coui-ui/miuix/blob/main/assets/006.webp?raw=true" width="300" alt="Screenshot 006"/></a></td>
-  </tr>
-</table>
+COUI is a fork of [Miuix](https://github.com/compose-miuix-ui/miuix) by YuKongA and the
+compose-miuix-ui contributors, rethemed to the ColorOS 16 design language. Both projects are
+licensed under Apache-2.0.
