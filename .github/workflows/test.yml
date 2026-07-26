@@ -43,6 +43,11 @@ jobs:
           java-version: "21"
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v6
+      - name: Raise JVM heap for CI
+        shell: bash
+        run: |
+          echo "org.gradle.jvmargs=-Xmx6g -Dfile.encoding=UTF-8" >> gradle.properties
+          echo "kotlin.daemon.jvmargs=-Xmx6g" >> gradle.properties
       - name: Run check
         if: matrix.os == 'macos-26'
         run: ./gradlew check
