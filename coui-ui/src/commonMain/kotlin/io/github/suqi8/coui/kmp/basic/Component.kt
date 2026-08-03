@@ -28,8 +28,10 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -45,6 +47,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param endActions The [Composable] content on the end side of the [BasicComponent].
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive an
+ *   extra [CardListPosition.HeadOrTailPadding]. Defaults to [CardListPosition.None].
  * @param onClick The callback when the [BasicComponent] is clicked.
  * @param onClickLabel Optional label describing the click action for accessibility services.
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
@@ -65,6 +69,7 @@ fun BasicComponent(
     endActions: @Composable (RowScope.() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     onClick: (() -> Unit)? = null,
     onClickLabel: String? = null,
     role: Role? = null,
@@ -78,6 +83,7 @@ fun BasicComponent(
         bottomAction = bottomAction,
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         onClick = onClick,
         onClickLabel = onClickLabel,
         role = role,
@@ -91,14 +97,18 @@ fun BasicComponent(
                 fontSize = COUITheme.textStyles.headline1.fontSize,
                 fontWeight = FontWeight.Medium,
                 color = titleColor.color(enabled),
+                lineHeight = TitleLineHeight,
+                style = COUITheme.textStyles.main.copy(lineHeightStyle = COUILineHeightStyle),
             )
         }
         if (summary != null) {
             Text(
                 text = summary,
-                modifier = Modifier.padding(top = if (title != null) 2.dp else 0.dp),
+                modifier = Modifier.padding(top = if (title != null) MarginBetweenLine else 0.dp),
                 fontSize = COUITheme.textStyles.body2.fontSize,
                 color = summaryColor.color(enabled),
+                lineHeight = SummaryLineHeight,
+                style = COUITheme.textStyles.main.copy(lineHeightStyle = COUILineHeightStyle),
             )
         }
     }
@@ -112,6 +122,9 @@ fun BasicComponent(
  * @param endActions The [Composable] content on the end side of the [BasicComponent].
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive an
+ *   extra [CardListPosition.HeadOrTailPadding], so a standalone row is 4dp taller than a middle row
+ *   and a head/tail row is 2dp taller. Defaults to [CardListPosition.None] (no extra padding).
  * @param onClick The callback when the [BasicComponent] is clicked.
  * @param onClickLabel Optional label describing the click action for accessibility services.
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
@@ -129,6 +142,7 @@ fun BasicComponent(
     endActions: @Composable (RowScope.() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     onClick: (() -> Unit)? = null,
     onClickLabel: String? = null,
     role: Role? = null,
@@ -156,12 +170,18 @@ fun BasicComponent(
         }
     }
 
+    // COUI COUICardListSelectedItemLayout.setPadding: the rounded outer edges of a card group each get
+    // an extra coui_list_card_head_or_tail_padding, and the row's minimum height grows by the same total.
+    val extraPaddingTop = cardListPosition.extraPaddingTop
+    val extraPaddingBottom = cardListPosition.extraPaddingBottom
+
     Column(
         modifier = modifier
-            .heightIn(min = 48.dp)
+            .heightIn(min = BasicComponentDefaults.MinHeight + extraPaddingTop + extraPaddingBottom)
             .fillMaxWidth()
             .then(clickableModifier)
-            .padding(insideMargin),
+            .padding(insideMargin)
+            .padding(top = extraPaddingTop, bottom = extraPaddingBottom),
         verticalArrangement = Arrangement.Center,
     ) {
         if (startAction == null && endActions == null) {
@@ -262,6 +282,12 @@ fun BasicComponent(
 object BasicComponentDefaults {
 
     /**
+     * The default minimum height of the [BasicComponent], before any card-group
+     * position padding is added.
+     */
+    val MinHeight = 48.dp
+
+    /**
      * The default margin inside the [BasicComponent].
      */
     val InsideMargin = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
@@ -303,3 +329,28 @@ data class BasicComponentColors(
     @Stable
     internal fun color(enabled: Boolean): Color = if (enabled) color else disabledColor
 }
+
+/** COUI support_preference_margin_between_line: the summary's layout_marginTop in coui_preference.xml. */
+private val MarginBetweenLine = 2.dp
+
+/**
+ * COUI coui_spacing_multiplier_headline_xs, the lineSpacingMultiplier of couiTextAppearanceHeadline6
+ * (the title style's parent). 1.158 in values-v35, the bucket ColorOS 16 resolves.
+ */
+private val TitleLineHeight = 1.158f.em
+
+/**
+ * COUI coui_spacing_multiplier_body_m, the lineSpacingMultiplier of couiTextAppearanceBody (the
+ * summary style's parent). 1.2245 in values-v35.
+ */
+private val SummaryLineHeight = 1.2245f.em
+
+/**
+ * Distributes the extra leading the way Android's lineSpacingMultiplier does: below the line, never
+ * trimmed. Compose's default centers and trims it, which would cancel the multipliers out on the
+ * single-line title and summary.
+ */
+private val COUILineHeightStyle = LineHeightStyle(
+    alignment = LineHeightStyle.Alignment.Top,
+    trim = LineHeightStyle.Trim.None,
+)
