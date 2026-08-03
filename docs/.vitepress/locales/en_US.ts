@@ -138,6 +138,7 @@ export default defineConfig({
                         { text: "WindowDialog", link: "/components/windowdialog" },
                         { text: "LoadingDialog", link: "/components/loadingdialog" },
                         { text: "SecurityDialog", link: "/components/securitydialog" },
+                        { text: "DialogButtonBar", link: "/components/dialogbuttonbar" },
                     ],
                 },
             ],

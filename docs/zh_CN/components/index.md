@@ -83,6 +83,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [OverlayDialog](../components/overlaydialog)                   | 基于 BasicComponent 的对话弹窗组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 提示、确认操作         |
 | [LoadingDialog](../components/loadingdialog)                   | 带旋转加载指示的加载对话框（含 Overlay 与 Window 两种变体）                        | 阻塞式加载反馈         |
 | [SecurityDialog](../components/securitydialog)                 | 安全声明对话框（含 Overlay 与 Window 两种变体）                                    | 隐私声明、安全确认     |
+| [DialogButtonBar](../components/dialogbuttonbar)               | 对话框按钮栏，文案放不下时自动翻成纵排                                             | 对话框动作             |
 | [WindowListPopup](../components/windowlistpopup)     | 窗口级列表弹窗组件                                                                 | 选项选择、功能列表     |
 | [WindowCascadingListPopup](../components/windowcascadinglistpopup) | 窗口级二级级联列表弹窗组件                                                         | 子菜单、分组动作面板   |
 | [WindowDropdownPreference](../components/windowdropdownpreference) | 窗口级下拉选择器组件                                                               | 选项选择、功能列表     |

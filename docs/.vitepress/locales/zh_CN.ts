@@ -147,6 +147,7 @@ export default defineConfig({
                         { text: "WindowDialog", link: "/zh_CN/components/windowdialog" },
                         { text: "LoadingDialog", link: "/zh_CN/components/loadingdialog" },
                         { text: "SecurityDialog", link: "/zh_CN/components/securitydialog" },
+                        { text: "DialogButtonBar", link: "/zh_CN/components/dialogbuttonbar" },
                     ],
                 },
             ],

@@ -83,6 +83,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [OverlayDialog](../components/overlaydialog)                   | Dialog window based on BasicComponent (uses COUIPopupUtils; requires `Scaffold`)        | Prompts, action confirmation           |
 | [LoadingDialog](../components/loadingdialog)                   | Loading dialog with spinner (Overlay and Window variants)                                | Blocking loading feedback              |
 | [SecurityDialog](../components/securitydialog)                 | Security statement dialog (Overlay and Window variants)                                  | Privacy statement, security confirmation |
+| [DialogButtonBar](../components/dialogbuttonbar)               | Dialog button bar that auto-stacks vertically when labels do not fit                      | Dialog actions                         |
 | [WindowListPopup](../components/windowlistpopup)     | Window-level list popup component                                                        | Option selection, feature list         |
 | [WindowCascadingListPopup](../components/windowcascadinglistpopup) | Window-level two-level cascading list popup                                              | Submenus, grouped action panels        |
 | [WindowDropdownPreference](../components/windowdropdownpreference) | Window-level dropdown selector component                                                 | Option selection, feature list         |

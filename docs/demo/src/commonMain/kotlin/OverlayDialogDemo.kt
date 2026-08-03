@@ -16,11 +16,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.TextButton
-import io.github.suqi8.coui.kmp.layout.DialogDefaults
+import io.github.suqi8.coui.kmp.layout.DialogButtonBar
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 
 @Composable
@@ -52,20 +52,11 @@ fun OverlayDialogDemo() {
                         show = showDialog,
                         onDismissRequest = { showDialog = false },
                     ) {
-                        TextButton(
-                            text = "Confirm",
-                            onClick = { showDialog = false },
-                            modifier = Modifier.fillMaxWidth(),
-                            // COUI dialog bar button: a full-cell square-cornered rect with no
-                            // press scale (COUIAlertDialogBottomButtonNewNormal drawableRadius=0dp,
-                            // scaleEnable=false, stateListAnimator=@null); the only press feedback
-                            // is the couiColorPress tint over the whole cell. Metrics come from
-                            // COUIButtonBarLayout's measured horizontal bar.
-                            pressScaleEnabled = false,
-                            cornerRadius = 0.dp,
-                            minHeight = DialogDefaults.ButtonBarMinHeight,
-                            insideMargin = DialogDefaults.ButtonBarInsideMargin,
-                            colors = ButtonDefaults.textButtonColorsBorderless(),
+                        // COUI button bar: it flips itself to a vertical stack when the labels
+                        // no longer fit side by side (COUIButtonBarLayout).
+                        DialogButtonBar(
+                            negative = DialogButtonBarAction(text = "Cancel", onClick = { showDialog = false }),
+                            positive = DialogButtonBarAction(text = "Confirm", onClick = { showDialog = false }),
                         )
                     }
                 }

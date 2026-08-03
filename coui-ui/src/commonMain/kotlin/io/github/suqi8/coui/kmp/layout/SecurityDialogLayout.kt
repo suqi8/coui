@@ -3,14 +3,9 @@
 package io.github.suqi8.coui.kmp.layout
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -36,10 +31,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.Text
-import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -196,50 +189,14 @@ internal fun SecurityDialogContentLayout(
                 )
             }
         }
-        Row(
-            // COUI horizontal button bar: spans the full panel width; the panel bottom
-            // inset is carried by the buttons' own paddings.
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = ButtonBarMarginTop)
-                .height(IntrinsicSize.Min),
-        ) {
-            TextButton(
-                text = cancelText,
-                onClick = requestCancel,
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                // COUIAlertDialogBottomButton sets stateListAnimator=@null and the center-panel
-                // style COUIAlertDialogBottomButtonNewNormal sets scaleEnable=false /
-                // drawableRadius=0dp: the button is a full-cell rectangle whose only press
-                // feedback is the couiColorPress tint over the whole cell (no shrink, no capsule).
-                pressScaleEnabled = false,
-                cornerRadius = ButtonBarCornerRadius,
-                minHeight = DialogDefaults.ButtonBarMinHeight,
-                insideMargin = DialogDefaults.ButtonBarInsideMargin,
-                colors = ButtonDefaults.textButtonColorsBorderless(),
-            )
-            Box(
-                // COUI hairline divider between the bar buttons.
-                modifier = Modifier
-                    .padding(
-                        top = DialogDefaults.ButtonBarDividerInsetTop,
-                        bottom = DialogDefaults.ButtonBarDividerInsetBottom,
-                    )
-                    .width(DialogDefaults.ButtonBarDividerThickness)
-                    .fillMaxHeight()
-                    .background(COUITheme.colorScheme.dividerLine),
-            )
-            TextButton(
-                text = confirmText,
-                onClick = remember { { currentOnConfirm(checked.value) } },
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-                pressScaleEnabled = false,
-                cornerRadius = ButtonBarCornerRadius,
-                minHeight = DialogDefaults.ButtonBarMinHeight,
-                insideMargin = DialogDefaults.ButtonBarInsideMargin,
-                colors = ButtonDefaults.textButtonColorsBorderless(),
-            )
-        }
+        DialogButtonBar(
+            negative = DialogButtonBarAction(text = cancelText, onClick = requestCancel),
+            positive = remember(confirmText) {
+                DialogButtonBarAction(text = confirmText, onClick = { currentOnConfirm(checked.value) })
+            },
+            // COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the bar.
+            modifier = Modifier.padding(top = ButtonBarMarginTop),
+        )
     }
 }
 
@@ -301,10 +258,3 @@ private val CheckboxTextGap = 8.dp
 
 /** COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the button bar. */
 private val ButtonBarMarginTop = 8.dp
-
-/**
- * The corner radius of a dialog bar button. COUIAlertDialogBottomButtonNewNormal sets
- * `drawableRadius=0dp` and the press mask of `coui_alert_dialog_item_background` is a plain
- * `<color>` filling the whole cell, so the hit area and press tint are a square-cornered rect.
- */
-private val ButtonBarCornerRadius = 0.dp

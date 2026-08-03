@@ -2,15 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package component
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,17 +12,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
-import io.github.suqi8.coui.kmp.basic.TextButton
-import io.github.suqi8.coui.kmp.layout.DialogDefaults
+import io.github.suqi8.coui.kmp.layout.DialogButtonBar
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
 import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
-import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
@@ -45,6 +35,8 @@ fun LazyListScope.dialogSection() {
         var loadingDialogHoldDown by remember { mutableStateOf(false) }
         var showSecurityDialog by remember { mutableStateOf(false) }
         var securityDialogHoldDown by remember { mutableStateOf(false) }
+        var showStackedDialog by remember { mutableStateOf(false) }
+        var stackedDialogHoldDown by remember { mutableStateOf(false) }
 
         SmallTitle(text = "Dialog")
         Card(
@@ -83,6 +75,16 @@ fun LazyListScope.dialogSection() {
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
+                title = "Stacked Button Bar (O)",
+                summary = "Long labels flip the bar to a vertical stack",
+                onClick = {
+                    showStackedDialog = true
+                    stackedDialogHoldDown = true
+                },
+                holdDownState = stackedDialogHoldDown,
+            )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            ArrowPreference(
                 title = "Security Dialog (O)",
                 summary = "Click to show an OverlaySecurityDialog",
                 onClick = {
@@ -102,6 +104,11 @@ fun LazyListScope.dialogSection() {
             show = showWindowDialog,
             onDismissRequest = { showWindowDialog = false },
             onDismissFinished = { windowDialogHoldDown = false },
+        )
+        StackedButtonBarDialogDemo(
+            show = showStackedDialog,
+            onDismissRequest = { showStackedDialog = false },
+            onDismissFinished = { stackedDialogHoldDown = false },
         )
 
         // Auto-dismiss the loading demo after a short delay, like a finished task would.
@@ -133,55 +140,31 @@ fun LazyListScope.dialogSection() {
 }
 
 /**
- * COUI alert dialog button bar: two borderless primary-tinted text buttons split by a hairline
- * vertical divider (COUIButtonBarLayout horizontal layout, divider colored couiColorDivider).
- * Every metric comes from [DialogDefaults] so the bar matches COUIButtonBarLayout's measured
- * result: a 58dp min height, 24dp horizontal / 12dp top / 22dp bottom button paddings (so the
- * panel bottom inset is carried by the buttons), and a 1dp divider inset 17dp / 21dp.
- * Each button is a full-cell square-cornered rect with no press scale, matching
- * COUIAlertDialogBottomButtonNewNormal (drawableRadius=0dp, scaleEnable=false).
+ * Shows the automatic vertical stacking of [DialogButtonBar]: the labels are wide enough that
+ * COUIButtonBarLayout's needSetButVertical check fails, so the whole bar flips to a stack.
  */
 @Composable
-private fun DialogButtonBar(
-    onNegative: () -> Unit,
-    onPositive: () -> Unit,
+private fun StackedButtonBarDialogDemo(
+    show: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min),
-    ) {
-        TextButton(
-            text = "Cancel",
-            onClick = onNegative,
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            pressScaleEnabled = false,
-            cornerRadius = 0.dp,
-            minHeight = DialogDefaults.ButtonBarMinHeight,
-            insideMargin = DialogDefaults.ButtonBarInsideMargin,
-            colors = ButtonDefaults.textButtonColorsBorderless(),
-        )
-        Box(
-            modifier = Modifier
-                .padding(
-                    top = DialogDefaults.ButtonBarDividerInsetTop,
-                    bottom = DialogDefaults.ButtonBarDividerInsetBottom,
-                )
-                .width(DialogDefaults.ButtonBarDividerThickness)
-                .fillMaxHeight()
-                .background(COUITheme.colorScheme.dividerLine),
-        )
-        TextButton(
-            text = "Confirm",
-            onClick = onPositive,
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            pressScaleEnabled = false,
-            cornerRadius = 0.dp,
-            minHeight = DialogDefaults.ButtonBarMinHeight,
-            insideMargin = DialogDefaults.ButtonBarInsideMargin,
-            colors = ButtonDefaults.textButtonColorsBorderless(),
-        )
-    }
+    OverlayDialog(
+        show = show,
+        title = "Delete Backup",
+        summary = "The button labels below do not fit side by side, so the bar stacks them.",
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        content = {
+            DialogButtonBar(
+                negative = DialogButtonBarAction(text = "Not Now", onClick = onDismissRequest),
+                positive = DialogButtonBarAction(
+                    text = "Delete Backup And Local Copies",
+                    onClick = onDismissRequest,
+                ),
+            )
+        },
+    )
 }
 
 @Composable
@@ -198,8 +181,8 @@ private fun SuperDialogDemo(
         onDismissFinished = onDismissFinished,
         content = {
             DialogButtonBar(
-                onNegative = onDismissRequest,
-                onPositive = onDismissRequest,
+                negative = DialogButtonBarAction(text = "Cancel", onClick = onDismissRequest),
+                positive = DialogButtonBarAction(text = "Confirm", onClick = onDismissRequest),
             )
         },
     )
@@ -220,8 +203,8 @@ private fun WindowDialogDemo(
         content = {
             val dismissState = LocalDismissState.current
             DialogButtonBar(
-                onNegative = { dismissState?.invoke() },
-                onPositive = { dismissState?.invoke() },
+                negative = DialogButtonBarAction(text = "Cancel", onClick = { dismissState?.invoke() }),
+                positive = DialogButtonBarAction(text = "Confirm", onClick = { dismissState?.invoke() }),
             )
         },
     )
