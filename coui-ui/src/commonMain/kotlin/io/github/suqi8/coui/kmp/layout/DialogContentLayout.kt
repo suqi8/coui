@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.captionBar
@@ -490,6 +491,39 @@ object DialogDefaults {
      * unpadded so COUI-style button bars can span the full panel width.
      */
     val insideMargin = DpSize(24.dp, 24.dp)
+
+    /**
+     * The min height of a horizontal dialog button bar. COUI `coui_alert_dialog_button_height`.
+     */
+    val ButtonBarMinHeight = 58.dp
+
+    /**
+     * The paddings of a button in a horizontal dialog button bar. COUI
+     * `coui_alert_dialog_button_horizontal_padding` and the vertical values
+     * `COUIButtonBarLayout.resetHorButsPadding` settles on,
+     * `coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new`, so the panel
+     * bottom inset is carried by the buttons themselves.
+     */
+    val ButtonBarInsideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp)
+
+    /**
+     * The thickness of the divider between horizontal dialog bar buttons. COUI
+     * `coui_delete_alert_dialog_divider_height_horizontalbutton`; the 0.33dp `_verticalbutton`
+     * token applies only when the bar stacks vertically.
+     */
+    val ButtonBarDividerThickness = 1.dp
+
+    /**
+     * The top inset of the divider between horizontal dialog bar buttons. COUI
+     * `coui_bottom_alert_dialog_horizontal_button_padding_top_extra_divider_new`.
+     */
+    val ButtonBarDividerInsetTop = 17.dp
+
+    /**
+     * The bottom inset of the divider between horizontal dialog bar buttons. COUI
+     * `coui_bottom_alert_dialog_horizontal_button_padding_bottom_extra_divider_new`.
+     */
+    val ButtonBarDividerInsetBottom = 21.dp
 }
 
 /** COUI android_alert_dialog_enter: pathInterpolator(0.3, 0, 0.1, 1). */

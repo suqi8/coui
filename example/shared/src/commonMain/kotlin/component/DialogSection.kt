@@ -5,7 +5,6 @@ package component
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +25,7 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
 import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
@@ -135,10 +135,11 @@ fun LazyListScope.dialogSection() {
 /**
  * COUI alert dialog button bar: two borderless primary-tinted text buttons split by a hairline
  * vertical divider (COUIButtonBarLayout horizontal layout, divider colored couiColorDivider).
- * The bar spans the full panel width with a 58dp min height (coui_alert_dialog_button_height);
- * each button pads 24dp horizontally (coui_alert_dialog_button_horizontal_padding) and
- * 12dp top / 22dp bottom (coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new),
- * so the panel bottom inset is carried by the buttons themselves.
+ * Every metric comes from [DialogDefaults] so the bar matches COUIButtonBarLayout's measured
+ * result: a 58dp min height, 24dp horizontal / 12dp top / 22dp bottom button paddings (so the
+ * panel bottom inset is carried by the buttons), and a 1dp divider inset 17dp / 21dp.
+ * Each button is a full-cell square-cornered rect with no press scale, matching
+ * COUIAlertDialogBottomButtonNewNormal (drawableRadius=0dp, scaleEnable=false).
  */
 @Composable
 private fun DialogButtonBar(
@@ -154,16 +155,19 @@ private fun DialogButtonBar(
             text = "Cancel",
             onClick = onNegative,
             modifier = Modifier.weight(1f).fillMaxHeight(),
-            minHeight = DialogButtonBarMinHeight,
-            insideMargin = DialogButtonInsideMargin,
+            pressScaleEnabled = false,
+            cornerRadius = 0.dp,
+            minHeight = DialogDefaults.ButtonBarMinHeight,
+            insideMargin = DialogDefaults.ButtonBarInsideMargin,
             colors = ButtonDefaults.textButtonColorsBorderless(),
         )
         Box(
-            // COUIAlertDialogBottomButtonDivider: 0.33dp hairline inset 12dp from the bar top
-            // and 21dp from the bar bottom.
             modifier = Modifier
-                .padding(top = 12.dp, bottom = 21.dp)
-                .width(0.33.dp)
+                .padding(
+                    top = DialogDefaults.ButtonBarDividerInsetTop,
+                    bottom = DialogDefaults.ButtonBarDividerInsetBottom,
+                )
+                .width(DialogDefaults.ButtonBarDividerThickness)
                 .fillMaxHeight()
                 .background(COUITheme.colorScheme.dividerLine),
         )
@@ -171,18 +175,14 @@ private fun DialogButtonBar(
             text = "Confirm",
             onClick = onPositive,
             modifier = Modifier.weight(1f).fillMaxHeight(),
-            minHeight = DialogButtonBarMinHeight,
-            insideMargin = DialogButtonInsideMargin,
+            pressScaleEnabled = false,
+            cornerRadius = 0.dp,
+            minHeight = DialogDefaults.ButtonBarMinHeight,
+            insideMargin = DialogDefaults.ButtonBarInsideMargin,
             colors = ButtonDefaults.textButtonColorsBorderless(),
         )
     }
 }
-
-/** COUI coui_alert_dialog_button_height. */
-private val DialogButtonBarMinHeight = 58.dp
-
-/** COUI dialog bar button paddings (24dp horizontal, 12dp top, 22dp bottom). */
-private val DialogButtonInsideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp)
 
 @Composable
 private fun SuperDialogDemo(

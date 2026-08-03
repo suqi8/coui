@@ -48,6 +48,9 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param onClick The callback when the [Button] is clicked.
  * @param modifier The modifier to be applied to the [Button].
  * @param enabled Whether the [Button] is enabled.
+ * @param pressScaleEnabled Whether the [Button] shrinks while pressed (COUIButton `scaleEnable`).
+ *   Set to `false` for buttons that fill a container cell, such as the alert dialog button bar,
+ *   leaving the full-cell press tint as the only feedback.
  * @param cornerRadius The corner radius of the [Button].
  * @param minWidth The minimum width of the [Button].
  * @param minHeight The minimum height of the [Button].
@@ -63,6 +66,7 @@ fun Button(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    pressScaleEnabled: Boolean = true,
     cornerRadius: Dp = ButtonDefaults.CornerRadius,
     minWidth: Dp = ButtonDefaults.MinWidth,
     minHeight: Dp = ButtonDefaults.MinHeight,
@@ -85,7 +89,7 @@ fun Button(
     // COUI press feedback: scale (COUIPressFeedbackHelper) + press tint (COUIMaskEffectDrawable).
     val isPressed by interactionSource.collectIsPressedAsState()
     val scaleProgress by animateFloatAsState(
-        targetValue = if (enabled && isPressed) 1f else 0f,
+        targetValue = if (enabled && isPressed && pressScaleEnabled) 1f else 0f,
         animationSpec = PressFeedbackSpring,
         label = "buttonPressScale",
     )
@@ -121,9 +125,13 @@ fun Button(
             modifier = modifier
                 .semantics { role = Role.Button }
                 .graphicsLayer {
-                    val scale = 1f - (1f - pressedScaleEndRatio(size)) * scaleProgress
-                    scaleX = scale
-                    scaleY = scale
+                    // Branch inside the block so the modifier chain keeps a single graphicsLayer
+                    // node instead of swapping nodes when the flag changes.
+                    if (pressScaleEnabled) {
+                        val scale = 1f - (1f - pressedScaleEndRatio(size)) * scaleProgress
+                        scaleX = scale
+                        scaleY = scale
+                    }
                 }
                 .squircleSurface(color = fillColor, cornerRadius = cornerRadius)
                 .clickable(
@@ -151,6 +159,9 @@ fun Button(
  * @param onClick The callback when the [TextButton] is clicked.
  * @param modifier The modifier to be applied to the [TextButton].
  * @param enabled Whether the [TextButton] is enabled.
+ * @param pressScaleEnabled Whether the [TextButton] shrinks while pressed (COUIButton
+ *   `scaleEnable`). Set to `false` for buttons that fill a container cell, such as the alert dialog
+ *   button bar, leaving the full-cell press tint as the only feedback.
  * @param cornerRadius The corner radius of the [TextButton].
  * @param minWidth The minimum width of the [TextButton].
  * @param minHeight The minimum height of the [TextButton].
@@ -168,6 +179,7 @@ fun TextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    pressScaleEnabled: Boolean = true,
     cornerRadius: Dp = ButtonDefaults.CornerRadius,
     minWidth: Dp = ButtonDefaults.MinWidth,
     minHeight: Dp = ButtonDefaults.MinHeight,
@@ -189,6 +201,7 @@ fun TextButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
+        pressScaleEnabled = pressScaleEnabled,
         cornerRadius = cornerRadius,
         minWidth = minWidth,
         minHeight = minHeight,

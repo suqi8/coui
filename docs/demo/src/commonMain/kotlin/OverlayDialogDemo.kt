@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 
 @Composable
@@ -56,10 +56,15 @@ fun OverlayDialogDemo() {
                             text = "Confirm",
                             onClick = { showDialog = false },
                             modifier = Modifier.fillMaxWidth(),
-                            // COUI dialog bar button: 58dp bar height, 24dp horizontal and
-                            // 12dp top / 22dp bottom paddings carry the panel bottom inset.
-                            minHeight = 58.dp,
-                            insideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp),
+                            // COUI dialog bar button: a full-cell square-cornered rect with no
+                            // press scale (COUIAlertDialogBottomButtonNewNormal drawableRadius=0dp,
+                            // scaleEnable=false, stateListAnimator=@null); the only press feedback
+                            // is the couiColorPress tint over the whole cell. Metrics come from
+                            // COUIButtonBarLayout's measured horizontal bar.
+                            pressScaleEnabled = false,
+                            cornerRadius = 0.dp,
+                            minHeight = DialogDefaults.ButtonBarMinHeight,
+                            insideMargin = DialogDefaults.ButtonBarInsideMargin,
                             colors = ButtonDefaults.textButtonColorsBorderless(),
                         )
                     }

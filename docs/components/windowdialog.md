@@ -86,6 +86,11 @@ WindowDialog(
 | MaxWidth      | Dp     | Maximum dialog content width (392.dp)     |
 | outsideMargin | DpSize | Default outer margin for dialog (16, 24)  |
 | insideMargin  | DpSize | Default margin for the built-in title/summary texts (24, 24); the content slot is unpadded |
+| ButtonBarMinHeight | Dp | Min height of a horizontal dialog button bar (58.dp) |
+| ButtonBarInsideMargin | PaddingValues | Paddings of a button in a horizontal bar (24dp horizontal, 12dp top, 22dp bottom); the panel bottom inset is carried by the buttons |
+| ButtonBarDividerThickness | Dp | Thickness of the divider between horizontal bar buttons (1.dp) |
+| ButtonBarDividerInsetTop | Dp | Top inset of the divider between horizontal bar buttons (17.dp) |
+| ButtonBarDividerInsetBottom | Dp | Bottom inset of the divider between horizontal bar buttons (21.dp) |
 
 #### Functions
 

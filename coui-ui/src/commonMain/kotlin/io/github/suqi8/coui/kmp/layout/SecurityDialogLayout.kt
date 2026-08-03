@@ -5,7 +5,6 @@ package io.github.suqi8.coui.kmp.layout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -209,15 +208,24 @@ internal fun SecurityDialogContentLayout(
                 text = cancelText,
                 onClick = requestCancel,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
-                minHeight = ButtonBarMinHeight,
-                insideMargin = DialogButtonInsideMargin,
+                // COUIAlertDialogBottomButton sets stateListAnimator=@null and the center-panel
+                // style COUIAlertDialogBottomButtonNewNormal sets scaleEnable=false /
+                // drawableRadius=0dp: the button is a full-cell rectangle whose only press
+                // feedback is the couiColorPress tint over the whole cell (no shrink, no capsule).
+                pressScaleEnabled = false,
+                cornerRadius = ButtonBarCornerRadius,
+                minHeight = DialogDefaults.ButtonBarMinHeight,
+                insideMargin = DialogDefaults.ButtonBarInsideMargin,
                 colors = ButtonDefaults.textButtonColorsBorderless(),
             )
             Box(
                 // COUI hairline divider between the bar buttons.
                 modifier = Modifier
-                    .padding(top = ButtonDividerInsetTop, bottom = ButtonDividerInsetBottom)
-                    .width(ButtonDividerWidth)
+                    .padding(
+                        top = DialogDefaults.ButtonBarDividerInsetTop,
+                        bottom = DialogDefaults.ButtonBarDividerInsetBottom,
+                    )
+                    .width(DialogDefaults.ButtonBarDividerThickness)
                     .fillMaxHeight()
                     .background(COUITheme.colorScheme.dividerLine),
             )
@@ -225,8 +233,10 @@ internal fun SecurityDialogContentLayout(
                 text = confirmText,
                 onClick = remember { { currentOnConfirm(checked.value) } },
                 modifier = Modifier.weight(1f).fillMaxHeight(),
-                minHeight = ButtonBarMinHeight,
-                insideMargin = DialogButtonInsideMargin,
+                pressScaleEnabled = false,
+                cornerRadius = ButtonBarCornerRadius,
+                minHeight = DialogDefaults.ButtonBarMinHeight,
+                insideMargin = DialogDefaults.ButtonBarInsideMargin,
                 colors = ButtonDefaults.textButtonColorsBorderless(),
             )
         }
@@ -292,21 +302,9 @@ private val CheckboxTextGap = 8.dp
 /** COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the button bar. */
 private val ButtonBarMarginTop = 8.dp
 
-/** COUI coui_alert_dialog_button_height: the min height of the horizontal button bar. */
-private val ButtonBarMinHeight = 58.dp
-
 /**
- * COUI dialog bar button paddings (coui_alert_dialog_button_horizontal_padding and
- * coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new); the panel
- * bottom inset is carried by the buttons themselves.
+ * The corner radius of a dialog bar button. COUIAlertDialogBottomButtonNewNormal sets
+ * `drawableRadius=0dp` and the press mask of `coui_alert_dialog_item_background` is a plain
+ * `<color>` filling the whole cell, so the hit area and press tint are a square-cornered rect.
  */
-private val DialogButtonInsideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp)
-
-/** COUI coui_delete_alert_dialog_divider_height_verticalbutton: 0.33dp hairline. */
-private val ButtonDividerWidth = 0.33.dp
-
-/** COUI coui_bottom_alert_dialog_horizontal_button_padding_top_extra_new (divider top margin). */
-private val ButtonDividerInsetTop = 12.dp
-
-/** COUI coui_bottom_alert_dialog_horizontal_button_padding_bottom_extra_divider_new. */
-private val ButtonDividerInsetBottom = 21.dp
+private val ButtonBarCornerRadius = 0.dp

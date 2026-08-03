@@ -90,6 +90,11 @@ Scaffold {
 | MaxWidth      | Dp     | 对话框内容最大宽度（392.dp）   |
 | outsideMargin | DpSize | 对话框外部默认边距（16, 24）   |
 | insideMargin  | DpSize | 内置标题/摘要文本的默认边距（24, 24）；content 插槽不加内边距 |
+| ButtonBarMinHeight | Dp | 横向对话框按钮栏的最小高度（58.dp） |
+| ButtonBarInsideMargin | PaddingValues | 横向按钮栏中按钮的内边距（水平 24dp、上 12dp、下 22dp）；面板底部留白由按钮自身承担 |
+| ButtonBarDividerThickness | Dp | 横向按钮栏分割线的粗细（1.dp） |
+| ButtonBarDividerInsetTop | Dp | 横向按钮栏分割线的上内缩（17.dp） |
+| ButtonBarDividerInsetBottom | Dp | 横向按钮栏分割线的下内缩（21.dp） |
 
 #### 函数
 
