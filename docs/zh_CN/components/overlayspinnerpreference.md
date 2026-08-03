@@ -253,6 +253,7 @@ Scaffold {
 | startAction           | @Composable (() -> Unit)? | 左侧显示的自定义内容 | null                                  | 否       |
 | bottomAction          | @Composable (() -> Unit)? | 底部显示的自定义内容 | null                                  | 否       |
 | insideMargin          | PaddingValues             | 组件内部内容的边距   | BasicComponentDefaults.InsideMargin   | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | maxHeight             | Dp?                       | 下拉菜单的最大高度   | null                                  | 否       |
 | enabled               | Boolean                   | 组件是否可交互       | true                                  | 否       |
 | showValue             | Boolean                   | 是否显示当前选中的值 | true                                  | 否       |
@@ -292,6 +293,7 @@ Scaffold {
 | startAction           | @Composable (() -> Unit)? | 左侧显示的自定义内容     | null                                    | 否       |
 | bottomAction          | @Composable (() -> Unit)? | 底部显示的自定义内容     | null                                    | 否       |
 | insideMargin          | PaddingValues             | 组件内部内容的边距       | BasicComponentDefaults.InsideMargin     | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | enabled               | Boolean                   | 组件是否可交互           | true                                    | 否       |
 | showValue             | Boolean                   | 是否显示当前选中的值     | true                                    | 否       |
 | renderInRootScaffold  | Boolean                   | 是否在根（最外层）Scaffold 中渲染对话框。为 true 时，对话框覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染 | true | 否 |

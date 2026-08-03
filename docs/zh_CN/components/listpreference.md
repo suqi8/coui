@@ -77,6 +77,7 @@ MultiSelectListPreference(
 | startAction           | @Composable (() -> Unit)? | 自定义起始侧内容                     | null                                         | 否   |
 | bottomAction          | @Composable (() -> Unit)? | 自定义底部内容                       | null                                         | 否   |
 | insideMargin          | PaddingValues             | 行内边距                             | BasicComponentDefaults.InsideMargin          | 否   |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | enabled               | Boolean                   | 行是否可点击                         | true                                         | 否   |
 | showValue             | Boolean                   | 是否在行末显示当前选中项             | true                                         | 否   |
 | renderInRootScaffold  | Boolean                   | 是否在根 Scaffold 渲染面板           | true                                         | 否   |

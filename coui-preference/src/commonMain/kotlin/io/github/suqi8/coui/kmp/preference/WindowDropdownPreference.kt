@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.DropdownArrowEndAction
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
@@ -47,6 +48,7 @@ import io.github.suqi8.coui.kmp.window.WindowListPopup
  * @param startAction The [Composable] content on the start side of the [WindowDropdownPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowDropdownPreference].
  * @param insideMargin The margin inside the [WindowDropdownPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param maxHeight The maximum height of the [WindowListPopup].
  * @param enabled Whether the [WindowDropdownPreference] is enabled.
  * @param showValue Whether to show the selected value of the [WindowDropdownPreference].
@@ -66,6 +68,7 @@ fun WindowDropdownPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -98,6 +101,7 @@ fun WindowDropdownPreference(
         startAction = startAction,
         bottomAction = bottomAction,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         maxHeight = maxHeight,
         enabled = enabled,
         showValue = showValue,
@@ -118,6 +122,7 @@ fun WindowDropdownPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -169,6 +174,7 @@ fun WindowDropdownPreference(
         modifier = modifier,
         interactionSource = interactionSource,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,
@@ -227,6 +233,7 @@ fun WindowDropdownPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -279,6 +286,7 @@ fun WindowDropdownPreference(
         modifier = modifier,
         interactionSource = interactionSource,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

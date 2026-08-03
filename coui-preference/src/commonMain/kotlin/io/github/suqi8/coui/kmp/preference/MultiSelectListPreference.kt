@@ -29,6 +29,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
@@ -62,6 +63,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param startAction The [Composable] content on the start side of the [MultiSelectListPreference].
  * @param bottomAction The [Composable] content at the bottom of the [MultiSelectListPreference].
  * @param insideMargin The margin inside the [MultiSelectListPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param enabled Whether the [MultiSelectListPreference] is clickable.
  * @param showValue Whether to show the selected entries as trailing assignment text.
  * @param renderInRootScaffold Whether to render the panel in the root (outermost) Scaffold.
@@ -87,6 +89,7 @@ fun MultiSelectListPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     enabled: Boolean = true,
     showValue: Boolean = true,
     renderInRootScaffold: Boolean = true,
@@ -127,6 +130,7 @@ fun MultiSelectListPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

@@ -253,6 +253,7 @@ Scaffold {
 | startAction           | @Composable (() -> Unit)? | Custom start side content       | null                                  | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom side content      | null                                  | No       |
 | insideMargin          | PaddingValues             | Internal content padding        | BasicComponentDefaults.InsideMargin   | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | maxHeight             | Dp?                       | Maximum dropdown height         | null                                  | No       |
 | enabled               | Boolean                   | Interactive state               | true                                  | No       |
 | showValue             | Boolean                   | Show current selected value     | true                                  | No       |
@@ -292,6 +293,7 @@ Scaffold {
 | startAction           | @Composable (() -> Unit)? | Custom start side content            | null                                    | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom side content           | null                                    | No       |
 | insideMargin          | PaddingValues             | Internal content padding             | BasicComponentDefaults.InsideMargin     | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | enabled               | Boolean                   | Interactive state                    | true                                    | No       |
 | showValue             | Boolean                   | Show current selected value          | true                                    | No       |
 | renderInRootScaffold  | Boolean                   | Whether to render the dialog in the root (outermost) Scaffold. When true, the dialog covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |

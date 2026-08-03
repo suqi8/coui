@@ -170,3 +170,37 @@ Card(
     Text("Interactive Card (Sink)")
 }
 ```
+
+### Card Group Row Positions
+
+COUI grows the rounded outer edges of a card group by `coui_list_card_head_or_tail_padding` (2dp).
+Pass a `CardListPosition` to the preference rows stacked inside a `Card` so each row gets the padding
+on the edges that are actually rounded. `CardListPosition.None` (the default) adds nothing, so
+existing call sites are unaffected.
+
+| Position | Extra top | Extra bottom | Total |
+| :------- | :-------- | :----------- | :---- |
+| `None` (default) | 0dp | 0dp | +0dp |
+| `Head` | 2dp | 0dp | +2dp |
+| `Middle` | 0dp | 0dp | +0dp |
+| `Tail` | 0dp | 2dp | +2dp |
+| `Full` (only row) | 2dp | 2dp | +4dp |
+
+Use `cardListPositionOf(index, count)` to derive the position while iterating a list. It mirrors
+COUI's `COUICardListHelper.getPositionInGroup(int, int)`, returning `Full` when `count == 1`.
+
+```kotlin
+val options = listOf("Every day", "Workdays only", "Never")
+
+Card {
+    options.forEachIndexed { index, option ->
+        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+        MarkPreference(
+            title = option,
+            checked = selected == index,
+            onClick = { selected = index },
+            cardListPosition = cardListPositionOf(index, options.size),
+        )
+    }
+}
+```

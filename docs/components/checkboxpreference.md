@@ -107,6 +107,7 @@ CheckboxPreference(
 | checkboxLocation | CheckboxLocation                   | Checkbox position                    | CheckboxLocation.Start                | No       |
 | bottomAction     | @Composable (() -> Unit)?          | Custom bottom content                | null                                  | No       |
 | insideMargin     | PaddingValues                      | Internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | holdDownState    | Boolean                            | Whether the component is held down   | false                                 | No       |
 | enabled          | Boolean                            | Whether component is interactive     | true                                  | No       |
 

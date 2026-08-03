@@ -77,6 +77,7 @@ MultiSelectListPreference(
 | startAction           | @Composable (() -> Unit)? | Custom start side content                          | null                                         | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom content                              | null                                         | No       |
 | insideMargin          | PaddingValues             | Internal content padding                           | BasicComponentDefaults.InsideMargin          | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | enabled               | Boolean                   | Whether the row is clickable                       | true                                         | No       |
 | showValue             | Boolean                   | Show the selected entry as trailing text           | true                                         | No       |
 | renderInRootScaffold  | Boolean                   | Render the panel in the root Scaffold              | true                                         | No       |

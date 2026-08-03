@@ -228,6 +228,7 @@ WindowSpinnerPreference(
 | startAction           | @Composable (() -> Unit)? | Custom start side content            | null                                  | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom side content           | null                                  | No       |
 | insideMargin          | PaddingValues             | Internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | maxHeight             | Dp?                       | Maximum height of popup              | null                                  | No       |
 | enabled               | Boolean                   | Whether component is interactive     | true                                  | No       |
 | showValue             | Boolean                   | Whether to show the selected value   | true                                  | No       |
@@ -267,6 +268,7 @@ All other parameters are identical to the items overload above. The `entry` and 
 | startAction           | @Composable (() -> Unit)? | Custom start side content            | null                                    | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom side content           | null                                    | No       |
 | insideMargin          | PaddingValues             | Internal content padding             | BasicComponentDefaults.InsideMargin     | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | enabled               | Boolean                   | Whether component is interactive     | true                                    | No       |
 | showValue             | Boolean                   | Whether to show the selected value   | true                                    | No       |
 | collapseOnSelection   | Boolean                   | Whether to close the dialog after selection | true                             | No       |

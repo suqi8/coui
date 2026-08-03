@@ -11,8 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.cardListPositionOf
 import io.github.suqi8.coui.kmp.preference.ButtonPreference
 import io.github.suqi8.coui.kmp.preference.MarkPreference
 import io.github.suqi8.coui.kmp.preference.RecommendedItem
@@ -49,6 +51,7 @@ fun LazyListScope.preferenceExtrasSection() {
                 title = "Async Switch",
                 summary = "Applies the change after a short delay",
                 isLoading = isLoading.value,
+                cardListPosition = CardListPosition.Head,
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             SwitchLoadingPreference(
@@ -57,6 +60,7 @@ fun LazyListScope.preferenceExtrasSection() {
                 title = "Always Loading",
                 summary = "A switch stuck in the loading state",
                 isLoading = true,
+                cardListPosition = CardListPosition.Tail,
             )
         }
 
@@ -76,8 +80,26 @@ fun LazyListScope.preferenceExtrasSection() {
                     title = option,
                     checked = selectedMark.intValue == index,
                     onClick = { selectedMark.intValue = index },
+                    // Head gets 2dp on top, Tail 2dp on the bottom, Middle none.
+                    cardListPosition = cardListPositionOf(index, markOptions.size),
                 )
             }
+        }
+
+        // A standalone row is CardListPosition.Full: both rounded edges get the padding, so this
+        // card is 4dp taller than a middle row of the group above.
+        SmallTitle(text = "MarkPreference (standalone, Full)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            MarkPreference(
+                title = "Only option",
+                checked = true,
+                onClick = {},
+                cardListPosition = CardListPosition.Full,
+            )
         }
 
         // ButtonPreference: an inline small button whose click is independent from the row.
@@ -98,6 +120,7 @@ fun LazyListScope.preferenceExtrasSection() {
                 },
                 buttonText = "Sign in",
                 onButtonClick = { signInCount.intValue++ },
+                cardListPosition = CardListPosition.Head,
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ButtonPreference(
@@ -106,6 +129,7 @@ fun LazyListScope.preferenceExtrasSection() {
                 buttonText = "Action",
                 onButtonClick = {},
                 enabled = false,
+                cardListPosition = CardListPosition.Tail,
             )
         }
 

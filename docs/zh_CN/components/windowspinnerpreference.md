@@ -228,6 +228,7 @@ WindowSpinnerPreference(
 | startAction           | @Composable (() -> Unit)? | 左侧显示的自定义内容 | null                                  | 否       |
 | bottomAction          | @Composable (() -> Unit)? | 底部自定义内容       | null                                  | 否       |
 | insideMargin          | PaddingValues             | 组件内部内容的边距   | BasicComponentDefaults.InsideMargin   | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | maxHeight             | Dp?                       | 弹出框的最大高度     | null                                  | 否       |
 | enabled               | Boolean                   | 组件是否可交互       | true                                  | 否       |
 | showValue             | Boolean                   | 是否显示当前选中值   | true                                  | 否       |
@@ -267,6 +268,7 @@ WindowSpinnerPreference(
 | startAction           | @Composable (() -> Unit)? | 左侧显示的自定义内容 | null                                    | 否       |
 | bottomAction          | @Composable (() -> Unit)? | 底部自定义内容       | null                                    | 否       |
 | insideMargin          | PaddingValues             | 组件内部内容的边距   | BasicComponentDefaults.InsideMargin     | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | enabled               | Boolean                   | 组件是否可交互       | true                                    | 否       |
 | showValue             | Boolean                   | 是否显示当前选中值   | true                                    | 否       |
 | collapseOnSelection   | Boolean                   | 选中后是否关闭对话框 | true                                    | 否       |

@@ -38,6 +38,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.DropdownArrowEndAction
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Text
@@ -82,6 +83,7 @@ data class ListPreferenceEntry(
  * @param startAction The [Composable] content on the start side of the [ListPreference].
  * @param bottomAction The [Composable] content at the bottom of the [ListPreference].
  * @param insideMargin The margin inside the [ListPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param enabled Whether the [ListPreference] is clickable.
  * @param showValue Whether to show the selected entry as trailing assignment text.
  * @param renderInRootScaffold Whether to render the panel in the root (outermost) Scaffold.
@@ -103,6 +105,7 @@ fun ListPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     enabled: Boolean = true,
     showValue: Boolean = true,
     renderInRootScaffold: Boolean = true,
@@ -139,6 +142,7 @@ fun ListPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

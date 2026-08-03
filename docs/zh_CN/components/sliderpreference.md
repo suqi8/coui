@@ -80,6 +80,7 @@ SliderPreference(
 | keyPoints             | List\<Float\>?                    | 要在滑块上显示的自定义关键点值。如果为 null，则使用 steps 参数的步长位置。值应在 valueRange 范围内               | null                               | 否       |
 | magnetThreshold       | Float                             | 磁吸对齐阈值，以分数表示 (0.0 到 1.0)。当滑块值与关键点的距离在此阈值内时，将对齐到该点。仅在设置 keyPoints 时生效 | 0.02f                              | 否       |
 | insideMargin          | PaddingValues                     | 组件内部内容的边距                                                                                               | BasicComponentDefaults.InsideMargin | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 
 ## 进阶用法
 

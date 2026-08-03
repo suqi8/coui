@@ -98,6 +98,7 @@ Scaffold {
 | buttonCornerRadius | Dp                              | 内嵌按钮的圆角半径                 | ButtonPreferenceDefaults.ButtonCornerRadius | 否       |
 | buttonInsideMargin | PaddingValues                   | 内嵌按钮的内边距                   | ButtonPreferenceDefaults.ButtonInsideMargin | 否       |
 | insideMargin       | PaddingValues                   | 组件内部内容的边距                 | BasicComponentDefaults.InsideMargin         | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | onClick            | (() -> Unit)?                   | 点击整行（非按钮）时的回调         | null                                        | 否       |
 | holdDownState      | Boolean                         | 组件是否处于按下状态               | false                                       | 否       |
 | enabled            | Boolean                         | 组件是否可交互                     | true                                        | 否       |

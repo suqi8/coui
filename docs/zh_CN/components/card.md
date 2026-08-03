@@ -169,3 +169,36 @@ Card(
     Text("可交互的卡片（下沉）")
 }
 ```
+
+### 卡片组内的行位置
+
+COUI 会给卡片组的圆角外边缘增加 `coui_list_card_head_or_tail_padding`（2dp）。给 `Card` 内堆叠的
+preference 行传入 `CardListPosition`，即可让每一行只在真正带圆角的那一侧获得该内边距。
+`CardListPosition.None`（默认值）不增加任何内边距，因此现有调用点不受影响。
+
+| 位置 | 顶部额外内边距 | 底部额外内边距 | 合计 |
+| :--- | :------------- | :------------- | :--- |
+| `None`（默认） | 0dp | 0dp | +0dp |
+| `Head` | 2dp | 0dp | +2dp |
+| `Middle` | 0dp | 0dp | +0dp |
+| `Tail` | 0dp | 2dp | +2dp |
+| `Full`（唯一一行） | 2dp | 2dp | +4dp |
+
+遍历列表时可用 `cardListPositionOf(index, count)` 推导位置。它对应 COUI 的
+`COUICardListHelper.getPositionInGroup(int, int)`，当 `count == 1` 时返回 `Full`。
+
+```kotlin
+val options = listOf("每天", "仅工作日", "从不")
+
+Card {
+    options.forEachIndexed { index, option ->
+        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+        MarkPreference(
+            title = option,
+            checked = selected == index,
+            onClick = { selected = index },
+            cardListPosition = cardListPositionOf(index, options.size),
+        )
+    }
+}
+```

@@ -20,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.Button
 import io.github.suqi8.coui.kmp.basic.ButtonColors
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -45,6 +46,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param buttonCornerRadius The corner radius of the inline button.
  * @param buttonInsideMargin The margin inside the inline button.
  * @param insideMargin The margin inside the [ButtonPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param onClick The callback when the row (not the button) is clicked.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [ButtonPreference] and its button are enabled.
@@ -68,6 +70,7 @@ fun ButtonPreference(
     buttonCornerRadius: Dp = ButtonPreferenceDefaults.ButtonCornerRadius,
     buttonInsideMargin: PaddingValues = ButtonPreferenceDefaults.ButtonInsideMargin,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     onClick: (() -> Unit)? = null,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
@@ -75,6 +78,7 @@ fun ButtonPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

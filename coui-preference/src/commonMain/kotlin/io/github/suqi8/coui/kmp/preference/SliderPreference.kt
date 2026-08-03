@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.RangeSlider
 import io.github.suqi8.coui.kmp.basic.Slider
 import io.github.suqi8.coui.kmp.basic.SliderColors
@@ -73,6 +74,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
  *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
  * @param insideMargin The margin inside the [SliderPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  */
 @Composable
 @NonRestartableComposable
@@ -102,6 +104,7 @@ fun SliderPreference(
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
 ) {
     val currentOnValueChange by rememberUpdatedState(onValueChange)
     val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
@@ -111,6 +114,7 @@ fun SliderPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,
@@ -203,6 +207,7 @@ fun SliderPreference(
  * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
  *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
  * @param insideMargin The margin inside the [RangeSliderPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  */
 @Composable
 @NonRestartableComposable
@@ -231,6 +236,7 @@ fun RangeSliderPreference(
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
 ) {
     val currentOnValueChange by rememberUpdatedState(onValueChange)
     val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
@@ -240,6 +246,7 @@ fun RangeSliderPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

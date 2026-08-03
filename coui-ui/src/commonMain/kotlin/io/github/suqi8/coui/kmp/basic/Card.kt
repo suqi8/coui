@@ -18,6 +18,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -221,6 +222,67 @@ private fun BasicCard(
             content()
         }
     }
+}
+
+/**
+ * The position of a row inside a card group, mirroring COUI's `COUICardListHelper` constants
+ * (`NONE = 0`, `HEAD = 1`, `MIDDLE = 2`, `TAIL = 3`, `FULL = 4`).
+ *
+ * COUI's `COUICardListSelectedItemLayout.setPadding` uses the position to decide which of the card's
+ * outer edges get an extra [CardListPosition.HeadOrTailPadding] of vertical padding, and grows the
+ * row's minimum height by the same amount. Only the edges that are visually rounded receive it, so a
+ * standalone row (both edges rounded) gains the padding twice while a middle row gains none.
+ *
+ * @see cardListPositionOf
+ */
+enum class CardListPosition {
+    /** Not part of a card group; no rounded edges and no extra padding. */
+    None,
+
+    /** First row of a multi-row group; the top edge is rounded. */
+    Head,
+
+    /** A row with a sibling on both sides; neither edge is rounded. */
+    Middle,
+
+    /** Last row of a multi-row group; the bottom edge is rounded. */
+    Tail,
+
+    /** The only row of the group; both edges are rounded. */
+    Full,
+    ;
+
+    /** The extra top padding contributed by this position. */
+    internal val extraPaddingTop: Dp
+        get() = if (this == Head || this == Full) HeadOrTailPadding else 0.dp
+
+    /** The extra bottom padding contributed by this position. */
+    internal val extraPaddingBottom: Dp
+        get() = if (this == Tail || this == Full) HeadOrTailPadding else 0.dp
+
+    companion object {
+        /**
+         * The padding COUI adds to each rounded outer edge of a card group
+         * (COUI `coui_list_card_head_or_tail_padding`).
+         */
+        val HeadOrTailPadding = 2.dp
+    }
+}
+
+/**
+ * Resolves the [CardListPosition] of the row at [index] within a card group of [count] rows,
+ * mirroring COUI's `COUICardListHelper.getPositionInGroup(int, int)`.
+ *
+ * @param index The zero-based index of the row within the group.
+ * @param count The total number of rows in the group.
+ */
+@Stable
+fun cardListPositionOf(index: Int, count: Int): CardListPosition = when {
+    count <= 0 || index !in 0 until count -> CardListPosition.None
+    count == 1 -> CardListPosition.Full
+    index == 0 -> CardListPosition.Head
+    index == count - 1 -> CardListPosition.Tail
+    else -> CardListPosition.Middle
 }
 
 object CardDefaults {

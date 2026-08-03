@@ -71,6 +71,7 @@ MarkPreference(
 | markLocation  | MarkLocation                       | 标记位置：End（COUI TAIL_MARK）或 Start（COUI HEAD_MARK） | MarkLocation.End                     | 否       |
 | bottomAction  | @Composable (() -> Unit)?          | 底部显示的自定义内容                                   | null                                    | 否       |
 | insideMargin  | PaddingValues                      | 组件内部内容的边距                                     | BasicComponentDefaults.InsideMargin     | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | holdDownState | Boolean                            | 组件是否处于按下状态                                   | false                                   | 否       |
 | enabled       | Boolean                            | 组件是否可交互                                         | true                                    | 否       |
 

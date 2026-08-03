@@ -82,6 +82,7 @@ SwitchLoadingPreference(
 | bottomAction    | @Composable (() -> Unit)?       | Custom bottom side content                     | null                                  | No       |
 | switchColors    | SwitchColors                    | Switch control color configuration             | SwitchDefaults.switchColors()         | No       |
 | insideMargin    | PaddingValues                   | Component internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
+| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
 | holdDownState   | Boolean                         | Whether the component is held down             | false                                 | No       |
 | enabled         | Boolean                         | Component interactive state                    | true                                  | No       |
 

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
@@ -40,6 +41,7 @@ import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
  * @param checkboxLocation The location of checkbox, [CheckboxLocation.Start] or [CheckboxLocation.End].
  * @param bottomAction The [Composable] content at the bottom of the [CheckboxPreference].
  * @param insideMargin The margin inside the [CheckboxPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [CheckboxPreference] is clickable.
  */
@@ -59,6 +61,7 @@ fun CheckboxPreference(
     checkboxLocation: CheckboxLocation = CheckboxLocation.Start,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
 ) {
@@ -67,6 +70,7 @@ fun CheckboxPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

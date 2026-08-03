@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.DropdownArrowEndAction
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
@@ -47,6 +48,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param startAction The [Composable] content on the start side of the [OverlaySpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [OverlaySpinnerPreference].
  * @param insideMargin The [PaddingValues] to be applied inside the [OverlaySpinnerPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param maxHeight The maximum height of the dropdown popup.
  * @param enabled Whether the [OverlaySpinnerPreference] is enabled.
  * @param showValue Whether to show the value of the [OverlaySpinnerPreference].
@@ -69,6 +71,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -102,6 +105,7 @@ fun OverlaySpinnerPreference(
         startAction = startAction,
         bottomAction = bottomAction,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         maxHeight = maxHeight,
         enabled = enabled,
         showValue = showValue,
@@ -123,6 +127,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -142,6 +147,7 @@ fun OverlaySpinnerPreference(
         startAction = startAction,
         bottomAction = bottomAction,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         maxHeight = maxHeight,
         enabled = enabled,
         showValue = showValue,
@@ -163,6 +169,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -216,6 +223,7 @@ fun OverlaySpinnerPreference(
         modifier = modifier,
         interactionSource = interactionSource,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,
@@ -282,6 +290,7 @@ fun OverlaySpinnerPreference(
  * @param startAction the action to be shown at the start side of the [OverlaySpinnerPreference].
  * @param bottomAction the action to be shown at the bottom of the [OverlaySpinnerPreference].
  * @param insideMargin the [PaddingValues] to be applied inside the [OverlaySpinnerPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param enabled whether the [OverlaySpinnerPreference] is enabled.
  * @param showValue whether to show the value of the [OverlaySpinnerPreference].
  * @param renderInRootScaffold Whether to render the dialog in the root (outermost) Scaffold.
@@ -305,6 +314,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     enabled: Boolean = true,
     showValue: Boolean = true,
     renderInRootScaffold: Boolean = true,
@@ -338,6 +348,7 @@ fun OverlaySpinnerPreference(
         startAction = startAction,
         bottomAction = bottomAction,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         enabled = enabled,
         showValue = showValue,
         renderInRootScaffold = renderInRootScaffold,
@@ -360,6 +371,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     enabled: Boolean = true,
     showValue: Boolean = true,
     renderInRootScaffold: Boolean = true,
@@ -380,6 +392,7 @@ fun OverlaySpinnerPreference(
         startAction = startAction,
         bottomAction = bottomAction,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         enabled = enabled,
         showValue = showValue,
         renderInRootScaffold = renderInRootScaffold,
@@ -402,6 +415,7 @@ fun OverlaySpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     enabled: Boolean = true,
     showValue: Boolean = true,
     renderInRootScaffold: Boolean = true,
@@ -454,6 +468,7 @@ fun OverlaySpinnerPreference(
         modifier = modifier,
         interactionSource = interactionSource,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

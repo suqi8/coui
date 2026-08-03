@@ -84,6 +84,7 @@ RadioButtonPreference(
 | radioButtonLocation | RadioButtonLocation                | 单选按钮控件的位置         | RadioButtonLocation.Start                 | 否       |
 | bottomAction      | @Composable (() -> Unit)?       | 自定义底部内容               | null                                      | 否       |
 | insideMargin      | PaddingValues                   | 内部内容边距                 | BasicComponentDefaults.InsideMargin       | 否       |
+| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
 | holdDownState     | Boolean                         | 组件是否处于按下状态         | false                                     | 否       |
 | enabled           | Boolean                         | 组件是否可交互               | true                                      | 否       |
 

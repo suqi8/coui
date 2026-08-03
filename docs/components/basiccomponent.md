@@ -127,6 +127,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | Composable content on the end side of the component   | null                                  | No       |
 | bottomAction      | @Composable (() -> Unit)?          | Composable content at the bottom of the component     | null                                  | No       |
 | insideMargin      | PaddingValues                      | Internal padding of the component                     | BasicComponentDefaults.InsideMargin   | No       |
+| cardListPosition  | CardListPosition                   | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No       |
 | onClick           | (() -> Unit)?                      | Callback triggered when the component is clicked      | null                                  | No       |
 | onClickLabel      | String?                            | Accessibility label describing the click action       | null                                  | No       |
 | role              | Role?                              | Semantic role for accessibility services              | null                                  | No       |
@@ -143,6 +144,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | Composable content on the end side of the component   | null                                | No       |
 | bottomAction      | @Composable (() -> Unit)?          | Composable content at the bottom of the component     | null                                | No       |
 | insideMargin      | PaddingValues                      | Internal padding of the component                     | BasicComponentDefaults.InsideMargin | No       |
+| cardListPosition  | CardListPosition                   | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No       |
 | onClick           | (() -> Unit)?                      | Callback triggered when the component is clicked      | null                                | No       |
 | onClickLabel      | String?                            | Accessibility label describing the click action       | null                                | No       |
 | role              | Role?                              | Semantic role for accessibility services              | null                                | No       |
@@ -159,6 +161,7 @@ The BasicComponentDefaults object provides default values and color configuratio
 
 | Constant Name | Type          | Description                       | Default Value        |
 | ------------- | ------------- | --------------------------------- | -------------------- |
+| MinHeight     | Dp            | Minimum row height, before card-group position padding | 48.dp |
 | InsideMargin  | PaddingValues | Internal padding of the component | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 
 #### BasicComponentDefaults Methods

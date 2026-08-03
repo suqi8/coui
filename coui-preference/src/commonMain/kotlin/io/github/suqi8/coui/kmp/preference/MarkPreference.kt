@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.RadioButton
 import io.github.suqi8.coui.kmp.basic.RadioButtonColors
 import io.github.suqi8.coui.kmp.basic.RadioButtonDefaults
@@ -42,6 +43,7 @@ import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
  * @param markLocation The location of the mark, [MarkLocation.End] or [MarkLocation.Start].
  * @param bottomAction The [Composable] content at the bottom of the [MarkPreference].
  * @param insideMargin The margin inside the [MarkPreference].
+ * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [MarkPreference] is clickable.
  */
@@ -61,6 +63,7 @@ fun MarkPreference(
     markLocation: MarkLocation = MarkLocation.End,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
+    cardListPosition: CardListPosition = CardListPosition.None,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
 ) {
@@ -69,6 +72,7 @@ fun MarkPreference(
     BasicComponent(
         modifier = modifier,
         insideMargin = insideMargin,
+        cardListPosition = cardListPosition,
         title = title,
         titleColor = titleColor,
         summary = summary,

@@ -127,6 +127,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | 组件右侧的可组合内容 | null                                  | 否       |
 | bottomAction      | @Composable (() -> Unit)?          | 组件底部的可组合内容 | null                                  | 否       |
 | insideMargin      | PaddingValues                      | 组件内部边距         | BasicComponentDefaults.InsideMargin   | 否       |
+| cardListPosition  | CardListPosition                   | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否       |
 | onClick           | (() -> Unit)?                      | 点击组件时触发的回调 | null                                  | 否       |
 | onClickLabel      | String?                            | 无障碍点击操作描述   | null                                  | 否       |
 | role              | Role?                              | 无障碍语义角色       | null                                  | 否       |
@@ -143,6 +144,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | 组件右侧的可组合内容 | null                                | 否       |
 | bottomAction      | @Composable (() -> Unit)?          | 组件底部的可组合内容 | null                                | 否       |
 | insideMargin      | PaddingValues                      | 组件内部边距         | BasicComponentDefaults.InsideMargin | 否       |
+| cardListPosition  | CardListPosition                   | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否       |
 | onClick           | (() -> Unit)?                      | 点击组件时触发的回调 | null                                | 否       |
 | onClickLabel      | String?                            | 无障碍点击操作描述   | null                                | 否       |
 | role              | Role?                              | 无障碍语义角色       | null                                | 否       |
@@ -159,6 +161,7 @@ BasicComponentDefaults 对象提供了 BasicComponent 组件的默认值和颜�
 
 | 常量名       | 类型          | 说明           | 默认值               |
 | ------------ | ------------- | -------------- | -------------------- |
+| MinHeight    | Dp            | 行的最小高度（未计入卡片组位置内边距） | 48.dp |
 | InsideMargin | PaddingValues | 组件的内部边距 | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 
 #### BasicComponentDefaults 方法
