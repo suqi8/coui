@@ -21,7 +21,7 @@ Line heights come from each `couiTextAppearance*`'s `lineSpacingMultiplier`, tak
 | `button`   | 16sp | Medium | 1.263em     | couiTextAppearanceButtonL |
 | `footnote1`| 13sp | Normal | 1.2245em    | couiTextAppearanceBody |
 | `footnote2`| 11sp | Normal | 1.143em     | couiTextAppearanceDescription |
-| `headline1`| 17sp | Normal | 1.158em     | couiTextAppearanceHeadline6 |
+| `headline1`| 16sp | Normal | 1.158em     | couiTextAppearanceHeadline6 |
 | `headline2`| 16sp | Normal | 1.158em     | couiTextAppearanceHeadline6 |
 | `subtitle` | 14sp | Bold   | 1.2245em    | couiTextAppearanceBody |
 | `title1`   | 32sp | Normal | 1.2322em    | couiTextAppearanceHeadline1 |
@@ -31,7 +31,9 @@ Line heights come from each `couiTextAppearance*`'s `lineSpacingMultiplier`, tak
 
 ::: tip
 COUI has no 11sp / 13sp / 17sp text appearance, so those styles borrow the multiplier of the
-closest tier by font size.
+closest tier by font size. `headline1` is the exception that was measured rather than inferred: a
+ColorOS 16 preference title node is 21.71dp tall at 560 dpi, which is 16sp — not the 17sp inherited
+from Miuix.
 
 Every style carries `LineHeightStyle(alignment = Top, trim = None)` to match Android's
 `lineSpacingMultiplier`: the extra leading sits below the line and is never trimmed. Compose's
