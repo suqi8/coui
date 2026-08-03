@@ -209,8 +209,8 @@ private val Footnote2: TextStyle
 
 /**
  * COUI couiTextAppearanceHeadline6 16sp (coui_spacing_multiplier_headline_xs), the appearance behind
- * TextAppearance.COUI.List.Title. Measured on ColorOS 16 at 560 dpi, a preference title node is
- * 76 px = 21.71 dp tall, matching 16sp x 1.158 x the font's 1.171 metric height.
+ * TextAppearance.COUI.List.Title. Confirmed on device: a ColorOS 16 preference title node measures
+ * 21.71dp at 560 dpi, which is 16sp rather than the 17sp inherited from Miuix.
  */
 private val Headline1: TextStyle
     get() =
