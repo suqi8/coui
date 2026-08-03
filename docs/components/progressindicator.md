@@ -1,6 +1,6 @@
 # ProgressIndicator
 
-`ProgressIndicator` is a progress indication component in COUI used to display the progress status of operations. It provides three styles: linear progress bar, circular progress indicator, and infinite spinning indicator, suitable for different loading and progress display scenarios.
+`ProgressIndicator` is a progress indication component in COUI used to display the progress status of operations. It provides four styles: linear progress bar, circular progress indicator, infinite spinning indicator, and the rotating spinner, suitable for different loading and progress display scenarios.
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=progressIndicator" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -12,6 +12,7 @@
 import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator // Linear progress bar
 import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator // Circular progress indicator
 import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // Infinite spinning indicator
+import io.github.suqi8.coui.kmp.basic.RotatingProgressIndicator // Rotating spinner
 ```
 
 ## Basic Usage
@@ -50,10 +51,29 @@ CircularProgressIndicator()
 
 ### Infinite Progress Indicator
 
-Infinite progress indicator is suitable for scenarios where operation duration is uncertain:
+Infinite progress indicator is suitable for scenarios where operation duration is uncertain. It is tinted with the theme accent color by default, matching the ColorOS "Refreshing…" spinner:
 
 ```kotlin
 InfiniteProgressIndicator()
+```
+
+### Rotating Spinner
+
+`RotatingProgressIndicator` is the ColorOS system-default indeterminate spinner: a bare stroked arc with flat caps and no background ring, whose sweep pulses between 273.6° and 50.4° while the arc spins twice per 1250 ms cycle. It is a direct port of the `coui_rotating_loading.json` asset that `Theme.COUI` binds to the `couiRotatingSpinnerJsonName` attribute, reproduced with a single `drawArc` so it needs no Lottie runtime.
+
+```kotlin
+RotatingProgressIndicator()
+```
+
+It ships a default (26dp) and a small (16dp) tier, matching `coui_lottie_loading_view_large_*` and `coui_lottie_loading_view_small_*`:
+
+```kotlin
+// Small rotating spinner
+RotatingProgressIndicator(
+    size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
+    ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
+    strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth
+)
 ```
 
 ### Size Tiers
@@ -124,10 +144,19 @@ CircularProgressIndicator(progress = null)
 | Property Name   | Type     | Description                        | Default Value                                                             | Required |
 | --------------- | -------- | ---------------------------------- | ------------------------------------------------------------------------- | -------- |
 | modifier        | Modifier | Modifier applied to the indicator  | Modifier                                                                  | No       |
-| color           | Color    | Color of the progress indicator    | Color.Gray                                                                | No       |
+| color           | Color    | Color of the arc                   | COUITheme.colorScheme.primary                                             | No       |
 | size            | Dp       | Size of the indicator              | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorSize            | No       |
-| strokeWidth     | Dp       | Stroke width of the circular track | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth     | No       |
-| orbitingDotSize | Dp       | Size of the orbiting dot           | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorOrbitingDotSize | No       |
+| strokeWidth     | Dp       | Stroke width of the arc            | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth     | No       |
+
+### RotatingProgressIndicator Properties
+
+| Property Name | Type     | Description                                            | Default Value                                                            | Required |
+| ------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------ | -------- |
+| modifier      | Modifier | Modifier applied to the indicator                      | Modifier                                                                 | No       |
+| color         | Color    | Color of the arc                                       | COUITheme.colorScheme.onSurfaceContainer                                 | No       |
+| size          | Dp       | Size of the indicator's square view box                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize           | No       |
+| ringDiameter  | Dp       | Diameter of the arc's stroke centerline                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter   | No       |
+| strokeWidth   | Dp       | Stroke width of the arc                                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth    | No       |
 
 ### ProgressIndicatorDefaults Object
 
@@ -141,12 +170,18 @@ The ProgressIndicatorDefaults object provides default values and color configura
 | DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 3.dp          | Default stroke width of circular indicator      |
 | DefaultCircularProgressIndicatorSize            | Dp   | 30.dp         | Default size of circular indicator              |
 | DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.67.dp       | Default stroke width of infinite indicator      |
-| DefaultInfiniteProgressIndicatorOrbitingDotSize | Dp   | 2.dp          | Default orbiting dot size of infinite indicator |
 | DefaultInfiniteProgressIndicatorSize            | Dp   | 18.dp         | Default size of infinite indicator              |
 | LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp          | Stroke width of the large circular tier         |
 | LargeCircularProgressIndicatorSize              | Dp   | 40.dp         | Size of the large circular tier                 |
 | LargeInfiniteProgressIndicatorStrokeWidth       | Dp   | 3.33.dp       | Stroke width of the large infinite tier         |
 | LargeInfiniteProgressIndicatorSize              | Dp   | 26.dp         | Size of the large infinite tier                 |
+| DefaultRotatingProgressIndicatorSize            | Dp   | 26.dp         | Default view box size of the rotating spinner   |
+| DefaultRotatingProgressIndicatorRingDiameter    | Dp   | 24.14.dp      | Default ring diameter of the rotating spinner   |
+| DefaultRotatingProgressIndicatorStrokeWidth     | Dp   | 1.857.dp      | Default stroke width of the rotating spinner    |
+| SmallRotatingProgressIndicatorSize              | Dp   | 16.dp         | View box size of the small rotating tier        |
+| SmallRotatingProgressIndicatorRingDiameter      | Dp   | 12.68.dp      | Ring diameter of the small rotating tier        |
+| SmallRotatingProgressIndicatorStrokeWidth       | Dp   | 1.811.dp      | Stroke width of the small rotating tier         |
+| MaxRotatingProgressIndicatorSize                | Dp   | 40.dp         | Largest supported rotating spinner size         |
 
 #### Methods
 
@@ -228,8 +263,7 @@ Button(
 InfiniteProgressIndicator(
     color = COUITheme.colorScheme.primary,
     size = 40.dp,
-    strokeWidth = 3.dp,
-    orbitingDotSize = 4.dp
+    strokeWidth = 3.dp
 )
 ```
 

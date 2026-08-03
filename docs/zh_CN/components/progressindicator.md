@@ -1,6 +1,6 @@
 # ProgressIndicator
 
-`ProgressIndicator` 是 COUI 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条和无限旋转指示器三种样式，适用于不同场景下的加载和进度展示需求。
+`ProgressIndicator` 是 COUI 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条、无限旋转指示器和旋转加载指示器四种样式，适用于不同场景下的加载和进度展示需求。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=progressIndicator" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -12,6 +12,7 @@
 import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator // 线性进度条
 import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator // 环形进度条
 import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
+import io.github.suqi8.coui.kmp.basic.RotatingProgressIndicator // 旋转加载指示器
 ```
 
 ## 基本用法
@@ -50,10 +51,29 @@ CircularProgressIndicator()
 
 ### 无限旋转指示器
 
-无限旋转指示器适用于无法确定操作时长的场景：
+无限旋转指示器适用于无法确定操作时长的场景，默认使用主题强调色着色，与 ColorOS「正在刷新…」的旋转指示器一致：
 
 ```kotlin
 InfiniteProgressIndicator()
+```
+
+### 旋转加载指示器
+
+`RotatingProgressIndicator` 是 ColorOS 系统默认的不确定态加载指示器：一段没有背景圆环的裸圆弧，端点为平头（butt cap），在 1250 ms 的一个周期内旋转两整圈，同时弧长在 273.6° 与 50.4° 之间脉动。它直接移植自 `Theme.COUI` 通过 `couiRotatingSpinnerJsonName` 属性绑定的 `coui_rotating_loading.json` 资源，用单个 `drawArc` 实现，因此不需要引入 Lottie 运行时。
+
+```kotlin
+RotatingProgressIndicator()
+```
+
+它提供默认（26dp）和小号（16dp）两档尺寸，分别对应 `coui_lottie_loading_view_large_*` 与 `coui_lottie_loading_view_small_*`：
+
+```kotlin
+// 小号旋转加载指示器
+RotatingProgressIndicator(
+    size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
+    ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
+    strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth
+)
 ```
 
 ### 尺寸规格
@@ -124,10 +144,19 @@ CircularProgressIndicator(progress = null)
 | 属性名          | 类型     | 说明                 | 默认值                                                                    | 是否必须 |
 | --------------- | -------- | -------------------- | ------------------------------------------------------------------------- | -------- |
 | modifier        | Modifier | 应用于进度条的修饰符 | Modifier                                                                  | 否       |
-| color           | Color    | 进度指示器的颜色     | Color.Gray                                                                | 否       |
+| color           | Color    | 圆弧的颜色           | COUITheme.colorScheme.primary                                             | 否       |
 | size            | Dp       | 进度指示器的大小     | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorSize            | 否       |
-| strokeWidth     | Dp       | 环形轨道的描边宽度   | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth     | 否       |
-| orbitingDotSize | Dp       | 环绕点的大小         | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorOrbitingDotSize | 否       |
+| strokeWidth     | Dp       | 圆弧的描边宽度       | ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth     | 否       |
+
+### RotatingProgressIndicator 属性
+
+| 属性名       | 类型     | 说明                     | 默认值                                                                 | 是否必须 |
+| ------------ | -------- | ------------------------ | ---------------------------------------------------------------------- | -------- |
+| modifier     | Modifier | 应用于指示器的修饰符     | Modifier                                                               | 否       |
+| color        | Color    | 圆弧的颜色               | COUITheme.colorScheme.onSurfaceContainer                               | 否       |
+| size         | Dp       | 指示器方形视图框的大小   | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize         | 否       |
+| ringDiameter | Dp       | 圆弧描边中心线的直径     | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter | 否       |
+| strokeWidth  | Dp       | 圆弧的描边宽度           | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth  | 否       |
 
 ### ProgressIndicatorDefaults 对象
 
@@ -141,12 +170,18 @@ ProgressIndicatorDefaults 对象提供了进度指示器组件的默认值和颜
 | DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 3.dp   | 环形进度条的默认描边宽度 |
 | DefaultCircularProgressIndicatorSize            | Dp   | 30.dp  | 环形进度条的默认大小     |
 | DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.67.dp | 无限指示器的默认描边宽度 |
-| DefaultInfiniteProgressIndicatorOrbitingDotSize | Dp   | 2.dp   | 无限指示器默认环绕点大小 |
 | DefaultInfiniteProgressIndicatorSize            | Dp   | 18.dp  | 无限指示器的默认大小     |
 | LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp   | 大号环形进度条的描边宽度 |
 | LargeCircularProgressIndicatorSize              | Dp   | 40.dp  | 大号环形进度条的大小     |
 | LargeInfiniteProgressIndicatorStrokeWidth       | Dp   | 3.33.dp | 大号无限指示器的描边宽度 |
 | LargeInfiniteProgressIndicatorSize              | Dp   | 26.dp  | 大号无限指示器的大小     |
+| DefaultRotatingProgressIndicatorSize            | Dp   | 26.dp  | 旋转指示器默认视图框大小 |
+| DefaultRotatingProgressIndicatorRingDiameter    | Dp   | 24.14.dp | 旋转指示器默认圆环直径 |
+| DefaultRotatingProgressIndicatorStrokeWidth     | Dp   | 1.857.dp | 旋转指示器默认描边宽度 |
+| SmallRotatingProgressIndicatorSize              | Dp   | 16.dp  | 小号旋转指示器视图框大小 |
+| SmallRotatingProgressIndicatorRingDiameter      | Dp   | 12.68.dp | 小号旋转指示器圆环直径 |
+| SmallRotatingProgressIndicatorStrokeWidth       | Dp   | 1.811.dp | 小号旋转指示器描边宽度 |
+| MaxRotatingProgressIndicatorSize                | Dp   | 40.dp  | 旋转指示器支持的最大尺寸 |
 
 #### 方法
 
@@ -228,8 +263,7 @@ Button(
 InfiniteProgressIndicator(
     color = COUITheme.colorScheme.primary,
     size = 40.dp,
-    strokeWidth = 3.dp,
-    orbitingDotSize = 4.dp
+    strokeWidth = 3.dp
 )
 ```
 

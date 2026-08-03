@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,11 +38,9 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * A [LinearProgressIndicator] with COUI style.
@@ -216,62 +216,162 @@ fun CircularProgressIndicator(
 
 /**
  * A [InfiniteProgressIndicator] with COUI style.
- * The indicator is a circular indicator with an orbiting dot.
+ *
+ * A thin wrapper around [RotatingProgressIndicator] that keeps the accent tint and the
+ * `coui_loading_view_*` size tier, for indeterminate waits inside dialogs and inline content.
  *
  * @param modifier The modifier to be applied to the indicator.
- * @param color The color of the indicator.
- * @param size The size (diameter) of the circular indicator.
- * @param strokeWidth The width of the circular stroke.
- * @param orbitingDotSize The size of the orbiting dot.
+ * @param color The color of the arc.
+ * @param size The size (the square view box) of the indicator.
+ * @param strokeWidth The width of the arc stroke.
  */
 @Composable
+@NonRestartableComposable
 fun InfiniteProgressIndicator(
     modifier: Modifier = Modifier,
-    color: Color = Color.Gray,
+    color: Color = COUITheme.colorScheme.primary,
     size: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorSize,
     strokeWidth: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorStrokeWidth,
-    orbitingDotSize: Dp = ProgressIndicatorDefaults.DefaultInfiniteProgressIndicatorOrbitingDotSize,
+) {
+    RotatingProgressIndicator(
+        modifier = modifier,
+        color = color,
+        size = size,
+        ringDiameter = size - strokeWidth,
+        strokeWidth = strokeWidth,
+    )
+}
+
+/**
+ * A [RotatingProgressIndicator] with COUI style.
+ *
+ * ColorOS's indeterminate spinner: a single bare stroked arc with flat caps and no background ring,
+ * whose sweep pulses while the whole arc spins. Ported from the Lottie asset
+ * `coui_rotating_loading.json`, which `Theme.COUI` binds to `couiRotatingSpinnerJsonName` and
+ * `COUILottieLoadingView` renders (the same animation also ships as the `fb_loading.xml`
+ * AnimatedVectorDrawable). The asset is one ellipse driven by one trim path, so it is reproduced
+ * here with a single [drawArc] and needs no Lottie runtime.
+ *
+ * @param modifier The modifier to be applied to the indicator.
+ * @param color The color of the arc.
+ * @param size The size (the square view box) of the indicator.
+ * @param ringDiameter The diameter of the arc's stroke centerline, centered inside [size].
+ * @param strokeWidth The width of the arc stroke.
+ */
+@Composable
+fun RotatingProgressIndicator(
+    modifier: Modifier = Modifier,
+    color: Color = COUITheme.colorScheme.onSurfaceContainer,
+    size: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize,
+    ringDiameter: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter,
+    strokeWidth: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth,
 ) {
     val transition = rememberInfiniteTransition()
-    // COUILoadingView rotates one full turn per 1000 ms with a linear interpolator
-    // ((uptimeMillis % 1000) * 360 / 1000 in onDraw).
-    val rotation by transition.animateFloat(
+    // coui_rotating_loading.json: fr = 60, ip = 0, op = 76, so frames 0..75 at 60 fps play in
+    // 1250 ms and then repeat forever.
+    val cycle by transition.animateFloat(
         initialValue = 0f,
-        targetValue = 360f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(RotatingSpinnerCycleMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
     )
 
     Canvas(
-        modifier = modifier.size(size),
+        modifier = modifier
+            .semantics { progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate }
+            .size(size),
     ) {
         val strokeWidthPx = strokeWidth.toPx()
-        val orbitingDotSizePx = orbitingDotSize.toPx()
-        val center = Offset(this.size.width / 2, this.size.height / 2)
-        val radius = (size.toPx() - strokeWidthPx) / 2
+        val diameterPx = ringDiameter.toPx()
+        val inset = (this.size.minDimension - diameterPx) / 2
 
-        drawCircle(
+        // `Trim Paths 1` pins `end` at 100% and animates `start`, so the arc's trailing edge is
+        // fixed while its leading edge swings; both the sweep and the start angle derive from it.
+        val trimStart = rotatingSpinnerTrimStart(cycle)
+
+        drawArc(
             color = color,
-            radius = radius,
-            center = center,
-            style = Stroke(strokeWidthPx, cap = StrokeCap.Round),
-        )
-
-        val orbitRadius = radius - 2 * orbitingDotSizePx
-        val angle = rotation * (PI / 180.0).toFloat()
-        val dotCenter = center + Offset(
-            x = orbitRadius * cos(angle),
-            y = orbitRadius * sin(angle),
-        )
-
-        drawCircle(
-            color = color,
-            radius = orbitingDotSizePx,
-            center = dotCenter,
+            startAngle = rotatingSpinnerStartAngle(cycle, trimStart),
+            sweepAngle = 360f - trimStart,
+            useCenter = false,
+            topLeft = Offset(inset, inset),
+            size = Size(diameterPx, diameterPx),
+            // Stroke 1 declares lc = 1, i.e. a butt/flat cap (not the round cap the other COUI
+            // progress indicators use), and lj = 1 (miter, irrelevant for a single open arc).
+            style = Stroke(width = strokeWidthPx, cap = StrokeCap.Butt),
         )
     }
+}
+
+/** The cycle duration of [RotatingProgressIndicator] (coui_rotating_loading.json: 76 frames at 60 fps). */
+private val RotatingSpinnerCycleMillis = 1250
+
+/** The normalized time at which the arc is shortest (coui_rotating_loading.json keyframe t = 37 of 75). */
+private val RotatingSpinnerBreakpoint = 37f / 75f
+
+/** Lottie's standard keyframe easing, used by every keyframe pair except the trim-start ones. */
+private val RotatingSpinnerStandardEasing = CubicBezierEasing(0.167f, 0.167f, 0.833f, 0.833f)
+
+/** The trim-start easing while the arc shortens (keyframe 0 -> 37). */
+private val RotatingSpinnerTrimGrowEasing = CubicBezierEasing(0.167f, 0.167f, 0.833f, 1f)
+
+/** The trim-start easing while the arc lengthens again (keyframe 37 -> 75). */
+private val RotatingSpinnerTrimShrinkEasing = CubicBezierEasing(0.167f, 0f, 0.833f, 0.833f)
+
+/** `Trim Paths 1` start at keyframes t = 0 and t = 75, in degrees of arc. */
+private val TrimStartMin = 24f / 100f * 360f
+
+/** `Trim Paths 1` start at keyframe t = 37, where the arc is shortest, in degrees of arc. */
+private val TrimStartMax = 86f / 100f * 360f
+
+/** `Trim Paths 1` offset at keyframes t = 0 / 37 / 75. */
+private val TrimOffsetStart = -90f
+private val TrimOffsetMid = -41f
+private val TrimOffsetEnd = 270f
+
+/**
+ * The eased `Trim Paths 1` start value at normalized time [cycle], in degrees.
+ *
+ * `start` animates 24% -> 86% -> 24% while `end` stays pinned at 100%, so the visible arc runs
+ * 76% -> 14% -> 76% of the circle, i.e. 273.6 -> 50.4 -> 273.6 degrees.
+ */
+private fun rotatingSpinnerTrimStart(cycle: Float): Float = if (cycle < RotatingSpinnerBreakpoint) {
+    val fraction = RotatingSpinnerTrimGrowEasing.transform(cycle / RotatingSpinnerBreakpoint)
+    lerp(TrimStartMin, TrimStartMax, fraction)
+} else {
+    val fraction = RotatingSpinnerTrimShrinkEasing.transform(
+        (cycle - RotatingSpinnerBreakpoint) / (1f - RotatingSpinnerBreakpoint),
+    )
+    lerp(TrimStartMax, TrimStartMin, fraction)
+}
+
+/**
+ * The start angle of [RotatingProgressIndicator]'s arc at normalized time [cycle], given the already
+ * eased [trimStart].
+ *
+ * Three rotations compose here. The layer's own rotation runs 90 -> 450 degrees over the cycle while
+ * the shape group carries a constant -90 degree transform, which together reduce to `360 * cycle`.
+ * The trim path's offset independently runs -90 -> -41 -> 270 degrees, so the arc advances 720
+ * degrees per cycle. Finally the arc is drawn from its leading edge, which sits [trimStart] into the
+ * path, and Compose measures angles from 3 o'clock while the ellipse path starts at 12 o'clock.
+ *
+ * The layer's `s: [-100, -100, 100]` scale is a 180 degree point reflection about the center; on a
+ * centered circular arc that is a constant phase shift of an already continuously spinning
+ * animation, so it is not applied.
+ */
+private fun rotatingSpinnerStartAngle(cycle: Float, trimStart: Float): Float {
+    val trimOffset = if (cycle < RotatingSpinnerBreakpoint) {
+        val fraction = RotatingSpinnerStandardEasing.transform(cycle / RotatingSpinnerBreakpoint)
+        lerp(TrimOffsetStart, TrimOffsetMid, fraction)
+    } else {
+        val fraction = RotatingSpinnerStandardEasing.transform(
+            (cycle - RotatingSpinnerBreakpoint) / (1f - RotatingSpinnerBreakpoint),
+        )
+        lerp(TrimOffsetMid, TrimOffsetEnd, fraction)
+    }
+    return -90f + 360f * cycle + trimOffset + trimStart
 }
 
 /**
@@ -360,9 +460,6 @@ object ProgressIndicatorDefaults {
     /** The default stroke width of [InfiniteProgressIndicator] (COUI coui_circle_loading_medium_strokewidth). */
     val DefaultInfiniteProgressIndicatorStrokeWidth = 2.67.dp
 
-    /** The default radius width of the orbiting dot in [InfiniteProgressIndicator]. */
-    val DefaultInfiniteProgressIndicatorOrbitingDotSize = 2.dp
-
     /** The default size of [InfiniteProgressIndicator] (COUI coui_loading_view_default_length). */
     val DefaultInfiniteProgressIndicatorSize = 18.dp
 
@@ -371,6 +468,52 @@ object ProgressIndicatorDefaults {
 
     /** The size of the large [InfiniteProgressIndicator] tier (COUI coui_loading_view_large_width/height). */
     val LargeInfiniteProgressIndicatorSize = 26.dp
+
+    /**
+     * The default size of [RotatingProgressIndicator]
+     * (COUI coui_lottie_loading_view_large_width/height, the tier COUILottieLoadingView defaults to).
+     */
+    val DefaultRotatingProgressIndicatorSize = 26.dp
+
+    /**
+     * The default ring diameter of [RotatingProgressIndicator].
+     * coui_rotating_loading.json: a 26-unit ellipse at 300% group scale is 78 units across on an
+     * 84-unit comp, so 78 / 84 * 26.dp = 24.14.dp.
+     */
+    val DefaultRotatingProgressIndicatorRingDiameter = 24.14.dp
+
+    /**
+     * The default stroke width of [RotatingProgressIndicator].
+     * coui_rotating_loading.json: a 2-unit stroke at 300% group scale is 6 units on an 84-unit comp,
+     * so 6 / 84 * 26.dp = 1.857.dp.
+     */
+    val DefaultRotatingProgressIndicatorStrokeWidth = 1.857.dp
+
+    /**
+     * The size of the small [RotatingProgressIndicator] tier
+     * (COUI coui_lottie_loading_view_small_width/height).
+     */
+    val SmallRotatingProgressIndicatorSize = 16.dp
+
+    /**
+     * The ring diameter of the small [RotatingProgressIndicator] tier.
+     * coui_lottie_loading_small.json: a 14-unit ellipse at 300% group scale is 42 units across on a
+     * 53-unit comp, so 42 / 53 * 16.dp = 12.68.dp.
+     */
+    val SmallRotatingProgressIndicatorRingDiameter = 12.68.dp
+
+    /**
+     * The stroke width of the small [RotatingProgressIndicator] tier.
+     * coui_lottie_loading_small.json: a 2-unit stroke at 300% group scale is 6 units on a 53-unit
+     * comp, so 6 / 53 * 16.dp = 1.811.dp.
+     */
+    val SmallRotatingProgressIndicatorStrokeWidth = 1.811.dp
+
+    /**
+     * The largest supported size of [RotatingProgressIndicator]
+     * (COUI coui_loading_max_large_width/height; COUICompProgressIndicator warns above it).
+     */
+    val MaxRotatingProgressIndicatorSize = 40.dp
 
     /**
      * The default [ProgressIndicatorColors] used by [LinearProgressIndicator]

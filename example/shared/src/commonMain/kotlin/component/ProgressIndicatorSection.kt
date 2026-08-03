@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator
 import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator
 import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator
+import io.github.suqi8.coui.kmp.basic.ProgressIndicatorDefaults
+import io.github.suqi8.coui.kmp.basic.RotatingProgressIndicator
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 
 fun LazyListScope.progressIndicatorSection() {
@@ -66,6 +68,17 @@ fun LazyListScope.progressIndicatorSection() {
             InfiniteProgressIndicator(
                 modifier = Modifier
                     .align(alignment = Alignment.CenterVertically),
+            )
+            RotatingProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically),
+            )
+            RotatingProgressIndicator(
+                modifier = Modifier
+                    .align(alignment = Alignment.CenterVertically),
+                size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
+                ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
+                strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,
             )
         }
     }
