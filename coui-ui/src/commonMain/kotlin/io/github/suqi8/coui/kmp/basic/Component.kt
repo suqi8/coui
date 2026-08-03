@@ -28,10 +28,8 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -94,21 +92,17 @@ fun BasicComponent(
         if (title != null) {
             Text(
                 text = title,
-                fontSize = COUITheme.textStyles.headline1.fontSize,
+                style = COUITheme.textStyles.headline1,
                 fontWeight = FontWeight.Medium,
                 color = titleColor.color(enabled),
-                lineHeight = TitleLineHeight,
-                style = COUITheme.textStyles.main.copy(lineHeightStyle = COUILineHeightStyle),
             )
         }
         if (summary != null) {
             Text(
                 text = summary,
                 modifier = Modifier.padding(top = if (title != null) MarginBetweenLine else 0.dp),
-                fontSize = COUITheme.textStyles.body2.fontSize,
+                style = COUITheme.textStyles.body2,
                 color = summaryColor.color(enabled),
-                lineHeight = SummaryLineHeight,
-                style = COUITheme.textStyles.main.copy(lineHeightStyle = COUILineHeightStyle),
             )
         }
     }
@@ -332,25 +326,3 @@ data class BasicComponentColors(
 
 /** COUI support_preference_margin_between_line: the summary's layout_marginTop in coui_preference.xml. */
 private val MarginBetweenLine = 2.dp
-
-/**
- * COUI coui_spacing_multiplier_headline_xs, the lineSpacingMultiplier of couiTextAppearanceHeadline6
- * (the title style's parent). 1.158 in values-v35, the bucket ColorOS 16 resolves.
- */
-private val TitleLineHeight = 1.158f.em
-
-/**
- * COUI coui_spacing_multiplier_body_m, the lineSpacingMultiplier of couiTextAppearanceBody (the
- * summary style's parent). 1.2245 in values-v35.
- */
-private val SummaryLineHeight = 1.2245f.em
-
-/**
- * Distributes the extra leading the way Android's lineSpacingMultiplier does: below the line, never
- * trimmed. Compose's default centers and trims it, which would cancel the multipliers out on the
- * single-line title and summary.
- */
-private val COUILineHeightStyle = LineHeightStyle(
-    alignment = LineHeightStyle.Alignment.Top,
-    trim = LineHeightStyle.Trim.None,
-)
