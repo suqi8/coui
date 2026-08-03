@@ -32,11 +32,8 @@ import io.github.suqi8.coui.kmp.basic.TextButtonColors
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * A single action in a [DialogButtonBar].
- *
- * COUI addresses the three dialog buttons by role rather than by position
- * (`android.R.id.button1` / `button2` / `button3` = positive / negative / neutral), because
- * `COUIButtonBarLayout.resortButton` reorders them when the bar stacks.
+ * A single action in a [DialogButtonBar], addressed by role rather than position because
+ * `COUIButtonBarLayout.resortButton` reorders the buttons when the bar stacks.
  *
  * @param text The button label.
  * @param enabled Whether the button is enabled.
@@ -54,16 +51,10 @@ data class DialogButtonBarAction(
  * row and a vertical stack.
  *
  * `COUIButtonBarLayout.onMeasure` keeps the bar horizontal only when every label fits, there are
- * exactly two buttons and there is no recommend button; in every other case it stacks. This
- * reproduces that decision: each label is measured against [textStyle] and compared with the
- * per-cell width `needSetButVertical` computes, which divides the bar width (clamped to
- * `coui_dialog_max_width`) by the button count, minus the dividers and the buttons' own
- * horizontal padding.
- *
- * The two tiers do not merely differ in direction: they use different min heights, paddings,
- * divider thickness and divider insets, and the buttons appear in the opposite order (COUI
- * brings neutral / positive / negative to the front when vertical, and negative / neutral /
- * positive when horizontal). See [DialogButtonBarDefaults] for the metrics of each tier.
+ * exactly two buttons and there is no recommend button; in every other case it stacks. The two
+ * tiers differ by more than direction — min heights, paddings, divider thickness and insets all
+ * change, and the buttons appear in the opposite order — so see [DialogButtonBarDefaults] for the
+ * stacked metrics and [DialogDefaults] for the row ones.
  *
  * The recommend-button tier (`setRecommendButtonId`, a highlighted filled button) is not
  * implemented; this bar always behaves as `mRecommendButtonId == NO_RECOMMEND_ID`.
@@ -72,13 +63,13 @@ data class DialogButtonBarAction(
  * @param positive The positive (confirm) action. Hidden when null.
  * @param modifier The modifier to be applied to the bar.
  * @param neutral The neutral (third) action. Hidden when null.
- * @param dynamicLayout Whether the bar may stack itself. When false it always stays horizontal,
- *   like `COUIButtonBarLayout.setDynamicLayout(false)`.
+ * @param dynamicLayout Whether the bar may stack itself, like
+ *   `COUIButtonBarLayout.setDynamicLayout`.
  * @param showDivider Whether the dividers between buttons are shown, like the
  *   `buttonBarShowDivider` attribute.
- * @param hasContentAbove Whether the dialog shows a title, message or custom panel above the
- *   bar. COUI adds `coui_bottom_alert_dialog_vertical_button_padding_top_extra_new` to the
- *   top-most stacked button only when nothing sits above it.
+ * @param hasContentAbove Whether the dialog shows a title, message or custom panel above the bar.
+ *   COUI adds [DialogButtonBarDefaults.StackedButtonPaddingTopExtra] to the top-most stacked button
+ *   only when nothing sits above it.
  * @param colors The [TextButtonColors] of the buttons.
  * @param dividerColor The color of the dividers between buttons.
  * @param textStyle The text style of the labels, also used to measure them for the flip decision.
@@ -118,7 +109,7 @@ fun DialogButtonBar(
             if (!dynamicLayout) {
                 false
             } else {
-                val labelsFit = !needsStacking(
+                val labelsFit = labelsFitInRow(
                     negative = negative,
                     positive = positive,
                     neutral = neutral,
@@ -128,9 +119,8 @@ fun DialogButtonBar(
                     textMeasurer = textMeasurer,
                     density = density,
                 )
-                // COUIButtonBarLayout.onMeasure: stay horizontal only when the labels fit AND
-                // there are exactly two buttons (AND there is no recommend button, which this
-                // implementation never has).
+                // COUIButtonBarLayout.onMeasure stays horizontal only when the labels fit and there
+                // are exactly two buttons (and no recommend button, which this bar never has).
                 !(labelsFit && buttonCount == 2)
             }
         }
@@ -161,15 +151,15 @@ fun DialogButtonBar(
 }
 
 /**
- * Reproduces `COUIButtonBarLayout.needSetButVertical`: the bar width minus the dividers is split
- * evenly between the buttons, each cell loses its two horizontal paddings, and the bar has to
- * stack as soon as one label is wider than what is left.
+ * Whether every label fits its cell, inverting `COUIButtonBarLayout.needSetButVertical`: the bar
+ * width minus the dividers is split evenly between the buttons, each cell loses its two horizontal
+ * paddings, and one label wider than what is left forces the bar to stack.
  *
- * Note the divider subtracted here is the *vertical* tier thickness
+ * The divider subtracted here is the *stacked* tier thickness
  * (`coui_delete_alert_dialog_divider_height_verticalbutton`), which is what COUI uses in this
- * formula even though the horizontal bar it may end up drawing uses the 1dp thickness.
+ * formula even though the row it may end up drawing uses the thicker one.
  */
-private fun needsStacking(
+private fun labelsFitInRow(
     negative: DialogButtonBarAction?,
     positive: DialogButtonBarAction?,
     neutral: DialogButtonBarAction?,
@@ -179,20 +169,20 @@ private fun needsStacking(
     textMeasurer: TextMeasurer,
     density: Density,
 ): Boolean {
-    if (buttonCount == 0) return false
+    if (buttonCount == 0) return true
     val availablePx = with(density) {
         val dividersPx = (buttonCount - 1) * DialogButtonBarDefaults.StackedDividerThickness.roundToPx()
         (barWidth.roundToPx() - dividersPx) / buttonCount -
             DialogButtonBarDefaults.ButtonHorizontalPadding.roundToPx() * 2
     }
-    return listOfNotNull(positive, negative, neutral).any { action ->
+    return listOfNotNull(positive, negative, neutral).all { action ->
         // COUI measures the raw single-line paint width of the label.
         textMeasurer.measure(
             text = action.text,
             style = textStyle,
             softWrap = false,
             maxLines = 1,
-        ).size.width > availablePx
+        ).size.width <= availablePx
     }
 }
 
@@ -238,10 +228,6 @@ private fun RowButtonBar(
                 onClick = action.onClick,
                 modifier = Modifier.weight(1f).fillMaxHeight(),
                 enabled = action.enabled,
-                // COUIAlertDialogBottomButton sets stateListAnimator=@null and the center-panel
-                // style COUIAlertDialogBottomButtonNewNormal sets scaleEnable=false /
-                // drawableRadius=0dp: the button is a full-cell rectangle whose only press
-                // feedback is the couiColorPress tint over the whole cell (no shrink, no capsule).
                 pressScaleEnabled = false,
                 cornerRadius = DialogButtonBarDefaults.ButtonCornerRadius,
                 minHeight = DialogDefaults.ButtonBarMinHeight,
@@ -396,8 +382,9 @@ object DialogButtonBarDefaults {
 
     /**
      * The corner radius of a dialog bar button. COUIAlertDialogBottomButtonNewNormal sets
-     * `drawableRadius=0dp` and the press mask of `coui_alert_dialog_item_background` is a plain
-     * `<color>` filling the whole cell, so the hit area and press tint are a square-cornered rect.
+     * `drawableRadius=0dp` and `scaleEnable=false`, and the press state of
+     * `coui_alert_dialog_item_background` is a plain `<color>` with no shape, so a bar button is a
+     * square-cornered cell whose only feedback is the press tint filling it.
      */
     val ButtonCornerRadius = 0.dp
 }
