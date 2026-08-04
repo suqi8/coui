@@ -36,6 +36,7 @@ export default defineConfig({
                     items: [
                         { text: "快速开始", link: "/zh_CN/guide/getting-started" },
                         { text: "从 Miuix 迁移", link: "/zh_CN/guide/migration" },
+                        { text: "升级指南", link: "/zh_CN/guide/upgrading" },
                     ],
                 },
                 {

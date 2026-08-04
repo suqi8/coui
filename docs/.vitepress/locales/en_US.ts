@@ -27,6 +27,7 @@ export default defineConfig({
                     items: [
                         { text: "Getting Started", link: "/guide/getting-started" },
                         { text: "Migrating from Miuix", link: "/guide/migration" },
+                        { text: "Upgrading", link: "/guide/upgrading" },
                     ],
                 },
                 {
