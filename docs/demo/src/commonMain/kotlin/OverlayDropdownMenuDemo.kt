@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.basic.Badge
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
@@ -104,6 +105,30 @@ fun OverlayDropdownMenuDemo() {
             items = listOf("Option 1", "Option 2", "Option 3").map { DropdownItem(text = it) },
         )
         val disabledEntry = DropdownEntry(items = listOf(DropdownItem(text = "Option 1")))
+        val hintEntry = DropdownEntry(
+            items = listOf(
+                DropdownItem(text = "Inbox", hint = { Badge(count = 12) }),
+                DropdownItem(text = "Updates", hint = { Badge() }),
+                DropdownItem(text = "Archive", hint = { Badge(count = 3) }, enabled = false),
+            ),
+        )
+        var sortIndex by remember { mutableIntStateOf(0) }
+        val headerEntries = listOf(
+            DropdownEntry(
+                title = "Sort by",
+                items = listOf("Name", "Date modified").mapIndexed { index, text ->
+                    DropdownItem(
+                        text = text,
+                        selected = sortIndex == index,
+                        onClick = { sortIndex = index },
+                    )
+                },
+            ),
+            DropdownEntry(
+                title = "Danger zone",
+                items = listOf(DropdownItem(text = "Reset all settings", alert = true)),
+            ),
+        )
 
         Card(modifier = Modifier.padding(16.dp).widthIn(max = 600.dp).fillMaxWidth()) {
             Scaffold(
@@ -140,6 +165,18 @@ fun OverlayDropdownMenuDemo() {
                                 summary = "This menu is currently unavailable",
                                 entry = disabledEntry,
                                 enabled = false,
+                            )
+                            OverlayDropdownMenu(
+                                title = "Hint Slot",
+                                summary = "Red dot and count badge; hidden when disabled",
+                                entry = hintEntry,
+                                collapseOnSelection = false,
+                            )
+                            OverlayDropdownMenu(
+                                title = "Group Headers and Alert",
+                                summary = "Header rows plus a destructive item",
+                                entries = headerEntries,
+                                collapseOnSelection = false,
                             )
                         }
                     }

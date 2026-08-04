@@ -199,6 +199,7 @@ Scaffold {
 | ------- | ------------------- | --------------------------------------------------------------------------------- | ------ | -------- |
 | items   | List\<DropdownItem> | 此分组中显示的条目                                                                | -      | 是       |
 | enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
+| title | String?             | 可选的不可点击分组标题，渲染在各项之上（12sp 中等字重、次级标签色、最多 2 行） | null   | 否       |
 
 ### DropdownItem 属性
 
@@ -211,6 +212,8 @@ Scaffold {
 | icon     | @Composable ((Modifier) -> Unit)? | 显示在选项文本前的图标                                                        | null   | 否       |
 | summary  | String?                           | 显示在选项文本下方的摘要文本                                                  | null   | 否       |
 | children | List\<DropdownItem>?              | 可选的子菜单项；仅级联变体会将其渲染为二级菜单（最多两级）                    | null   | 否       |
+| hint | @Composable (() -> Unit)?         | 可选的尾部提示槽（徽标、红点、短计数），显示在选中指示图标之前，最大宽度 40dp。行被禁用时整体隐藏 | null   | 否       |
+| alert | Boolean                           | 是否为警示（危险）项；其标题使用错误色 | false  | 否       |
 
 ### DropdownColors 属性
 
@@ -223,3 +226,6 @@ Scaffold {
 | selectedSummaryColor   | Color | 选中项摘要颜色   |
 | selectedContainerColor | Color | 选中项背景颜色   |
 | selectedIndicatorColor | Color | 选中指示图标颜色 |
+| disabledContentColor | Color | 禁用项标题颜色 |
+| alertContentColor | Color | 警示项标题颜色 |
+| headerColor | Color | 分组标题行的标题颜色 |

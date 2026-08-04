@@ -171,6 +171,66 @@ Scaffold {
 }
 ```
 
+## 带提示槽的选项
+
+`hint` 槽渲染在标题区块与选中指示图标之间，最大宽度 40dp，适合放红点、计数徽标或极短标签。与
+ColorOS 一致，行被禁用时提示槽整体隐藏。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Inbox", hint = { Badge(count = 12) }),
+        DropdownItem(text = "Updates", hint = { Badge() }),
+        // 该行被禁用，因此徽标不会显示。
+        DropdownItem(text = "Archive", hint = { Badge(count = 3) }, enabled = false),
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Hints", entry = entry)
+}
+```
+
+## 分组标题
+
+`DropdownEntry` 可声明 `title`，渲染为该分组各项之上的不可点击标题行（12sp 中等字重、次级标签
+色、最多 2 行）。分组标题与已有的分组分割线可以共存。
+
+```kotlin
+val entries = listOf(
+    DropdownEntry(
+        title = "Sort by",
+        items = listOf("Name", "Date modified").map { DropdownItem(text = it) }
+    ),
+    DropdownEntry(
+        title = "Order",
+        items = listOf("Ascending", "Descending").map { DropdownItem(text = it) }
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Group Headers", entries = entries)
+}
+```
+
+## 警示项
+
+设置 `alert = true` 可将某项标记为危险操作，其标题使用错误色而非常规标签色；被禁用的警示项仍回退
+到禁用色。
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Rename"),
+        DropdownItem(text = "Delete", alert = true),
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Alert Item", entry = entry)
+}
+```
+
 ## 组件状态
 
 ### 禁用状态
@@ -249,6 +309,7 @@ Scaffold {
 | ------- | ------------------- | --------------------------------------------------------------------------------- | ------ | -------- |
 | items   | List\<DropdownItem> | 此分组中显示的条目                                                                | -      | 是       |
 | enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
+| title | String?             | 可选的不可点击分组标题，渲染在各项之上（12sp 中等字重、次级标签色、最多 2 行） | null   | 否       |
 
 ### DropdownItem 属性
 
@@ -261,6 +322,8 @@ Scaffold {
 | icon     | @Composable ((Modifier) -> Unit)? | 显示在选项文本前的图标       | null   | 否       |
 | summary  | String?                           | 显示在选项文本下方的摘要文本 | null   | 否       |
 | children | List\<DropdownItem>?              | 可选的子菜单项；仅级联变体   | null   | 否       |
+| hint | @Composable (() -> Unit)?         | 可选的尾部提示槽（徽标、红点、短计数），显示在选中指示图标之前，最大宽度 40dp。行被禁用时整体隐藏 | null   | 否       |
+| alert | Boolean                           | 是否为警示（危险）项；其标题使用错误色 | false  | 否       |
 
 ### DropdownColors 属性
 
@@ -273,3 +336,6 @@ Scaffold {
 | selectedSummaryColor   | Color | 选中项摘要颜色   |
 | selectedContainerColor | Color | 选中项背景颜色   |
 | selectedIndicatorColor | Color | 选中指示图标颜色 |
+| disabledContentColor | Color | 禁用项标题颜色 |
+| alertContentColor | Color | 警示项标题颜色 |
+| headerColor | Color | 分组标题行的标题颜色 |

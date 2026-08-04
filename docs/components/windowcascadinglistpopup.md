@@ -107,6 +107,7 @@ Cascading depth is capped at 2. Items at the secondary level cannot have their o
 | ------------- | ------------------- | ------------------------------------------------------------------------------------------------------ | ------------- | -------- |
 | items         | List\<DropdownItem> | Items shown in this dropdown group                                                                     | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true          | No       |
+| title         | String?             | Optional non-clickable group header rendered above the items (12sp medium, secondary label, max 2 lines) | null          | No       |
 
 ### DropdownItem
 
@@ -119,6 +120,8 @@ Cascading depth is capped at 2. Items at the secondary level cannot have their o
 | icon          | @Composable ((Modifier) -> Unit)? | Icon shown before the item text                                                                                                   | null          | No       |
 | summary       | String?                           | Summary text shown below the item text                                                                                            | null          | No       |
 | children      | List\<DropdownItem>?              | Optional submenu items; only the cascading variants render these as a submenu (depth limited to 2)                                | null          | No       |
+| hint          | @Composable (() -> Unit)?         | Optional trailing hint slot (badge, red dot, short count) shown before the selection indicator, width-capped at 40dp. Hidden entirely while the row is disabled | null          | No       |
+| alert         | Boolean                           | Whether this is an alert (destructive) item; its title uses the error color | false         | No       |
 
 ### DropdownColors
 
@@ -131,6 +134,9 @@ Cascading depth is capped at 2. Items at the secondary level cannot have their o
 | selectedSummaryColor   | Color | Summary color of the selected option    |
 | selectedContainerColor | Color | Background color of the selected option |
 | selectedIndicatorColor | Color | Color of the selected indicator icon    |
+| disabledContentColor   | Color | Title color of a disabled option        |
+| alertContentColor      | Color | Title color of an alert option          |
+| headerColor            | Color | Title color of a group header row       |
 
 ### PopupPositionProvider.Align
 

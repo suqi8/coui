@@ -171,6 +171,68 @@ Scaffold {
 }
 ```
 
+## Items with a Hint Slot
+
+The `hint` slot renders between the title block and the selection indicator, capped at 40dp wide.
+It suits a red dot, a count badge, or a very short label. Matching ColorOS, the hint is hidden
+entirely while the row is disabled.
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Inbox", hint = { Badge(count = 12) }),
+        DropdownItem(text = "Updates", hint = { Badge() }),
+        // The badge is suppressed because the row is disabled.
+        DropdownItem(text = "Archive", hint = { Badge(count = 3) }, enabled = false),
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Hints", entry = entry)
+}
+```
+
+## Group Headers
+
+A `DropdownEntry` can declare a `title`, rendered above its items as a non-clickable header row
+(12sp medium, secondary label color, at most 2 lines). Headers coexist with the group divider that
+already separates adjacent entries.
+
+```kotlin
+val entries = listOf(
+    DropdownEntry(
+        title = "Sort by",
+        items = listOf("Name", "Date modified").map { DropdownItem(text = it) }
+    ),
+    DropdownEntry(
+        title = "Order",
+        items = listOf("Ascending", "Descending").map { DropdownItem(text = it) }
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Group Headers", entries = entries)
+}
+```
+
+## Alert Items
+
+Set `alert = true` to mark a destructive action. Its title uses the error color instead of the
+normal label color; disabled alert rows still fall back to the disabled color.
+
+```kotlin
+val entry = DropdownEntry(
+    items = listOf(
+        DropdownItem(text = "Rename"),
+        DropdownItem(text = "Delete", alert = true),
+    )
+)
+
+Scaffold {
+    OverlayDropdownMenu(title = "Alert Item", entry = entry)
+}
+```
+
 ## Component States
 
 ### Disabled State
@@ -249,6 +311,7 @@ All other parameters are identical to the entries overload above.
 | ------------- | ------------------- | ------------------------------------------------------------------------------------------------------ | ------------- | -------- |
 | items         | List\<DropdownItem> | Items shown in this dropdown group                                                                     | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true          | No       |
+| title         | String?             | Optional non-clickable group header rendered above the items (12sp medium, secondary label, max 2 lines) | null          | No       |
 
 ### DropdownItem Properties
 
@@ -261,6 +324,8 @@ All other parameters are identical to the entries overload above.
 | icon          | @Composable ((Modifier) -> Unit)? | Icon shown before the item text                          | null          | No       |
 | summary       | String?                           | Summary text shown below the item text                   | null          | No       |
 | children      | List\<DropdownItem>?              | Optional submenu items; cascading variants only          | null          | No       |
+| hint          | @Composable (() -> Unit)?         | Optional trailing hint slot (badge, red dot, short count) shown before the selection indicator, width-capped at 40dp. Hidden entirely while the row is disabled | null          | No       |
+| alert         | Boolean                           | Whether this is an alert (destructive) item; its title uses the error color | false         | No       |
 
 ### DropdownColors Properties
 
@@ -273,3 +338,6 @@ All other parameters are identical to the entries overload above.
 | selectedSummaryColor   | Color | Summary color of the selected option    |
 | selectedContainerColor | Color | Background color of the selected option |
 | selectedIndicatorColor | Color | Color of the selected indicator icon    |
+| disabledContentColor   | Color | Title color of a disabled option        |
+| alertContentColor      | Color | Title color of an alert option          |
+| headerColor            | Color | Title color of a group header row       |
