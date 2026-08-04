@@ -8,6 +8,7 @@ import androidx.compose.runtime.key
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 
@@ -15,6 +16,10 @@ import io.github.suqi8.coui.kmp.basic.HorizontalDivider
  * Renders a list of [DropdownEntry] groups inside a popup container. Computes popup-global
  * first/last per row internally so only the very first and very last rows of the entire popup
  * receive the larger first/last padding; group boundaries fall back to the middle padding.
+ *
+ * A group that declares a [DropdownEntry.title] gets a non-clickable [DropdownHeaderItem] above its
+ * items. The header then owns the group's leading edge, so the first option row no longer counts as
+ * the popup's first row.
  */
 @Composable
 internal fun DropdownEntriesPopupContent(
@@ -27,6 +32,16 @@ internal fun DropdownEntriesPopupContent(
         val lastItemIdx = entry.items.lastIndex
         val isFirstEntry = entryIdx == 0
         val isLastEntry = entryIdx == lastEntryIdx
+        val header = entry.title
+        if (header != null) {
+            key(entryIdx, "header") {
+                DropdownHeaderItem(
+                    text = header,
+                    color = dropdownColors.headerColor,
+                    isFirst = isFirstEntry,
+                )
+            }
+        }
         entry.items.forEachIndexed { itemIdx, option ->
             key(entryIdx, itemIdx) {
                 DropdownImpl(
@@ -36,7 +51,7 @@ internal fun DropdownEntriesPopupContent(
                     index = itemIdx,
                     dropdownColors = dropdownColors,
                     enabled = entry.enabled && option.enabled,
-                    isFirst = isFirstEntry && itemIdx == 0,
+                    isFirst = isFirstEntry && header == null && itemIdx == 0,
                     isLast = isLastEntry && itemIdx == lastItemIdx,
                     onSelectedIndexChange = { idx -> onItemClick(entryIdx, idx) },
                 )
@@ -54,7 +69,8 @@ internal fun DropdownEntriesPopupContent(
 /**
  * Adds [DropdownEntry] groups to a [LazyListScope] for use inside a dialog. Dialog mode uses
  * uniform vertical padding regardless of position, so popup-global first/last is intentionally
- * not propagated.
+ * not propagated. A [DropdownEntry.title] still renders a header row so grouped dialogs stay
+ * labelled, but COUI has no dialog header metrics to calibrate against — it reuses the popup one.
  */
 internal fun LazyListScope.dropdownEntriesDialogItems(
     entries: List<DropdownEntry>,
@@ -63,6 +79,11 @@ internal fun LazyListScope.dropdownEntriesDialogItems(
 ) {
     val lastEntryIdx = entries.lastIndex
     entries.forEachIndexed { entryIdx, entry ->
+        entry.title?.let { header ->
+            item(key = "header-$entryIdx") {
+                DropdownHeaderItem(text = header, color = dropdownColors.headerColor)
+            }
+        }
         items(entry.items.size, key = { itemIdx -> "$entryIdx-$itemIdx" }) { itemIdx ->
             val item = entry.items[itemIdx]
             DropdownImpl(
