@@ -25,10 +25,10 @@ COUI 基于 [Miuix](https://github.com/compose-miuix-ui/miuix) 构建，并保�
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:coui-ui:1.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:1.1.0")
             // 可选模块，模式相同：
-            implementation("io.github.suqi8.coui.kmp:coui-preference:1.0.0")
-            implementation("io.github.suqi8.coui.kmp:coui-icons:1.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-preference:1.1.0")
+            implementation("io.github.suqi8.coui.kmp:coui-icons:1.1.0")
         }
     }
 }
