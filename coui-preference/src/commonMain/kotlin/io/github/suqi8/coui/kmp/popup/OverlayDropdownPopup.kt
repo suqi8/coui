@@ -20,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
@@ -40,6 +41,7 @@ fun OverlayDropdownPopup(
     dropdownColors: DropdownColors,
     renderInRootScaffold: Boolean,
     collapseOnSelection: Boolean = true,
+    preciseClickState: PreciseClickState? = null,
 ) {
     val entries = remember(entry) { listOf(entry) }
     OverlayDropdownPopup(
@@ -51,6 +53,7 @@ fun OverlayDropdownPopup(
         dropdownColors = dropdownColors,
         renderInRootScaffold = renderInRootScaffold,
         collapseOnSelection = collapseOnSelection,
+        preciseClickState = preciseClickState,
     )
 }
 
@@ -69,6 +72,7 @@ fun OverlayDropdownPopup(
     dropdownColors: DropdownColors,
     renderInRootScaffold: Boolean,
     collapseOnSelection: Boolean = entries.size <= 1,
+    preciseClickState: PreciseClickState? = null,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val currentEntries by rememberUpdatedState(entries)
@@ -93,6 +97,7 @@ fun OverlayDropdownPopup(
         onDismissFinished = onDismissFinished,
         maxHeight = maxHeight,
         renderInRootScaffold = renderInRootScaffold,
+        preciseClickState = preciseClickState,
     ) {
         ListPopupColumn {
             DropdownEntriesPopupContent(

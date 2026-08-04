@@ -20,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
@@ -40,6 +41,7 @@ fun WindowDropdownPopup(
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
     collapseOnSelection: Boolean = true,
+    preciseClickState: PreciseClickState? = null,
 ) {
     val entries = remember(entry) { listOf(entry) }
     WindowDropdownPopup(
@@ -50,6 +52,7 @@ fun WindowDropdownPopup(
         maxHeight = maxHeight,
         dropdownColors = dropdownColors,
         collapseOnSelection = collapseOnSelection,
+        preciseClickState = preciseClickState,
     )
 }
 
@@ -67,6 +70,7 @@ fun WindowDropdownPopup(
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
     collapseOnSelection: Boolean = entries.size <= 1,
+    preciseClickState: PreciseClickState? = null,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val currentEntries by rememberUpdatedState(entries)
@@ -78,6 +82,7 @@ fun WindowDropdownPopup(
         onDismissRequest = onDismiss,
         onDismissFinished = onDismissFinished,
         maxHeight = maxHeight,
+        preciseClickState = preciseClickState,
     ) {
         val dismiss = LocalDismissState.current
         val currentDismiss by rememberUpdatedState(dismiss)

@@ -11,6 +11,7 @@ import androidx.compose.ui.window.Dialog
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.layout.ListPopupLayout
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.utils.RemovePlatformDialogDefaultEffects
@@ -27,10 +28,15 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param popupPositionProvider The [PopupPositionProvider] of the [WindowListPopup].
  * @param alignment The alignment of the [WindowListPopup].
  * @param enableWindowDim Whether to enable window dimming when the [WindowListPopup] is shown.
+ *   Defaults to false: `COUIPopupListWindow` calls `setBackgroundDrawable(null)` and never dims,
+ *   so a COUI dropdown leaves the content behind it untouched.
  * @param onDismissRequest The callback when the [WindowListPopup] is dismissed.
  * @param onDismissFinished The callback when the [WindowListPopup] is completely dismissed (after exit animation).
  * @param maxHeight The maximum height of the [WindowListPopup]. If null, the height will be calculated automatically.
  * @param minWidth The minimum width of the [WindowListPopup].
+ * @param preciseClickState Opens the popup at the last point recorded by
+ *   [io.github.suqi8.coui.kmp.basic.preciseClickAnchor] on the anchor instead of centring it on the
+ *   anchor, matching COUI `PreciseClickHelper`. Null (default) keeps anchor-centred placement.
  * @param content The [Composable] content of the [WindowListPopup]. You should use the [ListPopupColumn] in general.
  */
 @Composable
@@ -39,11 +45,12 @@ fun WindowListPopup(
     popupModifier: Modifier = Modifier,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.Start,
-    enableWindowDim: Boolean = true,
+    enableWindowDim: Boolean = false,
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
     minWidth: Dp = ListPopupDefaults.MinWidth,
+    preciseClickState: PreciseClickState? = null,
     content: @Composable () -> Unit,
 ) {
     val currentOnDismissRequest = rememberUpdatedState(onDismissRequest)
@@ -71,6 +78,7 @@ fun WindowListPopup(
         onDismissFinished = onDismissFinished,
         maxHeight = maxHeight,
         minWidth = minWidth,
+        preciseClickState = preciseClickState,
         content = {
             CompositionLocalProvider(
                 LocalDismissState provides {

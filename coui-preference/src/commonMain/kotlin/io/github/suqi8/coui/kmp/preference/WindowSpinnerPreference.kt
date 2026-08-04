@@ -30,6 +30,8 @@ import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
+import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
 import io.github.suqi8.coui.kmp.popup.WindowDropdownDialog
 import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -170,6 +172,9 @@ fun WindowSpinnerPreference(
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = rememberSaveable { mutableStateOf(false) }
     val isHoldDown = remember { mutableStateOf(false) }
+    // COUI wires the dropdown preference row through PreciseClickHelper, so the menu opens at
+    // the finger rather than centred on the row.
+    val preciseClickState = rememberPreciseClickState()
     val hapticFeedback = LocalHapticFeedback.current
     val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
@@ -210,7 +215,7 @@ fun WindowSpinnerPreference(
     }
 
     BasicComponent(
-        modifier = modifier,
+        modifier = modifier.preciseClickAnchor(preciseClickState),
         interactionSource = interactionSource,
         insideMargin = insideMargin,
         cardListPosition = cardListPosition,
@@ -253,6 +258,7 @@ fun WindowSpinnerPreference(
                     maxHeight = maxHeight,
                     dropdownColors = spinnerColors,
                     collapseOnSelection = collapseOnSelection,
+                    preciseClickState = preciseClickState,
                 )
             }
         },
