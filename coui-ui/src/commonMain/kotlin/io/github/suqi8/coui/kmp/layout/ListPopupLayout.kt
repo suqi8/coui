@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
@@ -36,6 +37,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.basic.ListPopupContent
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -62,6 +64,10 @@ import kotlinx.coroutines.launch
  *   is cancelled mid-flight (e.g., by [show] toggling back to true).
  * @param maxHeight The maximum height of the popup.
  * @param minWidth The minimum width of the popup.
+ * @param preciseClickState When non-null and carrying a recorded touch point, the anchor is
+ *   collapsed to that point so the popup opens at the finger (COUI `PreciseClickHelper` plus
+ *   `PopupMenuLocateHelper.setAnchor`). A null state, or one with no point recorded, keeps the
+ *   anchor-centred placement.
  * @param content The content of the popup.
  */
 @Composable
@@ -76,6 +82,7 @@ internal fun ListPopupLayout(
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
     minWidth: Dp = ListPopupDefaults.MinWidth,
+    preciseClickState: PreciseClickState? = null,
     content: @Composable () -> Unit,
 ) {
     val fractionProgress = remember { Animatable(0f) }
@@ -100,7 +107,7 @@ internal fun ListPopupLayout(
             }
         } else {
             if (!internalVisible.value) return@LaunchedEffect
-            launch { fractionProgress.animateTo(0f, ListPopupDefaults.FractionAnimationSpec) }
+            launch { fractionProgress.animateTo(0f, ListPopupDefaults.FractionExitAnimationSpec) }
             if (enableWindowDim) {
                 launch { dimProgress.animateTo(0f, ListPopupDefaults.DimExitAnimationSpec) }
             }
@@ -137,10 +144,22 @@ internal fun ListPopupLayout(
 
     if (parentBounds == IntRect.Zero) return
 
+    // COUI PopupMenuLocateHelper.setAnchor collapses the anchor to the recorded touch point, so both
+    // the horizontal centring and the below/above test run against that point. The point is already
+    // in window coordinates, the same space parentBounds uses.
+    val touchPoint = preciseClickState?.touchPoint ?: Offset.Unspecified
+    val anchorBounds = if (touchPoint.isSpecified) {
+        val x = touchPoint.x.toInt()
+        val y = touchPoint.y.toInt()
+        IntRect(left = x, top = y, right = x, bottom = y)
+    } else {
+        parentBounds
+    }
+
     val layoutInfo = rememberListPopupLayoutInfo(
         alignment = alignment,
         popupPositionProvider = popupPositionProvider,
-        parentBounds = parentBounds,
+        parentBounds = anchorBounds,
         popupContentSize = popupContentSize,
     )
 
@@ -203,11 +222,16 @@ internal fun ListPopupLayout(
                         val windowBounds = layoutInfo.windowBounds
                         val popupMargin = layoutInfo.popupMargin
                         val minHeightPx = ListPopupDefaults.MinPopupHeight.roundToPx()
+                        // COUI COUIPopupListWindow.getMaxMainMenuHeight() is the available rect
+                        // height, i.e. the window minus insets minus the top/bottom barriers, which
+                        // windowBounds already carries. ListPopupColumn's measure policy then stops
+                        // accumulating rows at this bound, as COUI's measurePopupWindow does.
+                        val availableHeight = (windowBounds.height - popupMargin.top - popupMargin.bottom)
+                            .coerceAtLeast(minHeightPx)
                         val placeable = measurable.measure(
                             constraints.copy(
-                                maxHeight = maxHeight?.roundToPx()?.coerceAtLeast(minHeightPx)
-                                    ?: (windowBounds.height - popupMargin.top - popupMargin.bottom)
-                                        .coerceAtLeast(minHeightPx),
+                                maxHeight = maxHeight?.roundToPx()?.coerceIn(minHeightPx, availableHeight)
+                                    ?: availableHeight,
                                 minHeight = if (minHeightPx <= constraints.maxHeight) minHeightPx else constraints.maxHeight,
                                 maxWidth = constraints.maxWidth,
                                 minWidth = minWidth.roundToPx().coerceAtMost(constraints.maxWidth),
@@ -216,7 +240,7 @@ internal fun ListPopupLayout(
                         val measuredSize = IntSize(placeable.width, placeable.height)
 
                         val calculatedOffset = popupPositionProvider.calculatePosition(
-                            parentBounds,
+                            anchorBounds,
                             windowBounds,
                             layoutDirection,
                             measuredSize,
