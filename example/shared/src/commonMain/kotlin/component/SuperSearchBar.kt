@@ -57,6 +57,7 @@ import androidx.compose.ui.zIndex
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.suqi8.coui.kmp.basic.CancelButton
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.Text
@@ -154,18 +155,10 @@ fun SearchStatus.SearchPager(
                 enter = expandHorizontally() + slideInHorizontally(initialOffsetX = { it }),
                 exit = shrinkHorizontally() + slideOutHorizontally(targetOffsetX = { it }),
             ) {
-                Text(
-                    text = "Cancel",
-                    fontWeight = FontWeight.Bold,
-                    color = COUITheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(end = 16.dp, bottom = 6.dp)
-                        .clickable(
-                            interactionSource = null,
-                            enabled = searchStatus.isExpand(),
-                            indication = null,
-                            onClick = onCancelSearch,
-                        ),
+                CancelButton(
+                    onClick = onCancelSearch,
+                    modifier = Modifier.padding(end = 4.dp, bottom = 6.dp),
+                    enabled = searchStatus.isExpand(),
                 )
                 val navEventState = rememberNavigationEventState(NavigationEventInfo.None)
                 NavigationBackHandler(

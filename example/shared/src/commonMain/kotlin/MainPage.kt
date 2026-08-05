@@ -57,6 +57,7 @@ import component.textFieldSection
 import component.tooltipSection
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.CancelButton
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.Icon
@@ -317,19 +318,7 @@ fun MainPage(
                             )
                         },
                         outsideEndAction = {
-                            // COUI functional button: couiTextAppearanceButton 14sp
-                            // sans-serif-medium, couiColorPrimaryText (accent blue).
-                            Text(
-                                modifier = Modifier
-                                    .clickable(
-                                        interactionSource = null,
-                                        indication = null,
-                                        onClick = onCancelSearch,
-                                    ),
-                                text = "Cancel",
-                                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
-                                color = COUITheme.colorScheme.primary,
-                            )
+                            CancelButton(onClick = onCancelSearch)
                         },
                         expanded = expanded,
                         onExpandedChange = { expanded = it },

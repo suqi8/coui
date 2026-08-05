@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
+import io.github.suqi8.coui.kmp.basic.CancelButton
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.Text
@@ -58,19 +59,11 @@ fun SearchBarDemo() {
                     )
                 },
                 outsideEndAction = {
-                    // COUI functional button: 14sp sans-serif-medium, accent blue.
-                    Text(
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = null,
-                                indication = null,
-                            ) {
-                                expanded = false
-                                searchValue = ""
-                            },
-                        text = "Cancel",
-                        style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
-                        color = COUITheme.colorScheme.primary,
+                    CancelButton(
+                        onClick = {
+                            expanded = false
+                            searchValue = ""
+                        },
                     )
                 },
                 expanded = expanded,

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -55,6 +56,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -411,6 +413,25 @@ object SearchBarDefaults {
     val TrailingIconTouchTargetSize = 36.dp
 
     /**
+     * The font size of the [CancelButton] label. COUI `couiTextAppearanceButton`, the style
+     * `initFunctionButton` applies to the functional button.
+     */
+    val CancelFontSize = 14.sp
+
+    /**
+     * The horizontal padding of the [CancelButton] label. COUI
+     * `text_ripple_bg_padding_horizontal`, forced by `COUITextViewCompatUtil.setPressRippleDrawable`
+     * so the label never sits flush against the window edge.
+     */
+    val CancelPaddingHorizontal = 12.dp
+
+    /** The vertical padding of the [CancelButton] label. COUI `text_ripple_bg_padding_vertical`. */
+    val CancelPaddingVertical = 4.dp
+
+    /** The widest a [CancelButton] may grow. COUI `coui_search_bar_functional_button_max_width`. */
+    val CancelMaxWidth = 152.dp
+
+    /**
      * The visual circle size of the default trailing (clear) button, matching the 9dp-radius
      * circle of ic_edit_text_delete_search_view.
      */
@@ -427,12 +448,15 @@ object SearchBarDefaults {
         labelColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         iconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         clearIconColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-    ): SearchBarColors = remember(backgroundColor, labelColor, iconColor, clearIconColor) {
+        // COUI coui_searchview_cancel_button_color resolves to ?couiColorPrimaryText.
+        cancelTextColor: Color = COUITheme.colorScheme.primary,
+    ): SearchBarColors = remember(backgroundColor, labelColor, iconColor, clearIconColor, cancelTextColor) {
         SearchBarColors(
             backgroundColor = backgroundColor,
             labelColor = labelColor,
             iconColor = iconColor,
             clearIconColor = clearIconColor,
+            cancelTextColor = cancelTextColor,
         )
     }
 }
@@ -444,6 +468,7 @@ object SearchBarDefaults {
  * @param labelColor the color of the label (hint) text.
  * @param iconColor the tint of the default leading search icon.
  * @param clearIconColor the fill color of the default clear button circle.
+ * @param cancelTextColor the color of the [CancelButton] label.
  */
 @Immutable
 data class SearchBarColors(
@@ -451,7 +476,58 @@ data class SearchBarColors(
     val labelColor: Color,
     val iconColor: Color,
     val clearIconColor: Color,
+    val cancelTextColor: Color,
 )
+
+/**
+ * The trailing button a COUI search bar shows while expanded.
+ *
+ * COUI `initFunctionButton` styles it with `couiTextAppearanceButton` and forces the ripple
+ * paddings, so the label keeps a 12dp visual inset from the window edge. It appears as soon as the
+ * bar expands, whether or not a query has been typed, and the class deliberately leaves the click
+ * unwired — the host decides. Settings collapses the bar, and collapsing clears the query, so the
+ * net effect there is clear + collapse + hide the keyboard.
+ *
+ * @param onClick the callback invoked when the button is clicked.
+ * @param modifier the [Modifier] to be applied to the button.
+ * @param text the label of the button.
+ * @param enabled whether the button responds to clicks.
+ * @param colors the [SearchBarColors] resolving the label color.
+ */
+@Composable
+fun CancelButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String = "Cancel",
+    enabled: Boolean = true,
+    colors: SearchBarColors = SearchBarDefaults.searchBarColors(),
+) {
+    val currentOnClick by rememberUpdatedState(onClick)
+    val labelColor = if (enabled) {
+        colors.cancelTextColor
+    } else {
+        COUITheme.colorScheme.disabledOnSecondaryVariant
+    }
+    Text(
+        text = text,
+        modifier = modifier
+            .widthIn(max = SearchBarDefaults.CancelMaxWidth)
+            .clickable(
+                enabled = enabled,
+                indication = null,
+                interactionSource = null,
+                onClick = { currentOnClick() },
+            )
+            .padding(
+                horizontal = SearchBarDefaults.CancelPaddingHorizontal,
+                vertical = SearchBarDefaults.CancelPaddingVertical,
+            ),
+        color = labelColor,
+        fontSize = SearchBarDefaults.CancelFontSize,
+        fontWeight = FontWeight.Medium,
+        maxLines = 1,
+    )
+}
 
 /** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
 private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
@@ -469,13 +545,14 @@ private val ActionAlphaDurationMillis = 350
 private val ActionSlideDistance = 30.dp
 
 /**
- * Extra start padding for the outside end action: the COUI 20dp visual gap from the capsule
- * (8dp button start gap + 12dp ripple text padding) minus the 16dp input field margin.
+ * Start padding for the outside end action: COUI `coui_search_bar_functional_button_start_gap`
+ * (8dp) minus the 16dp input field margin already applied, floored at zero. [CancelButton] brings
+ * its own 12dp ripple padding, which is what makes up the rest of the visual gap.
  */
-private val ActionExtraStartPadding = 4.dp
+private val ActionExtraStartPadding = 0.dp
 
 /**
- * End padding for the outside end action: `coui_search_bar_functional_button_end_gap_compat`
- * (4dp) + 12dp ripple text padding.
+ * End padding for the outside end action: `coui_search_bar_functional_button_end_gap_compat` (4dp).
+ * [CancelButton]'s own 12dp ripple padding supplies the remaining visual inset.
  */
-private val ActionEndPadding = 16.dp
+private val ActionEndPadding = 4.dp
