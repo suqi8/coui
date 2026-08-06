@@ -61,6 +61,9 @@ kotlin {
 
             implementation(libs.materialKolor.utilities) // Material Color for Multiplatform
         }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
+        }
     }
 }
 

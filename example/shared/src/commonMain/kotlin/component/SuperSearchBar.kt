@@ -277,11 +277,13 @@ fun SearchBar(
 fun SearchBarFake(
     label: String,
     searchBarTopPadding: Dp = 12.dp,
+    collapsePercent: Float = 1f,
 ) {
     InputField(
         query = "",
         onQueryChange = { },
         label = label,
+        collapsePercent = collapsePercent,
         leadingIcon = {
             Icon(
                 imageVector = COUIIcons.Basic.Search,

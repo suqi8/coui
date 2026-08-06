@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
@@ -60,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -176,6 +179,9 @@ fun SearchBar(
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param colors [SearchBarColors] that will be used to resolve the colors used for this input
  *   field in different states. See [SearchBarDefaults.searchBarColors].
+ * @param collapsePercent how far through its scroll-driven collapse the bar is: 1 fully expanded,
+ *   0 flattened to a divider line. See [searchBarCollapsePercent] for turning a scroll offset into
+ *   this value, and [searchBarCollapseGeometry] for what it drives.
  * @param leadingIcon the leading icon to be displayed at the start of the input field.
  * @param trailingIcon the trailing icon to be displayed at the end of the input field.
  * @param interactionSource an optional hoisted [MutableInteractionSource] for observing and
@@ -195,6 +201,7 @@ fun InputField(
     enabled: Boolean = true,
     textStyle: TextStyle? = null,
     colors: SearchBarColors = SearchBarDefaults.searchBarColors(),
+    collapsePercent: Float = 1f,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
@@ -269,6 +276,20 @@ fun InputField(
         .copy(color = textColor)
 
     val cursorBrush = SolidColor(COUITheme.colorScheme.primary)
+    // Null while fully expanded, so an unused collapse costs nothing and the modifier chain stays
+    // identical to what it was before this parameter existed.
+    val dividerColor = COUITheme.colorScheme.dividerLine
+    val collapse = if (collapsePercent >= 1f) {
+        null
+    } else {
+        remember(collapsePercent, colors.backgroundColor, dividerColor) {
+            searchBarCollapseGeometry(
+                percent = collapsePercent,
+                normalColor = colors.backgroundColor,
+                dividerColor = dividerColor,
+            )
+        }
+    }
     val labelText by remember(query, expanded, label) {
         derivedStateOf { if (!(query.isNotEmpty() || expanded)) label else "" }
     }
@@ -308,14 +329,44 @@ fun InputField(
             // page background shows through).
             Box(
                 modifier = Modifier
+                    .then(
+                        if (collapse == null) {
+                            Modifier
+                        } else {
+                            // The capsule shrinks and simultaneously widens past its own edges,
+                            // tinting to the divider color, so a fully collapsed bar reads as the
+                            // list's divider line.
+                            Modifier
+                                .height(collapse.capsuleHeight)
+                                .layout { measurable, constraints ->
+                                    val extra = collapse.extraHorizontalWidth.roundToPx()
+                                    val placeable = measurable.measure(
+                                        constraints.offset(horizontal = extra * 2),
+                                    )
+                                    // Report the resting width so the row keeps its place; the
+                                    // capsule simply draws wider than the space it occupies.
+                                    layout(placeable.width - extra * 2, placeable.height) {
+                                        placeable.place(-extra, 0)
+                                    }
+                                }
+                        },
+                    )
                     .background(
-                        color = colors.backgroundColor,
+                        color = collapse?.capsuleColor ?: colors.backgroundColor,
                         shape = capsuleShape,
                     ),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (collapse == null) {
+                                Modifier
+                            } else {
+                                Modifier.graphicsLayer { alpha = collapse.contentAlpha }
+                            },
+                        ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     actualLeadingIcon()

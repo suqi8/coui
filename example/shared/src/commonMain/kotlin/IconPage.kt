@@ -164,7 +164,13 @@ fun IconsPage(
                                     },
                                 ),
                         ) {
-                            SearchBarFake(searchStatus.label, dynamicTopPadding)
+                            SearchBarFake(
+                                label = searchStatus.label,
+                                searchBarTopPadding = dynamicTopPadding,
+                                // COUI collapses the pinned bar into the divider line as the list
+                                // scrolls under it, rather than letting it scroll away.
+                                collapsePercent = 1f - topAppBarScrollBehavior.state.collapsedFraction,
+                            )
                         }
                     }
                 }
