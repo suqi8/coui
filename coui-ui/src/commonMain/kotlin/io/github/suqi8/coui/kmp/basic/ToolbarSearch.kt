@@ -7,7 +7,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -20,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 
 /**
  * Creates a [ToolbarSearchState] that survives configuration changes.
@@ -49,39 +55,33 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
     /** The search bar's resting top, in root coordinates. COUI `mStartY`. */
     private var restingTopPx by mutableFloatStateOf(Float.NaN)
 
-    /** The search bar's own height, used to align it against the anchor's bottom edge. */
-    private var barHeightPx by mutableFloatStateOf(Float.NaN)
-
     /**
-     * The anchor's bottom, in root coordinates. Aligning against the bottom rather than the top
-     * keeps the landing spot correct whatever status-bar or display-cutout inset the toolbar
-     * carries above its content.
+     * Where the floated bar comes to rest, in root coordinates: the bottom of the status bar
+     * inset. Measured on ColorOS 16, the expanded `searchView` sits flush against the status bar —
+     * `[0,140][1264,322]` against a 140px inset — so the landing edge is the inset, not anything
+     * about the toolbar's own height.
      */
-    private var anchorBottomPx by mutableFloatStateOf(Float.NaN)
+    private var landingTopPx by mutableFloatStateOf(Float.NaN)
 
     /**
      * How far the bar must travel to reach the toolbar, in pixels. Zero until every input has been
      * measured, so the first frame never jumps.
      */
     internal val floatDistancePx: Float
-        get() = if (restingTopPx.isNaN() || anchorBottomPx.isNaN() || barHeightPx.isNaN()) {
+        get() = if (restingTopPx.isNaN() || landingTopPx.isNaN()) {
             0f
         } else {
-            (restingTopPx - (anchorBottomPx - barHeightPx)).coerceAtLeast(0f)
+            (restingTopPx - landingTopPx).coerceAtLeast(0f)
         }
 
-    internal fun onBarPositioned(topPx: Float, heightPx: Float) {
-        // Only the collapsed geometry is a valid reference. Once expanded the bar reports where
-        // the animation has moved it, and its height grows to include the results it now hosts —
-        // feeding either back in would corrupt the distance being animated over.
-        if (!expanded) {
-            restingTopPx = topPx
-            barHeightPx = heightPx
-        }
+    internal fun onBarPositioned(topPx: Float) {
+        // Only the collapsed position is a valid reference; once expanded the bar reports where
+        // the animation has moved it, which would feed back into the distance being animated over.
+        if (!expanded) restingTopPx = topPx
     }
 
-    internal fun onAnchorPositioned(bottomPx: Float) {
-        anchorBottomPx = bottomPx
+    internal fun onAnchorPositioned(contentTopPx: Float) {
+        landingTopPx = contentTopPx
     }
 
     /** Expands the search bar, floating it up into the toolbar. */
@@ -128,12 +128,13 @@ fun ToolbarSearchAnchor(
         animationSpec = tween(durationMillis = ToolbarContentFadeDurationMillis),
         label = "ToolbarSearchAnchorAlpha",
     )
+    // The floated bar lands flush against the status bar. Measured from the root rather than from
+    // the anchor's own position, which may already sit below the inset.
+    val statusBarInsetPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .onGloballyPositioned {
-                state.onAnchorPositioned(it.positionInRoot().y + it.size.height)
-            },
+            .onGloballyPositioned { state.onAnchorPositioned(statusBarInsetPx) },
     ) {
         Box(modifier = Modifier.graphicsLayer { this.alpha = alpha }) {
             content()
@@ -171,12 +172,12 @@ fun ToolbarFloatingSearchBar(
             .fillMaxWidth()
             .onGloballyPositioned { coordinates ->
                 // Report the resting top, undoing the translation currently applied.
-                state.onBarPositioned(
-                    topPx = coordinates.positionInRoot().y + distance * progress,
-                    heightPx = coordinates.size.height.toFloat(),
-                )
+                state.onBarPositioned(coordinates.positionInRoot().y + distance * progress)
             }
-            .graphicsLayer { translationY = -distance * progress },
+            // Offset at layout time rather than via graphicsLayer: Compose hit-tests against the
+            // layout position, so a draw-only translation would leave the bar's touch target — and
+            // the cancel button's with it — behind at the resting position.
+            .offset { IntOffset(x = 0, y = -(distance * progress).roundToInt()) },
         content = content,
     )
 }

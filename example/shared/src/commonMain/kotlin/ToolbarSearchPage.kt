@@ -117,15 +117,13 @@ fun ToolbarSearchPage(
                     }
                 }
             }
-            if (!searchState.expanded) {
-                items(entries.size, key = { entries[it] }) { index ->
-                    BasicComponent(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        title = entries[index],
-                    )
-                }
-                item { Spacer(modifier = Modifier.height(32.dp)) }
+            items(entries.size, key = { entries[it] }) { index ->
+                BasicComponent(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    title = entries[index],
+                )
             }
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
