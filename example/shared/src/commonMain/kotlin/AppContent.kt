@@ -168,6 +168,7 @@ fun AppContent(
                 subclass(Route.License::class)
                 subclass(Route.Navigation::class)
                 subclass(Route.MultiScaffold::class)
+                subclass(Route.ToolbarSearch::class)
             }
         }
     }
@@ -230,6 +231,9 @@ fun AppContent(
                 }
                 entry<Route.MultiScaffold> {
                     MultiScaffoldTestPage(padding = padding)
+                }
+                entry<Route.ToolbarSearch> {
+                    ToolbarSearchPage(padding = padding)
                 }
             }
         }

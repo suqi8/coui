@@ -41,6 +41,12 @@ fun LazyListScope.otherPageSection() {
                 summary = "Navigate to a MultiScaffold Page",
                 onClick = { navigator.push(Route.MultiScaffold) },
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            ArrowPreference(
+                title = "Toolbar Search Test",
+                summary = "A search bar that floats up into the toolbar",
+                onClick = { navigator.push(Route.ToolbarSearch) },
+            )
         }
     }
 }
