@@ -102,7 +102,7 @@
 1. **语义绿/橙不进 Colors.kt**：Colors 无独立语义色槽（仅 error 系），绿 `#00BD13`/橙 `#FF7700` 仅 demo 色板用，已在 example 同步。
 2. **未对齐即去除**：本库未对齐 COUI 规范的内容不保留，对齐不到就去除，不私自保留或发明。
 3. **TopBar 凝光 blur 半径 = 240**：取 `coui_list_dialog_background_blur_radius`（磨砂片模糊量级），非 Material 小半径（20/25px）。
-4. **凝光 alpha 渐变半透明**：下→上；浅色 3 档 alpha 0/0.7/1 @ pos 0/0.4/1；深色 2 档 alpha 0/1 @ pos 0/0.6（NORMAL_BLUR_DARK_ALPHA）。
+4. **凝光 alpha 渐变半透明**：下→上；浅色 3 档 alpha 0/0.7/1 @ pos 0/0.4/1；深色 2 档 alpha 0/**0.4** @ pos 0/**1**（GRADIENT_DARK_ALPHA，曾误写为 0/1 @ 0/0.6，已修正）。
 5. **分段**：容器 40dp、指示器满高 40dp、inset 4dp、无阴影。
 6. **凝光默认关闭**：`TopAppBarGlow` enabled 默认 false，调用方自选启用。
 7. **TopBar 标题字号**：通用 32sp（17 一致）/ 设置主页 40sp 覆写（`largeTitleFontSize`）/ 折叠 24sp。
