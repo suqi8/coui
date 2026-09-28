@@ -45,6 +45,8 @@ import androidx.compose.ui.graphics.Shape
  * @param modifier The [Modifier] to be applied to the overlay.
  * @param blurRadius The blur radius in dp at full strength. COUI `coui_list_dialog_background_blur_radius` (240dp).
  * @param shape The shape of the overlay region.
+ * @param enabled Whether the condensed-light glow is active. **Off by default** — the caller must
+ *   opt in, since the glow is a heavy frosting treatment COUI applies only in specific scenarios.
  * @param content Optional foreground content drawn on top of the glow (usually none).
  */
 @Composable
@@ -56,10 +58,11 @@ fun BoxScope.TopAppBarGlow(
     modifier: Modifier = Modifier,
     blurRadius: Float = TopAppBarGlowDefaults.BlurRadius,
     shape: Shape = RectangleShape,
+    enabled: Boolean = false,
     content: @Composable () -> Unit = {},
 ) {
     val alpha = collapseFraction.coerceIn(0f, 1f)
-    if (alpha <= 0f) {
+    if (!enabled || alpha <= 0f) {
         return
     }
 

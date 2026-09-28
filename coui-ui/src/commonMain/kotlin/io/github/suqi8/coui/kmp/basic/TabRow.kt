@@ -349,7 +349,9 @@ private fun SegmentButtonRow(
                     val pad = contourPadding.toPx()
                     val scale = indicatorScale.value
                     val indicatorW = indicatorWidth.value * scale
-                    val indicatorH = (size.height - 2f * pad) * scale
+                    // COUI 17: the indicator capsule is full height (40dp), not inset by the
+                    // contour padding; the padding only insets it horizontally within its segment.
+                    val indicatorH = size.height * scale
                     if (indicatorW <= 0f || indicatorH <= 0f) return@drawBehind
                     val centerX = pad + indicatorCenterX.value - scrollOffset
                     val centerY = size.height / 2f
