@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
@@ -13,6 +16,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,6 +55,15 @@ fun IconButton(
 
     HoldDownObserver(holdDownState, interactionSource)
 
+    // COUI 17 press feedback (COUIViewTouchAnimator / COUIPressFeedbackHelper): the button
+    // capsule scales down to 0.92 with a critically-damped spring while pressed.
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.92f else 1f,
+        animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
+        label = "iconButtonPressScale",
+    )
+
     val currentOnClick by rememberUpdatedState(onClick)
     val clickableModifier = remember(enabled, interactionSource) {
         if (enabled) {
@@ -67,6 +80,10 @@ fun IconButton(
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
             .then(clickableModifier),
         contentAlignment = Alignment.Center,

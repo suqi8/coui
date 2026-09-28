@@ -30,8 +30,8 @@ import androidx.compose.ui.graphics.Shape
  * - Blur radius: the dialog/background blur radius token `coui_list_dialog_background_blur_radius`
  *   (240dp) — the COUI frosted-sheet blur strength, not the small Material effect radius.
  * - Alpha gradient base (`GradientBackgroundDrawable`, direction bottom→top): light 3 stops
- *   positions [0, 0.4, 1] × alphas [0, 0.7, 1]; dark 2 stops positions [0, 0.6] × alphas [0, 1]
- *   (NORMAL_BLUR_DARK_ALPHA ramp).
+ *   positions [0, 0.4, 1] × alphas [0, 0.7, 1]; dark 2 stops positions [0, 1] × alphas [0, 0.4]
+ *   (GRADIENT_DARK_ALPHA).
  * - Blend layers (`COUIMaterialBlurEffect`, TYPE_TOP_BAR): light `#66333333` COLOR_DODGE +
  *   `#99F5F5F5` LUMINOSITY; dark `#CC262626` SRC_OVER + `#B37F7F7F` OVERLAY.
  *
@@ -67,11 +67,13 @@ fun BoxScope.TopAppBarGlow(
     }
 
     // Translucent vertical gradient base, drawn bottom→top (position 0 at the bottom edge).
+    // COUI 17 GradientBlurConfig: light positions [0, 0.4, 1] × alphas [0, 0.7, 1];
+    // dark positions [0, 1] × alphas [0, GRADIENT_DARK_ALPHA=0.4].
     val gradient = remember(baseColor, isDark) {
         if (isDark) {
             Brush.verticalGradient(
                 0f to baseColor.copy(alpha = 0f),
-                0.6f to baseColor.copy(alpha = 1f),
+                1f to baseColor.copy(alpha = 0.4f),
             )
         } else {
             Brush.verticalGradient(

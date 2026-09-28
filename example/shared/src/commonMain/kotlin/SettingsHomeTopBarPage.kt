@@ -22,10 +22,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.TopAppBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarDefaults
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
@@ -33,6 +36,8 @@ import io.github.suqi8.coui.kmp.blur.TopAppBarGlow
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Back
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import utils.pageContentPadding
@@ -53,6 +58,7 @@ fun SettingsHomeTopBarPage(
     val lazyListState = rememberLazyListState()
     var query by rememberSaveable { mutableStateOf("") }
 
+    val navigator = LocalNavigator.current
     val surfaceColor = COUITheme.colorScheme.surface
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
@@ -60,6 +66,8 @@ fun SettingsHomeTopBarPage(
     }
     val isDark = COUITheme.colorScheme.background.let { it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f }
     val glowEnabled = isRuntimeShaderSupported() && appState.enableBlur
+    // COUI 17 material button panel: light #FFF0F0F0, dark #FF333333.
+    val buttonPanelColor = TopAppBarDefaults.buttonPanelColor()
 
     Scaffold(
         topBar = {
@@ -70,6 +78,18 @@ fun SettingsHomeTopBarPage(
                     scrollBehavior = topAppBarScrollBehavior,
                     expandedHeight = 116.dp,
                     largeTitleFontSize = 40.sp,
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navigator.pop() },
+                            backgroundColor = buttonPanelColor,
+                        ) {
+                            Icon(
+                                imageVector = COUIIcons.Back,
+                                contentDescription = null,
+                                tint = COUITheme.colorScheme.onSurface,
+                            )
+                        }
+                    },
                     bottomContent = {
                         TopAppBarSearchSlot(
                             inputField = {
