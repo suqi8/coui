@@ -102,8 +102,8 @@ fun LazyListScope.colorPickerSection() {
 private fun ColorSwatchPickerCard() {
     val swatchColors = remember {
         listOf(
-            Color(0xFF0066FF),
-            Color(0xFF24B232),
+            Color(0xFF0080FF),
+            Color(0xFF00BD13),
             Color(0xFFF08222),
             Color(0xFFDB382C),
             Color(0xFFDB9A00),

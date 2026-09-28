@@ -79,13 +79,15 @@ object IconButtonDefaults {
 
     /**
      * The default minimum width of the [IconButton].
+     * COUI `coui_action_menu_item_min_width` (48dp).
      */
     val MinWidth = 48.dp
 
     /**
      * The default minimum height of the [IconButton].
+     * COUI `coui_action_menu_item_min_height` (40dp).
      */
-    val MinHeight = 48.dp
+    val MinHeight = 40.dp
 
     /**
      * The default corner radius of the [IconButton] (COUI coui_toolbar_menu_bg_radius).

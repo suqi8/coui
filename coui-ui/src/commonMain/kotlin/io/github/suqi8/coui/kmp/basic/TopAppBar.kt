@@ -411,10 +411,10 @@ object TopAppBarDefaults {
 
     /**
      * The default expanded height of the [TopAppBar] when no subtitle is present.
-     * COUI `coui_appbar_title_expanded_height` (107dp); the bar grows beyond it when the
+     * COUI `coui_appbar_title_expanded_height` (110dp); the bar grows beyond it when the
      * measured title content requires more space.
      */
-    val ExpandedHeight = 107.dp
+    val ExpandedHeight = 110.dp
 
     /**
      * The top padding of the expanded large title, measured from the top of the bar.
@@ -1222,8 +1222,8 @@ private fun SmallTopAppBarLayout(
     }
 }
 
-/** COUI `coui_appbar_title_collapsed_text_size` (18dp, sans-serif-medium). */
-private val CollapsedTitleTextSize = 18.sp
+/** COUI `coui_appbar_title_collapsed_text_size` (24sp, sans-serif-medium). */
+private val CollapsedTitleTextSize = 24.sp
 
 /**
  * COUIEaseInterpolator: cubic-bezier(0.33, 0, 0.67, 1), applied to the collapsing title's
