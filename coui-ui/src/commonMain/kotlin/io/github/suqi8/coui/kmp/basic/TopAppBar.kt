@@ -16,11 +16,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -150,6 +153,35 @@ fun TopAppBar(
         hideSubtitleOnCollapse = hideSubtitleOnCollapse,
         bottomContent = bottomContent,
     )
+}
+
+/**
+ * A search bar slot for [TopAppBar.bottomContent], matching the COUI 17 settings home page.
+ *
+ * It renders a capsule search field inside a fixed-height row, with the COUI page-side
+ * horizontal padding, so the bar collapses away with the rest of the expanded title area.
+ *
+ * @param inputField the search input field (e.g. [SearchBar]'s `InputField`).
+ * @param modifier the [Modifier] to be applied to the slot.
+ * @param height the height of the slot row. COUI `coui_search_view_height` (52dp).
+ * @param insideMargin the horizontal page-side padding of the capsule.
+ */
+@Composable
+fun TopAppBarSearchSlot(
+    inputField: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = TopAppBarDefaults.SearchSlotHeight,
+    insideMargin: PaddingValues = TopAppBarDefaults.SearchSlotInsideMargin,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+            .padding(insideMargin),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        inputField()
+    }
 }
 
 /**
@@ -454,6 +486,17 @@ object TopAppBarDefaults {
      * COUI `coui_toolbar_gap_before_menu` (8dp).
      */
     val ActionIconGap = 8.dp
+
+    /**
+     * The height of the [TopAppBarSearchSlot] row. COUI `coui_search_view_height` (52dp).
+     */
+    val SearchSlotHeight = 52.dp
+
+    /**
+     * The horizontal page-side padding of the capsule inside [TopAppBarSearchSlot].
+     * COUI `coui_preference_card_margin_horizontal` (16dp).
+     */
+    val SearchSlotInsideMargin = PaddingValues(horizontal = 16.dp)
 }
 
 @Stable
