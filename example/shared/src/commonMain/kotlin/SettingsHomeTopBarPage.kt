@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
@@ -72,9 +73,19 @@ fun SettingsHomeTopBarPage(
     Scaffold(
         topBar = {
             Box {
+                // Condensed-light glow sits BEHIND the bar as its frosted backing (it must not
+                // cover the title / search / buttons). The bar itself is transparent so the glow
+                // shows through where the bar has no content.
+                TopAppBarGlow(
+                    backdrop = backdrop,
+                    collapseFraction = topAppBarScrollBehavior.state.collapsedFraction,
+                    isDark = isDark,
+                    baseColor = surfaceColor,
+                    enabled = glowEnabled,
+                )
                 TopAppBar(
                     title = "Settings",
-                    color = surfaceColor,
+                    color = if (glowEnabled) Color.Transparent else surfaceColor,
                     scrollBehavior = topAppBarScrollBehavior,
                     expandedHeight = 116.dp,
                     largeTitleFontSize = 40.sp,
@@ -110,13 +121,6 @@ fun SettingsHomeTopBarPage(
                             },
                         )
                     },
-                )
-                TopAppBarGlow(
-                    backdrop = backdrop,
-                    collapseFraction = topAppBarScrollBehavior.state.collapsedFraction,
-                    isDark = isDark,
-                    baseColor = surfaceColor,
-                    enabled = glowEnabled,
                 )
             }
         },
