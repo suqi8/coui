@@ -84,8 +84,9 @@ object FloatingToolbarDefaults {
 
     /**
      * Default corner radius of the [FloatingToolbar].
+     * COUI 17 `coui_floating_toolbar_item_circle_radius` (20dp).
      */
-    val CornerRadius = 24.dp
+    val CornerRadius = 20.dp
 
     /**
      * Default color of the [FloatingToolbar].
