@@ -591,9 +591,9 @@ object TabRowDefaults {
 
     /**
      * The default inset between the container and the indicator in [TabRowWithContour].
-     * COUI 17 `coui_segment_padding` (8dp).
+     * COUI 17 indicator inset (4dp).
      */
-    val TabRowWithContourPadding = 8.dp
+    val TabRowWithContourPadding = 4.dp
 
     /**
      * The contour inset of the COUI `SegmentButton.Tiny` style.
