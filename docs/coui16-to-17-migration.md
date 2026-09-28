@@ -21,8 +21,12 @@
 | 2026-09-28 | TopAppBar 展开高 107→110 | `coui-ui/.../basic/TopAppBar.kt` | `coui_appbar_title_expanded_height`=110 | ✅ |
 | 2026-09-28 | TopAppBar 折叠标题 18→24sp | `TopAppBar.kt` `CollapsedTitleTextSize` | `coui_appbar_title_collapsed_text_size`=24 | ✅ |
 | 2026-09-28 | 编译自检 + spotless 通过 | — | Gradle 缓存修复（清 transforms） | ✅ |
-
-## 一、COUI17 vs COUI16 核心差异（用户/开发者视角）
+| 2026-09-28 | 图标按钮 48×48→48×40 | `coui-ui/.../basic/IconButton.kt` | `coui_action_menu_item_min_width/height`=48/40 | ✅ |
+| 2026-09-28 | 顶部搜索槽位 TopAppBarSearchSlot | `TopAppBar.kt` + `SearchSlotHeight/InsideMargin` | 设置主页胶囊搜索 52dp/16dp | ✅ |
+| 2026-09-28 | 凝光叠加层 TopAppBarGlow | `coui-blur/.../TopAppBarGlow.kt` | 渐进模糊 + 凝光 blend 层 + alpha 渐变底 | ✅ |
+| 2026-09-28 | 凝光 blur 半径→240 | `TopAppBarGlowDefaults.BlurRadius` | `coui_list_dialog_background_blur_radius`=240 | ✅ |
+| 2026-09-28 | 凝光 alpha 渐变（L 0/.7/1，D 0/0.6/1，下→上） | `TopAppBarGlow.kt` | `GradientBackgroundDrawable` / NORMAL_BLUR_DARK_ALPHA | ✅ |
+| 2026-09-28 | 分段容器+滑块 padding 4→8 | `TabRow.kt` `TabRowWithContourPadding` | 用户决策（17 取值 8） | ✅ |
 
 **结论：17 是一次「主色提亮 + 新形态叠加」的迭代，不是推翻。**
 
@@ -70,10 +74,13 @@
 - [ ] spotlessCheck
 
 ### 3.2 页面层 — 设置主页 TopBar（重点）
-- [ ] 复刻 `homepage_toolbar.xml` 形态：116dp 展开大标题（40sp，settings 覆写）→ 折叠 52dp
-- [ ] 状态栏融合 + 内容浮动滚动（`COUIFloatingScrollingViewBehavior`）
-- [ ] `AppBarBlurOverlayView` 毛玻璃/凝光叠加层（滚动驱动 alpha，待 jadx 校准模糊半径/材质）
-- [ ] 胶囊搜索框（`SearchBarStyle_v2`：圆角 40dp、描边 1dp、elevation 0、高 52dp）
+- [x] 通用 appbar 展开高 110dp / 折叠标题 24sp（`TopAppBarDefaults` / `CollapsedTitleTextSize`）
+- [x] 顶部搜索槽位 `TopAppBarSearchSlot`（胶囊 52dp / 页边 16dp）
+- [x] 凝光叠加层 `TopAppBarGlow`（240dp 渐进模糊 + 凝光 blend 层 + 半透明 alpha 渐变底）
+- [x] 图标按钮 48×40（`IconButtonDefaults`）
+- [x] 分段容器+滑块 padding 8（`TabRowWithContourPadding`）
+- [ ] 设置主页覆写：116dp 展开 + 40sp 大标题（页面层 demo，`SettingsCOUICollapsingToolbarLayoutStyle`）
+- [ ] 状态栏融合 + 内容浮动滚动（`COUIFloatingScrollingViewBehavior` 等价物，demo 层）
 
 ### 3.3 组件级新形态（专项，另行立项）
 - [ ] Checkbox/Radio `__17` 勾选动画
@@ -81,13 +88,19 @@
 - [ ] 按压 ripple 专用态（`coui_color_ripple_press_background`）
 - [ ] 圆角分档 weight（s/xs 1.5、xl/xxl 1.1、l/m 0.99）—— 高风险 flag
 - [ ] Dialog 底角 33→34（coui_dialog_os_16_1_radius_33_dp=34）
+- [ ] 文字按钮 60–104×40 padding 12、按钮面板底色 L `#FFF0F0F0`/D `#FF333333`
 
 ## 四、关键决策记录
 
 1. **语义绿/橙不进 Colors.kt**：Colors 无独立语义色槽（仅 error 系），绿 `#00BD13`/橙 `#FF7700` 仅 demo 色板用，已在 example 同步。
-2. **圆角分档 weight 留专项**：squircle 精确化需改 shader，属高风险核心绘制，不并入 token 迁移。
-3. **TopBar 迁移依赖基础层**：先完成 token/主题（蓝系），再做页面壳子（逻辑顺序）。
-4. **不动 16 已对齐项**：背景层级、卡片、文字、分隔线、Switch/Slider 几何（17 与 16 一致）。
+2. **未对齐即去除**：本库未对齐 COUI 规范的内容不保留，对齐不到就去除，不私自保留或发明。
+3. **TopBar 凝光 blur 半径 = 240**：取 `coui_list_dialog_background_blur_radius`（磨砂片模糊量级），非 Material 小半径（20/25px）。
+4. **凝光 alpha 渐变半透明**：下→上；浅色 3 档 alpha 0/0.7/1 @ pos 0/0.4/1；深色 2 档 alpha 0/1 @ pos 0/0.6（NORMAL_BLUR_DARK_ALPHA）。
+5. **分段容器与滑块 padding 均 = 8**：`TabRowWithContourPadding`=8（同一 inset 决定滑块高 = 容器高-2×8，不叠加二次 inset）。
+6. **TopBar 标题字号**：通用 32sp（17 一致）/ 设置主页 40sp 覆写 / 折叠 24sp。
+7. **圆角分档 weight 留专项**：squircle 精确化需改 shader，属高风险核心绘制，不并入 token 迁移。
+8. **TopBar 迁移依赖基础层**：先完成 token/主题（蓝系），再做页面壳子（逻辑顺序）。
+9. **不动 16 已对齐项**：背景层级、卡片、文字、分隔线、Switch/Slider 几何（17 与 16 一致）。
 
 ## 五、逆向工作区
 
