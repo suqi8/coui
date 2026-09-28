@@ -680,8 +680,8 @@ private val SegmentPaddingHorizontal = 12.dp
 /** COUI `coui_segment_shadow_offset` (2dp) — the vertical offset of the indicator shadow. */
 private val IndicatorShadowOffsetY = 2.dp
 
-/** COUI `coui_segment_shadow_radius` (1dp) — the blur radius of the indicator shadow. */
-private val IndicatorShadowBlurRadius = 1.dp
+/** COUI 17 indicator shadow blur radius (8dp). */
+private val IndicatorShadowBlurRadius = 8.dp
 
 /** COUI `coui_segment_button_shadow_color` in light themes (#0D000000). */
 private val IndicatorShadowLight = Color(0x0D000000)
