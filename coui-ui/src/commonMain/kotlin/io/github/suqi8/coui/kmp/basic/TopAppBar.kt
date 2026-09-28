@@ -14,6 +14,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -497,6 +498,37 @@ object TopAppBarDefaults {
      * COUI `coui_preference_card_margin_horizontal` (16dp).
      */
     val SearchSlotInsideMargin = PaddingValues(horizontal = 16.dp)
+
+    /**
+     * The min width of a text action button in the top app bar.
+     * COUI `coui_action_text_menu_item_min_width` (60dp).
+     */
+    val TextActionMinWidth = 60.dp
+
+    /**
+     * The max width of a text action button in the top app bar.
+     * COUI `coui_action_bar_text_menu_item_max_width` (104dp).
+     */
+    val TextActionMaxWidth = 104.dp
+
+    /**
+     * The min height of a text action button in the top app bar.
+     * COUI `coui_action_menu_item_min_height` (40dp).
+     */
+    val TextActionMinHeight = 40.dp
+
+    /**
+     * The horizontal padding of a text action button in the top app bar.
+     * COUI `coui_toolbar_text_menu_bg_padding_horizontal` (12dp).
+     */
+    val TextActionHorizontalPadding = 12.dp
+
+    /**
+     * The panel background color of a blurred top-bar button.
+     * COUI `ToolbarMaterialEffectDelegate`: light `#FFF0F0F0`, dark `#FF333333`.
+     */
+    @Composable
+    fun buttonPanelColor(): Color = if (isSystemInDarkTheme()) Color(0xFF333333) else Color(0xFFF0F0F0)
 }
 
 @Stable
