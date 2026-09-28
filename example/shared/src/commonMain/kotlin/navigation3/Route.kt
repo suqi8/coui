@@ -31,4 +31,7 @@ sealed interface Route : NavKey {
 
     @Serializable
     data object ToolbarSearch : Route
+
+    @Serializable
+    data object SettingsHomeTopBar : Route
 }

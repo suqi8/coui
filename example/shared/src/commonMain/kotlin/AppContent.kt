@@ -169,6 +169,7 @@ fun AppContent(
                 subclass(Route.Navigation::class)
                 subclass(Route.MultiScaffold::class)
                 subclass(Route.ToolbarSearch::class)
+                subclass(Route.SettingsHomeTopBar::class)
             }
         }
     }
@@ -234,6 +235,9 @@ fun AppContent(
                 }
                 entry<Route.ToolbarSearch> {
                     ToolbarSearchPage(padding = padding)
+                }
+                entry<Route.SettingsHomeTopBar> {
+                    SettingsHomeTopBarPage(padding = padding)
                 }
             }
         }

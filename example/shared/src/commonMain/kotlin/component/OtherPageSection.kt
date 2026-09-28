@@ -47,6 +47,12 @@ fun LazyListScope.otherPageSection() {
                 summary = "A search bar that floats up into the toolbar",
                 onClick = { navigator.push(Route.ToolbarSearch) },
             )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            ArrowPreference(
+                title = "COUI 17 Settings Top Bar",
+                summary = "116dp large title at 40sp, capsule search, condensed-light glow",
+                onClick = { navigator.push(Route.SettingsHomeTopBar) },
+            )
         }
     }
 }
