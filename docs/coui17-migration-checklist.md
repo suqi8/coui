@@ -42,7 +42,7 @@
 | 对话框模糊半径 | `coui_list_dialog_background_blur_radius`=240dp | 未实现 | ⬜ |
 | 顶栏搜索框（胶囊） | `SearchViewAnimate` 52dp + `SearchBarStyle_v2`（圆角 40、描边 1、elevation 0） | 现有搜索组件（16 已迁移浮动搜索栏） | 🚧 16 已部分 |
 | 顶栏菜单胶囊 | `coui_toolbar_menu_bg_radius`=24dp、icon 24dp | `IconButtonDefaults.CornerRadius`=24dp | ✅ 已一致 |
-| 顶栏分段控件 | 容器 28dp、滑块 L `#B2FFFFFF`/D `#33FFFFFF`、阴影 2dp/1dp、模糊 25px | `TabRowWithContour`（16 已对齐 40dp 等） | ⬜ 17 材质化待复查 |
+| 顶栏分段控件 | 容器 **40dp**、容器+滑块 padding **8**、滑块 L `#B2FFFFFF`/D `#33FFFFFF`、阴影 2dp/1dp | `TabRowWithContour`（40dp、padding 8 已对齐） | ✅ 几何已对齐 |
 
 ## 三、组件级新形态（专项，另行立项）
 
