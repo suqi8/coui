@@ -86,7 +86,7 @@
 - [x] 分段 40dp/指示器满高/inset 4/无阴影（`TabRowWithContour`）
 - [x] FloatingToolbar 圆角 20（布局圆角）
 - [x] TopAppBar 覆写参数（`expandedHeight`/`largeTitleFontSize`，设置主页 116/40sp 能力）
-- [ ] 设置主页页面层 demo：116dp 展开 + 40sp 大标题 + 状态栏融合 + 内容浮动滚动（example 层）
+- [x] 设置主页 TopBar 演示页 `SettingsHomeTopBarPage`（example 层：116dp/40sp + 胶囊搜索槽 + 凝光，凝光受 Blur 开关控制；编译+格式通过，注册 Route `SettingsHomeTopBar` 并在 Other 页加入口）
 
 ### 3.3 组件级新形态（专项，另行立项）
 - [ ] Checkbox/Radio `__17` 勾选动画

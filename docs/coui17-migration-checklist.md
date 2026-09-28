@@ -32,7 +32,7 @@
 
 | 组件/形态 | COUI17 证据 | 现状 | 状态 |
 | :-- | :-- | :-- | :-- |
-| **设置主页 TopBar**（大标题折叠） | `homepage_toolbar.xml`：116dp 展开、40sp 标题、折叠 52dp、状态栏融合 | `TopAppBar` + `expandedHeight`/`largeTitleFontSize` 覆写参数 | 🚧 覆写能力已加，页面层 demo 待办 |
+| **设置主页 TopBar**（大标题折叠） | `homepage_toolbar.xml`：116dp 展开、40sp 标题、折叠 52dp、状态栏融合 | `TopAppBar` + `expandedHeight`/`largeTitleFontSize` 覆写 + example `SettingsHomeTopBarPage` | ✅ 已组合演示页 |
 | TopBar 展开高 | `coui_appbar_title_expanded_height`=110dp | 107dp | ✅ 已改 110 |
 | TopBar 折叠标题字号 | `coui_appbar_title_collapsed_text_size`=24dp | 18sp | ✅ 已改 24 |
 | 图标按钮尺寸 | 48×40dp（`coui_action_menu_item_min_width/height`） | 48×48 | ✅ 已改 48×40 |
