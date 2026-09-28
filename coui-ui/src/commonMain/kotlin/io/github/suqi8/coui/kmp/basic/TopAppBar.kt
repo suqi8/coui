@@ -57,6 +57,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -117,6 +118,8 @@ fun TopAppBar(
     titlePadding: Dp = TopAppBarDefaults.TitlePadding,
     navigationIconPadding: Dp = TopAppBarDefaults.NavigationIconPadding,
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
+    expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
+    largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Wrap the given actions in a Row.
@@ -152,6 +155,8 @@ fun TopAppBar(
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         showDivider = showDivider,
         hideSubtitleOnCollapse = hideSubtitleOnCollapse,
+        expandedHeight = expandedHeight,
+        largeTitleFontSize = largeTitleFontSize,
         bottomContent = bottomContent,
     )
 }
@@ -758,6 +763,8 @@ private fun TopAppBarLayout(
     defaultWindowInsetsPadding: Boolean = true,
     showDivider: Boolean = true,
     hideSubtitleOnCollapse: Boolean = true,
+    expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
+    largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Producer lambdas — reads stay in layout/draw phases so scroll never recomposes this subtree.
@@ -779,9 +786,8 @@ private fun TopAppBarLayout(
         }
     }
 
-    // CollapsingTextHelper lerps the text size from expanded 32dp to collapsed 18dp; replicated
+    // CollapsingTextHelper lerps the text size from expanded to collapsed; replicated
     // as a scale factor around the title's top-start corner.
-    val largeTitleFontSize = COUITheme.textStyles.title1.fontSize
     val collapsedTitleScale = remember(largeTitleFontSize) {
         if (largeTitleFontSize.value > 0f) {
             CollapsedTitleTextSize.value / largeTitleFontSize.value
@@ -966,7 +972,7 @@ private fun TopAppBarLayout(
         val expandedContentHeight = largeTitleTop + largeTitlePlaceable.height +
             (subtitlePlaceable?.let { subtitleMarginTopPx + it.height } ?: 0)
         val expandedBarHeight = maxOf(
-            TopAppBarDefaults.ExpandedHeight.roundToPx() + subtitleHeight,
+            expandedHeight.roundToPx() + subtitleHeight,
             expandedContentHeight + largeTitleBottomPaddingPx,
         )
         val expansion = (expandedBarHeight - collapsedHeight).coerceAtLeast(0)
