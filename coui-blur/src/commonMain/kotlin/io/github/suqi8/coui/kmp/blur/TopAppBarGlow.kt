@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 
 /**
  * The "condensed light" (凝光) glow overlay for a COUI 17 top app bar.
@@ -37,8 +39,9 @@ import androidx.compose.ui.graphics.Shape
  *
  * @param backdrop The [Backdrop] providing the scrolled content to blur (e.g. `rememberLayerBackdrop`
  *   on the page content).
- * @param collapseFraction The top-app-bar collapse fraction in `[0, 1]`: 0 = expanded (overlay
- *   hidden), 1 = collapsed (overlay fully revealed). COUI maps scroll→alpha as min(1, scroll/30dp).
+ * @param scrollOffsetPx The top-app-bar scroll offset in pixels (a positive value that grows as the
+ *   bar collapses, e.g. `abs(scrollBehavior.state.heightOffset)`). The glow alpha follows COUI 17:
+ *   `min(1, scrollOffsetPx / 30dp)`, so the frosting is fully revealed after only a 30dp scroll.
  * @param isDark Whether the dark scheme is active, to pick the dark blend layers and alpha stops.
  * @param baseColor The opaque base color of the gradient sheet. Defaults to the COUI page surface
  *   (`couiColorBackgroundWithCard`); callers usually pass the same color as the app bar.
@@ -52,7 +55,7 @@ import androidx.compose.ui.graphics.Shape
 @Composable
 fun BoxScope.TopAppBarGlow(
     backdrop: Backdrop,
-    collapseFraction: Float,
+    scrollOffsetPx: Float,
     isDark: Boolean,
     baseColor: Color,
     modifier: Modifier = Modifier,
@@ -61,7 +64,9 @@ fun BoxScope.TopAppBarGlow(
     enabled: Boolean = false,
     content: @Composable () -> Unit = {},
 ) {
-    val alpha = collapseFraction.coerceIn(0f, 1f)
+    // COUI 17 AppBarBlurOverlayBehavior.computeOverlayAlpha: alpha = min(1, scrollPx / 30dp).
+    val thresholdPx = with(LocalDensity.current) { TopAppBarGlowDefaults.AlphaScrollThreshold.toPx() }
+    val alpha = (scrollOffsetPx / thresholdPx).coerceIn(0f, 1f)
     if (!enabled || alpha <= 0f) {
         return
     }
@@ -135,4 +140,10 @@ object TopAppBarGlowDefaults {
      * The blur radius in dp at full strength. COUI `coui_list_dialog_background_blur_radius` (240dp).
      */
     val BlurRadius: Float = 240f
+
+    /**
+     * The scroll distance over which the glow fades in. COUI 17
+     * `AppBarBlurOverlayBehavior.ALPHA_SCROLL_THRESHOLD_DP` (30dp).
+     */
+    val AlphaScrollThreshold = 30.dp
 }

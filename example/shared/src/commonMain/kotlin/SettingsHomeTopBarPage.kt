@@ -29,7 +29,6 @@ import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.TopAppBar
-import io.github.suqi8.coui.kmp.basic.TopAppBarDefaults
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
@@ -67,8 +66,6 @@ fun SettingsHomeTopBarPage(
     }
     val isDark = COUITheme.colorScheme.background.let { it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f }
     val glowEnabled = isRuntimeShaderSupported() && appState.enableBlur
-    // COUI 17 material button panel: light #FFF0F0F0, dark #FF333333.
-    val buttonPanelColor = TopAppBarDefaults.buttonPanelColor()
 
     Scaffold(
         topBar = {
@@ -78,7 +75,7 @@ fun SettingsHomeTopBarPage(
                 // shows through where the bar has no content.
                 TopAppBarGlow(
                     backdrop = backdrop,
-                    collapseFraction = topAppBarScrollBehavior.state.collapsedFraction,
+                    scrollOffsetPx = -topAppBarScrollBehavior.state.heightOffset,
                     isDark = isDark,
                     baseColor = surfaceColor,
                     enabled = glowEnabled,
@@ -90,9 +87,10 @@ fun SettingsHomeTopBarPage(
                     expandedHeight = 116.dp,
                     largeTitleFontSize = 40.sp,
                     navigationIcon = {
+                        // COUI 17 top-bar icon buttons have no panel fill; the pressed feedback is
+                        // a circular ripple built into IconButton.
                         IconButton(
                             onClick = { navigator.pop() },
-                            backgroundColor = buttonPanelColor,
                         ) {
                             Icon(
                                 imageVector = COUIIcons.Back,
