@@ -7,8 +7,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -38,9 +41,10 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param modifier The modifier to be applied to the [IconButton]
  * @param enabled Whether the [IconButton] is enabled.
  * @param holdDownState Used to determine whether it is in the pressed state.
- * @param backgroundColor The background color of the [IconButton]. COUI 17 top-bar buttons have
- *   no panel fill (`Color.Unspecified`, default); the pressed feedback is a circular ripple, not a
- *   background tint. Pass a color only for a genuinely filled button.
+ * @param backgroundColor The panel color of the [IconButton]. Defaults to the COUI 17 material
+ *   panel (`#FFF0F0F0` light / `#FF333333` dark) so the button floats over the frosted bar, the
+ *   way `ToolbarMaterialEffectDelegate` fills the button window. Pass [Color.Unspecified] for a
+ *   genuinely flat (no-fill) icon button.
  * @param cornerRadius The corner radius of of the [IconButton].
  * @param minHeight The minimum height of of the [IconButton].
  * @param minWidth The minimum width of the [IconButton].
@@ -52,7 +56,7 @@ fun IconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     holdDownState: Boolean = false,
-    backgroundColor: Color = Color.Unspecified,
+    backgroundColor: Color = IconButtonDefaults.panelColor(),
     cornerRadius: Dp = IconButtonDefaults.CornerRadius,
     minHeight: Dp = IconButtonDefaults.MinHeight,
     minWidth: Dp = IconButtonDefaults.MinWidth,
@@ -92,6 +96,18 @@ fun IconButton(
                 scaleX = scale
                 scaleY = scale
             }
+            .then(
+                // The floating-panel elevation shadow, only when the button has a panel fill.
+                if (backgroundColor != Color.Unspecified) {
+                    Modifier.shadow(
+                        elevation = IconButtonDefaults.PanelElevation,
+                        shape = RoundedCornerShape(cornerRadius),
+                        clip = false,
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
             .then(clickableModifier)
             .drawWithContent {
@@ -130,4 +146,17 @@ object IconButtonDefaults {
      * The default corner radius of the [IconButton] (COUI coui_toolbar_menu_bg_radius).
      */
     val CornerRadius = 24.dp
+
+    /**
+     * The COUI 17 material panel color of a top-bar button, from
+     * `ToolbarMaterialEffectDelegate.BLUR_WINDOW_VIEW_BG_COLOR`: `#FFF0F0F0` light, `#FF333333` dark.
+     */
+    @Composable
+    fun panelColor(): Color = if (isSystemInDarkTheme()) Color(0xFF333333) else Color(0xFFF0F0F0)
+
+    /**
+     * The elevation of the floating button panel shadow. COUI 17 falls back to elevation 6dp when
+     * caustic shadow is unavailable (`ToolbarMaterialEffectDelegate`).
+     */
+    val PanelElevation = 6.dp
 }
