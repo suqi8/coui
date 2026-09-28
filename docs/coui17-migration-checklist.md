@@ -18,7 +18,8 @@
 | 语义色 error | `#DB382C`/`#FF6C61` | 同 16 | `Colors.kt`（无需改） | ✅ |
 | 语义绿/橙 | 旧值 | 绿 L `#00BD13`、橙 night `#FF7700` | `Colors.kt` 语义色 | ✅ demo 色板已同步 |
 | 圆角体系 | squircle ext 1.2819 | 分档 weight（s/xs1.5、xl/xxl1.1、l/m0.99） | `coui-squircle` + Defaults | 📝 高风险·flag |
-| Dialog 底角 | 33dp | 34dp | `DialogContentLayout.kt` | ⬜ |
+| Dialog 底角 | 33dp | 34dp | `DialogContentLayout.kt` | ⬜ 底角独立规格待办 |
+| Dialog 主体圆角 | 19dp（xxl_radius） | 24dp（`coui_dialog_background_corner_radius`） | `DialogDefaults.CornerRadius` | ✅ 已改 24 |
 | FloatingToolbar 圆角 | 24dp | 20dp（`coui_floating_toolbar_item_circle_radius`） | `FloatingToolbarDefaults.CornerRadius` | ✅ 已改 20 |
 | TopAppBar 展开高 | 107dp | 110dp | `TopAppBarDefaults.ExpandedHeight` | ✅ |
 | TopAppBar 折叠标题字号 | 18sp | 24sp | `CollapsedTitleTextSize` | ✅ |
@@ -31,7 +32,7 @@
 
 | 组件/形态 | COUI17 证据 | 现状 | 状态 |
 | :-- | :-- | :-- | :-- |
-| **设置主页 TopBar**（大标题折叠） | `homepage_toolbar.xml`：116dp 展开、40sp 标题、折叠 52dp、状态栏融合 | 现有 `TopAppBar` | 🚧 展开高/折叠字号已对齐，116/40sp 待办 |
+| **设置主页 TopBar**（大标题折叠） | `homepage_toolbar.xml`：116dp 展开、40sp 标题、折叠 52dp、状态栏融合 | `TopAppBar` + `expandedHeight`/`largeTitleFontSize` 覆写参数 | 🚧 覆写能力已加，页面层 demo 待办 |
 | TopBar 展开高 | `coui_appbar_title_expanded_height`=110dp | 107dp | ✅ 已改 110 |
 | TopBar 折叠标题字号 | `coui_appbar_title_collapsed_text_size`=24dp | 18sp | ✅ 已改 24 |
 | 图标按钮尺寸 | 48×40dp（`coui_action_menu_item_min_width/height`） | 48×48 | ✅ 已改 48×40 |
