@@ -36,14 +36,14 @@
 | 图标按钮尺寸 | 48×40dp（`coui_action_menu_item_min_width/height`） | 48×48 | ✅ 已改 48×40 |
 | 文字按钮尺寸 | 60–104×40dp、padding 12（`coui_action_text_menu_item_*`） | `TopAppBarDefaults.TextAction*` 常量 | ✅ 已补常量 |
 | 按钮面板底色 | L `#FFF0F0F0`/D `#FF333333`（`ToolbarMaterialEffectDelegate`） | `TopAppBarDefaults.buttonPanelColor()` | ✅ 已补 |
-| TopBar 凝光渐变模糊 | Oplus gradient blur 240dp + 凝光 blend 层，滚动驱动 | `TopAppBarGlow`（coui-blur） | ✅ 已实现 |
+| TopBar 凝光渐变模糊 | Oplus gradient blur 240dp + 凝光 blend 层，滚动驱动，**默认关闭（enabled=false，自选启用）** | `TopAppBarGlow`（coui-blur） | ✅ 已实现 |
 | 凝光 alpha 渐变底 | L 0/.7/1 @ pos 0/.4/1，D 0/1 @ pos 0/.6，下→上 | `TopAppBarGlow` | ✅ 已实现 |
 | TopBar Material 三档 | DEFAULT 0px / IMMERSIVE 25px / DEFAULT_BLUR 20px + blend 层 | blend 层已并入 Glow | 🚧 blend 已实现，三档枚举待办 |
 | 顶栏毛玻璃/凝光叠加 | `AppBarBlurOverlayView`（alpha=min(1,scroll/30dp)） | `TopAppBarGlow`（collapseFraction 驱动） | ✅ 已实现 |
 | 对话框模糊半径 | `coui_list_dialog_background_blur_radius`=240dp | Glow 复用该值 | 🚧 Dialog 模糊待办 |
 | 顶栏搜索框（胶囊） | `SearchViewAnimate` 52dp + `SearchBarStyle_v2`（圆角 40、描边 1、elevation 0） | 现有搜索组件（16 已迁移浮动搜索栏） | 🚧 16 已部分 |
 | 顶栏菜单胶囊 | `coui_toolbar_menu_bg_radius`=24dp、icon 24dp | `IconButtonDefaults.CornerRadius`=24dp | ✅ 已一致 |
-| 顶栏分段控件 | 容器 **40dp**、容器+滑块 padding **8**、滑块 L `#B2FFFFFF`/D `#33FFFFFF`、滑块阴影 blur **8dp** / offset 2dp | `TabRowWithContour`（40dp、padding 8、阴影 8/2 已对齐） | ✅ 几何已对齐 |
+| 顶栏分段控件 | 容器 **40dp**、容器+滑块 padding **8**、滑块（指示器）**40dp 满高**、滑块阴影 blur **8dp** / offset 2dp | `TabRowWithContour`（40dp、padding 8、指示器满高、阴影 8/2 已对齐） | ✅ 几何已对齐 |
 
 ## 三、组件级新形态（专项，另行立项）
 
