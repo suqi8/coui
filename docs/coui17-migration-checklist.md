@@ -19,6 +19,7 @@
 | 语义绿/橙 | 旧值 | 绿 L `#00BD13`、橙 night `#FF7700` | `Colors.kt` 语义色 | ✅ demo 色板已同步 |
 | 圆角体系 | squircle ext 1.2819 | 分档 weight（s/xs1.5、xl/xxl1.1、l/m0.99） | `coui-squircle` + Defaults | 📝 高风险·flag |
 | Dialog 底角 | 33dp | 34dp | `DialogContentLayout.kt` | ⬜ |
+| FloatingToolbar 圆角 | 24dp | 20dp（`coui_floating_toolbar_item_circle_radius`） | `FloatingToolbarDefaults.CornerRadius` | ✅ 已改 20 |
 | TopAppBar 展开高 | 107dp | 110dp | `TopAppBarDefaults.ExpandedHeight` | ✅ |
 | TopAppBar 折叠标题字号 | 18sp | 24sp | `CollapsedTitleTextSize` | ✅ |
 
@@ -43,7 +44,7 @@
 | 对话框模糊半径 | `coui_list_dialog_background_blur_radius`=240dp | Glow 复用该值 | 🚧 Dialog 模糊待办 |
 | 顶栏搜索框（胶囊） | `SearchViewAnimate` 52dp + `SearchBarStyle_v2`（圆角 40、描边 1、elevation 0） | 现有搜索组件（16 已迁移浮动搜索栏） | 🚧 16 已部分 |
 | 顶栏菜单胶囊 | `coui_toolbar_menu_bg_radius`=24dp、icon 24dp | `IconButtonDefaults.CornerRadius`=24dp | ✅ 已一致 |
-| 顶栏分段控件 | 容器 **40dp**、滑块 inset **4dp**、滑块（指示器）**40dp 满高**、滑块阴影 blur **8dp** / offset 2dp | `TabRowWithContour`（40dp、inset 4、指示器满高、阴影 8/2 已对齐） | ✅ 几何已对齐 |
+| 顶栏分段控件 | 容器 **40dp**、滑块 inset **4dp**、滑块（指示器）**40dp 满高**、**无阴影** | `TabRowWithContour`（40dp、inset 4、指示器满高、阴影已去除） | ✅ 几何已对齐 |
 
 ## 三、组件级新形态（专项，另行立项）
 
