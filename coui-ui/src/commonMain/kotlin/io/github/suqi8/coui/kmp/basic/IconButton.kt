@@ -46,7 +46,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *   panel (`#FFF0F0F0` light / `#FF333333` dark) so the button floats over the frosted bar, the
  *   way `ToolbarMaterialEffectDelegate` fills the button window. Pass [Color.Unspecified] for a
  *   genuinely flat (no-fill) icon button.
- * @param cornerRadius The corner radius of of the [IconButton].
+ * @param cornerRadius The corner radius of the [IconButton]. COUI 17 top-bar buttons are circular
+ *   (`coui_toolbar_menu_bg_radius` = half the button size, e.g. 24dp for a 48dp circle).
  * @param minHeight The minimum height of of the [IconButton].
  * @param minWidth The minimum width of the [IconButton].
  * @param content The content of this icon button, typically an [Icon].
@@ -90,9 +91,13 @@ fun IconButton(
         }
     }
 
+    // COUI 17 top-bar buttons are circular (width == height); the corner radius is half the size.
+    val buttonSize = maxOf(minWidth, minHeight)
+    val resolvedCornerRadius = cornerRadius.coerceAtMost(buttonSize / 2f)
+
     Box(
         modifier = modifier
-            .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+            .defaultMinSize(minWidth = buttonSize, minHeight = buttonSize)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -102,22 +107,22 @@ fun IconButton(
                 if (backgroundColor != Color.Unspecified) {
                     Modifier.shadow(
                         elevation = IconButtonDefaults.PanelElevation,
-                        shape = RoundedCornerShape(cornerRadius),
+                        shape = RoundedCornerShape(resolvedCornerRadius),
                         clip = false,
                     )
                 } else {
                     Modifier
                 },
             )
-            .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
+            .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
             .then(
-                // The capsule stroke on the panel, the way COUIShadowEdgeDrawable draws the
+                // The circular stroke on the panel, the way COUIShadowEdgeDrawable draws the
                 // edge (edgeAlpha 0.2 light / 0.5 dark, edgeWidthDp ~2).
                 if (backgroundColor != Color.Unspecified) {
                     Modifier.squircleBorder(
                         width = IconButtonDefaults.StrokeWidth,
                         color = IconButtonDefaults.strokeColor(),
-                        cornerRadius = cornerRadius,
+                        cornerRadius = resolvedCornerRadius,
                     )
                 } else {
                     Modifier
@@ -146,18 +151,20 @@ object IconButtonDefaults {
 
     /**
      * The default minimum width of the [IconButton].
-     * COUI `coui_action_menu_item_min_width` (48dp).
+     * COUI `coui_action_menu_item_min_width` (48dp); the button is circular, so width == height.
      */
     val MinWidth = 48.dp
 
     /**
      * The default minimum height of the [IconButton].
-     * COUI `coui_action_menu_item_min_height` (40dp).
+     * COUI `coui_action_menu_item_min_height` (40dp); the button is circular, so width == height
+     * (48dp) when used as a top-bar icon button.
      */
-    val MinHeight = 40.dp
+    val MinHeight = 48.dp
 
     /**
-     * The default corner radius of the [IconButton] (COUI coui_toolbar_menu_bg_radius).
+     * The default corner radius of the [IconButton]. COUI 17 top-bar buttons are circular, so the
+     * radius is half the button size (48dp / 2 = 24dp, `coui_toolbar_menu_bg_radius`).
      */
     val CornerRadius = 24.dp
 
