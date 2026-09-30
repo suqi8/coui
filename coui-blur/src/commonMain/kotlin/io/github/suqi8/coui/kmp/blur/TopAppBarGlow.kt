@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialGlow
 
 /**
  * The "condensed light" (凝光) glow overlay for a COUI 17 top app bar.
@@ -123,9 +124,13 @@ fun BoxScope.TopAppBarGlow(
     Box(
         modifier = modifier
             .matchParentSize()
-            .alpha(alpha)
             .then(blurModifier)
-            .background(gradient),
+            .materialGlow(
+                baseColor = baseColor,
+                scrollOffsetPx = scrollOffsetPx,
+                isDark = isDark,
+                enabled = enabled,
+            ),
     ) {
         content()
     }

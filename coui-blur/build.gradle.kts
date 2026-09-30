@@ -55,6 +55,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.couiShader)
+            api(projects.couiUi)
             implementation(libs.jetbrains.compose.foundation)
         }
     }
