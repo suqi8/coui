@@ -434,9 +434,9 @@ class TopAppBarState(
 object TopAppBarDefaults {
     /**
      * The default horizontal padding of the title and large title.
-     * COUI `coui_appbar_title_expanded_margin_start/end_compat` (16dp).
+     * COUI 17 `coui_appbar_title_expanded_margin_start/end` (24dp).
      */
-    val TitlePadding = 16.dp
+    val TitlePadding = 24.dp
 
     /** The default start padding of the navigation icon. */
     val NavigationIconPadding = 16.dp
@@ -489,9 +489,9 @@ object TopAppBarDefaults {
 
     /**
      * The horizontal gap between the title and the action icons.
-     * COUI `coui_toolbar_gap_before_menu` (8dp).
+     * COUI 17 `coui_toolbar_gap_before_menu` (4dp).
      */
-    val ActionIconGap = 8.dp
+    val ActionIconGap = 4.dp
 
     /**
      * The height of the [TopAppBarSearchSlot] row. COUI `coui_search_view_height` (52dp).

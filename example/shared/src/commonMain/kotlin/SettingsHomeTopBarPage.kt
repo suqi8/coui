@@ -87,8 +87,8 @@ fun SettingsHomeTopBarPage(
                     expandedHeight = 116.dp,
                     largeTitleFontSize = 40.sp,
                     navigationIcon = {
-                        // COUI 17 top-bar icon buttons have no panel fill; the pressed feedback is
-                        // a circular ripple built into IconButton.
+                        // COUI 17 top-bar icon buttons float on a material panel (filled +
+                        // elevation shadow) with a circular press ripple.
                         IconButton(
                             onClick = { navigator.pop() },
                         ) {
