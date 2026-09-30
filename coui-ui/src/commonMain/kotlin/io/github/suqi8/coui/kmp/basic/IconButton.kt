@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
+import io.github.suqi8.coui.kmp.squircle.squircleBorder
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -109,6 +110,19 @@ fun IconButton(
                 },
             )
             .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
+            .then(
+                // The capsule stroke on the panel, the way COUIShadowEdgeDrawable draws the
+                // edge (edgeAlpha 0.2 light / 0.5 dark, edgeWidthDp ~2).
+                if (backgroundColor != Color.Unspecified) {
+                    Modifier.squircleBorder(
+                        width = IconButtonDefaults.StrokeWidth,
+                        color = IconButtonDefaults.strokeColor(),
+                        cornerRadius = cornerRadius,
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .then(clickableModifier)
             .drawWithContent {
                 drawContent()
@@ -159,4 +173,20 @@ object IconButtonDefaults {
      * caustic shadow is unavailable (`ToolbarMaterialEffectDelegate`).
      */
     val PanelElevation = 6.dp
+
+    /**
+     * The capsule stroke width on the panel. COUI 17 `StrokeEffectParams.edgeWidthDp` (~2dp).
+     */
+    val StrokeWidth = 2.dp
+
+    /**
+     * The capsule stroke color on the panel. COUI 17 `StrokeEffectParams.edgeAlpha`
+     * (0.2 light / 0.5 dark) over the panel base.
+     */
+    @Composable
+    fun strokeColor(): Color = if (isSystemInDarkTheme()) {
+        Color.White.copy(alpha = 0.5f)
+    } else {
+        Color.Black.copy(alpha = 0.2f)
+    }
 }
