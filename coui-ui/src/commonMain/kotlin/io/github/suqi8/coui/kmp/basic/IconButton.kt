@@ -2,35 +2,22 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
-import io.github.suqi8.coui.kmp.squircle.squircleBorder
-import io.github.suqi8.coui.kmp.squircle.squircleSurface
-import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
  * A [IconButton] component with COUI style.
@@ -58,7 +45,7 @@ fun IconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     holdDownState: Boolean = false,
-    backgroundColor: Color = IconButtonDefaults.panelColor(),
+    backgroundColor: Color = COUIMaterialEffect.panelColor(),
     cornerRadius: Dp = IconButtonDefaults.CornerRadius,
     minHeight: Dp = IconButtonDefaults.MinHeight,
     minWidth: Dp = IconButtonDefaults.MinWidth,
@@ -68,17 +55,7 @@ fun IconButton(
 
     HoldDownObserver(holdDownState, interactionSource)
 
-    // COUI 17 press feedback: a circular ripple (COUIMaskRippleDrawable, couiColorPress
-    // #1F000000 / #33FFFFFF) plus the COUIViewTouchAnimator scale-down to 0.92.
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.92f else 1f,
-        animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
-        label = "iconButtonPressScale",
-    )
-    val rippleColor = COUITheme.colorScheme.onSurface.copy(alpha = if (pressed) 0.12f else 0f)
-
-    val currentOnClick by rememberUpdatedState(onClick)
+    val currentOnClick by androidx.compose.runtime.rememberUpdatedState(onClick)
     val clickableModifier = remember(enabled, interactionSource) {
         if (enabled) {
             Modifier.clickable(
@@ -98,49 +75,21 @@ fun IconButton(
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = buttonSize, minHeight = buttonSize)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .then(
-                // The floating-panel elevation shadow, only when the button has a panel fill.
+                // COUI 17 unified material panel: fill + stroke + shadow + spotlight + caustic +
+                // press scale, from the shared COUIMaterialEffect pipeline.
                 if (backgroundColor != Color.Unspecified) {
-                    Modifier.shadow(
-                        elevation = IconButtonDefaults.PanelElevation,
-                        shape = RoundedCornerShape(resolvedCornerRadius),
-                        clip = false,
-                    )
-                } else {
-                    Modifier
-                },
-            )
-            .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
-            .then(
-                // The circular stroke on the panel, the way COUIShadowEdgeDrawable draws the
-                // edge (edgeAlpha 0.2 light / 0.5 dark, edgeWidthDp ~2).
-                if (backgroundColor != Color.Unspecified) {
-                    Modifier.squircleBorder(
-                        width = IconButtonDefaults.StrokeWidth,
-                        color = IconButtonDefaults.strokeColor(),
+                    Modifier.materialPanel(
+                        interactionSource = interactionSource,
+                        panelColor = backgroundColor,
+                        size = buttonSize,
                         cornerRadius = resolvedCornerRadius,
                     )
                 } else {
                     Modifier
                 },
             )
-            .then(clickableModifier)
-            .drawWithContent {
-                drawContent()
-                if (rippleColor.alpha > 0f) {
-                    // Circular press ripple centered in the button, the way COUIMaskRippleDrawable
-                    // masks the press tint to a circle over the icon.
-                    drawCircle(
-                        color = rippleColor,
-                        radius = size.minDimension / 2f,
-                        center = size.center,
-                    )
-                }
-            },
+            .then(clickableModifier),
         contentAlignment = Alignment.Center,
     ) {
         content()
@@ -167,33 +116,4 @@ object IconButtonDefaults {
      * radius is half the button size (48dp / 2 = 24dp, `coui_toolbar_menu_bg_radius`).
      */
     val CornerRadius = 24.dp
-
-    /**
-     * The COUI 17 material panel color of a top-bar button, from
-     * `ToolbarMaterialEffectDelegate.BLUR_WINDOW_VIEW_BG_COLOR`: `#FFF0F0F0` light, `#FF333333` dark.
-     */
-    @Composable
-    fun panelColor(): Color = if (isSystemInDarkTheme()) Color(0xFF333333) else Color(0xFFF0F0F0)
-
-    /**
-     * The elevation of the floating button panel shadow. COUI 17 falls back to elevation 6dp when
-     * caustic shadow is unavailable (`ToolbarMaterialEffectDelegate`).
-     */
-    val PanelElevation = 6.dp
-
-    /**
-     * The capsule stroke width on the panel. COUI 17 `StrokeEffectParams.edgeWidthDp` (~2dp).
-     */
-    val StrokeWidth = 2.dp
-
-    /**
-     * The capsule stroke color on the panel. COUI 17 `StrokeEffectParams.edgeAlpha`
-     * (0.2 light / 0.5 dark) over the panel base.
-     */
-    @Composable
-    fun strokeColor(): Color = if (isSystemInDarkTheme()) {
-        Color.White.copy(alpha = 0.5f)
-    } else {
-        Color.Black.copy(alpha = 0.2f)
-    }
 }
