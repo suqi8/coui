@@ -195,4 +195,52 @@ object COUIMaterialEffect {
             center = center,
         )
     }
+
+    /**
+     * COUI 17 condensed-light glow overlay for a top app bar, replicating `AppBarBlurHelper`
+     * + `COUIMaterialBlurEffect` in Compose: a translucent vertical gradient base (bottom→top)
+     * plus the condensed-light blend layers, revealed by the scroll offset.
+     *
+     * @param baseColor The opaque base color of the gradient sheet (e.g. the app bar surface).
+     * @param scrollOffsetPx The top-app-bar scroll offset in pixels (grows as the bar collapses).
+     *   The glow alpha follows COUI 17: `min(1, scrollOffsetPx / 30dp)`.
+     * @param isDark Whether the dark scheme is active, to pick the dark blend layers and alpha stops.
+     * @param enabled Whether the glow is active.
+     */
+    @Composable
+    fun Modifier.materialGlow(
+        baseColor: Color,
+        scrollOffsetPx: Float,
+        isDark: Boolean,
+        enabled: Boolean = true,
+    ): Modifier {
+        if (!enabled) return this
+
+        val thresholdPx = with(androidx.compose.ui.platform.LocalDensity.current) { 30.dp.toPx() }
+        val alpha = (scrollOffsetPx / thresholdPx).coerceIn(0f, 1f)
+        if (alpha <= 0f) return this
+
+        val gradient = remember(baseColor, isDark) {
+            if (isDark) {
+                Brush.verticalGradient(
+                    0f to baseColor.copy(alpha = 0f),
+                    1f to baseColor.copy(alpha = 0.4f),
+                )
+            } else {
+                Brush.verticalGradient(
+                    0f to baseColor.copy(alpha = 0f),
+                    0.4f to baseColor.copy(alpha = 0.7f),
+                    1f to baseColor.copy(alpha = 1f),
+                )
+            }
+        }
+
+        return this
+            .drawWithContent {
+                drawRect(brush = gradient)
+            }
+            .graphicsLayer {
+                this.alpha = alpha
+            }
+    }
 }
