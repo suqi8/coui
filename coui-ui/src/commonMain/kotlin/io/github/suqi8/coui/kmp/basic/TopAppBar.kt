@@ -96,6 +96,11 @@ import kotlin.math.roundToInt
  * @param titlePadding The horizontal padding of the [TopAppBar]'s title & large title.
  * @param navigationIconPadding The start padding of the navigation icon.
  * @param actionIconPadding The end padding of the action icons.
+ * @param fadeLargeTitleOnCollapse Whether the large title fades and scales away as the bar
+ *   collapses instead of morphing into a pinned 24sp title. COUI 17's collapsing toolbar keeps the
+ *   large title at its own text size and drives `alpha 1 -> 0` and `scale 1 -> 0.7` linearly over
+ *   the collapse (COUICollapsingToolbarLayout's offset listener + CollapsingTextHelper), leaving no
+ *   title pinned under the bar. Set `true` to reproduce that (e.g. the settings home page).
  * @param bottomContent The [Composable] content displayed below the title bar area.
  */
 @Composable
@@ -120,6 +125,7 @@ fun TopAppBar(
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
+    fadeLargeTitleOnCollapse: Boolean = false,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Wrap the given actions in a Row.
@@ -157,6 +163,7 @@ fun TopAppBar(
         hideSubtitleOnCollapse = hideSubtitleOnCollapse,
         expandedHeight = expandedHeight,
         largeTitleFontSize = largeTitleFontSize,
+        fadeLargeTitleOnCollapse = fadeLargeTitleOnCollapse,
         bottomContent = bottomContent,
     )
 }
@@ -765,6 +772,7 @@ private fun TopAppBarLayout(
     hideSubtitleOnCollapse: Boolean = true,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
+    fadeLargeTitleOnCollapse: Boolean = false,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Producer lambdas — reads stay in layout/draw phases so scroll never recomposes this subtree.
@@ -819,17 +827,20 @@ private fun TopAppBarLayout(
                 navigationIcon()
             }
             // Collapsed title: only shown once the bar is fully collapsed; until then the
-            // large title morphs into it.
+            // large title morphs into it. In fade mode the large title fades away instead, so
+            // this slot stays empty.
             Box(Modifier.layoutId("title")) {
-                Text(
-                    text = title,
-                    color = animatedTitleColor,
-                    fontSize = CollapsedTitleTextSize,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                )
+                if (!fadeLargeTitleOnCollapse) {
+                    Text(
+                        text = title,
+                        color = animatedTitleColor,
+                        fontSize = CollapsedTitleTextSize,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false,
+                    )
+                }
             }
             Box(
                 Modifier
@@ -1005,8 +1016,15 @@ private fun TopAppBarLayout(
         val largeTitleX = lerp(titlePaddingPx.toFloat(), collapsedTitleX.toFloat(), easedFraction)
         val largeTitleY =
             lerp(largeTitleTop.toFloat(), (collapsedTitleY + expansion).toFloat(), easedFraction) + offsetPx
-        val largeTitleScale = lerp(1f, collapsedTitleScale, easedFraction)
-        val collapsed = collapseFraction >= CollapsedTitleSwapFraction
+        // Fade mode (COUI 17 collapsing toolbar): the large title keeps its own text size and only
+        // alpha (1 -> 0) and scale (1 -> 0.7) move, both linearly on the raw expansion fraction —
+        // the eased blend below only drives the morph's position.
+        val largeTitleScale = if (fadeLargeTitleOnCollapse) {
+            lerp(1f, FadedLargeTitleScale, collapseFraction)
+        } else {
+            lerp(1f, collapsedTitleScale, easedFraction)
+        }
+        val collapsed = !fadeLargeTitleOnCollapse && collapseFraction >= CollapsedTitleSwapFraction
         val pivotX = if (layoutDirection == LayoutDirection.Rtl) 1f else 0f
 
         val contentTop = barHeight
@@ -1044,7 +1062,11 @@ private fun TopAppBarLayout(
                 transformOrigin = TransformOrigin(pivotX, 0f)
                 scaleX = largeTitleScale
                 scaleY = largeTitleScale
-                alpha = if (collapsed) 0f else 1f
+                alpha = when {
+                    fadeLargeTitleOnCollapse -> 1f - collapseFraction
+                    collapsed -> 0f
+                    else -> 1f
+                }
             }
 
             // Collapsed title (start-aligned, visible only at full collapse).
@@ -1326,6 +1348,12 @@ private val SnapAnimationEasing = Easing { fraction -> 1f - (1f - fraction) * (1
  * collapsed title (CollapsingTextHelper isClose(fraction, 1f)).
  */
 private val CollapsedTitleSwapFraction = 0.9999f
+
+/**
+ * End scale of the fading large title in fade mode
+ * (SettingsCollapsingToolbarLayout.OnOffsetChangedListener: `AnimationUtils.lerp(1.0f, 0.7f, f)`).
+ */
+private val FadedLargeTitleScale = 0.7f
 
 /** COUI: toolbar_divider_height = 0.33dp. */
 private val DividerThickness = 0.33.dp

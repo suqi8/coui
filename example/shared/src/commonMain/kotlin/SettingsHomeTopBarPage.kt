@@ -86,6 +86,9 @@ fun SettingsHomeTopBarPage(
                     scrollBehavior = topAppBarScrollBehavior,
                     expandedHeight = 116.dp,
                     largeTitleFontSize = 40.sp,
+                    // COUI 17's settings home keeps the 40sp title at its own size and fades it
+                    // out (scale 1 -> 0.7) over the 64dp collapse instead of pinning a 24sp title.
+                    fadeLargeTitleOnCollapse = true,
                     navigationIcon = {
                         // COUI 17 top-bar icon buttons float on a material panel (filled +
                         // elevation shadow) with a circular press ripple.
