@@ -127,6 +127,9 @@ fun MaterialIconButton(
                     color = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.2f),
                     style = Stroke(width = 2.dp.toPx()),
                 )
+
+                // 6. The button's own content (its icon) rides on top of the material.
+                drawContent()
             },
         contentAlignment = Alignment.Center,
     ) {
