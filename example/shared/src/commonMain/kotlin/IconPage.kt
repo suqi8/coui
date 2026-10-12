@@ -143,6 +143,8 @@ fun IconsPage(
                         isWideScreen = isWideScreen,
                         scrollBehavior = topAppBarScrollBehavior,
                         color = barColor,
+                        backdrop = backdrop,
+                        blurActive = blurActive,
                     ) {
                         Box(
                             modifier = Modifier

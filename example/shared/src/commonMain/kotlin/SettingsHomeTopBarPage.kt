@@ -69,61 +69,57 @@ fun SettingsHomeTopBarPage(
 
     Scaffold(
         topBar = {
-            Box {
-                // Condensed-light glow sits BEHIND the bar as its frosted backing (it must not
-                // cover the title / search / buttons). The bar itself is transparent so the glow
-                // shows through where the bar has no content.
-                TopAppBarGlow(
-                    backdrop = backdrop,
-                    scrollOffsetPx = -topAppBarScrollBehavior.state.heightOffset,
-                    isDark = isDark,
-                    baseColor = surfaceColor,
-                    enabled = glowEnabled,
-                )
-                TopAppBar(
-                    title = "Settings",
-                    color = if (glowEnabled) Color.Transparent else surfaceColor,
-                    scrollBehavior = topAppBarScrollBehavior,
-                    expandedHeight = 116.dp,
-                    largeTitleFontSize = 40.sp,
-                    // COUI 17's settings home keeps the 40sp title at its own size and fades it
-                    // out (scale 1 -> 0.7) over the 64dp collapse instead of pinning a 24sp title.
-                    fadeLargeTitleOnCollapse = true,
-                    navigationIcon = {
-                        // COUI 17 top-bar icon buttons float on a material panel (filled +
-                        // elevation shadow) with a circular press ripple.
-                        IconButton(
-                            onClick = { navigator.pop() },
-                        ) {
-                            Icon(
-                                imageVector = COUIIcons.Back,
-                                contentDescription = null,
-                                tint = COUITheme.colorScheme.onSurface,
-                            )
-                        }
-                    },
-                    bottomContent = {
-                        TopAppBarSearchSlot(
-                            inputField = {
-                                SearchBar(
-                                    inputField = {
-                                        InputField(
-                                            query = query,
-                                            onQueryChange = { query = it },
-                                            onSearch = {},
-                                            expanded = false,
-                                            onExpandedChange = {},
-                                            label = "Search settings",
-                                        )
-                                    },
-                                    expanded = false,
-                                    onExpandedChange = {},
-                                ) {}
-                            },
+            TopAppBar(
+                title = "Settings",
+                color = if (glowEnabled) Color.Transparent else surfaceColor,
+                scrollBehavior = topAppBarScrollBehavior,
+                expandedHeight = 116.dp,
+                largeTitleFontSize = 40.sp,
+                // The condensed-light glow is the bar's own backing layer: it spans the collapsed
+                // toolbar band and blurs the content scrolled beneath the transparent bar.
+                glow = {
+                    TopAppBarGlow(
+                        backdrop = backdrop,
+                        scrollOffsetPx = -topAppBarScrollBehavior.state.heightOffset,
+                        isDark = isDark,
+                        baseColor = surfaceColor,
+                        enabled = glowEnabled,
+                    )
+                },
+                navigationIcon = {
+                    // COUI 17 top-bar icon buttons float on a material panel (filled +
+                    // elevation shadow) with a circular press ripple.
+                    IconButton(
+                        onClick = { navigator.pop() },
+                    ) {
+                        Icon(
+                            imageVector = COUIIcons.Back,
+                            contentDescription = null,
+                            tint = COUITheme.colorScheme.onSurface,
                         )
-                    },
-                )
-            }
+                    }
+                },
+                bottomContent = {
+                    TopAppBarSearchSlot(
+                        inputField = {
+                            SearchBar(
+                                inputField = {
+                                    InputField(
+                                        query = query,
+                                        onQueryChange = { query = it },
+                                        onSearch = {},
+                                        expanded = false,
+                                        onExpandedChange = {},
+                                        label = "Search settings",
+                                    )
+                                },
+                                expanded = false,
+                                onExpandedChange = {},
+                            ) {}
+                        },
+                    )
+                },
+            )
         },
     ) { innerPadding ->
         val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)

@@ -259,6 +259,8 @@ fun MainPage(
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    backdrop = backdrop,
+                    blurActive = blurActive,
                     actions = {
                         OverlayIconCascadingDropdownMenu(
                             entries = cascadingEntries,

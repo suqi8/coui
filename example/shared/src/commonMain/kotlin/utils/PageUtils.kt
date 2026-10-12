@@ -4,6 +4,7 @@ package utils
 
 import LocalAppState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,12 +23,10 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBar
-import io.github.suqi8.coui.kmp.blur.BlendColorEntry
-import io.github.suqi8.coui.kmp.blur.BlurDefaults
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
+import io.github.suqi8.coui.kmp.blur.TopAppBarGlow
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
-import io.github.suqi8.coui.kmp.blur.textureBlur
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.overScrollVertical
 import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
@@ -78,33 +77,50 @@ fun AdaptiveTopAppBar(
     scrollBehavior: ScrollBehavior,
     subtitle: String = "",
     color: Color = COUITheme.colorScheme.surface,
+    backdrop: LayerBackdrop? = null,
+    blurActive: Boolean = false,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
-    if (showTopAppBar) {
-        if (isWideScreen) {
-            SmallTopAppBar(
-                title = title,
-                subtitle = subtitle,
-                color = color,
-                scrollBehavior = scrollBehavior,
-                defaultWindowInsetsPadding = false,
-                navigationIcon = navigationIcon,
-                actions = actions,
-                bottomContent = bottomContent,
-            )
-        } else {
-            TopAppBar(
-                title = title,
-                subtitle = subtitle,
-                color = color,
-                scrollBehavior = scrollBehavior,
-                navigationIcon = navigationIcon,
-                actions = actions,
-                bottomContent = bottomContent,
+    if (!showTopAppBar) return
+
+    val isDark = COUITheme.colorScheme.background.let { it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f }
+    val glowEnabled = blurActive && backdrop != null
+    val glow: @Composable BoxScope.() -> Unit = {
+        if (glowEnabled) {
+            TopAppBarGlow(
+                backdrop = backdrop,
+                scrollOffsetPx = -scrollBehavior.state.heightOffset,
+                isDark = isDark,
+                baseColor = COUITheme.colorScheme.surface,
             )
         }
+    }
+
+    if (isWideScreen) {
+        SmallTopAppBar(
+            title = title,
+            subtitle = subtitle,
+            color = color,
+            scrollBehavior = scrollBehavior,
+            defaultWindowInsetsPadding = false,
+            glow = glow,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            bottomContent = bottomContent,
+        )
+    } else {
+        TopAppBar(
+            title = title,
+            subtitle = subtitle,
+            color = color,
+            scrollBehavior = scrollBehavior,
+            glow = glow,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            bottomContent = bottomContent,
+        )
     }
 }
 
@@ -125,22 +141,9 @@ fun BlurredBar(
     blurEnabled: Boolean,
     content: @Composable () -> Unit,
 ) {
-    Box(
-        modifier = if (blurEnabled && backdrop != null) {
-            Modifier.textureBlur(
-                backdrop = backdrop,
-                shape = RectangleShape,
-                blurRadius = 25f,
-                colors = BlurDefaults.blurColors(
-                    blendColors = listOf(
-                        BlendColorEntry(color = COUITheme.colorScheme.surface.copy(0.8f)),
-                    ),
-                ),
-            )
-        } else {
-            Modifier
-        },
-    ) {
+    // The bar is transparent; the condensed-light glow handed to the bar's `glow` slot supplies
+    // both the backdrop blur and the gradient sheet, so no wrapper blur is applied here.
+    Box {
         content()
     }
 }

@@ -76,6 +76,8 @@ fun SettingsPage(
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    backdrop = backdrop,
+                    blurActive = blurActive,
                     subtitle = "v${VersionInfo.VERSION_NAME} (${VersionInfo.VERSION_CODE})",
                 )
             }

@@ -30,8 +30,12 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialGlow
  * fraction (COUI reveals it over a 30dp scroll: `alpha = min(1, scroll / 30dp)`).
  *
  * COUI 17 evidence (settings 17.0.0, `com.coui.appcompat.toolbar`):
- * - Blur radius: the dialog/background blur radius token `coui_list_dialog_background_blur_radius`
- *   (240dp) — the COUI frosted-sheet blur strength, not the small Material effect radius.
+ * - Backdrop filter: `OplusRenderEffect.createGradientBlurEffect(30, 0, true, 3)` — the radii are
+ *   **raw pixels**, not dp (`AppBarBlurParamsExtKt` passes 30f straight through), so the caller
+ *   converts the 30px token with `30f / density`. The SkSL ramps the radius down the overlay
+ *   (`ratio = lerp(start, end, y/H)`), applies the speed exponent (`ratio = 1 - pow(1 - ratio, 3)`,
+ *   i.e. `1 - (y/H)^3`), then quantises to `radius = int(15 * ratio)` — so the bottom ~4.7% of the
+ *   overlay is pixel-sharp and fully unblurred, not merely faint.
  * - Alpha gradient base (`GradientBackgroundDrawable`, direction bottom→top): light 3 stops
  *   positions [0, 0.4, 1] × alphas [0, 0.7, 1]; dark 2 stops positions [0, 1] × alphas [0, 0.4]
  *   (GRADIENT_DARK_ALPHA).
@@ -47,7 +51,10 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialGlow
  * @param baseColor The opaque base color of the gradient sheet. Defaults to the COUI page surface
  *   (`couiColorBackgroundWithCard`); callers usually pass the same color as the app bar.
  * @param modifier The [Modifier] to be applied to the overlay.
- * @param blurRadius The blur radius in dp at full strength. COUI `coui_list_dialog_background_blur_radius` (240dp).
+ * @param blurRadiusPx The backdrop blur radius in raw pixels at the top edge. COUI 17
+ *   `AppBarBlurParamsExtKt` uses `createGradientBlurEffect(30f, 0f, true, 3f)`: the radius ramps
+ *   from [blurRadiusPx] at the top to 0 at the bottom, quantised to `int(15 * (1 - (y/H)^3))` — so
+ *   the bottom ~4.7% of the overlay is fully sharp.
  * @param shape The shape of the overlay region.
  * @param enabled Whether the condensed-light glow is active. **Off by default** — the caller must
  *   opt in, since the glow is a heavy frosting treatment COUI applies only in specific scenarios.
@@ -60,7 +67,7 @@ fun BoxScope.TopAppBarGlow(
     isDark: Boolean,
     baseColor: Color,
     modifier: Modifier = Modifier,
-    blurRadius: Float = TopAppBarGlowDefaults.BlurRadius,
+    blurRadiusPx: Float = TopAppBarGlowDefaults.BlurRadiusPx,
     shape: Shape = RectangleShape,
     enabled: Boolean = false,
     content: @Composable () -> Unit = {},
@@ -113,8 +120,11 @@ fun BoxScope.TopAppBarGlow(
         Modifier.progressiveTextureBlur(
             backdrop = backdrop,
             shape = shape,
-            blurRadius = blurRadius,
-            gradient = ProgressiveBlur.Top,
+            // The 30px token is raw pixels (AppBarBlurParamsExtKt passes 30f straight to the
+            // RenderEffect), so convert it against the display density before handing the dp-based
+            // modifier its radius.
+            blurRadius = (blurRadiusPx / LocalDensity.current.density).coerceAtLeast(0f),
+            gradient = TopAppBarGlowDefaults.Gradient,
             colors = colors,
         )
     } else {
@@ -142,13 +152,26 @@ fun BoxScope.TopAppBarGlow(
 object TopAppBarGlowDefaults {
 
     /**
-     * The blur radius in dp at full strength. COUI `coui_list_dialog_background_blur_radius` (240dp).
+     * The backdrop blur radius in raw pixels at the overlay's top edge. COUI 17
+     * `AppBarBlurParamsExtKt` default: `AppBarBlurParams(30, 0, 3, ...)`.
      */
-    val BlurRadius: Float = 240f
+    val BlurRadiusPx: Float = 30f
 
     /**
      * The scroll distance over which the glow fades in. COUI 17
      * `AppBarBlurOverlayBehavior.ALPHA_SCROLL_THRESHOLD_DP` (30dp).
      */
     val AlphaScrollThreshold = 30.dp
+
+    /**
+     * The progressive ramp matching the native gradient blur: full radius at the top, zero at the
+     * bottom, shaped by the native `speed = 3f` exponent (`ratio = 1 - pow(1 - ratio, 3)`, applied
+     * to `ratio = 1 - y/H`, which reduces to `1 - (y/H)^3`).
+     */
+    val Gradient: ProgressiveBlur = ProgressiveBlur(
+        angle = 90f,
+        startFraction = 0f,
+        endFraction = 1f,
+        curve = 3f,
+    )
 }

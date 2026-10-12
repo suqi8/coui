@@ -91,6 +91,8 @@ fun PullToRefreshPage(
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    backdrop = backdrop,
+                    blurActive = blurActive,
                     navigationIcon = {
                         BackNavigationIcon(
                             onClick = { navigator.pop() },

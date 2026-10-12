@@ -17,11 +17,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -100,7 +102,12 @@ import kotlin.math.roundToInt
  *   collapses instead of morphing into a pinned 24sp title. COUI 17's collapsing toolbar keeps the
  *   large title at its own text size and drives `alpha 1 -> 0` and `scale 1 -> 0.7` linearly over
  *   the collapse (COUICollapsingToolbarLayout's offset listener + CollapsingTextHelper), leaving no
- *   title pinned under the bar. Set `true` to reproduce that (e.g. the settings home page).
+ *   title pinned under the bar. On by default, matching ColorOS 17; set `false` for the older
+ *   morph-to-24sp behaviour.
+ * @param glow The bar's backing layer, drawn behind everything else in the bar. Pass the COUI 17
+ *   condensed-light backdrop blur here (e.g. `TopAppBarGlow`) together with a transparent [color]
+ *   to get the frosted top bar: the bar itself draws no background, and the scrolled content is
+ *   blurred beneath it. Leave empty for a solid bar.
  * @param bottomContent The [Composable] content displayed below the title bar area.
  */
 @Composable
@@ -125,7 +132,8 @@ fun TopAppBar(
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
-    fadeLargeTitleOnCollapse: Boolean = false,
+    fadeLargeTitleOnCollapse: Boolean = true,
+    glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Wrap the given actions in a Row.
@@ -164,6 +172,7 @@ fun TopAppBar(
         expandedHeight = expandedHeight,
         largeTitleFontSize = largeTitleFontSize,
         fadeLargeTitleOnCollapse = fadeLargeTitleOnCollapse,
+        glow = glow,
         bottomContent = bottomContent,
     )
 }
@@ -237,6 +246,7 @@ fun SmallTopAppBar(
     titlePadding: Dp = TopAppBarDefaults.TitlePadding,
     navigationIconPadding: Dp = TopAppBarDefaults.NavigationIconPadding,
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
+    glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
     SideEffect {
@@ -277,6 +287,7 @@ fun SmallTopAppBar(
         modifier = modifier,
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         showDivider = showDivider,
+        glow = glow,
         bottomContent = bottomContent,
     )
 }
@@ -772,7 +783,8 @@ private fun TopAppBarLayout(
     hideSubtitleOnCollapse: Boolean = true,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
-    fadeLargeTitleOnCollapse: Boolean = false,
+    fadeLargeTitleOnCollapse: Boolean = true,
+    glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Producer lambdas — reads stay in layout/draw phases so scroll never recomposes this subtree.
@@ -817,8 +829,21 @@ private fun TopAppBarLayout(
         animationSpec = tween(durationMillis = 50),
     )
 
+    // Reserved for the glow band's height calculation below; read here because the inset is only
+    // available as a composable value.
+    val statusBarInset = WindowInsets.systemBars.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()
+
     Layout(
         {
+            // Backing layer: the condensed-light backdrop blur sits behind everything else in the
+            // bar, spanning the collapsed toolbar band so the blur's gradient terminates at the
+            // bar's bottom edge instead of the expanded title's.
+            Box(
+                Modifier
+                    .layoutId("glow")
+                    .fillMaxWidth(),
+                content = glow,
+            )
             Box(
                 Modifier
                     .layoutId("navigationIcon")
@@ -931,6 +956,26 @@ private fun TopAppBarLayout(
                 .fastFirst { it.layoutId == "actionIcons" }
                 .measure(constraints.copy(minWidth = 0, minHeight = 0))
 
+        // The glow band spans the collapsed toolbar plus the status bar inset, which the layout's
+        // top inset padding reserves above this content box (compensated in the placement below).
+        val statusBarInsetPx = if (defaultWindowInsetsPadding) {
+            statusBarInset.roundToPx()
+        } else {
+            0
+        }
+        val collapsedBarPx = TopAppBarDefaults.CollapsedHeight.roundToPx()
+        val glowPlaceable =
+            measurables
+                .firstOrNull { it.layoutId == "glow" }
+                ?.measure(
+                    constraints.copy(
+                        minWidth = 0,
+                        maxWidth = constraints.maxWidth,
+                        minHeight = 0,
+                        maxHeight = statusBarInsetPx + collapsedBarPx,
+                    ),
+                )
+
         val titlePaddingPx = titlePadding.roundToPx()
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
         val actionIconPaddingPx = actionIconPadding.roundToPx()
@@ -1031,6 +1076,10 @@ private fun TopAppBarLayout(
         val layoutHeight = contentTop + bottomContentPlaceable.height
 
         layout(constraints.maxWidth, layoutHeight) {
+            // Backing layer (condensed-light glow): spans the collapsed toolbar band, including the
+            // status bar area the layout's top inset padding reserves above this content box.
+            glowPlaceable?.placeRelative(x = 0, y = -statusBarInsetPx)
+
             // Navigation icon
             navigationIconPlaceable.placeRelative(
                 x = 0,
@@ -1103,6 +1152,7 @@ private fun TopAppBarLayout(
  * @param modifier the [Modifier] to be applied to this layout.
  * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [SmallTopAppBar].
  * @param showDivider whether to draw the bottom hairline divider on scroll.
+ * @param glow the bar's backing layer, drawn behind everything else in the bar.
  * @param bottomContent the composable content displayed below the title bar area.
  */
 @Composable
@@ -1122,6 +1172,7 @@ private fun SmallTopAppBarLayout(
     modifier: Modifier = Modifier,
     defaultWindowInsetsPadding: Boolean = true,
     showDivider: Boolean = true,
+    glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
     val animatedTitleColor by animateColorAsState(
@@ -1133,6 +1184,10 @@ private fun SmallTopAppBarLayout(
         animationSpec = tween(durationMillis = 50),
     )
 
+    // Reserved for the glow band's height calculation below; read here because the inset is only
+    // available as a composable value.
+    val statusBarInset = WindowInsets.systemBars.only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding()
+
     // Distance the content has scrolled beneath the pinned bar, in pixels. Drives the
     // divider like COUI's second-page toolbar behaviors (alpha over the first 10dp,
     // margin 24dp -> 0dp over the next 25dp after a 10dp threshold).
@@ -1142,6 +1197,14 @@ private fun SmallTopAppBarLayout(
 
     Layout(
         {
+            // Backing layer: the condensed-light backdrop blur sits behind everything else in the
+            // bar, spanning the pinned bar height.
+            Box(
+                Modifier
+                    .layoutId("glow")
+                    .fillMaxWidth(),
+                content = glow,
+            )
             Box(
                 Modifier
                     .layoutId("navigationIcon")
@@ -1241,6 +1304,25 @@ private fun SmallTopAppBarLayout(
                 .fastFirst { it.layoutId == "actionIcons" }
                 .measure(constraints.copy(minWidth = 0, minHeight = 0))
 
+        // The glow band spans the pinned bar plus the status bar inset, which the layout's top inset
+        // padding reserves above this content box (compensated in the placement below).
+        val statusBarInsetPx = if (defaultWindowInsetsPadding) {
+            statusBarInset.roundToPx()
+        } else {
+            0
+        }
+        val glowPlaceable =
+            measurables
+                .firstOrNull { it.layoutId == "glow" }
+                ?.measure(
+                    constraints.copy(
+                        minWidth = 0,
+                        maxWidth = constraints.maxWidth,
+                        minHeight = 0,
+                        maxHeight = statusBarInsetPx + TopAppBarDefaults.CollapsedHeight.roundToPx(),
+                    ),
+                )
+
         val titlePaddingPx = titlePadding.roundToPx()
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
         val actionIconPaddingPx = actionIconPadding.roundToPx()
@@ -1295,6 +1377,10 @@ private fun SmallTopAppBarLayout(
         val layoutHeight = contentTop + bottomContentPlaceable.height
 
         layout(constraints.maxWidth, layoutHeight) {
+            // Backing layer (condensed-light glow): spans the pinned bar band, including the status
+            // bar area the layout's top inset padding reserves above this content box.
+            glowPlaceable?.placeRelative(x = 0, y = -statusBarInsetPx)
+
             // Navigation icon
             navigationIconPlaceable.placeRelative(
                 x = 0,

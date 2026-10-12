@@ -92,6 +92,8 @@ fun TextStylePage(
                     isWideScreen = isWideScreen,
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    backdrop = backdrop,
+                    blurActive = blurActive,
                 )
             }
         },
