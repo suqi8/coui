@@ -429,9 +429,9 @@ object SearchBarDefaults {
 
     /**
      * The default font size for the [InputField] text and label.
-     * COUI `coui_search_view_input_text_size` (16sp).
+     * COUI `coui_search_view_input_text_size` (15sp, via `inputTextSize` on the search bar style).
      */
-    val InputFieldFontSize = 16.sp
+    val InputFieldFontSize = 15.sp
 
     /**
      * The start padding for the default leading icon: the COUI 4dp icon container start gap plus

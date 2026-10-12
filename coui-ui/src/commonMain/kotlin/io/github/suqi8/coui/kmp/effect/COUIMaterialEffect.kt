@@ -42,10 +42,18 @@ import kotlin.math.sqrt
 object COUIMaterialEffect {
 
     /**
-     * Applies the COUI 17 material panel to a component: panel fill + capsule stroke + elevation
-     * shadow + spotlight + caustic shadow + press scale, drawn with Compose Canvas.
+     * Applies the COUI 17 material panel to a component: material fill + edge lighting + inner
+     * shadow + spotlight + press scale, drawn with Compose Canvas.
      *
-     * @param panelColor The material panel color. Defaults to COUI 17 (`#FFF0F0F0` light / `#FF333333` dark).
+     * `ToolbarMaterialEffectDelegate` builds a top-bar button out of a **transparent** view
+     * background (`ColorDrawable(0)`) plus a backdrop filter — a backing blur with two colour
+     * layers (`#66333333` COLOR_DODGE + `#99F5F5F5` LUMINOSITY light, `#CC262626` SRC_OVER +
+     * `#B37F7F7F` OVERLAY dark). Compose has no backdrop filter on a plain `Modifier`, so the two
+     * colour layers are approximated by [panelColor]: a light translucent wash, which reads the
+     * same as the source's colour-dodge over a light bar.
+     *
+     * @param panelColor The material fill colour. Defaults to the COUI 17 top-bar material wash
+     *   ([materialColor]), not the `#FFF0F0F0` blur-window panel.
      * @param size The component size (e.g. 48dp for a top-bar icon button).
      * @param cornerRadius The corner radius (e.g. 24dp for a 48dp circle).
      * @param interactionSource The interaction source driving the press state.
@@ -54,7 +62,7 @@ object COUIMaterialEffect {
     @Composable
     fun Modifier.materialPanel(
         interactionSource: MutableInteractionSource,
-        panelColor: Color = panelColor(),
+        panelColor: Color = materialColor(),
         size: Dp = 48.dp,
         cornerRadius: Dp = 24.dp,
         enabled: Boolean = true,
@@ -62,15 +70,18 @@ object COUIMaterialEffect {
         if (!enabled) return this
 
         val pressed by interactionSource.collectIsPressedAsState()
+        val isDark = isSystemInDarkTheme()
+        // PressScaleTuning: t = (clamp(wh, 20dp^2, 150dp^2) - 20) / 130, scale = 0.85 + B(t) * 0.12
+        // with B = cubic-bezier(0, 0, 0, 1). A 48dp circle lands on ~0.900.
+        val pressScale = remember(size) { pressTargetScale(size) }
         val scale by animateFloatAsState(
-            targetValue = if (pressed) 0.92f else 1f,
-            animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
+            targetValue = if (pressed) pressScale else 1f,
+            // COUIPressAnimatorUnit press spring: bounce 0, response 0.25
+            // -> stiffness = (2pi / 0.25)^2 = 631.65, damping ratio 1.
+            animationSpec = spring(dampingRatio = 1f, stiffness = 631.65f),
             label = "materialPanelPressScale",
         )
-        val isDark = isSystemInDarkTheme()
-        val glowColor = if (isDark) Color(0xFF262626) else Color(0xFF333333)
         val spotlightColor = if (isDark) Color(0xFF7F7F7F) else Color(0xFFF5F5F5)
-        val strokeColor = if (isDark) Color.White.copy(alpha = 0.5f) else Color.Black.copy(alpha = 0.2f)
 
         return this
             .drawWithContent {
@@ -81,33 +92,26 @@ object COUIMaterialEffect {
                 // 1. Capsule SDF mask (material_shader.glsl sdCapsule)
                 val capsulePath = capsulePath(sizePx, cornerRadiusPx)
                 clipPath(capsulePath) {
-                    // 2. Panel fill
+                    // 2. Material fill
                     drawRect(color = panelColor)
 
-                    // 3. Spotlight (multi-light, material_shader.glsl main loop)
+                    // 3. Spotlight (SpotLightShader TYPE_OPAQUE_SMALL_2)
                     drawSpotlight(
                         center = center,
                         radius = sizePx / 2f,
-                        glowColor = glowColor,
+                        glowColor = spotlightColor,
                         spotlightColor = spotlightColor,
                         pressed = pressed,
                     )
 
-                    // 4. Caustic shadow (refractive edge glow)
-                    drawCausticShadow(
-                        center = center,
-                        radius = sizePx / 2f,
-                        cornerRadius = cornerRadiusPx,
-                        isDark = isDark,
-                    )
+                    // 4. Inner shadow: the white inner glow of ShadowEdge.java's blendShadow
+                    // (a light rim along the bottom inner edge).
+                    drawInnerGlow(capsulePath, sizePx, isDark)
                 }
 
-                // 5. Capsule stroke (COUIShadowEdgeDrawable edge)
-                drawPath(
-                    path = capsulePath,
-                    color = strokeColor,
-                    style = Stroke(width = 2.dp.toPx()),
-                )
+                // 5. Edge lighting (ShadowEdge.java blendEdge): two inner bands running around the
+                // perimeter, brightest at one light point and fading toward the opposite side.
+                drawEdgeLighting(capsulePath, sizePx, isDark)
             }
             .graphicsLayer {
                 scaleX = scale
@@ -115,9 +119,45 @@ object COUIMaterialEffect {
             }
     }
 
-    /** COUI 17 material panel color: `#FFF0F0F0` light, `#FF333333` dark. */
+    /**
+     * COUI 17 top-bar material fill: the effect of `COUIMaterialBlurEffect`'s two colour layers over
+     * a transparent button on the bar — a translucent light wash (light) or a translucent dark
+     * wash (dark). Not the `#FFF0F0F0` blur-window panel, which only applies inside dialogs.
+     */
     @Composable
-    fun panelColor(): Color = if (isSystemInDarkTheme()) Color(0xFF333333) else Color(0xFFF0F0F0)
+    fun materialColor(): Color = if (isSystemInDarkTheme()) Color(0x33FFFFFF) else Color(0x1FFFFFFF)
+
+    /**
+     * COUI 17 `PressPhysicsEngine.calculateTargetScaleBreakdown`: the press target scale for a
+     * view of [size] (square), from the 20dp²–150dp² area mapping and the `cubic-bezier(0,0,0,1)`
+     * shaping curve. A 48dp circle returns ~0.900.
+     */
+    fun pressTargetScale(size: Dp): Float {
+        val area = size.value * size.value
+        val t = ((area - 20f) / 130f).coerceIn(0f, 1f)
+        return 0.85f + bezier0001(t) * 0.12f
+    }
+
+    /** Cubic bezier (0,0,0,1) evaluated as y at parameter [t], matching COUI's press interpolator. */
+    private fun bezier0001(t: Float): Float {
+        var lo = 0f
+        var hi = 1f
+        repeat(24) {
+            val mid = (lo + hi) / 2f
+            if (cubicBezierX(mid, 0f, 0f, 1f) < t) lo = mid else hi = mid
+        }
+        return cubicBezierY((lo + hi) / 2f, 0f, 0f, 1f)
+    }
+
+    private fun cubicBezierX(t: Float, x1: Float, x2: Float, x3: Float): Float {
+        val u = 1f - t
+        return 3f * u * u * t * x1 + 3f * u * t * t * x2 + t * t * t * x3
+    }
+
+    private fun cubicBezierY(t: Float, y1: Float, y2: Float, y3: Float): Float {
+        val u = 1f - t
+        return 3f * u * u * t * y1 + 3f * u * t * t * y2 + t * t * t * y3
+    }
 
     /** COUI 17 material_shader.glsl sdCapsule: capsule SDF path. */
     fun capsulePath(width: Float, cornerRadius: Float): Path {
@@ -142,6 +182,82 @@ object COUIMaterialEffect {
         )
         path.close()
         return path
+    }
+
+    /**
+     * COUI 17 edge lighting (`ShadowEdge.java` `blendEdge` + `GradientStrokeStylePresets`): the
+     * stroke is **not** a uniform ring. It is two inner bands whose alpha sweeps around the
+     * perimeter — brightest near one light point, fading toward the opposite side — which is what
+     * makes a COUI button look lit rather than outlined.
+     *
+     * The light point sits at the bottom-centre (`ratio = frac(angle + hw / (4(hw + hh)) + 0.5)`
+     * with `angle = 0`), so the bottom edge carries the bright near band and the top edge the faint
+     * far band. Both bands are approximated here by sweeping a `sweepGradient` from the bottom
+     * around the shape.
+     *
+     * @param path The capsule path to stroke.
+     * @param sizePx The button size in pixels.
+     * @param isDark Whether the dark scheme is active (higher edge alpha: 0.6 vs 0.2).
+     */
+    fun DrawScope.drawEdgeLighting(path: Path, sizePx: Float, isDark: Boolean) {
+        // StrokeEffectParams CIRCLE_1: edgeAlpha 0.2 light / 0.6 dark, edgeWidthDp 1.9.
+        val edgeAlpha = if (isDark) 0.6f else 0.2f
+        val lineWidthPx = 1.9.dp.toPx()
+        // rectLineFade preset (circle / EDGE_STYLE_LIGHT_1): near band alpha 0.7, far band 1.0,
+        // fade fractions (0.06, 0.4, 0.01, 0.28).
+        val nearAlpha = 0.7f * edgeAlpha
+        val farAlpha = 1.0f * edgeAlpha
+        val center = Offset(sizePx / 2f, sizePx / 2f)
+        val radius = sizePx / 2f
+
+        // Near band: bright at the bottom light point, sweeping to the fade end 40% of the way round.
+        drawPath(
+            path = path,
+            brush = Brush.sweepGradient(
+                0.0f to Color.White.copy(alpha = farAlpha * 0.01f),
+                0.25f to Color.White.copy(alpha = farAlpha * 0.28f),
+                0.5f to Color.White.copy(alpha = nearAlpha),
+                0.75f to Color.White.copy(alpha = farAlpha * 0.28f),
+                1.0f to Color.White.copy(alpha = farAlpha * 0.01f),
+                center = center,
+            ),
+            style = Stroke(width = lineWidthPx),
+        )
+        // Far band: a second, narrower ring slightly inside the first, alpha 1.0 at the lit side.
+        drawPath(
+            path = path,
+            brush = Brush.sweepGradient(
+                0.0f to Color.White.copy(alpha = 0f),
+                0.5f to Color.White.copy(alpha = edgeAlpha * 0.4f),
+                1.0f to Color.White.copy(alpha = 0f),
+                center = center,
+            ),
+            style = Stroke(width = lineWidthPx * 0.6f),
+        )
+    }
+
+    /**
+     * COUI 17 inner shadow (`InnerShadowStyleMapper` + `ShadowEdge.java` `blendShadow`): a white
+     * inner glow shaped as `pow(smoothstep(-fadeIn, 0, sdf), 4) * 0.9 + 0.1 * alpha`, weighted so it
+     * reads along the **bottom inner edge** (the shadow is offset upward). Peak alpha is 0.06 light
+     * / 0.04 dark for the circle preset.
+     */
+    fun DrawScope.drawInnerGlow(path: Path, sizePx: Float, isDark: Boolean) {
+        val peak = if (isDark) 0.04f else 0.06f
+        val innerSize = sizePx * 0.9f
+        val inset = (sizePx - innerSize) / 2f
+        drawPath(
+            path = path,
+            brush = Brush.verticalGradient(
+                0f to Color.White.copy(alpha = peak * 0.2f),
+                0.65f to Color.White.copy(alpha = peak * 0.35f),
+                1f to Color.White.copy(alpha = peak),
+                startY = inset,
+                endY = sizePx,
+            ),
+            style = Stroke(width = (sizePx - innerSize) / 2f),
+            alpha = 1f,
+        )
     }
 
     /** COUI 17 material_shader.glsl main loop: multi-light spotlight. */

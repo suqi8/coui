@@ -29,10 +29,10 @@ import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
  * @param modifier The modifier to be applied to the [IconButton]
  * @param enabled Whether the [IconButton] is enabled.
  * @param holdDownState Used to determine whether it is in the pressed state.
- * @param backgroundColor The panel color of the [IconButton]. Defaults to the COUI 17 material
- *   panel (`#FFF0F0F0` light / `#FF333333` dark) so the button floats over the frosted bar, the
- *   way `ToolbarMaterialEffectDelegate` fills the button window. Pass [Color.Unspecified] for a
- *   genuinely flat (no-fill) icon button.
+ * @param backgroundColor The material fill of the [IconButton]. Defaults to the COUI 17 top-bar
+ *   material wash (a translucent light/dark layer), matching `ToolbarMaterialEffectDelegate`, whose
+ *   button view has a transparent background and takes its look from the backdrop filter plus its
+ *   colour layers. Pass [Color.Unspecified] for a genuinely flat (no-fill) icon button.
  * @param cornerRadius The corner radius of the [IconButton]. COUI 17 top-bar buttons are circular
  *   (`coui_toolbar_menu_bg_radius` = half the button size, e.g. 24dp for a 48dp circle).
  * @param minHeight The minimum height of of the [IconButton].
@@ -45,7 +45,7 @@ fun IconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     holdDownState: Boolean = false,
-    backgroundColor: Color = COUIMaterialEffect.panelColor(),
+    backgroundColor: Color = COUIMaterialEffect.materialColor(),
     cornerRadius: Dp = IconButtonDefaults.CornerRadius,
     minHeight: Dp = IconButtonDefaults.MinHeight,
     minWidth: Dp = IconButtonDefaults.MinWidth,
