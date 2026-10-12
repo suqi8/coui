@@ -133,6 +133,9 @@ object COUIMaterialEffect {
                 // 5. Edge lighting (ShadowEdge.java blendEdge): two inner bands running around the
                 // perimeter, brightest at one light point and fading toward the opposite side.
                 drawEdgeLighting(capsulePath, sizePx, isDark)
+
+                // 6. The button's own content (its icon) rides on top of the material.
+                drawContent()
             }
             .graphicsLayer {
                 scaleX = scale
