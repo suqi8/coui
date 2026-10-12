@@ -31,6 +31,7 @@ import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.glowScrollOffsetPx
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
 import io.github.suqi8.coui.kmp.blur.TopAppBarGlow
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
@@ -80,7 +81,7 @@ fun SettingsHomeTopBarPage(
                 glow = {
                     TopAppBarGlow(
                         backdrop = backdrop,
-                        scrollOffsetPx = -topAppBarScrollBehavior.state.heightOffset,
+                        scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
                         isDark = isDark,
                         baseColor = surfaceColor,
                         enabled = glowEnabled,

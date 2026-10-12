@@ -56,10 +56,12 @@ import io.github.suqi8.coui.kmp.basic.ScrollBehavior
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.glowScrollOffsetPx
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
 import io.github.suqi8.coui.kmp.blur.BlendColorEntry
 import io.github.suqi8.coui.kmp.blur.BlurBlendMode
 import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.TopAppBarGlow
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.textureBlur
@@ -121,6 +123,21 @@ fun AboutPage(
                     title = "About",
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    glow = {
+                        if (backdrop != null) {
+                            TopAppBarGlow(
+                                backdrop = backdrop,
+                                scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
+                                isDark = COUITheme.colorScheme.background.let {
+                                    it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f
+                                },
+                                baseColor = COUITheme.colorScheme.surface,
+                                // This page already fades the bar in over its own scroll progress,
+                                // so the glow follows that instead of the bar's collapse offset.
+                                enabled = blurActive,
+                            )
+                        }
+                    },
                     titleColor = COUITheme.colorScheme.onSurface.copy(
                         alpha = ((scrollProgress - 0.35f) / 0.65f).coerceIn(0f, 1f),
                     ),

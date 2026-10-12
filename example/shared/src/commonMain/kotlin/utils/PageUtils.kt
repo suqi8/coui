@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBar
+import io.github.suqi8.coui.kmp.basic.glowScrollOffsetPx
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.TopAppBarGlow
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
@@ -91,7 +92,7 @@ fun AdaptiveTopAppBar(
         if (glowEnabled) {
             TopAppBarGlow(
                 backdrop = backdrop,
-                scrollOffsetPx = -scrollBehavior.state.heightOffset,
+                scrollOffsetPx = scrollBehavior.glowScrollOffsetPx(),
                 isDark = isDark,
                 baseColor = COUITheme.colorScheme.surface,
             )

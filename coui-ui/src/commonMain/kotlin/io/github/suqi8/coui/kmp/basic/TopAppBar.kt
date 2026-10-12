@@ -448,6 +448,25 @@ class TopAppBarState(
     private var _heightOffset = mutableFloatStateOf(initialHeightOffset)
 }
 
+/**
+ * The distance, in pixels, the app bar's surface should treat itself as having scrolled — the value
+ * that drives the condensed-light glow's alpha.
+ *
+ * A collapsing bar reports its own collapse offset. A pinned bar (see [SmallTopAppBar]) never
+ * collapses, so it reports the distance the content has scrolled beneath it instead; otherwise the
+ * glow could never appear on a pinned bar.
+ */
+@Composable
+fun ScrollBehavior.glowScrollOffsetPx(): Float {
+    val heightOffset = state.heightOffset
+    val contentOffset = state.contentOffset
+    return if (heightOffset != 0f || state.heightOffsetLimit != 0f) {
+        -heightOffset
+    } else {
+        -contentOffset
+    }
+}
+
 /** Contains default values used by [TopAppBar] and [SmallTopAppBar]. */
 object TopAppBarDefaults {
     /**

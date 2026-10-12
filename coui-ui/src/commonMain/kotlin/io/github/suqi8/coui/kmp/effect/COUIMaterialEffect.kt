@@ -7,12 +7,14 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.center
@@ -23,7 +25,9 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.exp
 import kotlin.math.max
@@ -42,18 +46,22 @@ import kotlin.math.sqrt
 object COUIMaterialEffect {
 
     /**
-     * Applies the COUI 17 material panel to a component: material fill + edge lighting + inner
-     * shadow + spotlight + press scale, drawn with Compose Canvas.
+     * Applies the COUI 17 material panel to a component: elevation shadow + material fill + edge
+     * lighting + inner glow + spotlight + press scale, drawn with Compose Canvas.
      *
      * `ToolbarMaterialEffectDelegate` builds a top-bar button out of a **transparent** view
      * background (`ColorDrawable(0)`) plus a backdrop filter — a backing blur with two colour
      * layers (`#66333333` COLOR_DODGE + `#99F5F5F5` LUMINOSITY light, `#CC262626` SRC_OVER +
-     * `#B37F7F7F` OVERLAY dark). Compose has no backdrop filter on a plain `Modifier`, so the two
-     * colour layers are approximated by [panelColor]: a light translucent wash, which reads the
-     * same as the source's colour-dodge over a light bar.
+     * `#B37F7F7F` OVERLAY dark) — and lifts the whole view with
+     * `ShadowUtils.setElevationToView(view, 6)`. The float is what makes the button read: on the
+     * bar the composited fill is nearly the bar colour itself, so the shadow and the edge lighting
+     * carry the shape.
      *
-     * @param panelColor The material fill colour. Defaults to the COUI 17 top-bar material wash
-     *   ([materialColor]), not the `#FFF0F0F0` blur-window panel.
+     * Compose has no backdrop filter on a plain `Modifier`, so [panelColor] carries the *result* of
+     * those two colour layers rather than a translucent wash: see [materialColor].
+     *
+     * @param panelColor The material fill colour. Defaults to the composited COUI 17 top-bar button
+     *   fill ([materialColor]), not the `#FFF0F0F0` blur-window panel.
      * @param size The component size (e.g. 48dp for a top-bar icon button).
      * @param cornerRadius The corner radius (e.g. 24dp for a 48dp circle).
      * @param interactionSource The interaction source driving the press state.
@@ -82,8 +90,21 @@ object COUIMaterialEffect {
             label = "materialPanelPressScale",
         )
         val spotlightColor = if (isDark) Color(0xFF7F7F7F) else Color(0xFFF5F5F5)
+        val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
+
+        // ShadowUtils.setElevationToView(view, 6): 16dp elevation at alpha 30/255, lit from above
+        // (lightY -160dp, lightZ 0, lightR 800dp), which throws the shadow slightly downward.
+        val shadow = remember(isDark) {
+            Shadow(
+                radius = MaterialElevation,
+                color = Color.Black,
+                offset = DpOffset(0.dp, MaterialElevation * (LightOffsetRatio)),
+                alpha = MaterialShadowAlpha,
+            )
+        }
 
         return this
+            .dropShadow(shape = shape, shadow = shadow)
             .drawWithContent {
                 val sizePx = size.toPx()
                 val cornerRadiusPx = cornerRadius.toPx()
@@ -120,12 +141,31 @@ object COUIMaterialEffect {
     }
 
     /**
-     * COUI 17 top-bar material fill: the effect of `COUIMaterialBlurEffect`'s two colour layers over
-     * a transparent button on the bar — a translucent light wash (light) or a translucent dark
-     * wash (dark). Not the `#FFF0F0F0` blur-window panel, which only applies inside dialogs.
+     * COUI 17 top-bar button fill.
+     *
+     * The source button is transparent and gets its look from a backdrop filter, so the *rendered*
+     * fill is whatever the two colour layers make of the content behind it. Baking that composite in
+     * (`#F6F6F6` over a `#F0F1F2` bar) leaves a button invisible on any surface that happens to
+     * match it, so this keeps a fixed translucent sheet instead: it reads as a raised capsule over
+     * both the bar and the content scrolled under it, which is the effect the colour-dodge layer
+     * produces against light content.
+     *
+     * The `#FFF0F0F0` / `#FF333333` panels belong to the blur-window (dialog) path only.
      */
     @Composable
-    fun materialColor(): Color = if (isSystemInDarkTheme()) Color(0x33FFFFFF) else Color(0x1FFFFFFF)
+    fun materialColor(): Color = if (isSystemInDarkTheme()) Color(0xE6242424) else Color(0xE6FFFFFF)
+
+    /** COUI 17 `ShadowUtils` level 6 (CAUSTIC_UPPER): `coui_shadow_elevation_level6` = 16dp. */
+    private val MaterialElevation = 16.dp
+
+    /** COUI 17 shadow alpha for level 6: `coui_shadow_alpha_level6` = 30/255. */
+    private val MaterialShadowAlpha = 30f / 255f
+
+    /**
+     * Downward shadow throw for the level 6 light rig (lightY -160dp over lightR 800dp at 16dp
+     * elevation), expressed as a fraction of the elevation.
+     */
+    private val LightOffsetRatio = 0.2f
 
     /**
      * COUI 17 `PressPhysicsEngine.calculateTargetScaleBreakdown`: the press target scale for a
