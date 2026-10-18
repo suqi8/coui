@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -856,11 +857,13 @@ private fun TopAppBarLayout(
         {
             // Backing layer: the condensed-light backdrop blur sits behind everything else in the
             // bar, spanning the collapsed toolbar band so the blur's gradient terminates at the
-            // bar's bottom edge instead of the expanded title's.
+            // bar's bottom edge instead of the expanded title's. It must fill the band: a bare
+            // `fillMaxWidth` would measure to 0dp because the slot's only child uses
+            // `matchParentSize`, which never contributes to its parent's size.
             Box(
                 Modifier
                     .layoutId("glow")
-                    .fillMaxWidth(),
+                    .fillMaxSize(),
                 content = glow,
             )
             Box(
@@ -1217,11 +1220,12 @@ private fun SmallTopAppBarLayout(
     Layout(
         {
             // Backing layer: the condensed-light backdrop blur sits behind everything else in the
-            // bar, spanning the pinned bar height.
+            // bar, spanning the pinned bar height. `fillMaxSize` is required — the glow's only
+            // child uses `matchParentSize`, which contributes no size of its own.
             Box(
                 Modifier
                     .layoutId("glow")
-                    .fillMaxWidth(),
+                    .fillMaxSize(),
                 content = glow,
             )
             Box(

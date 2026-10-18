@@ -95,6 +95,7 @@ fun AdaptiveTopAppBar(
                 scrollOffsetPx = scrollBehavior.glowScrollOffsetPx(),
                 isDark = isDark,
                 baseColor = COUITheme.colorScheme.surface,
+                enabled = true,
             )
         }
     }
