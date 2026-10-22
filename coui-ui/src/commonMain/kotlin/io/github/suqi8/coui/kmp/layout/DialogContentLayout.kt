@@ -282,7 +282,11 @@ internal fun DialogContentLayout(
             backgroundModifier = backgroundModifier,
             materialStroke = materialStroke,
             content = {
-                CompositionLocalProvider(LocalDismissState provides requestDismiss) {
+                CompositionLocalProvider(
+                    LocalDismissState provides requestDismiss,
+                    // COUIButtonBarLayout.setBlurBackgroundWindow: the buttons follow the panel blur.
+                    LocalDialogMaterial provides materialStroke,
+                ) {
                     content()
                 }
             },

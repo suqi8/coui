@@ -52,6 +52,8 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  *   a transparent [backgroundColor] alongside it.
  * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
  *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
+ *   It also marks the window as blurred for a [io.github.suqi8.coui.kmp.layout.DialogButtonBar]
+ *   inside, whose buttons then turn material (`COUIButtonBarLayout.setBlurBackgroundWindow`).
  * @param content The [Composable] content of the [WindowDialog].
  */
 @Composable

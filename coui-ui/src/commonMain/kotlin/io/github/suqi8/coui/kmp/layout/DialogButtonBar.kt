@@ -11,18 +11,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.basic.ButtonColors
+import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.CouiButton
+import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextButtonColors
+import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -61,6 +68,13 @@ data class DialogButtonBarAction(
  *   (`COUIAlertDialogBottomButtonSecondary.Last`). Hidden when null.
  * @param dynamicLayout Whether the bar may stack itself, like
  *   `COUIButtonBarLayout.setDynamicLayout`.
+ * @param material Whether the buttons draw the COUI 17 material.
+ *   `COUIButtonBarLayout.setBlurBackgroundWindow` switches the buttons to `FOLLOW_SYSTEM` when the
+ *   dialog window is blurred (`FORCE_DISABLE` otherwise), so this defaults to whether the hosting
+ *   dialog draws its material panel (`materialStroke`). The buttons then take the
+ *   `drawableMaterialEffect` look: a translucent white fill
+ *   ([DialogButtonBarDefaults.materialButtonColors]), the `CONTENT_CAPSULE_5` edge lighting +
+ *   inner shadow, the `TYPE_OPAQUE_MEDIUM_2` touch spotlight and no press tint.
  * @param colors The [TextButtonColors] of the negative and positive buttons.
  * @param neutralColors The [TextButtonColors] of the neutral button.
  * @param textStyle The text style of the labels, also used to measure them for the flip decision.
@@ -72,8 +86,17 @@ fun DialogButtonBar(
     modifier: Modifier = Modifier,
     neutral: DialogButtonBarAction? = null,
     dynamicLayout: Boolean = true,
-    colors: TextButtonColors = DialogButtonBarDefaults.buttonColors(),
-    neutralColors: TextButtonColors = DialogButtonBarDefaults.neutralButtonColors(),
+    material: Boolean = LocalDialogMaterial.current,
+    colors: TextButtonColors = if (material) {
+        DialogButtonBarDefaults.materialButtonColors()
+    } else {
+        DialogButtonBarDefaults.buttonColors()
+    },
+    neutralColors: TextButtonColors = if (material) {
+        DialogButtonBarDefaults.materialNeutralButtonColors()
+    } else {
+        DialogButtonBarDefaults.neutralButtonColors()
+    },
     textStyle: TextStyle = COUITheme.textStyles.button,
 ) {
     if (negative == null && positive == null && neutral == null) return
@@ -114,6 +137,7 @@ fun DialogButtonBar(
                 positive = positive,
                 neutral = neutral,
                 barWidth = barWidth,
+                material = material,
                 colors = colors,
                 neutralColors = neutralColors,
                 textStyle = textStyle,
@@ -125,6 +149,7 @@ fun DialogButtonBar(
                 negative = negative,
                 positive = positive,
                 neutral = neutral,
+                material = material,
                 colors = colors,
                 neutralColors = neutralColors,
                 textStyle = textStyle,
@@ -175,6 +200,7 @@ private fun RowButtonBar(
     negative: DialogButtonBarAction?,
     positive: DialogButtonBarAction?,
     neutral: DialogButtonBarAction?,
+    material: Boolean,
     colors: TextButtonColors,
     neutralColors: TextButtonColors,
     textStyle: TextStyle,
@@ -196,6 +222,7 @@ private fun RowButtonBar(
             val isLast = index == slots.lastIndex
             BarButton(
                 action = action,
+                material = material,
                 colors = if (slot == BarSlot.Neutral) neutralColors else colors,
                 minHeight = DialogDefaults.ButtonBarMinHeight,
                 textStyle = textStyle,
@@ -224,6 +251,7 @@ private fun StackedButtonBar(
     positive: DialogButtonBarAction?,
     neutral: DialogButtonBarAction?,
     barWidth: Dp,
+    material: Boolean,
     colors: TextButtonColors,
     neutralColors: TextButtonColors,
     textStyle: TextStyle,
@@ -249,6 +277,7 @@ private fun StackedButtonBar(
             }
             BarButton(
                 action = action,
+                material = material,
                 colors = if (slot == BarSlot.Neutral) neutralColors else colors,
                 minHeight = if (multiline) {
                     DialogButtonBarDefaults.StackedButtonMinHeightMultiline
@@ -270,29 +299,51 @@ private fun StackedButtonBar(
     }
 }
 
-/** A `COUIAlertDialogBottomButtonSecondary` capsule: filled, press-scaled, corners at half height. */
+/**
+ * A `COUIAlertDialogBottomButtonSecondary` capsule: filled, press-scaled, corners at half height.
+ * With [material] it is the `drawableMaterialEffect` secondary button of a blurred dialog.
+ */
 @Composable
 private fun BarButton(
     action: DialogButtonBarAction,
+    material: Boolean,
     colors: TextButtonColors,
     minHeight: Dp,
     textStyle: TextStyle,
     modifier: Modifier = Modifier,
 ) {
-    TextButton(
-        text = action.text,
+    val mappedColors = remember(colors) {
+        ButtonColors(
+            color = colors.color,
+            disabledColor = colors.disabledColor,
+            contentColor = colors.textColor,
+            disabledContentColor = colors.disabledTextColor,
+        )
+    }
+    CouiButton(
         onClick = action.onClick,
         modifier = modifier,
         enabled = action.enabled,
+        pressScaleEnabled = true,
         // drawableRadius = -1dp: the default capsule rounds the fill at half the measured height.
+        cornerRadius = ButtonDefaults.CornerRadius,
         minWidth = 0.dp,
         minHeight = minHeight,
-        colors = colors,
+        colors = mappedColors,
         insideMargin = DialogDefaults.ButtonBarInsideMargin,
-        textStyle = textStyle,
-        // The bar measures label wrapping itself and grows the button for multi-line labels.
-        maxLines = Int.MAX_VALUE,
-    )
+        // getBlurWindowButtonType: every button without the recommend id is SECONDARY.
+        materialType = if (material) ContentButtonMaterialType.DrawableSecondary else null,
+        interactionSource = null,
+        indication = null,
+    ) {
+        Text(
+            text = action.text,
+            style = textStyle,
+            // The bar measures label wrapping itself and grows the button for multi-line labels.
+            maxLines = Int.MAX_VALUE,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 /** The COUI button roles, kept apart because the two tiers order them differently. */
@@ -363,6 +414,55 @@ object DialogButtonBarDefaults {
     }
 
     /**
+     * The [TextButtonColors] of the negative and positive buttons of a material dialog. COUI
+     * `COUIButton.changeButtonAlphaColor` for a `drawableMaterialEffect` secondary button with the
+     * material on: white at alpha 166 (light) or 51 (dark). The disabled fill stays
+     * `?couiColorContainer8` (`disabledColor`, which `drawButtonBackground` draws when disabled).
+     */
+    @Composable
+    fun materialButtonColors(
+        color: Color = if (isDarkTheme()) MaterialFillDark else MaterialFillLight,
+        disabledColor: Color = COUITheme.colorScheme.dialogButton,
+        textColor: Color = COUITheme.colorScheme.onSecondaryVariant,
+        disabledTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+    ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
+        TextButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            textColor = textColor,
+            disabledTextColor = disabledTextColor,
+        )
+    }
+
+    /**
+     * The [TextButtonColors] of the neutral button of a material dialog: the
+     * [materialButtonColors] fill with the error labels of [neutralButtonColors].
+     */
+    @Composable
+    fun materialNeutralButtonColors(
+        color: Color = if (isDarkTheme()) MaterialFillDark else MaterialFillLight,
+        disabledColor: Color = COUITheme.colorScheme.dialogButton,
+        textColor: Color = COUITheme.colorScheme.error,
+        disabledTextColor: Color = COUITheme.colorScheme.error.copy(alpha = 0.3f),
+    ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
+        TextButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            textColor = textColor,
+            disabledTextColor = disabledTextColor,
+        )
+    }
+
+    /** `Color.argb(166, 255, 255, 255)`, the light material fill. */
+    private val MaterialFillLight = Color(0xA6FFFFFF)
+
+    /** `Color.argb(51, 255, 255, 255)`, the dark material fill. */
+    private val MaterialFillDark = Color(0x33FFFFFF)
+
+    @Composable
+    private fun isDarkTheme(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+
+    /**
      * The default [TextButtonColors] of the neutral button. COUI
      * `COUIAlertDialogBottomButtonSecondary.Last`: the secondary fill with `coui_btn_error_text_color`
      * labels (`?couiColorError`, and `?couiColorErrorDisabled`, the error color at 30% alpha, when
@@ -383,3 +483,9 @@ object DialogButtonBarDefaults {
         )
     }
 }
+
+/**
+ * Whether the enclosing dialog draws its COUI 17 material panel (blurred window background +
+ * material stroke), which `COUIButtonBarLayout.setBlurBackgroundWindow` forwards to its buttons.
+ */
+internal val LocalDialogMaterial = staticCompositionLocalOf { false }
