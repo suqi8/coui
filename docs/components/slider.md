@@ -80,6 +80,31 @@ Slider(
 )
 ```
 
+## Interaction
+
+`Slider` follows COUI 17 `COUISeekBar`:
+
+- On touch down the track grows from 20dp to 28dp and the thumb from 6dp to 8dp with a slight bounce (springs of response 0.5; the thumb grows with bounce 0.3). A release before the track has grown halfway waits until it has, so a quick tap still shows the feedback.
+- A tap springs the progress to the tapped position (response 0.3); while dragging the progress follows the finger (response 0.15).
+- A fast release (at least 100px/s) keeps the progress gliding, slowed by a linear damping of 15/s. Sliders with `steps` do not fling, as `COUISectionSeekBar`.
+- Running into the maximum, by dragging or by a fling, flashes a white gradient over the progress (`GlitterEffectRenderer`).
+
+`VerticalSlider` and `RangeSlider` share the press enlarge, the springs and the colors; the fling, the glitter and the material effects are `Slider` only.
+
+### Material Effects
+
+With `material = true`, `Slider` adds the effects ColorOS 17 draws when the system material switches are on: the pressed thumb turns to glass (`TexturedThumbRenderer`) and the `TYPE_OPAQUE_MEDIUM_1` touch spotlight (OVERLAY, intensity 0.6 light / 0.8 dark) follows the finger inside the track. They are off by default, as on ColorOS 17 with those switches off. The spotlight needs runtime shaders (Android 13+ and every Skia target).
+
+```kotlin
+var value by remember { mutableFloatStateOf(0.5f) }
+
+Slider(
+    value = value,
+    onValueChange = { value = it },
+    material = true
+)
+```
+
 ## Properties
 
 ### Slider Properties
@@ -94,12 +119,13 @@ Slider(
 | steps                 | Int                               | Amount of discrete allowable values. If 0, the slider will behave continuously. Must not be negative                                                                           | 0                                  | No       |
 | onValueChangeFinished | (() -> Unit)?                     | Called when value change has ended                                                                                                                                             | null                               | No       |
 | reverseDirection      | Boolean                           | Controls the direction of slider. When false (default), follows LayoutDirection (L-R in LTR, R-L in RTL). When true, reverses the direction.                                   | false                              | No       |
-| height                | Dp                                | Height of the slider                                                                                                                                                           | SliderDefaults.MinHeight           | No       |
+| height                | Dp                                | Rest height of the track; it grows to 1.4x while pressed, drawn beyond the layout bounds                                                                                       | SliderDefaults.MinHeight           | No       |
 | colors                | SliderColors                      | Color configuration of the slider                                                                                                                                              | SliderDefaults.sliderColors()      | No       |
 | hapticEffect          | SliderDefaults.SliderHapticEffect | Type of haptic feedback                                                                                                                                                        | SliderDefaults.DefaultHapticEffect | No       |
 | showKeyPoints         | Boolean                           | Whether to show key point indicators on the slider. Only works when keyPoints is not null                                                                                      | false                              | No       |
 | keyPoints             | List\<Float\>?                    | Custom key point values to display on the slider. If null, uses step positions from steps parameter. Values should be within valueRange                                        | null                               | No       |
 | magnetThreshold       | Float                             | Magnetic snap threshold as a fraction (0.0 to 1.0). When slider value is within this distance from a key point, it will snap to that point. Only applies when keyPoints is set | 0.02f                              | No       |
+| material              | Boolean                           | Whether to draw the COUI 17 material effects (glass thumb while pressed, touch spotlight). See [Material Effects](#material-effects)                                         | false                              | No       |
 
 ### VerticalSlider Properties
 
@@ -115,7 +141,7 @@ Slider(
 | reverseDirection      | Boolean                           | Controls the direction of slider. When false, increases bottom to top. When true, increases top to bottom                                                                      | false                              | No       |
 | width                 | Dp                                | Width of the vertical slider                                                                                                                                                   | SliderDefaults.MinHeight           | No       |
 | colors                | SliderColors                      | Color configuration of the slider                                                                                                                                              | SliderDefaults.sliderColors()      | No       |
-| effect                | Boolean                           | Whether to show special effects                                                                                                                                                | false                              | No       |
+| effect                | Boolean                           | Reserved; currently has no effect                                                                                                                                              | false                              | No       |
 | hapticEffect          | SliderDefaults.SliderHapticEffect | Type of haptic feedback                                                                                                                                                        | SliderDefaults.DefaultHapticEffect | No       |
 | showKeyPoints         | Boolean                           | Whether to show key point indicators on the slider. Only works when keyPoints is not null                                                                                      | false                              | No       |
 | keyPoints             | List\<Float\>?                    | Custom key point values to display on the slider. If null, uses step positions from steps parameter. Values should be within valueRange                                        | null                               | No       |
@@ -177,6 +203,25 @@ The SliderDefaults object provides default configurations for the Slider compone
 | disabledThumbColor      | Color | Thumb color when disabled                     |
 | keyPointColor           | Color | Color of key point indicators in background   |
 | keyPointForegroundColor | Color | Color of key point indicators in foreground   |
+| disabledKeyPointColor   | Color | Background key points when disabled           |
+| disabledKeyPointForegroundColor | Color | Foreground key points when disabled   |
+| thumbShadowColor        | Color | Thumb drop shadow, drawn only when enabled    |
+
+`sliderColors()` follows COUI 17 `COUISeekBar`:
+
+| Parameter                       | Default (light / dark)                                  | COUI source                                  |
+| ------------------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| foregroundColor                 | `primary` (`#0080FF` / `#1A8CFF`)                       | `?couiColorContainerTheme`                   |
+| disabledForegroundColor         | `disabledPrimarySlider` (`#4D0080FF` / `#4D1A8CFF`)     | `?couiColorDisable`                          |
+| backgroundColor                 | `sliderBackground` (`#1F000000` / `#33FFFFFF`)          | `?couiColorContainer12`                      |
+| disabledBackgroundColor         | `sliderBackground` (the track does not change)          | `coui_seekbar_background_selector`           |
+| thumbColor                      | `onPrimary` (white)                                     | `coui_seekbar_thumb_selector`                |
+| disabledThumbColor              | `disabledSliderThumb` (`#8AFFFFFF` / `#29FFFFFF`)       | `coui_seekbar_thumb_disable_color`           |
+| keyPointColor                   | `sliderKeyPoint` (`#42000000` / `#4DFFFFFF`)            | `?couiColorLabelTertiary`                    |
+| keyPointForegroundColor         | `sliderKeyPointForeground` (white)                      | `?couiColorLabelOnColor`                     |
+| disabledKeyPointColor           | `disabledSliderKeyPoint` (`#42000000` / `#29FFFFFF`)    | `coui_seekbar_inactive_mark_disable_color`   |
+| disabledKeyPointForegroundColor | `disabledSliderThumb` (`#8AFFFFFF` / `#29FFFFFF`)       | `coui_seekbar_active_mark_disable_color`     |
+| thumbShadowColor                | `sliderThumbShadow` (`#1A000000` / `#40000000`)         | `coui_seekbar_thumb_shadow_color`            |
 
 ## Advanced Usage
 

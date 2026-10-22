@@ -80,6 +80,31 @@ Slider(
 )
 ```
 
+## 交互
+
+`Slider` 对齐 COUI 17 `COUISeekBar`：
+
+- 按下即放大：轨道从 20dp 长到 28dp，拇指从 6dp 长到 8dp 并带轻微回弹（response 0.5 的弹簧，拇指放大 bounce 0.3）。如果抬手时轨道还没长到一半，会等长到一半再收回，快速轻点也能看到反馈。
+- 轻点轨道时进度以弹簧（response 0.3）跳到点击位置；拖动时进度跟手（response 0.15）。
+- 快速松手（至少 100px/s）时进度会继续滑行，按 15/s 的线性阻尼减速。设置了 `steps` 的滑块不滑行，与 `COUISectionSeekBar` 一致。
+- 拖动或滑行撞到最大值时，进度条上会闪过一道白色渐变高光（`GlitterEffectRenderer`）。
+
+`VerticalSlider` 与 `RangeSlider` 共享按下放大、弹簧参数和颜色；滑行、触边高光与材质效果仅 `Slider` 提供。
+
+### 材质效果
+
+`material = true` 时，`Slider` 会加上 ColorOS 17 在系统材质开关打开时绘制的效果：按下时拇指变为玻璃质感（`TexturedThumbRenderer`），并且 `TYPE_OPAQUE_MEDIUM_1` 跟手聚光（OVERLAY，强度浅色 0.6 / 深色 0.8）在轨道内跟随手指。默认关闭，与 ColorOS 17 在这些开关关闭时的表现一致。聚光需要运行时着色器（Android 13+ 及所有 Skia 平台）。
+
+```kotlin
+var value by remember { mutableFloatStateOf(0.5f) }
+
+Slider(
+    value = value,
+    onValueChange = { value = it },
+    material = true
+)
+```
+
 ## 属性
 
 ### Slider 属性
@@ -100,6 +125,7 @@ Slider(
 | showKeyPoints         | Boolean                           | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | false                              | 否       |
 | keyPoints             | List\<Float\>?                    | 要在滑块上显示的自定义关键点值。如果为 null,则使用 steps 参数的步长位置。值应在 valueRange 范围内                | null                               | 否       |
 | magnetThreshold       | Float                             | 磁吸对齐阈值,以分数表示 (0.0 到 1.0)。当滑块值与关键点的距离在此阈值内时,将对齐到该点。仅在设置 keyPoints 时生效 | 0.02f                              | 否       |
+| material              | Boolean                           | 是否绘制 COUI 17 材质效果（按下时的玻璃拇指、跟手聚光），见[材质效果](#材质效果)                                  | false                              | 否       |
 
 ### VerticalSlider 属性
 
@@ -177,6 +203,25 @@ SliderDefaults 对象提供了 Slider 组件的默认配置。
 | disabledThumbColor      | Color | 禁用状态时拇指的颜色       |
 | keyPointColor           | Color | 背景中关键点指示器的颜色   |
 | keyPointForegroundColor | Color | 前景中关键点指示器的颜色   |
+| disabledKeyPointColor   | Color | 禁用状态时背景中关键点的颜色 |
+| disabledKeyPointForegroundColor | Color | 禁用状态时前景中关键点的颜色 |
+| thumbShadowColor        | Color | 拇指投影颜色，仅启用时绘制 |
+
+`sliderColors()` 的默认值对齐 COUI 17 `COUISeekBar`：
+
+| 参数                            | 默认值（浅色 / 深色）                                    | COUI 来源                                    |
+| ------------------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| foregroundColor                 | `primary`（`#0080FF` / `#1A8CFF`）                      | `?couiColorContainerTheme`                   |
+| disabledForegroundColor         | `disabledPrimarySlider`（`#4D0080FF` / `#4D1A8CFF`）    | `?couiColorDisable`                          |
+| backgroundColor                 | `sliderBackground`（`#1F000000` / `#33FFFFFF`）         | `?couiColorContainer12`                      |
+| disabledBackgroundColor         | `sliderBackground`（禁用时轨道颜色不变）                 | `coui_seekbar_background_selector`           |
+| thumbColor                      | `onPrimary`（白色）                                     | `coui_seekbar_thumb_selector`                |
+| disabledThumbColor              | `disabledSliderThumb`（`#8AFFFFFF` / `#29FFFFFF`）      | `coui_seekbar_thumb_disable_color`           |
+| keyPointColor                   | `sliderKeyPoint`（`#42000000` / `#4DFFFFFF`）           | `?couiColorLabelTertiary`                    |
+| keyPointForegroundColor         | `sliderKeyPointForeground`（白色）                      | `?couiColorLabelOnColor`                     |
+| disabledKeyPointColor           | `disabledSliderKeyPoint`（`#42000000` / `#29FFFFFF`）   | `coui_seekbar_inactive_mark_disable_color`   |
+| disabledKeyPointForegroundColor | `disabledSliderThumb`（`#8AFFFFFF` / `#29FFFFFF`）      | `coui_seekbar_active_mark_disable_color`     |
+| thumbShadowColor                | `sliderThumbShadow`（`#1A000000` / `#40000000`）        | `coui_seekbar_thumb_shadow_color`            |
 
 ## 进阶用法
 

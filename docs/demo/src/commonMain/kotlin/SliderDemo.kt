@@ -39,9 +39,15 @@ fun SliderDemo() {
             var slider1 by remember { mutableFloatStateOf(0.5f) }
             var slider2 by remember { mutableFloatStateOf(0.7f) }
             var slider3 by remember { mutableStateOf(0.2f..0.8f) }
+            var slider4 by remember { mutableFloatStateOf(0.3f) }
             Slider(
                 value = slider1,
                 onValueChange = { slider1 = it },
+            )
+            Slider(
+                value = slider4,
+                onValueChange = { slider4 = it },
+                material = true,
             )
             Slider(
                 value = slider2,
