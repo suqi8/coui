@@ -12,6 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.DatePicker
+import io.github.suqi8.coui.kmp.basic.DateTimePicker
+import io.github.suqi8.coui.kmp.basic.DateTimeValue
 import io.github.suqi8.coui.kmp.basic.DateValue
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.TimePicker
@@ -59,6 +61,23 @@ fun LazyListScope.dateTimePickerSection() {
             TimePicker(
                 value = time,
                 onValueChange = { time = it },
+                is24Hour = false,
+            )
+        }
+    }
+    item(key = "dateTimePicker") {
+        SmallTitle(text = "DateTimePicker (12-hour)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            var value by remember {
+                mutableStateOf(DateTimeValue(DateValue(year = 2026, month = 10, day = 23), TimeValue(hour = 11, minute = 30)))
+            }
+            DateTimePicker(
+                value = value,
+                onValueChange = { value = it },
                 is24Hour = false,
             )
         }
