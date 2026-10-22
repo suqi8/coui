@@ -144,7 +144,7 @@ fun TopAppBar(
     navigationIconPadding: Dp = TopAppBarDefaults.NavigationIconPadding,
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
-    largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
+    largeTitleFontSize: TextUnit = TopAppBarDefaults.largeTitleFontSize(),
     largeTitleBottomMargin: Dp = Dp.Unspecified,
     fadeLargeTitleOnCollapse: Boolean = false,
     glow: @Composable BoxScope.() -> Unit = {},
@@ -508,6 +508,13 @@ object TopAppBarDefaults {
     val ExpandedHeight = 110.dp
 
     /**
+     * The expanded large title size: COUI `coui_appbar_title_expanded_text_size` (32dp, a dp size
+     * that ignores font scale).
+     */
+    @Composable
+    fun largeTitleFontSize(): TextUnit = with(LocalDensity.current) { 32.dp.toSp() }
+
+    /**
      * The top padding of the expanded large title, measured from the top of the bar.
      * COUI `coui_appbar_title_expanded_margin_top` (54dp).
      */
@@ -792,7 +799,7 @@ private fun TopAppBarLayout(
     showDivider: Boolean = true,
     hideSubtitleOnCollapse: Boolean = true,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
-    largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
+    largeTitleFontSize: TextUnit = TopAppBarDefaults.largeTitleFontSize(),
     largeTitleBottomMargin: Dp = Dp.Unspecified,
     fadeLargeTitleOnCollapse: Boolean = false,
     glow: @Composable BoxScope.() -> Unit = {},
@@ -874,7 +881,7 @@ private fun TopAppBarLayout(
                         text = title,
                         color = animatedTitleColor,
                         fontSize = collapsedTitleTextSize,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = CollapsedTitleFontWeight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         softWrap = false,
@@ -895,7 +902,7 @@ private fun TopAppBarLayout(
                     text = largeTitle,
                     color = animatedLargeTitleColor,
                     fontSize = largeTitleFontSize,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = ExpandedTitleFontWeight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
@@ -973,13 +980,10 @@ private fun TopAppBarLayout(
                 .fastFirst { it.layoutId == "actionIcons" }
                 .measure(constraints.copy(minWidth = 0, minHeight = 0))
 
-        // The status bar inset the layout's top padding reserves above this content box; the glow
-        // reaches up into it (compensated in the placement below).
-        val statusBarInsetPx = if (defaultWindowInsetsPadding) {
-            statusBarInset.roundToPx()
-        } else {
-            0
-        }
+        // The status bar inset the layout's top padding reserves above this content box (applied
+        // regardless of defaultWindowInsetsPadding, which only covers the horizontal insets); the
+        // glow reaches up into it (compensated in the placement below).
+        val statusBarInsetPx = statusBarInset.roundToPx()
 
         val titlePaddingPx = titlePadding.roundToPx()
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
@@ -1231,7 +1235,7 @@ private fun SmallTopAppBarLayout(
                     color = animatedTitleColor,
                     maxLines = 1,
                     fontSize = collapsedTitleTextSize,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = CollapsedTitleFontWeight,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
                 )
@@ -1319,13 +1323,10 @@ private fun SmallTopAppBarLayout(
                 .fastFirst { it.layoutId == "actionIcons" }
                 .measure(constraints.copy(minWidth = 0, minHeight = 0))
 
-        // The status bar inset the layout's top padding reserves above this content box; the glow
-        // reaches up into it (compensated in the placement below).
-        val statusBarInsetPx = if (defaultWindowInsetsPadding) {
-            statusBarInset.roundToPx()
-        } else {
-            0
-        }
+        // The status bar inset the layout's top padding reserves above this content box (applied
+        // regardless of defaultWindowInsetsPadding, which only covers the horizontal insets); the
+        // glow reaches up into it (compensated in the placement below).
+        val statusBarInsetPx = statusBarInset.roundToPx()
 
         val titlePaddingPx = titlePadding.roundToPx()
         val navigationIconPaddingPx = navigationIconPadding.roundToPx()
@@ -1415,6 +1416,19 @@ private fun SmallTopAppBarLayout(
         }
     }
 }
+
+/**
+ * `COUIAppbarTitleStyle.Expanded`: `sans-serif-semibold` with the base style's `textStyle=bold`.
+ * Material's `TextAppearance` builds it with `Typeface.create(family, BOLD)`, which adds 300 to the
+ * family weight (600 in the ColorOS `fonts.xml`), so the expanded title renders at 900.
+ */
+private val ExpandedTitleFontWeight = FontWeight.Black
+
+/**
+ * `COUIAppbarTitleStyle.Collapsed`: `sans-serif-medium` (500) plus `textStyle=bold`, rendering at 800.
+ * `COUICollapsingTextHelper` swaps to it only at full collapse, so the step is 900 -> 800.
+ */
+private val CollapsedTitleFontWeight = FontWeight.ExtraBold
 
 /** COUI `coui_appbar_title_collapsed_text_size` (24dp, sans-serif-medium; a dp size, so it ignores font scale). */
 private val CollapsedTitleTextSize = 24.dp

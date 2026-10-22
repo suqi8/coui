@@ -165,7 +165,7 @@ TopAppBar(
 | navigationIconPadding      | Dp                              | 导航图标的起始边距             | TopAppBarDefaults.NavigationIconPadding | 否       |
 | actionIconPadding          | Dp                              | 操作图标的末尾边距             | TopAppBarDefaults.ActionIconPadding | 否       |
 | expandedHeight             | Dp                              | 无副标题时的展开高度           | TopAppBarDefaults.ExpandedHeight | 否       |
-| largeTitleFontSize         | TextUnit                        | 展开态大标题字号               | COUITheme.textStyles.title1.fontSize | 否       |
+| largeTitleFontSize         | TextUnit                        | 展开态大标题字号               | TopAppBarDefaults.largeTitleFontSize() (32dp) | 否       |
 | largeTitleBottomMargin     | Dp                              | 指定后大标题按此边距贴展开态底部，而不是用顶部边距 | Dp.Unspecified | 否       |
 | fadeLargeTitleOnCollapse   | Boolean                         | 折叠时让大标题淡出缩小，而不是变形为折叠标题（COUI 17 设置首页） | false | 否       |
 | glow                       | @Composable BoxScope.() -> Unit | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow` | {} | 否       |

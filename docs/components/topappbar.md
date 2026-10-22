@@ -167,7 +167,7 @@ TopAppBar(
 | navigationIconPadding      | Dp                              | Start padding of the navigation icon           | TopAppBarDefaults.NavigationIconPadding | No       |
 | actionIconPadding          | Dp                              | End padding of the action icons                | TopAppBarDefaults.ActionIconPadding | No       |
 | expandedHeight             | Dp                              | Expanded bar height without a subtitle         | TopAppBarDefaults.ExpandedHeight | No       |
-| largeTitleFontSize         | TextUnit                        | Font size of the expanded large title          | COUITheme.textStyles.title1.fontSize | No       |
+| largeTitleFontSize         | TextUnit                        | Font size of the expanded large title          | TopAppBarDefaults.largeTitleFontSize() (32dp) | No       |
 | largeTitleBottomMargin     | Dp                              | Anchor the large title to the bar bottom by this margin instead of the top padding | Dp.Unspecified | No       |
 | fadeLargeTitleOnCollapse   | Boolean                         | Fade and shrink the large title away instead of morphing it into the collapsed title (COUI 17 settings home) | false | No       |
 | glow                       | @Composable BoxScope.() -> Unit | Backing layer drawn behind the bar, e.g. `TopAppBarGlow` with a transparent `color` | {} | No       |
