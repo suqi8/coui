@@ -42,6 +42,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [TimePicker](../components/timepicker)                     | 时间滚轮选择器（时/分） | 时间选择、闹钟       |
 | [Stepper](../components/stepper)                           | 加减调节整数值的控件   | 数量调整、数值微调   |
 | [ProgressIndicator](../components/progressindicator)       | 展示操作进度状态       | 加载中、进度展示     |
+| [InstallLoadProgress](../components/installloadprogress)   | 带进度的下载/安装按钮  | 应用下载、安装操作   |
 | [Snackbar](../components/snackbar)                         | 底部临时消息条组件     | 状态提示、操作结果   |
 | [TopTips](../components/toptips)                           | 页面顶部提示条         | 页面提示、公告       |
 | [Tooltip](../components/tooltip)                           | 悬停或长按显示的简短标签 | 图标按钮标签、元素提示 |

@@ -42,6 +42,7 @@ import component.dialogSection
 import component.dropdownSection
 import component.fullPageStatementSection
 import component.inputViewSection
+import component.installLoadProgressSection
 import component.listPreferenceSection
 import component.numberPickerSection
 import component.otherPageSection
@@ -352,6 +353,7 @@ fun MainPage(
                     buttonSection()
                     snackbarSection(snackbarHostState)
                     progressIndicatorSection()
+                    installLoadProgressSection()
                     textFieldSection()
                     inputViewSection()
                     sliderSection()

@@ -87,6 +87,7 @@ export default defineConfig({
                         { text: "DatePicker", link: "/components/datepicker" },
                         { text: "TimePicker", link: "/components/timepicker" },
                         { text: "ProgressIndicator", link: "/components/progressindicator", },
+                        { text: "InstallLoadProgress", link: "/components/installloadprogress" },
                         { text: "Snackbar", link: "/components/snackbar" },
                         { text: "TopTips", link: "/components/toptips" },
                         { text: "Tooltip", link: "/components/tooltip" },
