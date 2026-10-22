@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -58,6 +60,9 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
  * @param colors The [TextButtonColors] of the [LoadingButton]. The loading dots use the content
  *   color, like COUILoadingButton draws them with the label paint.
  * @param insideMargin The margin inside the [LoadingButton].
+ * @param textStyle The [TextStyle] of the label, the loading text and its dots. Pass
+ *   [ButtonDefaults.textStyleSmall] with the `Small` metrics for the COUI small size tier.
+ * @param material The COUI 17 material layer drawn over the fill, see [Button].
  * @param interactionSource The [MutableInteractionSource] to be used for the [LoadingButton].
  * @param indication The [Indication] to be used for the [LoadingButton]. Defaults to `null`
  *   because the COUI press feedback (scale + press tint) is built into the button itself.
@@ -75,6 +80,8 @@ fun LoadingButton(
     minHeight: Dp = ButtonDefaults.MinHeight,
     colors: TextButtonColors = ButtonDefaults.textButtonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
+    textStyle: TextStyle = COUITheme.textStyles.button,
+    material: ButtonMaterial = ButtonMaterial.None,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
@@ -100,6 +107,7 @@ fun LoadingButton(
         minHeight = minHeight,
         colors = mappedColors,
         insideMargin = insideMargin,
+        material = material,
         interactionSource = interactionSource,
         indication = indication,
     ) {
@@ -109,11 +117,13 @@ fun LoadingButton(
             Text(
                 text = text,
                 modifier = Modifier.graphicsLayer { alpha = if (isLoading) 0f else 1f },
-                style = COUITheme.textStyles.button,
+                style = textStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             if (isLoading) {
                 if (loadingText != null) {
-                    LoadingTextWithDots(loadingText)
+                    LoadingTextWithDots(loadingText, textStyle)
                 } else {
                     LoadingDots()
                 }
@@ -165,7 +175,7 @@ private fun LoadingDots() {
  * isShowLoadingText): each "." carries the same staggered alpha wave as the plain dots.
  */
 @Composable
-private fun LoadingTextWithDots(loadingText: String) {
+private fun LoadingTextWithDots(loadingText: String, textStyle: TextStyle) {
     val transition = rememberInfiniteTransition(label = "loadingButtonDots")
     val firstAlpha = transition.loadingDotAlpha(0)
     val secondAlpha = transition.loadingDotAlpha(1)
@@ -174,22 +184,22 @@ private fun LoadingTextWithDots(loadingText: String) {
         Text(
             text = loadingText,
             modifier = Modifier.alignByBaseline(),
-            style = COUITheme.textStyles.button,
+            style = textStyle,
         )
-        LoadingDotGlyph { firstAlpha.value }
-        LoadingDotGlyph { secondAlpha.value }
-        LoadingDotGlyph { thirdAlpha.value }
+        LoadingDotGlyph(textStyle) { firstAlpha.value }
+        LoadingDotGlyph(textStyle) { secondAlpha.value }
+        LoadingDotGlyph(textStyle) { thirdAlpha.value }
     }
 }
 
 @Composable
-private fun RowScope.LoadingDotGlyph(alpha: () -> Float) {
+private fun RowScope.LoadingDotGlyph(textStyle: TextStyle, alpha: () -> Float) {
     Text(
         text = ".",
         modifier = Modifier
             .alignByBaseline()
             .graphicsLayer { this.alpha = alpha() },
-        style = COUITheme.textStyles.button,
+        style = textStyle,
     )
 }
 

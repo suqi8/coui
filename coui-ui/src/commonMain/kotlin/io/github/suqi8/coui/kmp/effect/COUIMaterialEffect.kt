@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSupported
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
@@ -82,19 +81,6 @@ object COUIMaterialEffect {
         val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
         val pressed by interactionSource.collectIsPressedAsState()
 
-        // COUIPressAnimatorUnit: press spring response 0.25 / bounce 0, release (jelly hand-up)
-        // response 0.5 / bounce 0.6. stiffness = (2pi / response)^2, damping ratio = 1 - bounce.
-        val pressFraction = remember { Animatable(0f) }
-        LaunchedEffect(pressed) {
-            pressFraction.animateTo(
-                targetValue = if (pressed) 1f else 0f,
-                animationSpec = if (pressed) {
-                    spring(dampingRatio = 1f, stiffness = 631.65f)
-                } else {
-                    spring(dampingRatio = 0.4f, stiffness = 157.91f)
-                },
-            )
-        }
         // COUIMaskEffectDrawable press layer: ?couiColorPress on a response 0.3 / bounce 0 spring.
         val maskProgress = remember { Animatable(0f) }
         LaunchedEffect(pressed) {
@@ -121,12 +107,7 @@ object COUIMaterialEffect {
 
         return this
             // The press scale lifts the whole button (shadow, material, edge and icon) together.
-            .graphicsLayer {
-                val target = pressTargetScale(size.width / density, size.height / density)
-                val scale = 1f + (target - 1f) * pressFraction.value
-                scaleX = scale
-                scaleY = scale
-            }
+            .couiPressScale(pressed)
             .dropShadow(shape = shape, shadow = MaterialShadow)
             .then(
                 if (shaders != null) {
@@ -196,16 +177,33 @@ object COUIMaterialEffect {
     }
 
     /**
-     * `PressPhysicsEngine.calculateTargetScaleBreakdown`: the press target scale for a
-     * [width] x [height] dp view. `t = (clamp(wh, 20², 150²) - 20²) / (150² - 20²)` and
-     * `scale = 0.85 + B(t) * 0.12` with `B = cubic-bezier(0, 0, 0, 1)`; a 40dp circle lands on
-     * ~0.889.
+     * `PressCalc.calculateUniformScaleBreakdown` with the default `PressParams`: the press target
+     * scale of a [width] x [height] dp view, shared by `COUITouchMotionAnimator` users such as
+     * `COUIButton` and the top-bar buttons.
+     *
+     * - Area channel: `t = (clamp(wh, 20², 150²) - 20²) / (150² - 20²)`,
+     *   `areaScale = 0.85 + B(t) * (0.97 - 0.85)`.
+     * - Aspect-ratio channel: `ar = max(w / h, h / w)`. Up to `ar = 2` the result is `areaScale`;
+     *   beyond it `arScale = 0.85 + B(clamp((ar - 2) / (15 - 2), 0, 1)) * (1 - 0.85)` and the
+     *   result is the mean of both channels.
+     *
+     * `B = cubic-bezier(0, 0, 0, 1)` and the result is clamped to `[0.4, 1]`. A 40dp circle lands
+     * on ~0.889, a 132 x 44dp button on ~0.920 and a 296 x 44dp button on ~0.966.
      */
     fun pressTargetScale(width: Float, height: Float): Float {
         val minArea = 20f * 20f
         val maxArea = 150f * 150f
         val t = ((width * height).coerceIn(minArea, maxArea) - minArea) / (maxArea - minArea)
-        return 0.85f + bezier0001(t) * 0.12f
+        val areaScale = 0.85f + bezier0001(t) * (0.97f - 0.85f)
+        val aspectRatio = pressAspectRatio(width, height)
+        val scale = if (aspectRatio <= PressAspectRatioThreshold) {
+            areaScale
+        } else {
+            val arT = ((aspectRatio - PressAspectRatioThreshold) / (15f - PressAspectRatioThreshold)).coerceIn(0f, 1f)
+            val arScale = 0.85f + bezier0001(arT) * (1f - 0.85f)
+            (areaScale + arScale) / 2f
+        }
+        return scale.coerceIn(0.4f, 1f)
     }
 
     /** `cubic-bezier(0, 0, 0, 1)` evaluated at x = [t]. */
@@ -240,9 +238,25 @@ object COUIMaterialEffect {
             isDark -> ShadowEdgePresets.CircleDark
             else -> ShadowEdgePresets.CircleLight
         }
+        configureShadowEdge(shader, width, height, cornerRadius, weight = if (isCapsule) 1f else 2f, isCapsule, params)
+    }
+
+    /**
+     * Feeds [ShadowEdgeShader] a stroke effect of [params] on a [width] x [height] pixel shape:
+     * edge style 0 and shadow style 0 for a capsule, style 1 for a circle.
+     */
+    private fun Density.configureShadowEdge(
+        shader: RuntimeShader,
+        width: Float,
+        height: Float,
+        cornerRadius: Float,
+        weight: Float,
+        isCapsule: Boolean,
+        params: StrokeEffectParams,
+    ) {
         shader.setFloatUniform(
             "u_commonArray",
-            ShadowEdgeShader.commonArray(width, height, cornerRadius, weight = if (isCapsule) 1f else 2f),
+            ShadowEdgeShader.commonArray(width, height, cornerRadius, weight = weight),
         )
         shader.setFloatUniform("u_shadow", 1f)
         shader.setFloatUniform(
@@ -270,6 +284,99 @@ object COUIMaterialEffect {
                 density = density,
             ),
         )
+    }
+
+    /**
+     * The COUI 17 content-button material layer that `COUIButton` adds over its solid fill when
+     * the system material switches are on (`useMaterialEffect` = FOLLOW_SYSTEM): the
+     * `COUIMaterialStrokeEffect` `CONTENT_CAPSULE_*` edge lighting + inner shadow through
+     * [ShadowEdgeShader], and the `COUISpotLightEffect` touch spotlight through [SpotLightShader].
+     * The background blur that would replace the fill is not drawn.
+     *
+     * Draws inside the button's clip, above the fill and below the content. Needs runtime shaders
+     * (Android 13+ and every Skia target); elsewhere it is skipped. Pointer events are only
+     * observed, never consumed.
+     *
+     * @param type The button type selecting the presets.
+     * @param enabled Whether the button is enabled; a disabled button takes the `_DISABLED`
+     *   stroke presets and no spotlight.
+     * @param cornerRadius The explicit corner radius, or [Dp.Unspecified] for a capsule at half
+     *   the height (`drawableRadius = -1`).
+     */
+    @Composable
+    internal fun Modifier.contentButtonMaterial(
+        type: ContentButtonMaterialType,
+        enabled: Boolean,
+        cornerRadius: Dp,
+    ): Modifier {
+        val shaders = remember {
+            if (isRuntimeShaderSupported()) {
+                RuntimeShader(ShadowEdgeShader.Source) to RuntimeShader(SpotLightShader.Source)
+            } else {
+                null
+            }
+        } ?: return this
+        val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+        val spotlight = remember { SpotlightState() }
+        val scope = rememberCoroutineScope()
+        val stroke = type.stroke(isDark, enabled)
+        val spotIntensity = type.spotlightIntensity(isDark)
+        val spotBlend = if (type == ContentButtonMaterialType.Secondary && isDark) BlendMode.Plus else BlendMode.Overlay
+
+        return this
+            .then(
+                if (enabled) {
+                    Modifier.pointerInput(Unit) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            scope.launch { spotlight.glow(down.position) }
+                            while (true) {
+                                val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                                if (change.changedToUp() || !change.pressed) break
+                                scope.launch { spotlight.follow(change.position) }
+                            }
+                            scope.launch { spotlight.extinguish() }
+                        }
+                    }
+                } else {
+                    Modifier
+                },
+            )
+            .drawWithCache {
+                val maxRadius = min(size.width, size.height) / 2f
+                val isCapsule = abs(size.width - size.height) >= 0.5f
+                // COUIButton stroke weight: 1.0 for a height-derived capsule, 2.0 for a circle,
+                // 3.0 (weight_16_1_large) for an explicit radius.
+                val radius: Float
+                val weight: Float
+                if (cornerRadius == Dp.Unspecified) {
+                    radius = maxRadius
+                    weight = if (isCapsule) 1f else 2f
+                } else {
+                    radius = min(cornerRadius.toPx(), maxRadius)
+                    weight = 3f
+                }
+                configureShadowEdge(shaders.first, size.width, size.height, radius, weight, isCapsule, stroke)
+                val edgeBrush = shaders.first.asBrush()
+
+                onDrawWithContent {
+                    val glow = spotlight.progress.value
+                    if (glow > 0f) {
+                        val light = spotlight.position.value
+                        SpotLightShader.setUniforms(
+                            shader = shaders.second,
+                            lightX = light.x,
+                            lightY = light.y,
+                            radius = SpotLightShader.radius(glow, spotlight.extinguishing),
+                            intensity = spotIntensity * glow,
+                        )
+                        drawRect(brush = shaders.second.asBrush(), blendMode = spotBlend)
+                    }
+                    // The edge shader carries its own SDF mask.
+                    drawRect(edgeBrush)
+                    drawContent()
+                }
+            }
     }
 
     /** `COUISpotLightEffect` glow / follow / extinguish, driven by the pointer. */
@@ -319,4 +426,47 @@ object COUIMaterialEffect {
     // coui_color_press.
     private val PressMaskLight = Color(0x1F000000)
     private val PressMaskDark = Color(0x33FFFFFF)
+}
+
+/** The `COUIButton` types that carry a material layer (`buttonType` 1, 2 and 3). */
+internal enum class ContentButtonMaterialType {
+    /** `buttonType = primary`: `CONTENT_CAPSULE_1` stroke, `TYPE_OPAQUE_MEDIUM_1` spotlight. */
+    Primary,
+
+    /** `buttonType = secondary`: `CONTENT_CAPSULE_2` stroke, `TYPE_OPAQUE_MEDIUM_2` spotlight. */
+    Secondary,
+
+    /** `buttonType = transparent`: `CONTENT_CAPSULE_3` stroke, `TYPE_TRANSPARENT_MEDIUM_1` spotlight. */
+    Transparent,
+    ;
+
+    /** `COUIMaterialStrokeEffect.CONTENT_CAPSULE_PARAMS_{1,2,3}[_DISABLED]_{LIGHT,DARK}`. */
+    fun stroke(isDark: Boolean, enabled: Boolean): StrokeEffectParams = when (this) {
+        Primary -> when {
+            enabled && isDark -> ShadowEdgePresets.ContentCapsule1Dark
+            enabled -> ShadowEdgePresets.ContentCapsule1Light
+            isDark -> ShadowEdgePresets.ContentCapsule1DisabledDark
+            else -> ShadowEdgePresets.ContentCapsule1DisabledLight
+        }
+
+        Secondary -> when {
+            enabled && isDark -> ShadowEdgePresets.ContentCapsule2Dark
+            enabled -> ShadowEdgePresets.ContentCapsule2Light
+            isDark -> ShadowEdgePresets.ContentCapsule2DisabledDark
+            else -> ShadowEdgePresets.ContentCapsule2DisabledLight
+        }
+
+        Transparent -> if (enabled) ShadowEdgePresets.ContentCapsule3 else ShadowEdgePresets.ContentCapsule3Disabled
+    }
+
+    /**
+     * The spotlight end intensity (`COUISpotLightEffect`): `TYPE_OPAQUE_MEDIUM_1` 0.6 light /
+     * 0.8 dark (OVERLAY), `TYPE_OPAQUE_MEDIUM_2` 1.0 light (OVERLAY) / 0.15 dark (PLUS),
+     * `TYPE_TRANSPARENT_MEDIUM_1` 0.5 light / 0.3 dark (OVERLAY).
+     */
+    fun spotlightIntensity(isDark: Boolean): Float = when (this) {
+        Primary -> if (isDark) 0.8f else 0.6f
+        Secondary -> SpotLightShader.endIntensity(isDark)
+        Transparent -> if (isDark) 0.3f else 0.5f
+    }
 }

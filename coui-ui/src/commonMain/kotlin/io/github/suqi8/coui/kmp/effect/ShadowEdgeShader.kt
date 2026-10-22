@@ -636,4 +636,34 @@ internal object ShadowEdgePresets {
 
     /** `FRAMEWORK_CAPSULE_PARAMS_1_DARK`. */
     val CapsuleDark = StrokeEffectParams(0.6f, 2.2f, 0f, 0.01f, 1f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_1_LIGHT`, the primary `COUIButton` stroke. */
+    val ContentCapsule1Light = StrokeEffectParams(0.3f, 2.8f, 0f, 0.1f, 1f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_1_DARK`. */
+    val ContentCapsule1Dark = StrokeEffectParams(0.26f, 2.8f, 0f, 0.08f, 1f, 0.8f)
+
+    /** `CONTENT_CAPSULE_PARAMS_1_DISABLED_LIGHT`. */
+    val ContentCapsule1DisabledLight = StrokeEffectParams(0.12f, 2.8f, 0f, 0.03f, 0.3f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_1_DISABLED_DARK`. */
+    val ContentCapsule1DisabledDark = StrokeEffectParams(0.18f, 2.8f, 0f, 0.024f, 0.3f, 0.8f)
+
+    /** `CONTENT_CAPSULE_PARAMS_2_LIGHT`, the secondary `COUIButton` stroke. */
+    val ContentCapsule2Light = StrokeEffectParams(0.5f, 2.8f, 0f, 0.1f, 1f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_2_DARK`. */
+    val ContentCapsule2Dark = StrokeEffectParams(0.5f, 2.8f, 0f, 0.05f, 1f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_2_DISABLED_LIGHT`. */
+    val ContentCapsule2DisabledLight = StrokeEffectParams(0.15f, 2.8f, 0f, 0.03f, 0.3f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_2_DISABLED_DARK`. */
+    val ContentCapsule2DisabledDark = StrokeEffectParams(0.15f, 2.8f, 0f, 0.015f, 0.3f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_3_LIGHT` / `_DARK` (identical), the transparent `COUIButton` stroke. */
+    val ContentCapsule3 = StrokeEffectParams(0.5f, 2.8f, 0f, 0.05f, 1f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_3_DISABLED_LIGHT` / `_DARK` (identical). */
+    val ContentCapsule3Disabled = StrokeEffectParams(0.15f, 2.8f, 0f, 0.015f, 0.3f, 1f)
 }

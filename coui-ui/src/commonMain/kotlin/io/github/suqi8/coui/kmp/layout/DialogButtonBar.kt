@@ -284,13 +284,14 @@ private fun BarButton(
         onClick = action.onClick,
         modifier = modifier,
         enabled = action.enabled,
-        // drawableRadius = -1dp: COUIButton rounds the fill at half its height.
-        cornerRadius = minHeight / 2,
+        // drawableRadius = -1dp: the default capsule rounds the fill at half the measured height.
         minWidth = 0.dp,
         minHeight = minHeight,
         colors = colors,
         insideMargin = DialogDefaults.ButtonBarInsideMargin,
         textStyle = textStyle,
+        // The bar measures label wrapping itself and grows the button for multi-line labels.
+        maxLines = Int.MAX_VALUE,
     )
 }
 

@@ -64,6 +64,14 @@ import androidx.compose.ui.graphics.Color
  * @param sliderBackground The background color of the slider.
  * @param dialogButton The fill of the dialog bar buttons (COUI couiColorContainer8). Cases: Dialog, BottomSheet.
  * @param dragHandle The color of the bottom sheet drag handle (COUI couiColorControls).
+ * @param secondaryButton The opaque fill of secondary buttons (COUI couiColorContainer8 composited over couiColorBackgroundElevated). Cases: Button, TextButton, LoadingButton.
+ * @param disabledSecondaryButton The fill of disabled secondary buttons (COUI couiColorContainer8, not composited).
+ * @param disabledOnSecondaryButton The label of disabled secondary buttons (COUI coui_btn_secondary_text_color disabled state).
+ * @param transparentButton The translucent fill of transparent buttons laid over images (COUI coui_button_translate_color).
+ * @param onTransparentButton The label of transparent buttons (COUI coui_btn_tiny_translate_text_color).
+ * @param disabledOnTransparentButton The label of disabled transparent buttons.
+ * @param backgroundTop The topmost floating surface (COUI couiColorBackgroundTop). Cases: Snackbar.
+ * @param primaryTextOnPopup The accent text on floating surfaces (COUI couiColorPrimaryTextOnPopup). Cases: Snackbar action.
  */
 @Stable
 class Colors(
@@ -122,6 +130,14 @@ class Colors(
     sliderBackground: Color,
     dialogButton: Color,
     dragHandle: Color,
+    secondaryButton: Color,
+    disabledSecondaryButton: Color,
+    disabledOnSecondaryButton: Color,
+    transparentButton: Color,
+    onTransparentButton: Color,
+    disabledOnTransparentButton: Color,
+    backgroundTop: Color,
+    primaryTextOnPopup: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -233,6 +249,22 @@ class Colors(
         internal set
     var dragHandle by mutableStateOf(dragHandle, structuralEqualityPolicy())
         internal set
+    var secondaryButton by mutableStateOf(secondaryButton, structuralEqualityPolicy())
+        internal set
+    var disabledSecondaryButton by mutableStateOf(disabledSecondaryButton, structuralEqualityPolicy())
+        internal set
+    var disabledOnSecondaryButton by mutableStateOf(disabledOnSecondaryButton, structuralEqualityPolicy())
+        internal set
+    var transparentButton by mutableStateOf(transparentButton, structuralEqualityPolicy())
+        internal set
+    var onTransparentButton by mutableStateOf(onTransparentButton, structuralEqualityPolicy())
+        internal set
+    var disabledOnTransparentButton by mutableStateOf(disabledOnTransparentButton, structuralEqualityPolicy())
+        internal set
+    var backgroundTop by mutableStateOf(backgroundTop, structuralEqualityPolicy())
+        internal set
+    var primaryTextOnPopup by mutableStateOf(primaryTextOnPopup, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -290,6 +322,14 @@ class Colors(
         sliderBackground: Color = this.sliderBackground,
         dialogButton: Color = this.dialogButton,
         dragHandle: Color = this.dragHandle,
+        secondaryButton: Color = this.secondaryButton,
+        disabledSecondaryButton: Color = this.disabledSecondaryButton,
+        disabledOnSecondaryButton: Color = this.disabledOnSecondaryButton,
+        transparentButton: Color = this.transparentButton,
+        onTransparentButton: Color = this.onTransparentButton,
+        disabledOnTransparentButton: Color = this.disabledOnTransparentButton,
+        backgroundTop: Color = this.backgroundTop,
+        primaryTextOnPopup: Color = this.primaryTextOnPopup,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -346,6 +386,14 @@ class Colors(
         sliderBackground,
         dialogButton,
         dragHandle,
+        secondaryButton,
+        disabledSecondaryButton,
+        disabledOnSecondaryButton,
+        transparentButton,
+        onTransparentButton,
+        disabledOnTransparentButton,
+        backgroundTop,
+        primaryTextOnPopup,
     )
 }
 
@@ -406,6 +454,14 @@ fun lightColorScheme(
     sliderBackground: Color = Color(0x0D000000),
     dialogButton: Color = Color(0x14000000),
     dragHandle: Color = Color(0x29000000),
+    secondaryButton: Color = Color(0xFFEBEBEB),
+    disabledSecondaryButton: Color = Color(0x14000000),
+    disabledOnSecondaryButton: Color = Color(0x42000000),
+    transparentButton: Color = Color(0x33FFFFFF),
+    onTransparentButton: Color = Color(0xFFFFFFFF),
+    disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
+    backgroundTop: Color = Color(0xFFFFFFFF),
+    primaryTextOnPopup: Color = Color(0xFF0080FF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -462,6 +518,14 @@ fun lightColorScheme(
     sliderBackground,
     dialogButton,
     dragHandle,
+    secondaryButton,
+    disabledSecondaryButton,
+    disabledOnSecondaryButton,
+    transparentButton,
+    onTransparentButton,
+    disabledOnTransparentButton,
+    backgroundTop,
+    primaryTextOnPopup,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -477,7 +541,7 @@ fun darkColorScheme(
     disabledPrimary: Color = Color(0x4D1A8CFF),
     disabledOnPrimary: Color = Color(0xFF404040),
     disabledPrimaryButton: Color = Color(0x4D1A8CFF),
-    disabledOnPrimaryButton: Color = Color(0x29FFFFFF),
+    disabledOnPrimaryButton: Color = Color(0x28FFFFFF),
     disabledPrimarySlider: Color = Color(0xFF262626),
     primaryContainer: Color = Color(0xFF1A8CFF),
     onPrimaryContainer: Color = Color.White,
@@ -521,6 +585,14 @@ fun darkColorScheme(
     sliderBackground: Color = Color(0x1AFFFFFF),
     dialogButton: Color = Color(0x1AFFFFFF),
     dragHandle: Color = Color(0x40FFFFFF),
+    secondaryButton: Color = Color(0xFF353535),
+    disabledSecondaryButton: Color = Color(0x1AFFFFFF),
+    disabledOnSecondaryButton: Color = Color(0x28FFFFFF),
+    transparentButton: Color = Color(0x33FFFFFF),
+    onTransparentButton: Color = Color(0xFFFFFFFF),
+    disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
+    backgroundTop: Color = Color(0xFF333333),
+    primaryTextOnPopup: Color = Color(0xFF5C9DFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -577,6 +649,14 @@ fun darkColorScheme(
     sliderBackground,
     dialogButton,
     dragHandle,
+    secondaryButton,
+    disabledSecondaryButton,
+    disabledOnSecondaryButton,
+    transparentButton,
+    onTransparentButton,
+    disabledOnTransparentButton,
+    backgroundTop,
+    primaryTextOnPopup,
 )
 
 @Stable
@@ -636,6 +716,14 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     sliderBackground = other.sliderBackground
     dialogButton = other.dialogButton
     dragHandle = other.dragHandle
+    secondaryButton = other.secondaryButton
+    disabledSecondaryButton = other.disabledSecondaryButton
+    disabledOnSecondaryButton = other.disabledOnSecondaryButton
+    transparentButton = other.transparentButton
+    onTransparentButton = other.onTransparentButton
+    disabledOnTransparentButton = other.disabledOnTransparentButton
+    backgroundTop = other.backgroundTop
+    primaryTextOnPopup = other.primaryTextOnPopup
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

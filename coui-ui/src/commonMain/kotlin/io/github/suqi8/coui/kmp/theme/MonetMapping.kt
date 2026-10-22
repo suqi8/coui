@@ -154,5 +154,13 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         sliderBackground = sliderBackground,
         dialogButton = roles.surfaceContainerHigh,
         dragHandle = roles.outlineVariant,
+        secondaryButton = roles.surfaceContainerHigh,
+        disabledSecondaryButton = disabledSecondaryVariantOpaque,
+        disabledOnSecondaryButton = disabledOnSecondaryVariantOpaque,
+        transparentButton = Color.White.copy(alpha = 0.2f),
+        onTransparentButton = Color.White,
+        disabledOnTransparentButton = Color.White.copy(alpha = 0.3f),
+        backgroundTop = roles.surfaceContainerHighest,
+        primaryTextOnPopup = roles.primary,
     )
 }
