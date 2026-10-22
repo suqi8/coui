@@ -99,6 +99,7 @@ BadgeBox(
 | colors      | BadgeColors | 颜色配置                            | BadgeDefaults.badgeColors() | 否   |
 | dotDiameter | Dp          | 纯圆点形态的直径                    | BadgeDefaults.DotDiameter   | 否   |
 | height      | Dp          | 数字胶囊形态的高度                  | BadgeDefaults.Height        | 否   |
+| navigation  | Boolean     | 使用底部导航宽度（`COUIHintRedDot` POINT_NAVI 模式）：小于 10 为 12dp，小于 100 为 16dp，其余 20dp，不按高度加宽 | false | 否 |
 
 ### BadgeBox
 
@@ -115,6 +116,7 @@ BadgeBox(
 | ----------------------- | ---- | ------ |
 | DotDiameter             | Dp   | 6.dp   |
 | Height                  | Dp   | 16.dp  |
+| NaviSmallWidth          | Dp   | 12.dp  |
 | SmallWidth              | Dp   | 16.dp  |
 | MediumWidth             | Dp   | 20.dp  |
 | LargeWidth              | Dp   | 26.dp  |

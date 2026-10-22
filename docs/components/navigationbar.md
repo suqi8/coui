@@ -79,6 +79,14 @@ Scaffold(
 
 `NavigationBarItem` follows the COUI tab navigation state model: the selected item shows the icon and label at full label color, unselected items are dimmed, and the icon cross-fades between the two states over 180ms while the label color switches instantly. Labels always use medium font weight; pressing an unselected item previews the selected icon color. `FloatingNavigationBarItem` switches its icon and label instantly between the selected color (`#E6000000`) and the unselected color (`#B8000000`); there is no indicator, press mask or haptic feedback.
 
+### Item Changes and Labels
+
+When the items stop fitting or their count changes, the capsule width and position follow on springs (response 0.55, bounce 0.35) and the items spread with the capsule. Each label cross-fades between its layout at the old and the new item width (shrinking: old out at response 0.2, new in at 0.3; growing the other way round). Labels sit where an Android `TextView` with `includeFontPadding` puts them: 30dp below the item top plus Roboto's font padding (0.128em).
+
+### Expansion View
+
+With `expansion` and `expansionVisible`, the expansion view slides out from behind the capsule's end on a spring (response 0.55, bounce 0.35) while it scales 0.5 -> 1 and the capsule shrinks to make room. Its alpha follows how much of it the capsule still covers (opaque up to half covered, then fading linearly), and with `materialEffect` the two shapes merge like metaballs while they touch. Hiding reverses it; a settled hidden expansion view is not placed and takes no touches.
+
 ### Slide to Select
 
 In a `FloatingNavigationBar`, sliding a finger across the capsule selects the item under it as it moves, so the selection follows the finger. The item the slide ends on is committed through its `onClick` when the finger lifts, wherever it lifts; disabled items are skipped. A plain tap calls the tapped item's `onClick`. While the finger is down, the whole capsule takes the COUI 17 touch motion (press scale, rubber-band follow and drag deformation) and, with `materialEffect`, a touch spotlight.
@@ -90,6 +98,7 @@ In a `FloatingNavigationBar`, sliding a finger across the capsule selects the it
 | Property Name              | Type                     | Description                         | Default Value                         | Required |
 | -------------------------- | ------------------------ | ----------------------------------- | ------------------------------------- | -------- |
 | modifier                   | Modifier                 | Modifier applied to the nav bar     | Modifier                              | No       |
+| visible                    | Boolean                  | Whether the bar is shown; hiding slides it down by its own height over 200ms (COUIOutEase) while its layout shrinks, showing reverses it over 250ms (COUIInEase) | true | No |
 | color                      | Color                    | Background color of the nav bar (`?couiColorBar`) | NavigationBarDefaults.color() | No       |
 | showDivider                | Boolean                  | Show top divider line or not        | true                                  | No       |
 | defaultWindowInsetsPadding | Boolean                  | Apply default window insets padding | true                                  | No       |
@@ -106,6 +115,7 @@ In a `FloatingNavigationBar`, sliding a finger across the capsule selects the it
 | label         | String        | Label of the item                | -             | Yes      |
 | modifier      | Modifier      | Modifier applied to the item     | Modifier      | No       |
 | enabled       | Boolean       | Whether the item is enabled      | true          | No       |
+| badge         | Int?          | Red dot on the icon: `null` none, `0` a 6dp dot (1dp past the icon's top end corner), a positive number a number badge (end edge 8dp past the icon, 5dp above it). Not shown in `TextOnly` | null | No |
 
 ### FloatingNavigationBar Properties
 
@@ -114,14 +124,16 @@ In a `FloatingNavigationBar`, sliding a finger across the capsule selects the it
 | modifier                   | Modifier                 | Modifier applied to the bar's full-width container | Modifier                     | No       |
 | backgroundModifier         | Modifier                 | Applied inside the capsule clip, above `color` and below the items: the slot for the bottom-bar backdrop blur | Modifier | No |
 | visible                    | Boolean                  | Whether the capsule is shown; changes run the COUI 17 show / hide springs, a hidden bar keeps its space but takes no touches | true | No |
-| materialEffect             | Boolean                  | Draw the COUI 17 edge lighting, inner shadow, touch spotlight and hide blur | true   | No       |
+| expansionVisible           | Boolean                  | Whether `expansion` is shown beside the capsule | true                           | No       |
+| materialEffect             | Boolean                  | Draw the COUI 17 edge lighting, inner shadow, touch spotlight, hide blur and the metaball merge with `expansion` | true   | No       |
 | showDivider                | Boolean                  | Show a thin divider ring around the capsule (not part of COUI 17) | false        | No       |
 | defaultWindowInsetsPadding | Boolean                  | Keep the capsule above the navigation and caption bars | true                    | No       |
 | color                      | Color                    | Capsule fill; pass `Color.Transparent` when `backgroundModifier` paints a blur | FloatingNavigationBarDefaults.color() | No |
 | cornerRadius               | Dp                       | Corner radius of the capsule; the default rounds it fully into the COUI 17 soft capsule, a smaller radius is drawn at `default_g2_weight` 2.45 | FloatingNavigationBarDefaults.CornerRadius | No       |
-| horizontalAlignment        | Alignment.Horizontal     | Horizontal alignment of the capsule     | CenterHorizontally                      | No       |
+| horizontalAlignment        | Alignment.Horizontal     | Horizontal alignment of the capsule while no `expansion` is shown; with it, COUI's placement applies (compact: capsule at the start, expansion at the end; wide: the pair centred) | CenterHorizontally | No |
 | horizontalOutSidePadding   | Dp                       | Minimum distance between the capsule and the bar's sides | FloatingNavigationBarDefaults.HorizontalOutSidePadding | No       |
 | shadowElevation            | Dp                       | Blur radius of the capsule's drop shadow; 0 disables it | FloatingNavigationBarDefaults.ShadowElevation          | No       |
+| expansion                  | (@Composable () -> Unit)? | Optional view beside the capsule (for example a 56dp search button), centred on a 56dp slot 12dp from the capsule | null | No |
 | content                    | @Composable () -> Unit   | The content of the nav bar, `FloatingNavigationBarItem`s placed directly inside | -  | Yes      |
 
 ### FloatingNavigationBarItem Properties
@@ -134,6 +146,8 @@ In a `FloatingNavigationBar`, sliding a finger across the capsule selects the it
 | label         | String        | Label of the item                | -             | Yes      |
 | modifier      | Modifier      | Modifier applied to the item     | Modifier      | No       |
 | enabled       | Boolean       | Whether the item is enabled      | true          | No       |
+| largeIcon     | Boolean       | Use the 40dp large icon that rises 14dp above the item (10dp above the capsule); taps on it select the item | false | No |
+| badge         | Int?          | Red dot on the icon: `null` none, `0` a 6dp dot at the icon's top end corner, a positive number a number badge 4dp above the icon whose end edge lies 6 / 9 / 10dp past the icon for 1 / 2 / 3 digits. Hidden on disabled items | null | No |
 | colors        | FloatingNavigationBarColors | Content colors of the item | FloatingNavigationBarDefaults.itemColors() | No |
 
 ### NavigationBarDefaults Object
@@ -153,6 +167,11 @@ The NavigationBarDefaults object provides default values for NavigationBar and N
 | LabelFontSize          | Dp       | Label text size, in dp (does not follow the font scale) | 10.dp |
 | TextFontSize           | Dp       | Text size (TextOnly mode), in dp             | 14.dp         |
 | IconFadeDurationMillis | Int      | Icon cross-fade duration between states      | 180           |
+| HideDurationMillis     | Int      | Hide translation duration                    | 200           |
+| ShowDurationMillis     | Int      | Show translation duration                    | 250           |
+| BadgeDotOffset         | Dp       | How far a red dot sticks out of the icon's top end corner | 1.dp |
+| BadgeNumberHorizontalOffset | Dp  | How far a number badge's end lies past the icon (-2dp under 10, +1dp from 100 to 999) | 8.dp |
+| BadgeNumberVerticalOffset | Dp    | How far a number badge rises above the icon  | 5.dp          |
 
 #### Functions
 
@@ -183,6 +202,14 @@ The FloatingNavigationBarDefaults object provides default values for FloatingNav
 | LabelTextSize            | Dp    | Label text size, in dp (does not follow the font scale) | 10.dp |
 | HiddenScale              | Float | Capsule scale when hidden           | 0.8f          |
 | HiddenBlurRadiusPx       | Float | Capsule blur radius when hidden, raw pixels | 30f   |
+| LargeIconSize            | Dp    | Large icon size                     | 40.dp         |
+| LargeIconOverflow        | Dp    | How far the large icon rises above its item | 14.dp |
+| BadgeTopOverflow         | Dp    | How far a number badge rises above the icon | 4.dp  |
+| BadgeEndOverflowOneDigit / TwoDigits / ThreeDigits | Dp | How far a number badge's end lies past the icon | 6.dp / 9.dp / 10.dp |
+| ExpansionSlotSize        | Dp    | Slot the expansion view is centred on | 56.dp       |
+| ExpansionSpacing         | Dp    | Gap between the capsule and the expansion view | 12.dp |
+| ExpansionHiddenScale     | Float | Expansion view scale when hidden    | 0.5f          |
+| CompactWidthBreakpoint   | Dp    | Below this container width the compact expansion placement applies | 600.dp |
 
 #### Functions
 
@@ -318,6 +345,19 @@ FloatingNavigationBar(
 ```
 
 The backdrop must record the page content, not the bar: keep the bar outside the recorded layer (for example in the `Scaffold` `bottomBar`).
+
+#### Expansion View, Large Icon and Badges
+
+```kotlin
+FloatingNavigationBar(
+    expansionVisible = showSearch,
+    expansion = { SearchButton(onClick = { showSearch = false }) },
+) {
+    FloatingNavigationBarItem(selected = page == 0, onClick = { page = 0 }, icon = COUIIcons.Photos, label = "Photos", badge = 0)
+    FloatingNavigationBarItem(selected = page == 1, onClick = { page = 1 }, icon = COUIIcons.Add, label = "Create", largeIcon = true)
+    FloatingNavigationBarItem(selected = page == 2, onClick = { page = 2 }, icon = COUIIcons.Contacts, label = "Me", badge = 8)
+}
+```
 
 #### Show and Hide
 

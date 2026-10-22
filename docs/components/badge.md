@@ -99,6 +99,7 @@ BadgeBox(
 | colors      | BadgeColors | Color configuration                               | BadgeDefaults.badgeColors() | No       |
 | dotDiameter | Dp          | Diameter of the plain dot form                    | BadgeDefaults.DotDiameter   | No       |
 | height      | Dp          | Height of the number capsule form                 | BadgeDefaults.Height        | No       |
+| navigation  | Boolean     | Use the bottom-navigation widths (`COUIHintRedDot` POINT_NAVI mode): 12dp under 10, 16dp under 100, 20dp otherwise, not widened to the height | false | No |
 
 ### BadgeBox
 
@@ -115,6 +116,7 @@ BadgeBox(
 | ----------------------- | ---- | ------------- |
 | DotDiameter             | Dp   | 6.dp          |
 | Height                  | Dp   | 16.dp         |
+| NaviSmallWidth          | Dp   | 12.dp         |
 | SmallWidth              | Dp   | 16.dp         |
 | MediumWidth             | Dp   | 20.dp         |
 | LargeWidth              | Dp   | 26.dp         |
