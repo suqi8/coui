@@ -44,7 +44,7 @@ fun LazyListScope.otherPageSection() {
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
                 title = "Toolbar Search Test",
-                summary = "A search bar that floats up into the toolbar",
+                summary = "A search bar that expands out of the toolbar search icon",
                 onClick = { navigator.push(Route.ToolbarSearch) },
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))

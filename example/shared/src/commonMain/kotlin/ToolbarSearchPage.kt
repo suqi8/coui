@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 @file:OptIn(ExperimentalScrollBarApi::class)
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -22,20 +25,26 @@ import component.BackNavigationIcon
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.CancelButton
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.ToolbarFloatingSearchBar
 import io.github.suqi8.coui.kmp.basic.ToolbarSearchAnchor
 import io.github.suqi8.coui.kmp.basic.rememberToolbarSearchState
+import io.github.suqi8.coui.kmp.basic.toolbarSearchEntry
+import io.github.suqi8.coui.kmp.basic.toolbarSearchItem
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.basic.Search
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import utils.AdaptiveTopAppBar
 import utils.pageContentPadding
 import utils.pageScrollModifiers
 
 /**
- * Demonstrates a search bar that floats up into the toolbar when it expands, the way
- * `COUISearchBar.setAtFrontToolBar` links the two.
+ * Demonstrates a search bar that expands out of the toolbar's search icon, the way COUI 17
+ * `COUISearchBar.showInToolBar` does.
  */
 @Composable
 fun ToolbarSearchPage(
@@ -57,29 +66,33 @@ fun ToolbarSearchPage(
 
     Scaffold(
         topBar = {
-            ToolbarSearchAnchor(state = searchState) {
-                AdaptiveTopAppBar(
-                    title = "Toolbar search",
-                    showTopAppBar = appState.showTopAppBar,
-                    isWideScreen = isWideScreen,
-                    scrollBehavior = topAppBarScrollBehavior,
-                    navigationIcon = { BackNavigationIcon(onClick = { navigator.pop() }) },
-                )
-            }
-        },
-    ) { innerPadding ->
-        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.pageScrollModifiers(
-                appState.enableScrollEndHaptic,
-                appState.showTopAppBar,
-                topAppBarScrollBehavior,
-            ),
-            contentPadding = contentPadding,
-        ) {
-            item(key = "search") {
-                ToolbarFloatingSearchBar(state = searchState) {
+            Box {
+                ToolbarSearchAnchor(state = searchState) {
+                    AdaptiveTopAppBar(
+                        title = "Toolbar search",
+                        showTopAppBar = appState.showTopAppBar,
+                        isWideScreen = isWideScreen,
+                        scrollBehavior = topAppBarScrollBehavior,
+                        navigationIcon = {
+                            BackNavigationIcon(
+                                modifier = Modifier.toolbarSearchItem(searchState),
+                                onClick = { navigator.pop() },
+                            )
+                        },
+                        actions = {
+                            IconButton(
+                                modifier = Modifier.toolbarSearchEntry(searchState),
+                                onClick = { searchState.expand() },
+                            ) {
+                                Icon(imageVector = COUIIcons.Basic.Search, contentDescription = "Search")
+                            }
+                        },
+                    )
+                }
+                ToolbarFloatingSearchBar(
+                    state = searchState,
+                    modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+                ) {
                     SearchBar(
                         modifier = Modifier.fillMaxWidth(),
                         inputField = {
@@ -102,25 +115,26 @@ fun ToolbarSearchPage(
                         },
                         expanded = searchState.expanded,
                         onExpandedChange = { if (it) searchState.expand() else searchState.collapse() },
-                    ) {
-                        Column {
-                            results.take(6).forEach { result ->
-                                BasicComponent(
-                                    title = result,
-                                    onClick = {
-                                        query = result
-                                        searchState.collapse()
-                                    },
-                                )
-                            }
-                        }
-                    }
+                    ) {}
                 }
             }
-            items(entries.size, key = { entries[it] }) { index ->
+        },
+    ) { innerPadding ->
+        val contentPadding = pageContentPadding(innerPadding, padding, isWideScreen)
+        LazyColumn(
+            state = lazyListState,
+            modifier = Modifier.pageScrollModifiers(
+                appState.enableScrollEndHaptic,
+                appState.showTopAppBar,
+                topAppBarScrollBehavior,
+            ),
+            contentPadding = contentPadding,
+        ) {
+            items(results.size, key = { results[it] }) { index ->
                 BasicComponent(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    title = entries[index],
+                    title = results[index],
+                    onClick = { query = results[index] },
                 )
             }
             item { Spacer(modifier = Modifier.height(32.dp)) }
