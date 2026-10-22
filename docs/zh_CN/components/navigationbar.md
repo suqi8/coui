@@ -2,7 +2,7 @@
 
 `NavigationBar` 是 COUI 中的底部导航栏组件，用于在应用底部创建导航菜单，支持 2 到 5 个导航项，提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
 
-`FloatingNavigationBar` 是一个悬浮样式的底部导航栏组件，同样支持 2 到 5 个导航项，仅显示图标。
+`FloatingNavigationBar` 是 COUI 17 悬浮底部导航栏：56dp 胶囊，容纳 2 到 5 个导航项，每项为 24dp 图标加其下 10dp 标签，带底栏材质、整体触摸形变与滑动选择。
 
 这些组件通常与 `Scaffold` 组件结合使用，以便在应用程序的不同页面中保持一致的布局和行为。
 
@@ -77,7 +77,11 @@ Scaffold(
 
 ### 选中状态
 
-`NavigationBarItem` 遵循 COUI tab 导航的状态模型：选中项的图标与标签以完整标签色显示，未选中项呈暗化色；图标在两种状态间以 180ms 交叉淡变过渡，标签颜色则瞬时切换。标签始终使用 Medium 字重；按压未选中项时图标会预览选中色。`FloatingNavigationBarItem` 在选中时高亮图标。
+`NavigationBarItem` 遵循 COUI tab 导航的状态模型：选中项的图标与标签以完整标签色显示，未选中项呈暗化色；图标在两种状态间以 180ms 交叉淡变过渡，标签颜色则瞬时切换。标签始终使用 Medium 字重；按压未选中项时图标会预览选中色。`FloatingNavigationBarItem` 的图标与标签在选中色（`#E6000000`）和未选中色（`#B8000000`）之间瞬时切换，没有指示器、按压遮罩或振动反馈。
+
+### 滑动选择
+
+在 `FloatingNavigationBar` 中，手指在胶囊上滑动时会随手指选中其下方的导航项，选中态跟随手指移动。手指抬起时（无论在何处抬起）提交滑动结束时所在项的 `onClick`；禁用项会被跳过。普通点按调用被点项的 `onClick`。按下期间整个胶囊带有 COUI 17 触摸形变（按压缩放、橡皮筋跟随与拖拽形变），开启 `materialEffect` 时还有触摸聚光。
 
 ## 属性
 
@@ -86,7 +90,7 @@ Scaffold(
 | 属性名                     | 类型                    | 说明                       | 默认值                                | 是否必须 |
 | -------------------------- | ----------------------- | -------------------------- | ------------------------------------- | -------- |
 | modifier                   | Modifier                | 应用于导航栏的修饰符       | Modifier                              | 否       |
-| color                      | Color                   | 导航栏背景颜色             | COUITheme.colorScheme.background     | 否       |
+| color                      | Color                   | 导航栏背景颜色（`?couiColorBar`） | NavigationBarDefaults.color() | 否       |
 | showDivider                | Boolean                 | 是否显示顶部分割线         | true                                  | 否       |
 | defaultWindowInsetsPadding | Boolean                 | 是否应用默认窗口嵌入边距   | true                                  | 否       |
 | mode                       | NavigationBarDisplayMode   | 导航项的显示模式           | NavigationBarDisplayMode.IconAndText     | 否       |
@@ -107,15 +111,18 @@ Scaffold(
 
 | 属性名                     | 类型                      | 说明                               | 默认值                                  | 是否必须 |
 | -------------------------- | ------------------------- | ---------------------------------- | --------------------------------------- | -------- |
-| modifier                   | Modifier                  | 应用于导航栏的修饰符               | Modifier                                | 否       |
-| color                      | Color                     | 导航栏背景颜色                     | COUITheme.colorScheme.surfaceContainer | 否       |
-| cornerRadius               | Dp                        | 导航栏的圆角半径；默认值使其全圆，按 COUI 17 软胶囊绘制，更小的半径按 `default_g2_weight` 2.45 绘制 | FloatingNavigationBarDefaults.CornerRadius | 否       |
-| horizontalAlignment        | Alignment.Horizontal      | 导航栏在其父容器中的水平对齐方式   | CenterHorizontally                      | 否       |
-| horizontalOutSidePadding   | Dp                        | 导航栏外部的水平内边距             | FloatingNavigationBarDefaults.HorizontalOutSidePadding | 否       |
-| shadowElevation            | Dp                        | 导航栏的阴影高度                   | FloatingNavigationBarDefaults.ShadowElevation          | 否       |
-| showDivider                | Boolean                   | 是否显示导航栏周围的分割线         | false                                   | 否       |
-| defaultWindowInsetsPadding | Boolean                   | 是否应用默认窗口嵌入边距           | true                                    | 否       |
-| content                    | @Composable () -> Unit    | 导航栏的内容                       | -                                       | 是       |
+| modifier                   | Modifier                  | 应用于导航栏整宽容器的修饰符       | Modifier                                | 否       |
+| backgroundModifier         | Modifier                  | 作用于胶囊裁剪内、`color` 之上、导航项之下：底栏背景模糊的位置 | Modifier | 否 |
+| visible                    | Boolean                   | 是否显示胶囊；切换时运行 COUI 17 显示 / 隐藏弹簧，隐藏后保留占位但不响应触摸 | true | 否 |
+| materialEffect             | Boolean                   | 是否绘制 COUI 17 描边光、内阴影、触摸聚光与隐藏模糊 | true                  | 否       |
+| showDivider                | Boolean                   | 是否在胶囊周围绘制细分割线（非 COUI 17 样式） | false                   | 否       |
+| defaultWindowInsetsPadding | Boolean                   | 是否让胶囊避开导航栏与标题栏嵌入   | true                                    | 否       |
+| color                      | Color                     | 胶囊填充色；`backgroundModifier` 绘制模糊时传 `Color.Transparent` | FloatingNavigationBarDefaults.color() | 否 |
+| cornerRadius               | Dp                        | 胶囊圆角半径；默认值使其全圆，按 COUI 17 软胶囊绘制，更小的半径按 `default_g2_weight` 2.45 绘制 | FloatingNavigationBarDefaults.CornerRadius | 否       |
+| horizontalAlignment        | Alignment.Horizontal      | 胶囊的水平对齐方式                 | CenterHorizontally                      | 否       |
+| horizontalOutSidePadding   | Dp                        | 胶囊与导航栏两侧的最小距离         | FloatingNavigationBarDefaults.HorizontalOutSidePadding | 否       |
+| shadowElevation            | Dp                        | 胶囊投影的模糊半径；0 关闭投影     | FloatingNavigationBarDefaults.ShadowElevation          | 否       |
+| content                    | @Composable () -> Unit    | 导航栏的内容，直接放置 `FloatingNavigationBarItem` | -                       | 是       |
 
 ### FloatingNavigationBarItem 属性
 
@@ -127,6 +134,7 @@ Scaffold(
 | label    | String      | 文本标签         | -      | 是       |
 | modifier | Modifier    | 应用于导航项的修饰符 | Modifier | 否       |
 | enabled  | Boolean     | 是否启用         | true     | 否       |
+| colors   | FloatingNavigationBarColors | 导航项内容色 | FloatingNavigationBarDefaults.itemColors() | 否 |
 
 ### NavigationBarDefaults 对象
 
@@ -142,9 +150,15 @@ NavigationBarDefaults 对象提供了 NavigationBar 和 NavigationBarItem 组件
 | IconSize               | Dp       | 图标尺寸                   | 24.dp  |
 | IconTopPadding         | Dp       | 图标顶部内边距             | 9.dp   |
 | LabelBottomPadding     | Dp       | 标签底部内边距             | 7.dp   |
-| LabelFontSize          | TextUnit | 标签字号                   | 10.sp  |
-| TextFontSize           | TextUnit | 字号（TextOnly 模式）      | 14.sp  |
+| LabelFontSize          | Dp       | 标签字号，单位 dp（不随字体缩放） | 10.dp |
+| TextFontSize           | Dp       | 字号（TextOnly 模式），单位 dp | 14.dp  |
 | IconFadeDurationMillis | Int      | 图标状态间交叉淡变时长     | 180    |
+
+#### 函数
+
+| 函数名 | 返回类型 | 说明 |
+| ------ | -------- | ---- |
+| color() | Color | 导航栏背景 `?couiColorBar`：浅色 `#FAFAFA`，深色 `#1E1E1E` |
 
 ### FloatingNavigationBarDefaults 对象
 
@@ -155,15 +169,36 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 | 常量名                   | 类型  | 说明                       | 默认值 |
 | ------------------------ | ----- | -------------------------- | ------ |
 | CornerRadius             | Dp    | 圆角半径：`COUIRoundCorner.Full`，任意高度都是胶囊（COUI 17 高度一半的软胶囊） | 72.dp  |
-| HorizontalOutSidePadding | Dp    | 外部水平内边距             | 36.dp  |
-| ShadowElevation          | Dp    | 阴影高度                   | 1.dp   |
-| HorizontalPadding        | Dp    | 内部水平内边距             | 12.dp  |
-| ItemSpacing              | Dp    | 项目间距                   | 12.dp  |
-| IconSize                 | Dp    | 图标尺寸                   | 28.dp  |
-| IconPadding              | Dp    | 图标周围的内边距           | 10.dp  |
-| SelectedPressedAlpha     | Float | 选中项按压时的透明度       | 0.5f   |
-| UnselectedPressedAlpha   | Float | 未选中项按压时的透明度     | 0.6f   |
-| UnselectedAlpha          | Float | 未选中项的透明度           | 0.4f   |
+| HorizontalOutSidePadding | Dp    | 胶囊两侧最小距离（`coui_bottom_floating_navigation_bar_padding_horizontal`） | 16.dp |
+| VerticalOutSidePadding   | Dp    | 胶囊上下留白（56dp 胶囊居中于 88dp 容器） | 16.dp |
+| ShadowElevation          | Dp    | 投影模糊半径，近似 COUI 17 焦散阴影（高度 24dp，alpha 45） | 24.dp |
+| Height                   | Dp    | 胶囊高度                   | 56.dp  |
+| HorizontalPadding        | Dp    | 胶囊内部水平内边距         | 12.dp  |
+| ItemSpacing              | Dp    | 项目间距                   | 8.dp   |
+| ItemMaxWidth             | Dp    | 项目宽度；放不下时等比缩小 | 70.dp  |
+| ItemHeight               | Dp    | 项目高度，在胶囊内垂直居中 | 48.dp  |
+| IconSize                 | Dp    | 图标尺寸                   | 24.dp  |
+| IconTopPadding           | Dp    | 图标距项目顶部的距离       | 4.dp   |
+| LabelTopSpacing          | Dp    | 图标与标签的间距           | 2.dp   |
+| LabelTextSize            | Dp    | 标签字号，单位 dp（不随字体缩放） | 10.dp |
+| HiddenScale              | Float | 隐藏时胶囊的缩放           | 0.8f   |
+| HiddenBlurRadiusPx       | Float | 隐藏时胶囊自身的模糊半径（原始像素） | 30f |
+
+#### 函数
+
+| 函数名 | 返回类型 | 说明 |
+| ------ | -------- | ---- |
+| color() | Color | 不透明填充，COUI 无模糊时的回退色 `?couiColorBar`：浅色 `#FAFAFA`，深色 `#1E1E1E` |
+| backdropSpec(isDark) | MaterialBackdropSpec | COUI 17 底栏材质 `TYPE_FRAMEWORK_BOTTOM_BAR`：25px 模糊，然后浅色 `#B3666666` COLOR_DODGE + `#99F5F5F5` LUMINOSITY，深色 `#80666666` OVERLAY + `#B3262626` LUMINOSITY |
+| itemColors() | FloatingNavigationBarColors | 导航项内容色：选中 `#E6000000` / `#E6FFFFFF`，未选中 `#B8000000` / `#B8FFFFFF`，禁用 `#42000000` / `#4DFFFFFF` |
+
+### FloatingNavigationBarColors 类
+
+| 属性名          | 类型  | 说明                   |
+| --------------- | ----- | ---------------------- |
+| selectedColor   | Color | 选中项的图标与标签颜色 |
+| unselectedColor | Color | 未选中项的图标与标签颜色 |
+| disabledColor   | Color | 禁用项的图标与标签颜色 |
 
 ### NavigationBarDisplayMode 枚举
 
@@ -174,7 +209,7 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 | TextOnly              | 仅显示文本             |
 | IconWithSelectedLabel | 始终显示图标，仅选中时显示文本 |
 
-设置在 `NavigationBar` 上的显示模式会通过 `LocalNavigationBarDisplayMode` 组合局部值传递给各导航项。`FloatingNavigationBar` 没有 `mode` 参数——其导航项始终仅显示图标。
+设置在 `NavigationBar` 上的显示模式会通过 `LocalNavigationBarDisplayMode` 组合局部值传递给各导航项。`FloatingNavigationBar` 没有 `mode` 参数——其导航项始终显示图标加其下标签。
 
 ### NavigationItem 属性
 
@@ -260,6 +295,35 @@ FloatingNavigationBar(
 FloatingNavigationBar(
     showDivider = true, // Draw a thin divider ring around the bar
     shadowElevation = 0.dp // Disable the drop shadow
+) {
+    // ... items ...
+}
+```
+
+#### 底栏材质模糊
+
+COUI 17 用框架底栏材质填充胶囊：25px 背景模糊叠加两层混合色。coui-ui 自身不采集背景，因此通过 `backgroundModifier` 传入模糊（例如基于 coui-blur `couiViewBlur` 的 `MaterialBackdropProvider`），并把填充色设为透明：
+
+```kotlin
+val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+FloatingNavigationBar(
+    color = Color.Transparent,
+    backgroundModifier = backdropProvider.materialBackdrop(
+        spec = FloatingNavigationBarDefaults.backdropSpec(isDark),
+        shape = RoundedCornerShape(FloatingNavigationBarDefaults.CornerRadius),
+    ),
+) {
+    // ... items ...
+}
+```
+
+背景采集层只能记录页面内容，不能包含导航栏本身：把导航栏放在采集层之外（例如 `Scaffold` 的 `bottomBar`）。
+
+#### 显示与隐藏
+
+```kotlin
+FloatingNavigationBar(
+    visible = !isScrollingDown, // Alpha, scale 0.8 and blur springs
 ) {
     // ... items ...
 }
