@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,9 @@ data class DateValue(
  * Three scroll wheels (year / month / day) arranged like the COUI date picker:
  * the columns are centered as a group, the day range follows the selected
  * year and month (leap years included), and the day is clamped when a shorter
- * month is selected. All columns wrap around, matching COUIDatePicker.
+ * month is selected. All columns wrap around, matching COUIDatePicker. Two hairlines frame
+ * the selected row at the center ± 24dp, inset 16dp from both sides, and holding a row above
+ * or below the center steps the year and day every 100ms and the month every 200ms.
  *
  * @param value The currently selected date. Out-of-range fields are coerced.
  * @param onValueChange The callback invoked when the selected date changes.
@@ -58,6 +61,7 @@ data class DateValue(
  * @param monthColumnWidth The width of the month column.
  * @param dayColumnWidth The width of the day column.
  * @param colors The [NumberPickerColors] for the wheels.
+ * @param dividerColor The color of the two hairlines around the selected row.
  * @param textStyle The [TextStyle] for the wheel items.
  * @param itemHeight The height of each wheel item.
  * @param insideMargin The padding around the wheel columns.
@@ -76,6 +80,7 @@ fun DatePicker(
     monthColumnWidth: Dp = DatePickerDefaults.MonthColumnWidth,
     dayColumnWidth: Dp = DatePickerDefaults.DayColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
+    dividerColor: Color = COUITheme.colorScheme.dividerLine,
     textStyle: TextStyle = COUITheme.textStyles.title3,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = DatePickerDefaults.InsideMargin,
@@ -116,6 +121,7 @@ fun DatePicker(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .numberPickerDividers(dividerColor)
             .padding(insideMargin),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -128,6 +134,7 @@ fun DatePicker(
             range = yearRange,
             label = yearLabel,
             wrapAround = true,
+            longPressStepInterval = DatePickerDefaults.YearStepInterval,
             colors = colors,
             textStyle = textStyle,
             itemHeight = itemHeight,
@@ -140,6 +147,7 @@ fun DatePicker(
             range = 1..12,
             label = monthLabel,
             wrapAround = true,
+            longPressStepInterval = DatePickerDefaults.MonthStepInterval,
             colors = colors,
             textStyle = textStyle,
             itemHeight = itemHeight,
@@ -152,6 +160,7 @@ fun DatePicker(
             range = 1..daysOfMonth,
             label = dayLabel,
             wrapAround = true,
+            longPressStepInterval = DatePickerDefaults.DayStepInterval,
             colors = colors,
             textStyle = textStyle,
             itemHeight = itemHeight,
@@ -178,6 +187,15 @@ object DatePickerDefaults {
 
     /** Padding around the wheel columns (COUI coui_number_picker_view_padding_vertical). */
     val InsideMargin = PaddingValues(vertical = 12.dp)
+
+    /** Auto-repeat interval of the year wheel while a side row is held (COUIDatePicker). */
+    val YearStepInterval: Long = 100L
+
+    /** Auto-repeat interval of the month wheel while a side row is held (COUIDatePicker). */
+    val MonthStepInterval: Long = 200L
+
+    /** Auto-repeat interval of the day wheel while a side row is held (COUIDatePicker). */
+    val DayStepInterval: Long = 100L
 
     /** Default year label: the plain year number. */
     val YearLabel: (Int) -> String = { it.toString() }

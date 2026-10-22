@@ -3,11 +3,9 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -18,10 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -47,7 +45,9 @@ data class TimeValue(
  * it before the hour wheel for locales whose time pattern starts with the
  * day period (e.g. Chinese) and after the minute wheel otherwise, which is
  * controlled here by [amPmFirst]. Optional unit labels (e.g. "h" / "min")
- * are drawn beside the selected row, matching the COUI unit text.
+ * are drawn after the selected value on its baseline, matching the COUI unit
+ * text. Two hairlines frame the selected row at the center ± 24dp, inset 16dp
+ * from both sides, and the AM/PM wheel uses an 18dp unselected text size.
  *
  * @param value The currently selected time. The hour is always in 24-hour form.
  * @param onValueChange The callback invoked when the selected time changes.
@@ -65,6 +65,7 @@ data class TimeValue(
  * @param minuteColumnWidth The width of the minute column.
  * @param amPmColumnWidth The width of the AM/PM column.
  * @param colors The [NumberPickerColors] for the wheels.
+ * @param dividerColor The color of the two hairlines around the selected row.
  * @param textStyle The [TextStyle] for the wheel items.
  * @param itemHeight The height of each wheel item.
  * @param insideMargin The padding around the wheel columns.
@@ -85,6 +86,7 @@ fun TimePicker(
     minuteColumnWidth: Dp = TimePickerDefaults.MinuteColumnWidth,
     amPmColumnWidth: Dp = TimePickerDefaults.AmPmColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
+    dividerColor: Color = COUITheme.colorScheme.dividerLine,
     textStyle: TextStyle = COUITheme.textStyles.title3,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = TimePickerDefaults.InsideMargin,
@@ -140,6 +142,7 @@ fun TimePicker(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .numberPickerDividers(dividerColor)
             .padding(insideMargin),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -156,26 +159,29 @@ fun TimePicker(
                 itemHeight = itemHeight,
             )
         }
-        WheelWithUnit(
+        NumberPicker(
             value = displayHour,
             onValueChange = onHourChange,
+            modifier = Modifier.width(hourColumnWidth),
             enabled = enabled,
             range = hourRange,
             label = hourLabel,
-            columnWidth = hourColumnWidth,
             unit = hourUnit,
+            wrapAround = true,
             colors = colors,
             textStyle = textStyle,
             itemHeight = itemHeight,
         )
-        WheelWithUnit(
+        NumberPicker(
             value = coercedMinute,
             onValueChange = onMinuteChange,
+            modifier = Modifier.width(minuteColumnWidth),
             enabled = enabled,
             range = 0..59,
             label = TwoDigitLabel,
-            columnWidth = minuteColumnWidth,
             unit = minuteUnit,
+            wrapAround = true,
+            longPressStepInterval = TimePickerDefaults.MinuteStepInterval,
             colors = colors,
             textStyle = textStyle,
             itemHeight = itemHeight,
@@ -190,48 +196,6 @@ fun TimePicker(
                 colors = colors,
                 textStyle = textStyle,
                 itemHeight = itemHeight,
-            )
-        }
-    }
-}
-
-@Composable
-private fun WheelWithUnit(
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    enabled: Boolean,
-    range: IntRange,
-    label: (Int) -> String,
-    columnWidth: Dp,
-    unit: String,
-    colors: NumberPickerColors,
-    textStyle: TextStyle,
-    itemHeight: Dp,
-) {
-    Box {
-        NumberPicker(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.width(columnWidth),
-            enabled = enabled,
-            range = range,
-            label = label,
-            wrapAround = true,
-            colors = colors,
-            textStyle = textStyle,
-            itemHeight = itemHeight,
-        )
-        if (unit.isNotEmpty()) {
-            // COUI draws the unit at the selected value's trailing edge, offset from the wheel center.
-            Text(
-                text = unit,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .offset(x = columnWidth / 2 + TimePickerDefaults.UnitTextOffset),
-                color = colors.selectedTextColor(enabled),
-                fontSize = TimePickerDefaults.UnitFontSize,
-                maxLines = 1,
-                softWrap = false,
             )
         }
     }
@@ -259,6 +223,7 @@ private fun AmPmWheel(
         wrapAround = false,
         colors = colors,
         textStyle = textStyle,
+        unselectedTextSize = TimePickerDefaults.AmPmUnselectedTextSize,
         itemHeight = itemHeight,
     )
 }
@@ -280,11 +245,11 @@ object TimePickerDefaults {
     /** Padding around the wheel columns (COUI coui_number_picker_view_padding_vertical). */
     val InsideMargin = PaddingValues(vertical = 12.dp)
 
-    /** Offset of the unit label from the wheel center: selected value width / 2 + 4dp margin. */
-    val UnitTextOffset = 13.dp
+    /** Unselected text size of the AM/PM wheel (COUI coui_time_limit_picker startTextSize). */
+    val AmPmUnselectedTextSize = 18.dp
 
-    /** Font size of the unit label (COUI coui_numberpicker_unit_textSize). */
-    val UnitFontSize = 14.sp
+    /** Auto-repeat interval of the minute wheel while a side row is held (COUITimeLimitPicker). */
+    val MinuteStepInterval: Long = 100L
 
     /** Default AM label, as COUI shows in English. */
     val AmLabel = "AM"

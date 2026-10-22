@@ -3,66 +3,96 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.exponentialDecay
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
-import androidx.compose.foundation.layout.Box
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.util.fastRoundToInt
-import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import kotlinx.coroutines.flow.distinctUntilChanged
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.exp
+import kotlin.math.floor
+import kotlin.math.ln
+import kotlin.math.roundToInt
+import kotlin.math.sign
 
 /**
  * A [NumberPicker] component with COUI style.
  *
- * A vertical scroll picker that displays a range of numbers with the selected value centered.
- * The centered item is enlarged and highlighted; items transition to the normal size and
- * color within half an item of the center, matching the COUI picker.
+ * A vertical scroll wheel that shows a range of values with the selected one centered, matching
+ * COUINumberPicker:
+ * - every row is drawn twice and hard-clipped at the center band (center ± 24dp): the part
+ *   inside the band uses [selectedTextSize] and the selected color, the part outside uses
+ *   [unselectedTextSize] and the unselected color. There is no gradual blend.
+ * - a fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s),
+ *   lands on a whole row and finishes with a 300ms snap.
+ * - [onValueChange] and a haptic tick fire on every value change while the wheel moves, not only
+ *   when it settles.
+ * - tapping the row above or below the center steps by one; holding it repeats the step every
+ *   [longPressStepInterval] milliseconds.
+ *
+ * Text sizes are in dp, not sp, so they do not follow the system font scale (like COUI).
  *
  * @param value The current selected value. If outside [range], it will be coerced into the range.
- * @param onValueChange The callback invoked when the selected value changes.
+ * @param onValueChange The callback invoked whenever the selected value changes.
  * @param modifier The modifier to be applied to the [NumberPicker].
  * @param enabled Whether the [NumberPicker] is enabled for user interaction.
  * @param range The range of selectable values.
  * @param label A function that converts a value to its display string.
+ * @param unit A unit label drawn after the selected value (COUI setUnitText); empty to hide.
  * @param visibleItemCount The number of visible items. Must be odd and at least 3.
- * @param wrapAround Whether the picker wraps around from the last item to the first (infinite scrolling).
+ * @param wrapAround Whether the picker wraps around from the last item to the first (infinite
+ *   scrolling). As in COUI, wrapping only applies when the range has more items than
+ *   [visibleItemCount].
+ * @param longPressStepInterval The interval, in milliseconds, between auto-repeated steps while a
+ *   row above or below the center is held.
  * @param colors The [NumberPickerColors] for this [NumberPicker].
- * @param textStyle The [TextStyle] for the picker items.
+ * @param textStyle The base [TextStyle] for the items. Its font size is replaced by
+ *   [selectedTextSize] and [unselectedTextSize]; a missing font weight defaults to Medium.
+ * @param selectedTextSize The text size inside the center band.
+ * @param unselectedTextSize The text size outside the center band.
  * @param itemHeight The height of each item in the picker.
  */
 @Composable
@@ -73,10 +103,14 @@ fun NumberPicker(
     enabled: Boolean = true,
     range: IntRange = 0..10,
     label: (Int) -> String = { it.toString() },
+    unit: String = "",
     visibleItemCount: Int = 3,
     wrapAround: Boolean = false,
+    longPressStepInterval: Long = NumberPickerDefaults.LongPressStepInterval,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
     textStyle: TextStyle = COUITheme.textStyles.title3,
+    selectedTextSize: Dp = NumberPickerDefaults.SelectedTextSize,
+    unselectedTextSize: Dp = NumberPickerDefaults.UnselectedTextSize,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
 ) {
     require(visibleItemCount % 2 == 1 && visibleItemCount >= 3) {
@@ -86,210 +120,402 @@ fun NumberPicker(
         "range must not be empty"
     }
 
-    val currentOnValueChange by rememberUpdatedState(onValueChange)
     val itemCount = range.last - range.first + 1
     val coercedValue = value.coerceIn(range)
     val currentIndex = coercedValue - range.first
-    val halfVisibleCount = visibleItemCount / 2
-    val hapticFeedback = LocalHapticFeedback.current
+    // COUINumberPicker.updateWrapSelectorWheel: max - min >= rows and wrapping preferred.
+    val canWrap = wrapAround && itemCount > visibleItemCount
 
-    // Drag offset (updated synchronously, no coroutine needed)
-    var dragOffset by remember { mutableFloatStateOf(0f) }
-    // Fling/snap animated offset
-    val flingAnimatable = remember { Animatable(0f) }
-    var isDragging by remember { mutableStateOf(false) }
-    var isUserScrolling by remember { mutableStateOf(false) }
-    var itemHeightPx by remember { mutableIntStateOf(0) }
+    val performHaptic = rememberCouiHaptic()
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
 
-    // Total offset combines drag + fling
-    val totalOffset by remember {
-        derivedStateOf { dragOffset + flingAnimatable.value }
+    // Wheel position in rows: the row at the center is `position`. Unbounded while wrapping;
+    // normalised back into 0 until itemCount whenever the wheel comes to rest.
+    val position = remember { Animatable(currentIndex.toFloat()) }
+    // Index last reported to the caller (not wrapped), advanced with COUI's 0.95-row hysteresis.
+    val tracker = remember { NumberPickerTracker(currentIndex) }
+    var pressed by remember { mutableStateOf(false) }
+    var animationJob by remember { mutableStateOf<Job?>(null) }
+
+    val latestOnValueChange by rememberUpdatedState(onValueChange)
+    val latestPerformHaptic by rememberUpdatedState(performHaptic)
+    val latestRangeStart by rememberUpdatedState(range.first)
+    val latestItemCount by rememberUpdatedState(itemCount)
+    val latestCanWrap by rememberUpdatedState(canWrap)
+    val latestStepInterval by rememberUpdatedState(longPressStepInterval)
+
+    fun wrapIndex(index: Int): Int = if (latestCanWrap) {
+        index.mod(latestItemCount)
+    } else {
+        index.coerceIn(0, latestItemCount - 1)
     }
 
-    // Sync offset when value changes externally
-    LaunchedEffect(coercedValue) {
-        if (!isDragging && dragOffset == 0f) {
-            flingAnimatable.snapTo(0f)
+    fun clampPosition(target: Float): Float = if (latestCanWrap) target else target.coerceIn(0f, (latestItemCount - 1).toFloat())
+
+    // Follow external value / range changes while the wheel is at rest.
+    LaunchedEffect(currentIndex, itemCount, canWrap) {
+        if (!pressed && animationJob?.isActive != true && (wrapIndex(tracker.reported) != currentIndex || position.value != currentIndex.toFloat())) {
+            tracker.rebase(currentIndex) { position.snapTo(currentIndex.toFloat()) }
         }
     }
 
-    // Haptic feedback when crossing item boundaries during scroll
-    val effectiveIndex by remember(currentIndex, itemCount, wrapAround) {
-        derivedStateOf {
-            val rawIndex = currentIndex + totalOffset.fastRoundToInt()
-            if (wrapAround) {
-                ((rawIndex % itemCount) + itemCount) % itemCount
-            } else {
-                rawIndex.coerceIn(0, itemCount - 1)
-            }
-        }
-    }
-
-    var lastHapticIndex by remember { mutableIntStateOf(currentIndex) }
+    // COUINumberPicker.scrollBy: the value changes once the wheel has moved 0.95 of a row, and every
+    // change notifies the listener and plays the feedback (setValueInternal -> performFeedback).
     LaunchedEffect(Unit) {
-        snapshotFlow { effectiveIndex }
-            .distinctUntilChanged()
-            .collect { index ->
-                if (index != lastHapticIndex) {
-                    if (isUserScrolling) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    }
-                    lastHapticIndex = index
-                }
-            }
-    }
-
-    val totalHeight = itemHeight * visibleItemCount
-
-    val draggableState = rememberDraggableState { delta ->
-        if (itemHeightPx > 0) {
-            val newOffset = dragOffset - delta / itemHeightPx
-            dragOffset = if (wrapAround) {
-                newOffset
-            } else {
-                newOffset.coerceIn(
-                    -(currentIndex.toFloat()),
-                    (itemCount - 1 - currentIndex).toFloat(),
-                )
+        snapshotFlow { position.value }.collect {
+            if (tracker.rebasing) return@collect
+            val next = numberPickerHysteresisIndex(tracker.reported, position.value)
+            if (next != tracker.reported) {
+                tracker.reported = next
+                latestPerformHaptic(CouiHapticEffect.Strength)
+                latestOnValueChange(latestRangeStart + wrapIndex(next))
             }
         }
     }
+
+    // Snap to the nearest row (COUI mAdjustScroller: 300ms, PathInterpolator(0, 0, 0.4, 1)), then
+    // normalise the position so it stays small while wrapping.
+    suspend fun settle() {
+        val target = clampPosition(position.value.roundToInt().toFloat())
+        if (position.value != target) {
+            position.animateTo(target, tween(NumberPickerSnapDurationMillis, easing = NumberPickerSnapEasing))
+        }
+        val index = wrapIndex(position.value.roundToInt())
+        if (position.value != index.toFloat() || tracker.reported != index) {
+            tracker.rebase(index) { position.snapTo(index.toFloat()) }
+        }
+    }
+
+    fun launchAnimation(block: suspend () -> Unit) {
+        animationJob?.cancel()
+        animationJob = scope.launch { block() }
+    }
+
+    // COUINumberPicker.changeValueByOne: one row over 300ms on the fling scroller, then adjust.
+    fun step(direction: Int) {
+        val from = (if (animationJob?.isActive == true) position.targetValue else position.value).roundToInt()
+        val target = clampPosition((from + direction).toFloat())
+        launchAnimation {
+            position.animateTo(target, tween(NumberPickerSnapDurationMillis, easing = NumberPickerFlingEasing))
+            settle()
+        }
+    }
+
+    fun fling(velocity: Float, rowPx: Float, from: Float) {
+        val fling = numberPickerFling(velocity, density.density)
+        val rows = numberPickerQuantisedRows(fling.distance, rowPx)
+        // A downward finger (positive velocity) reveals the previous values.
+        val target = clampPosition((from - sign(velocity) * rows).roundToInt().toFloat())
+        launchAnimation {
+            if (position.value != target) {
+                position.animateTo(target, tween(fling.durationMillis.coerceAtLeast(1), easing = NumberPickerFlingEasing))
+            }
+            settle()
+        }
+    }
+
+    val textMeasurer = rememberTextMeasurer(cacheSize = (visibleItemCount + 3) * 2 + 2)
+    val baseStyle = remember(textStyle) {
+        // Rows are centered on the font metrics, so the theme line height is dropped.
+        textStyle.copy(
+            fontWeight = textStyle.fontWeight ?: FontWeight.Medium,
+            lineHeight = TextUnit.Unspecified,
+        )
+    }
+    val selectedStyle = remember(baseStyle, selectedTextSize, density) {
+        baseStyle.copy(fontSize = with(density) { selectedTextSize.toSp() })
+    }
+    val unselectedStyle = remember(baseStyle, unselectedTextSize, density) {
+        baseStyle.copy(fontSize = with(density) { unselectedTextSize.toSp() })
+    }
+    // COUI draws the unit with Typeface.DEFAULT (regular weight) at 14dp.
+    val unitStyle = remember(density) {
+        TextStyle(fontSize = with(density) { NumberPickerDefaults.UnitTextSize.toSp() }, fontWeight = FontWeight.Normal)
+    }
+    val selectedColor = colors.selectedTextColor(enabled)
+    val unselectedColor = colors.unselectedTextColor(enabled)
+    val latestLabel by rememberUpdatedState(label)
 
     val displayValue = label(coercedValue)
-    Box(
+    Spacer(
         modifier = modifier
             .fillMaxWidth()
-            .height(totalHeight)
+            .height(itemHeight * visibleItemCount)
             .clipToBounds()
             .semantics {
                 contentDescription = "$displayValue, ${range.first} - ${range.last}"
             }
-            .onSizeChanged { size ->
-                itemHeightPx = size.height / visibleItemCount
-            }
             .then(
                 if (enabled) {
-                    Modifier.draggable(
-                        orientation = Orientation.Vertical,
-                        state = draggableState,
-                        onDragStarted = {
-                            // Stop any ongoing fling animation
-                            flingAnimatable.stop()
-                            // Absorb fling remainder into drag
-                            dragOffset += flingAnimatable.value
-                            flingAnimatable.snapTo(0f)
-                            isDragging = true
-                            isUserScrolling = true
-                        },
-                        onDragStopped = { velocity ->
-                            isDragging = false
-                            if (itemHeightPx > 0) {
-                                // Transfer drag offset to fling animatable
-                                val currentDragOffset = dragOffset
-                                dragOffset = 0f
-                                flingAnimatable.snapTo(currentDragOffset)
-
-                                val velocityInItems = -velocity / itemHeightPx
-                                val decay = exponentialDecay<Float>(frictionMultiplier = 2f)
-                                // Set bounds for non-wrap mode
-                                if (!wrapAround) {
-                                    val min = -(currentIndex.toFloat())
-                                    val max = (itemCount - 1 - currentIndex).toFloat()
-                                    flingAnimatable.updateBounds(min, max)
-                                }
-                                // Fling with real decay for natural inertia
-                                flingAnimatable.animateDecay(velocityInItems, decay)
-                                // Reset bounds
-                                flingAnimatable.updateBounds(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY)
-                                // Snap to nearest item
-                                val snappedTarget = flingAnimatable.value.fastRoundToInt().toFloat()
-                                flingAnimatable.animateTo(
-                                    targetValue = snappedTarget,
-                                    animationSpec = spring(dampingRatio = 1f, stiffness = 400f),
-                                )
-                                val offsetInt = flingAnimatable.value.fastRoundToInt()
-                                val newIndex = if (wrapAround) {
-                                    ((currentIndex + offsetInt) % itemCount + itemCount) % itemCount
-                                } else {
-                                    (currentIndex + offsetInt).coerceIn(0, itemCount - 1)
-                                }
-                                val newValue = range.first + newIndex
-                                if (newValue != coercedValue) {
-                                    currentOnValueChange(newValue)
-                                }
-                                isUserScrolling = false
-                                flingAnimatable.snapTo(0f)
+                    Modifier.pointerInput(visibleItemCount, density) {
+                        val touchSlop = viewConfiguration.touchSlop
+                        val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            val rowPx = size.height.toFloat() / visibleItemCount
+                            val centerY = size.height / 2f
+                            pressed = true
+                            // A touch while the wheel moves only stops it (COUI onInterceptTouchEvent).
+                            val wasMoving = animationJob?.isActive == true
+                            animationJob?.cancel()
+                            val holdDirection = when {
+                                wasMoving -> 0
+                                down.position.y < centerY - rowPx / 2f -> -1
+                                down.position.y > centerY + rowPx / 2f -> 1
+                                else -> 0
                             }
-                        },
-                    )
+                            val holdJob = if (holdDirection != 0) {
+                                scope.launch {
+                                    delay(longPressTimeout)
+                                    while (true) {
+                                        step(holdDirection)
+                                        delay(latestStepInterval)
+                                    }
+                                }
+                            } else {
+                                null
+                            }
+
+                            val tracker = VelocityTracker()
+                            tracker.addPosition(down.uptimeMillis, down.position)
+                            var dragging = false
+                            var dragPosition = position.value
+                            var lastY = down.position.y
+                            var upY = down.position.y
+                            var upTime = down.uptimeMillis
+                            var released = false
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                tracker.addPosition(change.uptimeMillis, change.position)
+                                if (!change.pressed) {
+                                    released = true
+                                    upY = change.position.y
+                                    upTime = change.uptimeMillis
+                                    break
+                                }
+                                if (!dragging && abs(change.position.y - down.position.y) > touchSlop) {
+                                    dragging = true
+                                    holdJob?.cancel()
+                                    animationJob?.cancel()
+                                    dragPosition = position.value
+                                } else if (dragging) {
+                                    dragPosition = clampPosition(dragPosition - (change.position.y - lastY) / rowPx)
+                                    val target = dragPosition
+                                    scope.launch { position.snapTo(target) }
+                                }
+                                if (dragging) change.consume()
+                                lastY = change.position.y
+                            }
+                            holdJob?.cancel()
+                            pressed = false
+
+                            val velocity = tracker.calculateVelocity().y
+                                .coerceIn(-NumberPickerMaxFlingVelocity, NumberPickerMaxFlingVelocity)
+                            val stepping = animationJob?.isActive == true
+                            when {
+                                released && abs(velocity) > NumberPickerMinFlingVelocity ->
+                                    fling(velocity * NumberPickerFlingVelocityRatio, rowPx, if (dragging) dragPosition else position.value)
+
+                                !released ||
+                                    abs(upY - down.position.y) > touchSlop ||
+                                    upTime - down.uptimeMillis >= longPressTimeout ->
+                                    if (!stepping) launchAnimation { settle() }
+
+                                else -> {
+                                    // Tap: the row above steps back, the row below steps forward.
+                                    val row = floor(upY / rowPx).toInt() - visibleItemCount / 2
+                                    if (row != 0) step(sign(row.toFloat()).toInt()) else launchAnimation { settle() }
+                                }
+                            }
+                        }
+                    }
                 } else {
                     Modifier
                 },
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (itemHeightPx > 0) {
-            val currentTotalOffset = totalOffset
-            val centerItemOffset = currentTotalOffset - currentTotalOffset.fastRoundToInt()
-            val roundedOffset = currentTotalOffset.fastRoundToInt()
-            val selectedColor = colors.selectedTextColor(enabled)
-            val unselectedColor = colors.unselectedTextColor(enabled)
-            // COUI renders picker text with sans-serif-medium
-            val resolvedTextStyle = if (textStyle.fontWeight == null) textStyle.copy(fontWeight = FontWeight.Medium) else textStyle
-
-            for (i in -halfVisibleCount - 1..halfVisibleCount + 1) {
-                val rawItemIndex = currentIndex + i + roundedOffset
-                val itemIndex = if (wrapAround) {
-                    ((rawItemIndex % itemCount) + itemCount) % itemCount
-                } else {
-                    if (rawItemIndex !in 0..<itemCount) continue
-                    rawItemIndex
-                }
-
-                val distanceFromCenter = i.toFloat() - centerItemOffset
-                // COUI completes the focus-to-normal transition within half an item of the center;
-                // items are never faded out per-item (the normal color carries its own alpha).
-                val transition = (abs(distanceFromCenter) * 2f).coerceIn(0f, 1f)
-
-                // COUI focus text is 20dp and normal text is 16dp, so the scale floor is 0.8.
-                val scale = 1f - 0.2f * transition
-                val yOffset = distanceFromCenter * itemHeightPx
-
-                val textColor = Color(
-                    red = lerp(selectedColor.red, unselectedColor.red, transition),
-                    green = lerp(selectedColor.green, unselectedColor.green, transition),
-                    blue = lerp(selectedColor.blue, unselectedColor.blue, transition),
-                    alpha = lerp(selectedColor.alpha, unselectedColor.alpha, transition),
+            )
+            .drawBehind {
+                drawNumberPickerRows(
+                    textMeasurer = textMeasurer,
+                    position = position.value,
+                    visibleItemCount = visibleItemCount,
+                    itemCount = itemCount,
+                    wrap = canWrap,
+                    labelOf = { latestLabel(range.first + it) },
+                    unit = unit,
+                    selectedStyle = selectedStyle,
+                    unselectedStyle = unselectedStyle,
+                    unitStyle = unitStyle,
+                    selectedColor = selectedColor,
+                    unselectedColor = unselectedColor,
                 )
+            },
+    )
+}
 
-                Text(
-                    text = label(range.first + itemIndex),
-                    modifier = Modifier
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                            translationY = yOffset
-                        },
-                    style = resolvedTextStyle,
-                    color = textColor,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+private fun DrawScope.drawNumberPickerRows(
+    textMeasurer: TextMeasurer,
+    position: Float,
+    visibleItemCount: Int,
+    itemCount: Int,
+    wrap: Boolean,
+    labelOf: (Int) -> String,
+    unit: String,
+    selectedStyle: TextStyle,
+    unselectedStyle: TextStyle,
+    unitStyle: TextStyle,
+    selectedColor: Color,
+    unselectedColor: Color,
+) {
+    val rowPx = size.height / visibleItemCount
+    val centerY = size.height / 2f
+    val bandHalf = NumberPickerBandHalfHeight.toPx()
+    val bandTop = centerY - bandHalf
+    val bandBottom = centerY + bandHalf
+    val half = visibleItemCount / 2
+    val first = floor(position).toInt() - half - 1
+    val last = ceil(position).toInt() + half + 1
+
+    for (row in first..last) {
+        val index = if (wrap) {
+            row.mod(itemCount)
+        } else {
+            if (row !in 0 until itemCount) continue
+            row
+        }
+        val text = labelOf(index)
+        val normal = measureRow(textMeasurer, text, unselectedStyle)
+        val focus = measureRow(textMeasurer, text, selectedStyle)
+        // Both passes share the normal-size baseline, as in COUINumberPicker.onDraw.
+        val rowCenter = centerY + (row - position) * rowPx
+        val baseline = rowCenter - normal.size.height / 2f + normal.firstBaseline
+
+        clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Difference) {
+            drawText(normal, color = unselectedColor, topLeft = Offset(rowTextX(normal), baseline - normal.firstBaseline))
+        }
+        clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Intersect) {
+            drawText(focus, color = selectedColor, topLeft = Offset(rowTextX(focus), baseline - focus.firstBaseline))
+        }
+    }
+
+    if (unit.isNotEmpty()) {
+        // The unit sits on the resting center row's baseline minus 2dp, after an 18dp value slot
+        // plus a 4dp margin (coui_number_picker_text_width / _text_margin_start).
+        val metrics = measureRow(textMeasurer, "0", unselectedStyle)
+        val baseline = centerY - metrics.size.height / 2f + metrics.firstBaseline - NumberPickerUnitMarginBottom.toPx()
+        val unitLayout = measureRow(textMeasurer, unit, unitStyle)
+        val x = size.width / 2f + (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
+        drawText(unitLayout, color = selectedColor, topLeft = Offset(x, baseline - unitLayout.firstBaseline))
+    }
+}
+
+private fun measureRow(textMeasurer: TextMeasurer, text: String, style: TextStyle): TextLayoutResult = textMeasurer.measure(text = text, style = style, softWrap = false, maxLines = 1)
+
+// COUI centers the text, or left-aligns it when it is wider than the wheel.
+private fun DrawScope.rowTextX(layout: TextLayoutResult): Float = if (layout.size.width >= size.width) 0f else (size.width - layout.size.width) / 2f
+
+/**
+ * Tracks the index reported to the caller. [rebase] moves the wheel without notifying, so the
+ * hysteresis collector never sees the reported index and the position out of step.
+ */
+private class NumberPickerTracker(var reported: Int) {
+    var rebasing = false
+        private set
+
+    suspend fun rebase(index: Int, move: suspend () -> Unit) {
+        rebasing = true
+        try {
+            move()
+        } finally {
+            reported = index
+            rebasing = false
         }
     }
 }
+
+/** The spline fling distance (px) and duration (ms) COUINumberPicker uses for a release velocity. */
+internal data class NumberPickerFling(val distance: Float, val durationMillis: Int)
+
+/**
+ * COUINumberPicker.getSplineFlingDistance / getSplineFlingDuration with the AOSP scroll friction,
+ * `ppi = density * 160` and `physicalCoeff = ppi * 386.0878 * 0.84`; the duration is stretched
+ * by 1.5 as in COUINumberPicker.fling.
+ */
+internal fun numberPickerFling(velocity: Float, density: Float): NumberPickerFling {
+    val physicalCoeff = density * 160f * 386.0878f * 0.84f
+    val decelerationRate = (ln(0.78) / ln(0.9))
+    val splineDeceleration = ln(abs(velocity) * 0.35 / (NumberPickerScrollFriction * physicalCoeff))
+    val distance = NumberPickerScrollFriction * physicalCoeff *
+        exp(decelerationRate / (decelerationRate - 1.0) * splineDeceleration)
+    val duration = exp(splineDeceleration / (decelerationRate - 1.0)) * 1000.0
+    return NumberPickerFling(distance.toFloat(), (duration * 1.5).toInt())
+}
+
+/**
+ * COUINumberPicker.fling rounds a distance longer than one row down to whole rows; a shorter one
+ * keeps its fraction (and the following snap decides the row).
+ */
+internal fun numberPickerQuantisedRows(distance: Float, rowPx: Float): Float {
+    if (rowPx <= 0f) return 0f
+    val rows = distance / rowPx
+    return if (rows > 1f) floor(rows) else rows
+}
+
+/** Advances [reported] towards [position] once the wheel has moved 0.95 of a row past it. */
+internal fun numberPickerHysteresisIndex(reported: Int, position: Float): Int {
+    var index = reported
+    while (position > index + NumberPickerValueChangeThreshold) index++
+    while (position < index - NumberPickerValueChangeThreshold) index--
+    return index
+}
+
+private val NumberPickerValueChangeThreshold = 0.95f
+private val NumberPickerScrollFriction = 0.015f
+
+// COUINumberPicker: mMinimumFlingVelocity / mMaximumFlingVelocity are raw px/s, not dp-scaled.
+internal val NumberPickerMinFlingVelocity = 750f
+internal val NumberPickerMaxFlingVelocity = 5000f
+
+// COUINumberPicker.getDampRatio: min(1.8, 1.6).
+internal val NumberPickerFlingVelocityRatio = 1.6f
+private val NumberPickerSnapDurationMillis = 300
+
+// COUINumberPicker FLING_INTERPOLATOR (adjust scroller) and SLOW_FLING_INTERPOLATOR (fling scroller).
+private val NumberPickerSnapEasing = CubicBezierEasing(0f, 0f, 0.4f, 1f)
+private val NumberPickerFlingEasing = CubicBezierEasing(0f, 0.23f, 0.1f, 1f)
+
+// coui_selected_background_radius: the center band is 2 x 24dp tall.
+private val NumberPickerBandHalfHeight = 24.dp
+private val NumberPickerSelectedValueWidth = 18.dp
+private val NumberPickerUnitMarginStart = 4.dp
+private val NumberPickerUnitMarginBottom = 2.dp
 
 /**
  * Contains default values used by [NumberPicker].
  */
 object NumberPickerDefaults {
 
+    /** Row height inside the COUI date and time pickers (135dp / 3 rows). */
     val ItemHeight = 45.dp
+
+    /** Text size inside the center band (coui_numberpicker_textSize_big). */
+    val SelectedTextSize = 20.dp
+
+    /** Text size outside the center band (coui_numberpicker_textSize_small). */
+    val UnselectedTextSize = 16.dp
+
+    /** Text size of the unit label (coui_numberpicker_unit_textSize). */
+    val UnitTextSize = 14.dp
+
+    /** Interval between auto-repeated steps while a side row is held (COUINumberPicker default). */
+    val LongPressStepInterval: Long = 300L
 
     /**
      * Creates the default [NumberPickerColors] for a [NumberPicker].
+     *
+     * COUI does not change the picker colors when it is disabled, so the disabled colors default
+     * to the enabled ones.
      *
      * @param selectedTextColor The color for the selected (center) item text.
      * @param unselectedTextColor The color for unselected item text.
@@ -300,8 +526,8 @@ object NumberPickerDefaults {
     fun colors(
         selectedTextColor: Color = COUITheme.colorScheme.onSurface,
         unselectedTextColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        disabledSelectedTextColor: Color = COUITheme.colorScheme.disabledOnSecondary,
-        disabledUnselectedTextColor: Color = COUITheme.colorScheme.disabledOnSecondary,
+        disabledSelectedTextColor: Color = selectedTextColor,
+        disabledUnselectedTextColor: Color = unselectedTextColor,
     ): NumberPickerColors = remember(
         selectedTextColor,
         unselectedTextColor,
@@ -336,3 +562,23 @@ data class NumberPickerColors(
     @Stable
     internal fun unselectedTextColor(enabled: Boolean): Color = if (enabled) unselectedTextColor else disabledUnselectedTextColor
 }
+
+/**
+ * Draws the two COUI picker hairlines at the center ± 24dp, inset 16dp from both sides
+ * (COUIDatePicker / COUITimeLimitPicker.dispatchDraw), `max(0.33dp, 1px)` thick.
+ */
+internal fun Modifier.numberPickerDividers(color: Color): Modifier = drawBehind {
+    val thickness = NumberPickerDividerThickness.toPx().toInt().coerceAtLeast(1).toFloat()
+    val inset = NumberPickerDividerInset.toPx().toInt().toFloat()
+    val radius = NumberPickerBandHalfHeight.toPx().toInt()
+    val center = size.height / 2f
+    val top = (center - radius).toInt().toFloat()
+    val bottom = (center + radius).toInt().toFloat()
+    val width = size.width - inset * 2
+    if (width <= 0f) return@drawBehind
+    drawRect(color, topLeft = Offset(inset, top), size = Size(width, thickness))
+    drawRect(color, topLeft = Offset(inset, bottom), size = Size(width, thickness))
+}
+
+private val NumberPickerDividerThickness = 0.33.dp
+private val NumberPickerDividerInset = 16.dp
