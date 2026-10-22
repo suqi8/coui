@@ -1,6 +1,6 @@
 # TimePicker
 
-`TimePicker` is a basic interactive component in COUI used for selecting a time of day with hour and minute scroll wheels, mirroring ColorOS's COUITimeLimitPicker. It supports both 24-hour and 12-hour formats; in 12-hour mode an AM/PM wheel is added, placed before the hour wheel or after the minute wheel depending on locale convention. Optional unit labels (e.g. "h" / "min") can be drawn beside the selected row like the COUI unit text.
+`TimePicker` is a basic interactive component in COUI used for selecting a time of day with hour and minute scroll wheels, mirroring ColorOS's COUITimeLimitPicker. It supports both 24-hour and 12-hour formats; in 12-hour mode an AM/PM wheel is added, placed before the hour wheel or after the minute wheel depending on locale convention. Optional unit labels (e.g. "h" / "min") are drawn after the selected value in 14dp text, on its baseline lifted by 2dp, like the COUI unit text. Two hairlines in the `dividerLine` color frame the selected row at the center ± 24dp, inset 16dp from both sides; the AM/PM wheel uses 18dp unselected text, and holding a side row of the minute wheel steps every 100ms. The wheels themselves follow [NumberPicker](./numberpicker).
 
 Times are represented by the plain `TimeValue` data class; the hour is always stored in 24-hour form (0..23) regardless of the display mode.
 
@@ -67,6 +67,7 @@ TimePicker(
 | minuteColumnWidth | Dp                  | Width of the minute column                                 | TimePickerDefaults.MinuteColumnWidth | No      |
 | amPmColumnWidth   | Dp                  | Width of the AM/PM column                                  | TimePickerDefaults.AmPmColumnWidth  | No       |
 | colors            | NumberPickerColors  | Color configuration of the wheels                          | NumberPickerDefaults.colors()       | No       |
+| dividerColor      | Color               | Color of the two hairlines around the selected row         | COUITheme.colorScheme.dividerLine   | No       |
 | textStyle         | TextStyle           | Text style for the wheel items                             | COUITheme.textStyles.title3        | No       |
 | itemHeight        | Dp                  | The height of each wheel item                              | NumberPickerDefaults.ItemHeight     | No       |
 | insideMargin      | PaddingValues       | Padding around the wheel columns                           | TimePickerDefaults.InsideMargin     | No       |
@@ -86,8 +87,8 @@ TimePicker(
 | MinuteColumnWidth | Dp            | Default width of the minute column                | 76.dp                           |
 | AmPmColumnWidth   | Dp            | Default width of the AM/PM column                 | 62.dp                           |
 | InsideMargin      | PaddingValues | Default padding around the wheel columns          | PaddingValues(vertical = 12.dp) |
-| UnitTextOffset    | Dp            | Offset of the unit label from the wheel center    | 13.dp                           |
-| UnitFontSize      | TextUnit      | Font size of the unit label                       | 14.sp                           |
+| AmPmUnselectedTextSize | Dp       | Unselected text size of the AM/PM wheel           | 18.dp                           |
+| MinuteStepInterval | Long         | Minute auto-repeat interval (ms) while held       | 100L                            |
 | AmLabel           | String        | Default AM label                                  | "AM"                            |
 | PmLabel           | String        | Default PM label                                  | "PM"                            |
 | HourUnit          | String        | Default hour unit label (hidden)                  | ""                              |

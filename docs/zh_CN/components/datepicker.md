@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。
+`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。选中行上下各有一条 `dividerLine` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp。与 COUIDatePicker 一致，按住中心上方或下方的行时，年和日每 100ms、月每 200ms 自动步进。滚轮本身的行为见 [NumberPicker](./numberpicker)。
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 
@@ -54,6 +54,7 @@ DatePicker(
 | monthColumnWidth | Dp                   | 月份列宽度                             | DatePickerDefaults.MonthColumnWidth | 否       |
 | dayColumnWidth   | Dp                   | 日列宽度                               | DatePickerDefaults.DayColumnWidth   | 否       |
 | colors           | NumberPickerColors   | 滚轮的颜色配置                         | NumberPickerDefaults.colors()       | 否       |
+| dividerColor     | Color                | 选中行上下两条细线的颜色               | COUITheme.colorScheme.dividerLine   | 否       |
 | textStyle        | TextStyle            | 滚轮项目的文本样式                     | COUITheme.textStyles.title3        | 否       |
 | itemHeight       | Dp                   | 每个滚轮项目的高度                     | NumberPickerDefaults.ItemHeight     | 否       |
 | insideMargin     | PaddingValues        | 滚轮列周围的内边距                     | DatePickerDefaults.InsideMargin     | 否       |
@@ -75,6 +76,9 @@ DatePicker(
 | MonthColumnWidth | Dp              | 月份列默认宽度             | 96.dp                           |
 | DayColumnWidth   | Dp              | 日列默认宽度               | 62.dp                           |
 | InsideMargin     | PaddingValues   | 滚轮列周围的默认内边距     | PaddingValues(vertical = 12.dp) |
+| YearStepInterval | Long            | 按住时年份自动步进间隔（毫秒） | 100L                        |
+| MonthStepInterval | Long           | 按住时月份自动步进间隔（毫秒） | 200L                        |
+| DayStepInterval  | Long            | 按住时日自动步进间隔（毫秒）   | 100L                        |
 | YearLabel        | (Int) -> String | 纯年份数字                 | { it.toString() }               |
 | MonthLabel       | (Int) -> String | 英文月份缩写               | "Jan".."Dec"                    |
 | DayLabel         | (Int) -> String | 两位补零数字               | "01".."31"                      |

@@ -1,6 +1,6 @@
 # TimePicker
 
-`TimePicker` 是 COUI 中的基础交互组件，通过时 / 分垂直滚轮选择时间，对应 ColorOS 的 COUITimeLimitPicker。支持 24 小时制与 12 小时制；12 小时制下会增加上午/下午（AM/PM）滚轮，可按语言习惯放在小时列之前或分钟列之后。还可以在选中行旁绘制单位标签（如“时”/“分”），与 COUI 的单位文本一致。
+`TimePicker` 是 COUI 中的基础交互组件，通过时 / 分垂直滚轮选择时间，对应 ColorOS 的 COUITimeLimitPicker。支持 24 小时制与 12 小时制；12 小时制下会增加上午/下午（AM/PM）滚轮，可按语言习惯放在小时列之前或分钟列之后。还可以在选中值之后绘制单位标签（如“时”/“分”），字号 14dp，基线为选中行基线上移 2dp，与 COUI 的单位文本一致。选中行上下各有一条 `dividerLine` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp；AM/PM 滚轮未选中项字号为 18dp；按住分钟滚轮的上下行时每 100ms 步进一次。滚轮本身的行为见 [NumberPicker](./numberpicker)。
 
 时间由纯数据类 `TimeValue` 表示；无论显示模式如何，小时始终以 24 小时制（0..23）存储。
 
@@ -67,6 +67,7 @@ TimePicker(
 | minuteColumnWidth | Dp                  | 分钟列宽度                                   | TimePickerDefaults.MinuteColumnWidth | 否       |
 | amPmColumnWidth   | Dp                  | AM/PM 列宽度                                 | TimePickerDefaults.AmPmColumnWidth   | 否       |
 | colors            | NumberPickerColors  | 滚轮的颜色配置                               | NumberPickerDefaults.colors()        | 否       |
+| dividerColor      | Color               | 选中行上下两条细线的颜色                     | COUITheme.colorScheme.dividerLine    | 否       |
 | textStyle         | TextStyle           | 滚轮项目的文本样式                           | COUITheme.textStyles.title3         | 否       |
 | itemHeight        | Dp                  | 每个滚轮项目的高度                           | NumberPickerDefaults.ItemHeight      | 否       |
 | insideMargin      | PaddingValues       | 滚轮列周围的内边距                           | TimePickerDefaults.InsideMargin      | 否       |
@@ -86,8 +87,8 @@ TimePicker(
 | MinuteColumnWidth | Dp            | 分钟列默认宽度                   | 76.dp                           |
 | AmPmColumnWidth   | Dp            | AM/PM 列默认宽度                 | 62.dp                           |
 | InsideMargin      | PaddingValues | 滚轮列周围的默认内边距           | PaddingValues(vertical = 12.dp) |
-| UnitTextOffset    | Dp            | 单位标签相对滚轮中心的偏移       | 13.dp                           |
-| UnitFontSize      | TextUnit      | 单位标签的字号                   | 14.sp                           |
+| AmPmUnselectedTextSize | Dp       | AM/PM 滚轮未选中项字号           | 18.dp                           |
+| MinuteStepInterval | Long         | 按住时分钟自动步进间隔（毫秒）   | 100L                            |
 | AmLabel           | String        | 默认 AM 文本                     | "AM"                            |
 | PmLabel           | String        | 默认 PM 文本                     | "PM"                            |
 | HourUnit          | String        | 默认小时单位标签（隐藏）         | ""                              |

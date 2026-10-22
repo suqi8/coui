@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` is a basic interactive component in COUI used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling.
+`DatePicker` is a basic interactive component in COUI used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling. Two hairlines in the `dividerLine` color frame the selected row at the center ± 24dp, inset 16dp from both sides. Holding a row above or below the center steps the year and day every 100ms and the month every 200ms, as in COUIDatePicker. The wheels themselves follow [NumberPicker](./numberpicker).
 
 Dates are represented by the plain `DateValue` data class, so no date/time library dependency is required.
 
@@ -54,6 +54,7 @@ DatePicker(
 | monthColumnWidth | Dp                   | Width of the month column                            | DatePickerDefaults.MonthColumnWidth | No     |
 | dayColumnWidth   | Dp                   | Width of the day column                              | DatePickerDefaults.DayColumnWidth | No       |
 | colors           | NumberPickerColors   | Color configuration of the wheels                    | NumberPickerDefaults.colors()     | No       |
+| dividerColor     | Color                | Color of the two hairlines around the selected row   | COUITheme.colorScheme.dividerLine | No       |
 | textStyle        | TextStyle            | Text style for the wheel items                       | COUITheme.textStyles.title3      | No       |
 | itemHeight       | Dp                   | The height of each wheel item                        | NumberPickerDefaults.ItemHeight   | No       |
 | insideMargin     | PaddingValues        | Padding around the wheel columns                     | DatePickerDefaults.InsideMargin   | No       |
@@ -75,6 +76,9 @@ DatePicker(
 | MonthColumnWidth | Dp              | Default width of the month column          | 96.dp                     |
 | DayColumnWidth   | Dp              | Default width of the day column            | 62.dp                     |
 | InsideMargin     | PaddingValues   | Default padding around the wheel columns   | PaddingValues(vertical = 12.dp) |
+| YearStepInterval | Long            | Year auto-repeat interval (ms) while held  | 100L                      |
+| MonthStepInterval | Long           | Month auto-repeat interval (ms) while held | 200L                      |
+| DayStepInterval  | Long            | Day auto-repeat interval (ms) while held   | 100L                      |
 | YearLabel        | (Int) -> String | Plain year number                          | { it.toString() }         |
 | MonthLabel       | (Int) -> String | Abbreviated English month names            | "Jan".."Dec"              |
 | DayLabel         | (Int) -> String | Zero-padded two digits                     | "01".."31"                |

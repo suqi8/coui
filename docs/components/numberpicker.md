@@ -1,6 +1,14 @@
 # NumberPicker
 
-`NumberPicker` is a basic interactive component in COUI used for selecting a value from a range of numbers by vertical scrolling. The selected item is centered, enlarged and highlighted, while surrounding items scale down and transition to the unselected color within half an item of the center. Supports infinite scrolling with the `wrapAround` parameter.
+`NumberPicker` is a basic interactive component in COUI used for selecting a value from a range of numbers by vertical scrolling. It follows COUINumberPicker (ColorOS 17):
+
+- Each row is drawn twice and hard-clipped at a 48dp band around the center (center ± 24dp): inside the band the text is 20dp in the selected color, outside it is 16dp in the unselected color. A row crossing the band edge is split; there is no gradual blend.
+- Text sizes are in dp, so they do not follow the system font scale.
+- A fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s), lands on a whole row and finishes with a 300ms snap.
+- `onValueChange` and a haptic tick fire on every value change while the wheel moves, not only when it stops.
+- Tapping the row above or below the center steps by one; holding it repeats the step every `longPressStepInterval` milliseconds.
+
+Supports infinite scrolling with the `wrapAround` parameter.
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=numberPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -28,6 +36,8 @@ NumberPicker(
 
 ### Disabled State
 
+As in COUI, a disabled picker keeps its colors and only ignores touch.
+
 ```kotlin
 var value by remember { mutableIntStateOf(5) }
 
@@ -41,7 +51,7 @@ NumberPicker(
 
 ### Infinite Scrolling
 
-When `wrapAround` is enabled, the picker wraps from the last item back to the first, allowing continuous scrolling.
+When `wrapAround` is enabled, the picker wraps from the last item back to the first, allowing continuous scrolling. As in COUI, wrapping only applies when the range has more items than `visibleItemCount`.
 
 ```kotlin
 var value by remember { mutableIntStateOf(0) }
@@ -66,10 +76,14 @@ NumberPicker(
 | enabled          | Boolean            | Whether the picker is enabled for user interaction                       | true                       | No       |
 | range            | IntRange           | The range of selectable values                                           | 0..10                      | No       |
 | label            | (Int) -> String    | Converts a value to its display string                                   | { it.toString() }          | No       |
+| unit             | String             | Unit label drawn after the selected value; empty to hide                 | ""                         | No       |
 | visibleItemCount | Int                | Number of visible items. Must be odd and at least 3                      | 3                          | No       |
 | wrapAround       | Boolean            | Whether the picker wraps around (infinite scrolling)                     | false                      | No       |
+| longPressStepInterval | Long          | Interval (ms) between auto-repeated steps while a side row is held       | NumberPickerDefaults.LongPressStepInterval | No |
 | colors           | NumberPickerColors | Color configuration of the picker                                        | NumberPickerDefaults.colors() | No       |
-| textStyle        | TextStyle          | Text style for picker items                                              | COUITheme.textStyles.title3 | No       |
+| textStyle        | TextStyle          | Base text style; its font size is replaced by the two sizes below        | COUITheme.textStyles.title3 | No       |
+| selectedTextSize | Dp                 | Text size inside the center band                                         | NumberPickerDefaults.SelectedTextSize | No |
+| unselectedTextSize | Dp               | Text size outside the center band                                        | NumberPickerDefaults.UnselectedTextSize | No |
 | itemHeight       | Dp                 | The height of each item in the picker                                    | NumberPickerDefaults.ItemHeight | No       |
 
 ### NumberPickerDefaults Object
@@ -81,6 +95,10 @@ The NumberPickerDefaults object provides default configurations for the NumberPi
 | Property Name | Type | Description                     | Default Value |
 | ------------- | ---- | ------------------------------- | ------------- |
 | ItemHeight    | Dp   | Default height of each item     | 45.dp         |
+| SelectedTextSize | Dp | Text size inside the center band | 20.dp       |
+| UnselectedTextSize | Dp | Text size outside the center band | 16.dp    |
+| UnitTextSize  | Dp   | Text size of the unit label     | 14.dp         |
+| LongPressStepInterval | Long | Auto-repeat interval (ms) while a side row is held | 300L |
 
 #### Methods
 
@@ -94,8 +112,8 @@ The `colors()` factory accepts the following parameters:
 | --------------------------- | ----- | ---------------------------------------------- |
 | selectedTextColor           | Color | COUITheme.colorScheme.onSurface                |
 | unselectedTextColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
-| disabledSelectedTextColor   | Color | COUITheme.colorScheme.disabledOnSecondary      |
-| disabledUnselectedTextColor | Color | COUITheme.colorScheme.disabledOnSecondary      |
+| disabledSelectedTextColor   | Color | selectedTextColor                              |
+| disabledUnselectedTextColor | Color | unselectedTextColor                            |
 
 ### NumberPickerColors Class
 
@@ -118,6 +136,21 @@ NumberPicker(
     onValueChange = { hour = it },
     range = 0..23,
     label = { it.toString().padStart(2, '0') }  // "00", "01", ... "23"
+)
+```
+
+### Unit Label
+
+The unit is drawn in 14dp text after an 18dp value slot plus a 4dp margin, on the selected row's baseline lifted by 2dp.
+
+```kotlin
+var weight by remember { mutableIntStateOf(60) }
+
+NumberPicker(
+    value = weight,
+    onValueChange = { weight = it },
+    range = 30..150,
+    unit = "kg"
 )
 ```
 
