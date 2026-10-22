@@ -112,7 +112,7 @@ TextButton(
 
 ## 材质层
 
-COUI 17 的所有 `ButtonNew` 样式都跟随系统材质开关（`useMaterialEffect = followSystem`），而 ColorOS 17 真机上这些开关是打开的，因此 `Button` 默认绘制材质层：描边光 + 内阴影（`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`）与触摸聚光（`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`、`TRANSPARENT_MEDIUM_1`）。`ButtonMaterial.Auto` 按填充色选择预设（主色、透明按钮色，其余为次要；无边框按钮不绘制）。传入 `ButtonMaterial.None` 可关闭。二者需要运行时着色器（Android 13+ 及所有 Skia 平台），其他环境下跳过，此时保留按压着色。未实现：COUI 用来替换实色填充的 25px 框架背景模糊（需要背景采样），以及焦散阴影（由 Oplus `RenderNode` 原生渲染）。
+COUI 17 的所有 `ButtonNew` 样式都跟随系统材质开关（`useMaterialEffect = followSystem`），而 ColorOS 17 真机上这些开关是打开的，因此 `Button` 默认绘制材质层：描边光 + 内阴影（`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`）与触摸聚光（`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`、`TRANSPARENT_MEDIUM_1`）。`ButtonMaterial.Auto` 按填充色选择预设（主色、透明按钮色，其余为次要；无边框按钮不绘制）。传入 `ButtonMaterial.None` 可关闭。二者需要运行时着色器（Android 13+ 及所有 Skia 平台），其他环境下跳过，此时保留按压着色。COUI 用来替换实色填充的框架背景模糊需要背景采样，见[背景模糊](#背景模糊)。焦散阴影不绘制：它由 Oplus `RenderNode` 原生渲染，而且只在应用主动开启时才出现。
 
 ```kotlin
 TextButton(
@@ -122,6 +122,40 @@ TextButton(
     material = ButtonMaterial.Primary
 )
 ```
+
+### 背景模糊
+
+系统材质模糊开启时，COUI 17 按钮完全不画实色填充：`COUIButton.onDraw` 跳过填充，由 `setViewBlurEffect` 对按钮背后的内容做滤镜。各类型的参数如下：
+
+- 主按钮：10px，填充色的 alpha 改为 229/230。
+- 次要按钮：25px，叠 `#CCFFFFFF` / `#33FFFFFF`。
+- 透明按钮：25px，`#3F333333` overlay + `#3FFFFFFF` luminosity。
+
+coui-ui 自身无法采集背景，所以只有两个条件同时满足时 `Button` 才绘制这层模糊：通过 `LocalMaterialBackdrop` 提供了 `MaterialBackdropProvider`，且运行时着色器可用。这时模糊替代填充，画在触摸形变层内，会随按压一起缩放、形变，悬停着色叠在模糊之上。没有 provider 时按钮保留不透明填充，这正是 COUI 的非模糊回退（次要按钮 `#EBEBEB` / `#353535`）。传入 `materialBackdrop = false` 可强制保留填充。
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+Box {
+    Image(painter, null, Modifier.matchParentSize().layerBackdrop(backdrop))
+    val provider = remember(backdrop) {
+        MaterialBackdropProvider { spec, shape ->
+            Modifier.couiViewBlur(
+                backdrop,
+                ViewBlurStyle(spec.blurRadiusPx, spec.layer1, spec.mode1, spec.layer2, spec.mode2),
+                shape,
+            )
+        }
+    }
+    CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
+        TextButton(text = "模糊按钮", onClick = {})
+    }
+}
+```
+
+- provider 的背景源不能录制到按钮本身。provider 要包在录制层之上的内容外层；把按钮包含在内的整页 `layerBackdrop` 不能用作背景源。
+- 对话框、底部抽屉和弹出菜单会为其内容提供 `null`，所以面板上的按钮保留填充，不会去采样面板背后的页面。COUI 自己的对话框按钮走 `drawableMaterialEffect` 路径，同样从不模糊。
+- 按压缩放也作用于采样到的背景，背景会随按钮最多缩小约 8%。在 10–25px 的模糊下几乎看不出来。
+- 不绘制焦散阴影。COUI 只在调用 `setCausticShadow(6|7)` 时才开启它，默认是关闭的。
 
 ## 组件状态
 
@@ -152,6 +186,7 @@ Button(
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |
 | insideMargin      | PaddingValues                   | 按钮内部边距             | ButtonDefaults.InsideMargin   | 否       |
 | material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光）；绘制时关闭按压着色 | ButtonMaterial.Auto | 否       |
+| materialBackdrop  | Boolean                         | 材质是否可用背景模糊替代填充；仅在有 `LocalMaterialBackdrop` provider 时绘制 | true | 否       |
 | interactionSource | MutableInteractionSource?       | 按钮的交互源             | null                          | 否       |
 | indication        | Indication?                     | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 | content           | @Composable RowScope.() -> Unit | 按钮内容区域的可组合函数 | -                             | 是       |
@@ -173,6 +208,7 @@ Button(
 | textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()` 可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
 | maxLines          | Int                       | 标签最大行数；COUIButton 为单行、末尾省略 | 1 | 否       |
 | material          | ButtonMaterial            | COUI 17 材质层，见 `Button` | ButtonMaterial.Auto | 否       |
+| materialBackdrop  | Boolean                   | 材质是否可用背景模糊替代填充，见 `Button` | true | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
 | indication        | Indication?               | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 

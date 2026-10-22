@@ -112,7 +112,7 @@ The press feedback follows COUI 17 `COUIButton` (`COUITouchMotionAnimator` + `CO
 
 ## Material Layer
 
-Every COUI 17 `ButtonNew` style follows the system material switches (`useMaterialEffect = followSystem`), which are on on ColorOS 17 devices, so `Button` draws the material layer by default: the edge lighting + inner shadow (`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`) and the touch spotlight (`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`, `TRANSPARENT_MEDIUM_1`). `ButtonMaterial.Auto` picks the preset from the fill (primary, transparent-button, or secondary for anything else; borderless buttons get none). Pass `ButtonMaterial.None` to opt out. Both effects need runtime shaders (Android 13+ and every Skia target) and are skipped elsewhere, in which case the press tint stays. Not drawn: the 25px framework background blur that COUI uses in place of the solid fill (it needs a backdrop), and the caustic shadow (rendered natively by the Oplus `RenderNode`).
+Every COUI 17 `ButtonNew` style follows the system material switches (`useMaterialEffect = followSystem`), which are on on ColorOS 17 devices, so `Button` draws the material layer by default: the edge lighting + inner shadow (`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`) and the touch spotlight (`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`, `TRANSPARENT_MEDIUM_1`). `ButtonMaterial.Auto` picks the preset from the fill (primary, transparent-button, or secondary for anything else; borderless buttons get none). Pass `ButtonMaterial.None` to opt out. Both effects need runtime shaders (Android 13+ and every Skia target) and are skipped elsewhere, in which case the press tint stays. The framework background blur that COUI draws in place of the solid fill needs a backdrop. See [Backdrop Blur](#backdrop-blur). The caustic shadow is not drawn: it is rendered natively by the Oplus `RenderNode`, and only when the app opts in.
 
 ```kotlin
 TextButton(
@@ -122,6 +122,34 @@ TextButton(
     material = ButtonMaterial.Primary
 )
 ```
+
+### Backdrop Blur
+
+With the system material blur on, COUI 17 does not draw a button's solid fill at all: `COUIButton.onDraw` skips it and `setViewBlurEffect` filters what lies behind the button instead (primary 10px with the fill re-alpha'd to 229/230, secondary 25px with `#CCFFFFFF` / `#33FFFFFF`, transparent 25px with `#3F333333` overlay + `#3FFFFFFF` luminosity). coui-ui cannot capture a backdrop on its own, so `Button` draws this only when a `MaterialBackdropProvider` is provided through `LocalMaterialBackdrop` and runtime shaders are available. The blur then replaces the fill inside the touch-motion layer, so it scales and deforms with the press, and the hover tint is drawn over it. Without a provider the button keeps its opaque fill, which is exactly COUI's non-blur fallback (`#EBEBEB` / `#353535` secondary). Pass `materialBackdrop = false` to keep the fill.
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+Box {
+    Image(painter, null, Modifier.matchParentSize().layerBackdrop(backdrop))
+    val provider = remember(backdrop) {
+        MaterialBackdropProvider { spec, shape ->
+            Modifier.couiViewBlur(
+                backdrop,
+                ViewBlurStyle(spec.blurRadiusPx, spec.layer1, spec.mode1, spec.layer2, spec.mode2),
+                shape,
+            )
+        }
+    }
+    CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
+        TextButton(text = "Blurred", onClick = {})
+    }
+}
+```
+
+- The provider's backdrop must not record the button: provide it around content that sits on top of the recorded layer. A page-wide `layerBackdrop` that contains the button cannot be used.
+- Dialogs, bottom sheets and popups provide `null` for their content, so buttons on a panel keep their fill instead of sampling the page behind it. COUI's own dialog buttons use the `drawableMaterialEffect` path and never blur either.
+- The press scale is applied to the sampled backdrop as well, so the backdrop shrinks by up to ~8% with the button. Under a 10-25px blur this is hardly visible.
+- The caustic shadow is not drawn. COUI only turns it on through `setCausticShadow(6|7)`, and its default is off.
 
 ## Component States
 
@@ -152,6 +180,7 @@ Button(
 | colors            | ButtonColors                    | Button color configuration             | ButtonDefaults.buttonColors() | No       |
 | insideMargin      | PaddingValues                   | Internal padding of the button         | ButtonDefaults.InsideMargin   | No       |
 | material          | ButtonMaterial                  | COUI 17 material layer (edge lighting, inner shadow, touch spotlight); the press tint is off while it is drawn | ButtonMaterial.Auto | No       |
+| materialBackdrop  | Boolean                         | Whether the material may replace the fill with the backdrop blur; only drawn with a `LocalMaterialBackdrop` provider | true | No       |
 | interactionSource | MutableInteractionSource?       | Interaction source for the button      | null                          | No       |
 | indication        | Indication?                     | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 | content           | @Composable RowScope.() -> Unit | Composable function for button content | -                             | Yes      |
@@ -173,6 +202,7 @@ Button(
 | textStyle         | TextStyle                 | Text style of the label (pass `ButtonDefaults.textStyleSmall()` with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.button | No       |
 | maxLines          | Int                       | Maximum number of label lines; COUIButton is single-line with an end ellipsis | 1 | No       |
 | material          | ButtonMaterial            | COUI 17 material layer, see `Button` | ButtonMaterial.Auto | No       |
+| materialBackdrop  | Boolean                   | Whether the material may replace the fill with the backdrop blur, see `Button` | true | No       |
 | interactionSource | MutableInteractionSource? | Interaction source for the button | null                              | No       |
 | indication        | Indication?               | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 

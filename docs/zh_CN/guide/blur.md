@@ -495,6 +495,38 @@ OverlayDialog(
 | fraction | Float | 同比缩放半径与两种颜色的 alpha（COUI 抽屉随遮罩淡入淡出模糊） | 1f |
 | enabled | Boolean | 是否绘制模糊 | true |
 
+## COUI 17 视图模糊
+
+`Modifier.couiViewBlur` 移植自 `COUIMaterialBlurEffect.setViewBlurEffect`：COUI 17 的按钮和顶栏按钮不画实色填充，而是对背后内容做这层背景滤镜。处理顺序是先模糊背景，再依次混合两层颜色。混合遵循 Android `BlendModeColorFilter` 的语义：常量色是 source，模糊后的背景是 destination。
+
+半径方面，COUI 传入的是原始像素，HWUI 再把它换算成 `sigma = 0.57735 * r + 0.5`。`couiViewBlurRadius(r)` 把它转成 `blur` 所用的半径，即 `(0.57735 * r + 0.5) / 0.45`，两边的高斯核因此一致。节点自身的内容画在模糊之上，模糊按 `shape` 裁剪。
+
+```kotlin
+Box(Modifier.couiViewBlur(backdrop, ViewBlurDefaults.contentSecondaryButton(isDark), CircleShape)) {
+    /* ... */
+}
+```
+
+注意：背景源不能录制到绘制它的节点本身。被模糊的元素要放在录制层之上，作为它的兄弟节点，而不是放在录制层内部。
+
+| 预设 | 半径（px） | 第 1 层 | 第 2 层 |
+| --- | --- | --- | --- |
+| `contentPrimaryButton(themeColor, isDark, enabled)` | 10 | 主题色 alpha 229（浅）/ 230（深）SrcOver；禁用时 alpha 77 | `#00FFFFFF`（浅）/ `#19FFFFFF`（深）Overlay；禁用时 `#19FFFFFF` Overlay |
+| `contentSecondaryButton(isDark)` | 25 | `#CCFFFFFF` / `#33FFFFFF` SrcOver | `#00FFFFFF` SrcOver（无效果） |
+| `contentTransparentButton()` | 25 | `#3F333333` Overlay | `#3FFFFFFF` Luminosity |
+| `topBar(TopBarMaterialTier.Default, isDark)` | 0 | 浅 `#66333333` ColorDodge；深 `#CC262626` SrcOver | 浅 `#99F5F5F5` Luminosity；深 `#B37F7F7F` Overlay |
+| `topBar(TopBarMaterialTier.Immersive, isDark)` | 25 | `#1A6E6E6E` ColorDodge | `#24F1F1F1` Luminosity（深浅相同） |
+| `topBar(TopBarMaterialTier.DefaultBlur, isDark)` | 20 | 同 `Default` | 同 `Default` |
+
+| 参数 | 类型 | 说明 | 默认值 |
+| --- | --- | --- | --- |
+| backdrop | Backdrop | 提供节点背后内容的背景源 | - |
+| style | ViewBlurStyle | 半径（原始 px）与两层颜色及其 Compose `BlendMode` | - |
+| shape | Shape | 模糊的裁剪形状，即组件轮廓 | - |
+| enabled | Boolean | 是否绘制模糊 | true |
+
+要让 coui-ui 按钮使用这层模糊，需要通过 coui-ui 的 `LocalMaterialBackdrop` 提供一个 `MaterialBackdropProvider`，让它返回 `Modifier.couiViewBlur(backdrop, ViewBlurStyle(spec.blurRadiusPx, spec.layer1, spec.mode1, spec.layer2, spec.mode2), shape)`。详见 [Button](../components/button#背景模糊)。
+
 ## 边缘高光
 
 `Highlight` 沿圆角形状绘制一条带两路定向光的玻璃质感边缘。它通过 `Modifier.textureBlur` / `Modifier.textureEffect` 的 `highlight` 参数（恒定场景）或 `Modifier.drawBackdrop` 的 `highlight` 参数（响应式场景，与 `BackdropEffectScope` 共享）绘制。配合模糊背景可营造"模糊背景上的发光边缘"效果。

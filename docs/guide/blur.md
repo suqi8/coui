@@ -501,6 +501,36 @@ OverlayDialog(
 | fraction | Float | Scales the radius and both color alphas (COUI fades the sheet blur with its mask) | 1f |
 | enabled | Boolean | Whether the blur is drawn | true |
 
+## COUI 17 View Blur
+
+`Modifier.couiViewBlur` ports `COUIMaterialBlurEffect.setViewBlurEffect`, the backdrop filter COUI 17 buttons and top-bar buttons draw instead of a solid fill: the backdrop is blurred, then two colors are blended over it in order with Android `BlendModeColorFilter` semantics (the color is the source, the blurred backdrop the destination). COUI passes the radius in raw pixels and HWUI turns it into `sigma = 0.57735 * r + 0.5`; `couiViewBlurRadius(r)` converts it to the radius `blur` takes (`(0.57735 * r + 0.5) / 0.45`), so the Gaussian matches. The node's own content is drawn on top, and the blur is clipped to `shape`.
+
+```kotlin
+Box(Modifier.couiViewBlur(backdrop, ViewBlurDefaults.contentSecondaryButton(isDark), CircleShape)) {
+    /* ... */
+}
+```
+
+The backdrop must not record the node that draws it: put the blurred element on top of the recorded layer (a sibling), not inside it.
+
+| Preset | Radius (px) | Layer 1 | Layer 2 |
+| --- | --- | --- | --- |
+| `contentPrimaryButton(themeColor, isDark, enabled)` | 10 | theme color at alpha 229 (light) / 230 (dark) SrcOver; disabled alpha 77 | `#00FFFFFF` (light) / `#19FFFFFF` (dark) Overlay; disabled `#19FFFFFF` Overlay |
+| `contentSecondaryButton(isDark)` | 25 | `#CCFFFFFF` / `#33FFFFFF` SrcOver | `#00FFFFFF` SrcOver (no-op) |
+| `contentTransparentButton()` | 25 | `#3F333333` Overlay | `#3FFFFFFF` Luminosity |
+| `topBar(TopBarMaterialTier.Default, isDark)` | 0 | light `#66333333` ColorDodge; dark `#CC262626` SrcOver | light `#99F5F5F5` Luminosity; dark `#B37F7F7F` Overlay |
+| `topBar(TopBarMaterialTier.Immersive, isDark)` | 25 | `#1A6E6E6E` ColorDodge | `#24F1F1F1` Luminosity (same in both schemes) |
+| `topBar(TopBarMaterialTier.DefaultBlur, isDark)` | 20 | as `Default` | as `Default` |
+
+| Parameter | Type | Description | Default |
+| --- | --- | --- | --- |
+| backdrop | Backdrop | The backdrop providing the content behind the node | - |
+| style | ViewBlurStyle | Radius (raw px) and the two color layers with their Compose `BlendMode`s | - |
+| shape | Shape | Clip of the blur, the component's outline | - |
+| enabled | Boolean | Whether the blur is drawn | true |
+
+To give coui-ui buttons this blur, provide a `MaterialBackdropProvider` through `LocalMaterialBackdrop` (coui-ui) that returns `Modifier.couiViewBlur(backdrop, ViewBlurStyle(spec.blurRadiusPx, spec.layer1, spec.mode1, spec.layer2, spec.mode2), shape)`; see [Button](../components/button#backdrop-blur).
+
 ## Edge Highlight
 
 A `Highlight` paints a thin glassy edge with two directional lights along a rounded shape. It is drawn through the `highlight` parameter on `Modifier.textureBlur` / `Modifier.textureEffect` (constant case) or on `Modifier.drawBackdrop` (reactive case, sharing the `BackdropEffectScope`). Combined with the blurred backdrop this produces a "lit edge over blurred backdrop" look.
