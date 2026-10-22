@@ -29,13 +29,14 @@ import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.interfaces.collectIsHeldDownAsState
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.PressFeedbackType
-import io.github.suqi8.coui.kmp.utils.SinkFeedback
 import io.github.suqi8.coui.kmp.utils.TiltFeedback
 import io.github.suqi8.coui.kmp.utils.pressable
 import kotlin.coroutines.cancellation.CancellationException
@@ -86,6 +87,7 @@ fun Card(
  * @param colors [CardColors] that will be used to resolve the color(s) used for the [Card].
  * @param pressFeedbackType The press feedback type of the [Card]. Defaults to
  *   [PressFeedbackType.Tint], which animates the fill towards [CardColors.pressedColor].
+ *   [PressFeedbackType.Sink] scales the card by the COUI 17 area-based press scale.
  * @param showIndication Whether to show indication of the [Card].
  * @param holdDownState Whether the [Card] is in a hold-down state.
  * @param onClick The callback to be invoked when the [Card] is clicked.
@@ -113,8 +115,7 @@ fun Card(
 
     val pressFeedback = remember(pressFeedbackType) {
         when (pressFeedbackType) {
-            PressFeedbackType.None, PressFeedbackType.Tint -> null
-            PressFeedbackType.Sink -> SinkFeedback()
+            PressFeedbackType.None, PressFeedbackType.Tint, PressFeedbackType.Sink -> null
             PressFeedbackType.Tilt -> TiltFeedback()
         }
     }
@@ -149,7 +150,15 @@ fun Card(
         colors.color
     }
 
-    val usedInteractionSource = if (pressFeedback != null) interactionSource else null
+    // COUI 17 touch motion press scale: the target scale follows the card's own dp size.
+    val sinkEnabled = pressFeedbackType == PressFeedbackType.Sink
+    val pressScaleModifier = if (sinkEnabled) {
+        Modifier.couiPressScale(pressed = isPressed || isHeldDown)
+    } else {
+        Modifier
+    }
+
+    val usedInteractionSource = if (pressFeedback != null || sinkEnabled) interactionSource else null
     val indicationToUse = if (showIndication) LocalIndication.current else null
 
     val hasOnClick = onClick != null
@@ -175,11 +184,13 @@ fun Card(
     BasicCard(
         color = fillColor,
         contentColor = colors.contentColor,
-        modifier = modifier.pressable(
-            interactionSource = usedInteractionSource,
-            indication = pressFeedback,
-            delay = null,
-        ),
+        modifier = modifier
+            .then(pressScaleModifier)
+            .pressable(
+                interactionSource = usedInteractionSource,
+                indication = pressFeedback,
+                delay = null,
+            ),
         cornerRadius = cornerRadius,
     ) {
         Column(
@@ -288,9 +299,11 @@ fun cardListPositionOf(index: Int, count: Int): CardListPosition = when {
 object CardDefaults {
 
     /**
-     * The default corner radius of the [Card] (COUI coui_round_corner_m).
+     * The default corner radius of the [Card]: the ColorOS 17 card list radius
+     * ([COUIRoundCorner.Normal.XL], COUI coui_round_corner_xl_radius_normal_16_1), which
+     * `COUICardListSelectedItemLayout.getInnerRadius` uses whenever smooth corners are on.
      */
-    val CornerRadius = 12.dp
+    val CornerRadius = COUIRoundCorner.Normal.XL
 
     /**
      * The default margin inside the [Card].

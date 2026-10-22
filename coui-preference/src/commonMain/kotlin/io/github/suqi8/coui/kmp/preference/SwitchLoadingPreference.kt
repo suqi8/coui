@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Switch
 import io.github.suqi8.coui.kmp.basic.SwitchColors
 import io.github.suqi8.coui.kmp.basic.SwitchDefaults
+import io.github.suqi8.coui.kmp.preference.internal.forwardPressTo
 
 /**
  * A switch with a title, a summary and a loading state, mirroring COUISwitchLoadingPreference.
@@ -70,8 +73,10 @@ fun SwitchLoadingPreference(
     enabled: Boolean = true,
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
+    val rowInteractionSource = remember { MutableInteractionSource() }
     BasicComponent(
         modifier = modifier,
+        interactionSource = rowInteractionSource,
         insideMargin = insideMargin,
         cardListPosition = cardListPosition,
         title = title,
@@ -89,6 +94,7 @@ fun SwitchLoadingPreference(
                 endActions()
             }
             SwitchLoadingPreferenceEndActions(
+                rowInteractionSource = rowInteractionSource,
                 checked = checked,
                 onCheckedChange = currentOnCheckedChange,
                 enabled = enabled,
@@ -108,6 +114,7 @@ fun SwitchLoadingPreference(
 
 @Composable
 private fun SwitchLoadingPreferenceEndActions(
+    rowInteractionSource: MutableInteractionSource,
     checked: Boolean,
     onCheckedChange: ((Boolean) -> Unit)?,
     enabled: Boolean,
@@ -117,6 +124,8 @@ private fun SwitchLoadingPreferenceEndActions(
     Switch(
         checked = checked,
         onCheckedChange = onCheckedChange,
+        // COUI 17 COUISwitchTouchEventDelegate: pressing the switch also presses the row.
+        modifier = Modifier.forwardPressTo(rowInteractionSource, enabled = enabled && onCheckedChange != null),
         enabled = enabled,
         isLoading = isLoading,
         colors = switchColors,

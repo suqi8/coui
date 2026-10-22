@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlin.math.roundToInt
 
 /**
  * A divider is a thin line that groups content in lists and layouts.
@@ -23,8 +24,9 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * (never after the last row) and inset it with [DividerDefaults.CardInset].
  *
  * @param modifier the [Modifier] to be applied to this divider line.
- * @param thickness thickness of this divider line. Using [Dp.Hairline] will produce a single pixel
- *   divider regardless of screen density.
+ * @param thickness thickness of this divider line, rounded to whole pixels and never thinner than one
+ *   pixel (COUIRecyclerView draws `max(1px, round(coui_list_divider_height))`). Using [Dp.Hairline]
+ *   will produce a single pixel divider regardless of screen density.
  * @param color color of this divider line.
  */
 @Composable
@@ -34,11 +36,12 @@ fun HorizontalDivider(
     thickness: Dp = DividerDefaults.Thickness,
     color: Color = DividerDefaults.DividerColor,
 ) = Canvas(modifier.fillMaxWidth().height(thickness)) {
+    val stroke = dividerStrokePx(thickness.toPx())
     drawLine(
         color = color,
-        strokeWidth = thickness.toPx(),
-        start = Offset(0f, thickness.toPx() / 2),
-        end = Offset(size.width, thickness.toPx() / 2),
+        strokeWidth = stroke,
+        start = Offset(0f, stroke / 2),
+        end = Offset(size.width, stroke / 2),
     )
 }
 
@@ -46,8 +49,9 @@ fun HorizontalDivider(
  * A divider is a thin line that groups content in lists and layouts.
  *
  * @param modifier the [Modifier] to be applied to this divider line.
- * @param thickness thickness of this divider line. Using [Dp.Hairline] will produce a single pixel
- *   divider regardless of screen density.
+ * @param thickness thickness of this divider line, rounded to whole pixels and never thinner than one
+ *   pixel (COUIRecyclerView draws `max(1px, round(coui_list_divider_height))`). Using [Dp.Hairline]
+ *   will produce a single pixel divider regardless of screen density.
  * @param color color of this divider line.
  */
 @Composable
@@ -57,11 +61,12 @@ fun VerticalDivider(
     thickness: Dp = DividerDefaults.Thickness,
     color: Color = DividerDefaults.DividerColor,
 ) = Canvas(modifier.fillMaxHeight().width(thickness)) {
+    val stroke = dividerStrokePx(thickness.toPx())
     drawLine(
         color = color,
-        strokeWidth = thickness.toPx(),
-        start = Offset(thickness.toPx() / 2, 0f),
-        end = Offset(thickness.toPx() / 2, size.height),
+        strokeWidth = stroke,
+        start = Offset(stroke / 2, 0f),
+        end = Offset(stroke / 2, size.height),
     )
 }
 
@@ -86,3 +91,6 @@ object DividerDefaults {
      */
     val CardInset = 16.dp
 }
+
+/** COUI divider stroke: [thicknessPx] rounded to whole pixels, with a one-pixel floor. */
+private fun dividerStrokePx(thicknessPx: Float): Float = thicknessPx.roundToInt().coerceAtLeast(1).toFloat()

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -126,8 +127,11 @@ data class RecommendedItem(
 
 object RecommendedPreferenceDefaults {
 
-    /** The default corner radius of the card (COUI couiRoundCornerM, 12dp). */
-    val CornerRadius = 12.dp
+    /**
+     * The default corner radius of the card: on ColorOS 17 `COUIRecommendedPreference.getInnerRadius`
+     * replaces couiRoundCornerM with coui_round_corner_xl_radius_normal_16_1 ([COUIRoundCorner.Normal.XL]).
+     */
+    val CornerRadius = COUIRoundCorner.Normal.XL
 
     /**
      * The default horizontal margin between the card edge and the texts

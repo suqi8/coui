@@ -201,7 +201,7 @@ fun OverlayDropdownPreference(
                             .padding(start = 8.dp, end = 4.dp)
                             .align(Alignment.CenterVertically)
                             .weight(1f, fill = false),
-                        fontSize = COUITheme.textStyles.body2.fontSize,
+                        fontSize = COUITheme.textStyles.footnote1.fontSize,
                         color = valueColor,
                         textAlign = TextAlign.End,
                         overflow = TextOverflow.Ellipsis,
@@ -325,7 +325,7 @@ fun OverlayDropdownPreference(
                         .padding(start = 8.dp, end = 4.dp)
                         .align(Alignment.CenterVertically)
                         .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.body2.fontSize,
+                    fontSize = COUITheme.textStyles.footnote1.fontSize,
                     color = valueColor,
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,

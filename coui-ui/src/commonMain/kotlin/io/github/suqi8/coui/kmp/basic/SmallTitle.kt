@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -39,10 +38,8 @@ fun SmallTitle(
             .heightIn(min = SmallTitleDefaults.MinHeight)
             .wrapContentHeight(),
         text = text,
-        style = COUITheme.textStyles.subtitle.copy(
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-        ),
+        // COUI couiTextAppearanceSmallButton: 12sp sans-serif-medium, coui_spacing_multiplier_button_s 1.143.
+        style = COUITheme.textStyles.footnote2.copy(fontWeight = FontWeight.Medium),
         color = textColor,
     )
 }

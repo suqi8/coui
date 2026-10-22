@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
@@ -93,15 +92,15 @@ fun BasicComponent(
             Text(
                 text = title,
                 style = COUITheme.textStyles.headline1,
-                fontWeight = FontWeight.Medium,
                 color = titleColor.color(enabled),
             )
         }
         if (summary != null) {
+            // COUI 17 coui_preference*.xml dropped the summary's layout_marginTop: the summary sits
+            // directly below the title, in TextAppearance.COUI.Preference.Summary (13sp ArticleBody).
             Text(
                 text = summary,
-                modifier = Modifier.padding(top = if (title != null) MarginBetweenLine else 0.dp),
-                style = COUITheme.textStyles.body2,
+                style = COUITheme.textStyles.footnote1,
                 color = summaryColor.color(enabled),
             )
         }
@@ -301,11 +300,12 @@ object BasicComponentDefaults {
     }
 
     /**
-     * The default color of the summary.
+     * The default color of the summary (COUI coui_preference_secondary_text_color:
+     * couiColorSecondNeutral, disabled couiColorLabelTertiary).
      */
     @Composable
     fun summaryColor(
-        color: Color = COUITheme.colorScheme.onSurfaceVariantSummary,
+        color: Color = COUITheme.colorScheme.onSurfaceSecondary,
         disabledColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
     ): BasicComponentColors = remember(color, disabledColor) {
         BasicComponentColors(
@@ -323,6 +323,3 @@ data class BasicComponentColors(
     @Stable
     internal fun color(enabled: Boolean): Color = if (enabled) color else disabledColor
 }
-
-/** COUI support_preference_margin_between_line: the summary's layout_marginTop in coui_preference.xml. */
-private val MarginBetweenLine = 2.dp

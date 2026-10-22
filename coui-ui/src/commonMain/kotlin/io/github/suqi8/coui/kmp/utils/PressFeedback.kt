@@ -179,7 +179,10 @@ enum class PressFeedbackType {
     /** Animates the fill towards the pressed color while pressed (COUI: COUICardListSelectedItemLayout). */
     Tint,
 
-    /** Sinks slightly when pressed. */
+    /**
+     * Scales down while pressed. [io.github.suqi8.coui.kmp.basic.Card] uses the COUI 17 touch motion
+     * scale, whose target depends on the card's area and aspect ratio (COUI PressCalc).
+     */
     Sink,
 
     /** Tilts based on touch position when pressed. */
