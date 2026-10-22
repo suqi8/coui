@@ -189,7 +189,8 @@ ColorOS 17 uses these values, exposed on `COUIRoundCorner` in `coui-ui`:
 
 | Weight | COUI source                       | Used by                                                                   |
 | :----: | --------------------------------- | ------------------------------------------------------------------------- |
-| `1.0`  | `FULL_RRECT_G2_WEIGHT`            | full-round capsules: capsule buttons, chips, floating toolbars, top tips  |
+| `1.0`  | `FULL_RRECT_G2_WEIGHT`            | full-round capsules: capsule buttons, search bars, single-line top tips   |
+| unspecified | no weight argument           | chips, floating toolbars / navigation bars, switch and slider tracks, segmented controls, snack bars: `1.0` when fully rounded, else `2.45` (`default_g2_weight`) |
 | `2.0`  | circular                          | base `coui_round_corner_*` radii, circles                                 |
 | `2.5`  | `weight_16_1_normal`              | card lists, input cards, popup menus (`*_radius_normal_16_1`, e.g. 24dp)  |
 | `3.0`  | `weight_16_1_large`               | buttons, card views, tooltips, alert dialogs, bottom sheets (45dp)        |
@@ -229,6 +230,23 @@ Modifier.squircleSurface(
 The shader evaluates the native distance function; `addSquircleRect` traces its
 zero contour (within 0.001 px).
 
+### Unspecified weight
+
+Many ColorOS call sites pass no weight at all (`addSmoothRoundRect(rect, rx, ry, dir)`,
+`setSmoothRoundRect(rect, radius)`). The native side then uses `1.0` for a fully rounded
+rect and `persist.sys.oplus.default_g2_weight` (2.45 when unset) for anything else.
+`SquircleDefaults.UnspecifiedWeight` reproduces that: pass it as `weight` and every
+modifier, `addSquircleRect` and `SquircleShape` resolve it per rect, so a capsule stays the
+soft capsule while a customised smaller radius draws at `SquircleDefaults.DefaultG2Weight`.
+
+```kotlin
+Modifier.squircleBackground(
+    color = COUITheme.colorScheme.surfaceContainer,
+    cornerRadius = cornerRadius, // 72.dp: soft capsule; 16.dp: weight 2.45
+    weight = SquircleDefaults.UnspecifiedWeight,
+)
+```
+
 ::: info Migrating from `extension`
 Earlier versions took an `extension` (corner-tile multiplier, default 1.2819)
 and drew a cubic corner that reached past `cornerRadius`. That parameter is now
@@ -257,6 +275,28 @@ val path = Path().apply {
 Each corner is a few cubic Bézier segments fitted to the superellipse (within
 0.03% of the radius). For static fills and clips prefer the shader-backed
 modifiers — they evaluate the exact superellipse distance per pixel.
+
+Two overloads take a `Rect` instead of a size, for shapes inside a larger canvas:
+`addSquircleRect(rect, cornerRadius, weight)` and the per-corner
+`addSquircleRect(rect, topLeft, topRight, bottomRight, bottomLeft, weight)` (physical
+corners). Like the Oplus G2 shader, each per-corner radius is clamped to half the shorter
+side on its own and all corners share the weight; a zero radius keeps a square corner.
+
+```kotlin
+// A popup frame whose top corners shrink while the bottom ones stay round.
+path.addSquircleRect(rect, topLeft = rTop, topRight = rTop, bottomRight = rBottom, bottomLeft = rBottom, weight = 2.5f)
+```
+
+For `Canvas` code, `DrawScope.drawSquircleRect(color or brush, cornerRadius, topLeft, size,
+weight)` fills such a path in one call (it builds the path per call), and `SquircleShape(cornerRadius,
+weight)` wraps `addSquircleRect` as a `Shape` for components that take one (surfaces, shadows):
+
+```kotlin
+Surface(shape = SquircleShape(72.dp, SquircleDefaults.UnspecifiedWeight)) { /* ... */ }
+```
+
+`SquircleShape` is path based and works on every platform; branch on `isSquircleEnabled()`
+when it should follow the modifiers' `RoundedCornerShape` fallback.
 
 ## Legacy COUI Path
 
@@ -330,7 +370,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomEnd`    | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomStart`  | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
-| `weight`       | `Float` | Superellipse exponent, clamped to `[1, 8]`; below 2 the soft capsule (fully rounded rects only) | `SquircleDefaults.Weight` = 2.5     |
+| `weight`       | `Float` | Superellipse exponent, clamped to `[1, 8]`; below 2 the soft capsule (fully rounded rects only); `UnspecifiedWeight` resolves per rect | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -347,7 +387,9 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | ----------------- | --------- | ------------------------------------------------------------------ | ------------------------------- |
 | `width`           | `Float`   | Path width in pixels                                               | -                               |
 | `height`          | `Float`   | Path height in pixels                                              | -                               |
+| `rect`            | `Rect`    | Bounds in pixels (`Rect` overloads, in place of width / height)    | -                               |
 | `cornerRadius`    | `Float`   | Corner radius in pixels                                            | -                               |
+| `topLeft` ... `bottomLeft` | `Float` | Per-corner radii in pixels, physical order (per-corner overload) | -                        |
 | `weight`          | `Float`   | Superellipse exponent                                              | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | When `false`, appends a plain rounded rect of the same dimensions  | `true`                          |
 
@@ -368,4 +410,6 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `Weight`       | `Float` | Default weight (`weight_16_1_normal`) | `2.5`  |
 | `WeightMin`    | `Float` | Lower bound (soft capsule)           | `1.0`  |
 | `CapsuleWeight`| `Float` | Full-round capsule (`FULL_RRECT_G2_WEIGHT`) | `1.0`  |
+| `DefaultG2Weight` | `Float` | Unweighted, not fully rounded (`default_g2_weight`) | `2.45` |
+| `UnspecifiedWeight` | `Float` | Marker: resolves to `CapsuleWeight` or `DefaultG2Weight` per rect | `0.0` |
 | `WeightMax`    | `Float` | Upper bound                          | `8.0`  |

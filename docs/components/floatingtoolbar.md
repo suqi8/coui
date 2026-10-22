@@ -57,7 +57,7 @@ Scaffold(
 
 | Property Name  | Type                    | Description              | Value                                   |
 | -------------- | ----------------------- | ------------------------ | --------------------------------------- |
-| CornerRadius   | Dp                      | Default corner radius (half the 44dp height, drawn as the weight-1.0 soft capsule) | 22.dp                                   |
+| CornerRadius   | Dp                      | Default corner radius (half the 44dp height, drawn as the weight-1.0 soft capsule; a radius below half the height takes `default_g2_weight` 2.45) | 22.dp                                   |
 | defaultColor() | @Composable () -> Color | Default background color | COUITheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | Default outside padding  | PaddingValues(12.dp, 8.dp)              |
 

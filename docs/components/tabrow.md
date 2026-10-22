@@ -114,7 +114,7 @@ The TabRowDefaults object provides default configurations for the TabRow compone
 | TabRowHeight                      | Dp   | 40.dp       | Default height of tab row for standard style                      |
 | TabRowWithContourHeight           | Dp   | 40.dp       | Default height of tab row for contour style                       |
 | TabRowWithContourTinyHeight       | Dp   | 32.dp       | Height of the COUI `SegmentButton.Tiny` style                     |
-| TabRowCornerRadius                | Dp   | 20.dp       | Default indicator corner radius (capsule) for standard style      |
+| TabRowCornerRadius                | Dp   | 20.dp       | Default indicator corner radius (capsule) for standard style; the container and a fully rounded indicator are COUI 17 soft capsules, a smaller radius takes `default_g2_weight` 2.45 |
 | TabRowWithContourCornerRadius     | Dp   | 16.dp       | Default indicator corner radius (capsule) for contour style       |
 | TabRowWithContourTinyCornerRadius | Dp   | 14.dp       | Indicator corner radius of the `SegmentButton.Tiny` style         |
 | TabRowWithContourPadding          | Dp   | 4.dp        | Default inset between container and indicator                     |

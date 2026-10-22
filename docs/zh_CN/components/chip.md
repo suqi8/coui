@@ -102,7 +102,7 @@ Chip(
 | MinHeight    | Dp            | 32.dp                             | coui_chip_selection_style_height                 |
 | MaxWidth     | Dp            | 300.dp                            | coui_chip_default_max_width                      |
 | TextMaxWidth | Dp            | 200.dp                            | coui_chip_default_max_text_width                 |
-| CornerRadius | Dp            | 16.dp                             | chipCornerRadius -1 → 胶囊(高度 / 2)，按权重 1.0 软胶囊绘制 |
+| CornerRadius | Dp            | 16.dp                             | chipCornerRadius -1 → 胶囊(高度 / 2)，按权重 1.0 软胶囊绘制；更小的半径按 `default_g2_weight` 2.45 绘制 |
 | IconSize     | Dp            | 16.dp                             | coui_chip_selection_style_chip_icon_size         |
 | IconSpacing  | Dp            | 4.dp                              | coui_chip_selection_style_chip_icon_end_padding  |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |

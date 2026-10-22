@@ -178,7 +178,8 @@ ColorOS 17 用到以下值，`coui-ui` 在 `COUIRoundCorner` 上提供：
 
 | 权重  | COUI 来源              | 使用者                                                     |
 | :---: | ---------------------- | ---------------------------------------------------------- |
-| `1.0` | `FULL_RRECT_G2_WEIGHT` | 全圆胶囊：胶囊按钮、Chip、悬浮工具栏、单行顶部提示         |
+| `1.0` | `FULL_RRECT_G2_WEIGHT` | 全圆胶囊：胶囊按钮、搜索框、单行顶部提示                   |
+| 未指定 | 不传权重              | Chip、悬浮工具栏 / 导航栏、开关与滑条轨道、分段控件、Snackbar：全圆时 `1.0`，否则 `2.45`（`default_g2_weight`） |
 | `2.0` | 圆弧                   | 基础 `coui_round_corner_*` 半径、圆形                      |
 | `2.5` | `weight_16_1_normal`   | 卡片列表、输入卡片、弹出菜单（`*_radius_normal_16_1`，如 24dp） |
 | `3.0` | `weight_16_1_large`    | 按钮、卡片视图、气泡提示、警告对话框、底部面板（45dp）     |
@@ -214,6 +215,22 @@ Modifier.squircleSurface(
 
 shader 直接计算原生距离函数；`addSquircleRect` 追踪其零等值线（误差 0.001 px 以内）。
 
+### 未指定权重
+
+ColorOS 很多调用点根本不传权重（`addSmoothRoundRect(rect, rx, ry, dir)`、
+`setSmoothRoundRect(rect, radius)`）。此时原生侧对全圆矩形用 `1.0`，其余用
+`persist.sys.oplus.default_g2_weight`（未设置时为 2.45）。`SquircleDefaults.UnspecifiedWeight`
+复现这一规则：把它作为 `weight` 传入，各 modifier、`addSquircleRect` 与 `SquircleShape`
+都会按矩形逐个解析，胶囊仍是软胶囊，而自定义的较小半径按 `SquircleDefaults.DefaultG2Weight` 绘制。
+
+```kotlin
+Modifier.squircleBackground(
+    color = COUITheme.colorScheme.surfaceContainer,
+    cornerRadius = cornerRadius, // 72.dp：软胶囊；16.dp：权重 2.45
+    weight = SquircleDefaults.UnspecifiedWeight,
+)
+```
+
 ::: info 从 `extension` 迁移
 旧版本使用 `extension`（角部区域倍数，默认 1.2819），三次曲线角会延伸到
 `cornerRadius` 之外。该参数现已改为 `weight`；`SquircleDefaults.Extension*`
@@ -242,6 +259,27 @@ val path = Path().apply {
 每个角由若干段拟合超椭圆的三次贝塞尔曲线构成（误差在半径的 0.03% 以内）。
 静态填充 / 裁剪场景请优先用 shader-backed modifier —— 它们逐像素计算精确的
 超椭圆距离。
+
+另有两个接受 `Rect`（而非尺寸）的重载，用于大画布内的形状：
+`addSquircleRect(rect, cornerRadius, weight)`，以及按物理方位逐角指定的
+`addSquircleRect(rect, topLeft, topRight, bottomRight, bottomLeft, weight)`。与 Oplus G2
+shader 一致，每个角的半径各自钳位到短边一半，所有角共用同一权重；半径为 0 的角保持直角。
+
+```kotlin
+// 弹出框形变：上方两角收缩，下方两角保持圆角。
+path.addSquircleRect(rect, topLeft = rTop, topRight = rTop, bottomRight = rBottom, bottomLeft = rBottom, weight = 2.5f)
+```
+
+`Canvas` 代码可用 `DrawScope.drawSquircleRect(color 或 brush, cornerRadius, topLeft, size, weight)`
+一次填充（每次调用都会构造 path）；`SquircleShape(cornerRadius, weight)` 把
+`addSquircleRect` 包装成 `Shape`，供接受 Shape 的组件（Surface、阴影）使用：
+
+```kotlin
+Surface(shape = SquircleShape(72.dp, SquircleDefaults.UnspecifiedWeight)) { /* ... */ }
+```
+
+`SquircleShape` 基于 path，所有平台可用；需要与 modifier 的 `RoundedCornerShape`
+回退保持一致时，按 `isSquircleEnabled()` 分支。
 
 ## COUI 旧版 Path
 
@@ -313,7 +351,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomEnd`    | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomStart`  | `Dp`    | 每角半径（按角重载）                              | -                                   |
-| `weight`       | `Float` | 超椭圆指数，钳位到 `[1, 8]`；低于 2 为软胶囊（仅全圆矩形） | `SquircleDefaults.Weight` = 2.5     |
+| `weight`       | `Float` | 超椭圆指数，钳位到 `[1, 8]`；低于 2 为软胶囊（仅全圆矩形）；`UnspecifiedWeight` 按矩形解析 | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -330,7 +368,9 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | ----------------- | --------- | ---------------------------------------------------- | ------------------------------- |
 | `width`           | `Float`   | path 宽度（像素）                                    | -                               |
 | `height`          | `Float`   | path 高度（像素）                                    | -                               |
+| `rect`            | `Rect`    | 边界（像素；`Rect` 重载，代替宽高）                  | -                               |
 | `cornerRadius`    | `Float`   | 圆角半径（像素）                                     | -                               |
+| `topLeft` ... `bottomLeft` | `Float` | 逐角半径（像素，物理方位；逐角重载）       | -                               |
 | `weight`          | `Float`   | 超椭圆指数                                           | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | 为 `false` 时改为追加同尺寸的圆角矩形                 | `true`                          |
 
@@ -351,4 +391,6 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `Weight`       | `Float` | 默认权重（`weight_16_1_normal`） | `2.5`  |
 | `WeightMin`    | `Float` | 权重下限（软胶囊）         | `1.0`  |
 | `CapsuleWeight`| `Float` | 全圆胶囊（`FULL_RRECT_G2_WEIGHT`） | `1.0`  |
+| `DefaultG2Weight` | `Float` | 未传权重且非全圆（`default_g2_weight`） | `2.45` |
+| `UnspecifiedWeight` | `Float` | 标记：按矩形解析为 `CapsuleWeight` 或 `DefaultG2Weight` | `0.0` |
 | `WeightMax`    | `Float` | 权重上限                   | `8.0`  |

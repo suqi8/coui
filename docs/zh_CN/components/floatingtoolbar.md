@@ -57,7 +57,7 @@ Scaffold(
 
 | 属性名         | 类型                    | 说明           | 值                                      |
 | -------------- | ----------------------- | -------------- | --------------------------------------- |
-| CornerRadius   | Dp                      | 默认圆角半径（44dp 高度的一半，按权重 1.0 软胶囊绘制） | 22.dp                                   |
+| CornerRadius   | Dp                      | 默认圆角半径（44dp 高度的一半，按权重 1.0 软胶囊绘制；小于高度一半时按 `default_g2_weight` 2.45 绘制） | 22.dp                                   |
 | defaultColor() | @Composable () -> Color | 默认背景颜色   | COUITheme.colorScheme.surfaceContainer |
 | OutSidePadding | PaddingValues           | 默认外部内边距 | PaddingValues(12.dp, 8.dp)              |
 

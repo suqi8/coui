@@ -216,6 +216,8 @@ smoothing weight, the superellipse exponent the squircle modifiers take as `weig
 (`weight_16_1_large`, also dialogs, bottom sheets and tooltips), `COUIRoundCorner.CircularWeight` = 2.0 for the base
 steps and circles, which ColorOS 17 draws without smoothing, and `COUIRoundCorner.CapsuleWeight` = 1.0, the Oplus soft
 capsule of full-round controls (pair it with `COUIRoundCorner.Full`, couiRoundCornerFULL 72dp).
+`COUIRoundCorner.UnspecifiedWeight` stands for the COUI call sites that pass no weight: it resolves to the soft capsule
+when the rect is fully rounded and to `COUIRoundCorner.DefaultG2Weight` = 2.45 (`default_g2_weight`) otherwise.
 
 ## State Layers
 

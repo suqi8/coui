@@ -102,7 +102,7 @@ Chip(
 | MinHeight    | Dp            | 32.dp                            | coui_chip_selection_style_height               |
 | MaxWidth     | Dp            | 300.dp                           | coui_chip_default_max_width                    |
 | TextMaxWidth | Dp            | 200.dp                           | coui_chip_default_max_text_width               |
-| CornerRadius | Dp            | 16.dp                            | chipCornerRadius -1 → capsule (height / 2), drawn as the weight-1.0 soft capsule |
+| CornerRadius | Dp            | 16.dp                            | chipCornerRadius -1 → capsule (height / 2), drawn as the weight-1.0 soft capsule; a smaller radius takes `default_g2_weight` 2.45 |
 | IconSize     | Dp            | 16.dp                            | coui_chip_selection_style_chip_icon_size       |
 | IconSpacing  | Dp            | 4.dp                             | coui_chip_selection_style_chip_icon_end_padding |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |

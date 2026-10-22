@@ -125,8 +125,8 @@ fun Snackbar(
 | data                   | SnackbarData   | 包含消息与操作信息的数据 | -                                 | 是       |
 | modifier               | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                      | 否       |
 | icon                   | (@Composable () -> Unit)? | 可选前置图标，布局在 30.dp 容器内（通过 `SnackbarHost` 的 `content` 插槽传入） | null | 否       |
-| cornerRadius           | Dp             | 垂直（多行）布局的圆角半径 | SnackbarDefaults.CornerRadius     | 否       |
-| singleLineCornerRadius | Dp             | 单行布局的圆角半径；`Dp.Unspecified` 按高度一半取圆角（胶囊） | SnackbarDefaults.SingleLineCornerRadius | 否 |
+| cornerRadius           | Dp             | 垂直（多行）布局的圆角半径，按 `default_g2_weight` 2.45 绘制 | SnackbarDefaults.CornerRadius     | 否       |
+| singleLineCornerRadius | Dp             | 单行布局的圆角半径；`Dp.Unspecified` 按高度一半取圆角（COUI 17 软胶囊） | SnackbarDefaults.SingleLineCornerRadius | 否 |
 | colors                 | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
 | insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（单行布局中操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
 

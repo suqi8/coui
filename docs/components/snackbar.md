@@ -125,8 +125,8 @@ fun Snackbar(
 | data                   | SnackbarData   | Data describing message and actions                        | -                                       | Yes      |
 | modifier               | Modifier       | Modifier applied to the Snackbar container                 | Modifier                                | No       |
 | icon                   | (@Composable () -> Unit)? | Optional leading icon shown in a 30.dp box (pass it through the `content` lambda of `SnackbarHost`) | null | No       |
-| cornerRadius           | Dp             | Corner radius of the vertical (multi-line) layout          | SnackbarDefaults.CornerRadius           | No       |
-| singleLineCornerRadius | Dp             | Corner radius of the single-line layout; `Dp.Unspecified` rounds it at half its height (capsule) | SnackbarDefaults.SingleLineCornerRadius | No       |
+| cornerRadius           | Dp             | Corner radius of the vertical (multi-line) layout, drawn at `default_g2_weight` 2.45 | SnackbarDefaults.CornerRadius           | No       |
+| singleLineCornerRadius | Dp             | Corner radius of the single-line layout; `Dp.Unspecified` rounds it at half its height (the COUI 17 soft capsule) | SnackbarDefaults.SingleLineCornerRadius | No       |
 | colors                 | SnackbarColors | Color configuration for the Snackbar                       | SnackbarDefaults.snackbarColors()       | No       |
 | insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element of the single-line layout) | SnackbarDefaults.InsideMargin | No       |
 

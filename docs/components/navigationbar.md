@@ -109,7 +109,7 @@ Scaffold(
 | -------------------------- | ------------------------ | --------------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                 | Modifier applied to the nav bar         | Modifier                                | No       |
 | color                      | Color                    | Background color of the nav bar         | COUITheme.colorScheme.surfaceContainer | No       |
-| cornerRadius               | Dp                       | Corner radius of the nav bar            | FloatingToolbarDefaults.CornerRadius    | No       |
+| cornerRadius               | Dp                       | Corner radius of the nav bar; the default rounds it fully into the COUI 17 soft capsule, a smaller radius is drawn at `default_g2_weight` 2.45 | FloatingNavigationBarDefaults.CornerRadius | No       |
 | horizontalAlignment        | Alignment.Horizontal     | Horizontal alignment within its parent  | CenterHorizontally                      | No       |
 | horizontalOutSidePadding   | Dp                       | Horizontal padding outside the nav bar  | FloatingNavigationBarDefaults.HorizontalOutSidePadding | No       |
 | shadowElevation            | Dp                       | The shadow elevation of the nav bar     | FloatingNavigationBarDefaults.ShadowElevation          | No       |
@@ -154,6 +154,7 @@ The FloatingNavigationBarDefaults object provides default values for FloatingNav
 
 | Constant Name            | Type  | Description                         | Default Value |
 | ------------------------ | ----- | ----------------------------------- | ------------- |
+| CornerRadius             | Dp    | Corner radius: `COUIRoundCorner.Full`, a capsule at any height (COUI 17 half-height soft capsule) | 72.dp         |
 | HorizontalOutSidePadding | Dp    | Horizontal outside padding          | 36.dp         |
 | ShadowElevation          | Dp    | Shadow elevation                    | 1.dp          |
 | HorizontalPadding        | Dp    | Horizontal padding inside the bar   | 12.dp         |

@@ -114,7 +114,7 @@ TabRowDefaults 对象提供了 TabRow 组件的默认配置。
 | TabRowHeight                      | Dp   | 40.dp       | 标准样式的默认高度                                       |
 | TabRowWithContourHeight           | Dp   | 40.dp       | 带轮廓样式的默认高度                                     |
 | TabRowWithContourTinyHeight       | Dp   | 32.dp       | COUI `SegmentButton.Tiny` 样式的高度                     |
-| TabRowCornerRadius                | Dp   | 20.dp       | 标准样式滑块的默认圆角半径（胶囊形）                     |
+| TabRowCornerRadius                | Dp   | 20.dp       | 标准样式滑块的默认圆角半径（胶囊形）；容器与全圆滑块按 COUI 17 软胶囊绘制，更小的半径按 `default_g2_weight` 2.45 绘制 |
 | TabRowWithContourCornerRadius     | Dp   | 16.dp       | 带轮廓样式滑块的默认圆角半径（胶囊形）                   |
 | TabRowWithContourTinyCornerRadius | Dp   | 14.dp       | `SegmentButton.Tiny` 样式滑块的圆角半径                  |
 | TabRowWithContourPadding          | Dp   | 4.dp        | 容器与滑块之间的默认内缩                                 |

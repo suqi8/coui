@@ -109,7 +109,7 @@ Scaffold(
 | -------------------------- | ------------------------- | ---------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                  | 应用于导航栏的修饰符               | Modifier                                | 否       |
 | color                      | Color                     | 导航栏背景颜色                     | COUITheme.colorScheme.surfaceContainer | 否       |
-| cornerRadius               | Dp                        | 导航栏的圆角半径                   | FloatingToolbarDefaults.CornerRadius    | 否       |
+| cornerRadius               | Dp                        | 导航栏的圆角半径；默认值使其全圆，按 COUI 17 软胶囊绘制，更小的半径按 `default_g2_weight` 2.45 绘制 | FloatingNavigationBarDefaults.CornerRadius | 否       |
 | horizontalAlignment        | Alignment.Horizontal      | 导航栏在其父容器中的水平对齐方式   | CenterHorizontally                      | 否       |
 | horizontalOutSidePadding   | Dp                        | 导航栏外部的水平内边距             | FloatingNavigationBarDefaults.HorizontalOutSidePadding | 否       |
 | shadowElevation            | Dp                        | 导航栏的阴影高度                   | FloatingNavigationBarDefaults.ShadowElevation          | 否       |
@@ -154,6 +154,7 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 
 | 常量名                   | 类型  | 说明                       | 默认值 |
 | ------------------------ | ----- | -------------------------- | ------ |
+| CornerRadius             | Dp    | 圆角半径：`COUIRoundCorner.Full`，任意高度都是胶囊（COUI 17 高度一半的软胶囊） | 72.dp  |
 | HorizontalOutSidePadding | Dp    | 外部水平内边距             | 36.dp  |
 | ShadowElevation          | Dp    | 阴影高度                   | 1.dp   |
 | HorizontalPadding        | Dp    | 内部水平内边距             | 12.dp  |
