@@ -19,8 +19,14 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.TabRow
 import io.github.suqi8.coui.kmp.basic.TabRowDefaults
+import io.github.suqi8.coui.kmp.basic.TabRowItem
 import io.github.suqi8.coui.kmp.basic.TabRowWithContour
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Image
+import io.github.suqi8.coui.kmp.icon.extended.Music
+import io.github.suqi8.coui.kmp.icon.extended.Photos
+import io.github.suqi8.coui.kmp.icon.extended.Settings
 import kotlinx.coroutines.launch
 
 fun LazyListScope.tabRowSection() {
@@ -49,6 +55,7 @@ fun LazyListScope.tabRowSection() {
                     tabPagerState.animateScrollToPage(it)
                 }
             },
+            pagerState = tabPagerState,
         )
         HorizontalPager(
             state = tabPagerState,
@@ -63,6 +70,22 @@ fun LazyListScope.tabRowSection() {
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
+        )
+        // Icon tabs (72dp), red dots and a disabled tab.
+        val iconTabs = remember {
+            listOf(
+                TabRowItem(text = "Photos", icon = COUIIcons.Photos),
+                TabRowItem(text = "Music", icon = COUIIcons.Music, badge = 0),
+                TabRowItem(text = "Images", icon = COUIIcons.Image, badge = 12),
+                TabRowItem(text = "Settings", icon = COUIIcons.Settings, enabled = false),
+            )
+        }
+        var iconSelected by remember { mutableIntStateOf(0) }
+        TabRow(
+            items = iconTabs,
+            selectedTabIndex = iconSelected,
+            onTabSelected = { iconSelected = it },
+            modifier = Modifier.padding(bottom = 12.dp),
         )
         Card(
             modifier = Modifier

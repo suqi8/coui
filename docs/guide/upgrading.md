@@ -1,5 +1,31 @@
 # Upgrading
 
+## Unreleased
+
+### TabRow is the sliding tab layout
+
+The plain `TabRow` used to draw the segment button without its container — a shape COUI does not
+have. It is now the ColorOS sliding tab layout (`COUITabLayout`): a 48dp row of labels over a 2dp
+track, with a 2dp underline indicator under the selected label. `TabRowWithContour` is unchanged and
+remains the segment button.
+
+Your code still compiles, but the row looks and behaves differently:
+
+- The default height is 48dp (was 40dp), and 72dp when a tab has an icon and a label.
+- `colors` now come from `TabRowDefaults.underlineColors()`: `backgroundColor` is the track and
+  `selectedBackgroundColor` the indicator. Pass `TabRowDefaults.tabRowColors()` explicitly only if
+  you want the segment colors on the new layout.
+- `cornerRadius` shapes the 8dp press mask instead of a capsule indicator, `minWidth` defaults to
+  0dp, and `maxWidth` defaults to 70% of the row.
+- `itemSpacing` is the minimum gap between labels and, like the new `horizontalMargin`, follows the
+  COUI screen size when left unspecified.
+- The press mask comes from `LocalIndication`; pass `indication = null` to remove it.
+- An overflowing row has fading edges and the COUI rubber-band overscroll.
+
+New: `enabled`, `pagerState` (the row follows a dragged pager) and a `TabRow(items = ...)` overload
+taking `TabRowItem`s with an icon, a red dot badge or a disabled state. If you need the old
+look, use `TabRowWithContour` with a transparent `backgroundColor`.
+
 ## 1.0.0 → 1.1.0
 
 Update the version in every COUI coordinate you depend on:

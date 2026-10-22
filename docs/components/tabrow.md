@@ -19,7 +19,7 @@ import io.github.suqi8.coui.kmp.basic.TabRowWithContour // Contour style (segmen
 
 The standard style matches `COUITabLayout`: a 48dp row of 14sp labels (medium weight when selected), a 2dp track inset 24dp from both edges, and a 2dp neutral indicator as wide as the selected label (at least 32dp). Changing the selection slides the indicator over `min(300, 50 × Δtabs + 150)` ms with `CubicBezierEasing(0.33f, 0f, 0.67f, 1f)` while the label colors crossfade. Each tab has an 8dp press mask, and touching an unselected tab plays a haptic tick.
 
-Labels that fit into the 360dp content width are spread with equal gaps, labels that fit into the row are centered with `itemSpacing` between them, and otherwise the row scrolls with 58dp fading edges and keeps the selected tab centered.
+Labels that fit into the 360dp content width are spread with equal gaps, labels that fit into the row are centered with `itemSpacing` between them, and otherwise the row scrolls with 58dp fading edges and keeps the selected tab centered. The scrolling row has the `COUIHorizontalScrollView` motion: a drag past either end follows at 40% and stiffens towards a screen width, a fling that hits an end overshoots by up to 37% of the screen width and springs back, and reaching an end plays an edge haptic.
 
 ```kotlin
 val tabs = listOf("Recommended", "Following", "Popular", "Featured")
@@ -27,6 +27,28 @@ var selectedTabIndex by remember { mutableStateOf(0) }
 
 TabRow(
     tabs = tabs,
+    selectedTabIndex = selectedTabIndex,
+    onTabSelected = { selectedTabIndex = it }
+)
+```
+
+### Icons, Red Dots and Disabled Tabs
+
+Pass `TabRowItem`s to give tabs an icon, a red dot or a disabled state. A row whose tabs have both an
+icon and a label is 72dp tall; the icon sits before the label and the red dot after it, aligned to
+the top of the row. The indicator stays under the label.
+
+```kotlin
+val items = listOf(
+    TabRowItem(text = "Photos", icon = COUIIcons.Photos),
+    TabRowItem(text = "Music", icon = COUIIcons.Music, badge = 0),
+    TabRowItem(text = "Images", icon = COUIIcons.Image, badge = 12),
+    TabRowItem(text = "Settings", icon = COUIIcons.Settings, enabled = false),
+)
+var selectedTabIndex by remember { mutableStateOf(0) }
+
+TabRow(
+    items = items,
     selectedTabIndex = selectedTabIndex,
     onTabSelected = { selectedTabIndex = it }
 )
@@ -68,23 +90,39 @@ TabRowWithContour(
 
 ### TabRow Properties
 
-| Property Name     | Type                      | Description                      | Default Value                                       | Required |
-| ----------------- | ------------------------- | -------------------------------- | --------------------------------------------------- | -------- |
-| tabs              | List\<String>             | List of tab texts                | -                                                   | Yes      |
-| selectedTabIndex  | Int                       | Current selected tab index       | -                                                   | Yes      |
-| onTabSelected     | (Int) -> Unit             | Callback when tab is selected    | -                                                   | Yes      |
-| modifier          | Modifier                  | Modifier for the tab row         | Modifier                                            | No       |
-| colors            | TabRowColors              | Color configuration                                                                      | TabRowDefaults.underlineColors()  | No       |
-| minWidth          | Dp                        | Minimum width of the label slot of each tab                                              | TabRowDefaults.TabRowMinWidth     | No       |
-| maxWidth          | Dp                        | Maximum width of the label slot; longer labels are ellipsized                            | TabRowDefaults.TabRowMaxWidth     | No       |
-| height            | Dp                        | Height of the tab row                                                                    | TabRowDefaults.TabRowHeight       | No       |
-| cornerRadius      | Dp                        | Corner radius of the press mask of a tab                                                 | TabRowDefaults.TabRowCornerRadius | No       |
-| itemSpacing       | Dp                        | Minimum spacing between labels; `Dp.Unspecified` = 20dp, or 24dp from a 600dp wide row   | Dp.Unspecified                    | No       |
-| horizontalMargin  | Dp                        | Minimum margin at both ends; `Dp.Unspecified` = 16dp, 24dp from 600dp, 40dp from 840dp   | Dp.Unspecified                    | No       |
-| contentAlignment  | Alignment                 | Alignment of the label in its tab                                                        | Alignment.Center                  | No       |
-| listState         | LazyListState?            | External scroll state for tabs                                                           | null                              | No       |
-| interactionSource | MutableInteractionSource? | Interaction source for tab items                                                         | null                              | No       |
-| indication        | Indication?               | Press mask of tab items, clipped to `cornerRadius`                                       | LocalIndication.current           | No       |
+| Property Name     | Type                      | Description                                                                                       | Default Value                    | Required |
+| ----------------- | ------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------- | -------- |
+| tabs / items      | List\<String> / List\<TabRowItem> | Tab labels, or tabs with an icon, a red dot or a disabled state                          | -                                | Yes      |
+| selectedTabIndex  | Int                       | Current selected tab index                                                                        | -                                | Yes      |
+| onTabSelected     | (Int) -> Unit             | Callback when tab is selected                                                                     | -                                | Yes      |
+| modifier          | Modifier                  | Modifier for the tab row                                                                          | Modifier                         | No       |
+| enabled           | Boolean                   | Whether the tabs can be selected; a disabled row greys out its labels and indicator               | true                             | No       |
+| colors            | TabRowColors              | Color configuration                                                                               | TabRowDefaults.underlineColors() | No       |
+| minWidth          | Dp                        | Minimum width of the content of each tab                                                          | TabRowDefaults.TabRowMinWidth    | No       |
+| maxWidth          | Dp                        | Maximum width of the content of each tab; longer labels are ellipsized                            | TabRowDefaults.TabRowMaxWidth    | No       |
+| height            | Dp                        | Height of the tab row; `Dp.Unspecified` = 48dp, or 72dp when a tab has an icon and a label        | Dp.Unspecified                   | No       |
+| cornerRadius      | Dp                        | Corner radius of the press mask of a tab                                                          | TabRowDefaults.TabRowCornerRadius | No      |
+| itemSpacing       | Dp                        | Minimum spacing between tabs; `Dp.Unspecified` = 20dp on small screens, 24dp otherwise            | Dp.Unspecified                   | No       |
+| horizontalMargin  | Dp                        | Minimum margin at both ends; `Dp.Unspecified` = 16dp, 24dp or 40dp by screen size                 | Dp.Unspecified                   | No       |
+| contentAlignment  | Alignment                 | Alignment of the tab content in its tab                                                           | Alignment.Center                 | No       |
+| listState         | LazyListState?            | External scroll state for tabs                                                                    | null                             | No       |
+| interactionSource | MutableInteractionSource? | Interaction source for tab items                                                                  | null                             | No       |
+| indication        | Indication?               | Press mask of tab items, clipped to `cornerRadius`                                                | LocalIndication.current          | No       |
+| pagerState        | PagerState?               | A pager the row follows while the user drags it                                                   | null                             | No       |
+
+Screen sizes follow COUI's window classes: small below 600dp; large from 840dp wide with a window
+height between 480dp and 900dp (or at least 900dp unless the window is a portrait under 960dp
+wide); medium otherwise. The margin is judged from the row width and the window height, the spacing
+from the row width and the row height, as `COUISlidingTabStrip` does.
+
+### TabRowItem
+
+| Property Name | Type         | Description                                                            | Default Value |
+| ------------- | ------------ | ---------------------------------------------------------------------- | ------------- |
+| text          | String       | Label; may be empty for an icon-only tab                               | -             |
+| icon          | ImageVector? | 24dp icon before the label, tinted like the label                      | null          |
+| badge         | Int?         | Red dot after the label: `null` none, `0` a dot, a positive number shown in a capsule | null |
+| enabled       | Boolean      | Whether the tab can be selected                                        | true          |
 
 ### TabRowWithContour Properties
 
@@ -114,7 +152,8 @@ The TabRowDefaults object provides default configurations for the TabRow compone
 
 | Constant Name                     | Type | Value       | Description                                                       |
 | --------------------------------- | ---- | ----------- | ----------------------------------------------------------------- |
-| TabRowHeight                      | Dp   | 48.dp       | Default height of tab row for standard style                      |
+| TabRowHeight                      | Dp   | 48.dp       | Height of the standard style with text tabs                       |
+| TabRowIconHeight                  | Dp   | 72.dp       | Height of the standard style when a tab has an icon and a label   |
 | TabRowWithContourHeight           | Dp   | 40.dp       | Default height of tab row for contour style                       |
 | TabRowWithContourTinyHeight       | Dp   | 32.dp       | Height of the COUI `SegmentButton.Tiny` style                     |
 | TabRowCornerRadius                | Dp   | 8.dp        | Press mask corner radius of a tab for standard style              |
@@ -142,6 +181,8 @@ The TabRowDefaults object provides default configurations for the TabRow compone
 | indicatorColor       | Color | Color of the 2dp indicator               | COUITheme.colorScheme.onSurface          |
 | contentColor         | Color | Label color of unselected tabs           | COUITheme.colorScheme.onSurfaceSecondary |
 | selectedContentColor | Color | Label color of selected and pressed tabs | COUITheme.colorScheme.onSurface          |
+| disabledContentColor | Color | Label color of disabled tabs             | COUITheme.colorScheme.disabledOnSurface  |
+| disabledIndicatorColor | Color | Indicator color of a disabled row      | `#FFD9D9D9`                              |
 
 ### TabRowColors Class
 
@@ -151,6 +192,8 @@ The TabRowDefaults object provides default configurations for the TabRow compone
 | contentColor            | Color | Default content color of tabs      |
 | selectedBackgroundColor | Color | Color of the sliding indicator     |
 | selectedContentColor    | Color | Content color of the selected tab  |
+| disabledContentColor    | Color | Label color of disabled tabs (`TabRow`); defaults to `contentColor` |
+| disabledSelectedBackgroundColor | Color | Indicator color of a disabled row (`TabRow`); defaults to `selectedBackgroundColor` |
 
 ## Advanced Usage
 
@@ -189,6 +232,11 @@ TabRowWithContour(
 
 ### Using with Pager
 
+Pass the `PagerState` as `pagerState` and the row follows the pager while the user drags it, like
+`COUITabLayout.setScrollPosition`: the indicator slides between the two labels, the label colors
+crossfade over the second half of the drag and the row scrolls along. A page change made by
+swiping plays a haptic; a tab click keeps its own indicator animation.
+
 ```kotlin
 val tabs = listOf("Page 1", "Page 2", "Page 3")
 val pagerState = rememberPagerState { tabs.size }
@@ -199,7 +247,8 @@ Surface {
         TabRow(
             tabs = tabs,
             selectedTabIndex = pagerState.targetPage,
-            onTabSelected = { scope.launch { pagerState.animateScrollToPage(it) } }
+            onTabSelected = { scope.launch { pagerState.animateScrollToPage(it) } },
+            pagerState = pagerState
         )
         HorizontalPager(
             state = pagerState,

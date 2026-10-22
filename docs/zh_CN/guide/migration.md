@@ -125,7 +125,7 @@ OverlayDialog(show = showDialog, title = "标题", onDismissRequest = { ... }) {
 
 ### TabRow
 
-`TabRowWithContour` 在视觉上重建为 ColorOS 分段按钮：`itemSpacing` 默认值改为 `0.dp`（原为 `5.dp`），并新增 `contourPadding` 参数。普通 `TabRow` 改为 ColorOS 滑动标签栏（48dp，文字标签 + 2dp 下划线指示器），颜色取自 `TabRowDefaults.underlineColors()`。其签名除新增 `horizontalMargin` 参数外保持源码兼容，但 `cornerRadius` 现在决定按压遮罩的圆角，`itemSpacing` 表示标签文字间的最小间距（默认随宽度自适应），点击反馈默认为 `LocalIndication.current`。
+`TabRowWithContour` 在视觉上重建为 ColorOS 分段按钮：`itemSpacing` 默认值改为 `0.dp`（原为 `5.dp`），并新增 `contourPadding` 参数。普通 `TabRow` 改为 ColorOS 滑动标签栏（48dp，文字标签 + 2dp 下划线指示器），颜色取自 `TabRowDefaults.underlineColors()`。使用具名参数时签名保持源码兼容，新增了 `enabled`、`horizontalMargin`、`pagerState` 参数以及支持图标、红点和禁用标签的 `TabRow(items = ...)` 重载，但 `cornerRadius` 现在决定按压遮罩的圆角，`itemSpacing` 表示标签文字间的最小间距（默认随宽度自适应），点击反馈默认为 `LocalIndication.current`。
 
 ### Switch
 

@@ -1,5 +1,22 @@
 # 升级指南
 
+## 未发布
+
+### TabRow 改为滑动标签栏
+
+普通 `TabRow` 过去绘制的是去掉容器的分段按钮，COUI 并没有这种形态。现在它是 ColorOS 的滑动标签栏（`COUITabLayout`）：48dp 高的文字标签行，底部 2dp 轨道，选中标签下方是 2dp 下划线指示器。`TabRowWithContour` 保持不变，仍是分段按钮。
+
+代码仍能编译，但外观和行为有变化：
+
+- 默认高度为 48dp（原为 40dp），有标签同时带图标和文字时为 72dp。
+- `colors` 默认取自 `TabRowDefaults.underlineColors()`：`backgroundColor` 是轨道，`selectedBackgroundColor` 是指示器。只有想在新布局上沿用分段配色时，才需要显式传 `TabRowDefaults.tabRowColors()`。
+- `cornerRadius` 现在决定 8dp 按压遮罩的圆角，不再是胶囊指示器；`minWidth` 默认 0dp，`maxWidth` 默认为行宽的 70%。
+- `itemSpacing` 表示标签之间的最小间距；与新增的 `horizontalMargin` 一样，不指定时随 COUI 屏幕尺寸变化。
+- 按压遮罩来自 `LocalIndication`，传 `indication = null` 可去掉。
+- 标签放不下时两端渐隐，并带 COUI 的橡皮筋越界回弹。
+
+新增：`enabled`、`pagerState`（拖动 Pager 时标签行跟随），以及接收 `TabRowItem` 的 `TabRow(items = ...)` 重载，可设置图标、红点和禁用状态。需要旧外观时，请改用 `backgroundColor` 透明的 `TabRowWithContour`。
+
 ## 1.0.0 → 1.1.0
 
 把你依赖的每个 COUI 坐标都改成新版本：
