@@ -14,9 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
@@ -245,10 +244,8 @@ internal fun CascadingSecondaryContent(
                     // Last-row anchors share primary's rounded bottom — keep both bottom corners
                     // full. Mid-list anchors must shrink uniformly into a flat internal row.
                     val rBottom = if (isAnchorPopupLast) cornerPx else rTop
-                    val topRadius = CornerRadius(rTop, rTop)
-                    val bottomRadius = CornerRadius(rBottom, rBottom)
                     innerPath.rewind()
-                    val morphRect = RoundRect(
+                    val morphRect = Rect(
                         left = lerp(
                             anchorLocalInUnion.left.toFloat(),
                             secondaryLocalInUnion.left.toFloat(),
@@ -269,27 +266,23 @@ internal fun CascadingSecondaryContent(
                             secondaryLocalInUnion.bottom.toFloat(),
                             frac,
                         ),
-                        topLeftCornerRadius = topRadius,
-                        topRightCornerRadius = topRadius,
-                        bottomRightCornerRadius = bottomRadius,
-                        bottomLeftCornerRadius = bottomRadius,
                     )
-                    if (squircleEnabled && rTop == rBottom) {
-                        // Uniform corners: the same smooth round rect as the container.
-                        innerPath.addSquircleRect(
-                            width = morphRect.width,
-                            height = morphRect.height,
-                            cornerRadius = rTop,
-                            weight = PopupCornerWeight,
-                        )
-                        innerPath.translate(Offset(morphRect.left, morphRect.top))
-                    } else {
-                        innerPath.addRoundRect(morphRect)
-                    }
+                    // The same smooth round rect as the container, per corner: the Oplus G2 shape
+                    // clamps each radius on its own and shares the weight, so frames with unequal
+                    // top and bottom radii keep the superellipse corners too.
+                    innerPath.addSquircleRect(
+                        rect = morphRect,
+                        topLeft = rTop,
+                        topRight = rTop,
+                        bottomRight = rBottom,
+                        bottomLeft = rBottom,
+                        weight = PopupCornerWeight,
+                        squircleEnabled = squircleEnabled,
+                    )
                     clipPath(innerPath) {
                         drawRect(
                             color = surfaceColor,
-                            topLeft = androidx.compose.ui.geometry.Offset.Zero,
+                            topLeft = Offset.Zero,
                             size = this.size,
                         )
                         this@onDrawWithContent.drawContent()
