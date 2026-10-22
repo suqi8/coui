@@ -49,7 +49,7 @@ fun FloatingToolbar(
 
     val dividerMod = if (showDivider) {
         Modifier
-            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CapsuleWeight)
             .padding(0.75.dp)
     } else {
         Modifier
@@ -72,7 +72,7 @@ fun FloatingToolbar(
             .padding(outSidePadding)
             .then(dividerMod)
             .then(shadowMod)
-            .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+            .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CapsuleWeight)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             },
@@ -86,7 +86,8 @@ object FloatingToolbarDefaults {
     /**
      * Default corner radius of the [FloatingToolbar]: a capsule. COUI 17
      * `COUIBottomFloatingToolbarMenuView` derives it as half the content height
-     * (`coui_floating_toolbar_menu_view_height` 44dp -> 22dp).
+     * (`coui_floating_toolbar_menu_view_height` 44dp -> 22dp), drawn as the weight-1.0 Oplus soft
+     * capsule (`addSmoothRoundRect` without a weight on a fully rounded rect).
      */
     val CornerRadius = 22.dp
 

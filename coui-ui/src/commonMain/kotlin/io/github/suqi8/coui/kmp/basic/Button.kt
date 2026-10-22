@@ -5,7 +5,6 @@ package io.github.suqi8.coui.kmp.basic
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -26,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
@@ -64,8 +61,9 @@ import kotlin.coroutines.cancellation.CancellationException
  *   Set to `false` for buttons that fill a container cell. The drag deformation and rubber band
  *   run either way.
  * @param cornerRadius The corner radius of the [Button]. [Dp.Unspecified] (the default) rounds
- *   the button at half its measured height, the COUI capsule (`drawableRadius = -1`); an explicit
- *   radius draws a weight-3.0 smooth round rect (COUI 17 `setSmoothRoundRect(..., 3.0f)`).
+ *   the button at half its measured height, the COUI capsule (`drawableRadius = -1`) drawn as the
+ *   weight-1.0 Oplus soft capsule; an explicit radius draws a weight-3.0 smooth round rect (COUI 17
+ *   `setSmoothRoundRect(..., 3.0f)`).
  * @param minWidth The minimum width of the [Button].
  * @param minHeight The minimum height of the [Button].
  * @param colors The [ButtonColors] of the [Button].
@@ -187,7 +185,8 @@ internal fun CouiButton(
         fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
     }
     val surfaceModifier = if (cornerRadius == Dp.Unspecified) {
-        Modifier.clip(CircleShape).background(fillColor)
+        // COUIButton.updateRoundRectPath: a height-derived capsule takes the 1.0 soft capsule weight.
+        Modifier.squircleSurface(color = fillColor, cornerRadius = COUIRoundCorner.Full, weight = COUIRoundCorner.CapsuleWeight)
     } else {
         Modifier.squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
     }

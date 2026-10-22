@@ -357,7 +357,7 @@ fun FloatingNavigationBar(
                             .squircleBackground(
                                 color = COUITheme.colorScheme.dividerLine,
                                 cornerRadius = cornerRadius,
-                                weight = COUIRoundCorner.CircularWeight,
+                                weight = COUIRoundCorner.CapsuleWeight,
                             )
                             .padding(0.75.dp)
                     } else {
@@ -378,7 +378,7 @@ fun FloatingNavigationBar(
                         Modifier
                     },
                 )
-                .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+                .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CapsuleWeight)
                 .then(modifier)
                 .padding(horizontal = FloatingNavigationBarDefaults.HorizontalPadding)
                 .align(horizontalAlignment)

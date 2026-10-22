@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -77,16 +80,25 @@ fun IconButton(
         }
     }
 
+    // ToolbarMaterialEffectDelegate: a wider-than-tall button is a capsule (soft capsule weight 1.0),
+    // a square one a circle (weight 2.0).
+    var isCapsule by remember { mutableStateOf(false) }
+
     Box(
         modifier = modifier
             .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+            .onSizeChanged { isCapsule = it.width != it.height }
             .materialPanel(
                 interactionSource = interactionSource,
                 cornerRadius = cornerRadius,
                 enabled = material,
                 motionEnabled = enabled,
             )
-            .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+            .squircleSurface(
+                color = backgroundColor,
+                cornerRadius = cornerRadius,
+                weight = if (isCapsule) COUIRoundCorner.CapsuleWeight else COUIRoundCorner.CircularWeight,
+            )
             .then(clickableModifier),
         contentAlignment = Alignment.Center,
     ) {
