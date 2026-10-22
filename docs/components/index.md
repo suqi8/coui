@@ -40,6 +40,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |
 | [TimePicker](../components/timepicker)                     | Time wheel picker (hour / minute)          | Time selection, alarms                |
+| [DateTimePicker](../components/datetimepicker)             | Date + time wheel picker                   | Reminders, scheduling                 |
 | [Stepper](../components/stepper)                           | Increment / decrement integer control      | Quantity adjustment, value tuning     |
 | [ProgressIndicator](../components/progressindicator)       | Displays operation progress status         | Loading, progress display             |
 | [InstallLoadProgress](../components/installloadprogress)   | Download / install button with progress    | App store download, install actions   |

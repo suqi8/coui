@@ -4,8 +4,11 @@
 
 - Each row is drawn twice and hard-clipped at a 48dp band around the center (center ± 24dp): inside the band the text is 20dp in the selected color, outside it is 16dp in the unselected color. A row crossing the band edge is split; there is no gradual blend.
 - Text sizes are in dp, so they do not follow the system font scale.
-- A fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s), lands on a whole row and finishes with a 300ms snap.
-- `onValueChange` and a haptic tick fire on every value change while the wheel moves, not only when it stops.
+- A fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s), lands on a whole row and finishes with a 300ms snap. Android uses these raw px/s values like COUI. Other platforms treat them as px on a 3.5x reference phone and scale them by the actual density (`value * density / 3.5`), so a flick travels as far as it does on the phone.
+- `onValueChange` fires on every value change while the wheel moves, not only when it stops.
+- Every value change plays a haptic tick whose intensity follows the wheel speed (50% at rest to 100% at 5000 px/s, COUI's "crisp" RichTap curve), at most one every 25ms. On Android 11+ apps with the `VIBRATE` permission it is a scaled `VibrationEffect` composition primitive; otherwise the fixed OPLUS 308 tick (or the standard haptic off Android).
+- On Android every value change also plays COUI's `coui_numberpicker_click.ogg` while the system "touch sounds" setting is on; other platforms are silent.
+- Rows are centered on the default typeface's top/bottom font metrics, like COUI (about 0.8dp higher than an ascent/descent center).
 - Tapping the row above or below the center steps by one; holding it repeats the step every `longPressStepInterval` milliseconds.
 
 Supports infinite scrolling with the `wrapAround` parameter.

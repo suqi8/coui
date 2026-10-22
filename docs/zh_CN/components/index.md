@@ -40,6 +40,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [DatePicker](../components/datepicker)                     | 日期滚轮选择器（年/月/日） | 日期选择、表单       |
 | [TimePicker](../components/timepicker)                     | 时间滚轮选择器（时/分） | 时间选择、闹钟       |
+| [DateTimePicker](../components/datetimepicker)             | 日期 + 时间滚轮选择器   | 提醒、日程           |
 | [Stepper](../components/stepper)                           | 加减调节整数值的控件   | 数量调整、数值微调   |
 | [ProgressIndicator](../components/progressindicator)       | 展示操作进度状态       | 加载中、进度展示     |
 | [InstallLoadProgress](../components/installloadprogress)   | 带进度的下载/安装按钮  | 应用下载、安装操作   |

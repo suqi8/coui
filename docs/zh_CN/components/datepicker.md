@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。选中行上下各有一条 `dividerLine` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp。与 COUIDatePicker 一致，按住中心上方或下方的行时，年和日每 100ms、月每 200ms 自动步进。滚轮本身的行为见 [NumberPicker](./numberpicker)。
+`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。所有列均支持无限循环滚动。选中行上下各有一条 `dividerLine` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp。与 COUIDatePicker 一致，按住中心上方或下方的行时，年和日每 100ms、月每 200ms 自动步进。各列按当前语言的日期字段顺序排列（如美式英语为月/日/年、中文为年/月/日、德语为日/月/年），对应 COUIDatePicker.reorderSpinners。滚轮本身的行为见 [NumberPicker](./numberpicker)。
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 
@@ -50,6 +50,7 @@ DatePicker(
 | yearLabel        | (Int) -> String      | 年份的显示文本转换函数                 | DatePickerDefaults.YearLabel        | 否       |
 | monthLabel       | (Int) -> String      | 月份（1..12）的显示文本转换函数        | DatePickerDefaults.MonthLabel       | 否       |
 | dayLabel         | (Int) -> String      | 日的显示文本转换函数                   | DatePickerDefaults.DayLabel         | 否       |
+| fieldOrder       | DateFieldOrder       | 滚轮从左到右的顺序（RTL 下镜像）       | DatePickerDefaults.localeFieldOrder() | 否     |
 | yearColumnWidth  | Dp                   | 年份列宽度                             | DatePickerDefaults.YearColumnWidth  | 否       |
 | monthColumnWidth | Dp                   | 月份列宽度                             | DatePickerDefaults.MonthColumnWidth | 否       |
 | dayColumnWidth   | Dp                   | 日列宽度                               | DatePickerDefaults.DayColumnWidth   | 否       |
@@ -83,7 +84,23 @@ DatePicker(
 | MonthLabel       | (Int) -> String | 英文月份缩写               | "Jan".."Dec"                    |
 | DayLabel         | (Int) -> String | 两位补零数字               | "01".."31"                      |
 
+`DatePickerDefaults.localeFieldOrder()` 读取平台的最佳 "yyyyMMMMdd" 日期模式：Android 用 `DateFormat.getBestDateTimePattern`，桌面用 JDK 长日期模式，iOS / macOS 用 `NSDateFormatter.dateFormatFromTemplate`，Web 用 `Intl.DateTimeFormat`；无法判断时回退为 `DateFieldOrder.YearMonthDay`。
+
+### DateFieldOrder 枚举
+
+`YearMonthDay`、`YearDayMonth`、`MonthDayYear`、`MonthYearDay`、`DayMonthYear`、`DayYearMonth`。每项提供 `fields: List<DateField>`；`DateFieldOrder.fromPattern(pattern)` 可从日期模式解析顺序。
+
 ## 进阶用法
+
+### 固定列顺序
+
+```kotlin
+DatePicker(
+    value = date,
+    onValueChange = { date = it },
+    fieldOrder = DateFieldOrder.YearMonthDay
+)
+```
 
 ### 自定义年份范围
 

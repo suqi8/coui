@@ -95,6 +95,7 @@ export default defineConfig({
                         { text: "Stepper", link: "/zh_CN/components/stepper" },
                         { text: "DatePicker", link: "/zh_CN/components/datepicker" },
                         { text: "TimePicker", link: "/zh_CN/components/timepicker" },
+                        { text: "DateTimePicker", link: "/zh_CN/components/datetimepicker" },
                         { text: "ProgressIndicator", link: "/zh_CN/components/progressindicator", },
                         { text: "InstallLoadProgress", link: "/zh_CN/components/installloadprogress" },
                         { text: "Snackbar", link: "/zh_CN/components/snackbar" },

@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` is a basic interactive component in COUI used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling. Two hairlines in the `dividerLine` color frame the selected row at the center ± 24dp, inset 16dp from both sides. Holding a row above or below the center steps the year and day every 100ms and the month every 200ms, as in COUIDatePicker. The wheels themselves follow [NumberPicker](./numberpicker).
+`DatePicker` is a basic interactive component in COUI used for selecting a calendar date with three vertical scroll wheels (year / month / day), mirroring ColorOS's COUIDatePicker. The day range automatically follows the selected year and month (leap years included), and the day is clamped when a shorter month is selected. All columns support infinite scrolling. Two hairlines in the `dividerLine` color frame the selected row at the center ± 24dp, inset 16dp from both sides. Holding a row above or below the center steps the year and day every 100ms and the month every 200ms, as in COUIDatePicker. The wheels follow the locale's date field order (e.g. month / day / year in US English, year / month / day in Chinese, day / month / year in German), like COUIDatePicker.reorderSpinners. The wheels themselves follow [NumberPicker](./numberpicker).
 
 Dates are represented by the plain `DateValue` data class, so no date/time library dependency is required.
 
@@ -50,6 +50,7 @@ DatePicker(
 | yearLabel        | (Int) -> String      | Converts a year to its display string                | DatePickerDefaults.YearLabel      | No       |
 | monthLabel       | (Int) -> String      | Converts a month (1..12) to its display string       | DatePickerDefaults.MonthLabel     | No       |
 | dayLabel         | (Int) -> String      | Converts a day of month to its display string        | DatePickerDefaults.DayLabel       | No       |
+| fieldOrder       | DateFieldOrder       | Left-to-right order of the wheels (mirrored in RTL)  | DatePickerDefaults.localeFieldOrder() | No   |
 | yearColumnWidth  | Dp                   | Width of the year column                             | DatePickerDefaults.YearColumnWidth | No      |
 | monthColumnWidth | Dp                   | Width of the month column                            | DatePickerDefaults.MonthColumnWidth | No     |
 | dayColumnWidth   | Dp                   | Width of the day column                              | DatePickerDefaults.DayColumnWidth | No       |
@@ -83,7 +84,23 @@ DatePicker(
 | MonthLabel       | (Int) -> String | Abbreviated English month names            | "Jan".."Dec"              |
 | DayLabel         | (Int) -> String | Zero-padded two digits                     | "01".."31"                |
 
+`DatePickerDefaults.localeFieldOrder()` reads the platform's best "yyyyMMMMdd" pattern: Android `DateFormat.getBestDateTimePattern`, the JDK long date pattern on desktop, `NSDateFormatter.dateFormatFromTemplate` on iOS / macOS and `Intl.DateTimeFormat` on the web. It falls back to `DateFieldOrder.YearMonthDay`.
+
+### DateFieldOrder Enum
+
+`YearMonthDay`, `YearDayMonth`, `MonthDayYear`, `MonthYearDay`, `DayMonthYear`, `DayYearMonth`. Each entry exposes `fields: List<DateField>`; `DateFieldOrder.fromPattern(pattern)` reads the order from a date pattern.
+
 ## Advanced Usage
+
+### Fixed Column Order
+
+```kotlin
+DatePicker(
+    value = date,
+    onValueChange = { date = it },
+    fieldOrder = DateFieldOrder.YearMonthDay
+)
+```
 
 ### Custom Year Range
 
