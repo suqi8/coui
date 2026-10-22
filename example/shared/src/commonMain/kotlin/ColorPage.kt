@@ -222,6 +222,14 @@ fun ColorsPreview(colors: Colors) {
             "windowDimming" to colors.windowDimming,
             "sliderKeyPoint" to colors.sliderKeyPoint,
             "sliderKeyPointForeground" to colors.sliderKeyPointForeground,
+            "secondaryButton" to colors.secondaryButton,
+            "disabledSecondaryButton" to colors.disabledSecondaryButton,
+            "disabledOnSecondaryButton" to colors.disabledOnSecondaryButton,
+            "transparentButton" to colors.transparentButton,
+            "onTransparentButton" to colors.onTransparentButton,
+            "disabledOnTransparentButton" to colors.disabledOnTransparentButton,
+            "backgroundTop" to colors.backgroundTop,
+            "primaryTextOnPopup" to colors.primaryTextOnPopup,
         )
         val colorMap = colorList.toMap()
         colorList.map { (name, color) ->

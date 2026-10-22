@@ -154,6 +154,21 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                         modifier = Modifier.weight(1f),
                     )
                 }
+                // COUI 17 switches to the vertical layout (action below the message) once the
+                // message wraps; touching the snack bar pauses its auto-dismiss timer.
+                TextButton(
+                    text = "Multi-line with action",
+                    onClick = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "The file has been moved to the recycle bin and will be deleted permanently after 30 days",
+                                actionLabel = "Undo",
+                                duration = SnackbarDuration.Long,
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }
