@@ -5,9 +5,11 @@
 `Path` 构造器。支持 Android、Desktop (JVM)、iOS、macOS 和 Web (WasmJs/Js) 平台。
 
 ::: tip 与 RoundedCornerShape 的区别
-`RoundedCornerShape` 的圆角是一段纯粹的四分之一圆弧，直线段与弧之间的曲率
-存在突变。squircle 把曲率分布到更宽的角部区域，呈现现代移动端图标常见的
-"连续曲率圆角"观感。视觉差异在中到大半径时最明显。
+`RoundedCornerShape` 的圆角是一段纯粹的四分之一圆弧。本库的 squircle 圆角即
+ColorOS 的平滑圆角（Oplus `Path.addSmoothRoundRect`）：一段 Lamé 超椭圆
+`|x|^n + |y|^n = r^n` 的四分之一，指数 `n` 即圆角 `weight`，在距顶点 `r`
+（圆角半径）处与两条直边相切。权重 `2` 即圆弧；权重越大，曲线在直边上停留越久，
+角越方。视觉差异在中到大半径时最明显。
 :::
 
 ::: warning 平台下限
@@ -165,22 +167,37 @@ Modifier.absoluteSquircleSurface(
 
 ## 调整曲线参数
 
-`extension` 决定连续曲率区从顶点延伸出去的距离。`1.0` 等同标准圆弧；
-默认 `1.1` 给出标准的 squircle 观感。
+`weight` 是每个角的超椭圆指数，与 ColorOS 传给 `addSmoothRoundRect` 的值相同。
+圆角总在 `cornerRadius` 处与直边相切，权重只改变两切点之间曲线的方正程度。
 
-| 参数        | 默认值 | 范围         | 作用                                                                |
-| ----------- | :----: | ------------ | ------------------------------------------------------------------- |
-| `extension` | `1.1`  | `[1, 2]`     | 角部区域大小相对 `cornerRadius` 的倍数；`1.0` 即标准圆弧。           |
+| 参数     | 默认值 | 范围     | 作用                               |
+| -------- | :----: | -------- | ---------------------------------- |
+| `weight` | `2.5`  | `[2, 8]` | 超椭圆指数。`2` 为圆弧，`3` 更方。 |
+
+ColorOS 17 用到三个值，`coui-ui` 在 `COUIRoundCorner` 上提供：
+
+| 权重  | COUI 来源            | 使用者                                                |
+| :---: | -------------------- | ----------------------------------------------------- |
+| `2.0` | 圆弧 / 胶囊          | 基础 `coui_round_corner_*` 半径、胶囊、圆形           |
+| `2.5` | `weight_16_1_normal` | 卡片列表、输入卡片（`*_radius_normal_16_1`，如 24dp） |
+| `3.0` | `weight_16_1_large`  | 按钮、卡片视图、警告对话框、底部面板（45dp）          |
 
 ```kotlin
-Modifier.squircleBackground(
-    color = COUITheme.colorScheme.primaryVariant,
-    cornerRadius = 24.dp,
-    extension = 1.2f,
+Modifier.squircleSurface(
+    color = COUITheme.colorScheme.surface,
+    cornerRadius = 45.dp,
+    weight = 3f,
 )
 ```
 
-引用默认值用 `SquircleDefaults.Extension`。
+引用默认值用 `SquircleDefaults.Weight`。胶囊（`cornerRadius` 等于高度一半）请传
+`2`：更大的权重会把圆头变方。
+
+::: info 从 `extension` 迁移
+旧版本使用 `extension`（角部区域倍数，默认 1.2819），三次曲线角会延伸到
+`cornerRadius` 之外。该参数现已改为 `weight`；`SquircleDefaults.Extension*`
+仅作为已弃用常量保留。
+:::
 
 ## Path API
 
@@ -201,8 +218,9 @@ val path = Path().apply {
 }
 ```
 
-静态填充 / 裁剪场景请优先用 shader-backed modifier —— 它们每进程只算一次
-距离场并缓存。
+每个角由若干段拟合超椭圆的三次贝塞尔曲线构成（误差在半径的 0.03% 以内）。
+静态填充 / 裁剪场景请优先用 shader-backed modifier —— 它们逐像素计算精确的
+超椭圆距离。
 
 ## 全局开关
 
@@ -257,7 +275,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomEnd`    | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomStart`  | `Dp`    | 每角半径（按角重载）                              | -                                   |
-| `extension`    | `Float` | 角部区域倍数，钳位到 `[1, 2]`                     | `SquircleDefaults.Extension` = 1.1  |
+| `weight`       | `Float` | 超椭圆指数，钳位到 `[2, 8]`                       | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -266,7 +284,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `width`        | `Dp`    | 描边宽度          | -                               |
 | `color`        | `Color` | 描边颜色          | -                               |
 | `cornerRadius` | `Dp`    | 统一圆角半径      | -                               |
-| `extension`    | `Float` | 角部区域倍数      | `SquircleDefaults.Extension`    |
+| `weight`       | `Float` | 超椭圆指数        | `SquircleDefaults.Weight`       |
 
 ### Path.addSquircleRect
 
@@ -275,13 +293,13 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `width`           | `Float`   | path 宽度（像素）                                    | -                               |
 | `height`          | `Float`   | path 高度（像素）                                    | -                               |
 | `cornerRadius`    | `Float`   | 圆角半径（像素）                                     | -                               |
-| `extension`       | `Float`   | 角部区域倍数                                         | `SquircleDefaults.Extension`    |
+| `weight`          | `Float`   | 超椭圆指数                                           | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | 为 `false` 时改为追加同尺寸的圆角矩形                 | `true`                          |
 
 ### SquircleDefaults
 
 | 常量           | 类型    | 说明                       |  值    |
 | -------------- | ------- | -------------------------- | -----: |
-| `Extension`    | `Float` | 默认角部区域倍数           | `1.1`  |
-| `ExtensionMin` | `Float` | `Extension` 下限           | `1.0`  |
-| `ExtensionMax` | `Float` | `Extension` 上限           | `2.0`  |
+| `Weight`       | `Float` | 默认权重（`weight_16_1_normal`） | `2.5`  |
+| `WeightMin`    | `Float` | 权重下限（圆弧）           | `2.0`  |
+| `WeightMax`    | `Float` | 权重上限                   | `8.0`  |

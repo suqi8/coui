@@ -11,7 +11,7 @@
 
 ## 1. 工程现状一句话
 
-COUI17 复刻的 **token 层（色值/字号/圆角/高度）大部分已对齐但并非 100%**（2026-10 基础框架审计修正了滑块/禁用色、行高口径、字阶、卡片圆角 12→24dp 等；平滑圆角权重 2.5/3.0 → squircle 参数的换算仍未知，见 §4.3）、**TopBar 页面层 90%**（含设置主页演示页）、**统一材质化接口 `COUIMaterialEffect` 骨架**；剩余硬骨头是 **material_shader.glsl（21,904 字节，提取自 libhwui.so）的完整 shader 级复刻**——当前 `materialPanel`/`materialGlow` 是简化版，与真机观感仍有肉眼可辨差距。
+COUI17 复刻的 **token 层（色值/字号/圆角/高度）大部分已对齐但并非 100%**（2026-10 基础框架审计修正了滑块/禁用色、行高口径、字阶、卡片圆角 12→24dp 等；平滑圆角已按 Oplus 超椭圆 n=weight 精确复刻，见 §4.3）、**TopBar 页面层 90%**（含设置主页演示页）、**统一材质化接口 `COUIMaterialEffect` 骨架**；剩余硬骨头是 **material_shader.glsl（21,904 字节，提取自 libhwui.so）的完整 shader 级复刻**——当前 `materialPanel`/`materialGlow` 是简化版，与真机观感仍有肉眼可辨差距。
 
 ## 2. 取证资产（全部已落盘，勿重复提取）
 
@@ -81,7 +81,7 @@ DEFAULT 0px / IMMERSIVE 25px / DEFAULT_BLUR 20px（blend 层已并入 Glow，枚
 - subtitle 折叠字号 18sp（`coui_appbar_title_collapsed_with_subtitle_text_size`，当前 body2 14sp 无折叠变化，且 `hideSubtitleOnCollapse` 默认 true，影响小）。
 - title icon（`coui_appbar_title_icon_size` 16dp / margin 12dp）概念未实现。
 - 组件级专项：Checkbox/RadioButton `__17` 勾选动画、选中态凝光（详见 `docs/coui17-migration-checklist.md` §三）。`coui_color_ripple_press_background` 在 17 上不消费，已移出。
-- 平滑圆角：COUI 17 用 Oplus `addSmoothRoundRect` 权重（卡片列表 2.5、按钮/卡片视图/对话框 3.0），是 framework native 实现，与 `coui-squircle` 的 extension 参数无已知换算；需要 17 真机截图量弧高后再定。
+- 平滑圆角（已完成）：Oplus `addSmoothRoundRect` 的 weight 即 Lamé 超椭圆指数 n（`|x|^n+|y|^n=r^n`，在 r 处与直边相切；17 对话框截图拟合 r=45.1dp、n=3.00）。`coui-squircle` 已改为 `weight` 参数（默认 2.5），shader 用与 libhwui G2 相同的 Lp-norm SDF，Path 用超椭圆三次拟合；调用点按 `COUIRoundCorner.Normal.Weight`=2.5 / `Large.Weight`=3.0 / `CircularWeight`=2.0 传入。遗留：① weight<2 的 Oplus 软胶囊（`sdCapsule` 软接合，与半圆差 ≤0.014r）未建模，胶囊按 2.0 画；② Tooltip（17：17dp/3.0）、TopTips（多行 28dp/3.0）、ListPopup（17：`RoundFrameLayout` 28dp/2.5）的半径仍是基础档，现按 2.0 画，换 17 半径时一并换权重；③ CodeTextField/Badge/RecommendedPreference 背景在 17 上仍走 Java `COUIShapePath`（非超椭圆），按 2.0/2.5 近似；④ NavDisplay 转场裁剪用屏幕圆角，无 COUI 取证，沿用默认 2.5。
 - 列表选中态：COUI 17 选中行画 `couiColorFocus` 蒙层并隐藏相邻分隔线（`COUIPreferenceItemDecoration`）；本库只在键盘焦点上画 `focus` 层，`BasicComponent` 无 selected 参数，分隔线也不会自动隐藏。
 
 ## 5. 已知坑（血泪记录，勿重蹈）

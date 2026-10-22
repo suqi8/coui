@@ -206,7 +206,7 @@ fun MyApp() {
 
 ## 圆角档位
 
-`COUIRoundCorner` 收录 COUI 圆角档位（`coui_round_corner_*`）：`XS` 4、`S` 8、`M` 12、`L` 16、`XL` 20、`XXL` 24、`XXXL` 28、`XXXXL` 32 dp。ColorOS 17 在平滑圆角路径上会把基础档换成更大的半径，对应 `COUIRoundCorner.Normal`（卡片列表，`*_radius_normal_16_1`；`Normal.XL` = 24dp，即 `Card` 默认圆角）和 `COUIRoundCorner.Large`（按钮与卡片视图，`*_radius_large_16_1`）。COUI 还为每条路径指定了平滑权重（卡片列表 2.5、按钮 3.0），本库没有建模这些权重，所有形状都使用 [Squircle](./squircle.md) 中描述的超椭圆参数。
+`COUIRoundCorner` 收录 COUI 圆角档位（`coui_round_corner_*`）：`XS` 4、`S` 8、`M` 12、`L` 16、`XL` 20、`XXL` 24、`XXXL` 28、`XXXXL` 32 dp。ColorOS 17 在平滑圆角路径上会把基础档换成更大的半径，对应 `COUIRoundCorner.Normal`（卡片列表，`*_radius_normal_16_1`；`Normal.XL` = 24dp，即 `Card` 默认圆角）和 `COUIRoundCorner.Large`（按钮与卡片视图，`*_radius_large_16_1`）。每组档位附带平滑权重，即 squircle modifier 的 `weight` 参数（超椭圆指数，见 [平滑圆角](./squircle.md)）：`COUIRoundCorner.Normal.Weight` = 2.5（`weight_16_1_normal`），`COUIRoundCorner.Large.Weight` = 3.0（`weight_16_1_large`，对话框与底部面板也用它），基础档、胶囊与圆形用 `COUIRoundCorner.CircularWeight` = 2.0（ColorOS 17 不做平滑）。
 
 ## 状态蒙层
 

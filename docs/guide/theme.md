@@ -210,9 +210,11 @@ fun MyApp() {
 `COUIRoundCorner` holds the COUI corner radius steps (`coui_round_corner_*`): `XS` 4, `S` 8, `M` 12, `L` 16,
 `XL` 20, `XXL` 24, `XXXL` 28, `XXXXL` 32 dp. ColorOS 17 swaps a base step for a larger radius on its smooth-corner
 paths, exposed as `COUIRoundCorner.Normal` (card lists, `*_radius_normal_16_1`: `Normal.XL` = 24dp, the default
-`Card` radius) and `COUIRoundCorner.Large` (buttons and card views, `*_radius_large_16_1`). COUI also gives each path
-its own smoothing weight (2.5 for card lists, 3.0 for buttons); those weights are not modelled, every shape uses the
-squircle extension described in the [Squircle](./squircle.md) guide.
+`Card` radius) and `COUIRoundCorner.Large` (buttons and card views, `*_radius_large_16_1`). Each family carries its
+smoothing weight, the superellipse exponent the squircle modifiers take as `weight` (see [Squircle](./squircle.md)):
+`COUIRoundCorner.Normal.Weight` = 2.5 (`weight_16_1_normal`), `COUIRoundCorner.Large.Weight` = 3.0
+(`weight_16_1_large`, also dialogs and bottom sheets), and `COUIRoundCorner.CircularWeight` = 2.0 for the base steps,
+capsules and circles, which ColorOS 17 draws without smoothing.
 
 ## State Layers
 

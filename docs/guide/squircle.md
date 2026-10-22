@@ -6,11 +6,13 @@ for fill / clip / border and a low-level `Path` builder. The library supports
 Android, Desktop (JVM), iOS, macOS, and Web (WasmJs/Js).
 
 ::: tip Squircle vs. RoundedCornerShape
-A `RoundedCornerShape` corner is a pure quarter circle, so the curvature jumps
-discontinuously at the point where the straight edge meets the arc. A squircle
-distributes the curvature along a wider corner zone, producing the smoother
-"continuous corner" look used by modern mobile app icons. Visual differences
-are most apparent at moderate to large radii.
+A `RoundedCornerShape` corner is a pure quarter circle. A squircle corner here is
+the ColorOS smooth round rect corner (Oplus `Path.addSmoothRoundRect`): a Lamé
+superellipse quarter `|x|^n + |y|^n = r^n` whose exponent `n` is the corner
+`weight`, tangent to both straight sides at the corner radius `r`. Weight `2` is
+the circular arc; larger weights keep the curve on the straight sides longer and
+square the corner off. Visual differences are most apparent at moderate to large
+radii.
 :::
 
 ::: warning Platform floor
@@ -175,23 +177,38 @@ Modifier.absoluteSquircleSurface(
 
 ## Customizing the Curve
 
-`extension` controls how far the continuous-curvature zone extends from the
-corner. `1.0` matches a circular arc; the default `1.1` gives the standard
-squircle look.
+`weight` is the superellipse exponent of every corner, the same value ColorOS
+passes to `addSmoothRoundRect`. The corner always meets the straight sides at
+`cornerRadius`; the weight only changes how square the curve between them is.
 
-| Parameter   | Default | Range    | Effect                                                                    |
-| ----------- | :-----: | -------- | ------------------------------------------------------------------------- |
-| `extension` |  `1.1`  | `[1, 2]` | Corner-tile size as a multiple of `cornerRadius`. `1.0` is a circular arc. |
+| Parameter | Default | Range    | Effect                                                        |
+| --------- | :-----: | -------- | ------------------------------------------------------------- |
+| `weight`  |  `2.5`  | `[2, 8]` | Superellipse exponent. `2` is a circular arc; `3` is squarer. |
+
+ColorOS 17 uses three values, exposed on `COUIRoundCorner` in `coui-ui`:
+
+| Weight | COUI source          | Used by                                                     |
+| :----: | -------------------- | ----------------------------------------------------------- |
+| `2.0`  | circular / capsule   | base `coui_round_corner_*` radii, capsules, circles         |
+| `2.5`  | `weight_16_1_normal` | card lists, input cards (`*_radius_normal_16_1`, e.g. 24dp) |
+| `3.0`  | `weight_16_1_large`  | buttons, card views, alert dialogs, bottom sheets (45dp)    |
 
 ```kotlin
-Modifier.squircleBackground(
-    color = COUITheme.colorScheme.primaryVariant,
-    cornerRadius = 24.dp,
-    extension = 1.2f,
+Modifier.squircleSurface(
+    color = COUITheme.colorScheme.surface,
+    cornerRadius = 45.dp,
+    weight = 3f,
 )
 ```
 
-Reference the default via `SquircleDefaults.Extension`.
+Reference the default via `SquircleDefaults.Weight`. On a capsule (`cornerRadius`
+equal to half the height) pass `2`: a larger weight squares the round ends.
+
+::: info Migrating from `extension`
+Earlier versions took an `extension` (corner-tile multiplier, default 1.2819)
+and drew a cubic corner that reached past `cornerRadius`. That parameter is now
+`weight`; `SquircleDefaults.Extension*` remain only as deprecated constants.
+:::
 
 ## Path API
 
@@ -212,8 +229,9 @@ val path = Path().apply {
 }
 ```
 
-For static fills and clips prefer the shader-backed modifiers — they cache
-their distance field once per process.
+Each corner is a few cubic Bézier segments fitted to the superellipse (within
+0.03% of the radius). For static fills and clips prefer the shader-backed
+modifiers — they evaluate the exact superellipse distance per pixel.
 
 ## Global Toggle
 
@@ -268,7 +286,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomEnd`    | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomStart`  | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
-| `extension`    | `Float` | Corner-tile size multiplier, clamped to `[1, 2]`         | `SquircleDefaults.Extension` = 1.1  |
+| `weight`       | `Float` | Superellipse exponent, clamped to `[2, 8]`               | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -277,7 +295,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `width`        | `Dp`    | Stroke width                                 | -                               |
 | `color`        | `Color` | Stroke color                                 | -                               |
 | `cornerRadius` | `Dp`    | Uniform corner radius                        | -                               |
-| `extension`    | `Float` | Corner-tile size multiplier                  | `SquircleDefaults.Extension`    |
+| `weight`       | `Float` | Superellipse exponent                        | `SquircleDefaults.Weight`       |
 
 ### Path.addSquircleRect
 
@@ -286,13 +304,13 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `width`           | `Float`   | Path width in pixels                                               | -                               |
 | `height`          | `Float`   | Path height in pixels                                              | -                               |
 | `cornerRadius`    | `Float`   | Corner radius in pixels                                            | -                               |
-| `extension`       | `Float`   | Corner-tile size multiplier                                        | `SquircleDefaults.Extension`    |
+| `weight`          | `Float`   | Superellipse exponent                                              | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | When `false`, appends a plain rounded rect of the same dimensions  | `true`                          |
 
 ### SquircleDefaults
 
 | Constant       | Type    | Description                          | Value  |
 | -------------- | ------- | ------------------------------------ | -----: |
-| `Extension`    | `Float` | Default corner-tile size multiplier  | `1.1`  |
-| `ExtensionMin` | `Float` | Lower bound for `Extension`          | `1.0`  |
-| `ExtensionMax` | `Float` | Upper bound for `Extension`          | `2.0`  |
+| `Weight`       | `Float` | Default weight (`weight_16_1_normal`) | `2.5`  |
+| `WeightMin`    | `Float` | Lower bound (circular arc)           | `2.0`  |
+| `WeightMax`    | `Float` | Upper bound                          | `8.0`  |
