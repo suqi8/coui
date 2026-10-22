@@ -4,15 +4,10 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -34,12 +29,14 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,23 +47,29 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
+import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
@@ -76,6 +79,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.hasFocusReassignBug
 import kotlinx.coroutines.delay
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * A [SearchBar] component with COUI style.
@@ -87,7 +92,8 @@ import kotlinx.coroutines.delay
  * @param insideMargin The margin inside the [SearchBar].
  * @param expanded whether the [SearchBar] is expanded and showing search results.
  * @param outsideEndAction the action to be shown at the end side of the [SearchBar] when it is
- *   expanded.
+ *   expanded, typically a [CancelButton]. It is placed 12dp after the capsule and grows in with the
+ *   COUI 17 edit-state spring (scale 0.5 to 1, fading in) while the capsule narrows to make room.
  * @param content the content to be shown when the [SearchBar] is expanded.
  */
 @Composable
@@ -102,46 +108,60 @@ fun SearchBar(
 ) {
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
-    val actionSlideDistancePx = with(LocalDensity.current) { ActionSlideDistance.roundToPx() }
+
+    // COUI 17 COUISearchBar: the capsule width (mStateChangedAnimation) and the functional button
+    // (mFunBtnSpringAnimation) run on response 0.5 / bounce 0.25 springs, both in
+    // StateChangedToEditParamsHigh and StateChangedToNormalParamsHigh. They start together with
+    // the same force, so one progress drives both.
+    val progress = remember { Animatable(if (expanded) 1f else 0f) }
+    LaunchedEffect(expanded) {
+        progress.animateTo(targetValue = if (expanded) 1f else 0f, animationSpec = StateChangeSpring)
+    }
+
     Column(
         modifier = modifier,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = insideMargin.width),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = insideMargin.height, horizontal = insideMargin.width),
+                    .padding(vertical = insideMargin.height),
             ) {
                 inputField()
             }
-            // COUISearchBar edit-state transition: background resize, button slide and fade,
-            // all with COUIMoveEaseInterpolator.
             if (outsideEndAction != null) {
-                AnimatedVisibility(
-                    visible = expanded,
-                    enter = expandHorizontally(animationSpec = tween(BackgroundResizeDurationMillis, easing = MoveEase)) +
-                        slideInHorizontally(
-                            animationSpec = tween(ActionOffsetDurationMillis, easing = MoveEase),
-                            initialOffsetX = { actionSlideDistancePx },
-                        ) +
-                        fadeIn(animationSpec = tween(ActionAlphaDurationMillis, easing = MoveEase)),
-                    exit = shrinkHorizontally(animationSpec = tween(BackgroundResizeDurationMillis, easing = MoveEase)) +
-                        slideOutHorizontally(
-                            animationSpec = tween(ActionOffsetDurationMillis, easing = MoveEase),
-                            targetOffsetX = { actionSlideDistancePx },
-                        ) +
-                        fadeOut(animationSpec = tween(ActionAlphaDurationMillis, easing = MoveEase)),
-                ) {
+                val actionInMotion by remember { derivedStateOf { progress.value != 0f } }
+                if (expanded || actionInMotion) {
+                    val actionTextAlpha = remember { { searchBarActionTextAlpha(progress.value) } }
                     Box(
-                        modifier = Modifier.padding(
-                            start = ActionExtraStartPadding,
-                            end = ActionEndPadding,
-                        ),
+                        modifier = Modifier.layout { measurable, constraints ->
+                            // The slot claims (gap + button) * progress, so the capsule beside it
+                            // narrows with the spring, overshoot included. The button itself sits
+                            // at its edit-state position against the end edge.
+                            val placeable = measurable.measure(constraints.copy(minWidth = 0))
+                            val fraction = max(progress.value, 0f)
+                            val width = ((placeable.width + ActionStartGap.roundToPx()) * fraction).roundToInt()
+                            val direction = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
+                            layout(width, placeable.height) {
+                                placeable.placeRelativeWithLayer(width - placeable.width, 0) {
+                                    val p = progress.value
+                                    val scale = searchBarActionScale(p)
+                                    scaleX = scale
+                                    scaleY = scale
+                                    translationX = direction * ActionOffsetPx * (1f - p)
+                                    alpha = searchBarActionAlpha(p)
+                                }
+                            }
+                        },
                     ) {
-                        outsideEndAction?.invoke()
+                        CompositionLocalProvider(LocalSearchBarActionTextAlpha provides actionTextAlpha) {
+                            outsideEndAction()
+                        }
                     }
                 }
             }
@@ -179,6 +199,10 @@ fun SearchBar(
  * @param enabled the enabled state of this input field. When `false`, this component will not
  *   respond to user input, and it will appear visually disabled and disabled to accessibility
  *   services.
+ * @param material whether the capsule takes the COUI 17 top-bar glass material (filtered
+ *   backdrop, shadow, edge lighting, touch spotlight and the `COUIViewTouchAnimator` press scale,
+ *   rubber band and deformation; see [COUIMaterialEffect.materialPanel]), as `SearchBarBackgroundView`
+ *   does by default. When `false` the capsule is a flat [SearchBarColors.backgroundColor] fill.
  * @param textStyle Style configuration that applies at character level such as color, font etc.
  * @param colors [SearchBarColors] that will be used to resolve the colors used for this input
  *   field in different states. See [SearchBarDefaults.searchBarColors].
@@ -202,6 +226,7 @@ fun InputField(
     modifier: Modifier = Modifier,
     label: String = "",
     enabled: Boolean = true,
+    material: Boolean = true,
     textStyle: TextStyle? = null,
     colors: SearchBarColors = SearchBarDefaults.searchBarColors(),
     collapsePercent: Float = 1f,
@@ -334,8 +359,10 @@ fun InputField(
         keyboardActions = KeyboardActions(onSearch = { currentOnSearch(query) }),
         interactionSource = internalInteractionSource,
         decorationBox = { innerTextField ->
-            // COUISearchBar capsule: coui_search_view_selector_color_normal (translucent, the
-            // page background shows through).
+            // COUI 17 SearchBarBackgroundView: the TOP_BAR material over a transparent background
+            // (ToolbarMaterialEffectResolver), ?couiColorBar without it. A collapsing capsule tints
+            // toward the divider line, so it drops the material for its flat colour.
+            val capsuleMaterial = material && collapse == null
             Box(
                 modifier = Modifier
                     .then(
@@ -360,9 +387,19 @@ fun InputField(
                                 }
                         },
                     )
-                    .background(
-                        color = collapse?.capsuleColor ?: colors.backgroundColor,
-                        shape = capsuleShape,
+                    .then(
+                        if (capsuleMaterial) {
+                            Modifier.materialPanel(
+                                interactionSource = internalInteractionSource,
+                                cornerRadius = COUIRoundCorner.Full,
+                                motionEnabled = enabled,
+                            )
+                        } else {
+                            Modifier.background(
+                                color = collapse?.capsuleColor ?: colors.backgroundColor,
+                                shape = capsuleShape,
+                            )
+                        },
                     ),
                 contentAlignment = Alignment.CenterStart,
             ) {
@@ -479,14 +516,17 @@ object SearchBarDefaults {
     val CancelFontSize = 14.sp
 
     /**
-     * The horizontal padding of the [CancelButton] label. COUI
-     * `text_ripple_bg_padding_horizontal`, forced by `COUITextViewCompatUtil.setPressRippleDrawable`
-     * so the label never sits flush against the window edge.
+     * The horizontal padding of the [CancelButton] label inside its capsule. COUI 17
+     * `coui_search_bar_functional_button_text_padding_horizontal`, which `SearchBarFunctionButton`
+     * applies to the instant-search button.
      */
-    val CancelPaddingHorizontal = 12.dp
+    val CancelPaddingHorizontal = 16.dp
 
-    /** The vertical padding of the [CancelButton] label. COUI `text_ripple_bg_padding_vertical`. */
-    val CancelPaddingVertical = 4.dp
+    /**
+     * The height of the [CancelButton] capsule. COUI 17 `SearchBarFunctionButton` matches the search
+     * capsule: `coui_search_bar_normal_background_height`.
+     */
+    val CancelHeight = 40.dp
 
     /** The widest a [CancelButton] may grow. COUI `coui_search_bar_functional_button_max_width`. */
     val CancelMaxWidth = 152.dp
@@ -498,18 +538,19 @@ object SearchBarDefaults {
     val TrailingIconVisualSize = 18.dp
 
     /**
-     * Creates a [SearchBarColors] with the default colors of the [InputField], following
-     * COUISearchBar (`coui_search_view_selector_color_normal` capsule, couiColorLabelSecondary
-     * hint, couiColorSecondNeutral glyph, couiColorHintNeutral clear circle).
+     * Creates a [SearchBarColors] with the default colors of the [InputField] and [CancelButton],
+     * following COUI 17 COUISearchBar: `?couiColorBar` capsule fill (the colour the glass material
+     * falls back to), couiColorLabelSecondary hint, couiColorSecondNeutral glyph (baked into
+     * `coui_search_view_icon_normal`), couiColorHintNeutral clear circle and the
+     * `coui_search_function_button_text_color` (couiColorLabelPrimary) cancel label.
      */
     @Composable
     fun searchBarColors(
-        backgroundColor: Color = COUITheme.colorScheme.secondaryContainer,
+        backgroundColor: Color = barColor(),
         labelColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         iconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         clearIconColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        // COUI coui_searchview_cancel_button_color resolves to ?couiColorPrimaryText.
-        cancelTextColor: Color = COUITheme.colorScheme.primary,
+        cancelTextColor: Color = COUITheme.colorScheme.onSurface,
     ): SearchBarColors = remember(backgroundColor, labelColor, iconColor, clearIconColor, cancelTextColor) {
         SearchBarColors(
             backgroundColor = backgroundColor,
@@ -519,12 +560,25 @@ object SearchBarDefaults {
             cancelTextColor = cancelTextColor,
         )
     }
+
+    /**
+     * `?couiColorBar` (`coui_color_bar`: `#FAFAFA` light, `#1E1E1E` dark), the fill
+     * `ToolbarMaterialEffectResolver.getToolbarBackgroundColor` gives the search capsule and the
+     * cancel capsule without the material. The theme has no bar token, so it is picked by the
+     * background luminance, the same test the material uses.
+     */
+    @Composable
+    private fun barColor(): Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) BarColorDark else BarColorLight
+
+    private val BarColorLight = Color(0xFFFAFAFA)
+    private val BarColorDark = Color(0xFF1E1E1E)
 }
 
 /**
- * Colors used by the [InputField] of a [SearchBar].
+ * Colors used by the [InputField] and [CancelButton] of a [SearchBar].
  *
- * @param backgroundColor the color of the capsule background.
+ * @param backgroundColor the capsule fill when the material is off, and the colour a collapsing
+ *   capsule starts from.
  * @param labelColor the color of the label (hint) text.
  * @param iconColor the tint of the default leading search icon.
  * @param clearIconColor the fill color of the default clear button circle.
@@ -542,17 +596,25 @@ data class SearchBarColors(
 /**
  * The trailing button a COUI search bar shows while expanded.
  *
- * COUI `initFunctionButton` styles it with `couiTextAppearanceButton` and forces the ripple
- * paddings, so the label keeps a 12dp visual inset from the window edge. It appears as soon as the
- * bar expands, whether or not a query has been typed, and the class deliberately leaves the click
- * unwired — the host decides. Settings collapses the bar, and collapsing clears the query, so the
- * net effect there is clear + collapse + hide the keyboard.
+ * On COUI 17 `SearchBarFunctionButton` is its own 40dp capsule: the same top-bar glass material as
+ * the search capsule (`?couiColorBar` without it), 16dp horizontal text padding and a 14sp medium
+ * couiColorLabelPrimary label. It appears as soon as the bar expands, whether or not a query has
+ * been typed, and the class deliberately leaves the click unwired — the host decides. Settings
+ * collapses the bar, and collapsing clears the query, so the net effect there is clear + collapse +
+ * hide the keyboard.
+ *
+ * Inside a [SearchBar] `outsideEndAction` the label fades in with the edit-state progress while the
+ * capsule reaches full opacity within the first fifth of it, as `COUISearchBar` does for a blurred
+ * button.
  *
  * @param onClick the callback invoked when the button is clicked.
  * @param modifier the [Modifier] to be applied to the button.
  * @param text the label of the button.
  * @param enabled whether the button responds to clicks.
- * @param colors the [SearchBarColors] resolving the label color.
+ * @param material whether the capsule takes the COUI 17 top-bar glass material (see
+ *   [COUIMaterialEffect.materialPanel]). When `false` it is a flat [SearchBarColors.backgroundColor]
+ *   capsule.
+ * @param colors the [SearchBarColors] resolving the label and fallback fill colors.
  */
 @Composable
 fun CancelButton(
@@ -560,59 +622,114 @@ fun CancelButton(
     modifier: Modifier = Modifier,
     text: String = "Cancel",
     enabled: Boolean = true,
+    material: Boolean = true,
     colors: SearchBarColors = SearchBarDefaults.searchBarColors(),
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
+    val interactionSource = remember { MutableInteractionSource() }
+    val textAlpha = LocalSearchBarActionTextAlpha.current
+    // coui_search_function_button_text_color: couiColorLabelPrimary, disabled couiColorLabelTertiary.
     val labelColor = if (enabled) {
         colors.cancelTextColor
     } else {
         COUITheme.colorScheme.disabledOnSecondaryVariant
     }
-    Text(
-        text = text,
+    // SearchBarFunctionButton: a smooth round rect at half the height with weight 1.0.
+    val capsuleShape = if (isSquircleEnabled()) {
+        remember { SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.CapsuleWeight) }
+    } else {
+        CircleShape
+    }
+    // The material draws its own press feedback.
+    val indication = if (material) null else LocalIndication.current
+    Box(
         modifier = modifier
             .widthIn(max = SearchBarDefaults.CancelMaxWidth)
+            .height(SearchBarDefaults.CancelHeight)
+            .then(
+                if (material) {
+                    Modifier.materialPanel(
+                        interactionSource = interactionSource,
+                        cornerRadius = COUIRoundCorner.Full,
+                        motionEnabled = enabled,
+                    )
+                } else {
+                    Modifier.background(color = colors.backgroundColor, shape = capsuleShape)
+                },
+            )
             .clickable(
                 enabled = enabled,
-                indication = null,
-                interactionSource = null,
+                role = Role.Button,
+                interactionSource = interactionSource,
+                indication = indication,
                 onClick = { currentOnClick() },
             )
-            .padding(
-                horizontal = SearchBarDefaults.CancelPaddingHorizontal,
-                vertical = SearchBarDefaults.CancelPaddingVertical,
-            ),
-        color = labelColor,
-        fontSize = SearchBarDefaults.CancelFontSize,
-        fontWeight = FontWeight.Medium,
-        maxLines = 1,
-    )
+            .padding(horizontal = SearchBarDefaults.CancelPaddingHorizontal),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            modifier = if (textAlpha == null) {
+                Modifier
+            } else {
+                Modifier.graphicsLayer { alpha = textAlpha() }
+            },
+            color = labelColor,
+            fontSize = SearchBarDefaults.CancelFontSize,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
-/** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
-private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+/**
+ * The extra alpha the [CancelButton] label applies inside a [SearchBar] action slot, on top of the
+ * slot's own [searchBarActionAlpha]; `null` outside a [SearchBar].
+ */
+private val LocalSearchBarActionTextAlpha = staticCompositionLocalOf<(() -> Float)?> { null }
 
-/** COUISearchBar DEFAULT_SEARCH_VIEW_OFFSET/SCALE_CHANGE_DURATION (450ms). */
-private val BackgroundResizeDurationMillis = 450
-
-/** COUISearchBar DEFAULT_SEARCH_VIEW_BUTTON_OFFSET_DURATION (400ms). */
-private val ActionOffsetDurationMillis = 400
-
-/** COUISearchBar DEFAULT_BUTTON_ALPHA_CHANGE_DURATION (350ms). */
-private val ActionAlphaDurationMillis = 350
-
-/** COUI `coui_search_bar_functional_button_offset_distance` (30dp). */
-private val ActionSlideDistance = 30.dp
+/** COUI 17 `StateChangedToEditParamsHigh` / `StateChangedToNormalParamsHigh`: response 0.5, bounce 0.25. */
+private val StateChangeSpring = TouchMotion.spring(response = 0.5f, bounce = 0.25f, visibilityThreshold = 0.001f)
 
 /**
- * Start padding for the outside end action: COUI `coui_search_bar_functional_button_start_gap`
- * (8dp) minus the 16dp input field margin already applied, floored at zero. [CancelButton] brings
- * its own 12dp ripple padding, which is what makes up the rest of the visual gap.
+ * `COUISearchBar.mFunctionalInitScale`: `functionalButtonInitScale` (to edit) and
+ * `functionalButtonEndScale` (to normal) are both 0.5 in the COUI 17 high-end params.
  */
-private val ActionExtraStartPadding = 0.dp
+private val ActionInitScale = 0.5f
+
+/** `COUISearchBar.updateFunctionalButtonAlpha`: a blurred button is fully opaque at this progress. */
+private val ActionAlphaRemapProgress = 0.2f
 
 /**
- * End padding for the outside end action: `coui_search_bar_functional_button_end_gap_compat` (4dp).
- * [CancelButton]'s own 12dp ripple padding supplies the remaining visual inset.
+ * The COUI 17 starting translation of the action, `mFunctionalButtonOffsetX`: the search background
+ * view's end edge minus the button's, read while the background view is laid out at its full width
+ * plus 20px (`handleStateChangedAnimation`). The button therefore grows in almost in place, shifted
+ * 20px outward at the start. The 60dp `functional_button_offset_distance` is ColorOS 16 only.
  */
-private val ActionEndPadding = 4.dp
+private val ActionOffsetPx = 20f
+
+/** Gap between the capsule and the action: COUI `coui_search_bar_functional_button_start_gap` (12dp). */
+private val ActionStartGap = 12.dp
+
+/** The action scale at edit-state [progress]: `initScale + (1 - initScale) * progress`. */
+internal fun searchBarActionScale(progress: Float): Float = ActionInitScale + (1f - ActionInitScale) * progress
+
+/**
+ * The action alpha at edit-state [progress]: `COUISearchBar.remapAlphaProgress(p, 0.2)`, which a
+ * blurred functional button uses, so the capsule is solid before the label has faded in.
+ */
+internal fun searchBarActionAlpha(progress: Float): Float {
+    val p = progress.coerceIn(0f, 1f)
+    return if (p < ActionAlphaRemapProgress) p / ActionAlphaRemapProgress else 1f
+}
+
+/**
+ * The extra label alpha that makes the [CancelButton] text, already under [searchBarActionAlpha],
+ * end up at `progress` (`setFunctionalButtonTextAlpha`).
+ */
+internal fun searchBarActionTextAlpha(progress: Float): Float {
+    val p = progress.coerceIn(0f, 1f)
+    val outer = searchBarActionAlpha(p)
+    return if (outer > 0f) p / outer else 0f
+}

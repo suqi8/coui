@@ -157,7 +157,7 @@ fun SearchStatus.SearchPager(
             ) {
                 CancelButton(
                     onClick = onCancelSearch,
-                    modifier = Modifier.padding(end = 4.dp, bottom = 6.dp),
+                    modifier = Modifier.padding(end = 16.dp, bottom = 6.dp),
                     enabled = searchStatus.isExpand(),
                 )
                 val navEventState = rememberNavigationEventState(NavigationEventInfo.None)
