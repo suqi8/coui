@@ -66,3 +66,11 @@ This page lists all colors in the COUI color scheme with their default light and
 | `sliderBackground` | Slider background | `#0F000000` | `#26FFFFFF` |
 | `dialogButton` | Dialog bar button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
 | `dragHandle` | Bottom sheet drag handle (COUI `couiColorControls`) | `#29000000` | `#40FFFFFF` |
+| `secondaryButton` | Secondary button fill (COUI `couiColorContainer8` over `couiColorBackgroundElevated`) | `#FFEBEBEB` | `#FF353535` |
+| `disabledSecondaryButton` | Disabled secondary button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
+| `disabledOnSecondaryButton` | Disabled secondary button label | `#42000000` | `#28FFFFFF` |
+| `transparentButton` | Transparent button fill (COUI `coui_button_translate_color`) | `#33FFFFFF` | `#33FFFFFF` |
+| `onTransparentButton` | Transparent button label | `#FFFFFFFF` | `#FFFFFFFF` |
+| `disabledOnTransparentButton` | Disabled transparent button label | `#4DFFFFFF` | `#4DFFFFFF` |
+| `backgroundTop` | Topmost floating surface, e.g. Snackbar (COUI `couiColorBackgroundTop`) | `#FFFFFFFF` | `#FF333333` |
+| `primaryTextOnPopup` | Accent text on floating surfaces, e.g. Snackbar action (COUI `couiColorPrimaryTextOnPopup`) | `#FF0080FF` | `#FF5C9DFF` |

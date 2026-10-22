@@ -62,6 +62,8 @@ LoadingButton(
 | minHeight         | Dp                        | Minimum height of the button                            | ButtonDefaults.MinHeight         | No       |
 | colors            | TextButtonColors          | Color configuration                                     | ButtonDefaults.textButtonColors() | No      |
 | insideMargin      | PaddingValues             | Margin inside the button                                | ButtonDefaults.InsideMargin      | No       |
+| textStyle         | TextStyle                 | Style of the label, loading text and dot glyphs (`ButtonDefaults.textStyleSmall()` for the small tier) | COUITheme.textStyles.button | No |
+| material          | ButtonMaterial            | COUI 17 material layer, see [Button](./button)          | ButtonMaterial.None              | No       |
 | interactionSource | MutableInteractionSource? | Interaction source of the button                        | null                             | No       |
 | indication        | Indication?               | Indication of the button (COUI press feedback is built in) | null                          | No       |
 
@@ -78,3 +80,4 @@ LoadingButton(
 - The three dots pulse 20% -> 50% -> 100% -> 50% -> 20% alpha on a linear curve; each dot is delayed by 333ms and the whole 1332ms wave loops, matching the COUILoadingButton animator set.
 - With `loadingText` set, the loading state shows that label followed by three animated dot glyphs instead of the plain dot indicator (COUIButton `isShowLoadingText`).
 - The dots are drawn with the button's content color, like COUILoadingButton draws them with the label paint.
+- Geometry, colors and the COUI 17 press feedback come from `Button`: a height-derived capsule, 132dp minimum width and a single-line label.

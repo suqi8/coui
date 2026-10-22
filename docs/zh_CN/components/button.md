@@ -2,7 +2,7 @@
 
 `Button` 是 COUI 中的基础交互组件，用于触发操作或事件。提供了多种风格选择，包括主要按钮、次要按钮和文本按钮。
 
-<div style="position: relative; height: 200px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+<div style="position: relative; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=button" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
 
@@ -59,9 +59,21 @@ TextButton(
 )
 ```
 
+### 透明按钮（Transparent Button）
+
+对应 COUI 的 `Widget.COUI.Button.Small.ButtonNew.Translate`：浅色与深色模式下都是半透明白色填充（`#33FFFFFF`）配白色文字，用于叠在图片或彩色背景上的按钮。
+
+```kotlin
+TextButton(
+    text = "透明按钮",
+    onClick = { /* 处理点击事件 */ },
+    colors = ButtonDefaults.textButtonColorsTransparent()
+)
+```
+
 ### 无边框文本按钮（Borderless Text Button）
 
-对应 COUI 的 `Widget.COUI.Button.Large.Borderless` / `Translate`：无填充、主题色文字。
+无填充、主题色文字。
 
 ```kotlin
 TextButton(
@@ -73,7 +85,7 @@ TextButton(
 
 ### 小尺寸档（Small Size Tier）
 
-将 `ButtonDefaults` 中的 `Small` 系列常量与 14sp 文字样式搭配使用，即可得到 COUI 小尺寸档（`Widget.COUI.Button.Small`）：
+将 `ButtonDefaults` 中的 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()`（14sp 中粗）搭配使用，即可得到 COUI 小尺寸档（`Widget.COUI.Button.Small`）：
 
 ```kotlin
 TextButton(
@@ -83,7 +95,28 @@ TextButton(
     minWidth = ButtonDefaults.MinWidthSmall,
     minHeight = ButtonDefaults.MinHeightSmall,
     insideMargin = ButtonDefaults.InsideMarginSmall,
-    textStyle = COUITheme.textStyles.button.copy(fontSize = 14.sp)
+    textStyle = ButtonDefaults.textStyleSmall()
+)
+```
+
+## 按压反馈
+
+按压反馈遵循 COUI 17 `COUIButton`（`COUITouchMotionAnimator` + `COUIMaskEffectDrawable`）：
+
+- **缩放目标**由实测 dp 尺寸推导（`PressCalc`）：面积通道 `0.85 + B(t) * 0.12`（`t` 为面积在 20² 到 150² 间的映射）；宽度超过高度两倍的按钮再叠加长宽比通道 `0.85 + B((ar - 2) / 13) * 0.15` 取平均（`B = cubic-bezier(0, 0, 0, 1)`）。296 x 44dp 按钮缩到约 0.966，132 x 44dp 约 0.920，52 x 28dp 约 0.886。
+- **弹簧**：宽度超过高度两倍的按钮用 candy 组（按下 k 438.65 / ζ 1，抬手 k 157.91 / ζ 0.5）；紧凑与圆形按钮用 jelly 组（按下 k 631.65 / ζ 1，抬手 k 157.91 / ζ 0.4）。欠阻尼的抬手带来轻微回弹。
+- **按压着色**：`couiColorPress`（浅色 `#1F000000` / 深色 `#33FFFFFF`），弹簧 k 438.65 / ζ 1，至少显现到 70% 才开始淡出。
+
+## 材质层
+
+ColorOS 17 只有在系统材质开关打开时才给按钮额外绘制材质层；这些开关默认关闭，因此 `Button` 默认不绘制。传入 `material` 可按按钮类型启用描边光 + 内阴影（`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`）与触摸聚光（`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`、`TRANSPARENT_MEDIUM_1`）。二者需要运行时着色器（Android 13+ 及所有 Skia 平台），其他环境下跳过。COUI 用来替换实色填充的背景模糊未实现。
+
+```kotlin
+TextButton(
+    text = "材质按钮",
+    onClick = { /* 处理点击事件 */ },
+    colors = ButtonDefaults.textButtonColorsPrimary(),
+    material = ButtonMaterial.Primary
 )
 ```
 
@@ -110,11 +143,12 @@ Button(
 | modifier          | Modifier                        | 应用于按钮的修饰符       | Modifier                      | 否       |
 | enabled           | Boolean                         | 按钮是否可点击           | true                          | 否       |
 | pressScaleEnabled | Boolean                         | 按压时按钮是否缩放（对应 COUIButton 的 `scaleEnable`）。填满容器单元格的按钮（如对话框按钮栏）应设为 `false`，此时按压反馈只有铺满整格的按压着色 | true | 否       |
-| cornerRadius      | Dp                              | 按钮圆角半径             | ButtonDefaults.CornerRadius   | 否       |
+| cornerRadius      | Dp                              | 按钮圆角半径；`Dp.Unspecified` 按实测高度的一半取圆角（COUI 胶囊），显式值绘制超椭圆 | ButtonDefaults.CornerRadius   | 否       |
 | minWidth          | Dp                              | 按钮最小宽度             | ButtonDefaults.MinWidth       | 否       |
 | minHeight         | Dp                              | 按钮最小高度             | ButtonDefaults.MinHeight      | 否       |
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |
 | insideMargin      | PaddingValues                   | 按钮内部边距             | ButtonDefaults.InsideMargin   | 否       |
+| material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光） | ButtonMaterial.None | 否       |
 | interactionSource | MutableInteractionSource?       | 按钮的交互源             | null                          | 否       |
 | indication        | Indication?                     | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 | content           | @Composable RowScope.() -> Unit | 按钮内容区域的可组合函数 | -                             | 是       |
@@ -129,11 +163,13 @@ Button(
 | enabled           | Boolean                   | 按钮是否可点击       | true                              | 否       |
 | pressScaleEnabled | Boolean                   | 按压时按钮是否缩放（对应 COUIButton 的 `scaleEnable`）。填满容器单元格的按钮（如对话框按钮栏）应设为 `false` | true | 否       |
 | colors            | TextButtonColors          | 文本按钮颜色配置     | ButtonDefaults.textButtonColors() | 否       |
-| cornerRadius      | Dp                        | 按钮圆角半径         | ButtonDefaults.CornerRadius       | 否       |
+| cornerRadius      | Dp                        | 按钮圆角半径；`Dp.Unspecified` 为随高度的胶囊 | ButtonDefaults.CornerRadius       | 否       |
 | minWidth          | Dp                        | 按钮最小宽度         | ButtonDefaults.MinWidth           | 否       |
 | minHeight         | Dp                        | 按钮最小高度         | ButtonDefaults.MinHeight          | 否       |
 | insideMargin      | PaddingValues             | 按钮内部边距         | ButtonDefaults.InsideMargin       | 否       |
-| textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 14sp 样式可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
+| textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()` 可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
+| maxLines          | Int                       | 标签最大行数；COUIButton 为单行、末尾省略 | 1 | 否       |
+| material          | ButtonMaterial            | COUI 17 材质层，见 `Button` | ButtonMaterial.None | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
 | indication        | Indication?               | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 
@@ -145,15 +181,15 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值               |
 | ------------ | ------------- | -------------- | -------------------- |
-| PressedScale | Float         | 按下时按钮收缩到的最小比例（48 x 48dp 以内的表面） | 0.92f |
+| PressedScale | Float         | 旧版 COUI 16 按压终点缩放；仅为源码兼容保留，已不再使用（COUI 17 目标值由尺寸推导） | 0.92f |
 | PressedBrightness | Float    | 旧版 COUIButton 的 `brightness` 属性值；仅为源码兼容保留，已不再使用 | 0.8f |
-| MinWidth     | Dp            | 按钮的最小宽度 | 58.dp                |
+| MinWidth     | Dp            | 按钮的最小宽度（COUI `coui_btn_large_width_min`） | 132.dp |
 | MinHeight    | Dp            | 按钮的最小高度 | 44.dp                |
-| CornerRadius | Dp            | 按钮的圆角半径 | 22.dp                |
-| InsideMargin | PaddingValues | 按钮的内部边距 | PaddingValues(horizontal = 12.dp, vertical = 0.dp) |
+| CornerRadius | Dp            | 按钮的圆角半径；未指定 = 按实测高度一半的胶囊 | Dp.Unspecified |
+| InsideMargin | PaddingValues | 按钮的内部边距（COUI `Widget.COUI.Button.Large`） | PaddingValues(horizontal = 12.dp, vertical = 8.dp) |
 | MinWidthSmall | Dp           | 小尺寸档的最小宽度（COUI Widget.COUI.Button.Small） | 52.dp |
 | MinHeightSmall | Dp          | 小尺寸档的最小高度 | 28.dp |
-| CornerRadiusSmall | Dp       | 小尺寸档的圆角半径（随高度的胶囊） | 14.dp |
+| CornerRadiusSmall | Dp       | 小尺寸档的圆角半径（随高度的胶囊） | Dp.Unspecified |
 | InsideMarginSmall | PaddingValues | 小尺寸档的内部边距 | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
 
 #### 方法
@@ -164,7 +200,21 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 | buttonColorsPrimary()     | ButtonColors     | 创建主要按钮的颜色配置     |
 | textButtonColors()        | TextButtonColors | 创建次要文本按钮的颜色配置 |
 | textButtonColorsPrimary() | TextButtonColors | 创建主要文本按钮的颜色配置 |
+| textStyleSmall()          | TextStyle        | 小尺寸档的标签样式（14sp 中粗） |
+| buttonColorsTransparent() | ButtonColors     | 创建透明按钮的颜色配置（半透明白色填充、白色文字） |
+| textButtonColorsTransparent() | TextButtonColors | 创建透明文本按钮的颜色配置 |
 | textButtonColorsBorderless() | TextButtonColors | 创建无边框 / 文字按钮的颜色配置(透明填充、主题色文字) |
+
+次级按钮颜色取自配色方案的 `secondaryButton`（浅色 `#EBEBEB` / 深色 `#353535`：COUI `couiColorContainer8` 合成在 `couiColorBackgroundElevated` 上）、`disabledSecondaryButton` 与 `disabledOnSecondaryButton`。
+
+### ButtonMaterial
+
+| 取值        | 说明 |
+| ----------- | ---- |
+| None        | 不绘制材质层（ColorOS 17 默认） |
+| Primary     | `CONTENT_CAPSULE_1` 描边 + `TYPE_OPAQUE_MEDIUM_1` 聚光 |
+| Secondary   | `CONTENT_CAPSULE_2` 描边 + `TYPE_OPAQUE_MEDIUM_2` 聚光 |
+| Transparent | `CONTENT_CAPSULE_3` 描边 + `TYPE_TRANSPARENT_MEDIUM_1` 聚光 |
 
 ## 进阶用法
 

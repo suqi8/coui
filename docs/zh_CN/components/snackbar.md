@@ -101,6 +101,8 @@ fun SnackbarHost(
 
 大多数情况下，可以直接使用默认的 `content`，即内置的 `Snackbar` 视觉样式。
 
+手指按住 Snackbar 时自动消失计时暂停，松手后按完整时长重新计时（COUISnackBar `onTouchEvent`：DOWN / MOVE 取消，UP / CANCEL 重新计时）。滑动关闭、多条堆叠与关闭图标为本库扩展，COUI 无对应。
+
 ## Snackbar
 
 `Snackbar` 定义了默认的消息样式。
@@ -123,10 +125,19 @@ fun Snackbar(
 | data                   | SnackbarData   | 包含消息与操作信息的数据 | -                                 | 是       |
 | modifier               | Modifier       | 应用于 Snackbar 容器的修饰符 | Modifier                      | 否       |
 | icon                   | (@Composable () -> Unit)? | 可选前置图标，布局在 30.dp 容器内（通过 `SnackbarHost` 的 `content` 插槽传入） | null | 否       |
-| cornerRadius           | Dp             | 消息为多行时的圆角半径   | SnackbarDefaults.CornerRadius     | 否       |
-| singleLineCornerRadius | Dp             | 消息为单行时的圆角半径   | SnackbarDefaults.SingleLineCornerRadius | 否 |
+| cornerRadius           | Dp             | 垂直（多行）布局的圆角半径 | SnackbarDefaults.CornerRadius     | 否       |
+| singleLineCornerRadius | Dp             | 单行布局的圆角半径；`Dp.Unspecified` 按高度一半取圆角（胶囊） | SnackbarDefaults.SingleLineCornerRadius | 否 |
 | colors                 | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
-| insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（当操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
+| insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（单行布局中操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
+
+### 布局
+
+遵循 COUI 17 `COUISnackBar.adjustLayout`：
+
+- **单行**：图标、消息、操作按钮与关闭图标排在一行，各自垂直居中，外形为胶囊。
+- **垂直**：消息换行（或含换行符）或整行超出可用宽度时，消息距顶部 12.dp，操作按钮移到消息下方（间距 10.dp）并贴右，末端边距 4.dp、底部边距 9.dp，圆角降为 `cornerRadius`（16.dp）。
+
+容器色为 `backgroundTop`（浅色 `#FFFFFF` / 深色 `#333333`），操作文字为 `primaryTextOnPopup`（`#0080FF` / `#5C9DFF`）。阴影以柔和投影近似 COUI `ShadowUtils` 3 级阴影，深色模式更浓（COUI 阴影 alpha 由 40/255 升至 120/255）。
 
 ### SnackbarColors 与 SnackbarDefaults
 
@@ -145,9 +156,9 @@ data class SnackbarColors(
 
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
-    containerColor = COUITheme.colorScheme.surfaceContainerHighest,
+    containerColor = COUITheme.colorScheme.backgroundTop,
     contentColor = COUITheme.colorScheme.onSurfaceContainer,
-    actionContentColor = COUITheme.colorScheme.primary,
+    actionContentColor = COUITheme.colorScheme.primaryTextOnPopup,
     dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
 )
 ```
@@ -158,8 +169,8 @@ val colors = SnackbarDefaults.snackbarColors(
 
 | 常量名                 | 类型          | 说明                      | 默认值                                               |
 | ---------------------- | ------------- | ------------------------- | ---------------------------------------------------- |
-| CornerRadius           | Dp            | 消息为多行时的圆角半径    | 16.dp                                                |
-| SingleLineCornerRadius | Dp            | 消息为单行时的圆角半径    | 24.dp                                                |
+| CornerRadius           | Dp            | 垂直（多行）布局的圆角半径（COUI `couiRoundCornerL`） | 16.dp                    |
+| SingleLineCornerRadius | Dp            | 单行布局的圆角半径；未指定 = 高度一半的胶囊 | Dp.Unspecified                     |
 | InsideMargin           | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 16.dp, vertical = 10.dp)  |
 | IconSize               | Dp            | 可选前置图标容器的尺寸    | 30.dp                                                |
 

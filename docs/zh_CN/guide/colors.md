@@ -66,3 +66,11 @@
 | `sliderBackground` | 滑块背景 | `#0F000000` | `#26FFFFFF` |
 | `dialogButton` | 对话框按钮栏按钮填充（COUI `couiColorContainer8`） | `#14000000` | `#1AFFFFFF` |
 | `dragHandle` | 底部抽屉拖拽指示器（COUI `couiColorControls`） | `#29000000` | `#40FFFFFF` |
+| `secondaryButton` | 次级按钮填充（COUI `couiColorContainer8` 合成在 `couiColorBackgroundElevated` 上） | `#FFEBEBEB` | `#FF353535` |
+| `disabledSecondaryButton` | 禁用次级按钮填充（COUI `couiColorContainer8`） | `#14000000` | `#1AFFFFFF` |
+| `disabledOnSecondaryButton` | 禁用次级按钮文字 | `#42000000` | `#28FFFFFF` |
+| `transparentButton` | 透明按钮填充（COUI `coui_button_translate_color`） | `#33FFFFFF` | `#33FFFFFF` |
+| `onTransparentButton` | 透明按钮文字 | `#FFFFFFFF` | `#FFFFFFFF` |
+| `disabledOnTransparentButton` | 禁用透明按钮文字 | `#4DFFFFFF` | `#4DFFFFFF` |
+| `backgroundTop` | 最上层浮层表面，如 Snackbar（COUI `couiColorBackgroundTop`） | `#FFFFFFFF` | `#FF333333` |
+| `primaryTextOnPopup` | 浮层上的强调文字，如 Snackbar 操作（COUI `couiColorPrimaryTextOnPopup`） | `#FF0080FF` | `#FF5C9DFF` |

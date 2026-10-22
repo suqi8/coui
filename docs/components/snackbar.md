@@ -101,6 +101,8 @@ fun SnackbarHost(
 
 In most cases you can keep the default `content` which uses the built‑in `Snackbar` composable.
 
+While a Snackbar is touched, its auto-dismiss timer is paused; on release the timer restarts with the full duration (COUISnackBar `onTouchEvent`: DOWN / MOVE cancel, UP / CANCEL re-post). Swipe-to-dismiss, stacking several Snackbars and the dismiss icon are library extensions with no COUI counterpart.
+
 ## Snackbar
 
 `Snackbar` defines the default visual style for messages.
@@ -123,10 +125,19 @@ fun Snackbar(
 | data                   | SnackbarData   | Data describing message and actions                        | -                                       | Yes      |
 | modifier               | Modifier       | Modifier applied to the Snackbar container                 | Modifier                                | No       |
 | icon                   | (@Composable () -> Unit)? | Optional leading icon shown in a 30.dp box (pass it through the `content` lambda of `SnackbarHost`) | null | No       |
-| cornerRadius           | Dp             | Corner radius when the message spans multiple lines        | SnackbarDefaults.CornerRadius           | No       |
-| singleLineCornerRadius | Dp             | Corner radius when the message fits on a single line       | SnackbarDefaults.SingleLineCornerRadius | No       |
+| cornerRadius           | Dp             | Corner radius of the vertical (multi-line) layout          | SnackbarDefaults.CornerRadius           | No       |
+| singleLineCornerRadius | Dp             | Corner radius of the single-line layout; `Dp.Unspecified` rounds it at half its height (capsule) | SnackbarDefaults.SingleLineCornerRadius | No       |
 | colors                 | SnackbarColors | Color configuration for the Snackbar                       | SnackbarDefaults.snackbarColors()       | No       |
-| insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element) | SnackbarDefaults.InsideMargin | No       |
+| insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element of the single-line layout) | SnackbarDefaults.InsideMargin | No       |
+
+### Layout
+
+Following COUI 17 `COUISnackBar.adjustLayout`:
+
+- **Single line**: the icon, message, action and dismiss icon sit on one line, each centered vertically, inside a capsule.
+- **Vertical**: once the message wraps (or contains a line break) or the line is wider than the available width, the message starts 12.dp from the top, the action moves below it (10.dp gap), aligned to the end with a 4.dp end margin and a 9.dp bottom margin, and the corners drop to `cornerRadius` (16.dp).
+
+The container is `backgroundTop` (`#FFFFFF` light / `#333333` dark) and the action label is `primaryTextOnPopup` (`#0080FF` / `#5C9DFF`). The shadow approximates COUI `ShadowUtils` level 3 with a soft drop shadow, denser in the dark scheme (the COUI shadow alpha rises from 40/255 to 120/255).
 
 ### SnackbarColors and SnackbarDefaults
 
@@ -145,9 +156,9 @@ You can create a color configuration via `SnackbarDefaults.snackbarColors`:
 
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
-    containerColor = COUITheme.colorScheme.surfaceContainerHighest,
+    containerColor = COUITheme.colorScheme.backgroundTop,
     contentColor = COUITheme.colorScheme.onSurfaceContainer,
-    actionContentColor = COUITheme.colorScheme.primary,
+    actionContentColor = COUITheme.colorScheme.primaryTextOnPopup,
     dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
 )
 ```
@@ -158,8 +169,8 @@ val colors = SnackbarDefaults.snackbarColors(
 
 | Constant Name          | Type          | Description                                              | Default Value                                       |
 | ---------------------- | ------------- | -------------------------------------------------------- | --------------------------------------------------- |
-| CornerRadius           | Dp            | Corner radius when the message spans multiple lines      | 16.dp                                               |
-| SingleLineCornerRadius | Dp            | Corner radius when the message fits on a single line     | 24.dp                                               |
+| CornerRadius           | Dp            | Corner radius of the vertical (multi-line) layout (COUI `couiRoundCornerL`) | 16.dp                            |
+| SingleLineCornerRadius | Dp            | Corner radius of the single-line layout; unspecified = capsule at half the height | Dp.Unspecified             |
 | InsideMargin           | PaddingValues | Default inner padding of the Snackbar                    | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 | IconSize               | Dp            | Size of the optional leading icon box                    | 30.dp                                               |
 

@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Button
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
+import io.github.suqi8.coui.kmp.basic.ButtonMaterial
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextButton
@@ -93,13 +94,13 @@ fun ButtonDemo() {
                     Icon(
                         imageVector = COUIIcons.Contacts,
                         contentDescription = null,
-                        tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                        tint = COUITheme.colorScheme.disabledOnPrimaryButton,
                         modifier = Modifier.size(24.dp),
                     )
                     Text(
                         text = "Disabled Button",
                         style = COUITheme.textStyles.button,
-                        color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                        color = COUITheme.colorScheme.disabledOnPrimaryButton,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -107,6 +108,25 @@ fun ButtonDemo() {
                     text = "Disabled TextButton",
                     enabled = false,
                     onClick = {},
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                TextButton(
+                    text = "Small",
+                    onClick = {},
+                    minWidth = ButtonDefaults.MinWidthSmall,
+                    minHeight = ButtonDefaults.MinHeightSmall,
+                    insideMargin = ButtonDefaults.InsideMarginSmall,
+                    textStyle = ButtonDefaults.textStyleSmall(),
+                )
+                TextButton(
+                    text = "Material",
+                    onClick = {},
+                    colors = ButtonDefaults.textButtonColorsPrimary(),
+                    material = ButtonMaterial.Primary,
                 )
             }
         }
