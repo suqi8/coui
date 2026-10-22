@@ -105,11 +105,14 @@ TextButton(
 
 - **缩放目标**由实测 dp 尺寸推导（`PressCalc`）：面积通道 `0.85 + B(t) * 0.12`（`t` 为面积在 20² 到 150² 间的映射）；宽度超过高度两倍的按钮再叠加长宽比通道 `0.85 + B((ar - 2) / 13) * 0.15` 取平均（`B = cubic-bezier(0, 0, 0, 1)`）。296 x 44dp 按钮缩到约 0.966，132 x 44dp 约 0.920，52 x 28dp 约 0.886。
 - **弹簧**：宽度超过高度两倍的按钮用 candy 组（按下 k 438.65 / ζ 1，抬手 k 157.91 / ζ 0.5）；紧凑与圆形按钮用 jelly 组（按下 k 631.65 / ζ 1，抬手 k 157.91 / ζ 0.4）。欠阻尼的抬手带来轻微回弹。
-- **按压着色**：`couiColorPress`（浅色 `#1F000000` / 深色 `#33FFFFFF`），弹簧 k 438.65 / ζ 1，至少显现到 70% 才开始淡出。
+- **按压着色**：`couiColorPress`（浅色 `#1F000000` / 深色 `#33FFFFFF`），弹簧 k 438.65 / ζ 1，至少显现到 70% 才开始淡出。绘制材质层时关闭（`COUIButton.applyBlurEffect` 关闭蒙版的按压态）。
+- **悬停着色**：`couiColorHover`（浅色 `#14000000` / 深色 `#26FFFFFF`），同一弹簧。
+- **拖动形变**（`COUIRubberAnimatorUnit` + `COUIDeformAnimatorUnit`）：越过 5px 死区后按钮按橡皮筋曲线 `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp` 跟手平移，并沿拖动方向拉伸、垂直方向收窄（面积守恒，`1 + band(|d|, 0.55, 150dp) / 150dp · (max - 1)`，小控件 `max` = 1.2，大或长的控件更小）。两者都用 response 0.15 / bounce 0.15 弹簧。手指移出按钮时按压缩放保持不变。
+- **松手**：平移和拉伸以 response 0.42（面积超过 100dp² 时 0.45）/ bounce 0.65 弹回，并带入手指速度。被滚动父容器接管的手势按零速度松手处理。禁用按钮时所有形变弹回。
 
 ## 材质层
 
-ColorOS 17 只有在系统材质开关打开时才给按钮额外绘制材质层；这些开关默认关闭，因此 `Button` 默认不绘制。传入 `material` 可按按钮类型启用描边光 + 内阴影（`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`）与触摸聚光（`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`、`TRANSPARENT_MEDIUM_1`）。二者需要运行时着色器（Android 13+ 及所有 Skia 平台），其他环境下跳过。COUI 用来替换实色填充的背景模糊未实现。
+COUI 17 的所有 `ButtonNew` 样式都跟随系统材质开关（`useMaterialEffect = followSystem`），而 ColorOS 17 真机上这些开关是打开的，因此 `Button` 默认绘制材质层：描边光 + 内阴影（`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`）与触摸聚光（`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`、`TRANSPARENT_MEDIUM_1`）。`ButtonMaterial.Auto` 按填充色选择预设（主色、透明按钮色，其余为次要；无边框按钮不绘制）。传入 `ButtonMaterial.None` 可关闭。二者需要运行时着色器（Android 13+ 及所有 Skia 平台），其他环境下跳过，此时保留按压着色。未实现：COUI 用来替换实色填充的 25px 框架背景模糊（需要背景采样），以及焦散阴影（由 Oplus `RenderNode` 原生渲染）。
 
 ```kotlin
 TextButton(
@@ -148,7 +151,7 @@ Button(
 | minHeight         | Dp                              | 按钮最小高度             | ButtonDefaults.MinHeight      | 否       |
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |
 | insideMargin      | PaddingValues                   | 按钮内部边距             | ButtonDefaults.InsideMargin   | 否       |
-| material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光） | ButtonMaterial.None | 否       |
+| material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光）；绘制时关闭按压着色 | ButtonMaterial.Auto | 否       |
 | interactionSource | MutableInteractionSource?       | 按钮的交互源             | null                          | 否       |
 | indication        | Indication?                     | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 | content           | @Composable RowScope.() -> Unit | 按钮内容区域的可组合函数 | -                             | 是       |
@@ -169,7 +172,7 @@ Button(
 | insideMargin      | PaddingValues             | 按钮内部边距         | ButtonDefaults.InsideMargin       | 否       |
 | textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()` 可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
 | maxLines          | Int                       | 标签最大行数；COUIButton 为单行、末尾省略 | 1 | 否       |
-| material          | ButtonMaterial            | COUI 17 材质层，见 `Button` | ButtonMaterial.None | 否       |
+| material          | ButtonMaterial            | COUI 17 材质层，见 `Button` | ButtonMaterial.Auto | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
 | indication        | Indication?               | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 
@@ -211,7 +214,8 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 
 | 取值        | 说明 |
 | ----------- | ---- |
-| None        | 不绘制材质层（ColorOS 17 默认） |
+| Auto        | 按填充色匹配预设：主色为 `Primary`，透明按钮色为 `Transparent`，完全透明填充不绘制，其余为 `Secondary`（默认） |
+| None        | 不绘制材质层（`useMaterialEffect = forceDisable`） |
 | Primary     | `CONTENT_CAPSULE_1` 描边 + `TYPE_OPAQUE_MEDIUM_1` 聚光 |
 | Secondary   | `CONTENT_CAPSULE_2` 描边 + `TYPE_OPAQUE_MEDIUM_2` 聚光 |
 | Transparent | `CONTENT_CAPSULE_3` 描边 + `TYPE_TRANSPARENT_MEDIUM_1` 聚光 |

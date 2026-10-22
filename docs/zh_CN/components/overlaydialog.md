@@ -79,7 +79,7 @@ Scaffold {
 | largeScreen                | Boolean?               | 大屏呈现方式的覆盖项（居中缩放/淡入淡出，而非底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
 | cornerRadius               | Dp?                    | 圆角半径覆盖项；为 null 时使用 DialogDefaults.CornerRadius | null | 否       |
 | backgroundModifier         | Modifier               | 作用在面板圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
-| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
+| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader。同时让内部的 `DialogButtonBar` 变为材质按钮 | false | 否       |
 | content                    | @Composable () -> Unit | 对话框的内容                                 | -                                     | 是       |
 
 ### DialogDefaults

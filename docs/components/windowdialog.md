@@ -75,7 +75,7 @@ WindowDialog(
 | largeScreen                | Boolean?               | Override for the large-screen presentation (centered scale/fade instead of bottom slide-in); if null, detected from the window size | null | No       |
 | cornerRadius               | Dp?                    | Corner radius override; if null, DialogDefaults.CornerRadius for the centered presentation, or derived from the screen corner radius (clamped to 32dp..48dp) when bottom-attached | null | No       |
 | backgroundModifier         | Modifier               | Applied inside the panel's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
-| materialStroke             | Boolean                | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders | false | No       |
+| materialStroke             | Boolean                | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders. Also turns a `DialogButtonBar` inside material | false | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                      | Yes      |
 
 ### DialogDefaults

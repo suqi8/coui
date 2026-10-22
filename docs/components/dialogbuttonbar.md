@@ -96,8 +96,9 @@ Buttons are 44dp tall (56dp when a stacked label wraps), with 12dp horizontal an
 | modifier      | Modifier               | Modifier applied to the bar                                             | Modifier                                        | No       |
 | neutral       | DialogButtonBarAction? | The neutral (third) action, drawn in the error color; hidden when null  | null                                            | No       |
 | dynamicLayout | Boolean                | Whether the bar may stack itself; false pins it horizontal              | true                                            | No       |
-| colors        | TextButtonColors       | Colors of the negative and positive buttons                             | DialogButtonBarDefaults.buttonColors()          | No       |
-| neutralColors | TextButtonColors       | Colors of the neutral button                                            | DialogButtonBarDefaults.neutralButtonColors()   | No       |
+| material      | Boolean                | Whether the buttons draw the COUI 17 material; defaults to whether the hosting dialog draws its material panel (`materialStroke`) | LocalDialogMaterial.current | No       |
+| colors        | TextButtonColors       | Colors of the negative and positive buttons                             | materialButtonColors() with `material`, else buttonColors() | No       |
+| neutralColors | TextButtonColors       | Colors of the neutral button                                            | materialNeutralButtonColors() with `material`, else neutralButtonColors() | No       |
 | textStyle     | TextStyle              | Label text style, also used to measure labels for the stacking decision | COUITheme.textStyles.button                     | No       |
 
 ### DialogButtonBarAction Properties
@@ -126,11 +127,14 @@ The row tier's button height and paddings live in `DialogDefaults.ButtonBarMinHe
 | :-------------------- | :--------------- | :-------------------------------------------------------------------------------------------- |
 | buttonColors()        | TextButtonColors | `colorScheme.dialogButton` fill (`?couiColorContainer8`), `onSecondaryVariant` label          |
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` fill, `error` label (error at 30% alpha when disabled)             |
+| materialButtonColors() | TextButtonColors | Material dialog fill: white at alpha 166 (`#A6FFFFFF`, light) / 51 (`#33FFFFFF`, dark); disabled fill stays `dialogButton` |
+| materialNeutralButtonColors() | TextButtonColors | The material fill with the `error` labels of `neutralButtonColors()` |
 
 ## Behavior Notes
 
 - **The bottom-most cell carries the panel inset.** Its 16dp bottom padding is the dialog's bottom inset, so the panel needs no bottom padding of its own.
-- **Buttons press-scale.** `COUIAlertDialogBottomButtonSecondary` keeps `scaleEnable=true`, so the buttons shrink while pressed like other COUI buttons.
+- **Buttons press-scale.** `COUIAlertDialogBottomButtonSecondary` keeps `scaleEnable=true`, so the buttons shrink while pressed like other COUI buttons, and they share the `Button` drag motion (rubber band + deformation).
+- **Material follows the dialog blur.** `COUIButtonBarLayout.setBlurBackgroundWindow(blur)` switches the buttons to `FOLLOW_SYSTEM` when the window is blurred and `FORCE_DISABLE` otherwise. Inside an `OverlayDialog` / `WindowDialog` with `materialStroke = true` the bar therefore turns material: the `drawableMaterialEffect` translucent white fill, the `CONTENT_CAPSULE_5` edge lighting + inner shadow (stroke weight 2), the `TYPE_OPAQUE_MEDIUM_2` touch spotlight, and no press tint. Pass `material = false` to opt out.
 
 ## Limitations
 

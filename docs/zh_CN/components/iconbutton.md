@@ -71,6 +71,16 @@ Scaffold {
 }
 ```
 
+## 触摸动效
+
+`material = true` 时按钮运行 `ToolbarMaterialEffectDelegate` 挂载的 `COUIViewTouchAnimator`（形变、橡皮筋、按压缩放全开），与 [Button](./button#按压反馈) 的动效相同：
+
+- **按压缩放**：40dp 圆形按钮缩到约 0.889（jelly 弹簧：按下 k 631.65 / ζ 1，松开 k 157.91 / ζ 0.4），手指按住期间保持，即使移出按钮。
+- **跟手拖动**：越过 5px 死区后按橡皮筋曲线 `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp` 跟随手指，沿拖动方向最多拉伸 1.2 倍、垂直方向收窄（面积守恒），弹簧 response 0.15 / bounce 0.15。
+- **松手**：所有形变以 response 0.42 / bounce 0.65 弹回，并带入手指速度。
+- **蒙版**：按压蒙版（`couiColorPress`）在手指移出按钮后立即淡出；悬停蒙版（`couiColorHover`）在桌面端和 Web 上跟随指针。
+- 禁用的按钮不响应触摸。
+
 ## 属性
 
 ### IconButton 属性
@@ -81,7 +91,7 @@ Scaffold {
 | modifier        | Modifier               | 应用于按钮的修饰符    | Modifier                        | 否       |
 | enabled         | Boolean                | 按钮是否可点击        | true                            | 否       |
 | holdDownState   | Boolean                | 是否处于按下状态      | false                           | 否       |
-| material        | Boolean                | 是否绘制 COUI 17 顶栏按钮材质（背景滤镜、阴影、边缘光、跟手聚光、按压反馈） | true | 否       |
+| material        | Boolean                | 是否绘制 COUI 17 顶栏按钮材质（背景滤镜、阴影、边缘光、跟手聚光、按压与悬停蒙版）及其触摸动效（按压缩放、跟手橡皮筋、拖动形变） | true | 否       |
 | backgroundColor | Color                  | 按钮的背景颜色        | Color.Unspecified               | 否       |
 | cornerRadius    | Dp                     | 按钮圆角半径          | IconButtonDefaults.CornerRadius | 否       |
 | minHeight       | Dp                     | 按钮最小高度          | IconButtonDefaults.MinHeight    | 否       |

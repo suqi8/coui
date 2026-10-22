@@ -63,7 +63,7 @@ LoadingButton(
 | colors            | TextButtonColors          | Color configuration                                     | ButtonDefaults.textButtonColors() | No      |
 | insideMargin      | PaddingValues             | Margin inside the button                                | ButtonDefaults.InsideMargin      | No       |
 | textStyle         | TextStyle                 | Style of the label, loading text and dot glyphs (`ButtonDefaults.textStyleSmall()` for the small tier) | COUITheme.textStyles.button | No |
-| material          | ButtonMaterial            | COUI 17 material layer, see [Button](./button)          | ButtonMaterial.None              | No       |
+| material          | ButtonMaterial            | COUI 17 material layer, see [Button](./button)          | ButtonMaterial.Auto              | No       |
 | interactionSource | MutableInteractionSource? | Interaction source of the button                        | null                             | No       |
 | indication        | Indication?               | Indication of the button (COUI press feedback is built in) | null                          | No       |
 

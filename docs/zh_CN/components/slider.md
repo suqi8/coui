@@ -93,7 +93,7 @@ Slider(
 
 ### 材质效果
 
-`material = true` 时，`Slider` 会加上 ColorOS 17 在系统材质开关打开时绘制的效果：按下时拇指变为玻璃质感（`TexturedThumbRenderer`），并且 `TYPE_OPAQUE_MEDIUM_1` 跟手聚光（OVERLAY，强度浅色 0.6 / 深色 0.8）在轨道内跟随手指。默认关闭，与 ColorOS 17 在这些开关关闭时的表现一致。聚光需要运行时着色器（Android 13+ 及所有 Skia 平台）。
+`Slider` 默认（`material = true`）绘制 ColorOS 17 在系统材质开关打开时的效果，而真机上这些开关是打开的（`COUISeekBar` 通过 `onMaterialStateChange` 跟随聚光开关）：按下时拇指变为玻璃质感（`TexturedThumbRenderer`），并且 `TYPE_OPAQUE_MEDIUM_1` 跟手聚光（OVERLAY，强度浅色 0.6 / 深色 0.8）在轨道内跟随手指。传入 `material = false` 可关闭。聚光需要运行时着色器（Android 13+ 及所有 Skia 平台）。
 
 ```kotlin
 var value by remember { mutableFloatStateOf(0.5f) }
@@ -101,7 +101,7 @@ var value by remember { mutableFloatStateOf(0.5f) }
 Slider(
     value = value,
     onValueChange = { value = it },
-    material = true
+    material = false // 关闭玻璃拇指与聚光
 )
 ```
 
@@ -125,7 +125,7 @@ Slider(
 | showKeyPoints         | Boolean                           | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | false                              | 否       |
 | keyPoints             | List\<Float\>?                    | 要在滑块上显示的自定义关键点值。如果为 null,则使用 steps 参数的步长位置。值应在 valueRange 范围内                | null                               | 否       |
 | magnetThreshold       | Float                             | 磁吸对齐阈值,以分数表示 (0.0 到 1.0)。当滑块值与关键点的距离在此阈值内时,将对齐到该点。仅在设置 keyPoints 时生效 | 0.02f                              | 否       |
-| material              | Boolean                           | 是否绘制 COUI 17 材质效果（按下时的玻璃拇指、跟手聚光），见[材质效果](#材质效果)                                  | false                              | 否       |
+| material              | Boolean                           | 是否绘制 COUI 17 材质效果（按下时的玻璃拇指、跟手聚光），见[材质效果](#材质效果)                                  | true                               | 否       |
 
 ### VerticalSlider 属性
 

@@ -75,7 +75,7 @@ WindowDialog(
 | largeScreen                | Boolean?               | 大屏呈现方式覆写（居中缩放/淡入替代底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
 | cornerRadius               | Dp?                    | 圆角半径覆写；为 null 时，居中呈现使用 DialogDefaults.CornerRadius，底部吸附时由屏幕圆角推导（限制在 32dp..48dp） | null | 否       |
 | backgroundModifier         | Modifier               | 作用在面板圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
-| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
+| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader。同时让内部的 `DialogButtonBar` 变为材质按钮 | false | 否       |
 | content                    | @Composable () -> Unit | 对话框内容                                     | -                                      | 是       |
 
 ### DialogDefaults

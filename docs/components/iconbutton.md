@@ -71,6 +71,16 @@ Scaffold {
 }
 ```
 
+## Touch Motion
+
+With `material = true` the button runs the `COUIViewTouchAnimator` that `ToolbarMaterialEffectDelegate` attaches (deformation, rubber band and press scale all on), the same motion as [Button](./button#press-feedback):
+
+- **Press scale**: the 40dp circle springs to ~0.889 (jelly springs: press k 631.65 / ζ 1, release k 157.91 / ζ 0.4) and stays down while the finger is held, even outside the button.
+- **Drag follow**: past a 5px dead zone the button follows the finger on the rubber band `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp`, stretching up to 1.2x along the drag and squeezing across it (area-conserving), on a response 0.15 / bounce 0.15 spring.
+- **Release**: everything springs home on response 0.42 / bounce 0.65, seeded with the finger velocity.
+- **Masks**: the press mask (`couiColorPress`) fades as soon as the finger leaves the button; the hover mask (`couiColorHover`) follows the pointer on desktop and web.
+- A disabled button ignores touches.
+
 ## Properties
 
 ### IconButton Properties
@@ -81,7 +91,7 @@ Scaffold {
 | modifier        | Modifier               | Modifier applied to the button     | Modifier                        | No       |
 | enabled         | Boolean                | Whether button is clickable        | true                            | No       |
 | holdDownState   | Boolean                | Whether button is held down        | false                           | No       |
-| material        | Boolean                | Draw the COUI 17 top-bar button material (filtered backdrop, shadow, edge lighting, touch spotlight, press feedback) | true | No       |
+| material        | Boolean                | Draw the COUI 17 top-bar button material (filtered backdrop, shadow, edge lighting, touch spotlight, press and hover masks) and its touch motion (press scale, drag-follow rubber band, drag deformation) | true | No       |
 | backgroundColor | Color                  | Button background color            | Color.Unspecified               | No       |
 | cornerRadius    | Dp                     | Button corner radius               | IconButtonDefaults.CornerRadius | No       |
 | minHeight       | Dp                     | Button minimum height              | IconButtonDefaults.MinHeight    | No       |

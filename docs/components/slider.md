@@ -93,7 +93,7 @@ Slider(
 
 ### Material Effects
 
-With `material = true`, `Slider` adds the effects ColorOS 17 draws when the system material switches are on: the pressed thumb turns to glass (`TexturedThumbRenderer`) and the `TYPE_OPAQUE_MEDIUM_1` touch spotlight (OVERLAY, intensity 0.6 light / 0.8 dark) follows the finger inside the track. They are off by default, as on ColorOS 17 with those switches off. The spotlight needs runtime shaders (Android 13+ and every Skia target).
+By default (`material = true`) `Slider` draws the effects ColorOS 17 adds with its system material switches on, as they are on real devices (`COUISeekBar` follows the spotlight switch through `onMaterialStateChange`): the pressed thumb turns to glass (`TexturedThumbRenderer`) and the `TYPE_OPAQUE_MEDIUM_1` touch spotlight (OVERLAY, intensity 0.6 light / 0.8 dark) follows the finger inside the track. Pass `material = false` to opt out. The spotlight needs runtime shaders (Android 13+ and every Skia target).
 
 ```kotlin
 var value by remember { mutableFloatStateOf(0.5f) }
@@ -101,7 +101,7 @@ var value by remember { mutableFloatStateOf(0.5f) }
 Slider(
     value = value,
     onValueChange = { value = it },
-    material = true
+    material = false // opt out of the glass thumb and spotlight
 )
 ```
 
@@ -125,7 +125,7 @@ Slider(
 | showKeyPoints         | Boolean                           | Whether to show key point indicators on the slider. Only works when keyPoints is not null                                                                                      | false                              | No       |
 | keyPoints             | List\<Float\>?                    | Custom key point values to display on the slider. If null, uses step positions from steps parameter. Values should be within valueRange                                        | null                               | No       |
 | magnetThreshold       | Float                             | Magnetic snap threshold as a fraction (0.0 to 1.0). When slider value is within this distance from a key point, it will snap to that point. Only applies when keyPoints is set | 0.02f                              | No       |
-| material              | Boolean                           | Whether to draw the COUI 17 material effects (glass thumb while pressed, touch spotlight). See [Material Effects](#material-effects)                                         | false                              | No       |
+| material              | Boolean                           | Whether to draw the COUI 17 material effects (glass thumb while pressed, touch spotlight). See [Material Effects](#material-effects)                                         | true                               | No       |
 
 ### VerticalSlider Properties
 

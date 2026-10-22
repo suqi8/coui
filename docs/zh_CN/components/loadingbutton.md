@@ -63,7 +63,7 @@ LoadingButton(
 | colors            | TextButtonColors          | 颜色配置                                 | ButtonDefaults.textButtonColors() | 否   |
 | insideMargin      | PaddingValues             | 按钮内部边距                             | ButtonDefaults.InsideMargin       | 否   |
 | textStyle         | TextStyle                 | 标签、加载文案与圆点字形的文字样式（小尺寸档用 `ButtonDefaults.textStyleSmall()`） | COUITheme.textStyles.button | 否 |
-| material          | ButtonMaterial            | COUI 17 材质层，见 [Button](./button)    | ButtonMaterial.None               | 否   |
+| material          | ButtonMaterial            | COUI 17 材质层，见 [Button](./button)    | ButtonMaterial.Auto               | 否   |
 | interactionSource | MutableInteractionSource? | 按钮的交互源                             | null                              | 否   |
 | indication        | Indication?               | 按钮的指示效果（COUI 按压反馈已内置）    | null                              | 否   |
 

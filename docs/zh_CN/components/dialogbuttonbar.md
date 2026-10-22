@@ -96,8 +96,9 @@ available = min(392.dp, barWidth) / buttonCount
 | modifier      | Modifier               | 应用于按钮栏的修饰符                           | Modifier                                      | 否   |
 | neutral       | DialogButtonBarAction? | 中性（第三个）动作，以错误色绘制；为 null 时隐藏 | null                                          | 否   |
 | dynamicLayout | Boolean                | 是否允许自动纵排；为 false 时固定横排          | true                                          | 否   |
-| colors        | TextButtonColors       | 否定与肯定按钮的颜色                           | DialogButtonBarDefaults.buttonColors()        | 否   |
-| neutralColors | TextButtonColors       | 中性按钮的颜色                                 | DialogButtonBarDefaults.neutralButtonColors() | 否   |
+| material      | Boolean                | 按钮是否绘制 COUI 17 材质；默认跟随所在对话框是否绘制材质面板（`materialStroke`） | LocalDialogMaterial.current | 否   |
+| colors        | TextButtonColors       | 否定与肯定按钮的颜色                           | `material` 时为 materialButtonColors()，否则 buttonColors() | 否   |
+| neutralColors | TextButtonColors       | 中性按钮的颜色                                 | `material` 时为 materialNeutralButtonColors()，否则 neutralButtonColors() | 否   |
 | textStyle     | TextStyle              | 文案样式，同时用于纵排判定时的文案测量         | COUITheme.textStyles.button                   | 否   |
 
 ### DialogButtonBarAction 属性
@@ -126,11 +127,14 @@ available = min(392.dp, barWidth) / buttonCount
 | :-------------------- | :--------------- | :------------------------------------------------------------------- |
 | buttonColors()        | TextButtonColors | `colorScheme.dialogButton` 填充（`?couiColorContainer8`），`onSecondaryVariant` 文字 |
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` 填充，`error` 文字（禁用时为 30% 透明度的错误色） |
+| materialButtonColors() | TextButtonColors | 材质对话框填充：白色 alpha 166（浅色 `#A6FFFFFF`）/ 51（深色 `#33FFFFFF`）；禁用填充保持 `dialogButton` |
+| materialNeutralButtonColors() | TextButtonColors | 材质填充 + `neutralButtonColors()` 的 `error` 文字 |
 
 ## 行为说明
 
 - **最底部单元格承担面板留白。** 它 16dp 的下内边距就是对话框的底部留白，面板自身无需再加底部内边距。
-- **按钮有按压缩放。** `COUIAlertDialogBottomButtonSecondary` 保留 `scaleEnable=true`，按下时与其他 COUI 按钮一样缩小。
+- **按钮有按压缩放。** `COUIAlertDialogBottomButtonSecondary` 保留 `scaleEnable=true`，按下时与其他 COUI 按钮一样缩小，并共享 `Button` 的拖动形变（橡皮筋跟手 + 拉伸）。
+- **材质跟随对话框模糊。** `COUIButtonBarLayout.setBlurBackgroundWindow(blur)` 在窗口模糊时把按钮设为 `FOLLOW_SYSTEM`，否则为 `FORCE_DISABLE`。因此在 `materialStroke = true` 的 `OverlayDialog` / `WindowDialog` 中按钮栏会变为材质按钮：`drawableMaterialEffect` 的半透明白色填充、`CONTENT_CAPSULE_5` 描边光 + 内阴影（描边权重 2）、`TYPE_OPAQUE_MEDIUM_2` 跟手聚光，且没有按压着色。传入 `material = false` 可关闭。
 
 ## 未实现部分
 

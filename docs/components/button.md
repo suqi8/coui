@@ -105,11 +105,14 @@ The press feedback follows COUI 17 `COUIButton` (`COUITouchMotionAnimator` + `CO
 
 - **Scale target** is derived from the measured size in dp (`PressCalc`): an area channel `0.85 + B(t) * 0.12` with `t` the area mapped from 20² to 150², and for buttons wider than twice their height an aspect-ratio channel `0.85 + B((ar - 2) / 13) * 0.15` averaged in (`B = cubic-bezier(0, 0, 0, 1)`). A 296 x 44dp button presses to ~0.966, 132 x 44dp to ~0.920, 52 x 28dp to ~0.886.
 - **Springs**: buttons wider than twice their height use the candy pair (press k 438.65 / ζ 1, release k 157.91 / ζ 0.5); compact and round buttons use the jelly pair (press k 631.65 / ζ 1, release k 157.91 / ζ 0.4). The under-damped release gives the slight rebound.
-- **Press tint**: `couiColorPress` (`#1F000000` light / `#33FFFFFF` dark) on a k 438.65 / ζ 1 spring, held until at least 70% visible.
+- **Press tint**: `couiColorPress` (`#1F000000` light / `#33FFFFFF` dark) on a k 438.65 / ζ 1 spring, held until at least 70% visible. It is off while the material layer is drawn (`COUIButton.applyBlurEffect` disables the mask's pressed state).
+- **Hover tint**: `couiColorHover` (`#14000000` light / `#26FFFFFF` dark) on the same spring.
+- **Drag motion** (`COUIRubberAnimatorUnit` + `COUIDeformAnimatorUnit`): past a 5px dead zone the button follows the finger on the rubber band `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp`, and stretches along the drag while squeezing across it (area-conserving, `1 + band(|d|, 0.55, 150dp) / 150dp · (max - 1)`, `max` = 1.2 for small views, less for large and long ones). Both follow a response 0.15 / bounce 0.15 spring. The press scale stays in while the finger is outside the button.
+- **Release**: translation and stretch spring home on response 0.42 (0.45 for views over 100dp²) / bounce 0.65, seeded with the finger velocity. A gesture taken over by a scrolling parent releases with zero velocity. Disabling the button springs everything back.
 
 ## Material Layer
 
-ColorOS 17 draws an extra material layer on buttons only when the system material switches are on; they are off by default, so `Button` draws none unless asked. Pass `material` to opt in to the edge lighting + inner shadow (`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`) and the touch spotlight (`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`, `TRANSPARENT_MEDIUM_1`) matching the button type. Both need runtime shaders (Android 13+ and every Skia target) and are skipped elsewhere. The background blur that COUI uses in place of the solid fill is not drawn.
+Every COUI 17 `ButtonNew` style follows the system material switches (`useMaterialEffect = followSystem`), which are on on ColorOS 17 devices, so `Button` draws the material layer by default: the edge lighting + inner shadow (`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_1/2/3`) and the touch spotlight (`COUISpotLightEffect` `OPAQUE_MEDIUM_1/2`, `TRANSPARENT_MEDIUM_1`). `ButtonMaterial.Auto` picks the preset from the fill (primary, transparent-button, or secondary for anything else; borderless buttons get none). Pass `ButtonMaterial.None` to opt out. Both effects need runtime shaders (Android 13+ and every Skia target) and are skipped elsewhere, in which case the press tint stays. Not drawn: the 25px framework background blur that COUI uses in place of the solid fill (it needs a backdrop), and the caustic shadow (rendered natively by the Oplus `RenderNode`).
 
 ```kotlin
 TextButton(
@@ -148,7 +151,7 @@ Button(
 | minHeight         | Dp                              | Minimum height of the button           | ButtonDefaults.MinHeight      | No       |
 | colors            | ButtonColors                    | Button color configuration             | ButtonDefaults.buttonColors() | No       |
 | insideMargin      | PaddingValues                   | Internal padding of the button         | ButtonDefaults.InsideMargin   | No       |
-| material          | ButtonMaterial                  | COUI 17 material layer (edge lighting, inner shadow, touch spotlight) | ButtonMaterial.None | No       |
+| material          | ButtonMaterial                  | COUI 17 material layer (edge lighting, inner shadow, touch spotlight); the press tint is off while it is drawn | ButtonMaterial.Auto | No       |
 | interactionSource | MutableInteractionSource?       | Interaction source for the button      | null                          | No       |
 | indication        | Indication?                     | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 | content           | @Composable RowScope.() -> Unit | Composable function for button content | -                             | Yes      |
@@ -169,7 +172,7 @@ Button(
 | insideMargin      | PaddingValues             | Internal padding of the button    | ButtonDefaults.InsideMargin       | No       |
 | textStyle         | TextStyle                 | Text style of the label (pass `ButtonDefaults.textStyleSmall()` with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.button | No       |
 | maxLines          | Int                       | Maximum number of label lines; COUIButton is single-line with an end ellipsis | 1 | No       |
-| material          | ButtonMaterial            | COUI 17 material layer, see `Button` | ButtonMaterial.None | No       |
+| material          | ButtonMaterial            | COUI 17 material layer, see `Button` | ButtonMaterial.Auto | No       |
 | interactionSource | MutableInteractionSource? | Interaction source for the button | null                              | No       |
 | indication        | Indication?               | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 
@@ -211,7 +214,8 @@ The secondary colors use the `secondaryButton` (`#EBEBEB` light / `#353535` dark
 
 | Value       | Description |
 | ----------- | ----------- |
-| None        | No material layer (the ColorOS 17 default) |
+| Auto        | The preset matching the fill: `Primary` for the theme primary, `Transparent` for the transparent-button fill, none for a fully transparent fill, `Secondary` otherwise (the default) |
+| None        | No material layer (`useMaterialEffect = forceDisable`) |
 | Primary     | `CONTENT_CAPSULE_1` stroke + `TYPE_OPAQUE_MEDIUM_1` spotlight |
 | Secondary   | `CONTENT_CAPSULE_2` stroke + `TYPE_OPAQUE_MEDIUM_2` spotlight |
 | Transparent | `CONTENT_CAPSULE_3` stroke + `TYPE_TRANSPARENT_MEDIUM_1` spotlight |
