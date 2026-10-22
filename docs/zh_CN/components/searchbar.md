@@ -81,7 +81,7 @@ SearchBarDefaults 对象提供了 SearchBar 和 InputField 组件的默认值。
 | --------------------------- | -------- | -------------------------------- | ------------------- |
 | InsideMargin                | DpSize   | SearchBar 的内部边距             | DpSize(16.dp, 6.dp) |
 | InputFieldMinHeight         | Dp       | InputField 背景的最小高度        | 40.dp               |
-| InputFieldFontSize          | TextUnit | InputField 文本与标签字号        | 16.sp               |
+| InputFieldFontSize          | TextUnit | InputField 文本与标签字号        | 15.sp               |
 | LeadingIconStartPadding     | Dp       | 默认前置图标的起始内边距         | 12.dp               |
 | LeadingIconEndPadding       | Dp       | 默认前置图标的结束内边距         | 8.dp                |
 | TrailingIconStartPadding    | Dp       | 默认清除按钮的起始内边距         | 4.dp                |

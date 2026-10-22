@@ -277,7 +277,8 @@ fun InputField(
     val textAlpha = remember { Animatable(1f) }
 
     val textColor = LocalContentColor.current
-    // COUI input text: 16sp regular (couiEditTextTextAppearance).
+    // COUI input text: 15sp regular (Widget.COUI.COUISearchBar inputTextSize =
+    // coui_search_view_input_text_size, applied by SearchBarBackgroundView.loadAttr).
     val inputTextStyle = COUITheme.textStyles.main
         .copy(fontSize = SearchBarDefaults.InputFieldFontSize)
         .merge(textStyle)
