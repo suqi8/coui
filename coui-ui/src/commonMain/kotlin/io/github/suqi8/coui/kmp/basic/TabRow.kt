@@ -113,15 +113,15 @@ import io.github.suqi8.coui.kmp.utils.COUIPhysicalAnimation
 import io.github.suqi8.coui.kmp.utils.COUIReboundOverScroller
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlin.jvm.JvmName
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 
 /**
  * A tab of a [TabRow].
