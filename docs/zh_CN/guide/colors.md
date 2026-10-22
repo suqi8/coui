@@ -64,3 +64,5 @@
 | `sliderKeyPoint` | 滑块关键点 | `#4DA3B3CD` | `#4D7A8AA6` |
 | `sliderKeyPointForeground` | 滑块关键点前景 | `#FF6EB5FF` | `#FF5DAAFF` |
 | `sliderBackground` | 滑块背景 | `#0F000000` | `#26FFFFFF` |
+| `dialogButton` | 对话框按钮栏按钮填充（COUI `couiColorContainer8`） | `#14000000` | `#1AFFFFFF` |
+| `dragHandle` | 底部抽屉拖拽指示器（COUI `couiColorControls`） | `#29000000` | `#40FFFFFF` |

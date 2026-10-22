@@ -464,6 +464,37 @@ Box(
 | --- | --- | --- |
 | blurColors() | BlurColors | 创建被 remember 的 BlurColors 实例 |
 
+## COUI 17 材质模糊
+
+`Modifier.couiMaterialBlur` 复刻 COUI 17 对话框与底部抽屉使用的窗口背景模糊
+（`COUIBackgroundBlurBuilder` + `OplusBlurParam.setMaterialParams`）：先模糊背景，再按 alpha 混入 mix 颜色，
+最后以 overlay（深色）或 color dodge（浅色）混合 blend 颜色，算法取自 ColorOS 17 渲染器中的材质混合 shader。
+`MaterialBlurDefaults` 提供预设；把结果传给 coui-ui 对话框或底部抽屉的 `backgroundModifier` 插槽即可。
+
+```kotlin
+OverlayDialog(
+    show = showDialog,
+    title = "模糊对话框",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showDialog = false },
+) { /* ... */ }
+```
+
+| 预设 | 半径（px） | mix 颜色（浅 / 深） | blend 颜色（浅 / 深） | 混合模式（浅 / 深） |
+| --- | --- | --- | --- | --- |
+| `MaterialBlurDefaults.dialog(isDark)` | 200 | `#DC909090` / `#8C777777` | `#509F9F9F` / `#B2292929` | ColorDodge / Overlay |
+| `MaterialBlurDefaults.bottomSheet(isDark)` | 400 | `#DCC8C8C8` / `#A4515151` | `#376E6E6E` / `#B30F0F0F` | ColorDodge / Overlay |
+
+| 参数 | 类型 | 说明 | 默认值 |
+| --- | --- | --- | --- |
+| backdrop | Backdrop | 提供表面背后内容的背景源 | - |
+| style | MaterialBlurStyle | 半径（原始 px）、mix 颜色、blend 颜色与混合模式 | - |
+| shape | Shape | 模糊的裁剪形状；在已裁剪的插槽内保持 `RectangleShape` | `RectangleShape` |
+| fraction | Float | 同比缩放半径与两种颜色的 alpha（COUI 抽屉随遮罩淡入淡出模糊） | 1f |
+| enabled | Boolean | 是否绘制模糊 | true |
+
 ## 边缘高光
 
 `Highlight` 沿圆角形状绘制一条带两路定向光的玻璃质感边缘。它通过 `Modifier.textureBlur` / `Modifier.textureEffect` 的 `highlight` 参数（恒定场景）或 `Modifier.drawBackdrop` 的 `highlight` 参数（响应式场景，与 `BackdropEffectScope` 共享）绘制。配合模糊背景可营造"模糊背景上的发光边缘"效果。

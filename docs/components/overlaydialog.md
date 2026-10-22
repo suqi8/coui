@@ -78,6 +78,8 @@ Scaffold {
 | maxWidth                   | Dp                     | Maximum width of the dialog                                   | DialogDefaults.MaxWidth          | No       |
 | largeScreen                | Boolean?               | Override for the large-screen presentation (centered scale/fade instead of bottom slide-in); when null, detected from the window size | null | No       |
 | cornerRadius               | Dp?                    | Corner radius override; when null, DialogDefaults.CornerRadius is used | null | No       |
+| backgroundModifier         | Modifier               | Applied inside the panel's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
+| materialStroke             | Boolean                | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders | false | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                     | Yes      |
 
 ### DialogDefaults Object
@@ -88,15 +90,14 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 
 | Property Name | Type   | Description                             |
 | ------------- | ------ | --------------------------------------- |
-| CornerRadius  | Dp     | Dialog panel corner radius (45.dp)      |
-| MaxWidth      | Dp     | Maximum dialog content width (392.dp)   |
-| outsideMargin | DpSize | Default dialog external margin (16, 24) |
+| CornerRadius  | Dp     | Dialog panel corner radius (45.dp, `coui_round_corner_xxxxl_radius_large_16_1`) |
+| MaxWidth      | Dp     | Maximum dialog content width (392.dp) |
+| MaxHeight     | Dp     | Maximum panel height (600.dp: `coui_dialog_max_height` 632dp minus the 32dp bottom margin) |
+| outsideMargin | DpSize | Default dialog external margin (16, 32); the height is the bottom gap without a navigation bar |
+| MarginBottomWithNavigationBar | Dp | Gap between a bottom-aligned dialog and the screen edge under three-button navigation (60.dp) |
 | insideMargin  | DpSize | Default margin for the built-in title/summary texts (24, 24); the content slot is unpadded |
-| ButtonBarMinHeight | Dp | Min height of a horizontal dialog button bar (58.dp) |
-| ButtonBarInsideMargin | PaddingValues | Paddings of a button in a horizontal bar (24dp horizontal, 12dp top, 22dp bottom); the panel bottom inset is carried by the buttons |
-| ButtonBarDividerThickness | Dp | Thickness of the divider between horizontal bar buttons (1.dp) |
-| ButtonBarDividerInsetTop | Dp | Top inset of the divider between horizontal bar buttons (17.dp) |
-| ButtonBarDividerInsetBottom | Dp | Bottom inset of the divider between horizontal bar buttons (21.dp) |
+| ButtonBarMinHeight | Dp | Min height of a horizontal dialog button bar and its buttons (44.dp) |
+| ButtonBarInsideMargin | PaddingValues | Paddings of a bar button (12dp horizontal, 4dp vertical) |
 
 #### Functions
 
@@ -107,6 +108,37 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 | backgroundColor() | Color       | Get default dialog background color |
 
 ## Advanced Usage
+
+### Blurred Material (COUI 17)
+
+With the system material blur on, COUI 17 blurs the window behind the dialog
+(`COUIAlertDialogBuilder.operateBlur`: radius `coui_dialog_blur_radius` 200px, light/dark mix and
+blend colors, overlay/color-dodge blend) and draws an edge-lighting stroke on the panel. coui-ui
+stays free of a blur dependency: pass the blur through `backgroundModifier`, e.g. with coui-blur's
+`couiMaterialBlur`, and turn on `materialStroke`. Without runtime shaders keep the opaque
+`DialogDefaults.backgroundColor()`, which is the surface COUI falls back to.
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+val isDark = isSystemInDarkTheme()
+
+Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) { /* page content */ }
+
+OverlayDialog(
+    show = showDialog,
+    title = "Blurred Dialog",
+    summary = "The page behind the dialog is blurred.",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showDialog = false },
+) {
+    DialogButtonBar(
+        negative = DialogButtonBarAction(text = "Cancel", onClick = { showDialog = false }),
+        positive = DialogButtonBarAction(text = "Confirm", onClick = { showDialog = false }),
+    )
+}
+```
 
 ### Centered Presentation (Large Screens)
 

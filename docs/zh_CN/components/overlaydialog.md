@@ -78,6 +78,8 @@ Scaffold {
 | maxWidth                   | Dp                     | 对话框的最大宽度                             | DialogDefaults.MaxWidth          | 否       |
 | largeScreen                | Boolean?               | 大屏呈现方式的覆盖项（居中缩放/淡入淡出，而非底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
 | cornerRadius               | Dp?                    | 圆角半径覆盖项；为 null 时使用 DialogDefaults.CornerRadius | null | 否       |
+| backgroundModifier         | Modifier               | 作用在面板圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
+| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
 | content                    | @Composable () -> Unit | 对话框的内容                                 | -                                     | 是       |
 
 ### DialogDefaults
@@ -86,15 +88,14 @@ Scaffold {
 
 | 属性名        | 类型   | 说明                           |
 | ------------- | ------ | ------------------------------ |
-| CornerRadius  | Dp     | 对话框面板圆角（45.dp）        |
-| MaxWidth      | Dp     | 对话框内容最大宽度（392.dp）   |
-| outsideMargin | DpSize | 对话框外部默认边距（16, 24）   |
+| CornerRadius  | Dp     | 对话框面板圆角（45.dp，`coui_round_corner_xxxxl_radius_large_16_1`） |
+| MaxWidth      | Dp     | 对话框内容最大宽度（392.dp） |
+| MaxHeight     | Dp     | 面板最大高度（600.dp：`coui_dialog_max_height` 632dp 减去 32dp 底部边距） |
+| outsideMargin | DpSize | 对话框外部默认边距（16, 32）；高度为无导航栏时的底部间距 |
+| MarginBottomWithNavigationBar | Dp | 三键导航下底部对话框与屏幕底边的间距（60.dp） |
 | insideMargin  | DpSize | 内置标题/摘要文本的默认边距（24, 24）；content 插槽不加内边距 |
-| ButtonBarMinHeight | Dp | 横向对话框按钮栏的最小高度（58.dp） |
-| ButtonBarInsideMargin | PaddingValues | 横向按钮栏中按钮的内边距（水平 24dp、上 12dp、下 22dp）；面板底部留白由按钮自身承担 |
-| ButtonBarDividerThickness | Dp | 横向按钮栏分割线的粗细（1.dp） |
-| ButtonBarDividerInsetTop | Dp | 横向按钮栏分割线的上内缩（17.dp） |
-| ButtonBarDividerInsetBottom | Dp | 横向按钮栏分割线的下内缩（21.dp） |
+| ButtonBarMinHeight | Dp | 横向对话框按钮栏及其按钮的最小高度（44.dp） |
+| ButtonBarInsideMargin | PaddingValues | 按钮栏按钮的内边距（水平 12dp、垂直 4dp） |
 
 #### 函数
 
@@ -105,6 +106,36 @@ Scaffold {
 | backgroundColor() | Color    | 获取默认对话框背景颜色 |
 
 ## 进阶用法
+
+### 模糊材质（COUI 17）
+
+系统材质模糊开启时，COUI 17 会模糊对话框背后的窗口（`COUIAlertDialogBuilder.operateBlur`：半径
+`coui_dialog_blur_radius` 200px，浅/深色各一组 mix 与 blend 颜色，混合模式为 overlay / color dodge），
+并在面板上绘制边缘光描边。coui-ui 不依赖模糊模块：通过 `backgroundModifier` 传入模糊（例如 coui-blur 的
+`couiMaterialBlur`），并打开 `materialStroke`。不支持 RuntimeShader 时保留不透明的
+`DialogDefaults.backgroundColor()`，这也是 COUI 的降级底色。
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+val isDark = isSystemInDarkTheme()
+
+Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) { /* 页面内容 */ }
+
+OverlayDialog(
+    show = showDialog,
+    title = "模糊对话框",
+    summary = "对话框背后的页面会被模糊。",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showDialog = false },
+) {
+    DialogButtonBar(
+        negative = DialogButtonBarAction(text = "取消", onClick = { showDialog = false }),
+        positive = DialogButtonBarAction(text = "确定", onClick = { showDialog = false }),
+    )
+}
+```
 
 ### 居中呈现（大屏）
 

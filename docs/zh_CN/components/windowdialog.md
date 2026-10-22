@@ -74,6 +74,8 @@ WindowDialog(
 | maxWidth                   | Dp                     | 对话框内容最大宽度                             | DialogDefaults.MaxWidth          | 否       |
 | largeScreen                | Boolean?               | 大屏呈现方式覆写（居中缩放/淡入替代底部滑入）；为 null 时根据窗口尺寸自动判断 | null | 否       |
 | cornerRadius               | Dp?                    | 圆角半径覆写；为 null 时，居中呈现使用 DialogDefaults.CornerRadius，底部吸附时由屏幕圆角推导（限制在 32dp..48dp） | null | 否       |
+| backgroundModifier         | Modifier               | 作用在面板圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
+| materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
 | content                    | @Composable () -> Unit | 对话框内容                                     | -                                      | 是       |
 
 ### DialogDefaults
@@ -82,15 +84,14 @@ WindowDialog(
 
 | 属性名        | 类型   | 说明                         |
 | ------------- | ------ | ---------------------------- |
-| CornerRadius  | Dp     | 对话框面板圆角（45.dp）      |
+| CornerRadius  | Dp     | 对话框面板圆角（45.dp，`coui_round_corner_xxxxl_radius_large_16_1`） |
 | MaxWidth      | Dp     | 对话框内容最大宽度（392.dp） |
-| outsideMargin | DpSize | 对话框外部默认边距（16, 24） |
+| MaxHeight     | Dp     | 面板最大高度（600.dp：`coui_dialog_max_height` 632dp 减去 32dp 底部边距） |
+| outsideMargin | DpSize | 对话框外部默认边距（16, 32）；高度为无导航栏时的底部间距 |
+| MarginBottomWithNavigationBar | Dp | 三键导航下底部对话框与屏幕底边的间距（60.dp） |
 | insideMargin  | DpSize | 内置标题/摘要文本的默认边距（24, 24）；content 插槽不加内边距 |
-| ButtonBarMinHeight | Dp | 横向对话框按钮栏的最小高度（58.dp） |
-| ButtonBarInsideMargin | PaddingValues | 横向按钮栏中按钮的内边距（水平 24dp、上 12dp、下 22dp）；面板底部留白由按钮自身承担 |
-| ButtonBarDividerThickness | Dp | 横向按钮栏分割线的粗细（1.dp） |
-| ButtonBarDividerInsetTop | Dp | 横向按钮栏分割线的上内缩（17.dp） |
-| ButtonBarDividerInsetBottom | Dp | 横向按钮栏分割线的下内缩（21.dp） |
+| ButtonBarMinHeight | Dp | 横向对话框按钮栏及其按钮的最小高度（44.dp） |
+| ButtonBarInsideMargin | PaddingValues | 按钮栏按钮的内边距（水平 12dp、垂直 4dp） |
 
 #### 函数
 
@@ -113,6 +114,11 @@ TextButton(
 ```
 
 ## 进阶用法
+
+### 模糊材质（COUI 17）
+
+`backgroundModifier` 与 `materialStroke` 的用法同 [OverlayDialog](./overlaydialog#模糊材质-coui-17)。
+但 `WindowDialog` 位于独立的平台窗口中，主窗口录制的 `LayerBackdrop` 不保证能与之对齐；需要模糊材质时优先使用 `OverlayDialog`。
 
 ### 呈现方式覆写
 

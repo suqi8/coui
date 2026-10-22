@@ -64,3 +64,5 @@ This page lists all colors in the COUI color scheme with their default light and
 | `sliderKeyPoint` | Slider key point | `#4DA3B3CD` | `#4D7A8AA6` |
 | `sliderKeyPointForeground` | Slider key point foreground | `#FF6EB5FF` | `#FF5DAAFF` |
 | `sliderBackground` | Slider background | `#0F000000` | `#26FFFFFF` |
+| `dialogButton` | Dialog bar button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
+| `dragHandle` | Bottom sheet drag handle (COUI `couiColorControls`) | `#29000000` | `#40FFFFFF` |

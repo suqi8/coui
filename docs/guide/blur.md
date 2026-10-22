@@ -469,6 +469,38 @@ Presets: `ProgressiveBlur.Top` / `Bottom` / `Left` / `Right` cover the four edge
 | --- | --- | --- |
 | blurColors() | BlurColors | Creates a remembered BlurColors instance |
 
+## COUI 17 Material Blur
+
+`Modifier.couiMaterialBlur` reproduces the window background blur COUI 17 dialogs and bottom sheets
+use (`COUIBackgroundBlurBuilder` + `OplusBlurParam.setMaterialParams`): the backdrop is blurred, a
+mix color is lerped in, then a blend color is blended with overlay (dark) or color dodge (light),
+following the material blend shader in the ColorOS 17 renderer. `MaterialBlurDefaults` holds the
+presets; feed the result to the coui-ui `backgroundModifier` slot of a dialog or bottom sheet.
+
+```kotlin
+OverlayDialog(
+    show = showDialog,
+    title = "Blurred Dialog",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showDialog = false },
+) { /* ... */ }
+```
+
+| Preset | Radius (px) | Mix color (light / dark) | Blend color (light / dark) | Blend mode (light / dark) |
+| --- | --- | --- | --- | --- |
+| `MaterialBlurDefaults.dialog(isDark)` | 200 | `#DC909090` / `#8C777777` | `#509F9F9F` / `#B2292929` | ColorDodge / Overlay |
+| `MaterialBlurDefaults.bottomSheet(isDark)` | 400 | `#DCC8C8C8` / `#A4515151` | `#376E6E6E` / `#B30F0F0F` | ColorDodge / Overlay |
+
+| Parameter | Type | Description | Default |
+| --- | --- | --- | --- |
+| backdrop | Backdrop | The backdrop providing the content behind the surface | - |
+| style | MaterialBlurStyle | Radius (raw px), mix color, blend color and blend mode | - |
+| shape | Shape | Clip of the blur; keep `RectangleShape` inside an already-clipped slot | `RectangleShape` |
+| fraction | Float | Scales the radius and both color alphas (COUI fades the sheet blur with its mask) | 1f |
+| enabled | Boolean | Whether the blur is drawn | true |
+
 ## Edge Highlight
 
 A `Highlight` paints a thin glassy edge with two directional lights along a rounded shape. It is drawn through the `highlight` parameter on `Modifier.textureBlur` / `Modifier.textureEffect` (constant case) or on `Modifier.drawBackdrop` (reactive case, sharing the `BackdropEffectScope`). Combined with the blurred backdrop this produces a "lit edge over blurred backdrop" look.

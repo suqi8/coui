@@ -75,6 +75,8 @@ Scaffold {
 | allowDismiss               | Boolean                   | 是否允许通过拖拽或返回手势关闭抽屉           | true                                       | 否       |
 | enableNestedScroll         | Boolean                   | 是否允许内容嵌套滚动                         | true                                       | 否       |
 | renderInRootScaffold       | Boolean                   | 是否在根（最外层）Scaffold 中渲染底部抽屉。为 true 时，覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染 | true | 否 |
+| backgroundModifier         | Modifier                  | 作用在抽屉圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
+| materialStroke             | Boolean                   | 是否绘制 COUI 17 模糊抽屉的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
 | content                    | @Composable () -> Unit    | 底部抽屉的内容                               | -                                          | 是       |
 
 ### BottomSheetDefaults
@@ -83,7 +85,7 @@ Scaffold {
 
 | 属性名        | 类型   | 说明                  |
 | ------------- | ------ | --------------------- |
-| cornerRadius  | Dp     | 默认圆角半径 (20.dp，COUI couiRoundCornerXL) |
+| cornerRadius  | Dp     | 默认顶部圆角半径（45.dp，COUI 17 `coui_round_corner_xxxxl_radius_large_16_1`） |
 | maxWidth      | Dp     | 默认宽度上限 (Dp.Infinity，实际宽度由 COUI 响应式栅格决定) |
 | outsideMargin | DpSize | 底部抽屉外部默认边距 (DpSize(0.dp, 0.dp)) |
 | insideMargin  | DpSize | 底部抽屉内部默认边距 (DpSize(24.dp, 0.dp)；宽 = 水平内边距，高 = 底部内边距) |
@@ -93,9 +95,35 @@ Scaffold {
 | 函数名            | 返回类型 | 说明                   |
 | ----------------- | -------- | ---------------------- |
 | backgroundColor() | Color    | 获取默认背景颜色       |
-| dragHandleColor() | Color    | 获取默认拖拽指示器颜色 |
+| dragHandleColor() | Color    | 获取默认拖拽指示器颜色（`colorScheme.dragHandle`，COUI `?couiColorControls`） |
 
 ## 进阶用法
+
+### 模糊材质（COUI 17）
+
+系统材质模糊开启时，COUI 17 会模糊面板背后的窗口（`COUIBottomSheetDialog.initBlurParams`：半径
+`coui_bottomdialog_blur_radius` 400px，浅/深色各一组 mix 与 blend 颜色，混合模式为 overlay / color dodge），
+并沿面板绘制边缘光描边。coui-ui 不依赖模糊模块：通过 `backgroundModifier` 传入模糊（例如 coui-blur 的
+`couiMaterialBlur`），并打开 `materialStroke`。不支持 RuntimeShader 时保留不透明的
+`BottomSheetDefaults.backgroundColor()`。
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+val isDark = isSystemInDarkTheme()
+
+Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) { /* 页面内容 */ }
+
+OverlayBottomSheet(
+    show = showSheet,
+    title = "模糊抽屉",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.bottomSheet(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showSheet = false },
+) {
+    Text("抽屉背后的页面会被模糊。")
+}
+```
 
 ### 自定义样式底部抽屉
 

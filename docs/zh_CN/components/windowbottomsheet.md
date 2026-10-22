@@ -77,6 +77,8 @@ WindowBottomSheet(
 | dragHandleColor            | Color                     | 拖拽指示器的颜色                             | BottomSheetDefaults.dragHandleColor() | 否       |
 | allowDismiss               | Boolean                   | 是否允许通过拖拽或返回手势关闭抽屉           | true                                        | 否       |
 | enableNestedScroll         | Boolean                   | 是否允许内容嵌套滚动                         | true                                        | 否       |
+| backgroundModifier         | Modifier                  | 作用在抽屉圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
+| materialStroke             | Boolean                   | 是否绘制 COUI 17 模糊抽屉的材质描边（边缘光 + 内阴影）；需要 RuntimeShader | false | 否       |
 | content                    | @Composable () -> Unit    | 底部抽屉的内容                               | -                                           | 是       |
 
 ### BottomSheetDefaults 对象
@@ -87,7 +89,7 @@ BottomSheetDefaults 对象为底部抽屉组件提供默认设置。
 
 | 属性名        | 类型   | 说明                  |
 | ------------- | ------ | --------------------- |
-| cornerRadius  | Dp     | 默认圆角半径 (20.dp，COUI couiRoundCornerXL) |
+| cornerRadius  | Dp     | 默认顶部圆角半径（45.dp，COUI 17 `coui_round_corner_xxxxl_radius_large_16_1`） |
 | maxWidth      | Dp     | 默认宽度上限 (Dp.Infinity，实际宽度由 COUI 响应式栅格决定) |
 | outsideMargin | DpSize | 底部抽屉外部默认边距  |
 | insideMargin  | DpSize | 底部抽屉内部默认边距  |
@@ -97,9 +99,14 @@ BottomSheetDefaults 对象为底部抽屉组件提供默认设置。
 | 函数名            | 返回类型 | 说明                   |
 | ----------------- | -------- | ---------------------- |
 | backgroundColor() | Color    | 获取默认背景颜色       |
-| dragHandleColor() | Color    | 获取默认拖拽指示器颜色 |
+| dragHandleColor() | Color    | 获取默认拖拽指示器颜色（`colorScheme.dragHandle`，COUI `?couiColorControls`） |
 
 ## 进阶用法
+
+### 模糊材质（COUI 17）
+
+`backgroundModifier` 与 `materialStroke` 的用法同 [OverlayBottomSheet](./overlaybottomsheet#模糊材质-coui-17)。
+但 `WindowBottomSheet` 位于独立的平台窗口中，主窗口录制的 `LayerBackdrop` 不保证能与之对齐；需要模糊材质时优先使用 `OverlayBottomSheet`。
 
 ### 头部操作按钮
 

@@ -75,6 +75,8 @@ Scaffold {
 | allowDismiss               | Boolean                   | Whether to allow dismissing the sheet via drag or back gesture | true                                       | No       |
 | enableNestedScroll         | Boolean                   | Whether to enable nested scrolling for the content             | true                                       | No       |
 | renderInRootScaffold       | Boolean                   | Whether to render the bottom sheet in the root (outermost) Scaffold. When true, it covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |
+| backgroundModifier         | Modifier                  | Applied inside the sheet's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
+| materialStroke             | Boolean                   | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred sheet carries; needs runtime shaders | false | No       |
 | content                    | @Composable () -> Unit    | Bottom sheet content                                           | -                                          | Yes      |
 
 ### BottomSheetDefaults Object
@@ -85,7 +87,7 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 
 | Property Name | Type   | Description                          |
 | ------------- | ------ | ------------------------------------ |
-| cornerRadius  | Dp     | Default corner radius (20.dp, COUI couiRoundCornerXL) |
+| cornerRadius  | Dp     | Default top corner radius (45.dp, COUI 17 `coui_round_corner_xxxxl_radius_large_16_1`) |
 | maxWidth      | Dp     | Default width cap (Dp.Infinity; width follows the COUI responsive grid) |
 | outsideMargin | DpSize | Default bottom sheet external margin (DpSize(0.dp, 0.dp)) |
 | insideMargin  | DpSize | Default bottom sheet internal margin (DpSize(24.dp, 0.dp); width = horizontal padding, height = bottom padding) |
@@ -95,9 +97,36 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 | Function Name     | Return Type | Description                      |
 | ----------------- | ----------- | -------------------------------- |
 | backgroundColor() | Color       | Get default background color     |
-| dragHandleColor() | Color       | Get default drag indicator color |
+| dragHandleColor() | Color       | Get default drag indicator color (`colorScheme.dragHandle`, COUI `?couiColorControls`) |
 
 ## Advanced Usage
+
+### Blurred Material (COUI 17)
+
+With the system material blur on, COUI 17 blurs the window behind the panel
+(`COUIBottomSheetDialog.initBlurParams`: radius `coui_bottomdialog_blur_radius` 400px, light/dark mix
+and blend colors, overlay/color-dodge blend) and draws an edge-lighting stroke along the panel.
+coui-ui stays free of a blur dependency: pass the blur through `backgroundModifier`, e.g. with
+coui-blur's `couiMaterialBlur`, and turn on `materialStroke`. Without runtime shaders keep the opaque
+`BottomSheetDefaults.backgroundColor()`.
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+val isDark = isSystemInDarkTheme()
+
+Box(Modifier.fillMaxSize().layerBackdrop(backdrop)) { /* page content */ }
+
+OverlayBottomSheet(
+    show = showSheet,
+    title = "Blurred Sheet",
+    backgroundColor = Color.Transparent,
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.bottomSheet(isDark)),
+    materialStroke = true,
+    onDismissRequest = { showSheet = false },
+) {
+    Text("The page behind the sheet is blurred.")
+}
+```
 
 ### Custom Styled Bottom Sheet
 
