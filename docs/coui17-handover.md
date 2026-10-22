@@ -73,7 +73,21 @@ COUI17 复刻的 **token 层（色值/字号/圆角/高度）大部分已对齐�
 落地建议：Compose 端用 `drawWithContent` + 离屏 `Canvas` 逐像素（或 `RuntimeShader` Android 端直接跑 SkSL——**注意桌面端 Skiko 也支持 RuntimeShader，可跨端共用同一份 SkSL 字符串**，这比用 Canvas 逐像素近似更接近原 shader）。按钮只有 48dp，逐像素成本可忽略。
 
 ### 4.2 顶栏 Material 三档枚举
-DEFAULT 0px / IMMERSIVE 25px / DEFAULT_BLUR 20px（blend 层已并入 Glow，枚举未做）。
+档位来自 `COUIMaterialEffectType`（`TYPE_DEFAULT=0` / `TYPE_IMMERSIVE=1` / `TYPE_DEFAULT_BLUR=2`），通过 `COUIToolbar` 属性 `supportMaterialType` 或 `setMaterialEffectType` 设置，并下发到导航按钮、菜单项、溢出按钮和文字按钮。Settings 从不设置，所以默认是 0。每一档的取值由 `ToolbarMaterialEffectResolver` 映射：
+
+| 档位 | 模糊预设 | 半径 px | 两层颜色（src = 常量色，dst = 模糊背景） | 非模糊回退填充 | 描边（普通 / 模糊窗口内） |
+|---|---|---|---|---|---|
+| 0 DEFAULT | `TYPE_FRAMEWORK_TOP_BAR` | **0** | L `#66333333` COLOR_DODGE + `#99F5F5F5` LUMINOSITY；D `#CC262626` SRC_OVER + `#B37F7F7F` OVERLAY | `?couiColorBar` #FAFAFA / #1E1E1E | CIRCLE_1、CAPSULE_1 / CIRCLE_4、CAPSULE_8 |
+| 1 IMMERSIVE | `TYPE_FRAMEWORK_TOP_BAR1` | **25** | `#1A6E6E6E` COLOR_DODGE + `#24F1F1F1` LUMINOSITY，**浅色深色相同** | `0x4DBABABA`（`BACKGROUND_COLOR`） | CIRCLE_3、CAPSULE_7 / CIRCLE_5、CAPSULE_9 |
+| 2 DEFAULT_BLUR | `TYPE_FRAMEWORK_TOP_BAR_BLUR` | **20** | 与档位 0 相同 | `?couiColorBar` | 同档位 0 |
+
+- 证据：`toolbar/ToolbarMaterialEffectResolver.java:15,22,47`，`COUIMaterialBlurEffect.java:497-512`（档位 1 是 case 4，`:351`）。半径是原始 px，Java 侧不做 dp 换算。
+- 模糊窗口内（对话框里的 toolbar，`drawableMaterialEffect`）的面板色：L `#FFF0F0F0`、D `#FF333333`、沉浸 `#26FFFFFF`。这种模式下的回退色：L 为 `#1A000000` 叠在 `?couiColorSurfaceWithCard` 上，D 为 `#33FFFFFF` 叠在 `?couiColorSurfaceWithCard` 上，沉浸为 `#26FFFFFF`。出处 `ToolbarMaterialEffectDelegate.java:58-60,75-76,247-250,681-692`。
+- 门控：`wantBlurOn = !drawable && mBlurOn && mBlurAllowed`（`:819-821`）。角参数：半径 = min(w,h)/2，胶囊 weight 1.0，圆 2.0（`:765-781`）。
+- 本库现状：
+  - 档位 0 已在 `COUIMaterialEffect.materialPanel` 里实现，做法是原地 `drawRect(…, blendMode)` 混合。半径是 0，所以不需要采样背景。
+  - 三档的取值已收进 coui-blur `ViewBlurDefaults.topBar(TopBarMaterialTier, isDark)`，可以配合 `Modifier.couiViewBlur` 使用。
+  - **档位切换尚未接入 `materialPanel`**。档位 1、2 需要走 `LocalMaterialBackdrop` 采样背景（与 Button 同一机制，见 coui-ui `effect/MaterialBackdrop.kt`）。没有 provider 时回退为上表的填充色：档位 1 用 `0x4DBABABA`，档位 2 用 `couiColorBar`。还要注意：顶栏按钮位于页面 `layerBackdrop` 之外才能采样，否则会采样到自身。
 
 ### 4.3 其他遗留
 - Dialog 底角 34dp（底角独立规格）、Dialog 磨砂 240dp。
@@ -82,6 +96,7 @@ DEFAULT 0px / IMMERSIVE 25px / DEFAULT_BLUR 20px（blend 层已并入 Glow，枚
 - title icon（`coui_appbar_title_icon_size` 16dp / margin 12dp）概念未实现。
 - 组件级专项：Checkbox/RadioButton `__17` 勾选动画、选中态凝光（详见 `docs/coui17-migration-checklist.md` §三）。`coui_color_ripple_press_background` 在 17 上不消费，已移出。
 - 平滑圆角（已完成）：Oplus `addSmoothRoundRect` 的 weight 即 Lamé 超椭圆指数 n（`|x|^n+|y|^n=r^n`，在 r 处与直边相切；17 对话框截图拟合 r=45.1dp、n=3.00）。`coui-squircle` 已改为 `weight` 参数（默认 2.5），shader 用与 libhwui G2 相同的 Lp-norm SDF，Path 用超椭圆三次拟合；调用点按 `COUIRoundCorner.Normal.Weight`=2.5 / `Large.Weight`=3.0 / `CircularWeight`=2.0 传入。权重 <2（2026-10-23 补齐）：按 libhwui `g2RoundRectCommonFill` 的 `superN<2` 分支实现 `mix(sdRoundRect(n=2), sdCapsule, smoothstep(2,1,n))`，`sdCapsule` 半径取短边一半、kMax 26.6 / 带宽 70·60 × r·0.0125、kAbs 1px；与 `OplusPathSmooth` 一致仅在全圆（四角相等且 ≥ 短边一半）时生效，否则按 2.0。shader 逐像素与原生公式差 ≤0.002 alpha，Path 追踪零等值线差 ≤0.001px；软胶囊衔接处比圆弧胶囊内收约 0.020r。胶囊调用点改用 `COUIRoundCorner.CapsuleWeight`=1.0（COUIButton 胶囊、Chip、FloatingToolbar、FloatingNavigationBar、宽>高的 IconButton；圆形 IconButton 保持 2.0）。Tooltip 改 17dp/3.0（`coui_tooltips_os_16_1_radius_17_dp`）；TopTips 单行=72dp 胶囊/1.0、多行=28dp/3.0、切换 300ms 动画（`COUIDefaultTopTips.updateRadius`）；ListPopup 与级联菜单改 28dp/2.5（`RoundFrameLayout.getSmoothRadiusAndWeight`），揭示裁剪与级联展开形变（等半径时）同步。CodeTextField、Badge 数字胶囊、RecommendedPreference 改用 `LegacySquircleShape`（`COUIShapePath.getRoundRectPath` 逐字移植，128.19% 延伸）。第三轮（2026-10-23）：① FloatingNavigationBar 默认圆角改为 `FloatingNavigationBarDefaults.CornerRadius` = 72dp（任意高度全圆，对应 `BaseBottomFloatingMenuView.updateSmoothRoundPath` 半高 + 不传权重）；② 新增 `SquircleDefaults/COUIRoundCorner.UnspecifiedWeight`（=0 标记）与 `DefaultG2Weight` = 2.45（`persist.sys.oplus.default_g2_weight` 回退值，`OplusSmoothRoundedManager.DEFAULT_G2_WEIGHT`），全圆解析为 1.0、否则 2.45；COUI 不传权重的调用点（Chip、FloatingToolbar、FloatingNavigationBar、胶囊 IconButton、Switch 轨道、Slider 背景/进度、TabRow/TabRowWithContour 容器与滑块、Snackbar 单行与多行、InstallLoadProgress）改用它；SearchBar 背景按 `SearchBarBackgroundView` 显式 1.0 画软胶囊；③ `addSquircleRect` 新增 `Rect` 与逐角重载（逐角各自钳位到短边一半、共用权重，与 G2 shader `getNormalizedRadius` 一致；k 缩放在钳位后恒为 1），级联展开形变的上下不等半径帧改走逐角超椭圆；另有 `SquircleShape`、`DrawScope.drawSquircleRect`；软胶囊 path 构造改用隐函数解析切线（约 60µs/条，desktop）。仍保持原样：Badge 描边外圈（COUI `drawPointWithStroke` 传未钳位 72dp 致路径自交，不复刻）；纵向 Slider 进度（`StandardProgressRenderer` 带滑块时画直角 drawRect，与本库模型不符，保留圆头）；Slider/Switch 滑块、FAB、线性进度条（`COUIHorizontalProgressBar` 普通 addRoundRect）、各类涟漪遮罩（Snackbar 动作/关闭、TopTips、TextField 清除/密码、SearchBar 清除按钮）仍为普通圆/圆角；ColorPicker、BreadcrumbBar 无 COUI 对应实现；NavDisplay 转场裁剪仍用屏幕圆角 2.5。
+- 按钮焦散阴影（未做）：只有原生实现，`OplusMaterialUtil.setOutlineCausticShadow*` 带六个参数和动画 speed，APK 里没有对应的 Java/AGSL 源码。另外它只在 `setCausticShadow(6|7)` 时才开启，默认 -1 = 无阴影，Settings 里只有存储页的「清理」按钮用到。因此本库 Button 默认不画，也暂不提供静态近似：近似无法取证校准，不值得为它新增公开参数。参数记录在材质 spec §2。
 - 列表选中态：COUI 17 选中行画 `couiColorFocus` 蒙层并隐藏相邻分隔线（`COUIPreferenceItemDecoration`）；本库只在键盘焦点上画 `focus` 层，`BasicComponent` 无 selected 参数，分隔线也不会自动隐藏。
 
 ## 5. 已知坑（血泪记录，勿重蹈）
