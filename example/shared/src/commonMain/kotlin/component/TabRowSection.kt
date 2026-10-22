@@ -26,15 +26,43 @@ import kotlinx.coroutines.launch
 fun LazyListScope.tabRowSection() {
     item(key = "tabRow") {
         SmallTitle(text = "TabRow")
-        val framelessTabs = remember { listOf("Day", "Week", "Month") }
-        var framelessSelected by remember { mutableIntStateOf(0) }
+        // COUI sliding tab layout: spread across the row when the labels fit.
+        val fixedTabs = remember { listOf("Day", "Week", "Month") }
+        var fixedSelected by remember { mutableIntStateOf(0) }
         TabRow(
-            tabs = framelessTabs,
-            selectedTabIndex = framelessSelected,
-            onTabSelected = { framelessSelected = it },
+            tabs = fixedTabs,
+            selectedTabIndex = fixedSelected,
+            onTabSelected = { fixedSelected = it },
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+        // Too many labels for the row: it scrolls with fading edges and follows the pager.
+        val scrollingTabs = remember {
+            listOf("Recommended", "Following", "Popular", "Featured", "Technology", "Travel", "Food")
+        }
+        val tabScope = rememberCoroutineScope()
+        val tabPagerState = rememberPagerState(pageCount = { scrollingTabs.size })
+        TabRow(
+            tabs = scrollingTabs,
+            selectedTabIndex = tabPagerState.targetPage,
+            onTabSelected = {
+                tabScope.launch {
+                    tabPagerState.animateScrollToPage(it)
+                }
+            },
+        )
+        HorizontalPager(
+            state = tabPagerState,
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 12.dp),
+                .padding(top = 12.dp, bottom = 16.dp),
+            key = { it },
+            pageContent = { page ->
+                Text(
+                    text = "Content of ${scrollingTabs[page]}",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
         )
         Card(
             modifier = Modifier

@@ -125,7 +125,7 @@ The navigation icon already carries a built-in `navigationIconPadding` of `16.dp
 
 ### TabRow
 
-`TabRow` is visually rebuilt as ColorOS segment buttons. The signature is compatible, with small differences: `itemSpacing` defaults to `0.dp` (was `9.dp`; `TabRowWithContour` was `5.dp`), the plain `TabRow` defaults to a transparent background and accepts an `indication` parameter, and `TabRowWithContour` gains a `contourPadding` parameter.
+`TabRowWithContour` is visually rebuilt as ColorOS segment buttons: `itemSpacing` defaults to `0.dp` (was `5.dp`) and it gains a `contourPadding` parameter. The plain `TabRow` becomes the ColorOS sliding tab layout (48dp, text tabs with a 2dp underline indicator) and takes its colors from `TabRowDefaults.underlineColors()`. Its signature stays source compatible apart from a new `horizontalMargin` parameter, but `cornerRadius` now shapes the press mask, `itemSpacing` is the minimum gap between labels (responsive by default), and the indication defaults to `LocalIndication.current`.
 
 ### Switch
 

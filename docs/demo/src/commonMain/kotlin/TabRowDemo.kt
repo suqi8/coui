@@ -36,7 +36,7 @@ fun TabRowDemo() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val tabs1 = listOf("Recommended", "Following", "Popular", "Featured")
+            val tabs1 = listOf("Recommended", "Following", "Popular", "Featured", "Technology", "Travel")
             var selectedTabIndex1 by remember { mutableIntStateOf(0) }
             val tabListState1 = rememberLazyListState()
 
