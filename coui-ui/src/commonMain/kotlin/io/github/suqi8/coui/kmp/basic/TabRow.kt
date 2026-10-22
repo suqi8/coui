@@ -212,6 +212,9 @@ private fun SegmentButtonRow(
     modifier: Modifier = Modifier,
 ) {
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
+    val isDarkTheme = COUITheme.colorScheme.background.luminance() < 0.5f
+    val shadowColor = if (isDarkTheme) IndicatorShadowDark else IndicatorShadowLight
+    val shadowPenumbraColor = remember(shadowColor) { shadowColor.copy(alpha = shadowColor.alpha * 0.5f) }
     val containerColor = colors.backgroundColor(false)
     val indicatorColor = colors.backgroundColor(true)
     val density = LocalDensity.current
@@ -346,9 +349,7 @@ private fun SegmentButtonRow(
                     val pad = contourPadding.toPx()
                     val scale = indicatorScale.value
                     val indicatorW = indicatorWidth.value * scale
-                    // COUI 17: the indicator capsule is full height (40dp), not inset by the
-                    // contour padding; the padding only insets it horizontally within its segment.
-                    val indicatorH = size.height * scale
+                    val indicatorH = (size.height - 2f * pad) * scale
                     if (indicatorW <= 0f || indicatorH <= 0f) return@drawBehind
                     val centerX = pad + indicatorCenterX.value - scrollOffset
                     val centerY = size.height / 2f
@@ -366,7 +367,25 @@ private fun SegmentButtonRow(
                         RoundRect(Rect(Offset.Zero, size), CornerRadius(containerRadius)),
                     )
                     clipPath(containerPath) {
-                        // 2. Indicator capsule fill (COUI 17 draws no shadow under the indicator).
+                        // 2. Indicator shadow, clipped outside the indicator (Region.Op.DIFFERENCE);
+                        // the 1dp blur is approximated with a half-alpha penumbra pass.
+                        clipPath(indicatorPath, clipOp = ClipOp.Difference) {
+                            val shadowDy = IndicatorShadowOffsetY.toPx()
+                            val shadowBlur = IndicatorShadowBlurRadius.toPx()
+                            drawRoundRect(
+                                color = shadowPenumbraColor,
+                                topLeft = Offset(rect.left - shadowBlur, rect.top + shadowDy - shadowBlur),
+                                size = Size(indicatorW + 2 * shadowBlur, indicatorH + 2 * shadowBlur),
+                                cornerRadius = CornerRadius(radius + shadowBlur),
+                            )
+                            drawRoundRect(
+                                color = shadowColor,
+                                topLeft = Offset(rect.left, rect.top + shadowDy),
+                                size = Size(indicatorW, indicatorH),
+                                cornerRadius = CornerRadius(radius),
+                            )
+                        }
+                        // 3. Indicator capsule fill.
                         drawRoundRect(
                             color = indicatorColor,
                             topLeft = rect.topLeft,
@@ -570,12 +589,12 @@ object TabRowDefaults {
 
     /**
      * The default inset between the container and the indicator in [TabRowWithContour].
-     * COUI 17 indicator inset (4dp).
+     * COUI `SegmentButton` style `android:padding` (4dp).
      */
     val TabRowWithContourPadding = 4.dp
 
     /**
-     * The contour inset of the COUI `SegmentButton.Tiny` style.
+     * The contour inset of the COUI `SegmentButton.Tiny` style (`android:padding` 2dp).
      */
     val TabRowWithContourTinyPadding = 2.dp
 
@@ -658,17 +677,29 @@ private val TextColorAnimationDuration = 300
 /** COUI `coui_segment_btn_padding_horizontal` (12dp) — horizontal text padding of a segment. */
 private val SegmentPaddingHorizontal = 12.dp
 
+/** COUI `coui_segment_shadow_offset` (2dp) — the vertical offset of the indicator shadow. */
+private val IndicatorShadowOffsetY = 2.dp
+
+/** COUI `coui_segment_shadow_radius` (1dp) — the blur radius of the indicator shadow. */
+private val IndicatorShadowBlurRadius = 1.dp
+
+/** COUI `coui_segment_button_shadow_color` in light themes (#0D000000). */
+private val IndicatorShadowLight = Color(0x0D000000)
+
+/** COUI 17 `coui_segment_button_shadow_color` in dark themes (#14000000). */
+private val IndicatorShadowDark = Color(0x14000000)
+
 /** COUI `coui_color_segment_button_background` in light themes (#0F000000). */
 private val SegmentContainerLight = Color(0x0F000000)
 
 /** COUI `coui_color_segment_button_background` in dark themes (#1FFFFFFF). */
 private val SegmentContainerDark = Color(0x1FFFFFFF)
 
-/** COUI `coui_color_segment_button_indicator` in light themes (#FFFFFF). */
-private val SegmentIndicatorLight = Color(0xFFFFFFFF)
+/** COUI 17 `coui_color_segment_button_indicator` in light themes (#B2FFFFFF). */
+private val SegmentIndicatorLight = Color(0xB2FFFFFF)
 
-/** COUI `coui_color_segment_button_indicator` in dark themes (#1AFFFFFF). */
-private val SegmentIndicatorDark = Color(0x1AFFFFFF)
+/** COUI 17 `coui_color_segment_button_indicator` in dark themes (#33FFFFFF). */
+private val SegmentIndicatorDark = Color(0x33FFFFFF)
 
 /** COUIInEaseInterpolator, used to map the segment area to the pressed end scale. */
 private val PressedScaleEasing = CubicBezierEasing(0f, 0f, 0.1f, 1f)

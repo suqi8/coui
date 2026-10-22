@@ -478,7 +478,7 @@ fun darkColorScheme(
     secondaryContainerVariant: Color = Color(0x26FFFFFF),
     onSecondaryContainerVariant: Color = Color(0x66FFFFFF),
     tertiaryContainer: Color = Color(0x401A8CFF),
-    onTertiaryContainer: Color = Color(0xFF1A8CFF),
+    onTertiaryContainer: Color = Color(0xFF5C9DFF),
     tertiaryContainerVariant: Color = Color(0x401A8CFF),
     background: Color = Color(0xFF1E1E1E),
     onBackground: Color = Color(0xE6FFFFFF),

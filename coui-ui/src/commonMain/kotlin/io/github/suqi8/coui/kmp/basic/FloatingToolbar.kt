@@ -83,10 +83,11 @@ fun FloatingToolbar(
 object FloatingToolbarDefaults {
 
     /**
-     * Default corner radius of the [FloatingToolbar].
-     * COUI 17 `coui_floating_toolbar_item_circle_radius` (20dp).
+     * Default corner radius of the [FloatingToolbar]: a capsule. COUI 17
+     * `COUIBottomFloatingToolbarMenuView` derives it as half the content height
+     * (`coui_floating_toolbar_menu_view_height` 44dp -> 22dp).
      */
-    val CornerRadius = 20.dp
+    val CornerRadius = 22.dp
 
     /**
      * Default color of the [FloatingToolbar].
