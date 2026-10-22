@@ -881,7 +881,7 @@ private fun TopAppBarLayout(
                         text = title,
                         color = animatedTitleColor,
                         fontSize = collapsedTitleTextSize,
-                        fontWeight = CollapsedTitleFontWeight,
+                        fontWeight = TitleFontWeight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         softWrap = false,
@@ -902,7 +902,7 @@ private fun TopAppBarLayout(
                     text = largeTitle,
                     color = animatedLargeTitleColor,
                     fontSize = largeTitleFontSize,
-                    fontWeight = ExpandedTitleFontWeight,
+                    fontWeight = TitleFontWeight,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
@@ -1235,7 +1235,7 @@ private fun SmallTopAppBarLayout(
                     color = animatedTitleColor,
                     maxLines = 1,
                     fontSize = collapsedTitleTextSize,
-                    fontWeight = CollapsedTitleFontWeight,
+                    fontWeight = TitleFontWeight,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
                 )
@@ -1418,17 +1418,12 @@ private fun SmallTopAppBarLayout(
 }
 
 /**
- * `COUIAppbarTitleStyle.Expanded`: `sans-serif-semibold` with the base style's `textStyle=bold`.
- * Material's `TextAppearance` builds it with `Typeface.create(family, BOLD)`, which adds 300 to the
- * family weight (600 in the ColorOS `fonts.xml`), so the expanded title renders at 900.
+ * The weight shared by the expanded and the collapsed title. `COUIAppbarTitleStyle.Expanded` is
+ * `sans-serif-semibold`; the large title is swapped for the collapsed one at full collapse
+ * (`COUICollapsingTextHelper` changes typeface only when the fraction reaches 1), so both use the
+ * same weight to keep that swap from showing as a jump in stroke weight.
  */
-private val ExpandedTitleFontWeight = FontWeight.Black
-
-/**
- * `COUIAppbarTitleStyle.Collapsed`: `sans-serif-medium` (500) plus `textStyle=bold`, rendering at 800.
- * `COUICollapsingTextHelper` swaps to it only at full collapse, so the step is 900 -> 800.
- */
-private val CollapsedTitleFontWeight = FontWeight.ExtraBold
+private val TitleFontWeight = FontWeight.SemiBold
 
 /** COUI `coui_appbar_title_collapsed_text_size` (24dp, sans-serif-medium; a dp size, so it ignores font scale). */
 private val CollapsedTitleTextSize = 24.dp
