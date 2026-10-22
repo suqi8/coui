@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
@@ -71,6 +72,11 @@ object COUIMaterialEffect {
      * @param cornerRadius The corner radius; half the height for a circle or capsule.
      * @param enabled Whether the material is drawn.
      * @param motionEnabled Whether the touch motion runs. Pass `false` for a disabled button.
+     * @param spotLightSuppressed Read when a touch would light or move the spotlight; while it
+     *   returns `true` the spotlight stays dark. A gesture handler running later in the same pass
+     *   (for example one that spots a child button consuming the down) can still turn it off for
+     *   that touch, as `SearchBarBackgroundView` only feeds its spotlight touches that drive the
+     *   capsule.
      */
     @Composable
     fun Modifier.materialPanel(
@@ -78,8 +84,10 @@ object COUIMaterialEffect {
         cornerRadius: Dp = 20.dp,
         enabled: Boolean = true,
         motionEnabled: Boolean = true,
+        spotLightSuppressed: () -> Boolean = { false },
     ): Modifier {
         if (!enabled) return this
+        val currentSpotLightSuppressed by rememberUpdatedState(spotLightSuppressed)
 
         val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
         val pressed by interactionSource.collectIsPressedAsState()
@@ -128,11 +136,12 @@ object COUIMaterialEffect {
                     Modifier.pointerInput(Unit) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
-                            scope.launch { spotlight.glow(down.position) }
+                            // Launched, so the check runs after every handler has seen the down.
+                            scope.launch { if (!currentSpotLightSuppressed()) spotlight.glow(down.position) }
                             while (true) {
                                 val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
                                 if (change.changedToUp() || !change.pressed) break
-                                scope.launch { spotlight.follow(change.position) }
+                                scope.launch { if (!currentSpotLightSuppressed()) spotlight.follow(change.position) }
                             }
                             scope.launch { spotlight.extinguish() }
                         }

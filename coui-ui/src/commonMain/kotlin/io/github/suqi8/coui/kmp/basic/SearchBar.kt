@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSupported
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -472,8 +474,10 @@ fun InputField(
     val iconExpand = LocalSearchBarIconExpand.current
     val capsuleInfo = LocalSearchBarCapsuleInfo.current
     // SearchBarBackgroundView.dispatchTouchEvent decides on ACTION_DOWN whether a gesture drives the
-    // capsule's touch animator: never when it starts on an inner button.
+    // capsule's touch animator and spotlight: not when it starts on an inner primary/secondary
+    // button, but the quick delete (clear) button is not in that list and still does.
     var innerButtonPressed by remember { mutableStateOf(false) }
+    val quickDeleteDown = remember { arrayOfNulls<PointerId>(1) }
     val iconExpandFullWidth = remember { IntArray(1) }
 
     val actualLeadingIcon = leadingIcon ?: {
@@ -500,6 +504,13 @@ fun InputField(
                     .padding(start = SearchBarDefaults.TrailingIconStartPadding, end = SearchBarDefaults.TrailingIconEndPadding)
                     .size(SearchBarDefaults.TrailingIconTouchTargetSize)
                     .clip(CircleShape)
+                    // Tags its downs in the Initial pass, before the clickable consumes them, so the
+                    // capsule keeps treating them as its own (mQuickDeleteButton is not excluded).
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+                            quickDeleteDown[0] = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial).id
+                        }
+                    }
                     .clickable { currentOnQueryChange("") }
                     .semantics { contentDescription = "Search Cleanup" },
                 contentAlignment = Alignment.Center,
@@ -625,12 +636,14 @@ fun InputField(
                     .then(
                         if (capsuleMaterial) {
                             // Observes the Main pass after every child, so a down an inner button
-                            // (the clear button or any clickable icon in the capsule) has consumed
-                            // switches the touch motion off for that gesture.
+                            // (any clickable icon in the capsule other than the clear button) has
+                            // consumed switches the touch motion and spotlight off for that gesture.
                             Modifier.pointerInput(Unit) {
                                 awaitEachGesture {
                                     val down = awaitFirstDown(requireUnconsumed = false)
-                                    if (down.isConsumed) {
+                                    val onQuickDelete = quickDeleteDown[0] == down.id
+                                    quickDeleteDown[0] = null
+                                    if (down.isConsumed && !onQuickDelete) {
                                         innerButtonPressed = true
                                         do {
                                             val event = awaitPointerEvent()
@@ -673,6 +686,7 @@ fun InputField(
                                 interactionSource = internalInteractionSource,
                                 cornerRadius = COUIRoundCorner.Full,
                                 motionEnabled = enabled && !innerButtonPressed,
+                                spotLightSuppressed = { innerButtonPressed },
                             )
                         } else {
                             Modifier.background(
