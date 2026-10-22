@@ -76,6 +76,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.anim.folmeSpring
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
 import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
@@ -328,13 +329,17 @@ internal fun BottomSheetContentLayout(
                 backgroundModifier = backgroundModifier,
                 materialStroke = materialStroke,
                 startAction = startAction?.let { action ->
-                    { CompositionLocalProvider(LocalDismissState provides requestDismiss) { action() } }
+                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null) { action() } }
                 },
                 endAction = endAction?.let { action ->
-                    { CompositionLocalProvider(LocalDismissState provides requestDismiss) { action() } }
+                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null) { action() } }
                 },
                 content = {
-                    CompositionLocalProvider(LocalDismissState provides requestDismiss) {
+                    // The page backdrop lies behind the sheet; buttons on it keep their fill.
+                    CompositionLocalProvider(
+                        LocalDismissState provides requestDismiss,
+                        LocalMaterialBackdrop provides null,
+                    ) {
                         content()
                     }
                 },

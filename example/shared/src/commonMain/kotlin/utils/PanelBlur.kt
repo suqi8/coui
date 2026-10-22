@@ -5,15 +5,22 @@ package utils
 import LocalAppState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import io.github.suqi8.coui.kmp.blur.Backdrop
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.blur.MaterialBlurStyle
+import io.github.suqi8.coui.kmp.blur.ViewBlurStyle
 import io.github.suqi8.coui.kmp.blur.couiMaterialBlur
+import io.github.suqi8.coui.kmp.blur.couiViewBlur
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.MaterialBackdropProvider
+import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -51,3 +58,37 @@ fun panelBlur(style: (isDark: Boolean) -> MaterialBlurStyle): PanelBlur? {
         backgroundColor = Color.Transparent,
     )
 }
+
+/**
+ * Bridges a coui-blur [Backdrop] to coui-ui's [LocalMaterialBackdrop], so buttons drawn over it get
+ * the COUI 17 view backdrop blur ([couiViewBlur]). Returns null when the blur setting is off, no
+ * backdrop is given or runtime shaders are unavailable; the buttons then keep their opaque fill,
+ * COUI's own fallback.
+ *
+ * The backdrop must record the content behind the buttons, not the buttons themselves: provide the
+ * result around siblings of the recorded layer. The page backdrop ([LocalPageBackdrop]) records
+ * the whole page, so page content cannot use it; overlays reset the local to null on their own.
+ *
+ * @param backdrop The backdrop recording the content behind the buttons.
+ */
+@Composable
+fun rememberMaterialBackdropProvider(backdrop: Backdrop?): MaterialBackdropProvider? {
+    val active = LocalAppState.current.enableBlur && backdrop != null && isRuntimeShaderSupported()
+    return remember(backdrop, active) {
+        if (active && backdrop != null) {
+            MaterialBackdropProvider { spec, shape ->
+                Modifier.couiViewBlur(backdrop = backdrop, style = spec.toViewBlurStyle(), shape = shape)
+            }
+        } else {
+            null
+        }
+    }
+}
+
+private fun MaterialBackdropSpec.toViewBlurStyle(): ViewBlurStyle = ViewBlurStyle(
+    blurRadiusPx = blurRadiusPx,
+    layer1 = layer1,
+    mode1 = mode1,
+    layer2 = layer2,
+    mode2 = mode2,
+)

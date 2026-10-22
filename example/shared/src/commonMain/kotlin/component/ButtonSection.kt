@@ -2,14 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 package component
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonMaterial
@@ -25,7 +33,14 @@ import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Stepper
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.shared.generated.resources.Res
+import io.github.suqi8.coui.kmp.shared.generated.resources.blur_test_bg
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import org.jetbrains.compose.resources.painterResource
+import utils.rememberMaterialBackdropProvider
 
 fun LazyListScope.buttonSection() {
     item(key = "button") {
@@ -154,6 +169,7 @@ fun LazyListScope.buttonSection() {
                 material = ButtonMaterial.Transparent,
             )
         }
+        MaterialBackdropButtons()
         var stepperValue by remember { mutableIntStateOf(2) }
         Row(
             modifier = Modifier
@@ -169,6 +185,73 @@ fun LazyListScope.buttonSection() {
                 minValue = 0,
                 maxValue = 10,
             )
+        }
+    }
+}
+
+/**
+ * The COUI 17 button backdrop blur: the buttons sit on top of a recorded image (a sibling of the
+ * recorded layer), so the material replaces their fill with the blurred, tinted image.
+ */
+@Composable
+private fun MaterialBackdropButtons() {
+    val backdrop = rememberLayerBackdrop()
+    val provider = rememberMaterialBackdropProvider(backdrop)
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 12.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp)),
+    ) {
+        Image(
+            painter = painterResource(Res.drawable.blur_test_bg),
+            contentDescription = null,
+            modifier = Modifier
+                .matchParentSize()
+                .layerBackdrop(backdrop),
+            contentScale = ContentScale.Crop,
+        )
+        CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row {
+                    TextButton(
+                        text = "Backdrop",
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    TextButton(
+                        text = "Backdrop",
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        text = "Transparent",
+                        onClick = {},
+                        minWidth = ButtonDefaults.MinWidthSmall,
+                        minHeight = ButtonDefaults.MinHeightSmall,
+                        insideMargin = ButtonDefaults.InsideMarginSmall,
+                        textStyle = ButtonDefaults.textStyleSmall(),
+                        colors = ButtonDefaults.textButtonColorsTransparent(),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    TextButton(
+                        text = "Disabled",
+                        onClick = {},
+                        enabled = false,
+                        minWidth = ButtonDefaults.MinWidthSmall,
+                        minHeight = ButtonDefaults.MinHeightSmall,
+                        insideMargin = ButtonDefaults.InsideMarginSmall,
+                        textStyle = ButtonDefaults.textStyleSmall(),
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
+                }
+            }
         }
     }
 }

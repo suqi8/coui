@@ -37,8 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.contentButtonMaterial
 import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -73,6 +75,14 @@ import kotlin.coroutines.cancellation.CancellationException
  *   as every `ButtonNew` style follows the system material switch; [ButtonMaterial.None] opts
  *   out. While the layer is drawn the press tint is off (`COUIButton.applyBlurEffect` disables the
  *   mask's pressed state).
+ * @param materialBackdrop Whether the [material] layer may replace the fill with the COUI 17
+ *   backdrop blur (`COUIButton` `isBlurEffectEnabled`). It is only drawn when a
+ *   [LocalMaterialBackdrop] provider is present and runtime shaders are available: the solid fill
+ *   is then skipped and the content behind the button is blurred and tinted with the preset of
+ *   its type (primary 10px with the fill at alpha 229/230, secondary 25px with white at
+ *   80% / 20%, transparent 25px overlay + luminosity). Without a provider the button keeps its
+ *   opaque fill, which is exactly COUI's non-blur fallback. Pass `false` to keep the fill
+ *   (`useMaterialEffect = forceDisable`).
  * @param interactionSource The [MutableInteractionSource] to be used for the [Button].
  * @param indication The [Indication] to be used for the [Button]. Defaults to `null` because
  *   the COUI press feedback (scale + press tint) is built into the button itself.
@@ -90,6 +100,7 @@ fun Button(
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     material: ButtonMaterial = ButtonMaterial.Auto,
+    materialBackdrop: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
     content: @Composable RowScope.() -> Unit,
@@ -105,6 +116,7 @@ fun Button(
         colors = colors,
         insideMargin = insideMargin,
         materialType = material.toContentType(colors),
+        backdropEnabled = materialBackdrop,
         interactionSource = interactionSource,
         indication = indication,
         content = content,
@@ -127,6 +139,7 @@ internal fun CouiButton(
     minWidth: Dp = ButtonDefaults.MinWidth,
     minHeight: Dp = ButtonDefaults.MinHeight,
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
+    backdropEnabled: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
     content: @Composable RowScope.() -> Unit,
@@ -177,7 +190,28 @@ internal fun CouiButton(
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val pressTint = if (isDark) PressedTintDark else PressedTintLight
     val hoverTint = if (isDark) HoveredTintDark else HoveredTintLight
-    var fillColor = containerColor
+    // COUIButton.onDraw skips the solid fill while the view blur is on: the filtered backdrop is
+    // the fill. The drawable variants never blur, and without a provider COUI's non-blur path
+    // keeps the opaque fill.
+    val backdropProvider = LocalMaterialBackdrop.current
+    val backdropSpec = if (materialActive && backdropEnabled && backdropProvider != null) {
+        materialType?.backdropSpec(isDark, enabled, colors.color)
+    } else {
+        null
+    }
+    val backdropModifier = if (backdropProvider != null && backdropSpec != null) {
+        val shape = remember(cornerRadius) {
+            if (cornerRadius == Dp.Unspecified) {
+                SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.CapsuleWeight)
+            } else {
+                SquircleShape(cornerRadius, COUIRoundCorner.Large.Weight)
+            }
+        }
+        remember(backdropProvider, backdropSpec, shape) { backdropProvider.materialBackdrop(backdropSpec, shape) }
+    } else {
+        Modifier
+    }
+    var fillColor = if (backdropSpec != null) Color.Transparent else containerColor
     if (hoverProgress.value > 0f) {
         fillColor = hoverTint.copy(alpha = hoverTint.alpha * hoverProgress.value).compositeOver(fillColor)
     }
@@ -200,6 +234,9 @@ internal fun CouiButton(
                     enabled = enabled,
                     pressScaleEnabled = pressScaleEnabled,
                 )
+                // Inside the touch-motion layer so the blurred backdrop scales and deforms with
+                // the button; the hover tint is drawn over it by the surface.
+                .then(backdropModifier)
                 .then(surfaceModifier)
                 .then(
                     if (materialType != null) {
@@ -247,6 +284,8 @@ internal fun CouiButton(
  * @param maxLines The maximum number of label lines. COUIButton is single-line with an end
  *   ellipsis (`singleLine = true`, `ellipsize = end`).
  * @param material The COUI 17 material layer drawn over the fill, see [Button].
+ * @param materialBackdrop Whether the material may replace the fill with the backdrop blur, see
+ *   [Button].
  * @param interactionSource The [MutableInteractionSource] to be used for the [TextButton].
  * @param indication The [Indication] to be used for the [TextButton]. Defaults to `null` because
  *   the COUI press feedback (scale + press tint) is built into the button itself.
@@ -266,6 +305,7 @@ fun TextButton(
     textStyle: TextStyle = COUITheme.textStyles.button,
     maxLines: Int = 1,
     material: ButtonMaterial = ButtonMaterial.Auto,
+    materialBackdrop: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
@@ -288,6 +328,7 @@ fun TextButton(
         colors = mappedColors,
         insideMargin = insideMargin,
         material = material,
+        materialBackdrop = materialBackdrop,
         interactionSource = interactionSource,
         indication = indication,
     ) {

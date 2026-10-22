@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.ime
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -48,6 +49,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.anim.DecelerateEasing
 import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.basic.Scaffold
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -411,7 +413,10 @@ class COUIPopupUtils {
                     exit = dialogState.exitTransition ?: rememberDefaultDialogExitTransition(effectiveLargeScreen),
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        dialogState.content()
+                        // Overlay content sits outside any page backdrop recording.
+                        CompositionLocalProvider(LocalMaterialBackdrop provides null) {
+                            dialogState.content()
+                        }
                     }
                     DisposableEffect(dialogState.showState) {
                         onDispose {
@@ -514,7 +519,9 @@ class COUIPopupUtils {
                     exit = popupState.exitTransition ?: rememberDefaultPopupExitTransition(),
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        popupState.content()
+                        CompositionLocalProvider(LocalMaterialBackdrop provides null) {
+                            popupState.content()
+                        }
                     }
                     DisposableEffect(popupState.showState) {
                         onDispose {

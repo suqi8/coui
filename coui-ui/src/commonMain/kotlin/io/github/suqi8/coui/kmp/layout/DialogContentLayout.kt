@@ -61,6 +61,7 @@ import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
 import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
@@ -287,6 +288,8 @@ internal fun DialogContentLayout(
                     LocalDismissState provides requestDismiss,
                     // COUIButtonBarLayout.setBlurBackgroundWindow: the buttons follow the panel blur.
                     LocalDialogMaterial provides materialStroke,
+                    // The page backdrop lies behind the panel; buttons on it keep their fill.
+                    LocalMaterialBackdrop provides null,
                 ) {
                     content()
                 }

@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
@@ -266,7 +267,10 @@ internal fun ListPopupLayout(
                     popupLayoutPosition = layoutInfo.popupLayoutPosition,
                     localTransformOrigin = layoutInfo.localTransformOrigin,
                     content = {
-                        CompositionLocalProvider(LocalDismissState provides requestDismiss) {
+                        CompositionLocalProvider(
+                            LocalDismissState provides requestDismiss,
+                            LocalMaterialBackdrop provides null,
+                        ) {
                             content()
                         }
                     },

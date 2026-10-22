@@ -63,6 +63,8 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
  * @param textStyle The [TextStyle] of the label, the loading text and its dots. Pass
  *   [ButtonDefaults.textStyleSmall] with the `Small` metrics for the COUI small size tier.
  * @param material The COUI 17 material layer drawn over the fill, see [Button].
+ * @param materialBackdrop Whether the material may replace the fill with the backdrop blur, see
+ *   [Button].
  * @param interactionSource The [MutableInteractionSource] to be used for the [LoadingButton].
  * @param indication The [Indication] to be used for the [LoadingButton]. Defaults to `null`
  *   because the COUI press feedback (scale + press tint) is built into the button itself.
@@ -82,6 +84,7 @@ fun LoadingButton(
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     textStyle: TextStyle = COUITheme.textStyles.button,
     material: ButtonMaterial = ButtonMaterial.Auto,
+    materialBackdrop: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
@@ -108,6 +111,7 @@ fun LoadingButton(
         colors = mappedColors,
         insideMargin = insideMargin,
         material = material,
+        materialBackdrop = materialBackdrop,
         interactionSource = interactionSource,
         indication = indication,
     ) {

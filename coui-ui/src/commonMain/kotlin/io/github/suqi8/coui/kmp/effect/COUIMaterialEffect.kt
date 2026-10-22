@@ -308,8 +308,8 @@ object COUIMaterialEffect {
      * `COUIMaterialStrokeEffect` `CONTENT_CAPSULE_*` edge lighting + inner shadow through
      * [ShadowEdgeShader], and the `COUISpotLightEffect` touch spotlight through [SpotLightShader].
      * The framework background blur that replaces the fill of a non-drawable button
-     * (`TYPE_CONTENT_*_BUTTON`, 25px) needs a backdrop and is not drawn; the caller keeps its
-     * fill.
+     * (`TYPE_CONTENT_*_BUTTON`, see [ContentButtonMaterialType.backdropSpec]) needs a backdrop and
+     * is not drawn here; the caller draws it through [LocalMaterialBackdrop] or keeps its fill.
      *
      * Draws inside the button's clip, above the fill and below the content. Needs runtime shaders
      * (Android 13+ and every Skia target); elsewhere it is skipped. Pointer events are only
@@ -462,6 +462,50 @@ internal enum class ContentButtonMaterialType(
     DrawableTransparent(SpotLightType.TransparentMedium1, drawable = true),
     ;
 
+    /**
+     * The `COUIButton.applyBlurEffect` view blur preset that replaces the fill of a non-drawable
+     * button while the system material blur is on, or null for the drawable variants, which
+     * never blur (`setViewBlurEffect(TYPE_NO_EFFECT)`).
+     *
+     * - [Primary]: `COUIMaterialThemeBlurEffect` `TYPE_CONTENT_PRIMARY_BUTTON`, 10px,
+     *   `?couiColorContainerTheme` ([fill]) re-alpha'd to 229 (light) / 230 (dark) SRC_OVER, then
+     *   `#00FFFFFF` (light) / `#19FFFFFF` (dark) OVERLAY; disabled
+     *   (`TYPE_CONTENT_DISABLED_PRIMARY_BUTTON`) the fill at alpha 77, then `#19FFFFFF` OVERLAY.
+     * - [Secondary]: `TYPE_CONTENT_SECONDARY_BUTTON`, 25px, `#CCFFFFFF` (light) / `#33FFFFFF`
+     *   (dark) SRC_OVER, then a no-op `#00FFFFFF` SRC_OVER.
+     * - [Transparent]: `TYPE_CONTENT_TRANSPARENT_BUTTON`, 25px, `#3F333333` OVERLAY, then
+     *   `#3FFFFFFF` LUMINOSITY, in both schemes.
+     *
+     * @param isDark Whether the dark scheme is active.
+     * @param enabled Whether the button is enabled.
+     * @param fill The button's theme fill, the colour the primary preset re-alphas.
+     */
+    fun backdropSpec(isDark: Boolean, enabled: Boolean, fill: Color): MaterialBackdropSpec? = when (this) {
+        Primary -> if (enabled) {
+            MaterialBackdropSpec(
+                blurRadiusPx = PrimaryBlurRadiusPx,
+                layer1 = fill.copy(alpha = (if (isDark) 230f else 229f) / 255f),
+                mode1 = BlendMode.SrcOver,
+                layer2 = if (isDark) Color(0x19FFFFFF) else Color(0x00FFFFFF),
+                mode2 = BlendMode.Overlay,
+            )
+        } else {
+            MaterialBackdropSpec(
+                blurRadiusPx = PrimaryBlurRadiusPx,
+                layer1 = fill.copy(alpha = 77f / 255f),
+                mode1 = BlendMode.SrcOver,
+                layer2 = Color(0x19FFFFFF),
+                mode2 = BlendMode.Overlay,
+            )
+        }
+
+        Secondary -> if (isDark) SecondaryBackdropDark else SecondaryBackdropLight
+
+        Transparent -> TransparentBackdrop
+
+        DrawablePrimary, DrawableSecondary, DrawableTransparent -> null
+    }
+
     /** `COUIMaterialStrokeEffect.CONTENT_CAPSULE_PARAMS_{1,2,3}[_DISABLED]_{LIGHT,DARK}`. */
     fun stroke(isDark: Boolean, enabled: Boolean): StrokeEffectParams = when (this) {
         Primary -> when {
@@ -500,5 +544,37 @@ internal enum class ContentButtonMaterialType(
             isDark -> ShadowEdgePresets.ContentCapsule6DisabledDark
             else -> ShadowEdgePresets.ContentCapsule6DisabledLight
         }
+    }
+
+    private companion object {
+        /** The primary button (and FAB) blur radius, 10 raw pixels. */
+        val PrimaryBlurRadiusPx = 10f
+
+        /** The secondary and transparent button blur radius, 25 raw pixels. */
+        val ContentBlurRadiusPx = 25f
+
+        val SecondaryBackdropLight = MaterialBackdropSpec(
+            blurRadiusPx = ContentBlurRadiusPx,
+            layer1 = Color(0xCCFFFFFF),
+            mode1 = BlendMode.SrcOver,
+            layer2 = Color(0x00FFFFFF),
+            mode2 = BlendMode.SrcOver,
+        )
+
+        val SecondaryBackdropDark = MaterialBackdropSpec(
+            blurRadiusPx = ContentBlurRadiusPx,
+            layer1 = Color(0x33FFFFFF),
+            mode1 = BlendMode.SrcOver,
+            layer2 = Color(0x00FFFFFF),
+            mode2 = BlendMode.SrcOver,
+        )
+
+        val TransparentBackdrop = MaterialBackdropSpec(
+            blurRadiusPx = ContentBlurRadiusPx,
+            layer1 = Color(0x3F333333),
+            mode1 = BlendMode.Overlay,
+            layer2 = Color(0x3FFFFFFF),
+            mode2 = BlendMode.Luminosity,
+        )
     }
 }

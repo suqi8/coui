@@ -51,6 +51,7 @@ import io.github.suqi8.coui.kmp.basic.PopupCornerRadius
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.popupSurfaceColor
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import kotlinx.coroutines.flow.first
@@ -269,7 +270,10 @@ internal fun CascadingListPopupLayout(
                 }
         }
 
-        CompositionLocalProvider(LocalDismissState provides { currentOnDismiss() }) {
+        CompositionLocalProvider(
+            LocalDismissState provides { currentOnDismiss() },
+            LocalMaterialBackdrop provides null,
+        ) {
             val dimColor = COUITheme.colorScheme.windowDimming
             val maskColor = remember(dimColor) {
                 dimColor.copy(alpha = (dimColor.alpha * 0.5f).coerceIn(0f, 1f))
