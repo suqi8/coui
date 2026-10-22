@@ -4,9 +4,13 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
@@ -49,5 +53,23 @@ class SnackbarLayoutTest {
         assertTrue(action.top >= message.bottom, "action must sit below the message: $message / $action")
         // 360dp box - 16dp outer margin - 4dp action end margin.
         assertTrue(action.right > 330.dp && action.right <= 340.dp, "action must hug the end: $action")
+    }
+
+    @Test
+    fun hostLeavesRoomForTheShadowAboveTheSnackbar() = runComposeUiTest {
+        setContent {
+            COUITheme {
+                val state = remember { SnackbarHostState() }
+                LaunchedEffect(state) { state.showSnackbar("Saved", duration = SnackbarDuration.Indefinite) }
+                Box(Modifier.width(360.dp)) { SnackbarHost(state, Modifier.testTag("host")) }
+            }
+        }
+        waitForIdle()
+        val host = onNodeWithTag("host").getUnclippedBoundsInRoot()
+        val message = onNodeWithText("Saved").getUnclippedBoundsInRoot()
+        // The lazy list clips at its top edge; the shadow reaches about 30dp above the snack bar,
+        // whose outline sits 10dp above the message text.
+        val outlineTop = message.top - 10.dp
+        assertTrue(outlineTop - host.top >= 26.dp, "the shadow must fit inside the host: $host / $message")
     }
 }

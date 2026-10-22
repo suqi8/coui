@@ -282,7 +282,10 @@ fun SnackbarHost(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
             // 28dp + the 4dp item padding = 32dp bottom offset (COUI coui_snack_bar_margin_bottom).
-            contentPadding = PaddingValues(bottom = 28.dp),
+            // The lazy list clips its children to its own bounds along the scroll axis, so the top
+            // padding keeps room for the shadow above the topmost snack bar. The list grows upwards
+            // from its bottom anchor, so the snack bar itself does not move.
+            contentPadding = PaddingValues(top = SnackbarHostShadowClearance, bottom = 28.dp),
         ) {
             itemsIndexed(state.currentSnackbars, key = { _, entry -> entry.id }) { index, entry ->
                 val visibleState = remember { MutableTransitionState(false) }
@@ -431,7 +434,7 @@ fun Snackbar(
         modifier = modifier
             .semantics { liveRegion = LiveRegionMode.Polite }
             // COUI card margins: grid_guide_column_card_margin_start (16dp) on each side.
-            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .padding(horizontal = 16.dp, vertical = SnackbarItemVerticalMargin)
             .dropShadow(shape = shape, shadow = if (isDark) SnackbarShadowDark else SnackbarShadowLight)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
@@ -664,15 +667,36 @@ private val SnackbarVerticalActionSpacing = 10.dp
 /** The bottom margin of the action in the vertical layout (COUI coui_snack_bar_action_margin_bottom_multi_lines). */
 private val SnackbarVerticalActionBottomMargin = 9.dp
 
+/** The vertical margin around each snack bar inside [SnackbarHost]. */
+private val SnackbarItemVerticalMargin = 4.dp
+
+/** The blur radius of the snack bar shadow (COUI coui_snack_bar_shadow_size). */
+private val SnackbarShadowRadius = 26.dp
+
+/** The downward offset of the snack bar shadow. */
+private val SnackbarShadowOffsetY = 4.dp
+
+/**
+ * How far the blurred shadow visibly reaches past the snack bar outline: a blur radius r maps to a
+ * Gaussian sigma of about 0.58r, and the shadow fades out at about two sigmas.
+ */
+private val SnackbarShadowExtent = SnackbarShadowRadius * 1.16f
+
+/**
+ * The extra space above the topmost snack bar that keeps its shadow inside [SnackbarHost]'s
+ * clipped lazy list: the shadow extent above the outline minus the item margin already there.
+ */
+internal val SnackbarHostShadowClearance = SnackbarShadowExtent - SnackbarShadowOffsetY - SnackbarItemVerticalMargin
+
 /**
  * `ShadowUtils.setElevationToView(layout, 2, ...)` in light schemes: the Oplus light-source shadow
  * at alpha 40/255, approximated by a soft drop shadow.
  */
 private val SnackbarShadowLight = Shadow(
-    radius = 26.dp,
+    radius = SnackbarShadowRadius,
     color = Color.Black,
     alpha = 0.14f,
-    offset = DpOffset(x = 0.dp, y = 4.dp),
+    offset = DpOffset(x = 0.dp, y = SnackbarShadowOffsetY),
 )
 
 /**
@@ -680,10 +704,10 @@ private val SnackbarShadowLight = Shadow(
  * (`integers.xml` night), so the approximation is roughly three times as dense.
  */
 private val SnackbarShadowDark = Shadow(
-    radius = 26.dp,
+    radius = SnackbarShadowRadius,
     color = Color.Black,
     alpha = 0.4f,
-    offset = DpOffset(x = 0.dp, y = 4.dp),
+    offset = DpOffset(x = 0.dp, y = SnackbarShadowOffsetY),
 )
 
 /** The vertical clearance of the leading icon (COUI coui_snack_bar_icon_margin_top_horizontal). */
