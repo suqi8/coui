@@ -44,6 +44,7 @@ import component.fullPageStatementSection
 import component.inputViewSection
 import component.installLoadProgressSection
 import component.listPreferenceSection
+import component.navigationBarSection
 import component.numberPickerSection
 import component.otherPageSection
 import component.preferenceExtrasSection
@@ -358,6 +359,7 @@ fun MainPage(
                     inputViewSection()
                     sliderSection()
                     tabRowSection()
+                    navigationBarSection()
                     breadcrumbBarSection()
                     tooltipSection()
                     numberPickerSection()
