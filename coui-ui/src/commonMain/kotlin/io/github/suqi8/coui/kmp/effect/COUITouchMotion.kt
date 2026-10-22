@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -404,14 +405,20 @@ internal class TouchMotionState {
  * @param enabled Whether the element reacts to touches.
  * @param pressScaleEnabled Whether the press scale unit runs (`COUIButton.scaleEnable`); the
  *   deformation and rubber band run either way.
+ * @param touchSuppressed When non-null, the touch down is taken in the Final pass, after every
+ *   handler in the Main pass has seen it, and a gesture for which this returns `true` never reaches
+ *   the animator (no press scale, rubber band or deformation, not even for a frame). `null` keeps
+ *   the Main-pass behaviour.
  */
 @Composable
 internal fun Modifier.couiTouchMotion(
     interactionSource: InteractionSource?,
     enabled: Boolean = true,
     pressScaleEnabled: Boolean = true,
+    touchSuppressed: (() -> Boolean)? = null,
 ): Modifier {
     val state = remember { TouchMotionState() }
+    val currentTouchSuppressed by rememberUpdatedState(touchSuppressed)
     val scope = rememberCoroutineScope()
     val sourcePressed = interactionSource?.collectIsPressedAsState()?.value ?: false
     val pressed = enabled && pressScaleEnabled && (state.touching || sourcePressed)
@@ -434,7 +441,17 @@ internal fun Modifier.couiTouchMotion(
             if (!enabled) return@pointerInput
             state.densityOrNull = this
             awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false)
+                val suppressed = currentTouchSuppressed
+                val down = awaitFirstDown(
+                    requireUnconsumed = false,
+                    pass = if (suppressed == null) PointerEventPass.Main else PointerEventPass.Final,
+                )
+                if (suppressed?.invoke() == true) {
+                    do {
+                        val event = awaitPointerEvent(PointerEventPass.Final)
+                    } while (event.changes.any { it.pressed })
+                    return@awaitEachGesture
+                }
                 val tracker = VelocityTracker()
                 tracker.addPosition(down.uptimeMillis, down.position)
                 var activeId: PointerId = down.id

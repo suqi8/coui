@@ -77,6 +77,9 @@ object COUIMaterialEffect {
      *   (for example one that spots a child button consuming the down) can still turn it off for
      *   that touch, as `SearchBarBackgroundView` only feeds its spotlight touches that drive the
      *   capsule.
+     * @param touchMotionSuppressed When non-null, read once the touch down has passed every handler;
+     *   a gesture for which it returns `true` never starts the touch motion. `null` keeps the
+     *   existing behaviour.
      */
     @Composable
     fun Modifier.materialPanel(
@@ -85,6 +88,7 @@ object COUIMaterialEffect {
         enabled: Boolean = true,
         motionEnabled: Boolean = true,
         spotLightSuppressed: () -> Boolean = { false },
+        touchMotionSuppressed: (() -> Boolean)? = null,
     ): Modifier {
         if (!enabled) return this
         val currentSpotLightSuppressed by rememberUpdatedState(spotLightSuppressed)
@@ -129,7 +133,11 @@ object COUIMaterialEffect {
 
         return this
             // The touch motion moves the whole button (shadow, material, edge and icon) together.
-            .couiTouchMotion(interactionSource = interactionSource, enabled = motionEnabled)
+            .couiTouchMotion(
+                interactionSource = interactionSource,
+                enabled = motionEnabled,
+                touchSuppressed = touchMotionSuppressed,
+            )
             .dropShadow(shape = shape, shadow = MaterialShadow)
             .then(
                 if (shaders != null) {

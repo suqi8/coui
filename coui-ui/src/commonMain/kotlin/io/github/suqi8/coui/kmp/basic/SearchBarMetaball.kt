@@ -26,11 +26,14 @@ import kotlin.math.max
  *   the bar folded into the toolbar icon, 1 the bar at its edit-state size and place.
  * @property sourceCenterX the horizontal centre of the toolbar search icon in root pixels, `NaN`
  *   until it has been measured.
+ * @property interactive whether the bar takes touches. A collapsing bar sits behind the toolbar
+ *   children in COUI (`updateLayerInToolBar(false)`), so its capsule and buttons stay still.
  */
 @Stable
 internal class SearchBarIconExpand(
     val progress: () -> Float,
     val sourceCenterX: () -> Float,
+    val interactive: () -> Boolean,
 )
 
 internal val LocalSearchBarIconExpand = staticCompositionLocalOf<SearchBarIconExpand?> { null }

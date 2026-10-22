@@ -685,8 +685,9 @@ fun InputField(
                             Modifier.materialPanel(
                                 interactionSource = internalInteractionSource,
                                 cornerRadius = COUIRoundCorner.Full,
-                                motionEnabled = enabled && !innerButtonPressed,
-                                spotLightSuppressed = { innerButtonPressed },
+                                motionEnabled = enabled,
+                                spotLightSuppressed = { innerButtonPressed || iconExpand?.interactive?.invoke() == false },
+                                touchMotionSuppressed = { innerButtonPressed || iconExpand?.interactive?.invoke() == false },
                             )
                         } else {
                             Modifier.background(
@@ -947,6 +948,7 @@ fun CancelButton(
     val currentOnClick by rememberUpdatedState(onClick)
     val interactionSource = remember { MutableInteractionSource() }
     val textAlpha = LocalSearchBarActionTextAlpha.current
+    val iconExpand = LocalSearchBarIconExpand.current
     // coui_search_function_button_text_color: couiColorLabelPrimary, disabled couiColorLabelTertiary.
     val labelColor = if (enabled) {
         colors.cancelTextColor
@@ -971,6 +973,8 @@ fun CancelButton(
                         interactionSource = interactionSource,
                         cornerRadius = COUIRoundCorner.Full,
                         motionEnabled = enabled,
+                        spotLightSuppressed = { iconExpand?.interactive?.invoke() == false },
+                        touchMotionSuppressed = { iconExpand?.interactive?.invoke() == false },
                     )
                 } else {
                     Modifier.background(color = colors.backgroundColor, shape = capsuleShape)
