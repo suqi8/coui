@@ -115,6 +115,7 @@ fun Snackbar(
     icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     singleLineCornerRadius: Dp = SnackbarDefaults.SingleLineCornerRadius,
+    maxWidth: Dp = SnackbarDefaults.maxWidth(),
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
     insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
@@ -127,6 +128,7 @@ fun Snackbar(
 | icon                   | (@Composable () -> Unit)? | Optional leading icon shown in a 30.dp box (pass it through the `content` lambda of `SnackbarHost`) | null | No       |
 | cornerRadius           | Dp             | Corner radius of the vertical (multi-line) layout, drawn at `default_g2_weight` 2.45 | SnackbarDefaults.CornerRadius           | No       |
 | singleLineCornerRadius | Dp             | Corner radius of the single-line layout; `Dp.Unspecified` rounds it at half its height (the COUI 17 soft capsule) | SnackbarDefaults.SingleLineCornerRadius | No       |
+| maxWidth               | Dp             | Maximum width of the Snackbar, excluding its 16.dp outer margins; `Dp.Unspecified` removes the cap | SnackbarDefaults.maxWidth() | No       |
 | colors                 | SnackbarColors | Color configuration for the Snackbar                       | SnackbarDefaults.snackbarColors()       | No       |
 | insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element of the single-line layout) | SnackbarDefaults.InsideMargin | No       |
 
@@ -136,6 +138,8 @@ Following COUI 17 `COUISnackBar.adjustLayout`:
 
 - **Single line**: the icon, message, action and dismiss icon sit on one line, each centered vertically, inside a capsule.
 - **Vertical**: once the message wraps (or contains a line break) or the line is wider than the available width, the message starts 12.dp from the top, the action moves below it (10.dp gap), aligned to the end with a 4.dp end margin and a 9.dp bottom margin, and the corners drop to `cornerRadius` (16.dp).
+- **Action**: the action label is padded 12.dp horizontally and 4.dp vertically for its capsule press area (COUI `text_ripple_bg_padding_*`), keeps a 16.dp gap after the message and a 4.dp end margin.
+- **Width**: the Snackbar wraps its content, up to `maxWidth`. By default this is six columns of the COUI responsive layout grid (small margin) of the current window: on compact windows (narrower than 600.dp) the grid only has four columns, so the Snackbar may span the window minus its 16.dp margins; on medium (8 columns, 24.dp margin, 8.dp gutter) and expanded (12 columns, 40.dp margin, 12.dp gutter) windows it stays centered at six columns.
 
 The container is `backgroundTop` (`#FFFFFF` light / `#333333` dark) and the action label is `primaryTextOnPopup` (`#0080FF` / `#5C9DFF`). The shadow approximates COUI `ShadowUtils` level 3 with a soft drop shadow, denser in the dark scheme (the COUI shadow alpha rises from 40/255 to 120/255).
 
@@ -174,7 +178,7 @@ val colors = SnackbarDefaults.snackbarColors(
 | InsideMargin           | PaddingValues | Default inner padding of the Snackbar                    | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
 | IconSize               | Dp            | Size of the optional leading icon box                    | 30.dp                                               |
 
-`SnackbarDefaults.textStyle()` returns the default text style of the message and action label (14sp, medium weight).
+`SnackbarDefaults.textStyle()` returns the default text style of the message and action label (14sp, medium weight), and `SnackbarDefaults.maxWidth()` returns the grid-based maximum width for the current window.
 
 ## SnackbarDuration and SnackbarResult
 

@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -53,6 +54,8 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -71,6 +74,7 @@ import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -393,6 +397,9 @@ fun SnackbarHost(
  *   the ColorOS default smoothing weight ([COUIRoundCorner.UnspecifiedWeight])
  * @param singleLineCornerRadius corner radius of the [Snackbar] in the single-line layout;
  *   [Dp.Unspecified] (the default) rounds it at half its height, the COUI 17 soft capsule
+ * @param maxWidth the maximum width of the [Snackbar], excluding its 16dp outer margins;
+ *   [Dp.Unspecified] removes the cap. The default follows the COUI responsive grid, see
+ *   [SnackbarDefaults.maxWidth]
  * @param colors colors of the [Snackbar]
  * @param insideMargin margin inside the [Snackbar]; in the single-line layout the end margin is
  *   replaced by a 4dp action margin when the action button is the trailing element
@@ -404,6 +411,7 @@ fun Snackbar(
     icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     singleLineCornerRadius: Dp = SnackbarDefaults.SingleLineCornerRadius,
+    maxWidth: Dp = SnackbarDefaults.maxWidth(),
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
     insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 ) {
@@ -435,6 +443,7 @@ fun Snackbar(
             .semantics { liveRegion = LiveRegionMode.Polite }
             // COUI card margins: grid_guide_column_card_margin_start (16dp) on each side.
             .padding(horizontal = 16.dp, vertical = SnackbarItemVerticalMargin)
+            .widthIn(max = maxWidth)
             .dropShadow(shape = shape, shadow = if (isDark) SnackbarShadowDark else SnackbarShadowLight)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
@@ -622,6 +631,31 @@ object SnackbarDefaults {
     val SingleLineCornerRadius = Dp.Unspecified
 
     /**
+     * The default maximum width: six columns of the COUI responsive layout grid with the small
+     * margin type, measured on the current window (`COUISnackBar.getMaxWidth`). On compact
+     * windows (narrower than 600dp) the grid has only four columns, so the snack bar may span the
+     * whole window minus its 16dp margins; on larger windows it stays centred at six columns.
+     */
+    @Composable
+    fun maxWidth(): Dp {
+        val containerSize = LocalWindowInfo.current.containerSize
+        val density = LocalDensity.current
+        return remember(containerSize, density) {
+            if (containerSize.width <= 0 || containerSize.height <= 0) {
+                Dp.Unspecified
+            } else {
+                with(density) {
+                    COUILayoutGrid.gridWidth(
+                        columns = 6,
+                        windowWidth = containerSize.width.toDp(),
+                        windowHeight = containerSize.height.toDp(),
+                    )
+                }
+            }
+        }
+    }
+
+    /**
      * The default inside margin
      * (COUI coui_snack_bar_child_margin_horizontal_no_icon_start/end, coui_snack_bar_child_margin_vertical).
      */
@@ -719,7 +753,11 @@ private val SnackbarIconSpacing = 16.dp
 /** The minimum gap between the message and the action press area (COUI coui_snack_bar_child_margin_horizontal_end). */
 private val SnackbarActionSpacing = 16.dp
 
-/** The padding of the action press area (COUI text_ripple_bg_padding_horizontal/vertical). */
+/**
+ * The padding of the action press area: `COUITextViewCompatUtil.setPressRippleDrawable`, called
+ * by `COUISnackBar.setOnAction` whenever the action has a listener, pads the label with
+ * text_ripple_bg_padding_horizontal / text_ripple_bg_padding_vertical (12dp / 4dp).
+ */
 private val SnackbarActionPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
 
 /** COUISnackBar.animateSpring show spring: COUISpringForce(response = 0.3f, bounce = 0f). */

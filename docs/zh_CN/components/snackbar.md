@@ -115,6 +115,7 @@ fun Snackbar(
     icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = SnackbarDefaults.CornerRadius,
     singleLineCornerRadius: Dp = SnackbarDefaults.SingleLineCornerRadius,
+    maxWidth: Dp = SnackbarDefaults.maxWidth(),
     colors: SnackbarColors = SnackbarDefaults.snackbarColors(),
     insideMargin: PaddingValues = SnackbarDefaults.InsideMargin,
 )
@@ -127,6 +128,7 @@ fun Snackbar(
 | icon                   | (@Composable () -> Unit)? | 可选前置图标，布局在 30.dp 容器内（通过 `SnackbarHost` 的 `content` 插槽传入） | null | 否       |
 | cornerRadius           | Dp             | 垂直（多行）布局的圆角半径，按 `default_g2_weight` 2.45 绘制 | SnackbarDefaults.CornerRadius     | 否       |
 | singleLineCornerRadius | Dp             | 单行布局的圆角半径；`Dp.Unspecified` 按高度一半取圆角（COUI 17 软胶囊） | SnackbarDefaults.SingleLineCornerRadius | 否 |
+| maxWidth               | Dp             | Snackbar 的最大宽度（不含两侧 16.dp 外边距）；`Dp.Unspecified` 取消上限 | SnackbarDefaults.maxWidth() | 否       |
 | colors                 | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
 | insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（单行布局中操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
 
@@ -136,6 +138,8 @@ fun Snackbar(
 
 - **单行**：图标、消息、操作按钮与关闭图标排在一行，各自垂直居中，外形为胶囊。
 - **垂直**：消息换行（或含换行符）或整行超出可用宽度时，消息距顶部 12.dp，操作按钮移到消息下方（间距 10.dp）并贴右，末端边距 4.dp、底部边距 9.dp，圆角降为 `cornerRadius`（16.dp）。
+- **操作按钮**：操作文字带水平 12.dp、垂直 4.dp 的内边距作为胶囊按压区（COUI `text_ripple_bg_padding_*`），与消息间隔 16.dp，末端边距 4.dp。
+- **宽度**：Snackbar 按内容自适应宽度，上限为 `maxWidth`。默认取当前窗口 COUI 响应式栅格（小边距）的 6 列宽度：紧凑窗口（宽度小于 600.dp）只有 4 列，因此可铺满窗口减去两侧 16.dp；中等窗口（8 列、边距 24.dp、间距 8.dp）与展开窗口（12 列、边距 40.dp、间距 12.dp）上居中显示为 6 列宽。
 
 容器色为 `backgroundTop`（浅色 `#FFFFFF` / 深色 `#333333`），操作文字为 `primaryTextOnPopup`（`#0080FF` / `#5C9DFF`）。阴影以柔和投影近似 COUI `ShadowUtils` 3 级阴影，深色模式更浓（COUI 阴影 alpha 由 40/255 升至 120/255）。
 
@@ -174,7 +178,7 @@ val colors = SnackbarDefaults.snackbarColors(
 | InsideMargin           | PaddingValues | Snackbar 内容的默认内边距 | PaddingValues(horizontal = 16.dp, vertical = 10.dp)  |
 | IconSize               | Dp            | 可选前置图标容器的尺寸    | 30.dp                                                |
 
-`SnackbarDefaults.textStyle()` 返回消息与操作按钮使用的默认文字样式（14sp、Medium 字重）。
+`SnackbarDefaults.textStyle()` 返回消息与操作按钮使用的默认文字样式（14sp、Medium 字重），`SnackbarDefaults.maxWidth()` 返回基于当前窗口栅格的最大宽度。
 
 ## SnackbarDuration 与 SnackbarResult
 
