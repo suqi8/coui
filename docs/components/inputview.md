@@ -1,6 +1,6 @@
 # InputView
 
-The ColorOS "card input": a white card (12dp corners) holding an optional 16sp medium title and a bare, undecorated text field, with the counter / clear / password buttons at the end of the field and a 10sp error caption below the card. Mirrors COUICardSingleInputView (single line) and COUICardMultiInputView (multi line, counter at the bottom-end corner of the card). The error caption fades in over 217ms / out over 283ms with the COUI ease curve, and the field plays the COUI error shake while it is shown.
+The ColorOS "card input": a white card (24dp corners) holding an optional 16sp medium title and a bare, undecorated 15sp text field, with the counter / clear / password buttons at the end of the field and a 10sp error caption below the card. Mirrors COUICardSingleInputView (single line) and COUICardMultiInputView (multi line, counter at the bottom-end corner of the card). The error caption fades in over 217ms / out over 283ms with the COUI ease curve, and the field plays the COUI error shake if it is focused.
 
 ## Import
 
@@ -78,7 +78,7 @@ InputView(
 | cornerRadius         | Dp                        | Corner radius of the card                               | InputViewDefaults.CornerRadius           | No       |
 | colors               | InputViewColors           | Colors of card, title, counter and error line           | InputViewDefaults.inputViewColors()      | No       |
 | textFieldColors      | TextFieldColors           | Colors of the inner field                               | TextFieldDefaults.textFieldColors()      | No       |
-| textStyle            | TextStyle                 | Text style of the input text                            | TextFieldDefaults.textStyle(TextFieldMode.None) | No |
+| textStyle            | TextStyle                 | Text style of the input text                            | InputViewDefaults.textStyle()            | No       |
 | keyboardOptions      | KeyboardOptions           | Keyboard options                                        | KeyboardOptions.Default                  | No       |
 | keyboardActions      | KeyboardActions           | Keyboard actions                                        | KeyboardActions.Default                  | No       |
 | singleLine           | Boolean                   | Single-line card (true) or multi-line card (false)      | true                                     | No       |
@@ -92,7 +92,7 @@ InputView(
 
 | Constant                   | Type     | Description                                             | Default Value |
 | -------------------------- | -------- | ------------------------------------------------------- | ------------- |
-| CornerRadius               | Dp       | Corner radius of the card (couiRoundCornerM)            | 12.dp         |
+| CornerRadius               | Dp       | Corner radius of the card (COUIRoundCorner.Normal.XL)   | 24.dp         |
 | ContentPadding             | Dp       | Horizontal content padding inside the card              | 16.dp         |
 | TitlePaddingTop            | Dp       | Top padding of the title                                | 12.dp         |
 | TitlePaddingBottom         | Dp       | Bottom padding of the title                             | 4.dp          |
@@ -107,6 +107,8 @@ InputView(
 | ErrorFontSize              | TextUnit | Font size of the error caption                          | 10.sp         |
 | ErrorPaddingTop            | Dp       | Top padding of the error caption                        | 4.dp          |
 | MaxLines                   | Int      | Default maximum lines                                   | 5             |
+
+`textStyle()` returns the default input text style (15sp regular, COUI couiTextBodyL, with the `paragraph` line spacing).
 
 `titleTextStyle()` returns the default title style (16sp, medium weight, COUI couiTextAppearanceHeadline6).
 
@@ -124,7 +126,8 @@ InputView(
 
 - The inner field is fully undecorated (`TextFieldMode.None`, COUIEditText MODE_BACKGROUND_NO_LINE) — no underline and no border, exactly like the card inputs in ColorOS Settings.
 - When `maxCount > 0` the input is hard-limited to that many characters; the counter (if shown) reads `length/max` and animates to the error color at the limit (250ms, like COUICardMultiInputView).
-- Setting a non-empty `errorMessage` shows the caption below the card (fade in 217ms / out 283ms, COUI ease 0.33, 0, 0.67, 1) and plays the COUI error shake on the field. The last non-empty message keeps showing during the fade-out.
+- Setting a non-empty `errorMessage` shows the caption below the card (fade in 217ms / out 283ms, COUI ease 0.33, 0, 0.67, 1) and plays the COUI error shake on the field when it is focused. The last non-empty message keeps showing during the fade-out.
+- On ColorOS 17 both card inputs draw their card with COUIInputListSelectedItemLayout, which uses the 24dp card list radius (coui_round_corner_xl_radius_normal_16_1) on the smooth-corner path.
 - Field paddings mirror COUICardSingleInputView: 15dp top/bottom without a title; 0dp top / 12dp bottom when a title is shown; 13dp in the multi-line card.
 
 ## Advanced Usage

@@ -158,8 +158,12 @@ Card {
 
 ## Error State
 
-Setting `isError = true` tints the border / underline and label with the error color and
-plays a one-shot horizontal shake animation:
+Setting `isError = true` blends the border / underline to the error color over 217ms, tints the
+text selection with it, and, if the field is focused, plays a one-shot horizontal shake animation.
+The label keeps its color. As in COUIEditText, the default error color is `couiColorErrorTextBg`
+(`textFieldError`: red at 30% alpha `#4DE82A18` in light mode, `#EA3939` in dark mode), so the light
+error line is a soft red; pass `errorColor` to `textFieldColors()` for a stronger tint. A disabled
+field draws its border / underline in `disabledTextFieldBorder` (`#19000000` / `#19FFFFFF`):
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -239,7 +243,7 @@ TextField(
 | justShowFocusLine     | Boolean                                      | Line mode: hide the resting underline | false                                          | No       |
 | enabled               | Boolean                                      | Whether input field is enabled      | true                                             | No       |
 | readOnly              | Boolean                                      | Whether input field is read-only    | false                                            | No       |
-| isError               | Boolean                                      | Error state (red tint + shake)      | false                                            | No       |
+| isError               | Boolean                                      | Error state (red line + shake)      | false                                            | No       |
 | maxCount              | Int?                                         | Max characters; shows a counter     | null                                             | No       |
 | showClearButton       | Boolean                                      | Show clear button when focused      | false                                            | No       |
 | showPasswordToggle    | Boolean                                      | Show password visibility toggle     | false                                            | No       |
@@ -320,10 +324,11 @@ Builds a [TextFieldColors] instance. Override any subset; unspecified params fal
 | labelColor       | Color | COUITheme.colorScheme.onSurfaceSecondary        |
 | borderColor      | Color | COUITheme.colorScheme.primary                   |
 | unfocusedBorderColor | Color | COUITheme.colorScheme.dividerLine           |
-| errorColor       | Color | COUITheme.colorScheme.error                     |
+| errorColor       | Color | COUITheme.colorScheme.textFieldError            |
 | counterColor     | Color | COUITheme.colorScheme.onSurfaceContainerHigh    |
 | iconColor        | Color | COUITheme.colorScheme.onSurfaceSecondary        |
 | disabledTextColor | Color | COUITheme.colorScheme.disabledOnSurface        |
+| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder |
 
 ## Advanced Usage
 

@@ -89,7 +89,7 @@ CodeTextField(
 
 | Method Name           | Type                | Description                                                                       |
 | --------------------- | ------------------- | --------------------------------------------------------------------------------- |
-| textStyle()           | TextStyle           | Default digit style (COUITheme.textStyles.title2 at 30sp, coui_code_input_cell_text_size) |
+| textStyle()           | TextStyle           | Default digit style: 30dp regular (coui_code_input_cell_text_size is a dp size, so digits ignore the font scale) |
 | codeTextFieldColors() | CodeTextFieldColors | Creates the color configuration for the code text field                           |
 
 ### `codeTextFieldColors()` factory

@@ -89,7 +89,7 @@ CodeTextField(
 
 | 方法名                | 类型                | 说明                                                                              |
 | --------------------- | ------------------- | --------------------------------------------------------------------------------- |
-| textStyle()           | TextStyle           | 默认数字样式(COUITheme.textStyles.title2 调整为 30sp,coui_code_input_cell_text_size) |
+| textStyle()           | TextStyle           | 默认数字样式:30dp 常规字重(coui_code_input_cell_text_size 以 dp 为单位,数字不随字体缩放) |
 | codeTextFieldColors() | CodeTextFieldColors | 创建验证码输入框的颜色配置                                                        |
 
 ### `codeTextFieldColors()` 工厂

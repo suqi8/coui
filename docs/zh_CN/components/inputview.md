@@ -1,6 +1,6 @@
 # InputView
 
-ColorOS「卡片输入」：白卡（12dp 圆角）内包含可选的 16sp 中等字重标题与一个完全无装饰的输入框，计数 / 清除 / 密码按钮位于输入框尾部，10sp 错误提示位于卡片下方。对应 COUICardSingleInputView（单行）与 COUICardMultiInputView（多行，计数位于卡片右下角）。错误提示以 COUI ease 曲线 217ms 淡入 / 283ms 淡出，显示期间输入框播放 COUI 错误抖动。
+ColorOS「卡片输入」：白卡（24dp 圆角）内包含可选的 16sp 中等字重标题与一个完全无装饰的 15sp 输入框，计数 / 清除 / 密码按钮位于输入框尾部，10sp 错误提示位于卡片下方。对应 COUICardSingleInputView（单行）与 COUICardMultiInputView（多行，计数位于卡片右下角）。错误提示以 COUI ease 曲线 217ms 淡入 / 283ms 淡出，输入框处于聚焦状态时播放 COUI 错误抖动。
 
 ## 引入
 
@@ -77,7 +77,7 @@ InputView(
 | cornerRadius         | Dp                        | 卡片圆角半径                               | InputViewDefaults.CornerRadius           | 否       |
 | colors               | InputViewColors           | 卡片、标题、计数与错误提示的颜色           | InputViewDefaults.inputViewColors()      | 否       |
 | textFieldColors      | TextFieldColors           | 内部输入框的颜色                           | TextFieldDefaults.textFieldColors()      | 否       |
-| textStyle            | TextStyle                 | 输入文本样式                               | TextFieldDefaults.textStyle(TextFieldMode.None) | 否 |
+| textStyle            | TextStyle                 | 输入文本样式                               | InputViewDefaults.textStyle()            | 否       |
 | keyboardOptions      | KeyboardOptions           | 键盘选项配置                               | KeyboardOptions.Default                  | 否       |
 | keyboardActions      | KeyboardActions           | 键盘操作配置                               | KeyboardActions.Default                  | 否       |
 | singleLine           | Boolean                   | 单行卡片（true）或多行卡片（false）        | true                                     | 否       |
@@ -91,7 +91,7 @@ InputView(
 
 | 常量                        | 类型     | 说明                                         | 默认值 |
 | --------------------------- | -------- | -------------------------------------------- | ------ |
-| CornerRadius                | Dp       | 卡片圆角半径（couiRoundCornerM）             | 12.dp  |
+| CornerRadius                | Dp       | 卡片圆角半径（COUIRoundCorner.Normal.XL）    | 24.dp  |
 | ContentPadding              | Dp       | 卡片内容水平内边距                           | 16.dp  |
 | TitlePaddingTop             | Dp       | 标题顶部内边距                               | 12.dp  |
 | TitlePaddingBottom          | Dp       | 标题底部内边距                               | 4.dp   |
@@ -106,6 +106,8 @@ InputView(
 | ErrorFontSize               | TextUnit | 错误提示字号                                 | 10.sp  |
 | ErrorPaddingTop             | Dp       | 错误提示顶部内边距                           | 4.dp   |
 | MaxLines                    | Int      | 默认最大行数                                 | 5      |
+
+`textStyle()` 返回默认输入文本样式（15sp 常规字重，COUI couiTextBodyL，行距同 `paragraph`）。
 
 `titleTextStyle()` 返回默认标题样式（16sp、中等字重，COUI couiTextAppearanceHeadline6）。
 
@@ -123,7 +125,8 @@ InputView(
 
 - 内部输入框完全无装饰（`TextFieldMode.None`，COUIEditText MODE_BACKGROUND_NO_LINE）——无下划线也无描边，与 ColorOS 设置的卡片输入一致。
 - `maxCount > 0` 时输入被硬性限制在上限内；计数（如显示）为 `当前/上限`，达到上限时以 250ms 动画切换为错误色（同 COUICardMultiInputView）。
-- 设置非空 `errorMessage` 时在卡片下方显示提示（217ms 淡入 / 283ms 淡出，COUI ease 0.33, 0, 0.67, 1），同时输入框播放 COUI 错误抖动。淡出过程中保留最后一条非空消息。
+- 设置非空 `errorMessage` 时在卡片下方显示提示（217ms 淡入 / 283ms 淡出，COUI ease 0.33, 0, 0.67, 1），输入框处于聚焦状态时同时播放 COUI 错误抖动。淡出过程中保留最后一条非空消息。
+- ColorOS 17 上两种卡片输入都由 COUIInputListSelectedItemLayout 绘制卡片，平滑圆角路径下使用 24dp 卡片列表圆角（coui_round_corner_xl_radius_normal_16_1）。
 - 输入区内边距对齐 COUICardSingleInputView：无标题上下各 15dp；有标题时顶部 0dp、底部 12dp；多行卡片为 13dp。
 
 ## 进阶用法

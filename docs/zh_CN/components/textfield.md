@@ -146,7 +146,7 @@ Card {
 
 ## 错误状态
 
-设置 `isError = true` 会将描边 / 下划线与标签染成错误色，并播放一次水平抖动动画：
+设置 `isError = true` 会让描边 / 下划线在 217ms 内过渡到错误色，并用它染色文本选区；若输入框处于聚焦状态，还会播放一次水平抖动动画。标签颜色保持不变。与 COUIEditText 一致，默认错误色为 `couiColorErrorTextBg`（`textFieldError`：浅色为 30% 透明度红 `#4DE82A18`，深色为 `#EA3939`），因此浅色下的错误线是淡红色；需要更醒目时可向 `textFieldColors()` 传入 `errorColor`。禁用状态的描边 / 下划线使用 `disabledTextFieldBorder`（`#19000000` / `#19FFFFFF`）：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -304,10 +304,11 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 | labelColor       | Color | COUITheme.colorScheme.onSurfaceSecondary         |
 | borderColor      | Color | COUITheme.colorScheme.primary                    |
 | unfocusedBorderColor | Color | COUITheme.colorScheme.dividerLine            |
-| errorColor       | Color | COUITheme.colorScheme.error                      |
+| errorColor       | Color | COUITheme.colorScheme.textFieldError             |
 | counterColor     | Color | COUITheme.colorScheme.onSurfaceContainerHigh     |
 | iconColor        | Color | COUITheme.colorScheme.onSurfaceSecondary         |
 | disabledTextColor | Color | COUITheme.colorScheme.disabledOnSurface         |
+| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder |
 
 ## 进阶用法
 
