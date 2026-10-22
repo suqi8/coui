@@ -3,7 +3,6 @@
 package io.github.suqi8.coui.kmp.effect
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -13,15 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
@@ -97,7 +93,7 @@ object COUIMaterialEffect {
                 null
             }
         }
-        val spotlight = remember { SpotlightState() }
+        val spotlight = remember { SpotLightState() }
         val scope = rememberCoroutineScope()
 
         val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
@@ -158,11 +154,11 @@ object COUIMaterialEffect {
                                 lightX = light.x,
                                 lightY = light.y,
                                 radius = SpotLightShader.radius(glow, spotlight.extinguishing),
-                                intensity = SpotLightShader.endIntensity(isDark) * glow,
+                                intensity = SpotLightType.OpaqueSmall2.endIntensity(isDark) * glow,
                             )
                             drawRect(
                                 brush = spotShader.asBrush(),
-                                blendMode = if (isDark) BlendMode.Plus else BlendMode.Overlay,
+                                blendMode = SpotLightType.OpaqueSmall2.blendMode(isDark),
                             )
                         }
 
@@ -317,11 +313,11 @@ object COUIMaterialEffect {
             }
         } ?: return this
         val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-        val spotlight = remember { SpotlightState() }
+        val spotlight = remember { SpotLightState() }
         val scope = rememberCoroutineScope()
         val stroke = type.stroke(isDark, enabled)
-        val spotIntensity = type.spotlightIntensity(isDark)
-        val spotBlend = if (type == ContentButtonMaterialType.Secondary && isDark) BlendMode.Plus else BlendMode.Overlay
+        val spotIntensity = type.spotLight.endIntensity(isDark)
+        val spotBlend = type.spotLight.blendMode(isDark)
 
         return this
             .then(
@@ -379,32 +375,6 @@ object COUIMaterialEffect {
             }
     }
 
-    /** `COUISpotLightEffect` glow / follow / extinguish, driven by the pointer. */
-    private class SpotlightState {
-        val progress = Animatable(0f)
-        val position = Animatable(Offset.Zero, Offset.VectorConverter)
-        var extinguishing by mutableStateOf(false)
-            private set
-
-        suspend fun glow(at: Offset) {
-            extinguishing = false
-            position.snapTo(at)
-            // glow(): response 0.15, bounce 0.
-            progress.animateTo(1f, spring(dampingRatio = 1f, stiffness = 1754.6f))
-        }
-
-        suspend fun follow(to: Offset) {
-            // Pointer follow: response 0.35, bounce 0.15.
-            position.animateTo(to, spring(dampingRatio = 0.85f, stiffness = 322.27f))
-        }
-
-        suspend fun extinguish() {
-            extinguishing = true
-            // extinguish(): response 0.4, bounce 0.
-            progress.animateTo(0f, spring(dampingRatio = 1f, stiffness = 246.74f))
-        }
-    }
-
     /** `ShadowUtils` level 6: 16dp elevation at alpha 30/255, lit from 160dp above (r 800dp). */
     private val MaterialShadow = Shadow(
         radius = 16.dp,
@@ -429,15 +399,18 @@ object COUIMaterialEffect {
 }
 
 /** The `COUIButton` types that carry a material layer (`buttonType` 1, 2 and 3). */
-internal enum class ContentButtonMaterialType {
+internal enum class ContentButtonMaterialType(
+    /** The touch spotlight preset. */
+    val spotLight: SpotLightType,
+) {
     /** `buttonType = primary`: `CONTENT_CAPSULE_1` stroke, `TYPE_OPAQUE_MEDIUM_1` spotlight. */
-    Primary,
+    Primary(SpotLightType.OpaqueMedium1),
 
     /** `buttonType = secondary`: `CONTENT_CAPSULE_2` stroke, `TYPE_OPAQUE_MEDIUM_2` spotlight. */
-    Secondary,
+    Secondary(SpotLightType.OpaqueMedium2),
 
     /** `buttonType = transparent`: `CONTENT_CAPSULE_3` stroke, `TYPE_TRANSPARENT_MEDIUM_1` spotlight. */
-    Transparent,
+    Transparent(SpotLightType.TransparentMedium1),
     ;
 
     /** `COUIMaterialStrokeEffect.CONTENT_CAPSULE_PARAMS_{1,2,3}[_DISABLED]_{LIGHT,DARK}`. */
@@ -457,16 +430,5 @@ internal enum class ContentButtonMaterialType {
         }
 
         Transparent -> if (enabled) ShadowEdgePresets.ContentCapsule3 else ShadowEdgePresets.ContentCapsule3Disabled
-    }
-
-    /**
-     * The spotlight end intensity (`COUISpotLightEffect`): `TYPE_OPAQUE_MEDIUM_1` 0.6 light /
-     * 0.8 dark (OVERLAY), `TYPE_OPAQUE_MEDIUM_2` 1.0 light (OVERLAY) / 0.15 dark (PLUS),
-     * `TYPE_TRANSPARENT_MEDIUM_1` 0.5 light / 0.3 dark (OVERLAY).
-     */
-    fun spotlightIntensity(isDark: Boolean): Float = when (this) {
-        Primary -> if (isDark) 0.8f else 0.6f
-        Secondary -> SpotLightShader.endIntensity(isDark)
-        Transparent -> if (isDark) 0.3f else 0.5f
     }
 }
