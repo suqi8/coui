@@ -57,6 +57,9 @@ COUI17 复刻已完成 **token 层（色值/字号/圆角/高度）100%**、**To
 ## 4. 未完成（⬜/🚧，按优先级）
 
 ### 4.1 【最高优先】material_shader.glsl 完整复刻
+
+> **进展（2026-10-22）**：顶栏按钮的描边与内阴影不来自 `material_shader.glsl`。`ToolbarMaterialEffectDelegate.applyStroke` 调用的是 `OplusMaterialUtil.setEdgeParams/setShadowParams`，它在 Java 侧的对应实现是 `com.coui.appcompat.shadowedge.agsl.ShadowEdge`（`blendEdge` + `blendShadowColor`，uniform 布局都是 `u_edgeArray`/`u_shadowArray`）。这部分已经移植完成：`coui-ui/.../effect/ShadowEdgeShader.kt` 包含 NEW_G2 角型的 SkSL、`toEdgeArray16`/`toShadowArray16` 映射，以及 `CIRCLE_1`/`CAPSULE_1` 预设。`materialPanel` 在支持 RuntimeShader 时（Android 33+ 及全部 Skiko 端）走 shader，否则回退到 Canvas 近似。验证情况：`desktopTest` 用 Skia 离屏渲染，PNG 输出在 `coui-ui/build/shadow-edge/`；真机 PJE110 深色模式实测正常。跟手聚光 `spotlight/agsl/SpotLight.java`（`TYPE_OPAQUE_SMALL_2`）也已移植到 `effect/SpotLightShader.kt`。下面这份 `material_shader.glsl` 在 jadx 里找不到调用方，不再作为复刻目标。
+
 当前 `materialPanel` 是**单光源、无深辉光、无超椭圆**的简化版。完整复刻需实现（全部在 `material_shader.glsl`，行号已标注）：
 1. **SDF 数学**：`powFast`（@65-74）、`lpNorm`（Lp 范数）、`sdCapsule`（@16-53，含 smoothMaxSqrt 软接合 + 法线）、`sdRoundRect`（@76-98，G2 超椭圆，`cornerSmooth>2.0` 时启用，否则走 capsule）。
 2. **8 光源聚光循环**（`main` @106-216）：每光源 `diffuseTotal`（tintedWhite×atten）+ `specularTotal`（specAtten×specularStrength）+ `deepGlowTotal`（glowColor×atten×baseGlowShape×nDotL）。
