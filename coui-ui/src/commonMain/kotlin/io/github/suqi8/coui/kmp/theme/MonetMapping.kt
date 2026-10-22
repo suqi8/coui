@@ -149,8 +149,9 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         outline = roles.outline,
         dividerLine = roles.outlineVariant,
         windowDimming = if (dark) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.2f),
-        sliderKeyPoint = roles.primary,
-        sliderKeyPointForeground = roles.surfaceContainerHigh,
+        // COUI couiColorLabelTertiary off the progress and couiColorLabelOnColor on it.
+        sliderKeyPoint = roles.onSurface.copy(alpha = if (dark) 0.3f else 0.26f),
+        sliderKeyPointForeground = roles.onPrimary,
         sliderBackground = sliderBackground,
         dialogButton = roles.surfaceContainerHigh,
         dragHandle = roles.outlineVariant,
@@ -171,5 +172,10 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         // coui_progressbar_background_color_disabled (black 3% / white 20%).
         disabledProgress = roles.surfaceContainerHigh,
         disabledProgressBackground = roles.onSurface.copy(alpha = if (dark) 0.2f else 0.03f),
+        // COUI coui_seekbar_thumb_disable_color (white 54% / 16%), coui_seekbar_inactive_mark_disable_color
+        // (black 26% / white 16%) and coui_seekbar_thumb_shadow_color (black 10% / 25%).
+        disabledSliderThumb = Color.White.copy(alpha = if (dark) 0.16f else 0.54f),
+        disabledSliderKeyPoint = roles.onSurface.copy(alpha = if (dark) 0.16f else 0.26f),
+        sliderThumbShadow = Color.Black.copy(alpha = if (dark) 0.25f else 0.1f),
     )
 }

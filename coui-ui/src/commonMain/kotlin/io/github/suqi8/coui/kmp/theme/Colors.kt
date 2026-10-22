@@ -60,8 +60,10 @@ import androidx.compose.ui.graphics.Color
  * @param surfaceContainerHighest The container color of the surface color.
  * @param onSurfaceContainerHighest The color of the text on surface container highest color.
  * @param windowDimming The color of the window dimming. Cases: Dialog, Dropdown, Spinner, BottomSheet.
- * @param sliderKeyPoint The color of the slider key point.
- * @param sliderKeyPointForeground The foreground color of the slider key point.
+ * @param sliderKeyPoint The off-progress key points of the slider (COUI couiColorLabelTertiary via
+ *   coui_seekbar_inactive_mark_selector).
+ * @param sliderKeyPointForeground The key points drawn on the slider progress (COUI couiColorLabelOnColor via
+ *   coui_seekbar_active_mark_selector).
  * @param sliderBackground The track color of the slider (COUI couiColorContainer12 via coui_seekbar_background_selector).
  * @param dialogButton The fill of the dialog bar buttons (COUI couiColorContainer8). Cases: Dialog, BottomSheet.
  * @param dragHandle The color of the bottom sheet drag handle (COUI couiColorControls).
@@ -81,6 +83,11 @@ import androidx.compose.ui.graphics.Color
  * @param disabledProgressBackground The track color of a disabled linear progress bar (COUI
  *   coui_progressbar_background_color_disabled, the candidate for couiProgressbarBackgroundColorDisabled).
  *   Cases: LinearProgressIndicator.
+ * @param disabledSliderThumb The thumb and the on-progress key points of a disabled slider (COUI
+ *   coui_seekbar_thumb_disable_color / coui_seekbar_active_mark_disable_color). Cases: Slider.
+ * @param disabledSliderKeyPoint The off-progress key points of a disabled slider (COUI
+ *   coui_seekbar_inactive_mark_disable_color). Cases: Slider.
+ * @param sliderThumbShadow The drop shadow of the slider thumb (COUI coui_seekbar_thumb_shadow_color). Cases: Slider.
  */
 @Stable
 class Colors(
@@ -152,6 +159,9 @@ class Colors(
     focus: Color,
     disabledProgress: Color,
     disabledProgressBackground: Color,
+    disabledSliderThumb: Color,
+    disabledSliderKeyPoint: Color,
+    sliderThumbShadow: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -289,6 +299,12 @@ class Colors(
         internal set
     var disabledProgressBackground by mutableStateOf(disabledProgressBackground, structuralEqualityPolicy())
         internal set
+    var disabledSliderThumb by mutableStateOf(disabledSliderThumb, structuralEqualityPolicy())
+        internal set
+    var disabledSliderKeyPoint by mutableStateOf(disabledSliderKeyPoint, structuralEqualityPolicy())
+        internal set
+    var sliderThumbShadow by mutableStateOf(sliderThumbShadow, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -359,6 +375,9 @@ class Colors(
         focus: Color = this.focus,
         disabledProgress: Color = this.disabledProgress,
         disabledProgressBackground: Color = this.disabledProgressBackground,
+        disabledSliderThumb: Color = this.disabledSliderThumb,
+        disabledSliderKeyPoint: Color = this.disabledSliderKeyPoint,
+        sliderThumbShadow: Color = this.sliderThumbShadow,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -428,6 +447,9 @@ class Colors(
         focus,
         disabledProgress,
         disabledProgressBackground,
+        disabledSliderThumb,
+        disabledSliderKeyPoint,
+        sliderThumbShadow,
     )
 }
 
@@ -483,8 +505,8 @@ fun lightColorScheme(
     outline: Color = Color(0x26000000),
     dividerLine: Color = Color(0x1F000000),
     windowDimming: Color = Color.Black.copy(alpha = 0.2F),
-    sliderKeyPoint: Color = Color(0xFFF2F2F2),
-    sliderKeyPointForeground: Color = Color(0xFF6EB5FF),
+    sliderKeyPoint: Color = Color(0x42000000),
+    sliderKeyPointForeground: Color = Color.White,
     sliderBackground: Color = Color(0x1F000000),
     dialogButton: Color = Color(0x14000000),
     dragHandle: Color = Color(0x29000000),
@@ -501,6 +523,9 @@ fun lightColorScheme(
     focus: Color = Color(0x1F0080FF),
     disabledProgress: Color = Color(0xFFE6E6E6),
     disabledProgressBackground: Color = Color(0x08000000),
+    disabledSliderThumb: Color = Color(0x8AFFFFFF),
+    disabledSliderKeyPoint: Color = Color(0x42000000),
+    sliderThumbShadow: Color = Color(0x1A000000),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -570,6 +595,9 @@ fun lightColorScheme(
     focus,
     disabledProgress,
     disabledProgressBackground,
+    disabledSliderThumb,
+    disabledSliderKeyPoint,
+    sliderThumbShadow,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -624,8 +652,8 @@ fun darkColorScheme(
     outline: Color = Color(0x26FFFFFF),
     dividerLine: Color = Color(0x33FFFFFF),
     windowDimming: Color = Color.Black.copy(alpha = 0.6F),
-    sliderKeyPoint: Color = Color(0xFF595959),
-    sliderKeyPointForeground: Color = Color(0xFF5DAAFF),
+    sliderKeyPoint: Color = Color(0x4DFFFFFF),
+    sliderKeyPointForeground: Color = Color.White,
     sliderBackground: Color = Color(0x33FFFFFF),
     dialogButton: Color = Color(0x1AFFFFFF),
     dragHandle: Color = Color(0x40FFFFFF),
@@ -642,6 +670,9 @@ fun darkColorScheme(
     focus: Color = Color(0x331A8CFF),
     disabledProgress: Color = Color(0xFF262626),
     disabledProgressBackground: Color = Color(0x33FFFFFF),
+    disabledSliderThumb: Color = Color(0x29FFFFFF),
+    disabledSliderKeyPoint: Color = Color(0x29FFFFFF),
+    sliderThumbShadow: Color = Color(0x40000000),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -711,6 +742,9 @@ fun darkColorScheme(
     focus,
     disabledProgress,
     disabledProgressBackground,
+    disabledSliderThumb,
+    disabledSliderKeyPoint,
+    sliderThumbShadow,
 )
 
 @Stable
@@ -783,6 +817,9 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     focus = other.focus
     disabledProgress = other.disabledProgress
     disabledProgressBackground = other.disabledProgressBackground
+    disabledSliderThumb = other.disabledSliderThumb
+    disabledSliderKeyPoint = other.disabledSliderKeyPoint
+    sliderThumbShadow = other.sliderThumbShadow
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }
