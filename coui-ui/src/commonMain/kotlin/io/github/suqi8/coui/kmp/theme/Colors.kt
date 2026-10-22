@@ -21,7 +21,8 @@ import androidx.compose.ui.graphics.Color
  * @param disabledOnPrimary The color of the switch on disabled primary color.
  * @param disabledPrimaryButton The disabled primary color of the button.
  * @param disabledOnPrimaryButton The color of the button on disabled primary color.
- * @param disabledPrimarySlider The disabled primary color of the slider.
+ * @param disabledPrimarySlider The disabled progress color of the slider (COUI couiColorDisable, the disabled state of
+ *   coui_seekbar_progress_selector).
  * @param primaryContainer The container color of the primary color.
  * @param onPrimaryContainer The color of the text on primary container color.
  * @param secondary The secondary color.
@@ -61,7 +62,7 @@ import androidx.compose.ui.graphics.Color
  * @param windowDimming The color of the window dimming. Cases: Dialog, Dropdown, Spinner, BottomSheet.
  * @param sliderKeyPoint The color of the slider key point.
  * @param sliderKeyPointForeground The foreground color of the slider key point.
- * @param sliderBackground The background color of the slider.
+ * @param sliderBackground The track color of the slider (COUI couiColorContainer12 via coui_seekbar_background_selector).
  * @param dialogButton The fill of the dialog bar buttons (COUI couiColorContainer8). Cases: Dialog, BottomSheet.
  * @param dragHandle The color of the bottom sheet drag handle (COUI couiColorControls).
  * @param secondaryButton The opaque fill of secondary buttons (COUI couiColorContainer8 composited over couiColorBackgroundElevated). Cases: Button, TextButton, LoadingButton.
@@ -72,6 +73,9 @@ import androidx.compose.ui.graphics.Color
  * @param disabledOnTransparentButton The label of disabled transparent buttons.
  * @param backgroundTop The topmost floating surface (COUI couiColorBackgroundTop). Cases: Snackbar.
  * @param primaryTextOnPopup The accent text on floating surfaces (COUI couiColorPrimaryTextOnPopup). Cases: Snackbar action.
+ * @param press The pressed state layer drawn over a component (COUI couiColorPress). Cases: COUIIndication.
+ * @param hover The hovered state layer drawn over a component (COUI couiColorHover). Cases: COUIIndication.
+ * @param focus The focused / selected state layer of list rows (COUI couiColorFocus). Cases: COUIIndication.
  */
 @Stable
 class Colors(
@@ -138,6 +142,9 @@ class Colors(
     disabledOnTransparentButton: Color,
     backgroundTop: Color,
     primaryTextOnPopup: Color,
+    press: Color,
+    hover: Color,
+    focus: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -265,6 +272,12 @@ class Colors(
         internal set
     var primaryTextOnPopup by mutableStateOf(primaryTextOnPopup, structuralEqualityPolicy())
         internal set
+    var press by mutableStateOf(press, structuralEqualityPolicy())
+        internal set
+    var hover by mutableStateOf(hover, structuralEqualityPolicy())
+        internal set
+    var focus by mutableStateOf(focus, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -330,6 +343,9 @@ class Colors(
         disabledOnTransparentButton: Color = this.disabledOnTransparentButton,
         backgroundTop: Color = this.backgroundTop,
         primaryTextOnPopup: Color = this.primaryTextOnPopup,
+        press: Color = this.press,
+        hover: Color = this.hover,
+        focus: Color = this.focus,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -394,6 +410,9 @@ class Colors(
         disabledOnTransparentButton,
         backgroundTop,
         primaryTextOnPopup,
+        press,
+        hover,
+        focus,
     )
 }
 
@@ -411,7 +430,7 @@ fun lightColorScheme(
     disabledOnPrimary: Color = Color.White,
     disabledPrimaryButton: Color = Color(0x4D0080FF),
     disabledOnPrimaryButton: Color = Color(0x8AFFFFFF),
-    disabledPrimarySlider: Color = Color(0xFFEBEBEB),
+    disabledPrimarySlider: Color = Color(0x4D0080FF),
     primaryContainer: Color = Color(0xFF0080FF),
     onPrimaryContainer: Color = Color.White,
     secondary: Color = Color(0xFFE5E5E5),
@@ -451,7 +470,7 @@ fun lightColorScheme(
     windowDimming: Color = Color.Black.copy(alpha = 0.2F),
     sliderKeyPoint: Color = Color(0xFFF2F2F2),
     sliderKeyPointForeground: Color = Color(0xFF6EB5FF),
-    sliderBackground: Color = Color(0x0D000000),
+    sliderBackground: Color = Color(0x1F000000),
     dialogButton: Color = Color(0x14000000),
     dragHandle: Color = Color(0x29000000),
     secondaryButton: Color = Color(0xFFEBEBEB),
@@ -462,6 +481,9 @@ fun lightColorScheme(
     disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
     backgroundTop: Color = Color(0xFFFFFFFF),
     primaryTextOnPopup: Color = Color(0xFF0080FF),
+    press: Color = Color(0x1F000000),
+    hover: Color = Color(0x14000000),
+    focus: Color = Color(0x1F0080FF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -526,6 +548,9 @@ fun lightColorScheme(
     disabledOnTransparentButton,
     backgroundTop,
     primaryTextOnPopup,
+    press,
+    hover,
+    focus,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -542,7 +567,7 @@ fun darkColorScheme(
     disabledOnPrimary: Color = Color(0xFF404040),
     disabledPrimaryButton: Color = Color(0x4D1A8CFF),
     disabledOnPrimaryButton: Color = Color(0x28FFFFFF),
-    disabledPrimarySlider: Color = Color(0xFF262626),
+    disabledPrimarySlider: Color = Color(0x4D1A8CFF),
     primaryContainer: Color = Color(0xFF1A8CFF),
     onPrimaryContainer: Color = Color.White,
     secondary: Color = Color(0xFF757575),
@@ -551,7 +576,7 @@ fun darkColorScheme(
     onSecondaryVariant: Color = Color(0xE6FFFFFF),
     disabledSecondary: Color = Color(0x4D757575),
     disabledOnSecondary: Color = Color(0x4DFFFFFF),
-    disabledSecondaryVariant: Color = Color(0x26FFFFFF),
+    disabledSecondaryVariant: Color = Color(0x1AFFFFFF),
     disabledOnSecondaryVariant: Color = Color(0x4DFFFFFF),
     secondaryContainer: Color = Color(0x26FFFFFF),
     onSecondaryContainer: Color = Color(0x66FFFFFF),
@@ -582,7 +607,7 @@ fun darkColorScheme(
     windowDimming: Color = Color.Black.copy(alpha = 0.6F),
     sliderKeyPoint: Color = Color(0xFF595959),
     sliderKeyPointForeground: Color = Color(0xFF5DAAFF),
-    sliderBackground: Color = Color(0x1AFFFFFF),
+    sliderBackground: Color = Color(0x33FFFFFF),
     dialogButton: Color = Color(0x1AFFFFFF),
     dragHandle: Color = Color(0x40FFFFFF),
     secondaryButton: Color = Color(0xFF353535),
@@ -593,6 +618,9 @@ fun darkColorScheme(
     disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
     backgroundTop: Color = Color(0xFF333333),
     primaryTextOnPopup: Color = Color(0xFF5C9DFF),
+    press: Color = Color(0x33FFFFFF),
+    hover: Color = Color(0x26FFFFFF),
+    focus: Color = Color(0x331A8CFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -657,6 +685,9 @@ fun darkColorScheme(
     disabledOnTransparentButton,
     backgroundTop,
     primaryTextOnPopup,
+    press,
+    hover,
+    focus,
 )
 
 @Stable
@@ -724,6 +755,9 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     disabledOnTransparentButton = other.disabledOnTransparentButton
     backgroundTop = other.backgroundTop
     primaryTextOnPopup = other.primaryTextOnPopup
+    press = other.press
+    hover = other.hover
+    focus = other.focus
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

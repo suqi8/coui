@@ -28,7 +28,14 @@ fun COUITheme(
     val rawColors = controller.currentColors()
     val couiColors = remember { rawColors.copy() }.apply { updateColorsFrom(rawColors) }
     val couiTextStyles = remember { textStyles.copy() }.apply { updateTextStylesFrom(textStyles) }
-    val couiIndication = remember(couiColors.onBackground) { COUIIndication(color = couiColors.onBackground) }
+    val couiIndication = remember(couiColors.onBackground, couiColors.press, couiColors.hover, couiColors.focus) {
+        COUIIndication(
+            color = couiColors.onBackground,
+            pressColor = couiColors.press,
+            hoverColor = couiColors.hover,
+            focusColor = couiColors.focus,
+        )
+    }
     CompositionLocalProvider(
         LocalColors provides couiColors,
         LocalTextStyles provides couiTextStyles,
@@ -57,7 +64,14 @@ fun COUITheme(
 ) {
     val couiColors = remember { colors.copy() }.apply { updateColorsFrom(colors) }
     val couiTextStyles = remember { textStyles.copy() }.apply { updateTextStylesFrom(textStyles) }
-    val couiIndication = remember(couiColors.onBackground) { COUIIndication(color = couiColors.onBackground) }
+    val couiIndication = remember(couiColors.onBackground, couiColors.press, couiColors.hover, couiColors.focus) {
+        COUIIndication(
+            color = couiColors.onBackground,
+            pressColor = couiColors.press,
+            hoverColor = couiColors.hover,
+            focusColor = couiColors.focus,
+        )
+    }
     CompositionLocalProvider(
         LocalColors provides couiColors,
         LocalTextStyles provides couiTextStyles,

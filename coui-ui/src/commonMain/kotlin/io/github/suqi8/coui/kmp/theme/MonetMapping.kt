@@ -148,7 +148,7 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         onSurfaceContainerHighest = roles.onSurface,
         outline = roles.outline,
         dividerLine = roles.outlineVariant,
-        windowDimming = if (dark) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.3f),
+        windowDimming = if (dark) Color.Black.copy(alpha = 0.6f) else Color.Black.copy(alpha = 0.2f),
         sliderKeyPoint = roles.primary,
         sliderKeyPointForeground = roles.surfaceContainerHigh,
         sliderBackground = sliderBackground,
@@ -162,5 +162,10 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         disabledOnTransparentButton = Color.White.copy(alpha = 0.3f),
         backgroundTop = roles.surfaceContainerHighest,
         primaryTextOnPopup = roles.primary,
+        // State layers stay translucent: they are drawn over the component, as COUI couiColorPress /
+        // couiColorHover (neutral 12% / 20% and 8% / 15%) and couiColorFocus (primary 12% / 20%).
+        press = roles.onSurface.copy(alpha = if (dark) 0.2f else 0.12f),
+        hover = roles.onSurface.copy(alpha = if (dark) 0.15f else 0.08f),
+        focus = roles.primary.copy(alpha = if (dark) 0.2f else 0.12f),
     )
 }
