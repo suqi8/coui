@@ -8,6 +8,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -30,8 +31,7 @@ import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import io.github.suqi8.coui.kmp.squircle.squircleSurface
-import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
+import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -151,16 +151,18 @@ private fun CountBadge(
         animationSpec = tween(durationMillis = WidthAnimDurationMillis, easing = WidthAnimEasing),
         label = "badgeWidth",
     )
-    // couiRoundCornerFULL (72dp) always exceeds half the badge size, so COUIRoundRectUtil clamps
-    // the corner to min(width, height) / 2 - a capsule, drawn with circular ends.
+    // drawPointWithNumber clamps couiRoundCornerFULL (72dp) to min(width, height) / 2 and draws the
+    // capsule with the COUIRoundRectUtil Java path (COUIShapePath), not the Oplus superellipse.
+    // drawPointWithStroke passes the unclamped 72dp to the outer path, which folds over itself; the
+    // outer ring uses the clamped radius here, the inner fill the same min / 2 rule as COUI.
     val cornerRadius = height / 2
     val backgroundModifier = if (stroke) {
         Modifier
-            .squircleSurface(color = colors.strokeColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+            .background(color = colors.strokeColor, shape = LegacySquircleShape(cornerRadius))
             .padding(BadgeDefaults.StrokeWidth)
-            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius - BadgeDefaults.StrokeWidth, weight = COUIRoundCorner.CircularWeight)
+            .background(color = colors.containerColor, shape = LegacySquircleShape(cornerRadius - BadgeDefaults.StrokeWidth))
     } else {
-        Modifier.squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+        Modifier.background(color = colors.containerColor, shape = LegacySquircleShape(cornerRadius))
     }
     val density = LocalDensity.current
     val fontSize = with(density) { BadgeDefaults.TextSize.toSp() }

@@ -27,8 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
@@ -39,9 +42,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.squircle.squircleBackground
-import io.github.suqi8.coui.kmp.squircle.squircleBorder
-import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
+import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
+import io.github.suqi8.coui.kmp.squircle.addLegacySquircleRect
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -280,13 +282,34 @@ private fun CodeCell(
     Box(
         modifier = Modifier
             .size(size)
-            .squircleBackground(color = colors.cellBackgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
-            .squircleBorder(
-                width = { if (strokeAlpha.value > 0f) CodeTextFieldDefaults.CellStrokeWidth else 0.dp },
-                color = { colors.focusedStrokeColor.copy(alpha = colors.focusedStrokeColor.alpha * strokeAlpha.value) },
-                cornerRadius = cornerRadius,
-                weight = COUIRoundCorner.CircularWeight,
-            ),
+            // COUICodeInputView draws the cell and its focus stroke with the COUIShapePath Java
+            // path, not the Oplus superellipse: the fill on the cell bounds, the stroke centered on
+            // the bounds inset by half the (whole pixel) stroke width, with the same radius.
+            .background(color = colors.cellBackgroundColor, shape = LegacySquircleShape(cornerRadius))
+            .drawWithCache {
+                val strokePx = CodeTextFieldDefaults.CellStrokeWidth.roundToPx()
+                val inset = (strokePx shr 1).toFloat()
+                val strokePath = Path().apply {
+                    addLegacySquircleRect(
+                        width = this@drawWithCache.size.width - inset * 2,
+                        height = this@drawWithCache.size.height - inset * 2,
+                        cornerRadius = cornerRadius.toPx(),
+                        left = inset,
+                        top = inset,
+                    )
+                }
+                val stroke = Stroke(width = strokePx.toFloat())
+                onDrawBehind {
+                    val alpha = strokeAlpha.value
+                    if (alpha > 0f) {
+                        drawPath(
+                            path = strokePath,
+                            color = colors.focusedStrokeColor.copy(alpha = colors.focusedStrokeColor.alpha * alpha),
+                            style = stroke,
+                        )
+                    }
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         if (security) {
@@ -327,7 +350,10 @@ object CodeTextFieldDefaults {
     /** The size of one cell (COUI coui_code_input_cell_width x coui_code_input_cell_height). */
     val CellSize = DpSize(42.dp, 46.dp)
 
-    /** The corner radius of one cell (COUI couiRoundCornerS / coui_code_input_cell_radius). */
+    /**
+     * The corner radius of one cell (COUI couiRoundCornerS / coui_code_input_cell_radius), drawn
+     * with the COUIShapePath Java path ([io.github.suqi8.coui.kmp.squircle.LegacySquircleShape]).
+     */
     val CellCornerRadius = 8.dp
 
     /** The minimum gap between adjacent cells (2 x COUI coui_code_input_cell_min_margin_horizontal). */

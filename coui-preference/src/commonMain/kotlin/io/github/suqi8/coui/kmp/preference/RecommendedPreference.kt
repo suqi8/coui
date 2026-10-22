@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
@@ -23,7 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.Text
-import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -56,12 +58,10 @@ fun RecommendedPreference(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            // squircleSurface also masks the children, clipping the row press overlays to the card corners.
-            .squircleSurface(
-                color = colors.containerColor,
-                cornerRadius = cornerRadius,
-                weight = COUIRoundCorner.Normal.Weight,
-            ),
+            // COUIRecommendedDrawable draws the card with the COUIRoundRectUtil Java path
+            // (COUIShapePath); clipping to it also keeps the row press overlays inside the corners.
+            .clip(LegacySquircleShape(cornerRadius))
+            .background(colors.containerColor),
     ) {
         Box(
             modifier = Modifier
@@ -133,7 +133,9 @@ object RecommendedPreferenceDefaults {
 
     /**
      * The default corner radius of the card: on ColorOS 17 `COUIRecommendedPreference.getInnerRadius`
-     * replaces couiRoundCornerM with coui_round_corner_xl_radius_normal_16_1 ([COUIRoundCorner.Normal.XL]).
+     * replaces couiRoundCornerXL with coui_round_corner_xl_radius_normal_16_1 ([COUIRoundCorner.Normal.XL]).
+     * `COUIRecommendedDrawable` still draws it with the COUIShapePath Java path
+     * ([io.github.suqi8.coui.kmp.squircle.LegacySquircleShape]), not the Oplus superellipse.
      */
     val CornerRadius = COUIRoundCorner.Normal.XL
 
