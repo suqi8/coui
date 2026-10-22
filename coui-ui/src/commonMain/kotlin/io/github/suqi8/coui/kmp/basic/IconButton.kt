@@ -33,7 +33,8 @@ import io.github.suqi8.coui.kmp.squircle.squircleSurface
  * @param enabled Whether the [IconButton] is enabled.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param material Whether to draw the COUI 17 top-bar button material (filtered backdrop, shadow,
- *   edge lighting, touch spotlight and press feedback, see [COUIMaterialEffect.materialPanel]).
+ *   edge lighting, touch spotlight, press and hover masks, and the `COUIViewTouchAnimator` press
+ *   scale, drag-follow rubber band and drag deformation; see [COUIMaterialEffect.materialPanel]).
  *   When `false` the button is flat and uses the theme's default press indication.
  * @param backgroundColor A solid fill drawn under the button, [Color.Unspecified] for none.
  * @param cornerRadius The corner radius of the [IconButton].
@@ -82,6 +83,7 @@ fun IconButton(
                 interactionSource = interactionSource,
                 cornerRadius = cornerRadius,
                 enabled = material,
+                motionEnabled = enabled,
             )
             .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
             .then(clickableModifier),

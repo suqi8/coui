@@ -666,4 +666,40 @@ internal object ShadowEdgePresets {
 
     /** `CONTENT_CAPSULE_PARAMS_3_DISABLED_LIGHT` / `_DARK` (identical). */
     val ContentCapsule3Disabled = StrokeEffectParams(0.15f, 2.8f, 0f, 0.015f, 0.3f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_4_LIGHT`, the drawable-material primary `COUIButton` stroke (`drawableMaterialEffect`). */
+    val ContentCapsule4Light = StrokeEffectParams(0.3f, 2.5f, 0f, 0.1f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_4_DARK`. */
+    val ContentCapsule4Dark = StrokeEffectParams(0.25f, 2.5f, 0f, 0.1f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_4_DISABLED_LIGHT`. */
+    val ContentCapsule4DisabledLight = StrokeEffectParams(0.3f, 2.5f, 0f, 0.04f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_4_DISABLED_DARK`. */
+    val ContentCapsule4DisabledDark = StrokeEffectParams(0.05f, 2.5f, 0f, 0.06f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_5_LIGHT`, the drawable-material secondary `COUIButton` stroke (`drawableMaterialEffect`). */
+    val ContentCapsule5Light = StrokeEffectParams(0.8f, 3f, 0f, 0.05f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_5_DARK`. */
+    val ContentCapsule5Dark = StrokeEffectParams(0.1f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_5_DISABLED_LIGHT`. */
+    val ContentCapsule5DisabledLight = StrokeEffectParams(0.24f, 3f, 0f, 0.05f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_5_DISABLED_DARK`. */
+    val ContentCapsule5DisabledDark = StrokeEffectParams(0.03f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_6_LIGHT`, the drawable-material transparent `COUIButton` stroke (`drawableMaterialEffect`). */
+    val ContentCapsule6Light = StrokeEffectParams(0.5f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_6_DARK`. */
+    val ContentCapsule6Dark = StrokeEffectParams(0.15f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_6_DISABLED_LIGHT`. */
+    val ContentCapsule6DisabledLight = StrokeEffectParams(0.15f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /** `CONTENT_CAPSULE_PARAMS_6_DISABLED_DARK`. */
+    val ContentCapsule6DisabledDark = StrokeEffectParams(0.045f, 3f, 0f, 0.01f, 0f, 1f)
 }

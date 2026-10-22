@@ -7,6 +7,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -57,7 +58,11 @@ object COUIMaterialEffect {
      * - **Shadow**: `ShadowUtils` level 6 (16dp elevation, alpha 30/255, light 160dp above).
      * - **Edge lighting + inner shadow**: [ShadowEdgeShader].
      * - **Touch spotlight**: [SpotLightShader], following the finger.
-     * - **Press**: the `COUIMaskEffectDrawable` press mask and the `PressPhysicsEngine` scale.
+     * - **Press and hover**: the `COUIMaskEffectDrawable` (type 1) press mask, which fades out as
+     *   soon as the finger leaves the button, and its `?couiColorHover` hover mask.
+     * - **Touch motion**: the `COUIViewTouchAnimator` press scale, rubber-band drag-follow
+     *   translation and area-conserving drag deformation, with velocity-seeded release springs
+     *   (see [couiTouchMotion]).
      *
      * The edge lighting and the spotlight need runtime shaders (Android 13+ and every Skia target),
      * as `COUIShadowEdgeDrawable` and `COUISpotLightEffectDrawable` do; elsewhere they are skipped.
@@ -65,23 +70,35 @@ object COUIMaterialEffect {
      * @param interactionSource The interaction source driving the press state.
      * @param cornerRadius The corner radius; half the height for a circle or capsule.
      * @param enabled Whether the material is drawn.
+     * @param motionEnabled Whether the touch motion runs. Pass `false` for a disabled button.
      */
     @Composable
     fun Modifier.materialPanel(
         interactionSource: MutableInteractionSource,
         cornerRadius: Dp = 20.dp,
         enabled: Boolean = true,
+        motionEnabled: Boolean = true,
     ): Modifier {
         if (!enabled) return this
 
         val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
         val pressed by interactionSource.collectIsPressedAsState()
+        val hovered by interactionSource.collectIsHoveredAsState()
 
         // COUIMaskEffectDrawable press layer: ?couiColorPress on a response 0.3 / bounce 0 spring.
         val maskProgress = remember { Animatable(0f) }
         LaunchedEffect(pressed) {
             maskProgress.animateTo(
                 targetValue = if (pressed) 1f else 0f,
+                animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
+            )
+        }
+
+        // The hover layer of the same drawable: ?couiColorHover on the same spring.
+        val hoverProgress = remember { Animatable(0f) }
+        LaunchedEffect(hovered, motionEnabled) {
+            hoverProgress.animateTo(
+                targetValue = if (hovered && motionEnabled) 1f else 0f,
                 animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
             )
         }
@@ -99,11 +116,12 @@ object COUIMaterialEffect {
         val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
         val blendSupported = remember { BlendMode.ColorDodge.isSupported() && BlendMode.Luminosity.isSupported() }
         val pressMaskColor = if (isDark) PressMaskDark else PressMaskLight
+        val hoverMaskColor = if (isDark) HoverMaskDark else HoverMaskLight
         val fallbackFill = if (isDark) BarFallbackDark else BarFallbackLight
 
         return this
-            // The press scale lifts the whole button (shadow, material, edge and icon) together.
-            .couiPressScale(pressed)
+            // The touch motion moves the whole button (shadow, material, edge and icon) together.
+            .couiTouchMotion(interactionSource = interactionSource, enabled = motionEnabled)
             .dropShadow(shape = shape, shadow = MaterialShadow)
             .then(
                 if (shaders != null) {
@@ -162,6 +180,8 @@ object COUIMaterialEffect {
                             )
                         }
 
+                        val hover = hoverProgress.value
+                        if (hover > 0f) drawRect(hoverMaskColor, alpha = hover.coerceIn(0f, 1f))
                         val mask = maskProgress.value
                         if (mask > 0f) drawRect(pressMaskColor, alpha = mask.coerceIn(0f, 1f))
                     }
@@ -287,7 +307,9 @@ object COUIMaterialEffect {
      * the system material switches are on (`useMaterialEffect` = FOLLOW_SYSTEM): the
      * `COUIMaterialStrokeEffect` `CONTENT_CAPSULE_*` edge lighting + inner shadow through
      * [ShadowEdgeShader], and the `COUISpotLightEffect` touch spotlight through [SpotLightShader].
-     * The background blur that would replace the fill is not drawn.
+     * The framework background blur that replaces the fill of a non-drawable button
+     * (`TYPE_CONTENT_*_BUTTON`, 25px) needs a backdrop and is not drawn; the caller keeps its
+     * fill.
      *
      * Draws inside the button's clip, above the fill and below the content. Needs runtime shaders
      * (Android 13+ and every Skia target); elsewhere it is skipped. Pointer events are only
@@ -342,10 +364,14 @@ object COUIMaterialEffect {
                 val maxRadius = min(size.width, size.height) / 2f
                 val isCapsule = abs(size.width - size.height) >= 0.5f
                 // COUIButton stroke weight: 1.0 for a height-derived capsule, 2.0 for a circle,
-                // 3.0 (weight_16_1_large) for an explicit radius.
+                // 3.0 (weight_16_1_large) for an explicit radius; always 2.0 for the drawable
+                // material (initShadowEdgeParamsWithoutBlur).
                 val radius: Float
                 val weight: Float
-                if (cornerRadius == Dp.Unspecified) {
+                if (type.drawable) {
+                    radius = if (cornerRadius == Dp.Unspecified) maxRadius else min(cornerRadius.toPx(), maxRadius)
+                    weight = 2f
+                } else if (cornerRadius == Dp.Unspecified) {
                     radius = maxRadius
                     weight = if (isCapsule) 1f else 2f
                 } else {
@@ -396,12 +422,26 @@ object COUIMaterialEffect {
     // coui_color_press.
     private val PressMaskLight = Color(0x1F000000)
     private val PressMaskDark = Color(0x33FFFFFF)
+
+    // coui_color_hover.
+    internal val HoverMaskLight = Color(0x14000000)
+    internal val HoverMaskDark = Color(0x26FFFFFF)
 }
 
-/** The `COUIButton` types that carry a material layer (`buttonType` 1, 2 and 3). */
+/**
+ * The `COUIButton` types that carry a material layer (`buttonType` 1, 2 and 3), in the
+ * framework-blur variant and in the `drawableMaterialEffect` variant that draws its own panel
+ * (the dialog buttons once `COUIButtonBarLayout.setBlurBackgroundWindow(true)` switches them to
+ * `FOLLOW_SYSTEM`).
+ */
 internal enum class ContentButtonMaterialType(
     /** The touch spotlight preset. */
     val spotLight: SpotLightType,
+    /**
+     * Whether this is the `drawableMaterialEffect` variant (`initShadowEdgeParamsWithoutBlur`:
+     * `CONTENT_CAPSULE_4/5/6`, stroke weight 2).
+     */
+    val drawable: Boolean = false,
 ) {
     /** `buttonType = primary`: `CONTENT_CAPSULE_1` stroke, `TYPE_OPAQUE_MEDIUM_1` spotlight. */
     Primary(SpotLightType.OpaqueMedium1),
@@ -411,6 +451,15 @@ internal enum class ContentButtonMaterialType(
 
     /** `buttonType = transparent`: `CONTENT_CAPSULE_3` stroke, `TYPE_TRANSPARENT_MEDIUM_1` spotlight. */
     Transparent(SpotLightType.TransparentMedium1),
+
+    /** Drawable-material primary: `CONTENT_CAPSULE_4` stroke, `TYPE_OPAQUE_MEDIUM_1` spotlight. */
+    DrawablePrimary(SpotLightType.OpaqueMedium1, drawable = true),
+
+    /** Drawable-material secondary: `CONTENT_CAPSULE_5` stroke, `TYPE_OPAQUE_MEDIUM_2` spotlight. */
+    DrawableSecondary(SpotLightType.OpaqueMedium2, drawable = true),
+
+    /** Drawable-material transparent: `CONTENT_CAPSULE_6` stroke, `TYPE_TRANSPARENT_MEDIUM_1` spotlight. */
+    DrawableTransparent(SpotLightType.TransparentMedium1, drawable = true),
     ;
 
     /** `COUIMaterialStrokeEffect.CONTENT_CAPSULE_PARAMS_{1,2,3}[_DISABLED]_{LIGHT,DARK}`. */
@@ -430,5 +479,26 @@ internal enum class ContentButtonMaterialType(
         }
 
         Transparent -> if (enabled) ShadowEdgePresets.ContentCapsule3 else ShadowEdgePresets.ContentCapsule3Disabled
+
+        DrawablePrimary -> when {
+            enabled && isDark -> ShadowEdgePresets.ContentCapsule4Dark
+            enabled -> ShadowEdgePresets.ContentCapsule4Light
+            isDark -> ShadowEdgePresets.ContentCapsule4DisabledDark
+            else -> ShadowEdgePresets.ContentCapsule4DisabledLight
+        }
+
+        DrawableSecondary -> when {
+            enabled && isDark -> ShadowEdgePresets.ContentCapsule5Dark
+            enabled -> ShadowEdgePresets.ContentCapsule5Light
+            isDark -> ShadowEdgePresets.ContentCapsule5DisabledDark
+            else -> ShadowEdgePresets.ContentCapsule5DisabledLight
+        }
+
+        DrawableTransparent -> when {
+            enabled && isDark -> ShadowEdgePresets.ContentCapsule6Dark
+            enabled -> ShadowEdgePresets.ContentCapsule6Light
+            isDark -> ShadowEdgePresets.ContentCapsule6DisabledDark
+            else -> ShadowEdgePresets.ContentCapsule6DisabledLight
+        }
     }
 }

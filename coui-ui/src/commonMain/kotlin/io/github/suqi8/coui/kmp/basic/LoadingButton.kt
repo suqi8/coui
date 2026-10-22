@@ -81,7 +81,7 @@ fun LoadingButton(
     colors: TextButtonColors = ButtonDefaults.textButtonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     textStyle: TextStyle = COUITheme.textStyles.button,
-    material: ButtonMaterial = ButtonMaterial.None,
+    material: ButtonMaterial = ButtonMaterial.Auto,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {

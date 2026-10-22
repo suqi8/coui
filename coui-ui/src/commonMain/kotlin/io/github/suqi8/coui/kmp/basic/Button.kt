@@ -8,6 +8,7 @@ import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,7 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.contentButtonMaterial
 import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
-import io.github.suqi8.coui.kmp.effect.couiPressScale
+import io.github.suqi8.coui.kmp.effect.couiTouchMotion
+import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
@@ -48,17 +50,18 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * A [Button] component with COUI style.
  *
- * The press feedback follows COUI 17 `COUIButton`: the `COUITouchMotionAnimator` scale (a target
- * derived from the button's area and aspect ratio, with under-damped release springs) plus the
- * `COUIMaskEffectDrawable` press tint. The optional [material] layer adds the system material
- * effects, which ColorOS 17 leaves off by default.
+ * The touch feedback follows COUI 17 `COUIButton` and its `COUITouchMotionAnimator`: the press
+ * scale (a target derived from the button's area and aspect ratio, with under-damped release
+ * springs), the rubber-band drag-follow translation and area-conserving drag deformation, the
+ * `COUIMaskEffectDrawable` press and hover tints, and the [material] layer that ColorOS 17 draws
+ * with its system material switches on (the default on real devices).
  *
  * @param onClick The callback when the [Button] is clicked.
  * @param modifier The modifier to be applied to the [Button].
  * @param enabled Whether the [Button] is enabled.
  * @param pressScaleEnabled Whether the [Button] shrinks while pressed (COUIButton `scaleEnable`).
- *   Set to `false` for buttons that fill a container cell, leaving the press tint as the only
- *   feedback.
+ *   Set to `false` for buttons that fill a container cell. The drag deformation and rubber band
+ *   run either way.
  * @param cornerRadius The corner radius of the [Button]. [Dp.Unspecified] (the default) rounds
  *   the button at half its measured height, the COUI capsule (`drawableRadius = -1`); an explicit
  *   radius draws a squircle.
@@ -67,8 +70,10 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param colors The [ButtonColors] of the [Button].
  * @param insideMargin The margin inside the [Button].
  * @param material The COUI 17 material layer (edge lighting, inner shadow and touch spotlight)
- *   drawn over the fill. [ButtonMaterial.None] by default, as on ColorOS 17 with the system
- *   material switches off.
+ *   drawn over the fill. [ButtonMaterial.Auto] (the default) picks the preset matching [colors],
+ *   as every `ButtonNew` style follows the system material switch; [ButtonMaterial.None] opts
+ *   out. While the layer is drawn the press tint is off (`COUIButton.applyBlurEffect` disables the
+ *   mask's pressed state).
  * @param interactionSource The [MutableInteractionSource] to be used for the [Button].
  * @param indication The [Indication] to be used for the [Button]. Defaults to `null` because
  *   the COUI press feedback (scale + press tint) is built into the button itself.
@@ -85,7 +90,44 @@ fun Button(
     minHeight: Dp = ButtonDefaults.MinHeight,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
-    material: ButtonMaterial = ButtonMaterial.None,
+    material: ButtonMaterial = ButtonMaterial.Auto,
+    interactionSource: MutableInteractionSource? = null,
+    indication: Indication? = null,
+    content: @Composable RowScope.() -> Unit,
+) {
+    CouiButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        pressScaleEnabled = pressScaleEnabled,
+        cornerRadius = cornerRadius,
+        minWidth = minWidth,
+        minHeight = minHeight,
+        colors = colors,
+        insideMargin = insideMargin,
+        materialType = material.toContentType(colors),
+        interactionSource = interactionSource,
+        indication = indication,
+        content = content,
+    )
+}
+
+/**
+ * The [Button] implementation with the material preset already resolved, so that components such
+ * as the dialog button bar can pick the `drawableMaterialEffect` presets.
+ */
+@Composable
+internal fun CouiButton(
+    onClick: () -> Unit,
+    colors: ButtonColors,
+    materialType: ContentButtonMaterialType?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    pressScaleEnabled: Boolean = true,
+    cornerRadius: Dp = ButtonDefaults.CornerRadius,
+    minWidth: Dp = ButtonDefaults.MinWidth,
+    minHeight: Dp = ButtonDefaults.MinHeight,
+    insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
     content: @Composable RowScope.() -> Unit,
@@ -99,14 +141,19 @@ fun Button(
     }
     val containerColor = if (enabled) colors.color else colors.disabledColor
     val contentColor = if (enabled) colors.contentColor else colors.disabledContentColor
+    // The material layer needs runtime shaders; without them COUI keeps the plain mask.
+    val shadersSupported = remember { isRuntimeShaderSupported() }
+    val materialActive = materialType != null && shadersSupported
 
-    // COUI press feedback: COUITouchMotionAnimator scale + COUIMaskEffectDrawable press tint.
+    // COUIMaskEffectDrawable press tint. COUIButton.applyBlurEffect turns the pressed state off
+    // while the material is on.
     val isPressed by interactionSource.collectIsPressedAsState()
     val tintProgress = remember { Animatable(0f) }
-    LaunchedEffect(enabled, isPressed) {
-        if (enabled && isPressed) {
+    val pressTintEnabled = enabled && !materialActive
+    LaunchedEffect(pressTintEnabled, isPressed) {
+        if (pressTintEnabled && isPressed) {
             tintProgress.animateTo(1f, PressTintSpring)
-        } else if (!enabled) {
+        } else if (!pressTintEnabled) {
             tintProgress.snapTo(0f)
         } else if (tintProgress.value > 0f) {
             if (tintProgress.value < PressedTintMinVisibleProgress) {
@@ -122,24 +169,37 @@ fun Button(
             tintProgress.animateTo(0f, PressTintSpring)
         }
     }
-    val pressTint = if (COUITheme.colorScheme.background.luminance() < 0.5f) PressedTintDark else PressedTintLight
-    val fillColor = if (tintProgress.value > 0f) {
-        pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(containerColor)
-    } else {
-        containerColor
+    // The hover layer of the same drawable (COUIButton.dispatchHoverEvent), on the same spring.
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val hoverProgress = remember { Animatable(0f) }
+    LaunchedEffect(enabled, isHovered) {
+        hoverProgress.animateTo(if (enabled && isHovered) 1f else 0f, PressTintSpring)
+    }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val pressTint = if (isDark) PressedTintDark else PressedTintLight
+    val hoverTint = if (isDark) HoveredTintDark else HoveredTintLight
+    var fillColor = containerColor
+    if (hoverProgress.value > 0f) {
+        fillColor = hoverTint.copy(alpha = hoverTint.alpha * hoverProgress.value).compositeOver(fillColor)
+    }
+    if (tintProgress.value > 0f) {
+        fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
     }
     val surfaceModifier = if (cornerRadius == Dp.Unspecified) {
         Modifier.clip(CircleShape).background(fillColor)
     } else {
         Modifier.squircleSurface(color = fillColor, cornerRadius = cornerRadius)
     }
-    val materialType = material.toContentType()
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
                 .semantics { role = Role.Button }
-                .couiPressScale(pressed = isPressed, enabled = enabled && pressScaleEnabled)
+                .couiTouchMotion(
+                    interactionSource = interactionSource,
+                    enabled = enabled,
+                    pressScaleEnabled = pressScaleEnabled,
+                )
                 .then(surfaceModifier)
                 .then(
                     if (materialType != null) {
@@ -205,7 +265,7 @@ fun TextButton(
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     textStyle: TextStyle = COUITheme.textStyles.button,
     maxLines: Int = 1,
-    material: ButtonMaterial = ButtonMaterial.None,
+    material: ButtonMaterial = ButtonMaterial.Auto,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
@@ -247,7 +307,15 @@ fun TextButton(
  * and every Skia target) and are skipped elsewhere.
  */
 enum class ButtonMaterial {
-    /** No material layer: the solid fill, press tint and press scale only (the COUI 17 default). */
+    /**
+     * The preset matching the button's fill, the COUI 17 default (`useMaterialEffect` is
+     * `followSystem` for every `ButtonNew` style): [Primary] for a [COUITheme] primary fill,
+     * [Transparent] for the transparent-button fill, none for a fully transparent (borderless)
+     * fill, and [Secondary] for everything else.
+     */
+    Auto,
+
+    /** No material layer: the solid fill, press tint and touch motion only (`forceDisable`). */
     None,
 
     /** The primary (theme-filled) button presets: `CONTENT_CAPSULE_1`, `TYPE_OPAQUE_MEDIUM_1`. */
@@ -260,11 +328,29 @@ enum class ButtonMaterial {
     Transparent,
 }
 
-private fun ButtonMaterial.toContentType(): ContentButtonMaterialType? = when (this) {
+@Composable
+private fun ButtonMaterial.toContentType(colors: ButtonColors): ContentButtonMaterialType? = when (this) {
     ButtonMaterial.None -> null
+
     ButtonMaterial.Primary -> ContentButtonMaterialType.Primary
+
     ButtonMaterial.Secondary -> ContentButtonMaterialType.Secondary
+
     ButtonMaterial.Transparent -> ContentButtonMaterialType.Transparent
+
+    ButtonMaterial.Auto -> {
+        val scheme = COUITheme.colorScheme
+        when {
+            // Borderless buttons have no buttonType (UNKNOWN) and never draw the material.
+            colors.color.alpha == 0f -> null
+
+            colors.color == scheme.primary -> ContentButtonMaterialType.Primary
+
+            colors.color == scheme.transparentButton -> ContentButtonMaterialType.Transparent
+
+            else -> ContentButtonMaterialType.Secondary
+        }
+    }
 }
 
 object ButtonDefaults {
@@ -489,6 +575,12 @@ private val PressedTintLight = Color(0x1F000000)
 
 /** couiColorPress in dark themes (coui_color_press_dark #33FFFFFF). */
 private val PressedTintDark = Color(0x33FFFFFF)
+
+/** couiColorHover in light themes (coui_color_hover #14000000). */
+private val HoveredTintLight = Color(0x14000000)
+
+/** couiColorHover in dark themes (coui_color_hover_dark #26FFFFFF). */
+private val HoveredTintDark = Color(0x26FFFFFF)
 
 /** The minimum press tint progress before a release may fade out (COUIMaskEffectDrawable). */
 private val PressedTintMinVisibleProgress = 0.7f
