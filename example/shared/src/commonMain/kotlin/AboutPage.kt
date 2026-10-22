@@ -124,9 +124,10 @@ fun AboutPage(
                     title = "About",
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
-                    // COUI 17 suppresses the bar divider while the material blur is on
-                    // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
-                    showDivider = !blurActive,
+                    // COUI 17 suppresses the bar divider whenever the material blur is enabled, not just
+                    // once it shows (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur ->
+                    // setBlurDividerSuppressed(shouldEnableBlur)).
+                    showDivider = backdrop == null,
                     glow = {
                         if (backdrop != null) {
                             TopAppBarGlow(
