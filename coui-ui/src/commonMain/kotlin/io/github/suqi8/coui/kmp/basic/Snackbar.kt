@@ -19,7 +19,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.offset
@@ -45,18 +44,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
@@ -287,6 +290,9 @@ fun SnackbarHost(
                         initialValue = SnackbarSwipeToDismissValue.Settled,
                     )
                 }
+                // COUISnackBar.onTouchEvent: DOWN / MOVE cancel the auto-dismiss timer, UP / CANCEL
+                // restart it with the full duration.
+                var isTouched by remember { mutableStateOf(false) }
 
                 visibleState.targetState = entry.visible
 
@@ -294,7 +300,8 @@ fun SnackbarHost(
                     LaunchedEffect(entry) { state.removeEntry(entry) }
                 }
 
-                LaunchedEffect(entry) {
+                LaunchedEffect(entry, isTouched) {
+                    if (isTouched) return@LaunchedEffect
                     val duration = entry.data.visuals.duration.toMillis(
                         entry.data.visuals.actionLabel != null,
                         accessibilityManager,
@@ -313,6 +320,15 @@ fun SnackbarHost(
 
                 AnimatedVisibility(
                     modifier = Modifier
+                        .pointerInput(Unit) {
+                            // Observe only: the action, dismiss icon and swipe keep their events.
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    isTouched = event.changes.any { it.pressed }
+                                }
+                            }
+                        }
                         .onSizeChanged { size ->
                             val width = size.width.toFloat()
 
@@ -358,15 +374,21 @@ fun SnackbarHost(
 /**
  * A Snackbar is a temporary message that appears at the bottom of the screen.
  *
+ * Follows COUI 17 `COUISnackBar`: the message, optional icon and action sit on one capsule line;
+ * once the message wraps or the line does not fit, the snack bar switches to the vertical layout
+ * with the action below the message, aligned to the end, and the corners drop to [cornerRadius].
+ * The dismiss icon is a library extension with no COUI counterpart.
+ *
  * @param data data of the [Snackbar]
  * @param modifier modifier to be applied to the [Snackbar]
  * @param icon optional leading icon, mirroring COUISnackBar's iv_snack_bar_icon slot. Pass it
  *   through [SnackbarHost]'s `content` lambda: `SnackbarHost(state) { Snackbar(it, icon = { ... }) }`.
- * @param cornerRadius corner radius of the [Snackbar] when the message spans multiple lines
- * @param singleLineCornerRadius corner radius of the [Snackbar] when the message fits on a single line
+ * @param cornerRadius corner radius of the [Snackbar] in the vertical (multi-line) layout
+ * @param singleLineCornerRadius corner radius of the [Snackbar] in the single-line layout;
+ *   [Dp.Unspecified] (the default) rounds it at half its height, the COUI capsule
  * @param colors colors of the [Snackbar]
- * @param insideMargin margin inside the [Snackbar]; the end margin is replaced by a 4dp action
- *   margin when the action button is the trailing element
+ * @param insideMargin margin inside the [Snackbar]; in the single-line layout the end margin is
+ *   replaced by a 4dp action margin when the action button is the trailing element
  */
 @Composable
 fun Snackbar(
@@ -380,28 +402,23 @@ fun Snackbar(
 ) {
     val visuals = data.visuals
     val scope = rememberCoroutineScope()
-    val layoutDirection = LocalLayoutDirection.current
 
-    // COUISnackBar.adjustLayout: a snack bar whose content spans a single line keeps the large
-    // "default" radius (capsule-like couiRoundCornerXXL), otherwise it falls back to couiRoundCornerL.
-    var isSingleLine by remember(visuals.message) { mutableStateOf(true) }
-    val shape = RoundedCornerShape(if (isSingleLine) singleLineCornerRadius else cornerRadius)
+    // COUISnackBar.adjustLayout: the horizontal layout keeps the capsule ("default") radius, the
+    // vertical one falls back to couiRoundCornerL. The layout below reports which one it chose.
+    var isVertical by remember(visuals) { mutableStateOf(false) }
+    val shape = when {
+        isVertical -> RoundedCornerShape(cornerRadius)
+        singleLineCornerRadius == Dp.Unspecified -> CircleShape
+        else -> RoundedCornerShape(singleLineCornerRadius)
+    }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
 
     Surface(
         modifier = modifier
             .semantics { liveRegion = LiveRegionMode.Polite }
             // COUI card margins: grid_guide_column_card_margin_start (16dp) on each side.
             .padding(horizontal = 16.dp, vertical = 4.dp)
-            // COUI ShadowUtils level 3 shadow: blur 26.66dp, black at 35/255 alpha.
-            .dropShadow(
-                shape = shape,
-                shadow = Shadow(
-                    radius = 26.dp,
-                    color = Color.Black,
-                    alpha = 0.14f,
-                    offset = DpOffset(x = 0.dp, y = 4.dp),
-                ),
-            )
+            .dropShadow(shape = shape, shadow = if (isDark) SnackbarShadowDark else SnackbarShadowLight)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             },
@@ -409,74 +426,154 @@ fun Snackbar(
         color = colors.containerColor,
         contentColor = colors.contentColor,
     ) {
-        val actionIsTrailing = !visuals.actionLabel.isNullOrEmpty() && !visuals.withDismissAction
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(
-                start = insideMargin.calculateStartPadding(layoutDirection),
-                top = insideMargin.calculateTopPadding(),
-                end = if (actionIsTrailing) SnackbarActionEndMargin else insideMargin.calculateEndPadding(layoutDirection),
-                bottom = insideMargin.calculateBottomPadding(),
-            ),
-        ) {
-            if (icon != null) {
-                // COUISnackBar iv_snack_bar_icon: a 30dp icon with 16dp top/bottom margins; the row
-                // already carries the 10dp child vertical margin, the padding tops it up to 16dp.
-                Box(
-                    modifier = Modifier
-                        .padding(
-                            top = (SnackbarIconVerticalMargin - insideMargin.calculateTopPadding()).coerceAtLeast(0.dp),
-                            bottom = (SnackbarIconVerticalMargin - insideMargin.calculateBottomPadding()).coerceAtLeast(0.dp),
-                            end = SnackbarIconSpacing,
-                        )
-                        .size(SnackbarDefaults.IconSize),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    icon()
+        Layout(
+            content = {
+                if (icon != null) {
+                    Box(
+                        modifier = Modifier
+                            .layoutId(SnackbarSlot.Icon)
+                            .size(SnackbarDefaults.IconSize),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        icon()
+                    }
                 }
-            }
 
-            Text(
-                text = visuals.message,
-                color = colors.contentColor,
-                style = SnackbarDefaults.textStyle(),
-                onTextLayout = { isSingleLine = it.lineCount <= 1 },
-                modifier = Modifier.weight(1f, fill = false),
-            )
-
-            if (!visuals.actionLabel.isNullOrEmpty()) {
-                val onAction by rememberUpdatedState(data::performAction)
                 Text(
-                    text = visuals.actionLabel,
-                    color = colors.actionContentColor,
+                    text = visuals.message,
+                    color = colors.contentColor,
                     style = SnackbarDefaults.textStyle(),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .padding(start = SnackbarActionSpacing)
-                        // COUIMaskRippleDrawable custom ripple mask: a capsule around the label.
-                        .clip(CircleShape)
-                        .clickable { scope.launch { onAction() } }
-                        .padding(SnackbarActionPadding),
+                    modifier = Modifier.layoutId(SnackbarSlot.Message),
                 )
-            }
 
-            if (visuals.withDismissAction) {
-                val onDismiss by rememberUpdatedState(data::dismiss)
-                Icon(
-                    imageVector = COUIIcons.Basic.SearchCleanup,
-                    contentDescription = "Dismiss",
-                    tint = colors.dismissActionContentColor,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .clickable { scope.launch { onDismiss() } },
-                )
+                if (!visuals.actionLabel.isNullOrEmpty()) {
+                    val onAction by rememberUpdatedState(data::performAction)
+                    Text(
+                        text = visuals.actionLabel,
+                        color = colors.actionContentColor,
+                        style = SnackbarDefaults.textStyle(),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .layoutId(SnackbarSlot.Action)
+                            // COUIMaskRippleDrawable custom ripple mask: a capsule around the label.
+                            .clip(CircleShape)
+                            .clickable { scope.launch { onAction() } }
+                            .padding(SnackbarActionPadding),
+                    )
+                }
+
+                if (visuals.withDismissAction) {
+                    val onDismiss by rememberUpdatedState(data::dismiss)
+                    Icon(
+                        imageVector = COUIIcons.Basic.SearchCleanup,
+                        contentDescription = "Dismiss",
+                        tint = colors.dismissActionContentColor,
+                        modifier = Modifier
+                            .layoutId(SnackbarSlot.Dismiss)
+                            .padding(start = 8.dp)
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .clickable { scope.launch { onDismiss() } },
+                    )
+                }
+            },
+        ) { measurables, constraints ->
+            val iconMeasurable = measurables.firstOrNull { it.layoutId == SnackbarSlot.Icon }
+            val messageMeasurable = measurables.first { it.layoutId == SnackbarSlot.Message }
+            val actionMeasurable = measurables.firstOrNull { it.layoutId == SnackbarSlot.Action }
+            val dismissMeasurable = measurables.firstOrNull { it.layoutId == SnackbarSlot.Dismiss }
+
+            val start = insideMargin.calculateStartPadding(layoutDirection).roundToPx()
+            val end = insideMargin.calculateEndPadding(layoutDirection).roundToPx()
+            val top = insideMargin.calculateTopPadding().roundToPx()
+            val bottom = insideMargin.calculateBottomPadding().roundToPx()
+            val actionEnd = SnackbarActionEndMargin.roundToPx()
+            val actionSpacing = SnackbarActionSpacing.roundToPx()
+            val iconSpacing = SnackbarIconSpacing.roundToPx()
+            val maxWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else Int.MAX_VALUE / 2
+
+            val loose = Constraints()
+            val iconPlaceable = iconMeasurable?.measure(loose)
+            val dismissPlaceable = dismissMeasurable?.measure(loose)
+            val actionPlaceable = actionMeasurable?.measure(
+                Constraints(maxWidth = (maxWidth - start - actionEnd - actionSpacing).coerceAtLeast(0)),
+            )
+            val iconWidth = iconPlaceable?.let { it.width + iconSpacing } ?: 0
+            val dismissWidth = dismissPlaceable?.width ?: 0
+            val actionWidth = actionPlaceable?.let { it.width + actionSpacing } ?: 0
+            // The action keeps only its 4dp margin when it is the trailing element.
+            val horizontalEnd = if (actionPlaceable != null && dismissPlaceable == null) actionEnd else end
+
+            // COUISnackBar.isVertical: more than one message line, or a line wider than the bar.
+            val horizontalMessageWidth = maxWidth - start - iconWidth - actionWidth - dismissWidth - horizontalEnd
+            val vertical = visuals.message.contains('\n') ||
+                messageMeasurable.maxIntrinsicWidth(Constraints.Infinity) > horizontalMessageWidth
+            if (vertical != isVertical) isVertical = vertical
+
+            if (!vertical) {
+                val message = messageMeasurable.measure(Constraints(maxWidth = horizontalMessageWidth.coerceAtLeast(0)))
+                val iconClearance = SnackbarIconVerticalMargin.roundToPx()
+                val height = maxOf(
+                    top + message.height + bottom,
+                    iconPlaceable?.let { it.height + 2 * iconClearance } ?: 0,
+                    actionPlaceable?.let { top + it.height + bottom } ?: 0,
+                    dismissPlaceable?.let { top + it.height + bottom } ?: 0,
+                ).coerceIn(constraints.minHeight, constraints.maxHeight)
+                val width = (start + iconWidth + message.width + actionWidth + dismissWidth + horizontalEnd)
+                    .coerceIn(constraints.minWidth, maxWidth)
+                layout(width, height) {
+                    // COUISnackBar.layoutHorizontally: every child is centred on the bar height.
+                    var x = start
+                    iconPlaceable?.let {
+                        it.placeRelative(x, (height - it.height) / 2)
+                        x += iconWidth
+                    }
+                    message.placeRelative(x, (height - message.height) / 2)
+                    x += message.width
+                    actionPlaceable?.let {
+                        it.placeRelative(x + actionSpacing, (height - it.height) / 2)
+                        x += actionWidth
+                    }
+                    dismissPlaceable?.let { it.placeRelative(x, (height - it.height) / 2) }
+                }
+            } else {
+                // COUISnackBar.layoutVertically: the message (and icon) start 12dp from the top,
+                // the action sits 10dp under the message, aligned to the end, 9dp off the bottom.
+                val verticalTop = SnackbarVerticalTopMargin.roundToPx()
+                val messageWidth = (maxWidth - start - iconWidth - dismissWidth - end).coerceAtLeast(0)
+                val message = messageMeasurable.measure(Constraints(maxWidth = messageWidth))
+                val rowHeight = maxOf(message.height, iconPlaceable?.height ?: 0, dismissPlaceable?.height ?: 0)
+                val actionTop = verticalTop + message.height + SnackbarVerticalActionSpacing.roundToPx()
+                val height = (
+                    if (actionPlaceable != null) {
+                        maxOf(actionTop + actionPlaceable.height + SnackbarVerticalActionBottomMargin.roundToPx(), verticalTop + rowHeight + bottom)
+                    } else {
+                        verticalTop + rowHeight + bottom
+                    }
+                    ).coerceIn(constraints.minHeight, constraints.maxHeight)
+                val width = maxOf(
+                    start + iconWidth + message.width + dismissWidth + end,
+                    actionPlaceable?.let { start + it.width + actionEnd } ?: 0,
+                ).coerceIn(constraints.minWidth, maxWidth)
+                layout(width, height) {
+                    var x = start
+                    iconPlaceable?.let {
+                        it.placeRelative(x, verticalTop + (rowHeight - it.height) / 2)
+                        x += iconWidth
+                    }
+                    message.placeRelative(x, verticalTop + (rowHeight - message.height) / 2)
+                    dismissPlaceable?.let {
+                        it.placeRelative(width - end - it.width, verticalTop + (rowHeight - it.height) / 2)
+                    }
+                    actionPlaceable?.placeRelative(width - actionEnd - actionPlaceable.width, actionTop)
+                }
             }
         }
     }
 }
+
+private enum class SnackbarSlot { Icon, Message, Action, Dismiss }
 
 /**
  * Colors for [Snackbar].
@@ -498,11 +595,14 @@ data class SnackbarColors(
  * Defaults for [Snackbar].
  */
 object SnackbarDefaults {
-    /** The default corner radius when the message spans multiple lines (COUI coui_snack_bar_radius / couiRoundCornerL). */
+    /** The default corner radius of the vertical (multi-line) layout (COUI couiRoundCornerL). */
     val CornerRadius = 16.dp
 
-    /** The default corner radius when the message fits on a single line (COUI coui_snack_bar_radius_single_line / couiRoundCornerXXL). */
-    val SingleLineCornerRadius = 24.dp
+    /**
+     * The default corner radius of the single-line layout: [Dp.Unspecified], half the snack bar
+     * height (COUI 16+ smooth corners round the single-line bar into a capsule).
+     */
+    val SingleLineCornerRadius = Dp.Unspecified
 
     /**
      * The default inside margin
@@ -518,15 +618,15 @@ object SnackbarDefaults {
     fun textStyle(): TextStyle = COUITheme.textStyles.body2.copy(fontWeight = FontWeight.Medium)
 
     /**
-     * The default [SnackbarColors]. Container and content follow COUI couiColorSurfaceTop /
-     * couiColorPrimaryNeutral; the action label uses the accent color (couiColorPrimaryTextOnPopup)
-     * and the dismiss icon uses couiColorLabelTertiary.
+     * The default [SnackbarColors]. Container and content follow COUI couiColorBackgroundTop /
+     * couiColorPrimaryNeutral; the action label uses couiColorPrimaryTextOnPopup and the dismiss
+     * icon uses couiColorLabelTertiary.
      */
     @Composable
     fun snackbarColors(
-        containerColor: Color = COUITheme.colorScheme.surfaceContainerHighest,
+        containerColor: Color = COUITheme.colorScheme.backgroundTop,
         contentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
-        actionContentColor: Color = COUITheme.colorScheme.primary,
+        actionContentColor: Color = COUITheme.colorScheme.primaryTextOnPopup,
         dismissActionContentColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
     ): SnackbarColors = remember(containerColor, contentColor, actionContentColor, dismissActionContentColor) {
         SnackbarColors(
@@ -540,6 +640,37 @@ object SnackbarDefaults {
 
 /** The end margin when the action button is the trailing element (COUI coui_snack_bar_action_margin_horizontal_end). */
 private val SnackbarActionEndMargin = 4.dp
+
+/** The top margin of the message in the vertical layout (COUI coui_snack_bar_child_margin_vertical_multi_lines). */
+private val SnackbarVerticalTopMargin = 12.dp
+
+/** The gap between the message and the action in the vertical layout (COUI coui_snack_bar_action_margin_top_horizontal). */
+private val SnackbarVerticalActionSpacing = 10.dp
+
+/** The bottom margin of the action in the vertical layout (COUI coui_snack_bar_action_margin_bottom_multi_lines). */
+private val SnackbarVerticalActionBottomMargin = 9.dp
+
+/**
+ * `ShadowUtils.setElevationToView(layout, 2, ...)` in light schemes: the Oplus light-source shadow
+ * at alpha 40/255, approximated by a soft drop shadow.
+ */
+private val SnackbarShadowLight = Shadow(
+    radius = 26.dp,
+    color = Color.Black,
+    alpha = 0.14f,
+    offset = DpOffset(x = 0.dp, y = 4.dp),
+)
+
+/**
+ * The dark-scheme twin of [SnackbarShadowLight]: the shadow alpha rises to 120/255
+ * (`integers.xml` night), so the approximation is roughly three times as dense.
+ */
+private val SnackbarShadowDark = Shadow(
+    radius = 26.dp,
+    color = Color.Black,
+    alpha = 0.4f,
+    offset = DpOffset(x = 0.dp, y = 4.dp),
+)
 
 /** The vertical clearance of the leading icon (COUI coui_snack_bar_icon_margin_top_horizontal). */
 private val SnackbarIconVerticalMargin = 16.dp
