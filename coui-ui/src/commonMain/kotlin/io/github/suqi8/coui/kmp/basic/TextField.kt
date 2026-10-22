@@ -7,6 +7,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,7 +37,10 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.then
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -122,9 +126,10 @@ enum class TextFieldMode { Rectangle, Line, None }
  *   COUIInputPreference couiJustShowFocusLine.
  * @param enabled Whether the [TextField] is enabled.
  * @param readOnly Whether the [TextField] is read-only.
- * @param isError Whether the [TextField] is in error state. Turning this on tints
- *   the border / underline and label with [TextFieldColors.errorColor] and plays a
- *   horizontal shake animation, mirroring COUIErrorEditTextHelper.
+ * @param isError Whether the [TextField] is in error state. Turning this on blends the
+ *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
+ *   when the field is focused, plays a horizontal shake animation, mirroring
+ *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
  *   COUIInputView couiInputMaxCount.
@@ -211,47 +216,49 @@ fun TextField(
         inputTransformation
     }
 
-    BasicTextField(
-        state = state,
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = resolvedTextStyle,
-        cursorBrush = cursorBrush,
-        keyboardOptions = keyboardOptions,
-        onKeyboardAction = onKeyboardAction,
-        lineLimits = lineLimits,
-        onTextLayout = currentOnTextLayout,
-        interactionSource = interactionSource,
-        inputTransformation = resolvedInputTransformation,
-        outputTransformation = resolvedOutputTransformation,
-        scrollState = scrollState,
-        decorator = TextFieldDecorator { innerTextField ->
-            val textLength = state.text.length
-            TextFieldChrome(
-                label = label,
-                labelState = labelState,
-                labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
-                colors = colors,
-                cornerRadius = cornerRadius,
-                insideMargin = insideMargin,
-                backgroundMode = backgroundMode,
-                justShowFocusLine = justShowFocusLine,
-                enabled = enabled,
-                isError = isError,
-                counterText = maxCount?.let { "$textLength/$it" },
-                counterOverflow = maxCount != null && textLength >= maxCount,
-                clearButtonVisible = showClearButton && enabled && isFocused && textLength > 0,
-                onClearText = if (showClearButton) ({ state.clearText() }) else null,
-                passwordVisible = if (showPasswordToggle) passwordVisible else null,
-                onPasswordToggle = { passwordVisible = !passwordVisible },
-                leadingIcon = leadingIcon,
-                trailingIcon = trailingIcon,
-                isFocused = isFocused,
-                innerTextField = innerTextField,
-            )
-        },
-    )
+    ErrorSelectionColors(isError = isError, errorColor = colors.errorColor) {
+        BasicTextField(
+            state = state,
+            modifier = modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = resolvedTextStyle,
+            cursorBrush = cursorBrush,
+            keyboardOptions = keyboardOptions,
+            onKeyboardAction = onKeyboardAction,
+            lineLimits = lineLimits,
+            onTextLayout = currentOnTextLayout,
+            interactionSource = interactionSource,
+            inputTransformation = resolvedInputTransformation,
+            outputTransformation = resolvedOutputTransformation,
+            scrollState = scrollState,
+            decorator = TextFieldDecorator { innerTextField ->
+                val textLength = state.text.length
+                TextFieldChrome(
+                    label = label,
+                    labelState = labelState,
+                    labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
+                    colors = colors,
+                    cornerRadius = cornerRadius,
+                    insideMargin = insideMargin,
+                    backgroundMode = backgroundMode,
+                    justShowFocusLine = justShowFocusLine,
+                    enabled = enabled,
+                    isError = isError,
+                    counterText = maxCount?.let { "$textLength/$it" },
+                    counterOverflow = maxCount != null && textLength >= maxCount,
+                    clearButtonVisible = showClearButton && enabled && isFocused && textLength > 0,
+                    onClearText = if (showClearButton) ({ state.clearText() }) else null,
+                    passwordVisible = if (showPasswordToggle) passwordVisible else null,
+                    onPasswordToggle = { passwordVisible = !passwordVisible },
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon,
+                    isFocused = isFocused,
+                    innerTextField = innerTextField,
+                )
+            },
+        )
+    }
 }
 
 /**
@@ -278,9 +285,10 @@ fun TextField(
  *   COUIInputPreference couiJustShowFocusLine.
  * @param enabled Whether the [TextField] is enabled.
  * @param readOnly Whether the [TextField] is read-only.
- * @param isError Whether the [TextField] is in error state. Turning this on tints
- *   the border / underline and label with [TextFieldColors.errorColor] and plays a
- *   horizontal shake animation, mirroring COUIErrorEditTextHelper.
+ * @param isError Whether the [TextField] is in error state. Turning this on blends the
+ *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
+ *   when the field is focused, plays a horizontal shake animation, mirroring
+ *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
  *   COUIInputView couiInputMaxCount.
@@ -378,47 +386,49 @@ fun TextField(
         }
     }
 
-    BasicTextField(
-        value = value,
-        onValueChange = handleValueChange,
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = resolvedTextStyle,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        minLines = minLines,
-        visualTransformation = resolvedVisualTransformation,
-        onTextLayout = currentOnTextLayout,
-        interactionSource = interactionSource,
-        cursorBrush = cursorBrush,
-        decorationBox = @Composable { innerTextField ->
-            TextFieldChrome(
-                label = label,
-                labelState = labelState,
-                labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
-                colors = colors,
-                cornerRadius = cornerRadius,
-                insideMargin = insideMargin,
-                backgroundMode = backgroundMode,
-                justShowFocusLine = justShowFocusLine,
-                enabled = enabled,
-                isError = isError,
-                counterText = maxCount?.let { "${value.text.length}/$it" },
-                counterOverflow = maxCount != null && value.text.length >= maxCount,
-                clearButtonVisible = showClearButton && enabled && isFocused && value.text.isNotEmpty(),
-                onClearText = if (showClearButton) ({ currentOnValueChange(TextFieldValue("")) }) else null,
-                passwordVisible = if (showPasswordToggle) passwordVisible else null,
-                onPasswordToggle = { passwordVisible = !passwordVisible },
-                leadingIcon = leadingIcon,
-                trailingIcon = trailingIcon,
-                isFocused = isFocused,
-                innerTextField = innerTextField,
-            )
-        },
-    )
+    ErrorSelectionColors(isError = isError, errorColor = colors.errorColor) {
+        BasicTextField(
+            value = value,
+            onValueChange = handleValueChange,
+            modifier = modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = resolvedTextStyle,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            visualTransformation = resolvedVisualTransformation,
+            onTextLayout = currentOnTextLayout,
+            interactionSource = interactionSource,
+            cursorBrush = cursorBrush,
+            decorationBox = @Composable { innerTextField ->
+                TextFieldChrome(
+                    label = label,
+                    labelState = labelState,
+                    labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
+                    colors = colors,
+                    cornerRadius = cornerRadius,
+                    insideMargin = insideMargin,
+                    backgroundMode = backgroundMode,
+                    justShowFocusLine = justShowFocusLine,
+                    enabled = enabled,
+                    isError = isError,
+                    counterText = maxCount?.let { "${value.text.length}/$it" },
+                    counterOverflow = maxCount != null && value.text.length >= maxCount,
+                    clearButtonVisible = showClearButton && enabled && isFocused && value.text.isNotEmpty(),
+                    onClearText = if (showClearButton) ({ currentOnValueChange(TextFieldValue("")) }) else null,
+                    passwordVisible = if (showPasswordToggle) passwordVisible else null,
+                    onPasswordToggle = { passwordVisible = !passwordVisible },
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon,
+                    isFocused = isFocused,
+                    innerTextField = innerTextField,
+                )
+            },
+        )
+    }
 }
 
 /**
@@ -444,9 +454,10 @@ fun TextField(
  *   COUIInputPreference couiJustShowFocusLine.
  * @param enabled Whether the [TextField] is enabled.
  * @param readOnly Whether the [TextField] is read-only.
- * @param isError Whether the [TextField] is in error state. Turning this on tints
- *   the border / underline and label with [TextFieldColors.errorColor] and plays a
- *   horizontal shake animation, mirroring COUIErrorEditTextHelper.
+ * @param isError Whether the [TextField] is in error state. Turning this on blends the
+ *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
+ *   when the field is focused, plays a horizontal shake animation, mirroring
+ *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
  *   COUIInputView couiInputMaxCount.
@@ -532,47 +543,49 @@ fun TextField(
         }
     }
 
-    BasicTextField(
-        value = value,
-        onValueChange = handleValueChange,
-        modifier = modifier,
-        enabled = enabled,
-        readOnly = readOnly,
-        textStyle = resolvedTextStyle,
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        singleLine = singleLine,
-        maxLines = maxLines,
-        minLines = minLines,
-        visualTransformation = resolvedVisualTransformation,
-        onTextLayout = currentOnTextLayout,
-        interactionSource = interactionSource,
-        cursorBrush = cursorBrush,
-        decorationBox = @Composable { innerTextField ->
-            TextFieldChrome(
-                label = label,
-                labelState = labelState,
-                labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
-                colors = colors,
-                cornerRadius = cornerRadius,
-                insideMargin = insideMargin,
-                backgroundMode = backgroundMode,
-                justShowFocusLine = justShowFocusLine,
-                enabled = enabled,
-                isError = isError,
-                counterText = maxCount?.let { "${value.length}/$it" },
-                counterOverflow = maxCount != null && value.length >= maxCount,
-                clearButtonVisible = showClearButton && enabled && isFocused && value.isNotEmpty(),
-                onClearText = if (showClearButton) ({ currentOnValueChange("") }) else null,
-                passwordVisible = if (showPasswordToggle) passwordVisible else null,
-                onPasswordToggle = { passwordVisible = !passwordVisible },
-                leadingIcon = leadingIcon,
-                trailingIcon = trailingIcon,
-                isFocused = isFocused,
-                innerTextField = innerTextField,
-            )
-        },
-    )
+    ErrorSelectionColors(isError = isError, errorColor = colors.errorColor) {
+        BasicTextField(
+            value = value,
+            onValueChange = handleValueChange,
+            modifier = modifier,
+            enabled = enabled,
+            readOnly = readOnly,
+            textStyle = resolvedTextStyle,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            minLines = minLines,
+            visualTransformation = resolvedVisualTransformation,
+            onTextLayout = currentOnTextLayout,
+            interactionSource = interactionSource,
+            cursorBrush = cursorBrush,
+            decorationBox = @Composable { innerTextField ->
+                TextFieldChrome(
+                    label = label,
+                    labelState = labelState,
+                    labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
+                    colors = colors,
+                    cornerRadius = cornerRadius,
+                    insideMargin = insideMargin,
+                    backgroundMode = backgroundMode,
+                    justShowFocusLine = justShowFocusLine,
+                    enabled = enabled,
+                    isError = isError,
+                    counterText = maxCount?.let { "${value.length}/$it" },
+                    counterOverflow = maxCount != null && value.length >= maxCount,
+                    clearButtonVisible = showClearButton && enabled && isFocused && value.isNotEmpty(),
+                    onClearText = if (showClearButton) ({ currentOnValueChange("") }) else null,
+                    passwordVisible = if (showPasswordToggle) passwordVisible else null,
+                    onPasswordToggle = { passwordVisible = !passwordVisible },
+                    leadingIcon = leadingIcon,
+                    trailingIcon = trailingIcon,
+                    isFocused = isFocused,
+                    innerTextField = innerTextField,
+                )
+            },
+        )
+    }
 }
 
 private enum class LabelAnimState { Hidden, Placeholder, Normal, Floating }
@@ -645,7 +658,7 @@ object TextFieldDefaults {
      * The label font size when the label is floating above the text
      * (COUI collapsedTextSize = coui_textinput_hint_text_size: 10sp).
      */
-    internal val LabelFontSizeFloating = 10.dp
+    internal val LabelFontSizeFloating = 10.sp
 
     /** Horizontal amplitude of the error shake animation (COUI coui_edit_text_shake_amplitude). */
     internal val ShakeAmplitude = 5.33.dp
@@ -664,8 +677,8 @@ object TextFieldDefaults {
 
     /**
      * The default input text style for the given [mode]: 16sp regular
-     * (COUI couiEditTextTextAppearance / couiTextBodyL — couiTextAppearanceHeadline6 16sp
-     * with fontFamily reset to sans-serif-regular), bold in [TextFieldMode.Rectangle]
+     * (COUI couiEditTextTextAppearance — couiTextAppearanceHeadline6 16sp with fontFamily
+     * reset to sans-serif-regular), bold in [TextFieldMode.Rectangle]
      * (Widget.COUI.EditText.HintAnim.Rectangle sets android:textStyle=bold).
      */
     @Composable
@@ -689,12 +702,15 @@ object TextFieldDefaults {
      *   (COUI couiStrokeColor = couiColorPrimary).
      * @param unfocusedBorderColor The color of the border / underline when the [TextField]
      *   is not focused (COUI couiDefaultStrokeColor = couiColorDivider).
-     * @param errorColor The border / underline / label / counter-overflow color in error state
-     *   (COUI couiColorError).
+     * @param errorColor The border / underline color and the selection tint in error state, and the
+     *   color of an overflowing counter (COUI couiEditTextErrorColor, which defaults to
+     *   couiColorErrorTextBg: red at 30% alpha in light mode, opaque in dark mode).
      * @param counterColor The color of the character counter (COUI couiColorHintNeutral).
      * @param iconColor The tint of the built-in clear / password buttons (COUI couiColorLabelSecondary).
      * @param disabledTextColor The input text / label color when the [TextField] is disabled
      *   (COUI coui_edit_text_color state_enabled=false -> couiColorDisabledNeutral).
+     * @param disabledBorderColor The border / underline color when the [TextField] is disabled
+     *   (COUI couiDisabledStrokeColor = coui_textinput_stroke_color_disabled).
      */
     @Composable
     fun textFieldColors(
@@ -702,10 +718,11 @@ object TextFieldDefaults {
         labelColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         borderColor: Color = COUITheme.colorScheme.primary,
         unfocusedBorderColor: Color = COUITheme.colorScheme.dividerLine,
-        errorColor: Color = COUITheme.colorScheme.error,
+        errorColor: Color = COUITheme.colorScheme.textFieldError,
         counterColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
         iconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         disabledTextColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        disabledBorderColor: Color = COUITheme.colorScheme.disabledTextFieldBorder,
     ): TextFieldColors = remember(
         backgroundColor,
         labelColor,
@@ -715,6 +732,7 @@ object TextFieldDefaults {
         counterColor,
         iconColor,
         disabledTextColor,
+        disabledBorderColor,
     ) {
         TextFieldColors(
             backgroundColor = backgroundColor,
@@ -725,6 +743,7 @@ object TextFieldDefaults {
             counterColor = counterColor,
             iconColor = iconColor,
             disabledTextColor = disabledTextColor,
+            disabledBorderColor = disabledBorderColor,
         )
     }
 }
@@ -737,10 +756,12 @@ object TextFieldDefaults {
  * @param labelColor The color of the label / placeholder.
  * @param borderColor The color of the border / focused underline.
  * @param unfocusedBorderColor The color of the border / underline when the [TextField] is not focused.
- * @param errorColor The border / underline / label / counter-overflow color in error state.
+ * @param errorColor The border / underline color and the selection tint in error state, and the
+ *   color of an overflowing counter.
  * @param counterColor The color of the character counter.
  * @param iconColor The tint of the built-in clear / password buttons.
  * @param disabledTextColor The input text / label color when the [TextField] is disabled.
+ * @param disabledBorderColor The border / underline color when the [TextField] is disabled.
  */
 @Immutable
 data class TextFieldColors(
@@ -752,6 +773,7 @@ data class TextFieldColors(
     val counterColor: Color,
     val iconColor: Color,
     val disabledTextColor: Color,
+    val disabledBorderColor: Color,
 )
 
 /** Fallback label font size (COUI input text: 16sp) when [TextStyle.fontSize] is not in sp. */
@@ -780,6 +802,31 @@ private val CounterColorAnimDuration = 250
 
 /** Total duration of the error shake animation (COUIErrorEditTextHelper ShakeInterpolator TOTAL_DURATION). */
 private val ShakeDuration = 450
+
+/**
+ * Tints the text selection with [errorColor] at 30% alpha while [isError] is on, as
+ * COUIErrorEditTextHelper.setErrorStateEnd sets the highlight color to the error RGB at alpha 0.3.
+ */
+@Composable
+private fun ErrorSelectionColors(
+    isError: Boolean,
+    errorColor: Color,
+    content: @Composable () -> Unit,
+) {
+    // Always provide the local, so toggling the error keeps the text field in the same slot.
+    val current = LocalTextSelectionColors.current
+    val selectionColors = remember(current, isError, errorColor) {
+        if (isError) {
+            TextSelectionColors(handleColor = current.handleColor, backgroundColor = errorColor.copy(alpha = ErrorSelectionAlpha))
+        } else {
+            current
+        }
+    }
+    CompositionLocalProvider(LocalTextSelectionColors provides selectionColors, content = content)
+}
+
+/** COUIErrorEditTextHelper selection mask alpha. */
+private val ErrorSelectionAlpha = 0.3f
 
 /** Masks every character with a bullet, used while the password toggle hides the text. */
 private object PasswordMaskOutputTransformation : OutputTransformation {
@@ -820,13 +867,14 @@ private fun TextFieldChrome(
 ) {
     // Rectangle mode: stroke width/color (error keeps the focused width, per
     // COUIErrorEditTextHelper which strokes with mStrokeWidthFocused). Disabled fields
-    // fall back to the thin resting stroke (COUIEditText updateTextInputBoxState).
+    // fall back to the thin resting stroke in couiDisabledStrokeColor (COUIEditText
+    // updateTextInputBoxState).
     val borderWidthState = animateDpAsState(
         if (enabled && (isFocused || isError)) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth,
     )
     val borderColorState = animateColorAsState(
         when {
-            !enabled -> colors.unfocusedBorderColor
+            !enabled -> colors.disabledBorderColor
             isError -> colors.errorColor
             isFocused -> colors.borderColor
             else -> colors.unfocusedBorderColor
@@ -836,8 +884,13 @@ private fun TextFieldChrome(
     // Line mode: base underline (0.33dp, thickened to the 1dp focused width in error state)
     // plus a focused overlay expanding from the start edge. With justShowFocusLine
     // (COUIInputPreference couiJustShowFocusLine) the resting underline is not drawn.
+    // A disabled field draws the resting underline with couiDisabledStrokeColor (COUIEditText draw).
     val underlineBaseColor = animateColorAsState(
-        if (isError && enabled) colors.errorColor else colors.unfocusedBorderColor,
+        when {
+            !enabled -> colors.disabledBorderColor
+            isError -> colors.errorColor
+            else -> colors.unfocusedBorderColor
+        },
         animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
     )
     val underlineBaseWidth = animateDpAsState(
@@ -871,9 +924,12 @@ private fun TextFieldChrome(
     // Error shake: COUIErrorEditTextHelper.ShakeInterpolator keyframes
     // offsets {0, -1, 0.5, -0.5, 0} x amplitude at {0, 83, 216, 333, 450}ms,
     // eased between keyframes with COUIEaseInterpolator.
+    // The shake only plays when the field is focused as the error turns on
+    // (COUIErrorEditTextHelper mIsFocusedAtAnimateBeginning).
     val shakeOffset = remember { Animatable(0f) }
+    val currentIsFocused by rememberUpdatedState(isFocused)
     LaunchedEffect(isError) {
-        if (isError) {
+        if (isError && currentIsFocused) {
             shakeOffset.snapTo(0f)
             shakeOffset.animateTo(
                 targetValue = 0f,
@@ -891,12 +947,10 @@ private fun TextFieldChrome(
         }
     }
 
+    // COUI never tints the label in error state: COUIErrorEditTextHelper.drawCollapseText has
+    // no caller, so the hint keeps its color.
     val labelColorState = animateColorAsState(
-        when {
-            !enabled -> colors.disabledTextColor
-            isError -> colors.errorColor
-            else -> colors.labelColor
-        },
+        if (enabled) colors.labelColor else colors.disabledTextColor,
         animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
     )
     // Label collapse: 200ms with COUIMoveEaseInterpolator
@@ -905,10 +959,10 @@ private fun TextFieldChrome(
         if (labelState == LabelAnimState.Floating) -insideMargin.height / 2 else 0.dp,
         animationSpec = tween(LabelAnimDuration, easing = CouiMoveEaseEasing),
     )
-    val labelFontSize by animateDpAsState(
+    val labelFontSize by animateFloatAsState(
         when (labelState) {
-            LabelAnimState.Floating -> TextFieldDefaults.LabelFontSizeFloating
-            else -> labelNormalFontSize.dp
+            LabelAnimState.Floating -> TextFieldDefaults.LabelFontSizeFloating.value
+            else -> labelNormalFontSize
         },
         animationSpec = tween(LabelAnimDuration, easing = CouiMoveEaseEasing),
     )
@@ -1030,7 +1084,7 @@ private fun TextFieldChrome(
 @Composable
 private fun TextFieldDecorationBox(
     label: String,
-    labelFontSize: Dp,
+    labelFontSize: Float,
     labelFontWeight: FontWeight,
     labelColor: Color,
     labelState: LabelAnimState,
@@ -1060,7 +1114,7 @@ private fun TextFieldDecorationBox(
                 if (labelState != LabelAnimState.Hidden && labelState != LabelAnimState.Placeholder) {
                     Text(
                         text = label,
-                        fontSize = labelFontSize.value.sp,
+                        fontSize = labelFontSize.sp,
                         color = labelColor,
                         fontWeight = labelFontWeight,
                         modifier = Modifier.offset { IntOffset(0, labelAnim().roundToPx()) },

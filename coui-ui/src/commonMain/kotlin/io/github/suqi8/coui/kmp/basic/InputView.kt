@@ -36,14 +36,15 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
  * An [InputView] component with COUI style — the ColorOS Settings "card input".
  *
  * Mirrors COUICardSingleInputView / COUICardMultiInputView (coui_single_input_card_view.xml /
- * coui_multi_input_card_view.xml): a white card (couiColorCardBackground, couiRoundCornerM 12dp
- * corners) holding an optional 16sp medium title and a bare, undecorated text field
+ * coui_multi_input_card_view.xml): a white card (couiColorCardBackground, 24dp corners) holding
+ * an optional 16sp medium title and a bare, undecorated 15sp text field
  * (COUIEditText MODE_BACKGROUND_NO_LINE — no underline, no border), with the trailing
  * counter / clear / password buttons overlaid at the end of the field. The error caption sits
  * *below* the card (10sp couiColorError, 4dp top padding), fades in over 217ms / out over 283ms
@@ -70,12 +71,13 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param showPasswordToggle Whether to show the password eye toggle (COUIInputView
  *   couiEnablePassword). While the password is hidden the text is masked.
  * @param errorMessage The error message displayed below the card. Empty hides the error line.
- * @param cornerRadius The corner radius of the card (COUI couiRoundCornerM).
+ * @param cornerRadius The corner radius of the card (COUI COUIInputListSelectedItemLayout on
+ *   ColorOS 17: coui_round_corner_xl_radius_normal_16_1).
  * @param colors The [InputViewColors] applied to the card, title, counter and error line. Use
  *   [InputViewDefaults.inputViewColors] to customize.
  * @param textFieldColors The [TextFieldColors] applied to the inner [TextField].
  * @param textStyle The text style to be applied to the input text (COUI couiTextBodyL:
- *   16sp regular).
+ *   15sp regular).
  * @param keyboardOptions The keyboard options to be applied to the input field.
  * @param keyboardActions The keyboard actions to be applied to the input field.
  * @param singleLine Whether the input field is single line (COUICardSingleInputView). Set to
@@ -103,7 +105,7 @@ fun InputView(
     cornerRadius: Dp = InputViewDefaults.CornerRadius,
     colors: InputViewColors = InputViewDefaults.inputViewColors(),
     textFieldColors: TextFieldColors = TextFieldDefaults.textFieldColors(),
-    textStyle: TextStyle = TextFieldDefaults.textStyle(TextFieldMode.None),
+    textStyle: TextStyle = InputViewDefaults.textStyle(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     singleLine: Boolean = true,
@@ -246,8 +248,13 @@ private fun MultiInputViewCount(
 
 /** Contains default values used by [InputView]. */
 object InputViewDefaults {
-    /** The corner radius of the card (COUI couiRoundCornerM = coui_round_corner_m). */
-    val CornerRadius = 12.dp
+    /**
+     * The corner radius of the card. Both card inputs draw their card with
+     * COUIInputListSelectedItemLayout, whose radius defaults to couiRoundCornerXL (20dp) and which,
+     * on the ColorOS 17 smooth-corner path, swaps it for coui_round_corner_xl_radius_normal_16_1
+     * ([COUIRoundCorner.Normal.XL], the card list radius; getInnerRadius).
+     */
+    val CornerRadius = COUIRoundCorner.Normal.XL
 
     /**
      * The horizontal content padding inside the card (COUI coui_single_input_card_view.xml
@@ -300,6 +307,17 @@ object InputViewDefaults {
 
     /** The default maximum number of lines (COUIInputView / COUICardMultiInputView MAX_LINE). */
     val MaxLines: Int = 5
+
+    /**
+     * The default text style of the input text (COUI Widget.COUI.Input / SingleInput / MultiInput
+     * textAppearance couiTextBodyL: 15sp regular with coui_spacing_multiplier_body_l, the same
+     * multiplier as [io.github.suqi8.coui.kmp.theme.TextStyles.paragraph]).
+     */
+    @Composable
+    fun textStyle(): TextStyle {
+        val paragraph = COUITheme.textStyles.paragraph
+        return remember(paragraph) { paragraph.copy(fontSize = InputFontSize) }
+    }
 
     /**
      * The default text style of the title
@@ -355,6 +373,9 @@ data class InputViewColors(
     @Stable
     internal fun titleColor(enabled: Boolean): Color = if (enabled) titleColor else disabledTitleColor
 }
+
+/** COUI couiTextBodyL text size. */
+private val InputFontSize = 15.sp
 
 /** COUIEaseInterpolator (0.33, 0, 0.67, 1) used by the error line fade. */
 private val CouiEase = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)

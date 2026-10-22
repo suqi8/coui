@@ -30,14 +30,15 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleBorder
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -345,9 +346,17 @@ object CodeTextFieldDefaults {
     /** The reference width below which cells scale down (COUICodeInputView DEFAULT_SCREEN_WIDTH_DP). */
     val ReferenceWidth = 360.dp
 
-    /** The default text style of a cell digit (COUI coui_code_input_cell_text_size). */
+    /**
+     * The default text style of a cell digit: 30dp regular. COUI coui_code_input_cell_text_size is a
+     * dp dimen set straight on the digit paint (COUICodeInputView.CodeItemView), so the digit does not
+     * follow the font scale, and the paint keeps the default regular typeface.
+     */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.title2.copy(fontSize = 30.sp)
+    fun textStyle(): TextStyle {
+        val main = COUITheme.textStyles.main
+        val fontSize = with(LocalDensity.current) { CellTextSize.toSp() }
+        return remember(main, fontSize) { main.copy(fontSize = fontSize, fontWeight = FontWeight.Normal) }
+    }
 
     /**
      * Default colors used by the [CodeTextField].
@@ -394,6 +403,9 @@ data class CodeTextFieldColors(
     val securityCircleColor: Color,
     val cursorColor: Color,
 )
+
+/** COUI coui_code_input_cell_text_size. */
+private val CellTextSize = 30.dp
 
 /** COUIMoveEaseInterpolator (0.3, 0, 0.1, 1) used by all cell animations. */
 private val CodeMoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
