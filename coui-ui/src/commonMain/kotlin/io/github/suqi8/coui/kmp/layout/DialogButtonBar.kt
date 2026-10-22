@@ -38,12 +38,18 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *
  * @param text The button label.
  * @param enabled Whether the button is enabled.
+ * @param recommended Whether this is the recommended action
+ *   (`COUIAlertDialogBuilder.setPositiveButton(text, listener, isRecommend = true)`), which
+ *   `COUIButtonBarLayout.applyRecommendStyle` promotes to a primary capsule: the theme-coloured
+ *   opaque fill and white label. Mark at most one action of a bar; COUI keeps a single
+ *   `mRecommendButtonId`.
  * @param onClick Invoked when the button is clicked.
  */
 @Stable
 data class DialogButtonBarAction(
     val text: String,
     val enabled: Boolean = true,
+    val recommended: Boolean = false,
     val onClick: () -> Unit,
 )
 
@@ -58,8 +64,12 @@ data class DialogButtonBarAction(
  * (`coui_alert_dialog_button_parent_padding_*`), and the bottom-most cell carries the 16dp panel
  * bottom inset. See [DialogButtonBarDefaults] for the metrics.
  *
- * The recommend-button tier (`setRecommendButtonId`, a primary-filled button) is not implemented;
- * this bar always behaves as `mRecommendButtonId == NO_RECOMMEND_ID`.
+ * An action with [DialogButtonBarAction.recommended] takes the recommend tier
+ * (`COUIButtonBarLayout.applyRecommendStyle`): `buttonType = PRIMARY` with the
+ * [recommendedColors] fill and labels. The layout and order do not change. With [material] the
+ * recommended button keeps the `drawableMaterialEffect` path, so its fill stays opaque (never
+ * backdrop-blurred) and it gets the `CONTENT_CAPSULE_4` edge lighting and the
+ * `TYPE_OPAQUE_MEDIUM_1` touch spotlight; the other buttons stay secondary.
  *
  * @param negative The negative (cancel) action. Hidden when null.
  * @param positive The positive (confirm) action. Hidden when null.
@@ -77,6 +87,7 @@ data class DialogButtonBarAction(
  *   inner shadow, the `TYPE_OPAQUE_MEDIUM_2` touch spotlight and no press tint.
  * @param colors The [TextButtonColors] of the negative and positive buttons.
  * @param neutralColors The [TextButtonColors] of the neutral button.
+ * @param recommendedColors The [TextButtonColors] of the recommended button, whatever its role.
  * @param textStyle The text style of the labels, also used to measure them for the flip decision.
  */
 @Composable
@@ -97,6 +108,7 @@ fun DialogButtonBar(
     } else {
         DialogButtonBarDefaults.neutralButtonColors()
     },
+    recommendedColors: TextButtonColors = DialogButtonBarDefaults.recommendedButtonColors(),
     textStyle: TextStyle = COUITheme.textStyles.button,
 ) {
     if (negative == null && positive == null && neutral == null) return
@@ -140,6 +152,7 @@ fun DialogButtonBar(
                 material = material,
                 colors = colors,
                 neutralColors = neutralColors,
+                recommendedColors = recommendedColors,
                 textStyle = textStyle,
                 textMeasurer = textMeasurer,
                 density = density,
@@ -152,6 +165,7 @@ fun DialogButtonBar(
                 material = material,
                 colors = colors,
                 neutralColors = neutralColors,
+                recommendedColors = recommendedColors,
                 textStyle = textStyle,
             )
         }
@@ -203,6 +217,7 @@ private fun RowButtonBar(
     material: Boolean,
     colors: TextButtonColors,
     neutralColors: TextButtonColors,
+    recommendedColors: TextButtonColors,
     textStyle: TextStyle,
 ) {
     // COUI resortButton brings negative, then neutral, then positive to the front in a row.
@@ -223,7 +238,11 @@ private fun RowButtonBar(
             BarButton(
                 action = action,
                 material = material,
-                colors = if (slot == BarSlot.Neutral) neutralColors else colors,
+                colors = when {
+                    action.recommended -> recommendedColors
+                    slot == BarSlot.Neutral -> neutralColors
+                    else -> colors
+                },
                 minHeight = DialogDefaults.ButtonBarMinHeight,
                 textStyle = textStyle,
                 modifier = Modifier
@@ -254,6 +273,7 @@ private fun StackedButtonBar(
     material: Boolean,
     colors: TextButtonColors,
     neutralColors: TextButtonColors,
+    recommendedColors: TextButtonColors,
     textStyle: TextStyle,
     textMeasurer: TextMeasurer,
     density: Density,
@@ -278,7 +298,11 @@ private fun StackedButtonBar(
             BarButton(
                 action = action,
                 material = material,
-                colors = if (slot == BarSlot.Neutral) neutralColors else colors,
+                colors = when {
+                    action.recommended -> recommendedColors
+                    slot == BarSlot.Neutral -> neutralColors
+                    else -> colors
+                },
                 minHeight = if (multiline) {
                     DialogButtonBarDefaults.StackedButtonMinHeightMultiline
                 } else {
@@ -301,7 +325,8 @@ private fun StackedButtonBar(
 
 /**
  * A `COUIAlertDialogBottomButtonSecondary` capsule: filled, press-scaled, corners at half height.
- * With [material] it is the `drawableMaterialEffect` secondary button of a blurred dialog.
+ * With [material] it is the `drawableMaterialEffect` button of a blurred dialog: primary for the
+ * recommended action, secondary otherwise.
  */
 @Composable
 private fun BarButton(
@@ -331,8 +356,13 @@ private fun BarButton(
         minHeight = minHeight,
         colors = mappedColors,
         insideMargin = DialogDefaults.ButtonBarInsideMargin,
-        // getBlurWindowButtonType: every button without the recommend id is SECONDARY.
-        materialType = if (material) ContentButtonMaterialType.DrawableSecondary else null,
+        // getBlurWindowButtonType: PRIMARY for the recommend id, SECONDARY for every other button.
+        // The bar style keeps drawableMaterialEffect = true, so neither ever samples a backdrop.
+        materialType = when {
+            !material -> null
+            action.recommended -> ContentButtonMaterialType.DrawablePrimary
+            else -> ContentButtonMaterialType.DrawableSecondary
+        },
         interactionSource = null,
         indication = null,
     ) {
@@ -444,6 +474,28 @@ object DialogButtonBarDefaults {
         disabledColor: Color = COUITheme.colorScheme.dialogButton,
         textColor: Color = COUITheme.colorScheme.error,
         disabledTextColor: Color = COUITheme.colorScheme.error.copy(alpha = 0.3f),
+    ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
+        TextButtonColors(
+            color = color,
+            disabledColor = disabledColor,
+            textColor = textColor,
+            disabledTextColor = disabledTextColor,
+        )
+    }
+
+    /**
+     * The [TextButtonColors] of the recommended button (`COUIButtonBarLayout.applyRecommendStyle`):
+     * the `?couiColorContainerTheme` primary fill, which `changeButtonAlphaColor` keeps opaque in a
+     * material dialog too, `coui_btn_default_text_color` labels (`?couiColorLabelOnColor`, white;
+     * `?couiBtnDefaultTextColorDisable` when disabled) and the `?couiColorDisable` disabled fill
+     * (the primary at 30% alpha).
+     */
+    @Composable
+    fun recommendedButtonColors(
+        color: Color = COUITheme.colorScheme.primary,
+        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        textColor: Color = COUITheme.colorScheme.onPrimary,
+        disabledTextColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
         TextButtonColors(
             color = color,

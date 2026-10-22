@@ -40,6 +40,8 @@ fun LazyListScope.dialogSection() {
         var securityDialogHoldDown by remember { mutableStateOf(false) }
         var showStackedDialog by remember { mutableStateOf(false) }
         var stackedDialogHoldDown by remember { mutableStateOf(false) }
+        var showRecommendDialog by remember { mutableStateOf(false) }
+        var recommendDialogHoldDown by remember { mutableStateOf(false) }
 
         SmallTitle(text = "Dialog")
         Card(
@@ -88,6 +90,16 @@ fun LazyListScope.dialogSection() {
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
             ArrowPreference(
+                title = "Recommended Button (O)",
+                summary = "The recommended action becomes a primary capsule",
+                onClick = {
+                    showRecommendDialog = true
+                    recommendDialogHoldDown = true
+                },
+                holdDownState = recommendDialogHoldDown,
+            )
+            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+            ArrowPreference(
                 title = "Security Dialog (O)",
                 summary = "Click to show an OverlaySecurityDialog",
                 onClick = {
@@ -112,6 +124,11 @@ fun LazyListScope.dialogSection() {
             show = showStackedDialog,
             onDismissRequest = { showStackedDialog = false },
             onDismissFinished = { stackedDialogHoldDown = false },
+        )
+        RecommendButtonDialogDemo(
+            show = showRecommendDialog,
+            onDismissRequest = { showRecommendDialog = false },
+            onDismissFinished = { recommendDialogHoldDown = false },
         )
 
         // Auto-dismiss the loading demo after a short delay, like a finished task would.
@@ -171,6 +188,39 @@ private fun StackedButtonBarDialogDemo(
                     onClick = onDismissRequest,
                 ),
                 neutral = DialogButtonBarAction(text = "Delete Everything", onClick = onDismissRequest),
+            )
+        },
+    )
+}
+
+/**
+ * Shows the recommend tier of [DialogButtonBar] (COUIAlertDialogBuilder `isRecommend = true`): the
+ * recommended action is a primary capsule while the other one stays secondary.
+ */
+@Composable
+private fun RecommendButtonDialogDemo(
+    show: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
+) {
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
+    OverlayDialog(
+        show = show,
+        title = "Turn On Backup",
+        summary = "The recommended action is drawn as a primary capsule; the other buttons stay secondary.",
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        materialStroke = blur != null,
+        content = {
+            DialogButtonBar(
+                negative = DialogButtonBarAction(text = "Not Now", onClick = onDismissRequest),
+                positive = DialogButtonBarAction(
+                    text = "Turn On",
+                    recommended = true,
+                    onClick = onDismissRequest,
+                ),
             )
         },
     )

@@ -52,6 +52,21 @@ DialogButtonBar(
 )
 ```
 
+### Recommended Button
+
+Mark one action `recommended = true` to get the COUI recommend tier (`COUIAlertDialogBuilder.setPositiveButton(text, listener, isRecommend = true)`). `COUIButtonBarLayout.applyRecommendStyle` turns that button into a primary capsule — the theme-coloured opaque fill and a white label — while the other buttons stay secondary. Layout and order are unchanged.
+
+```kotlin
+DialogButtonBar(
+    negative = DialogButtonBarAction(text = "Not Now", onClick = { showDialog = false }),
+    positive = DialogButtonBarAction(
+        text = "Turn On",
+        recommended = true,
+        onClick = { showDialog = false },
+    ),
+)
+```
+
 ## The Stacking Rule
 
 The bar reproduces `COUIButtonBarLayout.onMeasure`. It stays **horizontal only when** there are exactly two buttons and every label fits in its cell. A three-button bar and a single-button bar both take the vertical path.
@@ -99,6 +114,7 @@ Buttons are 44dp tall (56dp when a stacked label wraps), with 12dp horizontal an
 | material      | Boolean                | Whether the buttons draw the COUI 17 material; defaults to whether the hosting dialog draws its material panel (`materialStroke`) | LocalDialogMaterial.current | No       |
 | colors        | TextButtonColors       | Colors of the negative and positive buttons                             | materialButtonColors() with `material`, else buttonColors() | No       |
 | neutralColors | TextButtonColors       | Colors of the neutral button                                            | materialNeutralButtonColors() with `material`, else neutralButtonColors() | No       |
+| recommendedColors | TextButtonColors   | Colors of the recommended button, whatever its role                     | recommendedButtonColors()                       | No       |
 | textStyle     | TextStyle              | Label text style, also used to measure labels for the stacking decision | COUITheme.textStyles.button                     | No       |
 
 ### DialogButtonBarAction Properties
@@ -107,6 +123,7 @@ Buttons are 44dp tall (56dp when a stacked label wraps), with 12dp horizontal an
 | :------- | :--------- | :--------------------------------- | :------ | :------- |
 | text     | String     | The button label                   | -       | Yes      |
 | enabled  | Boolean    | Whether the button is enabled      | true    | No       |
+| recommended | Boolean | Whether this is the recommended action, drawn as a primary capsule; mark at most one per bar | false | No |
 | onClick  | () -> Unit | Invoked when the button is clicked | -       | Yes      |
 
 ### DialogButtonBarDefaults Object
@@ -129,13 +146,12 @@ The row tier's button height and paddings live in `DialogDefaults.ButtonBarMinHe
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` fill, `error` label (error at 30% alpha when disabled)             |
 | materialButtonColors() | TextButtonColors | Material dialog fill: white at alpha 166 (`#A6FFFFFF`, light) / 51 (`#33FFFFFF`, dark); disabled fill stays `dialogButton` |
 | materialNeutralButtonColors() | TextButtonColors | The material fill with the `error` labels of `neutralButtonColors()` |
+| recommendedButtonColors() | TextButtonColors | Recommended button: `primary` fill (`?couiColorContainerTheme`, opaque even in a material dialog), `onPrimary` label; `disabledPrimaryButton` / `disabledOnPrimaryButton` when disabled |
 
 ## Behavior Notes
 
 - **The bottom-most cell carries the panel inset.** Its 16dp bottom padding is the dialog's bottom inset, so the panel needs no bottom padding of its own.
 - **Buttons press-scale.** `COUIAlertDialogBottomButtonSecondary` keeps `scaleEnable=true`, so the buttons shrink while pressed like other COUI buttons, and they share the `Button` drag motion (rubber band + deformation).
 - **Material follows the dialog blur.** `COUIButtonBarLayout.setBlurBackgroundWindow(blur)` switches the buttons to `FOLLOW_SYSTEM` when the window is blurred and `FORCE_DISABLE` otherwise. Inside an `OverlayDialog` / `WindowDialog` with `materialStroke = true` the bar therefore turns material: the `drawableMaterialEffect` translucent white fill, the `CONTENT_CAPSULE_5` edge lighting + inner shadow (stroke weight 2), the `TYPE_OPAQUE_MEDIUM_2` touch spotlight, and no press tint. Pass `material = false` to opt out.
+- **The recommended button stays opaque.** COUI keeps `drawableMaterialEffect = true` on the bar buttons, so in a material dialog the recommended button keeps its opaque theme fill (it never samples a backdrop) and takes the `CONTENT_CAPSULE_4` edge lighting with the `TYPE_OPAQUE_MEDIUM_1` touch spotlight. Without `material` it is the plain primary capsule with the press tint.
 
-## Limitations
-
-The **recommend-button** tier is not implemented. In ColorOS, `COUIButtonBarLayout.setRecommendButtonId` promotes one button to a primary-filled button. This bar always behaves as `mRecommendButtonId == NO_RECOMMEND_ID`, which is the stock alert-dialog path.

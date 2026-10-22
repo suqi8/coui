@@ -52,6 +52,21 @@ DialogButtonBar(
 )
 ```
 
+### 推荐按钮
+
+把某个动作设为 `recommended = true` 即得到 COUI 的推荐档（`COUIAlertDialogBuilder.setPositiveButton(text, listener, isRecommend = true)`）。`COUIButtonBarLayout.applyRecommendStyle` 会把该按钮改为主色胶囊——不透明主题色填充 + 白色文字，其余按钮仍为次要按钮。布局与顺序不变。
+
+```kotlin
+DialogButtonBar(
+    negative = DialogButtonBarAction(text = "暂不", onClick = { showDialog = false }),
+    positive = DialogButtonBarAction(
+        text = "开启",
+        recommended = true,
+        onClick = { showDialog = false },
+    ),
+)
+```
+
 ## 纵排判定规则
 
 按钮栏复刻 `COUIButtonBarLayout.onMeasure`：**只有**恰好两个按钮且每个文案都放得进单元格时才保持横排。三按钮与单按钮都会走纵排。
@@ -99,6 +114,7 @@ available = min(392.dp, barWidth) / buttonCount
 | material      | Boolean                | 按钮是否绘制 COUI 17 材质；默认跟随所在对话框是否绘制材质面板（`materialStroke`） | LocalDialogMaterial.current | 否   |
 | colors        | TextButtonColors       | 否定与肯定按钮的颜色                           | `material` 时为 materialButtonColors()，否则 buttonColors() | 否   |
 | neutralColors | TextButtonColors       | 中性按钮的颜色                                 | `material` 时为 materialNeutralButtonColors()，否则 neutralButtonColors() | 否   |
+| recommendedColors | TextButtonColors   | 推荐按钮的颜色（不论其角色）                   | recommendedButtonColors()                     | 否   |
 | textStyle     | TextStyle              | 文案样式，同时用于纵排判定时的文案测量         | COUITheme.textStyles.button                   | 否   |
 
 ### DialogButtonBarAction 属性
@@ -107,6 +123,7 @@ available = min(392.dp, barWidth) / buttonCount
 | :------ | :--------- | :------------- | :----- | :--- |
 | text    | String     | 按钮文案       | -      | 是   |
 | enabled | Boolean    | 按钮是否可用   | true   | 否   |
+| recommended | Boolean | 是否为推荐动作，绘制为主色胶囊；每个按钮栏最多标记一个 | false | 否 |
 | onClick | () -> Unit | 点击按钮时回调 | -      | 是   |
 
 ### DialogButtonBarDefaults 对象
@@ -129,13 +146,12 @@ available = min(392.dp, barWidth) / buttonCount
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` 填充，`error` 文字（禁用时为 30% 透明度的错误色） |
 | materialButtonColors() | TextButtonColors | 材质对话框填充：白色 alpha 166（浅色 `#A6FFFFFF`）/ 51（深色 `#33FFFFFF`）；禁用填充保持 `dialogButton` |
 | materialNeutralButtonColors() | TextButtonColors | 材质填充 + `neutralButtonColors()` 的 `error` 文字 |
+| recommendedButtonColors() | TextButtonColors | 推荐按钮：`primary` 填充（`?couiColorContainerTheme`，材质对话框中也保持不透明），`onPrimary` 文字；禁用时为 `disabledPrimaryButton` / `disabledOnPrimaryButton` |
 
 ## 行为说明
 
 - **最底部单元格承担面板留白。** 它 16dp 的下内边距就是对话框的底部留白，面板自身无需再加底部内边距。
 - **按钮有按压缩放。** `COUIAlertDialogBottomButtonSecondary` 保留 `scaleEnable=true`，按下时与其他 COUI 按钮一样缩小，并共享 `Button` 的拖动形变（橡皮筋跟手 + 拉伸）。
 - **材质跟随对话框模糊。** `COUIButtonBarLayout.setBlurBackgroundWindow(blur)` 在窗口模糊时把按钮设为 `FOLLOW_SYSTEM`，否则为 `FORCE_DISABLE`。因此在 `materialStroke = true` 的 `OverlayDialog` / `WindowDialog` 中按钮栏会变为材质按钮：`drawableMaterialEffect` 的半透明白色填充、`CONTENT_CAPSULE_5` 描边光 + 内阴影（描边权重 2）、`TYPE_OPAQUE_MEDIUM_2` 跟手聚光，且没有按压着色。传入 `material = false` 可关闭。
+- **推荐按钮保持不透明。** COUI 对按钮栏按钮保留 `drawableMaterialEffect = true`，因此材质对话框中推荐按钮仍是不透明主题色填充（从不采样背景），并使用 `CONTENT_CAPSULE_4` 描边光与 `TYPE_OPAQUE_MEDIUM_1` 跟手聚光。未开启 `material` 时则是带按压着色的普通主色胶囊。
 
-## 未实现部分
-
-**推荐按钮**档未实现。ColorOS 中 `COUIButtonBarLayout.setRecommendButtonId` 会把某个按钮提升为主色填充按钮。本按钮栏始终按 `mRecommendButtonId == NO_RECOMMEND_ID` 处理，即标准警告对话框的路径。
