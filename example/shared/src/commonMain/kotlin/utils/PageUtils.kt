@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -86,7 +87,7 @@ fun AdaptiveTopAppBar(
 ) {
     if (!showTopAppBar) return
 
-    val isDark = COUITheme.colorScheme.background.let { it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val glowEnabled = blurActive && backdrop != null
     val glow: @Composable BoxScope.() -> Unit = {
         if (glowEnabled) {
@@ -107,6 +108,9 @@ fun AdaptiveTopAppBar(
             color = color,
             scrollBehavior = scrollBehavior,
             defaultWindowInsetsPadding = false,
+            // COUI 17 suppresses the bar divider while the material blur is on
+            // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
+            showDivider = !glowEnabled,
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,
@@ -118,6 +122,9 @@ fun AdaptiveTopAppBar(
             subtitle = subtitle,
             color = color,
             scrollBehavior = scrollBehavior,
+            // COUI 17 suppresses the bar divider while the material blur is on
+            // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
+            showDivider = !glowEnabled,
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,

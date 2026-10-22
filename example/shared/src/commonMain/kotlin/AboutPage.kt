@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -123,14 +124,15 @@ fun AboutPage(
                     title = "About",
                     scrollBehavior = topAppBarScrollBehavior,
                     color = barColor,
+                    // COUI 17 suppresses the bar divider while the material blur is on
+                    // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
+                    showDivider = !blurActive,
                     glow = {
                         if (backdrop != null) {
                             TopAppBarGlow(
                                 backdrop = backdrop,
                                 scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
-                                isDark = COUITheme.colorScheme.background.let {
-                                    it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f
-                                },
+                                isDark = COUITheme.colorScheme.background.luminance() < 0.5f,
                                 baseColor = COUITheme.colorScheme.surface,
                                 // This page already fades the bar in over its own scroll progress,
                                 // so the glow follows that instead of the bar's collapse offset.

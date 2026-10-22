@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
@@ -65,7 +66,7 @@ fun SettingsHomeTopBarPage(
         drawRect(surfaceColor)
         drawContent()
     }
-    val isDark = COUITheme.colorScheme.background.let { it.red * 0.299f + it.green * 0.587f + it.blue * 0.114f < 0.5f }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val glowEnabled = isRuntimeShaderSupported() && appState.enableBlur
 
     Scaffold(
@@ -76,6 +77,13 @@ fun SettingsHomeTopBarPage(
                 scrollBehavior = topAppBarScrollBehavior,
                 expandedHeight = 116.dp,
                 largeTitleFontSize = 40.sp,
+                // SettingsCollapsingToolbarLayout.onMeasure overrides the title margin with dimen_24.
+                titlePadding = 24.dp,
+                // SettingsCollapsingToolbarLayout fades the large title away instead of pinning one.
+                fadeLargeTitleOnCollapse = true,
+                // COUI 17 suppresses the bar divider while the material blur is on
+                // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
+                showDivider = !glowEnabled,
                 // The condensed-light glow is the bar's own backing layer: it spans the collapsed
                 // toolbar band and blurs the content scrolled beneath the transparent bar.
                 glow = {
