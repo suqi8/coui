@@ -230,6 +230,9 @@ fun ColorsPreview(colors: Colors) {
             "disabledOnTransparentButton" to colors.disabledOnTransparentButton,
             "backgroundTop" to colors.backgroundTop,
             "primaryTextOnPopup" to colors.primaryTextOnPopup,
+            "press" to colors.press,
+            "hover" to colors.hover,
+            "focus" to colors.focus,
         )
         val colorMap = colorList.toMap()
         colorList.map { (name, color) ->
