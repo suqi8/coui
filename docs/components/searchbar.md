@@ -20,7 +20,9 @@ On ColorOS 17 the search capsule and the cancel button are both glass capsules w
 material (filtered backdrop, shadow, edge lighting, touch spotlight and press/drag motion), falling
 back to the opaque bar colour (`#FAFAFA` light, `#1E1E1E` dark) where the blend modes are missing.
 Entering and leaving the edit state runs on a spring (response 0.5, bounce 0.25): the capsule
-narrows while the cancel button grows in from half size.
+narrows while the cancel button grows in from half size, the two merging like metaballs while
+they move. Pressing or dragging the capsule scales and stretches it; a gesture that starts on a
+clickable element inside it (the clear button or your own icon buttons) leaves it still.
 
 ## Basic Usage
 
@@ -231,3 +233,65 @@ SearchBar(
     // Search results content
 }
 ```
+
+### Expanding from the Toolbar
+
+On ColorOS 17 a search bar can live in the toolbar and expand out of its search icon
+(`COUISearchBar.showInToolBar`). The capsule starts as a circle on the icon, slides home while it
+widens, its text fades in and it blurs most half way; the cancel button flies out of the icon and
+merges with the capsule like a metaball, while the toolbar's own icons fade and shrink to 0.8.
+The expansion runs on a response 0.55 / bounce 0.2 spring (0.5 / 0.2 back), the toolbar icons on
+0.4 / 0.3 (0.5 / 0.2 back, growing from 0.5).
+
+```kotlin
+val searchState = rememberToolbarSearchState()
+var query by remember { mutableStateOf("") }
+
+Box {
+    ToolbarSearchAnchor(state = searchState) {
+        TopAppBar(
+            title = "Title",
+            navigationIcon = {
+                IconButton(modifier = Modifier.toolbarSearchItem(searchState), onClick = { /* back */ }) { /* ... */ }
+            },
+            actions = {
+                IconButton(
+                    modifier = Modifier.toolbarSearchEntry(searchState),
+                    onClick = { searchState.expand() },
+                ) {
+                    Icon(imageVector = COUIIcons.Basic.Search, contentDescription = "Search")
+                }
+            },
+        )
+    }
+    ToolbarFloatingSearchBar(
+        state = searchState,
+        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
+    ) {
+        SearchBar(
+            inputField = {
+                InputField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = {},
+                    expanded = searchState.expanded,
+                    onExpandedChange = { if (it) searchState.expand() else searchState.collapse() },
+                )
+            },
+            outsideEndAction = {
+                CancelButton(onClick = { query = ""; searchState.collapse() })
+            },
+            expanded = searchState.expanded,
+            onExpandedChange = { if (it) searchState.expand() else searchState.collapse() },
+        ) {}
+    }
+}
+```
+
+| API | Description |
+| --- | --- |
+| `rememberToolbarSearchState()` / `ToolbarSearchState` | Expanded state with `expand()` / `collapse()` |
+| `ToolbarSearchAnchor` | Hosts the toolbar content and fades it while the bar is out |
+| `Modifier.toolbarSearchEntry(state)` | Marks the toolbar search icon the bar grows out of; hides it while the bar is out |
+| `Modifier.toolbarSearchItem(state)` | Shrinks another toolbar icon along with the expansion |
+| `ToolbarFloatingSearchBar` | Hosts the `SearchBar` over the toolbar row; empty while the bar is folded away |
