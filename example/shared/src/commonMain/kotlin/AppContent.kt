@@ -72,12 +72,13 @@ import component.liquid.IosLiquidGlassNavigationBar
 import io.github.suqi8.coui.kmp.basic.FabPosition
 import io.github.suqi8.coui.kmp.basic.FloatingActionButton
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBar
+import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarDefaults
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarItem
 import io.github.suqi8.coui.kmp.basic.FloatingToolbar
-import io.github.suqi8.coui.kmp.basic.FloatingToolbarDefaults
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.NavigationBar
+import io.github.suqi8.coui.kmp.basic.NavigationBarDefaults
 import io.github.suqi8.coui.kmp.basic.NavigationBarDisplayMode
 import io.github.suqi8.coui.kmp.basic.NavigationBarItem
 import io.github.suqi8.coui.kmp.basic.NavigationItem
@@ -91,7 +92,6 @@ import io.github.suqi8.coui.kmp.basic.ToolbarPosition
 import io.github.suqi8.coui.kmp.blur.BlendColorEntry
 import io.github.suqi8.coui.kmp.blur.BlurDefaults
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
-import io.github.suqi8.coui.kmp.blur.highlight.Highlight
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import io.github.suqi8.coui.kmp.blur.textureBlur
@@ -119,6 +119,7 @@ import utils.BlurredBar
 import utils.FPSMonitor
 import utils.LocalPageBackdrop
 import utils.rememberBlurBackdrop
+import utils.rememberMaterialBackdropProvider
 import utils.shouldShowSplitPane
 import kotlin.math.abs
 
@@ -443,6 +444,8 @@ private fun CompactScreenLayout(
     }
 }
 
+// The bottom padding goes inside the classic bar's background and on the floating bar's container.
+@Suppress("ktlint:compose:modifier-not-used-at-root")
 @Composable
 private fun NavigationBar(
     navigationItems: List<NavigationItem>,
@@ -452,102 +455,55 @@ private fun NavigationBar(
 ) {
     val appState = LocalAppState.current
     val blurActive = appState.enableBlur && backdrop != null
-    // COUI tab navigation bar is slightly lighter than the page base; keep in sync with the
-    // NavigationBar default (colorScheme.background).
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.background
+    // COUI tab navigation bar: ?couiColorBar (NavigationBarDefaults.color()), see-through when blurred.
+    val barColor = if (blurActive) Color.Transparent else NavigationBarDefaults.color()
     val page = mainPagerState.selectedPage
 
-    AnimatedVisibility(
-        visible = appState.showNavigationBar,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
-    ) {
+    // The Scaffold measures one bottom-bar root: stack the classic and floating bars in a Box.
+    Box {
         AnimatedVisibility(
-            visible = !appState.useFloatingNavigationBar,
-            enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
+            visible = appState.showNavigationBar,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
         ) {
-            Box(
-                modifier = Modifier
-                    .then(
-                        if (blurActive) {
-                            Modifier.textureBlur(
-                                backdrop = backdrop,
-                                shape = RectangleShape,
-                                blurRadius = 25f,
-                                colors = BlurDefaults.blurColors(
-                                    blendColors = listOf(
-                                        BlendColorEntry(color = COUITheme.colorScheme.surface.copy(0.8f)),
-                                    ),
-                                ),
-                            )
-                        } else {
-                            Modifier
-                        },
-                    )
-                    .background(barColor)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {},
-                    )
-                    .then(modifier),
+            AnimatedVisibility(
+                visible = !appState.useFloatingNavigationBar,
+                enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+                exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top),
             ) {
-                NavigationBar(
-                    modifier = Modifier,
-                    color = barColor,
-                    mode = NavigationBarDisplayMode.entries[appState.navigationBarMode],
-                ) {
-                    navigationItems.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = page == index,
-                            onClick = { mainPagerState.animateToPage(index) },
-                            icon = item.icon,
-                            label = item.label,
-                        )
-                    }
-                }
-            }
-        }
-        if (appState.useFloatingNavigationBar) {
-            val floatingBarColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surfaceContainer
-            val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
-            val isDark = isInDarkTheme()
-            val floatingHighlight = remember(isDark) {
-                if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
-            }
-            Box(modifier = modifier) {
-                if (appState.floatingNavigationBarStyle == 1) {
-                    IosLiquidGlassNavigationBar(
-                        items = navigationItems,
-                        selectedIndex = page,
-                        onItemClick = { mainPagerState.animateToPage(it) },
-                        backdrop = backdrop,
-                        isBlurActive = blurActive,
-                    )
-                } else {
-                    FloatingNavigationBar(
-                        modifier = if (blurActive) {
-                            Modifier.textureBlur(
-                                backdrop = backdrop,
-                                shape = floatingBarShape,
-                                blurRadius = 25f,
-                                colors = BlurDefaults.blurColors(
-                                    blendColors = listOf(
-                                        BlendColorEntry(color = COUITheme.colorScheme.surfaceContainer.copy(0.6f)),
+                Box(
+                    modifier = Modifier
+                        .then(
+                            if (blurActive) {
+                                Modifier.textureBlur(
+                                    backdrop = backdrop,
+                                    shape = RectangleShape,
+                                    blurRadius = 25f,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = listOf(
+                                            BlendColorEntry(color = COUITheme.colorScheme.surface.copy(0.8f)),
+                                        ),
                                     ),
-                                ),
-                                highlight = floatingHighlight,
-                            )
-                        } else {
-                            Modifier
-                        },
-                        color = floatingBarColor,
-                        horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
-                            .toAlignment(),
+                                )
+                            } else {
+                                Modifier
+                            },
+                        )
+                        .background(barColor)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                        )
+                        .then(modifier),
+                ) {
+                    NavigationBar(
+                        modifier = Modifier,
+                        color = barColor,
+                        mode = NavigationBarDisplayMode.entries[appState.navigationBarMode],
                     ) {
                         navigationItems.forEachIndexed { index, item ->
-                            FloatingNavigationBarItem(
+                            NavigationBarItem(
                                 selected = page == index,
                                 onClick = { mainPagerState.animateToPage(index) },
                                 icon = item.icon,
@@ -555,6 +511,45 @@ private fun NavigationBar(
                             )
                         }
                     }
+                }
+            }
+            if (appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle == 1) {
+                Box(modifier = modifier) {
+                    IosLiquidGlassNavigationBar(
+                        items = navigationItems,
+                        selectedIndex = page,
+                        onItemClick = { mainPagerState.animateToPage(it) },
+                        backdrop = backdrop,
+                        isBlurActive = blurActive,
+                    )
+                }
+            }
+        }
+        if (appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle != 1) {
+            // COUI 17 bottom-bar material (TYPE_FRAMEWORK_BOTTOM_BAR, 25px): the page backdrop blurred
+            // behind the capsule, or COUI's opaque ?couiColorBar when the blur is off.
+            val backdropProvider = rememberMaterialBackdropProvider(backdrop)
+            val isDark = isInDarkTheme()
+            val capsuleShape = remember { RoundedCornerShape(FloatingNavigationBarDefaults.CornerRadius) }
+            FloatingNavigationBar(
+                modifier = modifier,
+                // The COUI 17 show / hide springs replace the AnimatedVisibility of the classic bar.
+                visible = appState.showNavigationBar,
+                color = if (backdropProvider != null) Color.Transparent else FloatingNavigationBarDefaults.color(),
+                backgroundModifier = backdropProvider?.materialBackdrop(
+                    spec = FloatingNavigationBarDefaults.backdropSpec(isDark),
+                    shape = capsuleShape,
+                ) ?: Modifier,
+                horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
+                    .toAlignment(),
+            ) {
+                navigationItems.forEachIndexed { index, item ->
+                    FloatingNavigationBarItem(
+                        selected = page == index,
+                        onClick = { mainPagerState.animateToPage(index) },
+                        icon = item.icon,
+                        label = item.label,
+                    )
                 }
             }
         }
