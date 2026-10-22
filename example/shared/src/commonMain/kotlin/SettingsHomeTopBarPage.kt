@@ -79,6 +79,8 @@ fun SettingsHomeTopBarPage(
                 largeTitleFontSize = 40.sp,
                 // SettingsCollapsingToolbarLayout.onMeasure overrides the title margin with dimen_24.
                 titlePadding = 24.dp,
+                // SettingsCOUICollapsingToolbarLayoutStyle: expandedTitleGravity start|bottom, 18dp margin.
+                largeTitleBottomMargin = 18.dp,
                 // SettingsCollapsingToolbarLayout fades the large title away instead of pinning one.
                 fadeLargeTitleOnCollapse = true,
                 // COUI 17 suppresses the bar divider while the material blur is on
