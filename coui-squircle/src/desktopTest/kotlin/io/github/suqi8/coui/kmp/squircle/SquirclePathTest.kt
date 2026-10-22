@@ -79,7 +79,8 @@ class SquirclePathTest {
     fun radiusAndWeightAreClamped() {
         assertEquals(20f, SuperellipseCorner.effectiveRadius(45f, 100f, 40f))
         assertEquals(0f, SuperellipseCorner.effectiveRadius(-3f, 100f, 40f))
-        assertEquals(SquircleDefaults.WeightMin, SuperellipseCorner.clampWeight(1f))
+        assertEquals(SquircleDefaults.WeightMin, SuperellipseCorner.clampWeight(0.5f))
+        assertEquals(2f, SuperellipseCorner.exponent(1.3f))
         assertEquals(SquircleDefaults.Weight, SuperellipseCorner.clampWeight(Float.NaN))
     }
 }

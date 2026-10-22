@@ -6,6 +6,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Path
+import io.github.suqi8.coui.kmp.squircle.internal.SoftCapsule
 import io.github.suqi8.coui.kmp.squircle.internal.SuperellipseCorner
 import kotlin.math.max
 import kotlin.math.min
@@ -17,6 +18,12 @@ import kotlin.math.min
  * `Path.addSmoothRoundRect(rect, radii, dir, weight)`): a Lamé superellipse quarter
  * `|x|^n + |y|^n = r^n` with exponent `n = weight`, tangent to both straight sides at the corner
  * radius `r`. `weight = 2` is a plain circular arc; larger weights square the corner off.
+ *
+ * Weights below 2 only shape a fully rounded rect (four equal radii of at least half the shorter
+ * side): the outline then blends from the circular capsule towards the Oplus soft capsule, whose
+ * ends join the straight sides through a smooth maximum instead of a tangent arc, reaching the soft
+ * capsule alone at [CapsuleWeight]. Any other rect draws a weight below 2 as 2, as
+ * `OplusPathSmooth.addSmoothRoundRect` does.
  */
 object SquircleDefaults {
 
@@ -26,8 +33,18 @@ object SquircleDefaults {
      */
     val Weight = 2.5f
 
-    /** Inclusive lower bound for the weight: 2, a circular arc. */
-    val WeightMin = 2f
+    /**
+     * Inclusive lower bound for the weight: 1, the soft capsule. Weights below 2 apply to fully
+     * rounded rects only (see [SquircleDefaults]).
+     */
+    val WeightMin = 1f
+
+    /**
+     * The weight of a ColorOS full-round capsule: 1.0, the Oplus soft capsule
+     * (`OplusSmoothRoundedManager.FULL_RRECT_G2_WEIGHT`, `RoundCornerUtil.OS_16_1_FULL_ROUND_SMOOTH_WEIGHT`),
+     * the weight every fully rounded `addSmoothRoundRect` call without an explicit weight receives.
+     */
+    val CapsuleWeight = 1f
 
     /** Inclusive upper bound for the weight. */
     val WeightMax = 8f
@@ -51,7 +68,9 @@ object SquircleDefaults {
  * prefer the modifier APIs.
  *
  * Each corner is a superellipse quarter with exponent [weight] (see [SquircleDefaults]), built from
- * a handful of cubic Bézier segments that stay within a hundredth of a percent of the radius.
+ * a handful of cubic Bézier segments that stay within a hundredth of a percent of the radius. A
+ * weight below 2 on a fully rounded rect ([cornerRadius] at least half the smaller side) appends
+ * the Oplus soft capsule contour instead, fitted to the native distance function.
  *
  * Pass `squircleEnabled = false` (typically forwarded from [isSquircleEnabled]) to append a
  * plain rounded rectangle of the same dimensions instead — useful when the surrounding visuals
@@ -61,7 +80,8 @@ object SquircleDefaults {
  * @param height The height of the rectangle in pixels; nothing is appended when not positive.
  * @param cornerRadius The corner radius in pixels, clamped to half the smaller side.
  * @param weight The superellipse exponent of the corners, clamped to
- *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax]; below 2 it selects the soft capsule
+ *   blend on a fully rounded rect and is raised to 2 otherwise.
  * @param squircleEnabled When `false`, appends a plain rounded rectangle instead of the squircle
  *   silhouette; typically forwarded from [isSquircleEnabled].
  */
@@ -95,7 +115,12 @@ fun Path.addSquircleRect(
         addRect(Rect(0f, 0f, width, height))
         return
     }
-    val quarter = SuperellipseCorner.unitQuarter(weight)
+    val clampedWeight = SuperellipseCorner.clampWeight(weight)
+    if (clampedWeight < 2f && SoftCapsule.isFullyRounded(cornerRadius, width, height) && r >= SoftCapsule.MIN_RADIUS_PX) {
+        SoftCapsule.appendContour(this, width, height, SoftCapsule.capsuleMix(clampedWeight))
+        return
+    }
+    val quarter = SuperellipseCorner.unitQuarter(clampedWeight)
     // Clockwise from the top edge. Each corner maps the unit quarter's (a, b) onto
     // center + r * (a * v + b * u), running from its first tangent point (b = 1) to its second (a = 1).
     moveTo(r, 0f)

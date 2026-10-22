@@ -23,12 +23,18 @@ internal object SuperellipseCorner {
     /** Number of cubic segments in one quarter. */
     const val SEGMENTS = SEGMENTS_PER_HALF * 2
 
-    /** Clamps [weight] into the supported exponent range; NaN falls back to [SquircleDefaults.Weight]. */
+    /** Clamps [weight] into the supported range; NaN falls back to [SquircleDefaults.Weight]. */
     fun clampWeight(weight: Float): Float = if (weight.isNaN()) {
         SquircleDefaults.Weight
     } else {
         weight.coerceIn(SquircleDefaults.WeightMin, SquircleDefaults.WeightMax)
     }
+
+    /**
+     * The superellipse exponent drawn for [weight]: the clamped weight, raised to 2 (a circular arc)
+     * when below it. Weights below 2 only shape fully rounded rects, through [SoftCapsule].
+     */
+    fun exponent(weight: Float): Float = maxOf(clampWeight(weight), 2f)
 
     /**
      * The unit quarter from `(a, b) = (0, 1)` to `(1, 0)` as [SEGMENTS] cubic Béziers. Returns
@@ -37,7 +43,7 @@ internal object SuperellipseCorner {
      * (`(0, 1)` for the first).
      */
     fun unitQuarter(weight: Float): FloatArray {
-        val n = clampWeight(weight).toDouble()
+        val n = exponent(weight).toDouble()
         val out = FloatArray(SEGMENTS * 6)
         // Where the two halves meet: a == b == 2^(-1/n).
         val mid = 2.0.pow(-1.0 / n)

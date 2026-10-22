@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asComposeShader
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.squircle.internal.SoftCapsule
 import io.github.suqi8.coui.kmp.squircle.internal.SuperellipseCorner
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -43,7 +44,8 @@ import kotlin.math.floor
  * @param cornerRadius The radius applied uniformly to all four corners.
  * @param weight The superellipse exponent of the corners (Oplus smooth round rect weight): 2.0 is a
  *   circular arc, larger values square the corners off. Clamped to
- *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax]; a weight below 2 draws the Oplus soft
+ *   capsule blend when the rect is fully rounded and 2 otherwise (see [SquircleDefaults]).
  */
 @Composable
 fun Modifier.squircleBackground(
@@ -326,7 +328,7 @@ private fun ContentDrawScope.drawSquircleBanded(
     if (bottomBand > 0f) maskedBand(midBottom, height, maskTop = false, maskBottom = true, clip = true)
 }
 
-// Carve the corner squares (the shader is opaque elsewhere). Must run inside an offscreen already
+// Carve the corner regions (the shader is opaque elsewhere). Must run inside an offscreen already
 // holding fill + content, so DstIn has an alpha channel to carve against.
 private fun ContentDrawScope.maskSquircleCorners(
     brush: SquircleShaderBrush,
@@ -336,23 +338,24 @@ private fun ContentDrawScope.maskSquircleCorners(
     val width = size.width
     val height = size.height
     val canvas = drawContext.canvas
-    fun corner(left: Float, topPx: Float, side: Float) {
-        if (side <= 0f) return
+    fun corner(index: Int, alignRight: Boolean, alignBottom: Boolean) {
+        val w = brush.cornerWidthPx(index, size)
+        val h = brush.cornerHeightPx(index, size)
+        if (w <= 0f || h <= 0f) return
+        val left = if (alignRight) width - w else 0f
+        val topPx = if (alignBottom) height - h else 0f
         canvas.save()
-        canvas.clipRect(left, topPx, left + side, topPx + side)
+        canvas.clipRect(left, topPx, left + w, topPx + h)
         drawRect(brush = brush, blendMode = BlendMode.DstIn)
         canvas.restore()
     }
     if (top) {
-        corner(0f, 0f, brush.effectiveCornerPx(0, size))
-        val tr = brush.effectiveCornerPx(1, size)
-        corner(width - tr, 0f, tr)
+        corner(0, alignRight = false, alignBottom = false)
+        corner(1, alignRight = true, alignBottom = false)
     }
     if (bottom) {
-        val br = brush.effectiveCornerPx(2, size)
-        corner(width - br, height - br, br)
-        val bl = brush.effectiveCornerPx(3, size)
-        corner(0f, height - bl, bl)
+        corner(2, alignRight = true, alignBottom = true)
+        corner(3, alignRight = false, alignBottom = true)
     }
 }
 
@@ -367,7 +370,7 @@ private fun rememberSquircleBrush(
 ): SquircleShaderBrush? {
     if (!LocalSquircleEnabled.current || !isRuntimeShaderSupported()) return null
     val density = LocalDensity.current
-    val exponent = SuperellipseCorner.clampWeight(weight)
+    val clampedWeight = SuperellipseCorner.clampWeight(weight)
     val radii = remember(topStart, topEnd, bottomEnd, bottomStart, density) {
         with(density) {
             floatArrayOf(
@@ -378,15 +381,16 @@ private fun rememberSquircleBrush(
             )
         }
     }
-    return remember(color, radii, exponent) {
-        SquircleShaderBrush(color, radii, exponent)
+    return remember(color, radii, clampedWeight) {
+        SquircleShaderBrush(color, radii, clampedWeight)
     }
 }
 
 /**
  * Fills the squircle silhouette with [color] through [SQUIRCLE_SHADER], an analytic signed distance
  * field of the Oplus smooth round rect: per corner `lpNorm(q, weight) - r`, the same Lp-norm the
- * libhwui G2 shader evaluates, so no distance-field texture is baked or sampled.
+ * libhwui G2 shader evaluates, so no distance-field texture is baked or sampled. A [weight] below 2
+ * on a fully rounded rect switches to the G2 soft capsule blend (see [SoftCapsule]).
  */
 internal class SquircleShaderBrush(
     private val color: Color,
@@ -403,17 +407,44 @@ internal class SquircleShaderBrush(
         runtimeShader.setColorUniform("color", color)
         runtimeShader.setFloatUniform("size", size.width, size.height)
         runtimeShader.setFloatUniform("radii", effectiveRadii)
-        runtimeShader.setFloatUniform("weight", weight)
+        runtimeShader.setFloatUniform("weight", SuperellipseCorner.exponent(weight))
+        runtimeShader.setFloatUniform("capsuleMix", capsuleMix(size))
         return runtimeShader.asComposeShader()
     }
 
+    /**
+     * The soft capsule blend factor for [size], or -1 when the superellipse corners apply: a weight
+     * below 2 only counts on a fully rounded rect, as in `OplusPathSmooth.addSmoothRoundRect`.
+     */
+    fun capsuleMix(size: Size): Float {
+        if (weight >= 2f) return -1f
+        if (!SoftCapsule.isFullyRounded(cornerRadiiPx, size.width, size.height)) return -1f
+        if (minOf(size.width, size.height) * 0.5f < SoftCapsule.MIN_RADIUS_PX) return -1f
+        return SoftCapsule.capsuleMix(weight)
+    }
+
     // Corner index order: 0 = topStart/topLeft, 1 = topEnd/topRight, 2 = bottomEnd/bottomRight, 3 = bottomStart/bottomLeft.
-    fun topBandHeightPx(size: Size): Float = maxOf(effectiveCornerPx(0, size), effectiveCornerPx(1, size))
+    fun topBandHeightPx(size: Size): Float = maxOf(cornerHeightPx(0, size), cornerHeightPx(1, size))
 
-    fun bottomBandHeightPx(size: Size): Float = maxOf(effectiveCornerPx(2, size), effectiveCornerPx(3, size))
+    fun bottomBandHeightPx(size: Size): Float = maxOf(cornerHeightPx(2, size), cornerHeightPx(3, size))
 
-    // Corner radius the shader uses at [index]: the square of that side is the only area it carves.
+    // Corner radius the shader uses at [index].
     fun effectiveCornerPx(index: Int, size: Size): Float = SuperellipseCorner.effectiveRadius(cornerRadiiPx[index], size.width, size.height)
+
+    // Width of the region the shader carves at corner [index]: the corner square, or for the soft
+    // capsule the end cap plus the softened junction along a horizontal long axis.
+    fun cornerWidthPx(index: Int, size: Size): Float {
+        if (capsuleMix(size) < 0f) return effectiveCornerPx(index, size)
+        val halfShort = minOf(size.width, size.height) * 0.5f
+        return if (size.width > size.height) minOf(size.width * 0.5f, SoftCapsule.junctionReach(halfShort)) else size.width * 0.5f
+    }
+
+    // Height of the region the shader carves at corner [index]; see [cornerWidthPx].
+    fun cornerHeightPx(index: Int, size: Size): Float {
+        if (capsuleMix(size) < 0f) return effectiveCornerPx(index, size)
+        val halfShort = minOf(size.width, size.height) * 0.5f
+        return if (size.height > size.width) minOf(size.height * 0.5f, SoftCapsule.junctionReach(halfShort)) else size.height * 0.5f
+    }
 }
 
 // Max node dimension composited in one offscreen layer. 2048 px is the texture-size floor guaranteed
@@ -426,14 +457,44 @@ private const val MAX_OFFSCREEN_PX = 2048f
  * with `superN = weight`). The Lp-norm excess is divided by the norm's gradient length, turning it
  * into a Euclidean distance near the boundary, so the one-pixel anti-aliasing ramp keeps its width
  * along the whole curve.
+ *
+ * With `capsuleMix >= 0` (a weight below 2 on a fully rounded rect) the whole rect is evaluated as
+ * the G2 `superN < 2` branch instead: `mix(sdRoundRect(n = 2), sdCapsule, capsuleMix)`, where
+ * `sdCapsule` is the libhwui soft capsule (radius half the shorter side, smooth-max junction with
+ * `kMax` 26.6 and junction bands 70 / 60 scaled by `r * 0.0125`, one pixel `kAbs`).
  */
 internal const val SQUIRCLE_SHADER = """
 uniform float2 size;
 uniform float4 radii;
 uniform float weight;
+uniform float capsuleMix;
 layout(color) uniform half4 color;
 
 half4 main(float2 coord) {
+    if (capsuleMix >= 0.0) {
+        float2 halfSize = size * 0.5;
+        float2 p = coord - halfSize;
+        bool vertical = halfSize.x < halfSize.y;
+        float2 hs = vertical ? halfSize.yx : halfSize;
+        float2 pl = vertical ? p.yx : p;
+        float rc = hs.y;
+        float a = max(hs.x - rc, 0.0);
+        float2 qc = sqrt(pl * pl + float2(1.0));
+        float scale = rc * 0.0125;
+        float kMax = max(26.6 * scale, 1e-4);
+        float xBand = max(70.0 * scale, 1e-3);
+        float yBand = max(60.0 * scale, 1e-3);
+        float sc = qc.x - a;
+        float xSoft = 0.5 * (sc + sqrt(sc * sc + kMax * kMax));
+        float wx = 1.0 - smoothstep(0.0, xBand, abs(sc));
+        float wy = smoothstep(rc - yBand, rc, qc.y);
+        float xc = mix(max(sc, 0.0), xSoft, clamp(wx * wy, 0.0, 1.0));
+        float dCapsule = length(float2(xc, qc.y)) - rc;
+        float2 qr = float2(abs(pl.x) - a, abs(pl.y));
+        float dRound = length(max(qr, float2(0.0))) + min(max(qr.x, qr.y), 0.0) - rc;
+        float dc = mix(dRound, dCapsule, capsuleMix);
+        return color * half(smoothstep(0.5, -0.5, dc));
+    }
     float dxL = coord.x;
     float dxR = size.x - coord.x;
     float dyT = coord.y;
