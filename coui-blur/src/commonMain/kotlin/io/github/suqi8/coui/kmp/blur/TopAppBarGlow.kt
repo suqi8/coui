@@ -2,32 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.blur
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialGlow
 
 /**
  * The "condensed light" (凝光) glow overlay for a COUI 17 top app bar.
  *
  * Two layers composite over the content scrolled beneath the bar:
  * 1. A backdrop blur (radius [blurRadius], strongest at the top and fading to pixel-sharp at the
- *    bottom via a progressive gradient), tinted by the two condensed-light blend layers.
- * 2. A translucent vertical gradient base ([baseColor] at the COUI alpha stops), drawn bottom→top
- *    so the bar reads as a frosted sheet that thickens toward its own top edge.
+ *    bottom via a progressive gradient).
+ * 2. A translucent vertical gradient base ([baseColor] at the COUI alpha stops), transparent at the
+ *    bottom edge and thickening toward the top, so the band dissolves into the content below it.
  *
- * The whole overlay is revealed by [alpha], which the caller drives from the top-app-bar collapse
- * fraction (COUI reveals it over a 30dp scroll: `alpha = min(1, scroll / 30dp)`).
+ * The whole overlay fades in with the scroll: `alpha = min(1, scrollOffsetPx / 30dp)`.
  *
  * COUI 17 evidence (settings 17.0.0, `com.coui.appcompat.toolbar`):
  * - Backdrop filter: `OplusRenderEffect.createGradientBlurEffect(30, 0, true, 3)` — the radii are
@@ -36,20 +34,19 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialGlow
  *   (`ratio = lerp(start, end, y/H)`), applies the speed exponent (`ratio = 1 - pow(1 - ratio, 3)`,
  *   i.e. `1 - (y/H)^3`), then quantises to `radius = int(15 * ratio)` — so the bottom ~4.7% of the
  *   overlay is pixel-sharp and fully unblurred, not merely faint.
- * - Alpha gradient base (`GradientBackgroundDrawable`, direction bottom→top): light 3 stops
- *   positions [0, 0.4, 1] × alphas [0, 0.7, 1]; dark 2 stops positions [0, 1] × alphas [0, 0.4]
- *   (GRADIENT_DARK_ALPHA).
- * - Blend layers (`COUIMaterialBlurEffect`, TYPE_TOP_BAR): light `#66333333` COLOR_DODGE +
- *   `#99F5F5F5` LUMINOSITY; dark `#CC262626` SRC_OVER + `#B37F7F7F` OVERLAY.
+ * - Alpha gradient base (`GradientBackgroundDrawable`: `LinearGradient(0, height, 0, 0)`, so
+ *   position 0 is the **bottom** edge): light 3 stops positions [0, 0.4, 1] × alphas [0, 0.7, 1];
+ *   dark 2 stops positions [0, 1] × alphas [0, 0.4] (GRADIENT_DARK_ALPHA).
+ * - No colour blend: the default `GradientBlurConfig()` passes blendMode / blendC / mixC = 0.
  *
  * @param backdrop The [Backdrop] providing the scrolled content to blur (e.g. `rememberLayerBackdrop`
  *   on the page content).
  * @param scrollOffsetPx The top-app-bar scroll offset in pixels (a positive value that grows as the
  *   bar collapses, e.g. `abs(scrollBehavior.state.heightOffset)`). The glow alpha follows COUI 17:
  *   `min(1, scrollOffsetPx / 30dp)`, so the frosting is fully revealed after only a 30dp scroll.
- * @param isDark Whether the dark scheme is active, to pick the dark blend layers and alpha stops.
- * @param baseColor The opaque base color of the gradient sheet. Defaults to the COUI page surface
- *   (`couiColorBackgroundWithCard`); callers usually pass the same color as the app bar.
+ * @param isDark Whether the dark scheme is active, to pick the dark alpha stops.
+ * @param baseColor The opaque base color of the gradient sheet, usually the COUI page surface
+ *   (`couiColorBackgroundWithCard`), the same color as the app bar.
  * @param modifier The [Modifier] to be applied to the overlay.
  * @param blurRadiusPx The backdrop blur radius in raw pixels at the top edge. COUI 17
  *   `AppBarBlurParamsExtKt` uses `createGradientBlurEffect(30f, 0f, true, 3f)`: the radius ramps
@@ -79,44 +76,25 @@ fun BoxScope.TopAppBarGlow(
         return
     }
 
-    // Translucent vertical gradient base, drawn bottom→top (position 0 at the bottom edge).
-    // COUI 17 GradientBlurConfig: light positions [0, 0.4, 1] × alphas [0, 0.7, 1];
-    // dark positions [0, 1] × alphas [0, GRADIENT_DARK_ALPHA=0.4].
+    // GradientBackgroundDrawable draws LinearGradient(0, height, 0, 0): its position 0 is the bottom
+    // edge, so the stops are mirrored onto Compose's top-to-bottom axis. The sheet is densest at the
+    // top and fully transparent where it meets the content.
     val gradient = remember(baseColor, isDark) {
         if (isDark) {
             Brush.verticalGradient(
-                0f to baseColor.copy(alpha = 0f),
-                1f to baseColor.copy(alpha = 0.4f),
+                0f to baseColor.copy(alpha = 0.4f),
+                1f to baseColor.copy(alpha = 0f),
             )
         } else {
             Brush.verticalGradient(
-                0f to baseColor.copy(alpha = 0f),
-                0.4f to baseColor.copy(alpha = 0.7f),
-                1f to baseColor.copy(alpha = 1f),
+                0f to baseColor.copy(alpha = 1f),
+                0.6f to baseColor.copy(alpha = 0.7f),
+                1f to baseColor.copy(alpha = 0f),
             )
         }
     }
 
-    val blurSupported = isRuntimeShaderSupported()
-    val colors = remember(isDark) {
-        if (isDark) {
-            BlurColors(
-                blendColors = listOf(
-                    BlendColorEntry(Color(0xCC262626), BlurBlendMode.SrcOver),
-                    BlendColorEntry(Color(0xB37F7F7F), BlurBlendMode.Overlay),
-                ),
-            )
-        } else {
-            BlurColors(
-                blendColors = listOf(
-                    BlendColorEntry(Color(0x66333333), BlurBlendMode.ColorDodge),
-                    BlendColorEntry(Color(0x99F5F5F5), BlurBlendMode.Luminosity),
-                ),
-            )
-        }
-    }
-
-    val blurModifier = if (blurSupported) {
+    val blurModifier = if (isRuntimeShaderSupported()) {
         Modifier.progressiveTextureBlur(
             backdrop = backdrop,
             shape = shape,
@@ -125,7 +103,8 @@ fun BoxScope.TopAppBarGlow(
             // modifier its radius.
             blurRadius = (blurRadiusPx / LocalDensity.current.density).coerceAtLeast(0f),
             gradient = TopAppBarGlowDefaults.Gradient,
-            colors = colors,
+            // The default GradientBlurConfig() passes blendMode = blendC = mixC = 0: no colour blend.
+            colors = NoBlend,
         )
     } else {
         Modifier
@@ -134,17 +113,17 @@ fun BoxScope.TopAppBarGlow(
     Box(
         modifier = modifier
             .matchParentSize()
+            // AppBarBlurOverlayBehavior sets the alpha on the whole overlay view, so the blur and
+            // the gradient sheet fade in together.
+            .graphicsLayer { this.alpha = alpha }
             .then(blurModifier)
-            .materialGlow(
-                baseColor = baseColor,
-                scrollOffsetPx = scrollOffsetPx,
-                isDark = isDark,
-                enabled = enabled,
-            ),
+            .drawBehind { drawRect(brush = gradient) },
     ) {
         content()
     }
 }
+
+private val NoBlend = BlurColors()
 
 /**
  * Defaults for [TopAppBarGlow].

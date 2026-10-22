@@ -14,7 +14,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -45,10 +44,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -56,8 +59,10 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
@@ -100,11 +105,10 @@ import kotlin.math.roundToInt
  * @param navigationIconPadding The start padding of the navigation icon.
  * @param actionIconPadding The end padding of the action icons.
  * @param fadeLargeTitleOnCollapse Whether the large title fades and scales away as the bar
- *   collapses instead of morphing into a pinned 24sp title. COUI 17's collapsing toolbar keeps the
- *   large title at its own text size and drives `alpha 1 -> 0` and `scale 1 -> 0.7` linearly over
- *   the collapse (COUICollapsingToolbarLayout's offset listener + CollapsingTextHelper), leaving no
- *   title pinned under the bar. On by default, matching ColorOS 17; set `false` for the older
- *   morph-to-24sp behaviour.
+ *   collapses instead of morphing into the pinned collapsed title. Off by default: the standard
+ *   COUI collapsing toolbar morphs the title. The ColorOS 17 settings home
+ *   (`SettingsCollapsingToolbarLayout`) is the exception: it drives `alpha 1 -> 0` and
+ *   `scale 1 -> 0.7` linearly over the collapse and pins no title.
  * @param glow The bar's backing layer, drawn behind everything else in the bar. Pass the COUI 17
  *   condensed-light backdrop blur here (e.g. `TopAppBarGlow`) together with a transparent [color]
  *   to get the frosted top bar: the bar itself draws no background, and the scrolled content is
@@ -133,7 +137,7 @@ fun TopAppBar(
     actionIconPadding: Dp = TopAppBarDefaults.ActionIconPadding,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
-    fadeLargeTitleOnCollapse: Boolean = true,
+    fadeLargeTitleOnCollapse: Boolean = false,
     glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
@@ -141,7 +145,7 @@ fun TopAppBar(
     val actionsRow =
         @Composable {
             Row(
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
                 content = actions,
             )
@@ -262,7 +266,7 @@ fun SmallTopAppBar(
     val actionsRow =
         @Composable {
             Row(
-                horizontalArrangement = Arrangement.End,
+                horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically,
                 content = actions,
             )
@@ -472,9 +476,10 @@ fun ScrollBehavior.glowScrollOffsetPx(): Float {
 object TopAppBarDefaults {
     /**
      * The default horizontal padding of the title and large title.
-     * COUI 17 `coui_appbar_title_expanded_margin_start/end` (24dp).
+     * COUI `coui_appbar_title_expanded_margin_start/end_compat` (16dp), which
+     * `COUICollapsingToolbarLayout.onMeasure` applies on phones. 24dp is the settings home only.
      */
-    val TitlePadding = 24.dp
+    val TitlePadding = 16.dp
 
     /** The default start padding of the navigation icon. */
     val NavigationIconPadding = 16.dp
@@ -521,9 +526,15 @@ object TopAppBarDefaults {
 
     /**
      * The horizontal gap between the navigation icon and the collapsed title.
-     * COUI `coui_toolbar_gap_between_navigation_and_title` (4dp).
+     * COUI 17 `coui_toolbar_gap_between_navigation_and_title`: 10dp in `values-v37` (4dp before).
      */
-    val NavigationIconGap = 4.dp
+    val NavigationIconGap = 10.dp
+
+    /**
+     * The horizontal spacing between adjacent action icons.
+     * COUI 17 `coui_actionbar_menuitemview_item_spacing`: 10dp in `values-v37` (0dp before).
+     */
+    val ActionItemSpacing = 10.dp
 
     /**
      * The horizontal gap between the title and the action icons.
@@ -541,37 +552,6 @@ object TopAppBarDefaults {
      * COUI `coui_preference_card_margin_horizontal` (16dp).
      */
     val SearchSlotInsideMargin = PaddingValues(horizontal = 16.dp)
-
-    /**
-     * The min width of a text action button in the top app bar.
-     * COUI `coui_action_text_menu_item_min_width` (60dp).
-     */
-    val TextActionMinWidth = 60.dp
-
-    /**
-     * The max width of a text action button in the top app bar.
-     * COUI `coui_action_bar_text_menu_item_max_width` (104dp).
-     */
-    val TextActionMaxWidth = 104.dp
-
-    /**
-     * The min height of a text action button in the top app bar.
-     * COUI `coui_action_menu_item_min_height` (40dp).
-     */
-    val TextActionMinHeight = 40.dp
-
-    /**
-     * The horizontal padding of a text action button in the top app bar.
-     * COUI `coui_toolbar_text_menu_bg_padding_horizontal` (12dp).
-     */
-    val TextActionHorizontalPadding = 12.dp
-
-    /**
-     * The panel background color of a blurred top-bar button.
-     * COUI `ToolbarMaterialEffectDelegate`: light `#FFF0F0F0`, dark `#FF333333`.
-     */
-    @Composable
-    fun buttonPanelColor(): Color = if (isSystemInDarkTheme()) Color(0xFF333333) else Color(0xFFF0F0F0)
 }
 
 @Stable
@@ -803,7 +783,7 @@ private fun TopAppBarLayout(
     hideSubtitleOnCollapse: Boolean = true,
     expandedHeight: Dp = TopAppBarDefaults.ExpandedHeight,
     largeTitleFontSize: TextUnit = COUITheme.textStyles.title1.fontSize,
-    fadeLargeTitleOnCollapse: Boolean = true,
+    fadeLargeTitleOnCollapse: Boolean = false,
     glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
@@ -828,9 +808,10 @@ private fun TopAppBarLayout(
 
     // CollapsingTextHelper lerps the text size from expanded to collapsed; replicated
     // as a scale factor around the title's top-start corner.
-    val collapsedTitleScale = remember(largeTitleFontSize) {
+    val collapsedTitleTextSize = with(LocalDensity.current) { CollapsedTitleTextSize.toSp() }
+    val collapsedTitleScale = remember(largeTitleFontSize, collapsedTitleTextSize) {
         if (largeTitleFontSize.value > 0f) {
-            CollapsedTitleTextSize.value / largeTitleFontSize.value
+            collapsedTitleTextSize.value / largeTitleFontSize.value
         } else {
             1f
         }
@@ -881,7 +862,7 @@ private fun TopAppBarLayout(
                     Text(
                         text = title,
                         color = animatedTitleColor,
-                        fontSize = CollapsedTitleTextSize,
+                        fontSize = collapsedTitleTextSize,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -929,6 +910,10 @@ private fun TopAppBarLayout(
         },
         modifier = modifier
             .background(color)
+            // Clip before the top inset padding: the glow is placed up into the status bar area,
+            // which a clip inside the padding would cut away, leaving the status bar bare. The clip
+            // leaves room below the bar so the action buttons' elevation shadow is not cut off.
+            .clip(BarClipShape)
             .then(
                 if (defaultWindowInsetsPadding) {
                     Modifier
@@ -939,7 +924,6 @@ private fun TopAppBarLayout(
                 },
             )
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
-            .clipToBounds()
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             }
@@ -1197,6 +1181,7 @@ private fun SmallTopAppBarLayout(
     glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
+    val collapsedTitleTextSize = with(LocalDensity.current) { CollapsedTitleTextSize.toSp() }
     val animatedTitleColor by animateColorAsState(
         targetValue = titleColor,
         animationSpec = tween(durationMillis = 50),
@@ -1241,7 +1226,7 @@ private fun SmallTopAppBarLayout(
                     text = title,
                     color = animatedTitleColor,
                     maxLines = 1,
-                    fontSize = CollapsedTitleTextSize,
+                    fontSize = collapsedTitleTextSize,
                     fontWeight = FontWeight.Medium,
                     overflow = TextOverflow.Ellipsis,
                     softWrap = false,
@@ -1273,6 +1258,10 @@ private fun SmallTopAppBarLayout(
         },
         modifier = modifier
             .background(color)
+            // Clip before the top inset padding: the glow is placed up into the status bar area,
+            // which a clip inside the padding would cut away, leaving the status bar bare. The clip
+            // leaves room below the bar so the action buttons' elevation shadow is not cut off.
+            .clip(BarClipShape)
             .then(
                 if (defaultWindowInsetsPadding) {
                     Modifier
@@ -1283,7 +1272,6 @@ private fun SmallTopAppBarLayout(
                 },
             )
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
-            .clipToBounds()
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             }
@@ -1434,8 +1422,8 @@ private fun SmallTopAppBarLayout(
     }
 }
 
-/** COUI `coui_appbar_title_collapsed_text_size` (24sp, sans-serif-medium). */
-private val CollapsedTitleTextSize = 24.sp
+/** COUI `coui_appbar_title_collapsed_text_size` (24dp, sans-serif-medium; a dp size, so it ignores font scale). */
+private val CollapsedTitleTextSize = 24.dp
 
 /**
  * COUIEaseInterpolator: cubic-bezier(0.33, 0, 0.67, 1), applied to the collapsing title's
@@ -1463,6 +1451,20 @@ private val CollapsedTitleSwapFraction = 0.9999f
  * (SettingsCollapsingToolbarLayout.OnOffsetChangedListener: `AnimationUtils.lerp(1.0f, 0.7f, f)`).
  */
 private val FadedLargeTitleScale = 0.7f
+
+/**
+ * Clips the bar's top and sides but lets content spill [ShadowOverflow] below its bottom edge, where
+ * the action buttons' elevation shadow falls over the page.
+ */
+private val BarClipShape = object : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val overflow = with(density) { ShadowOverflow.toPx() }
+        return Outline.Rectangle(Rect(0f, 0f, size.width, size.height + overflow))
+    }
+}
+
+/** Room below the bar for the action buttons' shadow (16dp elevation blur plus its offset). */
+private val ShadowOverflow = 24.dp
 
 /** COUI: toolbar_divider_height = 0.33dp. */
 private val DividerThickness = 0.33.dp

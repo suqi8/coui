@@ -164,6 +164,10 @@ TopAppBar(
 | titlePadding          | Dp                              | 水平内容边距                   | TopAppBarDefaults.TitlePadding | 否       |
 | navigationIconPadding      | Dp                              | 导航图标的起始边距             | TopAppBarDefaults.NavigationIconPadding | 否       |
 | actionIconPadding          | Dp                              | 操作图标的末尾边距             | TopAppBarDefaults.ActionIconPadding | 否       |
+| expandedHeight             | Dp                              | 无副标题时的展开高度           | TopAppBarDefaults.ExpandedHeight | 否       |
+| largeTitleFontSize         | TextUnit                        | 展开态大标题字号               | COUITheme.textStyles.title1.fontSize | 否       |
+| fadeLargeTitleOnCollapse   | Boolean                         | 折叠时让大标题淡出缩小，而不是变形为折叠标题（COUI 17 设置首页） | false | 否       |
+| glow                       | @Composable BoxScope.() -> Unit | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow` | {} | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
 ### SmallTopAppBar 属性
@@ -185,6 +189,7 @@ TopAppBar(
 | titlePadding          | Dp                              | 水平内容边距             | TopAppBarDefaults.TitlePadding | 否       |
 | navigationIconPadding      | Dp                              | 导航图标的起始边距       | TopAppBarDefaults.NavigationIconPadding | 否       |
 | actionIconPadding          | Dp                              | 操作图标的末尾边距       | TopAppBarDefaults.ActionIconPadding | 否       |
+| glow                       | @Composable BoxScope.() -> Unit | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow` | {} | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
 ### TopAppBarDefaults 对象
@@ -205,8 +210,9 @@ TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认�
 | LargeTitleBottomPadding    | Dp   | 展开态大标题区块下方的底部边距（折叠时渐变至 0.dp） | 12.dp   |
 | SubtitleBottomPadding      | Dp   | 副标题溢出折叠栏时其下方的底部边距 | 8.dp   |
 | SubtitleMarginTop          | Dp   | 标题与副标题之间的垂直间距        | 3.5.dp |
-| NavigationIconGap          | Dp   | 导航图标与折叠态标题之间的水平间距 | 4.dp   |
-| ActionIconGap              | Dp   | 标题与操作图标之间的水平间距      | 8.dp   |
+| NavigationIconGap          | Dp   | 导航图标与折叠态标题之间的水平间距 | 10.dp  |
+| ActionIconGap              | Dp   | 标题与操作图标之间的水平间距      | 4.dp   |
+| ActionItemSpacing          | Dp   | 相邻操作图标之间的水平间距        | 10.dp  |
 
 ### ScrollBehavior
 

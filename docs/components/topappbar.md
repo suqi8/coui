@@ -166,6 +166,10 @@ TopAppBar(
 | titlePadding          | Dp                              | Horizontal content padding                     | TopAppBarDefaults.TitlePadding | No       |
 | navigationIconPadding      | Dp                              | Start padding of the navigation icon           | TopAppBarDefaults.NavigationIconPadding | No       |
 | actionIconPadding          | Dp                              | End padding of the action icons                | TopAppBarDefaults.ActionIconPadding | No       |
+| expandedHeight             | Dp                              | Expanded bar height without a subtitle         | TopAppBarDefaults.ExpandedHeight | No       |
+| largeTitleFontSize         | TextUnit                        | Font size of the expanded large title          | COUITheme.textStyles.title1.fontSize | No       |
+| fadeLargeTitleOnCollapse   | Boolean                         | Fade and shrink the large title away instead of morphing it into the collapsed title (COUI 17 settings home) | false | No       |
+| glow                       | @Composable BoxScope.() -> Unit | Backing layer drawn behind the bar, e.g. `TopAppBarGlow` with a transparent `color` | {} | No       |
 | bottomContent              | @Composable () -> Unit          | Composable content displayed below the title bar area | {} | No |
 
 ### SmallTopAppBar Properties
@@ -187,6 +191,7 @@ TopAppBar(
 | titlePadding          | Dp                              | Horizontal content padding                     | TopAppBarDefaults.TitlePadding | No       |
 | navigationIconPadding      | Dp                              | Start padding of the navigation icon           | TopAppBarDefaults.NavigationIconPadding | No       |
 | actionIconPadding          | Dp                              | End padding of the action icons                | TopAppBarDefaults.ActionIconPadding | No       |
+| glow                       | @Composable BoxScope.() -> Unit | Backing layer drawn behind the bar, e.g. `TopAppBarGlow` with a transparent `color` | {} | No       |
 | bottomContent              | @Composable () -> Unit          | Composable content displayed below the title bar area | {} | No |
 
 ### TopAppBarDefaults Object
@@ -207,8 +212,9 @@ The TopAppBarDefaults object provides default values for TopAppBar and SmallTopA
 | LargeTitleBottomPadding    | Dp   | Bottom padding below the large title block when expanded (interpolates to 0.dp as the bar collapses) | 12.dp |
 | SubtitleBottomPadding      | Dp   | Bottom padding below the subtitle when it overflows the collapsed bar | 8.dp  |
 | SubtitleMarginTop          | Dp   | Vertical gap between the title and the subtitle   | 3.5.dp        |
-| NavigationIconGap          | Dp   | Horizontal gap between the navigation icon and the collapsed title | 4.dp |
-| ActionIconGap              | Dp   | Horizontal gap between the title and the action icons | 8.dp      |
+| NavigationIconGap          | Dp   | Horizontal gap between the navigation icon and the collapsed title | 10.dp|
+| ActionIconGap              | Dp   | Horizontal gap between the title and the action icons | 4.dp      |
+| ActionItemSpacing          | Dp   | Horizontal spacing between adjacent action icons | 10.dp     |
 
 ### ScrollBehavior
 
