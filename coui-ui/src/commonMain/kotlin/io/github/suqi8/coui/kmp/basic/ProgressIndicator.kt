@@ -6,8 +6,10 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,10 +35,13 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -45,8 +50,19 @@ import kotlin.math.abs
 /**
  * A [LinearProgressIndicator] with COUI style.
  *
+ * The determinate form ports COUIHorizontalProgressBar: a capsule track with a square-edged fill
+ * clipped to it, redrawn directly on every progress change (no progress animation), filling from
+ * the end edge in right-to-left layouts.
+ *
+ * The indeterminate form (`progress = null`) is a library extension with no COUI counterpart:
+ * COUIProgressHorizontal is `indeterminateOnly = false` and draws no indeterminate animation, so the
+ * three-segment loop drawn here is not sourced from ColorOS.
+ *
  * @param modifier The modifier to be applied to the indicator.
  * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
+ * @param enabled Whether the indicator is enabled. A disabled indicator switches to the disabled
+ *   foreground and track colors, as the `state_enabled="false"` items of
+ *   coui_progressbar_progress_selector / coui_progressbar_background_selector do.
  * @param colors The colors used for the indicator.
  * @param height The height of the indicator.
  */
@@ -54,11 +70,15 @@ import kotlin.math.abs
 fun LinearProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
+    enabled: Boolean = true,
     colors: ProgressIndicatorColors = ProgressIndicatorDefaults.progressIndicatorColors(),
     height: Dp = ProgressIndicatorDefaults.DefaultLinearProgressIndicatorHeight,
 ) {
-    val currentBackgroundColor = colors.backgroundColor()
-    val currentForegroundColor = colors.foregroundColor(true)
+    val currentBackgroundColor = colors.backgroundColor(enabled)
+    val currentForegroundColor = colors.foregroundColor(enabled)
+    // COUIHorizontalProgressBar.onDraw fills from the right edge when the layout is RTL.
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val directionScaleX = if (isRtl) -1f else 1f
 
     if (progress == null) {
         val transition = rememberInfiniteTransition()
@@ -83,8 +103,10 @@ fun LinearProgressIndicator(
                 cornerRadius = CornerRadius(size.height / 2),
             )
 
-            for (i in 0 until 3) {
-                drawIndeterminateSegment(animatedValue, i, currentForegroundColor)
+            scale(scaleX = directionScaleX, scaleY = 1f) {
+                for (i in 0 until 3) {
+                    drawIndeterminateSegment(animatedValue, i, currentForegroundColor)
+                }
             }
         }
     } else {
@@ -109,10 +131,12 @@ fun LinearProgressIndicator(
                     color = currentBackgroundColor,
                     size = size,
                 )
-                drawRect(
-                    color = currentForegroundColor,
-                    size = Size(size.width * progressValue, size.height),
-                )
+                scale(scaleX = directionScaleX, scaleY = 1f) {
+                    drawRect(
+                        color = currentForegroundColor,
+                        size = Size(size.width * progressValue, size.height),
+                    )
+                }
             }
         }
     }
@@ -121,9 +145,22 @@ fun LinearProgressIndicator(
 /**
  * A [CircularProgressIndicator] with COUI style.
  *
+ * With a [progress] value it ports COUICircularProgressBar / COUICircularProgressDrawable: a
+ * neutral arc over a divider-colored track, starting at 12 o'clock, which follows progress changes
+ * on a critically damped spring (dampingRatio 1, stiffness 50). Without one it ports
+ * COUILoadingView, whose arc and track use the theme accent (couiColorPrimary on
+ * couiColorSecondary), so the default [colors] depend on [progress].
+ *
+ * Geometry note: COUICircularProgressBar measures its view as `length + 2 x 4dp` but draws a ring
+ * whose outer diameter is `length - 2 x 4dp` (a 48dp view with a 32dp ring for the 40dp large tier).
+ * This indicator draws the ring across the full [size] (outer diameter = [size]); pass a smaller
+ * [size] if the device-measured ring matches the narrower geometry.
+ *
  * @param modifier The modifier to be applied to the indicator.
  * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
- * @param colors The colors used for the indicator.
+ * @param colors The colors used for the indicator. Defaults to
+ *   [ProgressIndicatorDefaults.circularProgressIndicatorColors] with a [progress] value and to
+ *   [ProgressIndicatorDefaults.loadingViewColors] without one.
  * @param strokeWidth The width of the circular stroke.
  * @param size The size (diameter) of the circular indicator.
  */
@@ -131,7 +168,11 @@ fun LinearProgressIndicator(
 fun CircularProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
-    colors: ProgressIndicatorColors = ProgressIndicatorDefaults.circularProgressIndicatorColors(),
+    colors: ProgressIndicatorColors = if (progress == null) {
+        ProgressIndicatorDefaults.loadingViewColors()
+    } else {
+        ProgressIndicatorDefaults.circularProgressIndicatorColors()
+    },
     strokeWidth: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth,
     size: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize,
 ) {
@@ -183,6 +224,12 @@ fun CircularProgressIndicator(
         }
     } else {
         val progressValue = progress.coerceIn(0f, 1f)
+        // COUICircularProgressDrawable.setProgress(p, animate = true) drives the visual progress
+        // with a SpringAnimation of SpringForce(dampingRatio = 1.0, stiffness = 50).
+        val visualProgress by animateFloatAsState(
+            targetValue = progressValue,
+            animationSpec = CircularProgressSpring,
+        )
 
         Canvas(
             modifier = modifier
@@ -194,7 +241,7 @@ fun CircularProgressIndicator(
             val center = Offset(size.toPx() / 2, size.toPx() / 2)
 
             // COUICircularProgressDrawable.drawProgress: sweep = max(1e-4, progress * 360 / max).
-            val sweepAngle = maxOf(1.0E-4f, progressValue * 360f)
+            val sweepAngle = maxOf(1.0E-4f, visualProgress * 360f)
 
             withSrcCompositingLayer {
                 drawCircularBackground(currentBackgroundColor, radius, center, strokeWidthPx)
@@ -213,6 +260,9 @@ fun CircularProgressIndicator(
         }
     }
 }
+
+/** COUICircularProgressDrawable.initSpring: SpringForce(dampingRatio = 1.0, stiffness = 50). */
+private val CircularProgressSpring = spring(dampingRatio = 1f, stiffness = 50f, visibilityThreshold = 0.001f)
 
 /**
  * A [InfiniteProgressIndicator] with COUI style.
@@ -253,7 +303,8 @@ fun InfiniteProgressIndicator(
  * here with a single [drawArc] and needs no Lottie runtime.
  *
  * @param modifier The modifier to be applied to the indicator.
- * @param color The color of the arc.
+ * @param color The color of the arc. Defaults to
+ *   [ProgressIndicatorDefaults.rotatingProgressIndicatorColor], the asset's 85% stroke opacity.
  * @param size The size (the square view box) of the indicator.
  * @param ringDiameter The diameter of the arc's stroke centerline, centered inside [size].
  * @param strokeWidth The width of the arc stroke.
@@ -261,7 +312,7 @@ fun InfiniteProgressIndicator(
 @Composable
 fun RotatingProgressIndicator(
     modifier: Modifier = Modifier,
-    color: Color = COUITheme.colorScheme.onSurfaceContainer,
+    color: Color = ProgressIndicatorDefaults.rotatingProgressIndicatorColor(),
     size: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize,
     ringDiameter: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter,
     strokeWidth: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth,
@@ -516,14 +567,46 @@ object ProgressIndicatorDefaults {
     val MaxRotatingProgressIndicatorSize = 40.dp
 
     /**
+     * The default arc color of [RotatingProgressIndicator].
+     *
+     * coui_rotating_loading.json (light) and coui_rotating_loading_night.json (dark) stroke the arc
+     * in black / white at opacity 85. The animation renderer (BaseStrokeContent.draw) replaces the
+     * paint alpha with the stroke opacity after StrokeContent sets the color, so the color's own
+     * alpha component is discarded and the arc renders as #D9000000 / #D9FFFFFF.
+     */
+    @Composable
+    fun rotatingProgressIndicatorColor(): Color = COUITheme.colorScheme.onSurfaceContainer.copy(alpha = RotatingSpinnerOpacity)
+
+    /**
      * The default [ProgressIndicatorColors] used by [LinearProgressIndicator]
-     * (COUIProgressHorizontal style: progress = couiColorPrimary, track = couiColorDivider).
+     * (COUIProgressHorizontal style: progress = couiColorPrimary, track = couiColorDivider; the
+     * disabled pair comes from the `state_enabled="false"` items of the same selectors).
      */
     @Composable
     fun progressIndicatorColors(
         foregroundColor: Color = COUITheme.colorScheme.primary,
-        disabledForegroundColor: Color = COUITheme.colorScheme.disabledPrimarySlider,
+        disabledForegroundColor: Color = COUITheme.colorScheme.disabledProgress,
         backgroundColor: Color = COUITheme.colorScheme.dividerLine,
+        disabledBackgroundColor: Color = COUITheme.colorScheme.disabledProgressBackground,
+    ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor, disabledBackgroundColor) {
+        ProgressIndicatorColors(
+            foregroundColor = foregroundColor,
+            disabledForegroundColor = disabledForegroundColor,
+            backgroundColor = backgroundColor,
+            disabledBackgroundColor = disabledBackgroundColor,
+        )
+    }
+
+    /**
+     * The default [ProgressIndicatorColors] used by the indeterminate [CircularProgressIndicator]
+     * (Widget.COUI.COUILoadingView style: arc = couiColorPrimary, track = couiColorSecondary,
+     * i.e. #0080FF on #260080FF / #1A8CFF on #401A8CFF).
+     */
+    @Composable
+    fun loadingViewColors(
+        foregroundColor: Color = COUITheme.colorScheme.primary,
+        disabledForegroundColor: Color = COUITheme.colorScheme.disabledPrimary,
+        backgroundColor: Color = COUITheme.colorScheme.tertiaryContainer,
     ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor) {
         ProgressIndicatorColors(
             foregroundColor = foregroundColor,
@@ -551,15 +634,19 @@ object ProgressIndicatorDefaults {
     }
 }
 
+/** The stroke opacity of coui_rotating_loading.json (`"o": 85`). */
+private val RotatingSpinnerOpacity = 0.85f
+
 @Immutable
 data class ProgressIndicatorColors(
     private val foregroundColor: Color,
     private val disabledForegroundColor: Color,
     private val backgroundColor: Color,
+    private val disabledBackgroundColor: Color = backgroundColor,
 ) {
     @Stable
     internal fun foregroundColor(enabled: Boolean): Color = if (enabled) foregroundColor else disabledForegroundColor
 
     @Stable
-    internal fun backgroundColor(): Color = backgroundColor
+    internal fun backgroundColor(enabled: Boolean = true): Color = if (enabled) backgroundColor else disabledBackgroundColor
 }

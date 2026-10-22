@@ -167,5 +167,9 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         press = roles.onSurface.copy(alpha = if (dark) 0.2f else 0.12f),
         hover = roles.onSurface.copy(alpha = if (dark) 0.15f else 0.08f),
         focus = roles.primary.copy(alpha = if (dark) 0.2f else 0.12f),
+        // COUI coui_progressbar_color_disabled (#E6E6E6 / #262626, opaque) and
+        // coui_progressbar_background_color_disabled (black 3% / white 20%).
+        disabledProgress = roles.surfaceContainerHigh,
+        disabledProgressBackground = roles.onSurface.copy(alpha = if (dark) 0.2f else 0.03f),
     )
 }

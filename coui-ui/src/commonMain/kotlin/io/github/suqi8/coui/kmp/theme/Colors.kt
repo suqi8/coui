@@ -76,6 +76,11 @@ import androidx.compose.ui.graphics.Color
  * @param press The pressed state layer drawn over a component (COUI couiColorPress). Cases: COUIIndication.
  * @param hover The hovered state layer drawn over a component (COUI couiColorHover). Cases: COUIIndication.
  * @param focus The focused / selected state layer of list rows (COUI couiColorFocus). Cases: COUIIndication.
+ * @param disabledProgress The progress color of a disabled linear progress bar (COUI coui_progressbar_color_disabled,
+ *   the candidate for couiProgressbarProgressColorDisabled). Cases: LinearProgressIndicator.
+ * @param disabledProgressBackground The track color of a disabled linear progress bar (COUI
+ *   coui_progressbar_background_color_disabled, the candidate for couiProgressbarBackgroundColorDisabled).
+ *   Cases: LinearProgressIndicator.
  */
 @Stable
 class Colors(
@@ -145,6 +150,8 @@ class Colors(
     press: Color,
     hover: Color,
     focus: Color,
+    disabledProgress: Color,
+    disabledProgressBackground: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -278,6 +285,10 @@ class Colors(
         internal set
     var focus by mutableStateOf(focus, structuralEqualityPolicy())
         internal set
+    var disabledProgress by mutableStateOf(disabledProgress, structuralEqualityPolicy())
+        internal set
+    var disabledProgressBackground by mutableStateOf(disabledProgressBackground, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -346,6 +357,8 @@ class Colors(
         press: Color = this.press,
         hover: Color = this.hover,
         focus: Color = this.focus,
+        disabledProgress: Color = this.disabledProgress,
+        disabledProgressBackground: Color = this.disabledProgressBackground,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -413,6 +426,8 @@ class Colors(
         press,
         hover,
         focus,
+        disabledProgress,
+        disabledProgressBackground,
     )
 }
 
@@ -484,6 +499,8 @@ fun lightColorScheme(
     press: Color = Color(0x1F000000),
     hover: Color = Color(0x14000000),
     focus: Color = Color(0x1F0080FF),
+    disabledProgress: Color = Color(0xFFE6E6E6),
+    disabledProgressBackground: Color = Color(0x08000000),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -551,6 +568,8 @@ fun lightColorScheme(
     press,
     hover,
     focus,
+    disabledProgress,
+    disabledProgressBackground,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -621,6 +640,8 @@ fun darkColorScheme(
     press: Color = Color(0x33FFFFFF),
     hover: Color = Color(0x26FFFFFF),
     focus: Color = Color(0x331A8CFF),
+    disabledProgress: Color = Color(0xFF262626),
+    disabledProgressBackground: Color = Color(0x33FFFFFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -688,6 +709,8 @@ fun darkColorScheme(
     press,
     hover,
     focus,
+    disabledProgress,
+    disabledProgressBackground,
 )
 
 @Stable
@@ -758,6 +781,8 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     press = other.press
     hover = other.hover
     focus = other.focus
+    disabledProgress = other.disabledProgress
+    disabledProgressBackground = other.disabledProgressBackground
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }
