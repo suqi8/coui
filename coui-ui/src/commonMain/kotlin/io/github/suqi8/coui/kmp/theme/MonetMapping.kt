@@ -152,5 +152,7 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         sliderKeyPoint = roles.primary,
         sliderKeyPointForeground = roles.surfaceContainerHigh,
         sliderBackground = sliderBackground,
+        dialogButton = roles.surfaceContainerHigh,
+        dragHandle = roles.outlineVariant,
     )
 }

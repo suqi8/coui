@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.captionBarPadding
@@ -21,10 +22,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -54,12 +56,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
+import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -95,6 +98,8 @@ import kotlinx.coroutines.launch
  *   instead of bottom slide-in). If null, detected from the window size.
  * @param cornerRadius Optional corner radius override. If null, [DialogDefaults.CornerRadius].
  * @param topInset Optional top inset override. If null, calculated from window insets.
+ * @param backgroundModifier Applied inside the panel's corner clip, below the content.
+ * @param materialStroke Whether to draw the COUI 17 material stroke of a blurred panel.
  * @param content The content of the dialog.
  */
 @Suppress("ktlint:compose:modifier-not-used-at-root")
@@ -108,6 +113,7 @@ internal fun DialogContentLayout(
     insideMargin: DpSize,
     popupHost: @Composable (visible: Boolean, content: @Composable () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     summary: String? = null,
     enableWindowDim: Boolean = true,
@@ -119,6 +125,7 @@ internal fun DialogContentLayout(
     largeScreen: Boolean? = null,
     cornerRadius: Dp? = null,
     topInset: Dp? = null,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val animationProgress = remember { Animatable(0f, visibilityThreshold = 0.0001f) }
@@ -228,9 +235,10 @@ internal fun DialogContentLayout(
         val slideBottomPadding = if (isCentered) {
             0.dp
         } else {
-            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                WindowInsets.captionBar.asPaddingValues().calculateBottomPadding() +
-                outsideMargin.height
+            dialogBottomGap(
+                navigationBar = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+                margin = outsideMargin.height,
+            ) + WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
         }
         val contentModifier = modifier.graphicsLayer {
             val progress = animationProgress.value
@@ -271,6 +279,8 @@ internal fun DialogContentLayout(
             largeScreen = largeScreen,
             cornerRadius = cornerRadius,
             topInset = topInset,
+            backgroundModifier = backgroundModifier,
+            materialStroke = materialStroke,
             content = {
                 CompositionLocalProvider(LocalDismissState provides requestDismiss) {
                     content()
@@ -295,11 +305,13 @@ internal fun DialogContent(
     dialogHeightPx: MutableIntState,
     onDismissRequest: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     forceCentered: Boolean = false,
     maxWidth: Dp = DialogDefaults.MaxWidth,
     largeScreen: Boolean? = null,
     cornerRadius: Dp? = null,
     topInset: Dp? = null,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val resolvedCornerRadius = cornerRadius ?: DialogDefaults.CornerRadius
@@ -321,21 +333,30 @@ internal fun DialogContent(
         maxOf(statusBars, captionBar, displayCutout)
     }
 
+    val navigationBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    // The gap between the panel and the bottom screen edge, see [dialogBottomGap]; the centered
+    // tier keeps the plain navigation inset + margin.
+    val bottomGap = if (isCentered) {
+        navigationBarBottom + outsideMargin.height
+    } else {
+        dialogBottomGap(navigationBar = navigationBarBottom, margin = outsideMargin.height)
+    }
     // Predictive-back translation pad (small-screen only). Pre-converted to px so the per-frame
     // graphicsLayer block does not call asPaddingValues() / toPx() each invalidation.
-    val bottomPadding = if (isCentered) {
-        0.dp
-    } else {
-        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-            WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
-    }
-    val extraBottomPaddingPx = remember(density, bottomPadding, outsideMargin.height, isCentered) {
-        if (isCentered) 0f else with(density) { (bottomPadding + outsideMargin.height).toPx() }
+    val captionBarBottom = WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
+    val extraBottomPaddingPx = remember(density, bottomGap, captionBarBottom, isCentered) {
+        if (isCentered) 0f else with(density) { (bottomGap + captionBarBottom).toPx() }
     }
 
     val contentModifier = modifier
         .widthIn(max = maxWidth)
-        .heightIn(max = if (isCentered) windowHeight * (2f / 3f) else Dp.Unspecified)
+        .heightIn(
+            max = if (isCentered) {
+                minOf(windowHeight * (2f / 3f), DialogDefaults.MaxHeight)
+            } else {
+                DialogDefaults.MaxHeight
+            },
+        )
         .onGloballyPositioned { coordinates ->
             dialogHeightPx.intValue = coordinates.size.height
         }
@@ -360,6 +381,17 @@ internal fun DialogContent(
         }
         // COUI panels carry no blanket inside padding; each slot brings its own margins.
         .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
+        // Inside the corner clip: a backdrop blur provider paints here, under the content.
+        .then(backgroundModifier)
+        // COUIAlertDialogRootLayout draws its shadow edge in onDraw, above the background and
+        // below the children.
+        .materialStroke(
+            light = MaterialStrokePresets.DialogLight,
+            dark = MaterialStrokePresets.DialogDark,
+            topCornerRadius = resolvedCornerRadius,
+            bottomCornerRadius = resolvedCornerRadius,
+            enabled = materialStroke,
+        )
 
     Box(
         modifier = Modifier
@@ -367,7 +399,8 @@ internal fun DialogContent(
                 if (defaultWindowInsetsPadding) {
                     Modifier
                         .imePadding()
-                        .navigationBarsPadding()
+                        // The bottom navigation inset is folded into the bottom gap below.
+                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
                         .captionBarPadding()
                 } else {
                     Modifier
@@ -386,19 +419,15 @@ internal fun DialogContent(
                 }
             }
             .padding(horizontal = outsideMargin.width)
-            .padding(top = calculatedTopInset, bottom = outsideMargin.height),
+            .padding(
+                top = calculatedTopInset,
+                bottom = if (defaultWindowInsetsPadding) bottomGap else outsideMargin.height,
+            ),
     ) {
         Column(
             modifier = contentModifier.align(contentAlignment),
         ) {
-            val titleMultiline = remember { mutableStateOf(false) }
             val summaryMultiline = remember { mutableStateOf(false) }
-            // COUI swaps the message scroll paddings for the tall variant once the title or message wraps.
-            val messagePadding = if (titleMultiline.value || summaryMultiline.value) {
-                MessagePaddingVerticalTall
-            } else {
-                MessagePaddingVertical
-            }
             title?.let {
                 Text(
                     modifier = Modifier
@@ -406,12 +435,11 @@ internal fun DialogContent(
                         .padding(horizontal = insideMargin.width)
                         .padding(top = insideMargin.height, bottom = TitleMarginBottom),
                     text = it,
-                    fontSize = COUITheme.textStyles.title4.fontSize,
-                    fontWeight = FontWeight.Medium,
+                    // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp), sans-serif-semibold.
+                    style = COUITheme.textStyles.title4,
+                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
-                    lineHeight = DialogLineHeight,
                     color = titleColor,
-                    onTextLayout = { titleMultiline.value = it.lineCount > 1 },
                 )
             }
             summary?.let {
@@ -419,12 +447,18 @@ internal fun DialogContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = insideMargin.width)
-                        .padding(vertical = messagePadding),
+                        // COUIAlertDialogMessageScrollViewStyle: 0dp above, 16dp below. With no
+                        // title the message takes the title's top margin instead.
+                        .padding(
+                            top = if (title == null) insideMargin.height else MessagePaddingTop,
+                            bottom = MessagePaddingBottom,
+                        ),
                     text = it,
-                    fontSize = COUITheme.textStyles.body2.fontSize,
-                    // COUI centers a single-line message and start-aligns once it wraps.
+                    // COUIAlertDialogMessageStyle: couiTextBodyS (13sp).
+                    style = COUITheme.textStyles.footnote1,
+                    // COUIAlertDialogMessageView centers a single-line message and start-aligns
+                    // once it wraps.
                     textAlign = if (summaryMultiline.value) TextAlign.Start else TextAlign.Center,
-                    lineHeight = DialogLineHeight,
                     color = summaryColor,
                     onTextLayout = { summaryMultiline.value = it.lineCount > 1 },
                 )
@@ -455,13 +489,17 @@ object DialogDefaults {
     fun titleColor() = COUITheme.colorScheme.onBackground
 
     /**
-     * The default color of the summary. COUI uses the same primary label color as the title.
+     * The default color of the summary. COUI 17 `COUIAlertDialogMessageStyle` uses
+     * `?couiColorLabelSecondary`.
      */
     @Composable
-    fun summaryColor() = COUITheme.colorScheme.onBackground
+    fun summaryColor() = COUITheme.colorScheme.onSurfaceSecondary
 
     /**
-     * The default background color of the dialog.
+     * The default background color of the dialog (`?couiColorSurface`, the opaque fill
+     * `coui_alert_dialog_background` draws and the overlay COUI falls back to when the blur is
+     * unavailable). Pass [androidx.compose.ui.graphics.Color.Transparent] when a backdrop blur
+     * paints the panel through `backgroundModifier`.
      */
     @Composable
     fun backgroundColor() = COUITheme.colorScheme.background
@@ -481,51 +519,50 @@ object DialogDefaults {
     val MaxWidth = 392.dp
 
     /**
-     * The default margin outside the dialog.
-     * COUI `coui_dialog_layout_margin_horizontal` / `coui_dialog_layout_margin_vertical`.
+     * The upper bound on the panel height. COUI `COUIAlertDialogLayoutStyle` caps the panel at
+     * `coui_dialog_max_height` (632dp), a height that includes the
+     * `coui_dialog_layout_margin_vertical` (32dp) bottom inset of its background, leaving 600dp
+     * for the panel itself.
      */
-    val outsideMargin = DpSize(16.dp, 24.dp)
+    val MaxHeight = 600.dp
+
+    /**
+     * The default margin outside the dialog. COUI `coui_dialog_layout_margin_horizontal` (16dp) /
+     * `coui_dialog_layout_margin_vertical` (32dp); the height is the bottom gap on a screen
+     * without a navigation bar, see [MarginBottomWithNavigationBar].
+     */
+    val outsideMargin = DpSize(16.dp, 32.dp)
+
+    /**
+     * The distance between a bottom-aligned dialog and the bottom screen edge under three-button
+     * navigation. COUI `COUIAlertDialogMaxLinearLayout.updateDialogBottomMargin` pads the panel by
+     * `coui_dialog_layout_margin_bottom_with_navigation_bar - navigationBarHeight`, so the panel
+     * always ends 60dp above the screen edge; under gesture navigation it pads by
+     * `max(0, coui_dialog_layout_margin_vertical - navigationBarHeight)` instead.
+     */
+    val MarginBottomWithNavigationBar = 60.dp
 
     /**
      * The default margin for the built-in title and summary texts: width is their horizontal
-     * padding (COUI `coui_alert_dialog_message_padding_left`), height is the top padding above
-     * the title (`coui_no_message_alert_dialog_title_margin_top`). The content slot is left
-     * unpadded so COUI-style button bars can span the full panel width.
+     * padding (COUI `coui_alert_dialog_message_padding_left`), height is the top margin of the
+     * title (`coui_alert_dialog_title_margin_top`). The content slot is left unpadded so the button
+     * bar can lay out its own paddings.
      */
     val insideMargin = DpSize(24.dp, 24.dp)
 
     /**
-     * The min height of a horizontal dialog button bar. COUI `coui_alert_dialog_button_height`.
+     * The min height of a horizontal dialog button bar and of each of its buttons. COUI
+     * `coui_alert_dialog_button_height`.
      */
-    val ButtonBarMinHeight = 58.dp
+    val ButtonBarMinHeight = 44.dp
 
     /**
      * The paddings of a button in a horizontal dialog button bar. COUI
-     * `coui_alert_dialog_button_horizontal_padding` and the vertical values
-     * `COUIButtonBarLayout.resetHorButsPadding` settles on,
-     * `coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new`, so the panel
-     * bottom inset is carried by the buttons themselves.
+     * `COUIButtonBarLayout.setButHorizontal`: `coui_alert_dialog_button_horizontal_padding` (12dp)
+     * on both sides and `coui_bottom_alert_dialog_horizontal_button_padding_top/bottom_extra_new`
+     * (4dp) above and below the label.
      */
-    val ButtonBarInsideMargin = PaddingValues(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 22.dp)
-
-    /**
-     * The thickness of the divider between horizontal dialog bar buttons. COUI
-     * `coui_delete_alert_dialog_divider_height_horizontalbutton`; the 0.33dp `_verticalbutton`
-     * token applies only when the bar stacks vertically.
-     */
-    val ButtonBarDividerThickness = 1.dp
-
-    /**
-     * The top inset of the divider between horizontal dialog bar buttons. COUI
-     * `coui_bottom_alert_dialog_horizontal_button_padding_top_extra_divider_new`.
-     */
-    val ButtonBarDividerInsetTop = 17.dp
-
-    /**
-     * The bottom inset of the divider between horizontal dialog bar buttons. COUI
-     * `coui_bottom_alert_dialog_horizontal_button_padding_bottom_extra_divider_new`.
-     */
-    val ButtonBarDividerInsetBottom = 21.dp
+    val ButtonBarInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
 }
 
 /** COUI android_alert_dialog_enter: pathInterpolator(0.3, 0, 0.1, 1). */
@@ -543,14 +580,26 @@ private val BottomExitDurationMillis = 250
 /** COUI coui_center_dialog_exit alpha duration. */
 private val CenterExitDurationMillis = 150
 
-/** COUI dialog title/message lineSpacingMultiplier 1.1, resolved against sans-serif font metrics. */
-private val DialogLineHeight = 1.29f.em
-
-/** COUI coui_no_message_alert_dialog_title_margin_bottom, applied for every non-tiny dialog. */
+/** COUI coui_alert_dialog_title_margin_bottom. */
 private val TitleMarginBottom = 6.dp
 
-/** COUI coui_alert_dialog_scroll_padding_top/bottom_message_tallDialog (the resting values). */
-private val MessagePaddingVertical = 18.dp
+/** COUI coui_alert_dialog_scroll_padding_top_message_tallDialog (the message scroll view style). */
+private val MessagePaddingTop = 0.dp
 
-/** COUI message scroll padding once the title or message is multiline (a tall dialog). */
-private val MessagePaddingVerticalTall = 8.dp
+/** COUI coui_alert_dialog_scroll_padding_bottom_message_tallDialog (the message scroll view style). */
+private val MessagePaddingBottom = 16.dp
+
+/**
+ * The gap between a bottom-aligned dialog and the bottom screen edge, after
+ * `COUIAlertDialogMaxLinearLayout.updateDialogBottomMargin`. Gesture navigation pads the panel by
+ * `max(0, margin - navigationBar)`, which lands it [margin] above the screen edge; three-button
+ * navigation pads it by `60dp - navigationBar`, which lands it
+ * [DialogDefaults.MarginBottomWithNavigationBar] above the edge. Compose cannot tell the two
+ * navigation modes apart, so a navigation bar taller than [margin] is taken as the three-button
+ * one (the gesture handle bar is well below the 32dp default).
+ */
+private fun dialogBottomGap(navigationBar: Dp, margin: Dp): Dp = if (navigationBar <= margin) {
+    margin
+} else {
+    maxOf(DialogDefaults.MarginBottomWithNavigationBar, navigationBar)
+}

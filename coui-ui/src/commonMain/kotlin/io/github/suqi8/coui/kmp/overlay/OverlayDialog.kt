@@ -41,12 +41,19 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  *   instead of bottom slide-in). If null, detected from the window size.
  * @param cornerRadius Optional corner radius override. If null, [DialogDefaults.CornerRadius]
  *   is used.
+ * @param backgroundModifier A [Modifier] applied inside the panel's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred window background, e.g. with
+ *   coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark))`, and pass
+ *   a transparent [backgroundColor] alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
  * @param content The [Composable] content of the [OverlayDialog].
  */
 @Composable
 fun OverlayDialog(
     show: Boolean,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     titleColor: Color = DialogDefaults.titleColor(),
     summary: String? = null,
@@ -62,6 +69,7 @@ fun OverlayDialog(
     maxWidth: Dp = DialogDefaults.MaxWidth,
     largeScreen: Boolean? = null,
     cornerRadius: Dp? = null,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     DialogContentLayout(
@@ -95,6 +103,8 @@ fun OverlayDialog(
         maxWidth = maxWidth,
         largeScreen = largeScreen,
         cornerRadius = cornerRadius,
+        backgroundModifier = backgroundModifier,
+        materialStroke = materialStroke,
         content = content,
     )
 }

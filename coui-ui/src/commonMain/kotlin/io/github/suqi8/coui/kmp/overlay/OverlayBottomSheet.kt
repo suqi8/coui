@@ -39,12 +39,19 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  * @param renderInRootScaffold Whether to render the bottom sheet in the root (outermost) Scaffold.
  *   When true (default), the bottom sheet covers the full screen. When false, it renders within the
  *   current Scaffold's bounds.
+ * @param backgroundModifier A [Modifier] applied inside the sheet's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred panel background, e.g. with
+ *   coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.bottomSheet(isDark))`, and
+ *   pass a transparent [backgroundColor] alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIBottomSheetDialog` adds once the panel background is blurred. Needs runtime shaders.
  * @param content The [Composable] content of the [OverlayBottomSheet].
  */
 @Composable
 fun OverlayBottomSheet(
     show: Boolean,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     startAction: @Composable (() -> Unit)? = null,
     endAction: @Composable (() -> Unit)? = null,
@@ -61,6 +68,7 @@ fun OverlayBottomSheet(
     allowDismiss: Boolean = true,
     enableNestedScroll: Boolean = true,
     renderInRootScaffold: Boolean = true,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     BottomSheetContentLayout(
@@ -95,6 +103,8 @@ fun OverlayBottomSheet(
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
         allowDismiss = allowDismiss,
         enableNestedScroll = enableNestedScroll,
+        backgroundModifier = backgroundModifier,
+        materialStroke = materialStroke,
         content = content,
     )
 }

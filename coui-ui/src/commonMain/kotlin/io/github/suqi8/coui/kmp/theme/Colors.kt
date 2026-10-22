@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.Color
  * @param sliderKeyPoint The color of the slider key point.
  * @param sliderKeyPointForeground The foreground color of the slider key point.
  * @param sliderBackground The background color of the slider.
+ * @param dialogButton The fill of the dialog bar buttons (COUI couiColorContainer8). Cases: Dialog, BottomSheet.
+ * @param dragHandle The color of the bottom sheet drag handle (COUI couiColorControls).
  */
 @Stable
 class Colors(
@@ -118,6 +120,8 @@ class Colors(
     sliderKeyPoint: Color,
     sliderKeyPointForeground: Color,
     sliderBackground: Color,
+    dialogButton: Color,
+    dragHandle: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -225,6 +229,10 @@ class Colors(
         internal set
     var sliderBackground by mutableStateOf(sliderBackground, structuralEqualityPolicy())
         internal set
+    var dialogButton by mutableStateOf(dialogButton, structuralEqualityPolicy())
+        internal set
+    var dragHandle by mutableStateOf(dragHandle, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -280,6 +288,8 @@ class Colors(
         sliderKeyPoint: Color = this.sliderKeyPoint,
         sliderKeyPointForeground: Color = this.sliderKeyPointForeground,
         sliderBackground: Color = this.sliderBackground,
+        dialogButton: Color = this.dialogButton,
+        dragHandle: Color = this.dragHandle,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -334,6 +344,8 @@ class Colors(
         sliderKeyPoint,
         sliderKeyPointForeground,
         sliderBackground,
+        dialogButton,
+        dragHandle,
     )
 }
 
@@ -392,6 +404,8 @@ fun lightColorScheme(
     sliderKeyPoint: Color = Color(0xFFF2F2F2),
     sliderKeyPointForeground: Color = Color(0xFF6EB5FF),
     sliderBackground: Color = Color(0x0D000000),
+    dialogButton: Color = Color(0x14000000),
+    dragHandle: Color = Color(0x29000000),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -446,6 +460,8 @@ fun lightColorScheme(
     sliderKeyPoint,
     sliderKeyPointForeground,
     sliderBackground,
+    dialogButton,
+    dragHandle,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -503,6 +519,8 @@ fun darkColorScheme(
     sliderKeyPoint: Color = Color(0xFF595959),
     sliderKeyPointForeground: Color = Color(0xFF5DAAFF),
     sliderBackground: Color = Color(0x1AFFFFFF),
+    dialogButton: Color = Color(0x1AFFFFFF),
+    dragHandle: Color = Color(0x40FFFFFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -557,6 +575,8 @@ fun darkColorScheme(
     sliderKeyPoint,
     sliderKeyPointForeground,
     sliderBackground,
+    dialogButton,
+    dragHandle,
 )
 
 @Stable
@@ -614,6 +634,8 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     sliderKeyPoint = other.sliderKeyPoint
     sliderKeyPointForeground = other.sliderKeyPointForeground
     sliderBackground = other.sliderBackground
+    dialogButton = other.dialogButton
+    dragHandle = other.dragHandle
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

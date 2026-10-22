@@ -45,12 +45,19 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param dragHandleColor The color of the drag handle at the top.
  * @param allowDismiss Whether to allow dismissing the sheet via drag or back gesture.
  * @param enableNestedScroll Whether to enable nested scrolling for the content.
+ * @param backgroundModifier A [Modifier] applied inside the sheet's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred panel background, e.g. with
+ *   coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.bottomSheet(isDark))`, and
+ *   pass a transparent [backgroundColor] alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIBottomSheetDialog` adds once the panel background is blurred. Needs runtime shaders.
  * @param content The [Composable] content of the [WindowBottomSheet].
  */
 @Composable
 fun WindowBottomSheet(
     show: Boolean,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     startAction: @Composable (() -> Unit)? = null,
     endAction: @Composable (() -> Unit)? = null,
@@ -66,6 +73,7 @@ fun WindowBottomSheet(
     dragHandleColor: Color = BottomSheetDefaults.dragHandleColor(),
     allowDismiss: Boolean = true,
     enableNestedScroll: Boolean = true,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val statusBarsPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -113,6 +121,8 @@ fun WindowBottomSheet(
         allowDismiss = allowDismiss,
         enableNestedScroll = enableNestedScroll,
         topInset = safeTopInset,
+        backgroundModifier = backgroundModifier,
+        materialStroke = materialStroke,
         content = {
             CompositionLocalProvider(
                 LocalDismissState provides {

@@ -76,6 +76,8 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.anim.folmeSpring
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
+import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
@@ -111,6 +113,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param allowDismiss Whether to allow dismissing the sheet via drag or back gesture.
  * @param enableNestedScroll Whether to enable nested scrolling for the content.
  * @param topInset Optional top inset override. If null, calculated from window insets.
+ * @param backgroundModifier Applied inside the sheet's corner clip, below the content.
+ * @param materialStroke Whether to draw the COUI 17 material stroke of a blurred panel.
  * @param content The content of the bottom sheet.
  */
 @Suppress("ktlint:compose:modifier-not-used-at-root")
@@ -125,6 +129,7 @@ internal fun BottomSheetContentLayout(
     dragHandleColor: Color,
     popupHost: @Composable (visible: Boolean, content: @Composable () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     startAction: @Composable (() -> Unit)? = null,
     endAction: @Composable (() -> Unit)? = null,
@@ -135,6 +140,7 @@ internal fun BottomSheetContentLayout(
     allowDismiss: Boolean = true,
     enableNestedScroll: Boolean = true,
     topInset: Dp? = null,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val animationProgress = remember { Animatable(0f, visibilityThreshold = 0.0001f) }
@@ -318,6 +324,8 @@ internal fun BottomSheetContentLayout(
                 modifier = sheetModifier,
                 topInset = topInset,
                 enableNestedScroll = enableNestedScroll,
+                backgroundModifier = backgroundModifier,
+                materialStroke = materialStroke,
                 startAction = startAction?.let { action ->
                     { CompositionLocalProvider(LocalDismissState provides requestDismiss) { action() } }
                 },
@@ -352,8 +360,10 @@ internal fun BottomSheetContent(
     dragSnapChannel: Channel<Float>,
     onDismissRequest: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     topInset: Dp? = null,
     enableNestedScroll: Boolean = true,
+    materialStroke: Boolean = false,
     startAction: @Composable (() -> Unit)? = null,
     endAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
@@ -436,15 +446,18 @@ internal fun BottomSheetContent(
                                 peekPx = with(density) { PanelPeekHeight.toPx() },
                                 dimAlpha = dimAlpha,
                                 velocity = velocity,
+                                draggedOut = true,
                             ) {
                                 onDismissRequest?.invoke()
                             }
                         }
                     } else {
                         val effectiveVelocity = if (!allowDismiss && velocity > 0) 0f else velocity
+                        // COUIBottomSheetBehavior.startSettleRunnable back to the expanded state:
+                        // COUISpringForce response 0.4, bounce 0.
                         dragOffsetY.animateTo(
                             targetValue = 0f,
-                            animationSpec = folmeSpring(damping = 0.85f, response = 0.4f),
+                            animationSpec = folmeSpring(damping = 1f, response = 0.4f),
                             initialVelocity = effectiveVelocity,
                         ) {
                             updateDimAlpha(value)
@@ -561,6 +574,8 @@ internal fun BottomSheetContent(
         onSettle = performSettle,
         onUpdateAlpha = updateDimAlpha,
         modifier = modifier,
+        backgroundModifier = backgroundModifier,
+        materialStroke = materialStroke,
         content = content,
     )
 }
@@ -590,6 +605,8 @@ private fun BottomSheetColumn(
     onSettle: (velocity: Float) -> Unit,
     onUpdateAlpha: (Float) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
+    materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -635,6 +652,16 @@ private fun BottomSheetColumn(
                     topEnd = cornerRadius,
                     bottomEnd = 0.dp,
                     bottomStart = 0.dp,
+                )
+                // Inside the corner clip: a backdrop blur provider paints here, under the content.
+                .then(backgroundModifier)
+                // COUIBottomSheetDialog's shadow edge: radius on the top corners only.
+                .materialStroke(
+                    light = MaterialStrokePresets.SheetLight,
+                    dark = MaterialStrokePresets.SheetDark,
+                    topCornerRadius = cornerRadius,
+                    bottomCornerRadius = 0.dp,
+                    enabled = materialStroke,
                 )
                 .padding(horizontal = insideMargin.width)
                 .padding(bottom = insideMargin.height),
@@ -882,19 +909,29 @@ private suspend fun CoroutineScope.animateDismissOffScreen(
     peekPx: Float,
     dimAlpha: MutableFloatState,
     velocity: Float = 0f,
+    draggedOut: Boolean = false,
     onDismiss: () -> Unit,
 ) {
     val sheetHeight = sheetHeightPx.toFloat()
     val thresholdPx = if (sheetHeight > 0) sheetHeight else 500f
+    val spec: SpringSpec<Float> = if (draggedOut) {
+        // COUIBottomSheetBehavior.startSettleRunnable(STATE_HIDDEN) after a drag: response
+        // 0.18 + 0.19 * (the part of the sheet still on screen / parent height), bounce 0.
+        val visible = ((if (sheetHeight > 0) sheetHeight else windowHeightPx) - dragOffsetY.value).coerceAtLeast(0f)
+        val fraction = if (windowHeightPx > 0f) (visible / windowHeightPx).coerceIn(0f, 1f) else 0f
+        folmeSpring(damping = 1f, response = 0.18f + 0.19f * fraction)
+    } else {
+        couiPanelSlideSpring(
+            entering = false,
+            travelPx = if (sheetHeight > 0) sheetHeight else windowHeightPx,
+            containerPx = windowHeightPx,
+            peekPx = peekPx,
+        )
+    }
     val settleJob = launch {
         dragOffsetY.animateTo(
             targetValue = windowHeightPx,
-            animationSpec = couiPanelSlideSpring(
-                entering = false,
-                travelPx = if (sheetHeight > 0) sheetHeight else windowHeightPx,
-                containerPx = windowHeightPx,
-                peekPx = peekPx,
-            ),
+            animationSpec = spec,
             initialVelocity = velocity,
         ) {
             dimAlpha.floatValue = (1f - (value / thresholdPx).coerceIn(0f, 1f))
@@ -916,17 +953,20 @@ object BottomSheetDefaults {
     fun backgroundColor() = COUITheme.colorScheme.background
 
     /**
-     * The default color of the drag handle.
+     * The default color of the drag handle. COUI `DefaultBottomSheetDialog` tints the
+     * `coui_panel_drag_view` capsule with `panelDragViewTintColor = ?couiColorControls`.
      */
     @Composable
-    fun dragHandleColor() = COUITheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.2f)
+    fun dragHandleColor() = COUITheme.colorScheme.dragHandle
 
     /**
-     * The default corner radius of the top corners of the bottom sheet. COUI `couiRoundCornerXL`,
-     * with the squircle surface supplying the smooth-corner shape; the bottom corners are square,
-     * matching the outline COUI extends off-screen.
+     * The default corner radius of the top corners of the bottom sheet. COUI 17
+     * `COUIBottomSheetDialog` takes `coui_round_corner_xxxxl_radius_large_16_1` (45dp) once the Oplus
+     * OS version is above 37 (`couiRoundCornerXXXXL` before), with the squircle surface supplying the
+     * smooth-corner shape; the bottom corners are square, matching the outline COUI extends
+     * off-screen.
      */
-    val cornerRadius = 20.dp
+    val cornerRadius = 45.dp
 
     /**
      * The default maximum width cap of the bottom sheet. Unbounded by default: the effective

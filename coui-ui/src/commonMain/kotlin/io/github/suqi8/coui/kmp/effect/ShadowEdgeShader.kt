@@ -333,6 +333,32 @@ internal object ShadowEdgeShader {
         1f,
     )
 
+    /**
+     * [commonArray] with the top and bottom corner pairs set apart, after
+     * `ShadowEdgeShader.setCornerRadius(lt, rt, lb, rb)` (stored as lb, rb, rt, lt). A COUI panel
+     * passes its radius to the top corners only and zero to the bottom ones.
+     */
+    fun commonArray(
+        width: Float,
+        height: Float,
+        topCornerRadius: Float,
+        bottomCornerRadius: Float,
+        weight: Float,
+    ): FloatArray = floatArrayOf(
+        width,
+        height,
+        0f,
+        0f,
+        width,
+        height,
+        bottomCornerRadius,
+        bottomCornerRadius,
+        topCornerRadius,
+        topCornerRadius,
+        weight,
+        1f,
+    )
+
     /** `GradientStrokeStyleMapper.toEdgeArray16`: [lineWidth] is in pixels. */
     fun edgeArray(
         spec: GradientStrokeSpec,
@@ -563,6 +589,40 @@ internal object ShadowEdgePresets {
         fadeOut = 20f,
         fadeOutPara1 = 4f,
         fadeOutPara2 = 0.7f,
+    )
+
+    /**
+     * `GradientStrokeStylePresets.EDGE_STYLE_LIGHT_2` / `EDGE_STYLE_DARK_2`, the edge style the
+     * blurred alert dialog (`COUIAlertDialogRootLayout`) and bottom sheet (`COUIBottomSheetDialog`)
+     * request. The light and dark presets are identical.
+     */
+    val PanelEdge = GradientStrokeSpec(
+        rectLineSize = floatArrayOf(600f, 200f),
+        rectLineColor = floatArrayOf(1f, 1f, 1f),
+        rectLineNear = floatArrayOf(2f, 8f),
+        rectLineFar = floatArrayOf(2f, 2f),
+        rectLineAlpha = floatArrayOf(0.7f, 0.6f),
+        rectLineFade = floatArrayOf(0.18f, 0.35f, 0.25f, 0.25f),
+        rectLinePara1 = 4f,
+        rectLinePara2 = 0.8f,
+    )
+
+    /**
+     * `InnerShadowStylePresets.SHADOW_STYLE_LIGHT_2` / `SHADOW_STYLE_DARK_2`, the inner shadow of the
+     * blurred bottom sheet. The light and dark presets are identical.
+     */
+    val PanelShadow = InnerShadowSpec(
+        fadeSize = floatArrayOf(600f, 600f),
+        fadeColor = floatArrayOf(1f, 1f, 1f),
+        fadeAlpha = floatArrayOf(0.6f, 0f, 0f),
+        fadeOffset = floatArrayOf(0f, 10f),
+        fadeScale = floatArrayOf(1.1f, 1.07f),
+        fadeIn = 86f,
+        fadeInPara1 = 4f,
+        fadeInPara2 = 0.7f,
+        fadeOut = 1f,
+        fadeOutPara1 = 1f,
+        fadeOutPara2 = 0f,
     )
 
     /** `FRAMEWORK_CIRCLE_PARAMS_1_LIGHT` (`TYPE_FRAMEWORK_CIRCLE_1`). */
