@@ -117,6 +117,7 @@ import navigation3.Route
 import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.FPSMonitor
+import utils.LocalPageBackdrop
 import utils.rememberBlurBackdrop
 import utils.shouldShowSplitPane
 import kotlin.math.abs
@@ -370,14 +371,16 @@ private fun WideScreenContent(
             floatingToolbarPosition = appState.floatingToolbarPosition.toToolbarPosition(),
         ) { padding ->
             Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-                AppPager(
-                    snackbarHostState = snackbarHostState,
-                    padding = PaddingValues(top = padding.calculateTopPadding()),
-                    pagerState = mainPagerState.pagerState,
-                    modifier = Modifier
-                        .imePadding()
-                        .padding(end = padding.calculateEndPadding(layoutDirection)),
-                )
+                CompositionLocalProvider(LocalPageBackdrop provides backdrop) {
+                    AppPager(
+                        snackbarHostState = snackbarHostState,
+                        padding = PaddingValues(top = padding.calculateTopPadding()),
+                        pagerState = mainPagerState.pagerState,
+                        modifier = Modifier
+                            .imePadding()
+                            .padding(end = padding.calculateEndPadding(layoutDirection)),
+                    )
+                }
             }
         }
     }
@@ -422,18 +425,20 @@ private fun CompactScreenLayout(
         },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
-            AppPager(
-                snackbarHostState = snackbarHostState,
-                padding = innerPadding,
-                pagerState = mainPagerState.pagerState,
-                modifier = Modifier
-                    .padding(
-                        top = padding.calculateTopPadding(),
-                        start = padding.calculateStartPadding(LocalLayoutDirection.current),
-                        end = padding.calculateEndPadding(LocalLayoutDirection.current),
-                    )
-                    .imePadding(),
-            )
+            CompositionLocalProvider(LocalPageBackdrop provides backdrop) {
+                AppPager(
+                    snackbarHostState = snackbarHostState,
+                    padding = innerPadding,
+                    pagerState = mainPagerState.pagerState,
+                    modifier = Modifier
+                        .padding(
+                            top = padding.calculateTopPadding(),
+                            start = padding.calculateStartPadding(LocalLayoutDirection.current),
+                            end = padding.calculateEndPadding(LocalLayoutDirection.current),
+                        )
+                        .imePadding(),
+                )
+            }
         }
     }
 }

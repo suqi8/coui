@@ -28,9 +28,11 @@ import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.TextField
+import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Close
 import io.github.suqi8.coui.kmp.icon.extended.Ok
+import io.github.suqi8.coui.kmp.layout.BottomSheetDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
 import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
@@ -42,6 +44,7 @@ import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.utils.overScrollVertical
 import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 import io.github.suqi8.coui.kmp.window.WindowBottomSheet
+import utils.panelBlur
 
 private val BottomSheetDropdownOptions = listOf("Option 1", "Option 2")
 
@@ -114,14 +117,20 @@ private fun SuperBottomSheetDemo(
 ) {
     var allowDismiss by remember { mutableStateOf(true) }
     var enableNestedScroll by remember { mutableStateOf(true) }
+    // COUI 17 blurs the window behind the panel when the material blur is on; the page backdrop
+    // stands in for that window here.
+    val blur = panelBlur(MaterialBlurDefaults::bottomSheet)
 
     OverlayBottomSheet(
         title = "BottomSheet (O)",
         show = show,
+        backgroundColor = blur?.backgroundColor ?: BottomSheetDefaults.backgroundColor(),
         allowDismiss = allowDismiss,
         enableNestedScroll = enableNestedScroll,
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        materialStroke = blur != null,
         startAction = {
             IconButton(
                 onClick = onDismissRequest,

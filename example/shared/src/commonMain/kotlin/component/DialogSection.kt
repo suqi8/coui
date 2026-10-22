@@ -15,8 +15,10 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.layout.DialogButtonBar
 import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
+import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
 import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
@@ -24,6 +26,7 @@ import io.github.suqi8.coui.kmp.preference.ArrowPreference
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
+import utils.panelBlur
 
 fun LazyListScope.dialogSection() {
     item(key = "dialog") {
@@ -149,12 +152,17 @@ private fun StackedButtonBarDialogDemo(
     onDismissRequest: () -> Unit,
     onDismissFinished: () -> Unit,
 ) {
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
     OverlayDialog(
         show = show,
         title = "Delete Backup",
-        summary = "The button labels below do not fit side by side, so the bar stacks them.",
+        summary = "The button labels below do not fit side by side, so the bar stacks them. " +
+            "The neutral action takes the error color.",
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        materialStroke = blur != null,
         content = {
             DialogButtonBar(
                 negative = DialogButtonBarAction(text = "Not Now", onClick = onDismissRequest),
@@ -162,6 +170,7 @@ private fun StackedButtonBarDialogDemo(
                     text = "Delete Backup And Local Copies",
                     onClick = onDismissRequest,
                 ),
+                neutral = DialogButtonBarAction(text = "Delete Everything", onClick = onDismissRequest),
             )
         },
     )
@@ -173,12 +182,18 @@ private fun SuperDialogDemo(
     onDismissRequest: () -> Unit,
     onDismissFinished: () -> Unit,
 ) {
+    // COUI 17 blurs the window behind the dialog when the material blur is on; the page backdrop
+    // stands in for that window here.
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
     OverlayDialog(
         show = show,
         title = "Dialog (O)",
         summary = "A dialog component inside COUIPopupHost.",
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        materialStroke = blur != null,
         content = {
             DialogButtonBar(
                 negative = DialogButtonBarAction(text = "Cancel", onClick = onDismissRequest),
