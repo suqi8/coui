@@ -10,6 +10,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -32,25 +34,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSupported
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -59,11 +77,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toSize
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
@@ -72,6 +92,8 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
 import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
+import io.github.suqi8.coui.kmp.shader.RuntimeShader
+import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
@@ -108,15 +130,30 @@ fun SearchBar(
 ) {
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+    val iconExpand = LocalSearchBarIconExpand.current
+    val capsuleInfo = remember { SearchBarCapsuleInfo() }
+    val geometry = remember { SearchBarGeometry() }
+    val barLayoutDirection = LocalLayoutDirection.current
 
     // COUI 17 COUISearchBar: the capsule width (mStateChangedAnimation) and the functional button
     // (mFunBtnSpringAnimation) run on response 0.5 / bounce 0.25 springs, both in
     // StateChangedToEditParamsHigh and StateChangedToNormalParamsHigh. They start together with
-    // the same force, so one progress drives both.
-    val progress = remember { Animatable(if (expanded) 1f else 0f) }
-    LaunchedEffect(expanded) {
-        progress.animateTo(targetValue = if (expanded) 1f else 0f, animationSpec = StateChangeSpring)
+    // the same force, so one progress drives both. Expanded out of a toolbar icon
+    // (showInToolBar), the bar is laid out in its edit state for the whole icon expansion instead.
+    val progress = remember { Animatable(if (expanded || iconExpand != null) 1f else 0f) }
+    LaunchedEffect(expanded, iconExpand != null) {
+        if (iconExpand != null) {
+            progress.snapTo(1f)
+        } else {
+            progress.animateTo(targetValue = if (expanded) 1f else 0f, animationSpec = StateChangeSpring)
+        }
     }
+
+    val shaders = remember {
+        if (isRuntimeShaderSupported()) List(2) { RuntimeShader(SearchBarMetaballShader.Source) } else null
+    }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val blendSupported = remember { BlendMode.ColorDodge.isSupported() && BlendMode.Luminosity.isSupported() }
 
     Column(
         modifier = modifier,
@@ -124,40 +161,115 @@ fun SearchBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = insideMargin.width),
+                .padding(horizontal = insideMargin.width)
+                .onGloballyPositioned { geometry.rowRootX = it.positionInRoot().x }
+                .then(
+                    if (outsideEndAction != null && shaders != null) {
+                        Modifier.drawWithContent {
+                            drawSearchBarNeck(
+                                geometry = geometry,
+                                progress = progress.value,
+                                iconExpand = iconExpand,
+                                capsuleInfo = capsuleInfo,
+                                capsuleInsetPx = insideMargin.height.toPx(),
+                                shaders = shaders,
+                                filters = if (blendSupported) materialFilters(isDark) else null,
+                            )
+                            drawContent()
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .onPlaced { geometry.inputRect = Rect(it.positionInParent(), it.size.toSize()) }
+                    .then(
+                        if (iconExpand == null) {
+                            Modifier
+                        } else {
+                            Modifier.graphicsLayer {
+                                // showInToolBar: the background view starts centred on the toolbar
+                                // icon (mIconExpandStartX, measured glyph centre to icon centre) and
+                                // slides home, blurring most half way.
+                                val p = iconExpand.progress()
+                                val startX = iconExpandCapsuleStartX(geometry, iconExpand, barLayoutDirection)
+                                if (startX.isNaN()) {
+                                    alpha = 0f
+                                } else {
+                                    alpha = 1f
+                                    translationX = startX * (1f - p)
+                                }
+                                val blur = if (capsuleInfo.material) iconExpandCapsuleBlurPx(p) else 0f
+                                renderEffect = if (blur > 0f) BlurEffect(blur, blur, TileMode.Decal) else null
+                            }
+                        },
+                    )
                     .padding(vertical = insideMargin.height),
             ) {
-                inputField()
+                CompositionLocalProvider(LocalSearchBarCapsuleInfo provides capsuleInfo) {
+                    inputField()
+                }
             }
             if (outsideEndAction != null) {
                 val actionInMotion by remember { derivedStateOf { progress.value != 0f } }
                 if (expanded || actionInMotion) {
-                    val actionTextAlpha = remember { { searchBarActionTextAlpha(progress.value) } }
+                    val actionTextAlpha = remember(iconExpand) {
+                        if (iconExpand == null) {
+                            { searchBarActionTextAlpha(progress.value) }
+                        } else {
+                            { 1f }
+                        }
+                    }
                     Box(
-                        modifier = Modifier.layout { measurable, constraints ->
-                            // The slot claims (gap + button) * progress, so the capsule beside it
-                            // narrows with the spring, overshoot included. The button itself sits
-                            // at its edit-state position against the end edge.
-                            val placeable = measurable.measure(constraints.copy(minWidth = 0))
-                            val fraction = max(progress.value, 0f)
-                            val width = ((placeable.width + ActionStartGap.roundToPx()) * fraction).roundToInt()
-                            val direction = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
-                            layout(width, placeable.height) {
-                                placeable.placeRelativeWithLayer(width - placeable.width, 0) {
-                                    val p = progress.value
-                                    val scale = searchBarActionScale(p)
-                                    scaleX = scale
-                                    scaleY = scale
-                                    translationX = direction * ActionOffsetPx * (1f - p)
-                                    alpha = searchBarActionAlpha(p)
+                        modifier = Modifier
+                            .onPlaced { geometry.actionSlotOrigin = it.positionInParent() }
+                            .layout { measurable, constraints ->
+                                // The slot claims (gap + button) * progress, so the capsule beside
+                                // it narrows with the spring, overshoot included. The button itself
+                                // sits at its edit-state position against the end edge.
+                                val placeable = measurable.measure(constraints.copy(minWidth = 0))
+                                val fraction = max(progress.value, 0f)
+                                val width = ((placeable.width + ActionStartGap.roundToPx()) * fraction).roundToInt()
+                                val rtl = layoutDirection == LayoutDirection.Rtl
+                                val direction = if (rtl) -1f else 1f
+                                // Slot-local bounds; the slot origin shifts them into the row.
+                                val buttonX = if (rtl) 0 else width - placeable.width
+                                geometry.actionLocalRect = Rect(
+                                    left = buttonX.toFloat(),
+                                    top = 0f,
+                                    right = (buttonX + placeable.width).toFloat(),
+                                    bottom = placeable.height.toFloat(),
+                                )
+                                layout(width, placeable.height) {
+                                    placeable.placeRelativeWithLayer(width - placeable.width, 0) {
+                                        if (iconExpand == null) {
+                                            val p = progress.value
+                                            val scale = searchBarActionScale(p)
+                                            scaleX = scale
+                                            scaleY = scale
+                                            translationX = direction * ActionOffsetPx * (1f - p)
+                                            alpha = searchBarActionAlpha(p)
+                                            renderEffect = null
+                                        } else {
+                                            // funBtnAnimateIconExpand: the button flies from the
+                                            // toolbar icon centre (mFunctionalButtonStartX).
+                                            val p = iconExpand.progress()
+                                            val scale = iconExpandActionScale(p)
+                                            scaleX = scale
+                                            scaleY = scale
+                                            val startX = iconExpandActionStartX(geometry, iconExpand)
+                                            translationX = if (startX.isNaN()) 0f else startX * (1f - p)
+                                            alpha = iconExpandActionAlpha(p)
+                                            val blur = if (capsuleInfo.material) iconExpandActionBlurPx(p) else 0f
+                                            renderEffect = if (blur > 0f) BlurEffect(blur, blur, TileMode.Decal) else null
+                                        }
+                                    }
                                 }
-                            }
-                        },
+                            },
                     ) {
                         CompositionLocalProvider(LocalSearchBarActionTextAlpha provides actionTextAlpha) {
                             outsideEndAction()
@@ -182,6 +294,118 @@ fun SearchBar(
         },
     )
 }
+
+/**
+ * `mIconExpandStartX`: the toolbar icon centre minus the search glyph centre, in root pixels; `NaN`
+ * until both are measured.
+ */
+private fun Density.iconExpandCapsuleStartX(
+    geometry: SearchBarGeometry,
+    iconExpand: SearchBarIconExpand,
+    layoutDirection: LayoutDirection,
+): Float {
+    val iconX = iconExpand.sourceCenterX()
+    val rowX = geometry.rowRootX
+    if (iconX.isNaN() || rowX.isNaN() || geometry.inputRect.isEmpty) return Float.NaN
+    val glyphInset = SearchIconCenterInset.toPx()
+    val glyphX = if (layoutDirection == LayoutDirection.Rtl) {
+        rowX + geometry.inputRect.right - glyphInset
+    } else {
+        rowX + geometry.inputRect.left + glyphInset
+    }
+    return iconX - glyphX
+}
+
+/** `mFunctionalButtonStartX`: the toolbar icon centre minus the button centre, in root pixels. */
+private fun iconExpandActionStartX(geometry: SearchBarGeometry, iconExpand: SearchBarIconExpand): Float {
+    val iconX = iconExpand.sourceCenterX()
+    val rowX = geometry.rowRootX
+    if (iconX.isNaN() || rowX.isNaN() || geometry.actionRect.isEmpty) return Float.NaN
+    return iconX - (rowX + geometry.actionRect.center.x)
+}
+
+/**
+ * Draws the metaball neck between the capsule and the action while they move, from the same
+ * transforms the two layers apply. Nothing is drawn at rest, where `COUISearchBar`'s 12dp gap keeps
+ * the two shapes apart anyway.
+ */
+private fun DrawScope.drawSearchBarNeck(
+    geometry: SearchBarGeometry,
+    progress: Float,
+    iconExpand: SearchBarIconExpand?,
+    capsuleInfo: SearchBarCapsuleInfo,
+    capsuleInsetPx: Float,
+    shaders: List<RuntimeShader>,
+    filters: List<Pair<Color, BlendMode>>?,
+) {
+    if (!capsuleInfo.material) return
+    val input = geometry.inputRect
+    val action = geometry.actionRect
+    if (input.isEmpty || action.isEmpty) return
+    val capsuleTop = input.top + capsuleInsetPx
+    val capsuleBottom = input.bottom - capsuleInsetPx
+    val capsule: Rect
+    val button: Rect
+    val alpha: Float
+    if (iconExpand == null) {
+        if (progress <= 0f || progress >= 1f) return
+        capsule = Rect(input.left, capsuleTop, input.right, capsuleBottom)
+        val scale = searchBarActionScale(progress)
+        val direction = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
+        button = action.scaledAround(scale).translate(direction * ActionOffsetPx * (1f - progress), 0f)
+        alpha = searchBarActionAlpha(progress)
+    } else {
+        val p = iconExpand.progress()
+        if (p <= 0f || p >= 1f) return
+        val capsuleStartX = iconExpandCapsuleStartX(geometry, iconExpand, layoutDirection)
+        val actionStartX = iconExpandActionStartX(geometry, iconExpand)
+        if (capsuleStartX.isNaN() || actionStartX.isNaN()) return
+        val width = iconExpandCapsuleWidth(capsuleBottom - capsuleTop, input.width, p)
+        val shift = capsuleStartX * (1f - p)
+        capsule = if (layoutDirection == LayoutDirection.Rtl) {
+            Rect(input.right - width + shift, capsuleTop, input.right + shift, capsuleBottom)
+        } else {
+            Rect(input.left + shift, capsuleTop, input.left + width + shift, capsuleBottom)
+        }
+        button = action.scaledAround(iconExpandActionScale(p)).translate(actionStartX * (1f - p), 0f)
+        alpha = iconExpandActionAlpha(p)
+    }
+    with(SearchBarMetaballShader) {
+        drawNeck(
+            shaders = shaders,
+            capsule = capsule,
+            action = button,
+            alpha = alpha,
+            filters = filters,
+            fallback = capsuleInfo.fallbackColor,
+        )
+    }
+}
+
+private fun Rect.scaledAround(scale: Float): Rect {
+    val c = center
+    val halfWidth = width / 2f * scale
+    val halfHeight = height / 2f * scale
+    return Rect(c.x - halfWidth, c.y - halfHeight, c.x + halfWidth, c.y + halfHeight)
+}
+
+/**
+ * The top-bar material colour filters [COUIMaterialEffect.materialPanel] draws (light `#66333333`
+ * COLOR_DODGE + `#99F5F5F5` LUMINOSITY, dark `#CC262626` SRC_OVER + `#B37F7F7F` OVERLAY), so the neck
+ * matches the shapes it joins.
+ */
+private fun materialFilters(isDark: Boolean): List<Pair<Color, BlendMode>> = if (isDark) {
+    listOf(Color(0xCC262626) to BlendMode.SrcOver, Color(0xB37F7F7F) to BlendMode.Overlay)
+} else {
+    listOf(Color(0x66333333) to BlendMode.ColorDodge, Color(0x99F5F5F5) to BlendMode.Luminosity)
+}
+
+/**
+ * The search glyph centre's inset from the capsule's start edge:
+ * `coui_search_bar_inner_search_icon_start_gap` (4dp) + `coui_search_bar_inner_search_icon_size` / 2
+ * (18dp), which the default leading icon's 12dp + 10dp also lands on.
+ */
+private val SearchIconCenterInset = 22.dp
 
 /**
  * A text field to input a query in a search bar with COUI style.
@@ -245,6 +469,12 @@ fun InputField(
     } else {
         CircleShape
     }
+    val iconExpand = LocalSearchBarIconExpand.current
+    val capsuleInfo = LocalSearchBarCapsuleInfo.current
+    // SearchBarBackgroundView.dispatchTouchEvent decides on ACTION_DOWN whether a gesture drives the
+    // capsule's touch animator: never when it starts on an inner button.
+    var innerButtonPressed by remember { mutableStateOf(false) }
+    val iconExpandFullWidth = remember { IntArray(1) }
 
     val actualLeadingIcon = leadingIcon ?: {
         // coui_search_view_icon: 20dp glyph filled with couiColorSecondNeutral.
@@ -324,6 +554,12 @@ fun InputField(
             )
         }
     }
+    val capsuleMaterial = material && collapse == null
+    val fallbackColor = colors.backgroundColor
+    SideEffect {
+        capsuleInfo?.material = capsuleMaterial
+        capsuleInfo?.fallbackColor = fallbackColor
+    }
     val labelText by remember(query, expanded, label) {
         derivedStateOf { if (!(query.isNotEmpty() || expanded)) label else "" }
     }
@@ -362,7 +598,6 @@ fun InputField(
             // COUI 17 SearchBarBackgroundView: the TOP_BAR material over a transparent background
             // (ToolbarMaterialEffectResolver), ?couiColorBar without it. A collapsing capsule tints
             // toward the divider line, so it drops the material for its flat colour.
-            val capsuleMaterial = material && collapse == null
             Box(
                 modifier = Modifier
                     .then(
@@ -389,16 +624,78 @@ fun InputField(
                     )
                     .then(
                         if (capsuleMaterial) {
+                            // Observes the Main pass after every child, so a down an inner button
+                            // (the clear button or any clickable icon in the capsule) has consumed
+                            // switches the touch motion off for that gesture.
+                            Modifier.pointerInput(Unit) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    if (down.isConsumed) {
+                                        innerButtonPressed = true
+                                        do {
+                                            val event = awaitPointerEvent()
+                                        } while (event.changes.any { it.pressed })
+                                        innerButtonPressed = false
+                                    }
+                                }
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .then(
+                        if (iconExpand == null) {
+                            Modifier
+                        } else {
+                            // showInToolBar: the capsule is clipped to a circle of its height that
+                            // widens into the full capsule (updateIconExpandClippingWidth), from the
+                            // start edge, while its content keeps the full width.
+                            Modifier.layout { measurable, constraints ->
+                                val full = constraints.maxWidth
+                                iconExpandFullWidth[0] = full
+                                val width = if (constraints.hasBoundedWidth) {
+                                    iconExpandCapsuleWidth(
+                                        height = SearchBarDefaults.InputFieldMinHeight.toPx(),
+                                        fullWidth = full.toFloat(),
+                                        progress = iconExpand.progress(),
+                                    ).roundToInt().coerceAtLeast(0)
+                                } else {
+                                    full
+                                }
+                                val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+                                layout(full, placeable.height) { placeable.placeRelative(0, 0) }
+                            }
+                        },
+                    )
+                    .then(
+                        if (capsuleMaterial) {
                             Modifier.materialPanel(
                                 interactionSource = internalInteractionSource,
                                 cornerRadius = COUIRoundCorner.Full,
-                                motionEnabled = enabled,
+                                motionEnabled = enabled && !innerButtonPressed,
                             )
                         } else {
                             Modifier.background(
                                 color = collapse?.capsuleColor ?: colors.backgroundColor,
                                 shape = capsuleShape,
                             )
+                        },
+                    )
+                    .then(
+                        if (iconExpand == null) {
+                            Modifier
+                        } else {
+                            Modifier
+                                .clipToBounds()
+                                .layout { measurable, constraints ->
+                                    val full = iconExpandFullWidth[0]
+                                    val placeable = if (constraints.hasBoundedWidth && full > 0) {
+                                        measurable.measure(constraints.copy(minWidth = full, maxWidth = full))
+                                    } else {
+                                        measurable.measure(constraints)
+                                    }
+                                    layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
+                                }
                         },
                     ),
                 contentAlignment = Alignment.CenterStart,
@@ -419,7 +716,15 @@ fun InputField(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = SearchBarDefaults.InputFieldMinHeight),
+                            .heightIn(min = SearchBarDefaults.InputFieldMinHeight)
+                            .then(
+                                if (iconExpand == null) {
+                                    Modifier
+                                } else {
+                                    // showInToolBar: the edit text fades in with the expansion.
+                                    Modifier.graphicsLayer { alpha = iconExpand.progress().coerceIn(0f, 1f) }
+                                },
+                            ),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         val mergedLabelStyle = remember(textStyle) {

@@ -2,30 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntOffset
-import kotlin.math.roundToInt
+import io.github.suqi8.coui.kmp.effect.TouchMotion
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Creates a [ToolbarSearchState] that survives configuration changes.
@@ -36,62 +34,75 @@ import kotlin.math.roundToInt
 fun rememberToolbarSearchState(initiallyExpanded: Boolean = false): ToolbarSearchState = rememberSaveable(saver = ToolbarSearchState.Saver) { ToolbarSearchState(initiallyExpanded) }
 
 /**
- * The state driving a search bar that floats up into the toolbar when it expands.
+ * The state of a search bar that lives in the toolbar and expands out of the toolbar's search icon,
+ * after COUI 17 `COUISearchBar.showInToolBar` / `hideInToolBar`.
  *
- * COUI models this with `COUISearchBar.setAtFrontToolBar`: the bar keeps its place in the list
- * until it expands, then travels up to where the toolbar sits while the toolbar's own children
- * fade away underneath it. The travel distance is not a design token — `COUISearchBar` measures
- * it at runtime as `mStartY - mExtraY`, the bar's own top minus a caller-supplied inset — so this
- * state measures the same two positions instead of hardcoding a distance.
+ * On expand the bar starts as a circle centred on the search icon, slides home while widening into
+ * the full capsule, and the cancel button flies out of the icon, the two merging like metaballs;
+ * the toolbar's own children fade and shrink away underneath. Collapsing plays it back. Two springs
+ * drive it, both from `IconExpandToEditParamsHigh` / `IconCollapseToNormalParamsHigh`:
+ * - the icon expansion (`mIconExpandAnimation`): response 0.55 / bounce 0.2 out, 0.5 / 0.2 back;
+ * - the toolbar children (`mToolbarIconSpringAnimation`): response 0.4 / bounce 0.3 out, scaling to
+ *   0.8, and 0.5 / 0.2 back, growing from 0.5.
  *
  * @param initiallyExpanded whether the search bar starts out expanded.
  */
 @Stable
 class ToolbarSearchState(initiallyExpanded: Boolean = false) {
-    /** Whether the search bar is expanded and floated up into the toolbar. */
+    /** Whether the search bar is expanded in the toolbar. */
     var expanded: Boolean by mutableStateOf(initiallyExpanded)
         internal set
 
-    /** The search bar's resting top, in root coordinates. COUI `mStartY`. */
-    private var restingTopPx by mutableFloatStateOf(Float.NaN)
+    /** `mIconExpandCenterAnimationRange / 1000`. */
+    internal val iconExpandProgress = Animatable(if (initiallyExpanded) 1f else 0f)
+
+    /** `mToolbarIconSpringValue / 1000`: 0 shows the toolbar children, 1 hides them. */
+    internal val toolbarProgress = Animatable(if (initiallyExpanded) 1f else 0f)
+
+    /** `mToolbarIconScaleEnd`: the scale the toolbar children shrink to (out) or grow from (back). */
+    internal var toolbarScaleEnd by mutableFloatStateOf(ExpandToolbarEndScale)
+
+    /** The toolbar search icon's horizontal centre in root pixels, `NaN` until measured. */
+    internal var entryCenterXPx by mutableFloatStateOf(Float.NaN)
 
     /**
-     * Where the floated bar comes to rest, in root coordinates: the bottom of the status bar
-     * inset. Measured on ColorOS 16, the expanded `searchView` sits flush against the status bar —
-     * `[0,140][1264,322]` against a 140px inset — so the landing edge is the inset, not anything
-     * about the toolbar's own height.
+     * Whether the bar is on screen: expanded, or still folding back into the icon. COUI keeps the
+     * bar `GONE` otherwise.
      */
-    private var landingTopPx by mutableFloatStateOf(Float.NaN)
+    internal val barVisible: Boolean
+        get() = expanded || iconExpandProgress.value != 0f
 
-    /**
-     * How far the bar must travel to reach the toolbar, in pixels. Zero until every input has been
-     * measured, so the first frame never jumps.
-     */
-    internal val floatDistancePx: Float
-        get() = if (restingTopPx.isNaN() || landingTopPx.isNaN()) {
-            0f
-        } else {
-            (restingTopPx - landingTopPx).coerceAtLeast(0f)
-        }
+    /** `setToolBarAlpha(1 - q)`. */
+    internal fun toolbarAlpha(): Float = (1f - toolbarProgress.value).coerceIn(0f, 1f)
 
-    internal fun onBarPositioned(topPx: Float) {
-        // Only the collapsed position is a valid reference; once expanded the bar reports where
-        // the animation has moved it, which would feed back into the distance being animated over.
-        if (!expanded) restingTopPx = topPx
+    /** `setToolBarScale(1 - q)`: `end + (1 - end) * (1 - q)`. */
+    internal fun toolbarScale(): Float {
+        val end = toolbarScaleEnd
+        return end + (1f - end) * (1f - toolbarProgress.value)
     }
 
-    internal fun onAnchorPositioned(contentTopPx: Float) {
-        landingTopPx = contentTopPx
-    }
-
-    /** Expands the search bar, floating it up into the toolbar. */
+    /** Expands the search bar out of the toolbar's search icon. */
     fun expand() {
         expanded = true
     }
 
-    /** Collapses the search bar, returning it to its place in the content. */
+    /** Collapses the search bar back into the toolbar's search icon. */
     fun collapse() {
         expanded = false
+    }
+
+    internal suspend fun animateTo(expanded: Boolean) = coroutineScope {
+        if (expanded) {
+            // setExpandData + configureToolbarIconSpringForExpand.
+            toolbarScaleEnd = ExpandToolbarEndScale
+            launch { iconExpandProgress.animateTo(1f, ExpandSpring) }
+            launch { toolbarProgress.animateTo(1f, ExpandToolbarSpring) }
+        } else {
+            // setCollapseData + configureToolbarIconSpringForCollapse.
+            toolbarScaleEnd = CollapseToolbarInitScale
+            launch { iconExpandProgress.animateTo(0f, CollapseSpring) }
+            launch { toolbarProgress.animateTo(0f, CollapseToolbarSpring) }
+        }
     }
 
     companion object {
@@ -104,16 +115,16 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
 }
 
 /**
- * Hosts the toolbar content that a [ToolbarSearchState]-driven search bar floats over.
+ * Hosts the toolbar content the search bar expands over.
  *
- * Place this where the toolbar belongs and pass the same [state] to [ToolbarSearchAnchor] and
- * [ToolbarFloatingSearchBar]. On expand the toolbar's children fade out over 150ms, matching
- * `COUISearchBar.showInToolBar`, which drives `setToolBarAlpha` from 1 to 0 over that duration.
- * COUI does not translate the toolbar content, so neither does this.
+ * While the bar expands, the content fades out on the toolbar-children spring
+ * (`COUISearchBar.setToolBarAlpha`), and fades back in when it collapses. Apply
+ * [toolbarSearchItem] to the toolbar's navigation and menu icons for the matching shrink, and
+ * [toolbarSearchEntry] to the search icon itself.
  *
- * @param state the [ToolbarSearchState] shared with the floating search bar.
+ * @param state the [ToolbarSearchState] shared with the [ToolbarFloatingSearchBar].
  * @param modifier the [Modifier] to be applied to the anchor.
- * @param content the toolbar content that fades out while the search bar is expanded.
+ * @param content the toolbar content.
  */
 @Composable
 fun ToolbarSearchAnchor(
@@ -121,34 +132,50 @@ fun ToolbarSearchAnchor(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val alpha by animateFloatAsState(
-        targetValue = if (state.expanded) 0f else 1f,
-        // COUISearchBar.showInToolBar: a bare 150ms ValueAnimator with no interpolator set, so it
-        // runs on the platform default rather than MoveEase.
-        animationSpec = tween(durationMillis = ToolbarContentFadeDurationMillis),
-        label = "ToolbarSearchAnchorAlpha",
-    )
-    // The floated bar lands flush against the status bar. Measured from the root rather than from
-    // the anchor's own position, which may already sit below the inset.
-    val statusBarInsetPx = WindowInsets.statusBars.getTop(LocalDensity.current).toFloat()
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { state.onAnchorPositioned(statusBarInsetPx) },
-    ) {
-        Box(modifier = Modifier.graphicsLayer { this.alpha = alpha }) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.graphicsLayer { alpha = state.toolbarAlpha() }) {
             content()
         }
     }
 }
 
 /**
- * A search bar that floats up into a [ToolbarSearchAnchor] when it expands.
+ * Marks the toolbar's search icon, the [ToolbarFloatingSearchBar] grows out of. It reports the
+ * icon's centre and hides the icon while the bar is out (`setToolbarSearchIconAlpha(0)`, restored
+ * once the bar has folded back), and shrinks with the other toolbar icons.
  *
- * The bar occupies its natural place in the content while collapsed. On expand it translates up by
- * the measured distance to the anchor over 450ms on the COUIMoveEaseInterpolator curve, matching
- * `COUISearchBar`'s offset animator. The translation is a draw-time offset, so the content below
- * keeps its layout and does not reflow as the bar travels.
+ * @param state the [ToolbarSearchState] driving the search bar.
+ */
+fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
+    .onGloballyPositioned { state.entryCenterXPx = it.boundsInRoot().center.x }
+    .graphicsLayer {
+        val scale = state.toolbarScale()
+        scaleX = scale
+        scaleY = scale
+        alpha = if (state.barVisible) 0f else 1f
+    }
+
+/**
+ * Shrinks a toolbar icon (navigation or menu) while the search bar is out, after
+ * `COUISearchBar.applyMenuViewScale` / `applyToolbarIconExternalScale`.
+ *
+ * @param state the [ToolbarSearchState] driving the search bar.
+ */
+fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graphicsLayer {
+    val scale = state.toolbarScale()
+    scaleX = scale
+    scaleY = scale
+}
+
+/**
+ * The search bar that expands out of the toolbar's search icon.
+ *
+ * Place it over the toolbar row, in the same position COUI adds `COUISearchBar` to the toolbar
+ * (full width, below the status bar), and mark the search icon with [toolbarSearchEntry]. It
+ * shows nothing while the bar is folded away. Inside, a [SearchBar] with an [InputField] and a
+ * [CancelButton] runs the COUI 17 icon expansion: the capsule starts as a circle on the icon,
+ * slides home and widens while its text fades in and it blurs most half way, and the cancel button
+ * flies out of the icon from 0.6 scale, merging with the capsule like a metaball.
  *
  * @param state the [ToolbarSearchState] shared with the [ToolbarSearchAnchor].
  * @param modifier the [Modifier] to be applied to the search bar.
@@ -160,33 +187,38 @@ fun ToolbarFloatingSearchBar(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val distance = state.floatDistancePx
-    val progress by animateFloatAsState(
-        targetValue = if (state.expanded) 1f else 0f,
-        // COUISearchBar offset animator: 450ms on COUIMoveEaseInterpolator.
-        animationSpec = tween(durationMillis = FloatDurationMillis, easing = MoveEasing),
-        label = "ToolbarFloatingSearchBarProgress",
-    )
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .onGloballyPositioned { coordinates ->
-                // Report the resting top, undoing the translation currently applied.
-                state.onBarPositioned(coordinates.positionInRoot().y + distance * progress)
+    LaunchedEffect(state, state.expanded) {
+        state.animateTo(state.expanded)
+    }
+    val iconExpand = remember(state) {
+        SearchBarIconExpand(
+            progress = { state.iconExpandProgress.value },
+            sourceCenterX = { state.entryCenterXPx },
+        )
+    }
+    Box(modifier = modifier.fillMaxWidth()) {
+        if (state.barVisible) {
+            CompositionLocalProvider(LocalSearchBarIconExpand provides iconExpand) {
+                content()
             }
-            // Offset at layout time rather than via graphicsLayer: Compose hit-tests against the
-            // layout position, so a draw-only translation would leave the bar's touch target — and
-            // the cancel button's with it — behind at the resting position.
-            .offset { IntOffset(x = 0, y = -(distance * progress).roundToInt()) },
-        content = content,
-    )
+        }
+    }
 }
 
-/** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
-private val MoveEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+/** `IconExpandToEditParamsHigh` bounce 0.2 / response 0.55. */
+private val ExpandSpring = TouchMotion.spring(response = 0.55f, bounce = 0.2f, visibilityThreshold = 0.001f)
 
-/** COUISearchBar DEFAULT_SEARCH_VIEW_OFFSET_CHANGE_DURATION (450ms). */
-private val FloatDurationMillis = 450
+/** `IconCollapseToNormalParamsHigh` bounce 0.2 / response 0.5. */
+private val CollapseSpring = TouchMotion.spring(response = 0.5f, bounce = 0.2f, visibilityThreshold = 0.001f)
 
-/** COUISearchBar.showInToolBar toolbar alpha animator (150ms). */
-private val ToolbarContentFadeDurationMillis = 150
+/** `IconExpandToEditParamsHigh` toolbar icon bounce 0.3 / response 0.4. */
+private val ExpandToolbarSpring = TouchMotion.spring(response = 0.4f, bounce = 0.3f, visibilityThreshold = 0.001f)
+
+/** `IconCollapseToNormalParamsHigh` toolbar icon bounce 0.2 / response 0.5. */
+private val CollapseToolbarSpring = TouchMotion.spring(response = 0.5f, bounce = 0.2f, visibilityThreshold = 0.001f)
+
+/** `IconExpandToEditParamsHigh.toolbarEndScale`. */
+private val ExpandToolbarEndScale = 0.8f
+
+/** `IconCollapseToNormalParamsHigh.toolbarInitScale`. */
+private val CollapseToolbarInitScale = 0.5f
