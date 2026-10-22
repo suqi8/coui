@@ -31,6 +31,19 @@ internal object SuperellipseCorner {
     }
 
     /**
+     * Resolves [weight] for one rect: [SquircleDefaults.UnspecifiedWeight] becomes
+     * [SquircleDefaults.CapsuleWeight] on a [fullyRounded] rect and [SquircleDefaults.DefaultG2Weight]
+     * otherwise (`addSmoothRoundRect` without a weight); any other weight is clamped.
+     */
+    fun resolveWeight(weight: Float, fullyRounded: Boolean): Float = when {
+        weight == SquircleDefaults.UnspecifiedWeight -> if (fullyRounded) SquircleDefaults.CapsuleWeight else SquircleDefaults.DefaultG2Weight
+        else -> clampWeight(weight)
+    }
+
+    /** Clamps [weight] like [clampWeight] but keeps [SquircleDefaults.UnspecifiedWeight] for [resolveWeight]. */
+    fun normalizeWeight(weight: Float): Float = if (weight == SquircleDefaults.UnspecifiedWeight) weight else clampWeight(weight)
+
+    /**
      * The superellipse exponent drawn for [weight]: the clamped weight, raised to 2 (a circular arc)
      * when below it. Weights below 2 only shape fully rounded rects, through [SoftCapsule].
      */

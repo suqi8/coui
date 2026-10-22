@@ -370,7 +370,7 @@ private fun rememberSquircleBrush(
 ): SquircleShaderBrush? {
     if (!LocalSquircleEnabled.current || !isRuntimeShaderSupported()) return null
     val density = LocalDensity.current
-    val clampedWeight = SuperellipseCorner.clampWeight(weight)
+    val clampedWeight = SuperellipseCorner.normalizeWeight(weight)
     val radii = remember(topStart, topEnd, bottomEnd, bottomStart, density) {
         with(density) {
             floatArrayOf(
@@ -407,7 +407,7 @@ internal class SquircleShaderBrush(
         runtimeShader.setColorUniform("color", color)
         runtimeShader.setFloatUniform("size", size.width, size.height)
         runtimeShader.setFloatUniform("radii", effectiveRadii)
-        runtimeShader.setFloatUniform("weight", SuperellipseCorner.exponent(weight))
+        runtimeShader.setFloatUniform("weight", SuperellipseCorner.exponent(resolvedWeight(size)))
         runtimeShader.setFloatUniform("capsuleMix", capsuleMix(size))
         return runtimeShader.asComposeShader()
     }
@@ -417,11 +417,15 @@ internal class SquircleShaderBrush(
      * below 2 only counts on a fully rounded rect, as in `OplusPathSmooth.addSmoothRoundRect`.
      */
     fun capsuleMix(size: Size): Float {
-        if (weight >= 2f) return -1f
+        val resolved = resolvedWeight(size)
+        if (resolved >= 2f) return -1f
         if (!SoftCapsule.isFullyRounded(cornerRadiiPx, size.width, size.height)) return -1f
         if (minOf(size.width, size.height) * 0.5f < SoftCapsule.MIN_RADIUS_PX) return -1f
-        return SoftCapsule.capsuleMix(weight)
+        return SoftCapsule.capsuleMix(resolved)
     }
+
+    /** The weight drawn at [size]: [SquircleDefaults.UnspecifiedWeight] resolves per rect. */
+    fun resolvedWeight(size: Size): Float = SuperellipseCorner.resolveWeight(weight, SoftCapsule.isFullyRounded(cornerRadiiPx, size.width, size.height))
 
     // Corner index order: 0 = topStart/topLeft, 1 = topEnd/topRight, 2 = bottomEnd/bottomRight, 3 = bottomStart/bottomLeft.
     fun topBandHeightPx(size: Size): Float = maxOf(cornerHeightPx(0, size), cornerHeightPx(1, size))

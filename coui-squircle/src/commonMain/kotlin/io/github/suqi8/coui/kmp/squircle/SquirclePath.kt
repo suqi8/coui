@@ -8,7 +8,6 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Path
 import io.github.suqi8.coui.kmp.squircle.internal.SoftCapsule
 import io.github.suqi8.coui.kmp.squircle.internal.SuperellipseCorner
-import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -46,6 +45,21 @@ object SquircleDefaults {
      */
     val CapsuleWeight = 1f
 
+    /**
+     * The weight of a smooth round rect that is not fully rounded and is given no weight: 2.45, the
+     * fallback of the `persist.sys.oplus.default_g2_weight` system property
+     * (`OplusSmoothRoundedManager.DEFAULT_G2_WEIGHT`, 245 / 100).
+     */
+    val DefaultG2Weight = 2.45f
+
+    /**
+     * Marks a weight as unspecified, the way ColorOS calls `addSmoothRoundRect` / `setSmoothRoundRect`
+     * without a weight argument: it resolves per rect to [CapsuleWeight] when the rect is fully
+     * rounded (four equal radii of at least half the shorter side) and to [DefaultG2Weight] otherwise.
+     * Pass it wherever COUI leaves the weight out, e.g. a capsule whose radius may be customised.
+     */
+    val UnspecifiedWeight = 0f
+
     /** Inclusive upper bound for the weight. */
     val WeightMax = 8f
 
@@ -81,7 +95,8 @@ object SquircleDefaults {
  * @param cornerRadius The corner radius in pixels, clamped to half the smaller side.
  * @param weight The superellipse exponent of the corners, clamped to
  *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax]; below 2 it selects the soft capsule
- *   blend on a fully rounded rect and is raised to 2 otherwise.
+ *   blend on a fully rounded rect and is raised to 2 otherwise. [SquircleDefaults.UnspecifiedWeight]
+ *   resolves to the soft capsule or [SquircleDefaults.DefaultG2Weight].
  * @param squircleEnabled When `false`, appends a plain rounded rectangle instead of the squircle
  *   silhouette; typically forwarded from [isSquircleEnabled].
  */
@@ -92,46 +107,122 @@ fun Path.addSquircleRect(
     weight: Float = SquircleDefaults.Weight,
     squircleEnabled: Boolean = true,
 ) {
-    if (width <= 0f || height <= 0f) return
+    appendSquircleRect(0f, 0f, width, height, cornerRadius, cornerRadius, cornerRadius, cornerRadius, weight, squircleEnabled)
+}
+
+/**
+ * Variant of [addSquircleRect] that appends the rectangle at [rect] instead of at the origin, for
+ * shapes drawn inside a larger canvas (tracks, indicators, inset capsules).
+ *
+ * @param rect The bounds of the rectangle in pixels; nothing is appended when empty.
+ * @param cornerRadius The corner radius in pixels, clamped to half the smaller side.
+ * @param weight The superellipse exponent of the corners; see [addSquircleRect].
+ * @param squircleEnabled When `false`, appends a plain rounded rectangle instead of the squircle
+ *   silhouette; typically forwarded from [isSquircleEnabled].
+ */
+fun Path.addSquircleRect(
+    rect: Rect,
+    cornerRadius: Float,
+    weight: Float = SquircleDefaults.Weight,
+    squircleEnabled: Boolean = true,
+) {
+    appendSquircleRect(
+        rect.left,
+        rect.top,
+        rect.width,
+        rect.height,
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+        cornerRadius,
+        weight,
+        squircleEnabled,
+    )
+}
+
+/**
+ * Per-corner variant of [addSquircleRect], in physical corner order (clockwise from the top left,
+ * never flipped by the layout direction). Like the Oplus G2 shader (`getNormalizedRadius`), each
+ * radius is clamped to half the smaller side on its own and every corner shares the exponent
+ * [weight]; a corner with a zero radius stays square. A weight below 2 only selects the soft
+ * capsule when all four radii are equal and fully round the rect.
+ *
+ * @param rect The bounds of the rectangle in pixels; nothing is appended when empty.
+ * @param topLeft The radius of the top-left corner in pixels.
+ * @param topRight The radius of the top-right corner in pixels.
+ * @param bottomRight The radius of the bottom-right corner in pixels.
+ * @param bottomLeft The radius of the bottom-left corner in pixels.
+ * @param weight The superellipse exponent of the corners; see [addSquircleRect].
+ * @param squircleEnabled When `false`, appends a plain rounded rectangle with the same radii.
+ */
+fun Path.addSquircleRect(
+    rect: Rect,
+    topLeft: Float,
+    topRight: Float,
+    bottomRight: Float,
+    bottomLeft: Float,
+    weight: Float = SquircleDefaults.Weight,
+    squircleEnabled: Boolean = true,
+) {
+    appendSquircleRect(rect.left, rect.top, rect.width, rect.height, topLeft, topRight, bottomRight, bottomLeft, weight, squircleEnabled)
+}
+
+private fun Path.appendSquircleRect(
+    left: Float,
+    top: Float,
+    width: Float,
+    height: Float,
+    topLeft: Float,
+    topRight: Float,
+    bottomRight: Float,
+    bottomLeft: Float,
+    weight: Float,
+    squircleEnabled: Boolean,
+) {
+    if (!(width > 0f) || !(height > 0f)) return
+    val right = left + width
+    val bottom = top + height
+    val rTL = SuperellipseCorner.effectiveRadius(topLeft, width, height)
+    val rTR = SuperellipseCorner.effectiveRadius(topRight, width, height)
+    val rBR = SuperellipseCorner.effectiveRadius(bottomRight, width, height)
+    val rBL = SuperellipseCorner.effectiveRadius(bottomLeft, width, height)
+    if (rTL <= 0f && rTR <= 0f && rBR <= 0f && rBL <= 0f) {
+        addRect(Rect(left, top, right, bottom))
+        return
+    }
     if (!squircleEnabled) {
-        val radius = max(0f, cornerRadius).coerceAtMost(min(width, height) * 0.5f)
-        if (radius <= 0f) {
-            addRect(Rect(0f, 0f, width, height))
-        } else {
-            addRoundRect(
-                RoundRect(
-                    left = 0f,
-                    top = 0f,
-                    right = width,
-                    bottom = height,
-                    cornerRadius = CornerRadius(radius, radius),
-                ),
-            )
-        }
+        addRoundRect(
+            RoundRect(
+                left = left,
+                top = top,
+                right = right,
+                bottom = bottom,
+                topLeftCornerRadius = CornerRadius(rTL, rTL),
+                topRightCornerRadius = CornerRadius(rTR, rTR),
+                bottomRightCornerRadius = CornerRadius(rBR, rBR),
+                bottomLeftCornerRadius = CornerRadius(rBL, rBL),
+            ),
+        )
         return
     }
-    val r = SuperellipseCorner.effectiveRadius(cornerRadius, width, height)
-    if (r <= 0f) {
-        addRect(Rect(0f, 0f, width, height))
+    val fullyRounded = SoftCapsule.isFullyRounded(topLeft, topRight, bottomRight, bottomLeft, width, height)
+    val resolvedWeight = SuperellipseCorner.resolveWeight(weight, fullyRounded)
+    if (resolvedWeight < 2f && fullyRounded && min(width, height) * 0.5f >= SoftCapsule.MIN_RADIUS_PX) {
+        SoftCapsule.appendContour(this, left, top, width, height, SoftCapsule.capsuleMix(resolvedWeight))
         return
     }
-    val clampedWeight = SuperellipseCorner.clampWeight(weight)
-    if (clampedWeight < 2f && SoftCapsule.isFullyRounded(cornerRadius, width, height) && r >= SoftCapsule.MIN_RADIUS_PX) {
-        SoftCapsule.appendContour(this, width, height, SoftCapsule.capsuleMix(clampedWeight))
-        return
-    }
-    val quarter = SuperellipseCorner.unitQuarter(clampedWeight)
+    val quarter = SuperellipseCorner.unitQuarter(resolvedWeight)
     // Clockwise from the top edge. Each corner maps the unit quarter's (a, b) onto
     // center + r * (a * v + b * u), running from its first tangent point (b = 1) to its second (a = 1).
-    moveTo(r, 0f)
-    lineTo(width - r, 0f)
-    appendCorner(quarter, cx = width - r, cy = r, ux = 0f, uy = -1f, vx = 1f, vy = 0f, r = r)
-    lineTo(width, height - r)
-    appendCorner(quarter, cx = width - r, cy = height - r, ux = 1f, uy = 0f, vx = 0f, vy = 1f, r = r)
-    lineTo(r, height)
-    appendCorner(quarter, cx = r, cy = height - r, ux = 0f, uy = 1f, vx = -1f, vy = 0f, r = r)
-    lineTo(0f, r)
-    appendCorner(quarter, cx = r, cy = r, ux = -1f, uy = 0f, vx = 0f, vy = -1f, r = r)
+    moveTo(left + rTL, top)
+    lineTo(right - rTR, top)
+    if (rTR > 0f) appendCorner(quarter, cx = right - rTR, cy = top + rTR, ux = 0f, uy = -1f, vx = 1f, vy = 0f, r = rTR)
+    lineTo(right, bottom - rBR)
+    if (rBR > 0f) appendCorner(quarter, cx = right - rBR, cy = bottom - rBR, ux = 1f, uy = 0f, vx = 0f, vy = 1f, r = rBR)
+    lineTo(left + rBL, bottom)
+    if (rBL > 0f) appendCorner(quarter, cx = left + rBL, cy = bottom - rBL, ux = 0f, uy = 1f, vx = -1f, vy = 0f, r = rBL)
+    lineTo(left, top + rTL)
+    if (rTL > 0f) appendCorner(quarter, cx = left + rTL, cy = top + rTL, ux = -1f, uy = 0f, vx = 0f, vy = -1f, r = rTL)
     close()
 }
 

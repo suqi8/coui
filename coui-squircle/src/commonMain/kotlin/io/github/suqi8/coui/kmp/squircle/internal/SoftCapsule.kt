@@ -40,6 +40,12 @@ internal object SoftCapsule {
     private const val SCALE_PER_RADIUS = 0.0125
     private const val EPSILON = 0.01f
 
+    /** Bisection steps per contour point: 2^-36 of the search span, far below a thousandth of a pixel. */
+    private const val ROOT_ITERATIONS = 36
+
+    /** Step (px) of the central differences that give the contour tangents. */
+    private const val GRADIENT_STEP = 1e-4
+
     /** Cubic segments that follow the softened straight side up to the end cap, per quarter. */
     private const val SIDE_SEGMENTS = 8
 
@@ -58,6 +64,12 @@ internal object SoftCapsule {
         }
         return isFullyRounded(first, width, height)
     }
+
+    /** Four radius variant of [isFullyRounded] that does not allocate. */
+    fun isFullyRounded(topLeft: Float, topRight: Float, bottomRight: Float, bottomLeft: Float, width: Float, height: Float): Boolean = abs(topRight - topLeft) <= EPSILON &&
+        abs(bottomRight - topLeft) <= EPSILON &&
+        abs(bottomLeft - topLeft) <= EPSILON &&
+        isFullyRounded(topLeft, width, height)
 
     /** Single radius variant of [isFullyRounded]. */
     fun isFullyRounded(radius: Float, width: Float, height: Float): Boolean = radius >= min(width, height) * 0.5f
@@ -115,15 +127,16 @@ internal object SoftCapsule {
      * Appends the zero contour of [distance] for a `width x height` rect as one closed path of
      * cubic segments: the straight sides and the softened junctions are sampled along the side
      * normal, the end caps along rays from the cap center, and consecutive samples are joined by
-     * cubic Hermite segments whose tangents are differentiated numerically.
+     * cubic Hermite segments whose tangents are differentiated numerically. The rect's top-left
+     * corner sits at ([left], [top]).
      */
-    fun appendContour(path: Path, width: Float, height: Float, mix: Float) {
+    fun appendContour(path: Path, left: Float, top: Float, width: Float, height: Float, mix: Float) {
         val vertical = height > width
         val halfLong = (if (vertical) height else width) * 0.5
         val halfShort = (if (vertical) width else height) * 0.5
         val quarter = quarterSegments(halfLong, halfShort, mix.toDouble())
-        val cx = width * 0.5
-        val cy = height * 0.5
+        val cx = left + width * 0.5
+        val cy = top + height * 0.5
 
         // Maps (u along the long axis, v along the short axis) of quadrant (su, sv) to the canvas.
         fun x(u: Double, v: Double, su: Int, sv: Int): Float = (cx + if (vertical) sv * v else su * u).toFloat()
@@ -174,15 +187,25 @@ internal object SoftCapsule {
         val a = max(halfLong - r, 0.0)
         val xBand = max(JUNCTION_X_BAND * r * SCALE_PER_RADIUS, 1e-3)
 
-        // Contour point on the vertical through (u, 0).
-        fun side(u: Double): DoubleArray = doubleArrayOf(u, root(u, 0.0, 0.0, 1.0, halfLong, halfShort, mix))
+        // Contour point on the vertical through (u, 0), with its derivative d/du from the implicit
+        // function theorem: dv/du = -(dD/du) / (dD/dv).
+        fun side(u: Double): DoubleArray {
+            val v = root(u, 0.0, 0.0, 1.0, halfLong, halfShort, mix)
+            val g = gradient(u, v, halfLong, halfShort, mix)
+            return doubleArrayOf(u, v, 1.0, -g[0] / g[1])
+        }
 
-        // Contour point on the ray from the cap center (a, 0) at angle theta from the long axis.
+        // Contour point on the ray from the cap center (a, 0) at angle theta from the long axis, with
+        // its derivative d/dtheta: rho' = -rho * (grad . perp) / (grad . dir).
         fun cap(theta: Double): DoubleArray {
             val dx = cos(theta)
             val dy = sin(theta)
             val rho = root(a, 0.0, dx, dy, halfLong, halfShort, mix)
-            return doubleArrayOf(a + rho * dx, rho * dy)
+            val x = a + rho * dx
+            val y = rho * dy
+            val g = gradient(x, y, halfLong, halfShort, mix)
+            val rhoPrime = -rho * (-g[0] * dy + g[1] * dx) / (g[0] * dx + g[1] * dy)
+            return doubleArrayOf(x, y, rhoPrime * dx - rho * dy, rhoPrime * dy + rho * dx)
         }
 
         val segments = ArrayList<DoubleArray>()
@@ -208,46 +231,40 @@ internal object SoftCapsule {
         return Quarter(start, segments)
     }
 
-    // Joins `count` samples of `curve` over [from, to] with cubic Hermite segments.
+    // Joins `count` samples of `curve` over [from, to] with cubic Hermite segments. `curve` returns
+    // the point and its derivative d/dt: (x, y, dx/dt, dy/dt).
     private fun hermite(out: MutableList<DoubleArray>, from: Double, to: Double, count: Int, curve: (Double) -> DoubleArray) {
         val step = (to - from) / count
-        val h = abs(step) * 1e-3
-        fun tangent(t: Double): DoubleArray {
-            val ahead = curve(t + h)
-            val behind = curve(t - h)
-            return doubleArrayOf((ahead[0] - behind[0]) / (2 * h), (ahead[1] - behind[1]) / (2 * h))
-        }
         var p0 = curve(from)
-        var d0 = tangent(from)
         for (i in 1..count) {
-            val t = from + step * i
-            val p1 = curve(t)
-            val d1 = tangent(t)
+            val p1 = curve(if (i == count) to else from + step * i)
             // Tangents are d/dt; the parameter runs by `step` per segment.
             val k = step / 3
             out += doubleArrayOf(
-                p0[0] + d0[0] * k,
-                p0[1] + d0[1] * k,
-                p1[0] - d1[0] * k,
-                p1[1] - d1[1] * k,
+                p0[0] + p0[2] * k,
+                p0[1] + p0[3] * k,
+                p1[0] - p1[2] * k,
+                p1[1] - p1[3] * k,
                 p1[0],
                 p1[1],
             )
             p0 = p1
-            d0 = d1
         }
-        // Pin the last end point where the next piece starts.
-        val last = out.last()
-        val exact = curve(to)
-        last[4] = exact[0]
-        last[5] = exact[1]
+    }
+
+    // Central-difference gradient of the distance at (u, v); the field is smooth at this scale.
+    private fun gradient(u: Double, v: Double, halfLong: Double, halfShort: Double, mix: Double): DoubleArray {
+        val h = GRADIENT_STEP
+        val du = distance(u + h, v, halfLong, halfShort, mix) - distance(u - h, v, halfLong, halfShort, mix)
+        val dv = distance(u, v + h, halfLong, halfShort, mix) - distance(u, v - h, halfLong, halfShort, mix)
+        return doubleArrayOf(du / (2 * h), dv / (2 * h))
     }
 
     // Distance along the ray (ox, oy) + rho * (dx, dy) to the zero contour, by bisection.
     private fun root(ox: Double, oy: Double, dx: Double, dy: Double, halfLong: Double, halfShort: Double, mix: Double): Double {
         var lo = 0.0
         var hi = halfShort * 1.5 + 2 * K_ABS
-        repeat(64) {
+        repeat(ROOT_ITERATIONS) {
             val mid = (lo + hi) * 0.5
             if (distance(ox + mid * dx, oy + mid * dy, halfLong, halfShort, mix) < 0.0) lo = mid else hi = mid
         }
