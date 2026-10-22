@@ -65,7 +65,7 @@ DividerDefaults 对象提供了分割线组件的默认值。
 
 | 常量名       | 类型  | 说明                                     | 默认值                             |
 | ------------ | ----- | ---------------------------------------- | ---------------------------------- |
-| Thickness    | Dp    | 分割线的默认厚度                         | 0.33.dp                            |
+| Thickness    | Dp    | 分割线的默认厚度（COUI `coui_list_divider_height`）。绘制时取整到整像素且不小于 1px，与 COUIRecyclerView 一致 | 0.33.dp |
 | DividerColor | Color | 分割线的默认颜色                         | COUITheme.colorScheme.dividerLine |
 | CardInset    | Dp    | 卡片内行间分割线的推荐水平缩进（COUI 规则） | 16.dp                              |
 

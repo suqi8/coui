@@ -204,3 +204,18 @@ fun MyApp() {
     }
 }
 ```
+
+## Corner Radius Steps
+
+`COUIRoundCorner` holds the COUI corner radius steps (`coui_round_corner_*`): `XS` 4, `S` 8, `M` 12, `L` 16,
+`XL` 20, `XXL` 24, `XXXL` 28, `XXXXL` 32 dp. ColorOS 17 swaps a base step for a larger radius on its smooth-corner
+paths, exposed as `COUIRoundCorner.Normal` (card lists, `*_radius_normal_16_1`: `Normal.XL` = 24dp, the default
+`Card` radius) and `COUIRoundCorner.Large` (buttons and card views, `*_radius_large_16_1`). COUI also gives each path
+its own smoothing weight (2.5 for card lists, 3.0 for buttons); those weights are not modelled, every shape uses the
+squircle extension described in the [Squircle](./squircle.md) guide.
+
+## State Layers
+
+`COUITheme` installs `COUIIndication` as `LocalIndication`. It draws the `hover`, `focus` and `press` colors of the
+scheme as three independent layers (COUI `COUIMaskEffectDrawable`), each on a response 0.3 / bounce 0 spring. A
+release that comes before the press layer reaches 70% first carries it on to 70%, so quick taps stay visible.

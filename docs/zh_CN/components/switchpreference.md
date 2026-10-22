@@ -39,6 +39,10 @@ SwitchPreference(
 )
 ```
 
+::: tip 按压反馈
+按在开关本身上时整行也会进入按压态：开关继续处理手势（点按或拖动），同时整行绘制按压蒙层，与 COUI 17 的 `COUISwitchTouchEventDelegate` 一致。
+:::
+
 ## 组件状态
 
 ### 禁用状态

@@ -20,7 +20,7 @@
 | onPrimaryContainer | `#FFFFFF` | `#FFFFFF` | `#FFFFFF` | coui_color_label_on_color |
 | disabledPrimary / disabledPrimaryButton | `#4D0066FF`/`#4D247CFF` | `#4D0080FF` | `#4D1A8CFF` | 30% 主色 |
 | tertiaryContainer | `#260066FF`/`#40247CFF` | `#260080FF` | `#401A8CFF` | coui_color_secondary_blue |
-| onTertiaryContainer | `#0066FF`/`#5C9DFF` | `#0080FF` | `#1A8CFF` | coui_color_label_theme_blue |
+| onTertiaryContainer | `#0066FF`/`#5C9DFF` | `#0080FF` | `#5C9DFF` | couiColorOnSecondary = ?couiColorPrimaryText = coui_color_primary_text_blue（更正：暗色不是 `#1A8CFF`） |
 
 > **其余色槽（secondary/error/surface/background/文字族/divider/mask/slider 等）与 COUI16 完全一致，见 `coui-retheme-spec.md` §2，逐项沿用。**
 > 17 背景层级：页面灰底 `surface` L `#F0F1F2` / D `#000000`；白卡 `surfaceContainer` L `#FFFFFF` / D `#1AFFFFFF`；`background`（面板）L `#FFFFFF` / D `#1E1E1E`。
@@ -36,7 +36,7 @@
 | **hover 态** | `coui_color_hover` `#14000000`/`#26FFFFFF` | hover indication |
 | **勾选动画化** | `coui_checkbox_*__17`、`coui_shape_checkbox_*__17`、`coui_btn_radio_*__17` 动画族 | Checkbox/Radio 组件级新形态（专项） |
 
-> 按压/悬停 token 与 16 的 `couiColorPress` 12%/20% 体系基本同源（`#1F=12%` 黑、`#33=20%` 白），17 仅新增 ripple 专用槽；不引入新色槽，映射到现有 `secondaryVariant`/press 槽即可。
+> 按压/悬停 token 与 16 的 `couiColorPress` 12%/20% 体系同源（`#1F=12%` 黑、`#33=20%` 白）。更正：`coui_color_ripple_press_background` 在 ColorOS 17 上**不会被消费**——`COUIMaskRippleDrawable` 仅 `SDK_INT<34` 用它、`==34` 用 `couiColorPressBackground`、`>=35` 用 `couiColorPress`（`COUIMaskRippleDrawable.java:50-56,184-190`），无需新增 ripple 槽。色板已新增 `press`/`hover`/`focus` 三槽（couiColorPress/Hover/Focus），由 `COUIIndication` 消费。
 
 ## 2. 圆角（squircle）体系 —— 基准 radius + weight（17 扩展为四档变体）
 
@@ -57,7 +57,7 @@
 
 | 落点 | 16 | **17 目标** | 来源 |
 | :-- | :-- | :-- | :-- |
-| `CardDefaults.CornerRadius` | 12dp | **12dp**（沿用，coui_preference_card_radius=12） | 高 |
+| `CardDefaults.CornerRadius` | 12dp | **24dp**（更正：`COUICardListSelectedItemLayout.getInnerRadius` 在平滑圆角开启且 OS>37 时直接取 `coui_round_corner_xl_radius_normal_16_1`=24dp、权重 2.5；平滑关闭回退 `couiRoundCornerXL`=20dp。`coui_preference_card_radius`=12 只被 Settings 自有图片组件消费） | 高 |
 | `DialogContentLayout` 底角 | 33dp | **34dp**（coui_dialog_os_16_1_radius_33_dp=34） | 中 |
 | 对话框主体圆角 | — | 24dp / 旋转 12dp（coui_dialog_background_corner_radius） | 中 |
 | Squircle Extension | 1.2819 | **分档 weight**：s/xs=1.5、xl/xxl=1.1、l/m=0.99（精确化，高风险，flag） | 低·flag |

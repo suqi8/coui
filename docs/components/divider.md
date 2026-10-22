@@ -65,7 +65,7 @@ The DividerDefaults object provides default values for the divider components.
 
 | Constant Name | Type  | Description                                            | Default Value                      |
 | ------------- | ----- | ------------------------------------------------------ | ---------------------------------- |
-| Thickness     | Dp    | Default thickness of divider                           | 0.33.dp                            |
+| Thickness     | Dp    | Default thickness of divider (COUI `coui_list_divider_height`). The stroke is rounded to whole pixels with a 1px floor, like COUIRecyclerView | 0.33.dp |
 | DividerColor  | Color | Default color of divider                               | COUITheme.colorScheme.dividerLine |
 | CardInset     | Dp    | Recommended horizontal inset inside a Card (COUI rule) | 16.dp                              |
 

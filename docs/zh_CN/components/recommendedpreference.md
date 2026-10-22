@@ -1,6 +1,6 @@
 # RecommendedPreference
 
-`RecommendedPreference` 是独立的相关设置推荐卡片，对应 ColorOS 的 `COUIRecommendedPreference`（设置页底部的「你可能想找：」卡片）。卡片为 12dp 圆角容器（COUI `couiRoundCornerM`），填充 `couiColorContainer4`，内含一个次要色小标题和逐条可点击的文字行。行按下时显示标准 COUI 按压遮罩。
+`RecommendedPreference` 是独立的相关设置推荐卡片，对应 ColorOS 的 `COUIRecommendedPreference`（设置页底部的「你可能想找：」卡片）。卡片为 24dp 圆角容器（ColorOS 17 上 `COUIRecommendedPreference` 把 `couiRoundCornerM` 换成 `coui_round_corner_xl_radius_normal_16_1`），填充 `couiColorContainer4`，内含一个次要色小标题和逐条可点击的文字行。行按下时显示标准 COUI 按压遮罩。
 
 当 `items` 为空时不渲染任何内容，与 `COUIRecommendedPreference.setData()` 在列表为空时隐藏该偏好的行为一致。
 
@@ -56,7 +56,7 @@ RecommendedPreference(
 
 | 常量                | 类型          | 默认值                            | 说明                                                         |
 | ------------------- | ------------- | --------------------------------- | ------------------------------------------------------------ |
-| CornerRadius        | Dp            | 12.dp                             | COUI couiRoundCornerM                                        |
+| CornerRadius        | Dp            | 24.dp                             | COUI coui_round_corner_xl_radius_normal_16_1（`COUIRoundCorner.Normal.XL`） |
 | InsideMargin        | PaddingValues | PaddingValues(horizontal = 16.dp) | 卡内文字缩进（COUI 32dp 减去 16dp 卡片外边距）               |
 | HeaderTopPadding    | Dp            | 16.dp                             | COUI recommended_recyclerView_padding_top                    |
 | HeaderBottomSpacing | Dp            | 8.dp                              | COUI recommended_preference_list_item_head_bottom_margin     |

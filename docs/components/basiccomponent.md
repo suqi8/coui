@@ -95,7 +95,7 @@ BasicComponent(
     )
     Text(
         text = "Custom content description",
-        style = COUITheme.textStyles.body2
+        style = COUITheme.textStyles.footnote1
     )
 }
 ```
@@ -168,8 +168,12 @@ The BasicComponentDefaults object provides default values and color configuratio
 
 | Method Name    | Type                 | Description                         |
 | -------------- | -------------------- | ----------------------------------- |
-| titleColor()   | BasicComponentColors | Creates title color configuration   |
-| summaryColor() | BasicComponentColors | Creates summary color configuration |
+| titleColor()   | BasicComponentColors | Creates title color configuration (`onBackground`, disabled `disabledOnSecondaryVariant`) |
+| summaryColor() | BasicComponentColors | Creates summary color configuration (`onSurfaceSecondary`, COUI `couiColorSecondNeutral`; disabled `disabledOnSecondaryVariant`) |
+
+The title uses `textStyles.headline1` (16sp Medium, COUI `TextAppearance.COUI.List.Title`). The summary uses
+`textStyles.footnote1` (13sp, COUI `TextAppearance.COUI.Preference.Summary`) and sits directly below the
+title: COUI 17 removed the 2dp `layout_marginTop` the summary had in COUI 16.
 
 ### BasicComponentColors Class
 

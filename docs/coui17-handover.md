@@ -11,7 +11,7 @@
 
 ## 1. 工程现状一句话
 
-COUI17 复刻已完成 **token 层（色值/字号/圆角/高度）100%**、**TopBar 页面层 90%**（含设置主页演示页）、**统一材质化接口 `COUIMaterialEffect` 骨架**；剩余硬骨头是 **material_shader.glsl（21,904 字节，提取自 libhwui.so）的完整 shader 级复刻**——当前 `materialPanel`/`materialGlow` 是简化版，与真机观感仍有肉眼可辨差距。
+COUI17 复刻的 **token 层（色值/字号/圆角/高度）大部分已对齐但并非 100%**（2026-10 基础框架审计修正了滑块/禁用色、行高口径、字阶、卡片圆角 12→24dp 等；平滑圆角权重 2.5/3.0 → squircle 参数的换算仍未知，见 §4.3）、**TopBar 页面层 90%**（含设置主页演示页）、**统一材质化接口 `COUIMaterialEffect` 骨架**；剩余硬骨头是 **material_shader.glsl（21,904 字节，提取自 libhwui.so）的完整 shader 级复刻**——当前 `materialPanel`/`materialGlow` 是简化版，与真机观感仍有肉眼可辨差距。
 
 ## 2. 取证资产（全部已落盘，勿重复提取）
 
@@ -28,8 +28,10 @@ COUI17 复刻已完成 **token 层（色值/字号/圆角/高度）100%**、**To
 
 ## 3. 已完成（✅，可直接信赖）
 
-### 3.1 基础 token 层（全部对齐 17 权威值）
-- 主色蓝系 `#0080FF`/`#1A8CFF`、语义绿/橙、文字 alpha 族、`Colors.kt` 全量。
+### 3.1 基础 token 层（已按 17 取证对齐，遗留见 §4.3）
+- 主色蓝系 `#0080FF`/`#1A8CFF`、语义绿/橙、文字 alpha 族、`Colors.kt` 全量；2026-10 修正 `sliderBackground`（container12 `#1F000000`/`#33FFFFFF`）、`disabledPrimarySlider`（couiColorDisable）、暗色 `disabledSecondaryVariant` `#1AFFFFFF`、Monet 浅色遮罩 0.2，新增 `press`/`hover`/`focus`。
+- 字阶：`TextStyles` 行高 = 字号 × lineSpacingMultiplier × 1.1719（Android 乘字体度量高）；`main` 16sp、`footnote1` 13sp/1.1739、`footnote2` 12sp、字重写进 token。
+- 列表：`CardDefaults.CornerRadius` 24dp（`COUIRoundCorner.Normal.XL`）；摘要 13sp + `onSurfaceSecondary`、去掉 2dp 标题摘要间距；右侧值 13sp；分隔线 1px 下限；行按压最小可见进度 0.7；开关行按开关也带整行按压。
 - `DialogDefaults.CornerRadius` = 24dp（`coui_dialog_background_corner_radius`）。
 - `FloatingToolbarDefaults.CornerRadius` = 20dp。
 - `TopAppBarDefaults`：展开高 110dp、折叠标题 24sp、大标题边距 **24dp**（`coui_appbar_title_expanded_margin_start/end`，**勿再用 compat 的 16dp**）、`ActionIconGap` = **4dp**（`coui_toolbar_gap_before_menu`）、divider margin 24→0dp、divider 色 `coui_color_divider`（L `#1F000000`/D `#33FFFFFF`）。
@@ -78,7 +80,9 @@ DEFAULT 0px / IMMERSIVE 25px / DEFAULT_BLUR 20px（blend 层已并入 Glow，枚
 - 顶栏搜索框 `SearchViewAnimate` 52dp + `SearchBarStyle_v2`（圆角 40、描边 1、elevation 0）。
 - subtitle 折叠字号 18sp（`coui_appbar_title_collapsed_with_subtitle_text_size`，当前 body2 14sp 无折叠变化，且 `hideSubtitleOnCollapse` 默认 true，影响小）。
 - title icon（`coui_appbar_title_icon_size` 16dp / margin 12dp）概念未实现。
-- 组件级专项：Checkbox/RadioButton `__17` 勾选动画、选中态凝光、`coui_color_ripple_press_background`（详见 `docs/coui17-migration-checklist.md` §三）。
+- 组件级专项：Checkbox/RadioButton `__17` 勾选动画、选中态凝光（详见 `docs/coui17-migration-checklist.md` §三）。`coui_color_ripple_press_background` 在 17 上不消费，已移出。
+- 平滑圆角：COUI 17 用 Oplus `addSmoothRoundRect` 权重（卡片列表 2.5、按钮/卡片视图/对话框 3.0），是 framework native 实现，与 `coui-squircle` 的 extension 参数无已知换算；需要 17 真机截图量弧高后再定。
+- 列表选中态：COUI 17 选中行画 `couiColorFocus` 蒙层并隐藏相邻分隔线（`COUIPreferenceItemDecoration`）；本库只在键盘焦点上画 `focus` 层，`BasicComponent` 无 selected 参数，分隔线也不会自动隐藏。
 
 ## 5. 已知坑（血泪记录，勿重蹈）
 

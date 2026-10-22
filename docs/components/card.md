@@ -52,7 +52,7 @@ The CardDefaults object provides default values and color configurations for the
 
 | Constant Name | Type          | Description        | Default Value       |
 | ------------- | ------------- | ------------------ | ------------------- |
-| CornerRadius  | Dp            | Card corner radius | 12.dp               |
+| CornerRadius  | Dp            | Card corner radius: the ColorOS 17 card list radius (`COUIRoundCorner.Normal.XL`, COUI `coui_round_corner_xl_radius_normal_16_1`) | 24.dp |
 | InsideMargin  | PaddingValues | Card inner padding | PaddingValues(0.dp) |
 
 #### Methods
@@ -75,7 +75,7 @@ The CardDefaults object provides default values and color configurations for the
 | ------ | -------------------------------------------------------------------------------------------------- |
 | None   | No press feedback                                                                                  |
 | Tint   | Animates the fill towards `pressedColor` while pressed or held down (COUI card feedback, default)  |
-| Sink   | Sinks (scales down) slightly when pressed                                                          |
+| Sink   | Scales down while pressed by the COUI 17 touch motion scale: the target (0.85–0.97) follows the card's area and aspect ratio |
 | Tilt   | Tilts based on the touch position when pressed                                                     |
 
 

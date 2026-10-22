@@ -53,7 +53,7 @@ CardDefaults 对象提供了卡片组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值              |
 | ------------ | ------------- | -------------- | ------------------- |
-| CornerRadius | Dp            | 卡片的圆角半径 | 12.dp               |
+| CornerRadius | Dp            | 卡片的圆角半径：ColorOS 17 卡片列表圆角（`COUIRoundCorner.Normal.XL`，COUI `coui_round_corner_xl_radius_normal_16_1`） | 24.dp |
 | InsideMargin | PaddingValues | 卡片的内部边距 | PaddingValues(0.dp) |
 
 #### 方法
@@ -75,7 +75,7 @@ CardDefaults 对象提供了卡片组件的默认值和颜色配置。
 | ---- | --------------------------------------------------------------------- |
 | None | 无按压反馈                                                            |
 | Tint | 按压或保持按下时背景过渡到 `pressedColor`（COUI 卡片按压反馈，默认）  |
-| Sink | 按压时轻微下沉（缩小）                                                |
+| Sink | 按压时按 COUI 17 触控缩放下沉：目标缩放（0.85–0.97）由卡片面积与长宽比决定 |
 | Tilt | 按压时根据触摸位置倾斜                                                |
 
 ## 进阶用法

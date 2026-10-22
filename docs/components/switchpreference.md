@@ -39,6 +39,10 @@ SwitchPreference(
 )
 ```
 
+::: tip Press feedback
+Pressing the switch itself also presses the row: the switch keeps handling the gesture (tap or drag) while the row draws its press layer, as COUI 17's `COUISwitchTouchEventDelegate` does.
+:::
+
 ## Component States
 
 ### Disabled State

@@ -1,6 +1,6 @@
 # RecommendedPreference
 
-`RecommendedPreference` is a standalone rounded card that recommends related settings, mirroring ColorOS's `COUIRecommendedPreference` (the "You might be looking for:" card at the bottom of ColorOS settings pages). The card is a 12dp rounded container (COUI `couiRoundCornerM`) filled with `couiColorContainer4`, holding a small secondary header followed by one tappable text row per item. Rows draw the standard COUI press overlay while pressed.
+`RecommendedPreference` is a standalone rounded card that recommends related settings, mirroring ColorOS's `COUIRecommendedPreference` (the "You might be looking for:" card at the bottom of ColorOS settings pages). The card is a 24dp rounded container (on ColorOS 17 `COUIRecommendedPreference` swaps `couiRoundCornerM` for `coui_round_corner_xl_radius_normal_16_1`) filled with `couiColorContainer4`, holding a small secondary header followed by one tappable text row per item. Rows draw the standard COUI press overlay while pressed.
 
 Nothing is rendered when `items` is empty, matching `COUIRecommendedPreference.setData()` hiding the preference for an empty list.
 
@@ -56,7 +56,7 @@ RecommendedPreference(
 
 | Constant            | Type          | Default Value                       | Description                                                    |
 | ------------------- | ------------- | ----------------------------------- | -------------------------------------------------------------- |
-| CornerRadius        | Dp            | 12.dp                               | COUI couiRoundCornerM                                          |
+| CornerRadius        | Dp            | 24.dp                               | COUI coui_round_corner_xl_radius_normal_16_1 (`COUIRoundCorner.Normal.XL`) |
 | InsideMargin        | PaddingValues | PaddingValues(horizontal = 16.dp)   | In-card text inset (COUI 32dp minus the 16dp card margin)      |
 | HeaderTopPadding    | Dp            | 16.dp                               | COUI recommended_recyclerView_padding_top                      |
 | HeaderBottomSpacing | Dp            | 8.dp                                | COUI recommended_preference_list_item_head_bottom_margin       |

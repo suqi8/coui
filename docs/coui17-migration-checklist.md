@@ -54,7 +54,7 @@
 | Checkbox | `__17` 勾选过渡动画（shape + 部分选中态） | `coui_checkbox_*__17` 动画族 | 📝 |
 | RadioButton | `__17` 勾选过渡动画 | `coui_btn_radio_*__17` | 📝 |
 | 控件选中态光晕/渐变 | 凝光视效（lock/keyboard gradient、checked_background_gradient_start） | gradient token | 📝 |
-| 按压 ripple 专用态 | `coui_color_ripple_press_background` | press 资源 | 📝 |
+| 按压 ripple 专用态 | `coui_color_ripple_press_background`：ColorOS 17（SDK≥35）走 `couiColorPress`，此资源不消费 | `COUIMaskRippleDrawable.java:50-56` | 不适用 |
 | Switch/Slider 动效 | 17 是否调整 spring（待 jadx 校准） | — | 📝 |
 
 ## 四、对照方法

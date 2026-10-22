@@ -203,3 +203,11 @@ fun MyApp() {
     }
 }
 ```
+
+## 圆角档位
+
+`COUIRoundCorner` 收录 COUI 圆角档位（`coui_round_corner_*`）：`XS` 4、`S` 8、`M` 12、`L` 16、`XL` 20、`XXL` 24、`XXXL` 28、`XXXXL` 32 dp。ColorOS 17 在平滑圆角路径上会把基础档换成更大的半径，对应 `COUIRoundCorner.Normal`（卡片列表，`*_radius_normal_16_1`；`Normal.XL` = 24dp，即 `Card` 默认圆角）和 `COUIRoundCorner.Large`（按钮与卡片视图，`*_radius_large_16_1`）。COUI 还为每条路径指定了平滑权重（卡片列表 2.5、按钮 3.0），本库没有建模这些权重，所有形状都使用 [Squircle](./squircle.md) 中描述的超椭圆参数。
+
+## 状态蒙层
+
+`COUITheme` 把 `COUIIndication` 设为 `LocalIndication`。它把配色方案中的 `hover`、`focus`、`press` 三色作为三个独立图层绘制（COUI `COUIMaskEffectDrawable`），各自使用 response 0.3 / bounce 0 弹簧。按压层进度未到 70% 就抬手时，会先继续走到 70% 再回落，保证快速点按也可见。

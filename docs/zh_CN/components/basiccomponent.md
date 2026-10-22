@@ -95,7 +95,7 @@ BasicComponent(
     )
     Text(
         text = "自定义内容说明",
-        style = COUITheme.textStyles.body2
+        style = COUITheme.textStyles.footnote1
     )
 }
 ```
@@ -168,8 +168,10 @@ BasicComponentDefaults 对象提供了 BasicComponent 组件的默认值和颜�
 
 | 方法名         | 类型                 | 说明             |
 | -------------- | -------------------- | ---------------- |
-| titleColor()   | BasicComponentColors | 创建标题颜色配置 |
-| summaryColor() | BasicComponentColors | 创建摘要颜色配置 |
+| titleColor()   | BasicComponentColors | 创建标题颜色配置（`onBackground`，禁用 `disabledOnSecondaryVariant`） |
+| summaryColor() | BasicComponentColors | 创建摘要颜色配置（`onSurfaceSecondary`，即 COUI `couiColorSecondNeutral`；禁用 `disabledOnSecondaryVariant`） |
+
+标题使用 `textStyles.headline1`（16sp Medium，COUI `TextAppearance.COUI.List.Title`）。摘要使用 `textStyles.footnote1`（13sp，COUI `TextAppearance.COUI.Preference.Summary`），紧贴标题下方：COUI 17 删除了 COUI 16 摘要上的 2dp `layout_marginTop`。
 
 ### BasicComponentColors 类
 

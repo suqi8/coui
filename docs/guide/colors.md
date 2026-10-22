@@ -11,59 +11,59 @@ This page lists all colors in the COUI color scheme with their default light and
 
 | Name | Role | Light | Dark |
 |------|------|-------|------|
-| `primary` | Primary color | `#FF3482FF` | `#FF277AF7` |
+| `primary` | Primary color | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimary` | Text on primary | `#FFFFFFFF` | `#FFFFFFFF` |
-| `primaryVariant` | Primary variant | `#FF3482FF` | `#FF0073DD` |
+| `primaryVariant` | Primary variant | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimaryVariant` | Text on primary variant | `#FFAECDFF` | `#FF99C7F1` |
-| `error` | Error color | `#FFE94634` | `#FFF12522` |
-| `onError` | Text on error | `#FFFFFFFF` | `#FF690005` |
-| `errorContainer` | Error container | `#FFFDF6F4` | `#FF2E0603` |
-| `onErrorContainer` | Text on error container | `#FF410002` | `#FFFFDAD6` |
-| `disabledPrimary` | Disabled primary (switch/btn/slider) | `#FFC2D9FF` | `#FF253E64` |
-| `disabledOnPrimary` | Text on disabled primary | `#FFF3F8FF` | `#FF677993` |
-| `disabledPrimaryButton` | Disabled primary for button | `#FFC2D9FF` | `#FF253E64` |
-| `disabledOnPrimaryButton` | Text on disabled primary button | `#FFFFFFFF` | `#FF677893` |
-| `disabledPrimarySlider` | Disabled primary for slider | `#FFB8CFF5` | `#FF44587C` |
-| `primaryContainer` | Primary container | `#FF5D9BFF` | `#FF338FE4` |
+| `error` | Error color | `#FFDB382C` | `#FFFF6C61` |
+| `onError` | Text on error | `#FFFFFFFF` | `#FFFFFFFF` |
+| `errorContainer` | Error container | `#26EB3B2F` | `#40EB493D` |
+| `onErrorContainer` | Text on error container | `#FFDB382C` | `#FFFF6C61` |
+| `disabledPrimary` | Disabled primary (switch/btn/slider) | `#4D0080FF` | `#4D1A8CFF` |
+| `disabledOnPrimary` | Text on disabled primary | `#FFFFFFFF` | `#FF404040` |
+| `disabledPrimaryButton` | Disabled primary for button | `#4D0080FF` | `#4D1A8CFF` |
+| `disabledOnPrimaryButton` | Text on disabled primary button | `#8AFFFFFF` | `#28FFFFFF` |
+| `disabledPrimarySlider` | Disabled primary for slider | `#4D0080FF` | `#4D1A8CFF` |
+| `primaryContainer` | Primary container | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimaryContainer` | Text on primary container | `#FFFFFFFF` | `#FFFFFFFF` |
-| `secondary` | Secondary color | `#FFE6E6E6` | `#FF505050` |
+| `secondary` | Secondary color | `#FFE5E5E5` | `#FF757575` |
 | `onSecondary` | Text on secondary | `#FFFFFFFF` | `#FFFFFFFF` |
-| `secondaryVariant` | Secondary variant | `#FFF0F0F0` | `#FF434343` |
-| `onSecondaryVariant` | Text on secondary variant | `#FF303030` | `#FFD9D9D9` |
-| `disabledSecondary` | Disabled secondary | `#FFF0F0F0` | `#FF3F3F3F` |
-| `disabledOnSecondary` | Text on disabled secondary | `#FFFCFCFC` | `#FF797979` |
-| `disabledSecondaryVariant` | Disabled secondary variant | `#FFF2F2F2` | `#FF404040` |
-| `disabledOnSecondaryVariant` | Text on disabled secondary variant | `#FFB2B2B2` | `#FF707170` |
-| `secondaryContainer` | Secondary container | `#FFF0F0F0` | `#FF434343` |
-| `onSecondaryContainer` | Text on secondary container | `#FFA9A9A9` | `#FF7C7C7C` |
-| `secondaryContainerVariant` | Secondary container variant | `#FFF0F0F0` | `#FF4F4F4F` |
-| `onSecondaryContainerVariant` | Text on secondary container variant | `#FFA8A8A8` | `#FF959595` |
-| `tertiaryContainer` | Tertiary container | `#FFEAF2FF` | `#FF2B3B54` |
-| `onTertiaryContainer` | Text on tertiary container | `#FF3482FF` | `#FF4788FF` |
-| `tertiaryContainerVariant` | Tertiary container variant | `#FFEAF2FF` | `#FF505050` |
-| `background` | App background | `#FFFFFFFF` | `#FF242424` |
-| `onBackground` | Text on background | `#FF000000` | `#E6FFFFFF` |
-| `onBackgroundVariant` | Variant text on background | `#FF8C93B0` | `#FF787E96` |
-| `surface` | Surface | `#FFF7F7F7` | `#FF000000` |
-| `onSurface` | Text on surface | `#FF000000` | `#FFF2F2F2` |
-| `surfaceVariant` | Surface variant | `#FFFFFFFF` | `#FF242424` |
-| `onSurfaceSecondary` | Secondary text on surface | `#CC000000` | `#CCFFFFFF` |
-| `onSurfaceVariantSummary` | Summary text on surface variant | `#99000000` | `#80FFFFFF` |
-| `onSurfaceVariantActions` | Action text on surface variant | `#66000000` | `#66FFFFFF` |
-| `disabledOnSurface` | Text on disabled surface | `#FFB2B2B2` | `#FF666666` |
-| `surfaceContainer` | Surface container | `#FFFFFFFF` | `#FF242424` |
-| `onSurfaceContainer` | Text on surface container | `#FF000000` | `#E6FFFFFF` |
-| `onSurfaceContainerVariant` | Variant text on surface container | `#FF959595` | `#FF737373` |
-| `surfaceContainerHigh` | High surface container | `#FFE8E8E8` | `#FF242424` |
-| `onSurfaceContainerHigh` | Text on high surface container | `#FFA2A2A2` | `#FF666666` |
-| `surfaceContainerHighest` | Highest surface container | `#FFE8E8E8` | `#FF2D2D2D` |
-| `onSurfaceContainerHighest` | Text on highest surface container | `#FF000000` | `#FFE9E9E9` |
-| `outline` | Outlines/borders | `#FFD9D9D9` | `#FF404040` |
-| `dividerLine` | Dividers | `#FFE0E0E0` | `#FF393939` |
-| `windowDimming` | Window dimming (dialogs/dropdowns) | `#4D000000` | `#99000000` |
-| `sliderKeyPoint` | Slider key point | `#4DA3B3CD` | `#4D7A8AA6` |
+| `secondaryVariant` | Secondary variant | `#14000000` | `#26FFFFFF` |
+| `onSecondaryVariant` | Text on secondary variant | `#E6000000` | `#E6FFFFFF` |
+| `disabledSecondary` | Disabled secondary | `#FFF2F2F2` | `#4D757575` |
+| `disabledOnSecondary` | Text on disabled secondary | `#42000000` | `#4DFFFFFF` |
+| `disabledSecondaryVariant` | Disabled secondary variant | `#14000000` | `#1AFFFFFF` |
+| `disabledOnSecondaryVariant` | Text on disabled secondary variant | `#42000000` | `#4DFFFFFF` |
+| `secondaryContainer` | Secondary container | `#14000000` | `#26FFFFFF` |
+| `onSecondaryContainer` | Text on secondary container | `#66000000` | `#66FFFFFF` |
+| `secondaryContainerVariant` | Secondary container variant | `#14000000` | `#26FFFFFF` |
+| `onSecondaryContainerVariant` | Text on secondary container variant | `#66000000` | `#66FFFFFF` |
+| `tertiaryContainer` | Tertiary container | `#260080FF` | `#401A8CFF` |
+| `onTertiaryContainer` | Text on tertiary container | `#FF0080FF` | `#FF5C9DFF` |
+| `tertiaryContainerVariant` | Tertiary container variant | `#260080FF` | `#401A8CFF` |
+| `background` | App background | `#FFFFFFFF` | `#FF1E1E1E` |
+| `onBackground` | Text on background | `#E6000000` | `#E6FFFFFF` |
+| `onBackgroundVariant` | Variant text on background | `#8A000000` | `#8AFFFFFF` |
+| `surface` | Surface | `#FFF0F1F2` | `#FF000000` |
+| `onSurface` | Text on surface | `#E6000000` | `#E6FFFFFF` |
+| `surfaceVariant` | Surface variant | `#FFFFFFFF` | `#1AFFFFFF` |
+| `onSurfaceSecondary` | Secondary text on surface | `#8A000000` | `#8AFFFFFF` |
+| `onSurfaceVariantSummary` | Summary text on surface variant | `#66000000` | `#66FFFFFF` |
+| `onSurfaceVariantActions` | Action text on surface variant | `#42000000` | `#4DFFFFFF` |
+| `disabledOnSurface` | Text on disabled surface | `#42000000` | `#4DFFFFFF` |
+| `surfaceContainer` | Surface container | `#FFFFFFFF` | `#1AFFFFFF` |
+| `onSurfaceContainer` | Text on surface container | `#E6000000` | `#E6FFFFFF` |
+| `onSurfaceContainerVariant` | Variant text on surface container | `#66000000` | `#66FFFFFF` |
+| `surfaceContainerHigh` | High surface container | `#FFE6E6E6` | `#33FFFFFF` |
+| `onSurfaceContainerHigh` | Text on high surface container | `#42000000` | `#4DFFFFFF` |
+| `surfaceContainerHighest` | Highest surface container | `#FFFFFFFF` | `#FF1E1E1E` |
+| `onSurfaceContainerHighest` | Text on highest surface container | `#E6000000` | `#E6FFFFFF` |
+| `outline` | Outlines/borders | `#26000000` | `#26FFFFFF` |
+| `dividerLine` | Dividers | `#1F000000` | `#33FFFFFF` |
+| `windowDimming` | Window dimming (dialogs/dropdowns) | `#33000000` | `#99000000` |
+| `sliderKeyPoint` | Slider key point | `#FFF2F2F2` | `#FF595959` |
 | `sliderKeyPointForeground` | Slider key point foreground | `#FF6EB5FF` | `#FF5DAAFF` |
-| `sliderBackground` | Slider background | `#0F000000` | `#26FFFFFF` |
+| `sliderBackground` | Slider background | `#1F000000` | `#33FFFFFF` |
 | `dialogButton` | Dialog bar button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
 | `dragHandle` | Bottom sheet drag handle (COUI `couiColorControls`) | `#29000000` | `#40FFFFFF` |
 | `secondaryButton` | Secondary button fill (COUI `couiColorContainer8` over `couiColorBackgroundElevated`) | `#FFEBEBEB` | `#FF353535` |
@@ -74,3 +74,6 @@ This page lists all colors in the COUI color scheme with their default light and
 | `disabledOnTransparentButton` | Disabled transparent button label | `#4DFFFFFF` | `#4DFFFFFF` |
 | `backgroundTop` | Topmost floating surface, e.g. Snackbar (COUI `couiColorBackgroundTop`) | `#FFFFFFFF` | `#FF333333` |
 | `primaryTextOnPopup` | Accent text on floating surfaces, e.g. Snackbar action (COUI `couiColorPrimaryTextOnPopup`) | `#FF0080FF` | `#FF5C9DFF` |
+| `press` | Pressed state layer (COUI `couiColorPress`), drawn by `COUIIndication` | `#1F000000` | `#33FFFFFF` |
+| `hover` | Hovered state layer (COUI `couiColorHover`), drawn by `COUIIndication` | `#14000000` | `#26FFFFFF` |
+| `focus` | Focused / selected list row layer (COUI `couiColorFocus`), drawn by `COUIIndication` | `#1F0080FF` | `#331A8CFF` |
