@@ -227,7 +227,7 @@ private fun BasicCard(
                 .semantics(mergeDescendants = false) {
                     isTraversalGroup = true
                 }
-                .squircleSurface(color = color, cornerRadius = cornerRadius),
+                .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.Normal.Weight),
             propagateMinConstraints = true,
         ) {
             content()

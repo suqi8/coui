@@ -18,6 +18,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -48,7 +49,7 @@ fun FloatingToolbar(
 
     val dividerMod = if (showDivider) {
         Modifier
-            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius)
+            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .padding(0.75.dp)
     } else {
         Modifier
@@ -71,7 +72,7 @@ fun FloatingToolbar(
             .padding(outSidePadding)
             .then(dividerMod)
             .then(shadowMod)
-            .squircleBackground(color = color, cornerRadius = cornerRadius)
+            .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .pointerInput(Unit) {
                 detectTapGestures { /* Consume click */ }
             },

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleBorder
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -279,11 +280,12 @@ private fun CodeCell(
     Box(
         modifier = Modifier
             .size(size)
-            .squircleBackground(color = colors.cellBackgroundColor, cornerRadius = cornerRadius)
+            .squircleBackground(color = colors.cellBackgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .squircleBorder(
                 width = { if (strokeAlpha.value > 0f) CodeTextFieldDefaults.CellStrokeWidth else 0.dp },
                 color = { colors.focusedStrokeColor.copy(alpha = colors.focusedStrokeColor.alpha * strokeAlpha.value) },
                 cornerRadius = cornerRadius,
+                weight = COUIRoundCorner.CircularWeight,
             ),
         contentAlignment = Alignment.Center,
     ) {

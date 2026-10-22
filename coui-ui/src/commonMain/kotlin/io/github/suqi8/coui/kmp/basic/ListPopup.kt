@@ -88,6 +88,7 @@ import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.anim.folmeSpring
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
@@ -1306,7 +1307,7 @@ fun ListPopupContent(
                 transformOrigin = localTransformOrigin
             }
             .dropShadow(shape = shape, shadow = PopupShadow)
-            .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius),
+            .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = COUIRoundCorner.CircularWeight),
     ) {
         content()
     }
@@ -1350,6 +1351,7 @@ internal fun Modifier.popupClipReveal(
             width = size.width,
             height = visibleHeight,
             cornerRadius = cornerRadius.toPx(),
+            weight = COUIRoundCorner.CircularWeight,
             squircleEnabled = squircleEnabled,
         )
         if (clipStart == 0f) {

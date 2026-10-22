@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.Platform
 import io.github.suqi8.coui.kmp.utils.platform
@@ -356,6 +357,7 @@ fun FloatingNavigationBar(
                             .squircleBackground(
                                 color = COUITheme.colorScheme.dividerLine,
                                 cornerRadius = cornerRadius,
+                                weight = COUIRoundCorner.CircularWeight,
                             )
                             .padding(0.75.dp)
                     } else {
@@ -376,7 +378,7 @@ fun FloatingNavigationBar(
                         Modifier
                     },
                 )
-                .squircleBackground(color = color, cornerRadius = cornerRadius)
+                .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
                 .then(modifier)
                 .padding(horizontal = FloatingNavigationBarDefaults.HorizontalPadding)
                 .align(horizontalAlignment)

@@ -65,6 +65,7 @@ import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
 import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
@@ -384,7 +385,7 @@ internal fun DialogContent(
             detectTapGestures { /* Consume click */ }
         }
         // COUI panels carry no blanket inside padding; each slot brings its own margins.
-        .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius)
+        .squircleSurface(color = backgroundColor, cornerRadius = resolvedCornerRadius, weight = COUIRoundCorner.Large.Weight)
         // Inside the corner clip: a backdrop blur provider paints here, under the content.
         .then(backgroundModifier)
         // COUIAlertDialogRootLayout draws its shadow edge in onDraw, above the background and
@@ -513,8 +514,8 @@ object DialogDefaults {
     /**
      * The default corner radius of the dialog panel. COUI 17 `COUIAlertDialogMaxLinearLayout`
      * takes `coui_round_corner_xxxxl_radius_large_16_1` (45dp) once the Oplus OS version is above 37
-     * with smooth corners on, drawn as a weight-3.0 smooth round rect; the squircle surface
-     * approximates that smoothing.
+     * with smooth corners on, drawn as a weight-3.0 smooth round rect, which the squircle surface draws
+     * with [COUIRoundCorner.Large.Weight].
      */
     val CornerRadius = 45.dp
 

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -100,7 +101,7 @@ fun TopTips(
     Box(
         modifier = modifier
             .graphicsLayer { scaleY = visibility.value }
-            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius),
+            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight),
     ) {
         BoxWithConstraints {
             // COUIDefaultTopTipsView.isNeedMultiText: the layout switches to the multi-line

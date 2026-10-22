@@ -79,6 +79,7 @@ import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
 import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import kotlinx.coroutines.CoroutineScope
@@ -652,6 +653,7 @@ private fun BottomSheetColumn(
                     topEnd = cornerRadius,
                     bottomEnd = 0.dp,
                     bottomStart = 0.dp,
+                    weight = COUIRoundCorner.Large.Weight,
                 )
                 // Inside the corner clip: a backdrop blur provider paints here, under the content.
                 .then(backgroundModifier)
@@ -962,8 +964,8 @@ object BottomSheetDefaults {
     /**
      * The default corner radius of the top corners of the bottom sheet. COUI 17
      * `COUIBottomSheetDialog` takes `coui_round_corner_xxxxl_radius_large_16_1` (45dp) once the Oplus
-     * OS version is above 37 (`couiRoundCornerXXXXL` before), with the squircle surface supplying the
-     * smooth-corner shape; the bottom corners are square, matching the outline COUI extends
+     * OS version is above 37 (`couiRoundCornerXXXXL` before), drawn by the squircle surface as a
+     * weight-3.0 smooth round rect ([COUIRoundCorner.Large.Weight]); the bottom corners are square, matching the outline COUI extends
      * off-screen.
      */
     val cornerRadius = 45.dp

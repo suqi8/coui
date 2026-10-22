@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.coroutines.cancellation.CancellationException
@@ -64,7 +65,7 @@ import kotlin.coroutines.cancellation.CancellationException
  *   run either way.
  * @param cornerRadius The corner radius of the [Button]. [Dp.Unspecified] (the default) rounds
  *   the button at half its measured height, the COUI capsule (`drawableRadius = -1`); an explicit
- *   radius draws a squircle.
+ *   radius draws a weight-3.0 smooth round rect (COUI 17 `setSmoothRoundRect(..., 3.0f)`).
  * @param minWidth The minimum width of the [Button].
  * @param minHeight The minimum height of the [Button].
  * @param colors The [ButtonColors] of the [Button].
@@ -188,7 +189,7 @@ internal fun CouiButton(
     val surfaceModifier = if (cornerRadius == Dp.Unspecified) {
         Modifier.clip(CircleShape).background(fillColor)
     } else {
-        Modifier.squircleSurface(color = fillColor, cornerRadius = cornerRadius)
+        Modifier.squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
     }
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {

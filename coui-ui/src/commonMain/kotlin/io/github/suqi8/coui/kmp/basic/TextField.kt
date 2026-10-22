@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleBorder
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.math.roundToInt
@@ -977,11 +978,12 @@ private fun TextFieldChrome(
     val backgroundModifier = when (backgroundMode) {
         TextFieldMode.Rectangle ->
             Modifier
-                .squircleBackground(color = colors.backgroundColor, cornerRadius = cornerRadius)
+                .squircleBackground(color = colors.backgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
                 .squircleBorder(
                     width = { borderWidthState.value },
                     color = { borderColorState.value },
                     cornerRadius = cornerRadius,
+                    weight = COUIRoundCorner.CircularWeight,
                 )
 
         TextFieldMode.Line -> Modifier.drawBehind {

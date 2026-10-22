@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.coroutines.cancellation.CancellationException
@@ -155,7 +156,7 @@ fun Chip(
                     scaleY = scale
                 }
                 .widthIn(max = maxWidth)
-                .squircleSurface(color = fillColor, cornerRadius = cornerRadius)
+                .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
                 .selectable(
                     selected = selected,
                     interactionSource = interactionSource,

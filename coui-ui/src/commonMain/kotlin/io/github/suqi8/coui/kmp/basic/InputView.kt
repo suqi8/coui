@@ -148,7 +148,7 @@ fun InputView(
     Column(modifier = modifier) {
         Column(
             modifier = Modifier
-                .squircleBackground(color = colors.cardColor, cornerRadius = cornerRadius)
+                .squircleBackground(color = colors.cardColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Normal.Weight)
                 .padding(horizontal = InputViewDefaults.ContentPadding),
         ) {
             if (hasTitle) {

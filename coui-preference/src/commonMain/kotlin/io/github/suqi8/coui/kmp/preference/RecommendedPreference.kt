@@ -57,7 +57,11 @@ fun RecommendedPreference(
         modifier = modifier
             .fillMaxWidth()
             // squircleSurface also masks the children, clipping the row press overlays to the card corners.
-            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius),
+            .squircleSurface(
+                color = colors.containerColor,
+                cornerRadius = cornerRadius,
+                weight = COUIRoundCorner.Normal.Weight,
+            ),
     ) {
         Box(
             modifier = Modifier

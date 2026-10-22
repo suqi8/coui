@@ -73,6 +73,7 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlinx.coroutines.CancellableContinuation
@@ -596,7 +597,7 @@ private fun TooltipScope.TooltipSurface(
                     shape = RoundedCornerShape(cornerRadius),
                     shadow = Shadow(radius = 10.dp, color = Color.Black, alpha = 0.1f),
                 )
-                .squircleBackground(color = containerColor, cornerRadius = cornerRadius)
+                .squircleBackground(color = containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
                 .padding(insideMargin),
         ) {
             content()

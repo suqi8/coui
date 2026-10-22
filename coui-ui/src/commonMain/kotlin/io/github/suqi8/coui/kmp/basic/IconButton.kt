@@ -21,6 +21,7 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 
 /**
  * A [IconButton] component with COUI style.
@@ -85,7 +86,7 @@ fun IconButton(
                 enabled = material,
                 motionEnabled = enabled,
             )
-            .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius)
+            .squircleSurface(color = backgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .then(clickableModifier),
         contentAlignment = Alignment.Center,
     ) {

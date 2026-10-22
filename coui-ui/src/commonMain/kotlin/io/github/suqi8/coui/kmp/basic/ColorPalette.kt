@@ -42,6 +42,7 @@ import io.github.suqi8.coui.kmp.color.api.toHsv
 import io.github.suqi8.coui.kmp.color.space.Hsv
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleClip
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -126,6 +127,7 @@ fun ColorPalette(
                     .squircleBackground(
                         color = lastEmittedColor ?: color,
                         cornerRadius = 13.dp,
+                        weight = COUIRoundCorner.CircularWeight,
                     ),
             )
         }
@@ -197,7 +199,7 @@ private fun PaletteCanvas(
 
     Box(
         modifier = Modifier
-            .squircleClip(cornerRadius)
+            .squircleClip(cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .onGloballyPositioned { sizePx = it.size }
             .pointerInput(rows, hueColumns, includeGrayColumn, isRtl) {
                 awaitEachGesture {

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -151,15 +152,15 @@ private fun CountBadge(
         label = "badgeWidth",
     )
     // couiRoundCornerFULL (72dp) always exceeds half the badge size, so COUIRoundRectUtil clamps
-    // the corner to min(width, height) / 2 - a smooth-corner capsule, like the squircle surface.
+    // the corner to min(width, height) / 2 - a capsule, drawn with circular ends.
     val cornerRadius = height / 2
     val backgroundModifier = if (stroke) {
         Modifier
-            .squircleSurface(color = colors.strokeColor, cornerRadius = cornerRadius)
+            .squircleSurface(color = colors.strokeColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
             .padding(BadgeDefaults.StrokeWidth)
-            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius - BadgeDefaults.StrokeWidth)
+            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius - BadgeDefaults.StrokeWidth, weight = COUIRoundCorner.CircularWeight)
     } else {
-        Modifier.squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius)
+        Modifier.squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
     }
     val density = LocalDensity.current
     val fontSize = with(density) { BadgeDefaults.TextSize.toSp() }

@@ -13,10 +13,19 @@ import androidx.compose.ui.unit.dp
  *   use [Normal.XL];
  * - [Large]: `COUIButton` and `COUICardView` (`RoundCornerUtil.getRoundCornerForOS17`, weight 3.0).
  *
- * The smoothing weights themselves are not modelled: they are Oplus framework values without a known
- * mapping onto the squircle extension this library draws with.
+ * Each step family carries its smoothing weight, the exponent of the Oplus smooth round rect corner
+ * (`Path.addSmoothRoundRect(rect, radii, dir, weight)`, a superellipse `|x|^n + |y|^n = r^n` with
+ * `n = weight`), which the squircle modifiers take as their `weight` argument. The base steps are
+ * drawn without smoothing on ColorOS 17, as is every full-round capsule or circle: pass
+ * [CircularWeight] for those.
  */
 object COUIRoundCorner {
+    /**
+     * The weight of a plain circular corner (superellipse exponent 2): the base steps, capsules and
+     * circles (`COUIButton` `CIRCLE_CORNER_WEIGHT`, the 1.0 capsule weight it hands the outline).
+     */
+    val CircularWeight = 2f
+
     /** COUI coui_round_corner_xs. */
     val XS = 4.dp
 
@@ -43,6 +52,9 @@ object COUIRoundCorner {
 
     /** The ColorOS 17 card list radii (COUI coui_round_corner_*_radius_normal_16_1). */
     object Normal {
+        /** COUI weight_16_1_normal, the smoothing weight of card lists and input cards. */
+        val Weight = 2.5f
+
         /** COUI coui_round_corner_xs_radius_normal_16_1. */
         val XS = 5.dp
 
@@ -70,6 +82,12 @@ object COUIRoundCorner {
 
     /** The ColorOS 17 button and card view radii (COUI coui_round_corner_*_radius_large_16_1). */
     object Large {
+        /**
+         * COUI weight_16_1_large, the smoothing weight of buttons, card views, tooltips, alert dialogs
+         * and bottom sheets.
+         */
+        val Weight = 3f
+
         /** COUI coui_round_corner_xs_radius_large_16_1. */
         val XS = 5.dp
 
