@@ -467,10 +467,12 @@ object DialogDefaults {
     fun backgroundColor() = COUITheme.colorScheme.background
 
     /**
-     * The default corner radius of the dialog panel. COUI 17 `coui_dialog_background_corner_radius`
-     * (24dp), reproduced by the squircle surface.
+     * The default corner radius of the dialog panel. COUI 17 `COUIAlertDialogMaxLinearLayout`
+     * takes `coui_round_corner_xxxxl_radius_large_16_1` (45dp) once the Oplus OS version is above 37
+     * with smooth corners on, drawn as a weight-3.0 smooth round rect; the squircle surface
+     * approximates that smoothing.
      */
-    val CornerRadius = 24.dp
+    val CornerRadius = 45.dp
 
     /**
      * The default upper bound on dialog content width. Keeps dialogs from stretching across

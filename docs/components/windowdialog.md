@@ -82,7 +82,7 @@ WindowDialog(
 
 | Name          | Type   | Description                               |
 | ------------- | ------ | ----------------------------------------- |
-| CornerRadius  | Dp     | Dialog panel corner radius (19.dp)        |
+| CornerRadius  | Dp     | Dialog panel corner radius (45.dp)        |
 | MaxWidth      | Dp     | Maximum dialog content width (392.dp)     |
 | outsideMargin | DpSize | Default outer margin for dialog (16, 24)  |
 | insideMargin  | DpSize | Default margin for the built-in title/summary texts (24, 24); the content slot is unpadded |

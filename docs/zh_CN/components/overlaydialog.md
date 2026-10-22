@@ -86,7 +86,7 @@ Scaffold {
 
 | 属性名        | 类型   | 说明                           |
 | ------------- | ------ | ------------------------------ |
-| CornerRadius  | Dp     | 对话框面板圆角（19.dp）        |
+| CornerRadius  | Dp     | 对话框面板圆角（45.dp）        |
 | MaxWidth      | Dp     | 对话框内容最大宽度（392.dp）   |
 | outsideMargin | DpSize | 对话框外部默认边距（16, 24）   |
 | insideMargin  | DpSize | 内置标题/摘要文本的默认边距（24, 24）；content 插槽不加内边距 |
