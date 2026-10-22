@@ -17,7 +17,7 @@ import io.github.suqi8.coui.kmp.basic.CancelButton
 在 ColorOS 17 上，搜索胶囊与取消按钮都是带顶栏材质的玻璃胶囊（背景滤色、阴影、边缘光、触摸聚光与按压/拖拽动效）；
 平台不支持所需混合模式时回退为不透明的栏颜色（浅色 `#FAFAFA`，深色 `#1E1E1E`）。进入与退出编辑态使用弹簧动画
 （response 0.5，bounce 0.25）：胶囊收窄的同时，取消按钮从半尺寸放大淡入，两者运动中像融球一样粘连。按压或拖拽胶囊会让它缩放与形变；
-从胶囊内可点击元素（清除按钮或自定义图标按钮）开始的手势不会带动胶囊。
+清除按钮同样会带动胶囊并点亮触摸聚光；从胶囊内其他可点击元素（自定义图标按钮）开始的手势不会带动胶囊，也不会点亮聚光。
 
 ## 基本用法
 
@@ -233,7 +233,8 @@ SearchBar(
 
 ColorOS 17 上，搜索栏可以放在工具栏里，从工具栏的搜索图标中展开（`COUISearchBar.showInToolBar`）。
 胶囊先是图标位置上的一个圆，边移回原位边变宽，文字淡入，中途模糊最强；取消按钮从图标处飞出，与胶囊像融球一样粘连；
-工具栏自身的图标同时淡出并缩小到 0.8。展开使用 response 0.55 / bounce 0.2 的弹簧（收起 0.5 / 0.2），
+工具栏自身的图标同时淡出并缩小到 0.8，标题淡出（工具栏背景不变）；收起的最后 5% 内触摸搜索图标会立即完成收起。
+展开使用 response 0.55 / bounce 0.2 的弹簧（收起 0.5 / 0.2），
 工具栏图标使用 0.4 / 0.3（收起 0.5 / 0.2，从 0.5 放大回来）。
 
 ```kotlin
@@ -242,8 +243,10 @@ var query by remember { mutableStateOf("") }
 
 Box {
     ToolbarSearchAnchor(state = searchState) {
+        val titleColor = COUITheme.colorScheme.onSurface
         TopAppBar(
             title = "标题",
+            titleColor = titleColor.copy(alpha = titleColor.alpha * searchState.toolbarTitleAlpha),
             navigationIcon = {
                 IconButton(modifier = Modifier.toolbarSearchItem(searchState), onClick = { /* 返回 */ }) { /* ... */ }
             },
@@ -284,7 +287,8 @@ Box {
 | API | 说明 |
 | --- | --- |
 | `rememberToolbarSearchState()` / `ToolbarSearchState` | 展开状态，提供 `expand()` / `collapse()` |
-| `ToolbarSearchAnchor` | 承载工具栏内容，搜索栏展开时将其淡出 |
+| `ToolbarSearchAnchor` | 承载工具栏内容（工具栏本身不淡出） |
+| `ToolbarSearchState.toolbarTitleAlpha` | 搜索栏展开期间应用到工具栏标题颜色上的透明度 |
 | `Modifier.toolbarSearchEntry(state)` | 标记搜索栏从中展开的工具栏搜索图标；展开期间隐藏该图标 |
-| `Modifier.toolbarSearchItem(state)` | 让其他工具栏图标随展开一起缩小 |
+| `Modifier.toolbarSearchItem(state)` | 让其他工具栏图标随展开一起淡出并缩小 |
 | `ToolbarFloatingSearchBar` | 在工具栏行上方承载 `SearchBar`；收起后不显示内容 |

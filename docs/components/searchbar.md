@@ -21,8 +21,9 @@ material (filtered backdrop, shadow, edge lighting, touch spotlight and press/dr
 back to the opaque bar colour (`#FAFAFA` light, `#1E1E1E` dark) where the blend modes are missing.
 Entering and leaving the edit state runs on a spring (response 0.5, bounce 0.25): the capsule
 narrows while the cancel button grows in from half size, the two merging like metaballs while
-they move. Pressing or dragging the capsule scales and stretches it; a gesture that starts on a
-clickable element inside it (the clear button or your own icon buttons) leaves it still.
+they move. Pressing or dragging the capsule scales and stretches it and lights a touch spotlight,
+the clear button included; a gesture that starts on another clickable element inside it (your own
+icon buttons) leaves the capsule still and dark.
 
 ## Basic Usage
 
@@ -239,7 +240,9 @@ SearchBar(
 On ColorOS 17 a search bar can live in the toolbar and expand out of its search icon
 (`COUISearchBar.showInToolBar`). The capsule starts as a circle on the icon, slides home while it
 widens, its text fades in and it blurs most half way; the cancel button flies out of the icon and
-merges with the capsule like a metaball, while the toolbar's own icons fade and shrink to 0.8.
+merges with the capsule like a metaball, while the toolbar's own icons fade and shrink to 0.8
+and its title fades (the toolbar background stays). Touching the search icon in the last 5% of a
+collapse completes the collapse at once.
 The expansion runs on a response 0.55 / bounce 0.2 spring (0.5 / 0.2 back), the toolbar icons on
 0.4 / 0.3 (0.5 / 0.2 back, growing from 0.5).
 
@@ -249,8 +252,10 @@ var query by remember { mutableStateOf("") }
 
 Box {
     ToolbarSearchAnchor(state = searchState) {
+        val titleColor = COUITheme.colorScheme.onSurface
         TopAppBar(
             title = "Title",
+            titleColor = titleColor.copy(alpha = titleColor.alpha * searchState.toolbarTitleAlpha),
             navigationIcon = {
                 IconButton(modifier = Modifier.toolbarSearchItem(searchState), onClick = { /* back */ }) { /* ... */ }
             },
@@ -291,7 +296,8 @@ Box {
 | API | Description |
 | --- | --- |
 | `rememberToolbarSearchState()` / `ToolbarSearchState` | Expanded state with `expand()` / `collapse()` |
-| `ToolbarSearchAnchor` | Hosts the toolbar content and fades it while the bar is out |
+| `ToolbarSearchAnchor` | Hosts the toolbar content (the toolbar itself does not fade) |
+| `ToolbarSearchState.toolbarTitleAlpha` | Alpha to apply to the toolbar title colour while the bar is out |
 | `Modifier.toolbarSearchEntry(state)` | Marks the toolbar search icon the bar grows out of; hides it while the bar is out |
-| `Modifier.toolbarSearchItem(state)` | Shrinks another toolbar icon along with the expansion |
+| `Modifier.toolbarSearchItem(state)` | Fades and shrinks another toolbar icon along with the expansion |
 | `ToolbarFloatingSearchBar` | Hosts the `SearchBar` over the toolbar row; empty while the bar is folded away |
