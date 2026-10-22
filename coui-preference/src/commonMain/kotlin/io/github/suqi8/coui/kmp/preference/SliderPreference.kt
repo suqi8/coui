@@ -73,6 +73,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *   Values should be within [valueRange]. For example, for a range of 0f..100f, you might specify listOf(0f, 25f, 50f, 75f, 100f).
  * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
  *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
+ * @param material Whether the [Slider] draws the COUI 17 material effects (the glass thumb while pressed
+ *   and the touch spotlight), see the `material` parameter of [Slider].
  * @param insideMargin The margin inside the [SliderPreference].
  * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
  */
@@ -103,6 +105,7 @@ fun SliderPreference(
     showKeyPoints: Boolean = false,
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
+    material: Boolean = true,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
     cardListPosition: CardListPosition = CardListPosition.None,
 ) {
@@ -163,6 +166,7 @@ fun SliderPreference(
                     showKeyPoints = showKeyPoints,
                     keyPoints = keyPoints,
                     magnetThreshold = magnetThreshold,
+                    material = material,
                 )
             }
         },
