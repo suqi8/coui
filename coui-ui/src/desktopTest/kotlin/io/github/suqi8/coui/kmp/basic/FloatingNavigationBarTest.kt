@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -49,6 +50,84 @@ class FloatingNavigationBarTest {
         val geometry = floatingNavigationBarLayout(itemCount = 5, maxWidth = 300, itemMaxWidth = 70, innerPadding = 12, itemSpacing = 8)
         assertEquals(48, geometry.itemWidth)
         assertEquals(48 * 5 + 24 + 32, geometry.width)
+    }
+
+    @Test
+    fun itemCentresSpreadWithTheDrawnWidth() {
+        val geometry = floatingNavigationBarLayout(itemCount = 3, maxWidth = 1000, itemMaxWidth = 70, innerPadding = 12, itemSpacing = 8)
+        // At the final width the centres sit on the item slots.
+        assertEquals(12f + 35f, geometry.itemCenter(0, geometry.width.toFloat()))
+        assertEquals(12f + 78f * 2 + 35f, geometry.itemCenter(2, geometry.width.toFloat()))
+        // Drawn wider (still springing from 4 items), the slots widen equally.
+        val wider = geometry.width + 30f
+        assertEquals(12f + 40f, geometry.itemCenter(0, wider))
+    }
+
+    @Test
+    fun expansionPositionsFollowCoui() {
+        // Inactive: centred capsule, the slot hidden behind its end.
+        assertEquals(20 to 292, floatingNavigationBarPositions(368, 328, 56, 12, expansionActive = false, compact = true, alignment = 0))
+        // Active on a compact screen: capsule at the start, slot at the end.
+        assertEquals(0 to 312, floatingNavigationBarPositions(368, 276, 56, 12, expansionActive = true, compact = true, alignment = 0))
+        // Active on a wide screen: the pair centred.
+        assertEquals(150 to 490, floatingNavigationBarPositions(696, 328, 56, 12, expansionActive = true, compact = false, alignment = 0))
+    }
+
+    @Test
+    fun expansionAlphaFadesOnlyPastHalfCovered() {
+        assertEquals(1f, floatingNavigationExpansionAlpha(0f))
+        assertEquals(1f, floatingNavigationExpansionAlpha(0.5f))
+        assertEquals(0.5f, floatingNavigationExpansionAlpha(0.75f))
+        assertEquals(0f, floatingNavigationExpansionAlpha(1f))
+    }
+
+    @Test
+    fun removingAnItemSpringsTheCapsuleWidth() = runComposeUiTest {
+        var count by mutableIntStateOf(4)
+        setBar(selected = { 0 }, onClick = {}, count = { count })
+        mainClock.advanceTimeBy(1000)
+        val before = onNodeWithTag("item0").getBoundsInRoot().left
+        mainClock.autoAdvance = false
+        count = 3
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeByFrame()
+        val during = onNodeWithTag("item0").getBoundsInRoot().left
+        mainClock.advanceTimeBy(3000)
+        val after = onNodeWithTag("item0").getBoundsInRoot().left
+        // 3 items: a 250dp capsule centred in 368dp -> item 0 at 16 + 59 + 12.
+        assertClose(87.dp, after, "settled item 0")
+        assertTrue(during > before && during < after, "item 0 must move on a spring: $before -> $during -> $after")
+    }
+
+    @Test
+    fun showingTheExpansionViewSlidesItOutAndShrinksTheCapsule() = runComposeUiTest {
+        var shown by mutableStateOf(false)
+        setBar(selected = { 0 }, onClick = {}, withExpansion = true, expansionVisible = { shown })
+        mainClock.advanceTimeBy(1000)
+        shown = true
+        mainClock.advanceTimeBy(3000)
+        val expansion = onNodeWithTag("expansion").getBoundsInRoot()
+        // Compact: the 56dp slot at the end edge, 16dp in from the 400dp container.
+        assertClose(384.dp, expansion.right, "expansion end")
+        assertClose(56.dp, expansion.right - expansion.left, "expansion size")
+        // The capsule now has 368 - 56 - 12 = 300dp: four 63dp items, starting at the edge.
+        val first = onNodeWithTag("item0").getBoundsInRoot()
+        assertClose(63.dp, first.right - first.left, "shrunk item width")
+        assertClose(28.dp, first.left, "capsule at the start edge")
+    }
+
+    @Test
+    fun aLargeIconRisesAboveTheCapsuleAndTakesTaps() = runComposeUiTest {
+        val clicks = mutableListOf<Int>()
+        setBar(selected = { 0 }, onClick = { clicks += it }, largeIcon = 2)
+        mainClock.advanceTimeBy(1000)
+        val item = onNodeWithTag("item2").getBoundsInRoot()
+        val x = with(density) { ((item.left + item.right) / 2).toPx() }
+        // 14dp above the item top: inside the 40dp icon, above the 56dp capsule.
+        val y = with(density) { (item.top - 12.dp).toPx() }
+        onNodeWithTag("bar").performTouchInput { click(Offset(x, y)) }
+        mainClock.advanceTimeBy(100)
+        assertEquals(listOf(2), clicks)
     }
 
     @Test
@@ -163,11 +242,41 @@ class FloatingNavigationBarTest {
         assertTrue(clicks.isEmpty(), "a hidden bar must not click: $clicks")
     }
 
+    @Test
+    fun theClassicBarSlidesOutOfItsLayout() = runComposeUiTest {
+        var visible by mutableStateOf(true)
+        setContent {
+            COUITheme {
+                Box(Modifier.width(400.dp)) {
+                    NavigationBar(modifier = Modifier.testTag("classic"), visible = visible, defaultWindowInsetsPadding = false) {
+                        NavigationBarItem(selected = true, onClick = {}, icon = COUIIcons.Basic.Check, label = "A", badge = 3)
+                        NavigationBarItem(selected = false, onClick = {}, icon = COUIIcons.Basic.Check, label = "B", badge = 0)
+                    }
+                }
+            }
+        }
+        mainClock.advanceTimeBy(500)
+        val shown = onNodeWithTag("classic").getBoundsInRoot()
+        assertTrue(shown.bottom - shown.top > 50.dp, "the shown bar keeps its height: ${shown.bottom - shown.top}")
+        mainClock.autoAdvance = false
+        visible = false
+        mainClock.advanceTimeBy(100)
+        val half = onNodeWithTag("classic").getBoundsInRoot()
+        mainClock.advanceTimeBy(400)
+        val hidden = onNodeWithTag("classic").getBoundsInRoot()
+        assertTrue(half.bottom - half.top in 1.dp..(shown.bottom - shown.top), "hiding shrinks the layout gradually: ${half.bottom - half.top}")
+        assertClose(0.dp, hidden.bottom - hidden.top, "hidden height")
+    }
+
     private fun ComposeUiTest.setBar(
         selected: () -> Int,
         onClick: (Int) -> Unit,
         disabled: Int = -1,
         visible: () -> Boolean = { true },
+        count: () -> Int = { 4 },
+        largeIcon: Int = -1,
+        expansionVisible: () -> Boolean = { false },
+        withExpansion: Boolean = false,
     ) {
         setContent {
             COUITheme {
@@ -175,9 +284,15 @@ class FloatingNavigationBarTest {
                     FloatingNavigationBar(
                         modifier = Modifier.testTag("bar"),
                         visible = visible(),
+                        expansionVisible = expansionVisible(),
                         defaultWindowInsetsPadding = false,
+                        expansion = if (withExpansion) {
+                            { Box(Modifier.size(56.dp).testTag("expansion")) }
+                        } else {
+                            null
+                        },
                     ) {
-                        repeat(4) { index ->
+                        repeat(count()) { index ->
                             FloatingNavigationBarItem(
                                 selected = selected() == index,
                                 onClick = { onClick(index) },
@@ -185,6 +300,7 @@ class FloatingNavigationBarTest {
                                 label = "Item $index",
                                 modifier = Modifier.testTag("item$index"),
                                 enabled = index != disabled,
+                                largeIcon = index == largeIcon,
                             )
                         }
                     }

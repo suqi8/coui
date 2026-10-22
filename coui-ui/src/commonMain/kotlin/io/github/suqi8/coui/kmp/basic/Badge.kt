@@ -55,6 +55,9 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param colors The [BadgeColors] of the [Badge].
  * @param dotDiameter The diameter of the plain dot form.
  * @param height The height of the number capsule form.
+ * @param navigation Whether the number capsule takes the bottom-navigation widths
+ *   (`COUIHintRedDot` `POINT_NAVI_WITH_NUM`, `getNaviBgWidth`): 12dp under 10, 16dp under 100 and
+ *   20dp otherwise, not widened to [height], instead of 16 / 20 / 26dp.
  */
 @Composable
 fun Badge(
@@ -64,11 +67,12 @@ fun Badge(
     colors: BadgeColors = BadgeDefaults.badgeColors(),
     dotDiameter: Dp = BadgeDefaults.DotDiameter,
     height: Dp = BadgeDefaults.Height,
+    navigation: Boolean = false,
 ) {
     if (count <= 0) {
         DotBadge(stroke = stroke, colors = colors, dotDiameter = dotDiameter, modifier = modifier)
     } else {
-        CountBadge(count = count, stroke = stroke, colors = colors, height = height, modifier = modifier)
+        CountBadge(count = count, stroke = stroke, colors = colors, height = height, navigation = navigation, modifier = modifier)
     }
 }
 
@@ -144,10 +148,11 @@ private fun CountBadge(
     stroke: Boolean,
     colors: BadgeColors,
     height: Dp,
+    navigation: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val width by animateDpAsState(
-        targetValue = badgeWidth(count, height),
+        targetValue = if (navigation) naviBadgeWidth(count) else badgeWidth(count, height),
         animationSpec = tween(durationMillis = WidthAnimDurationMillis, easing = WidthAnimEasing),
         label = "badgeWidth",
     )
@@ -155,7 +160,9 @@ private fun CountBadge(
     // capsule with the COUIRoundRectUtil Java path (COUIShapePath), not the Oplus superellipse.
     // drawPointWithStroke passes the unclamped 72dp to the outer path, which folds over itself; the
     // outer ring uses the clamped radius here, the inner fill the same min / 2 rule as COUI.
-    val cornerRadius = height / 2
+    // A navigation capsule can be narrower than it is tall (12dp x 16dp): the radius clamps to
+    // min(width, height) / 2 like drawPointWithNumber.
+    val cornerRadius = minOf(width, height) / 2
     val backgroundModifier = if (stroke) {
         Modifier
             .background(color = colors.strokeColor, shape = LegacySquircleShape(cornerRadius))
@@ -211,6 +218,16 @@ private fun BadgeEllipsis(color: Color) {
 }
 
 /**
+ * The navigation capsule width for [count] (COUIHintRedDotHelper.getNaviBgWidth(int)):
+ * coui_hint_red_dot_navi_small_width under 10, coui_small_width under 100, coui_medium_width otherwise.
+ */
+private fun naviBadgeWidth(count: Int): Dp = when {
+    count < 10 -> BadgeDefaults.NaviSmallWidth
+    count < 100 -> BadgeDefaults.SmallWidth
+    else -> BadgeDefaults.MediumWidth
+}
+
+/**
  * The capsule width for [count] (COUIHintRedDotHelper.getBgWidth): small under 10, medium under
  * 100, large under 1000, and back to medium for the 1000+ ellipsis, never narrower than [height].
  */
@@ -232,6 +249,9 @@ object BadgeDefaults {
 
     /** The height of the number capsule form (COUI coui_height). */
     val Height = 16.dp
+
+    /** The navigation capsule width for counts under 10 (COUI coui_hint_red_dot_navi_small_width). */
+    val NaviSmallWidth = 12.dp
 
     /** The capsule width for counts under 10 (COUI coui_small_width). */
     val SmallWidth = 16.dp
