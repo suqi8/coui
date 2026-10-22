@@ -1,8 +1,7 @@
-HSPLtop/yukonga/miuix/kmp/squircle/LocalSquircleEnabledKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/SquircleBackgroundKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/SquircleBorderKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/SquircleDefaults;->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/SquirclePathKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/SquircleShaderBrush;->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/internal/AlphaImageBitmap_androidKt**->**(**)**
-HSPLtop/yukonga/miuix/kmp/squircle/internal/BakedSquircleSdf;->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/LocalSquircleEnabledKt**->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquircleBackgroundKt**->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquircleBorderKt**->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquircleDefaults;->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquirclePathKt**->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquircleShaderBrush;->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/internal/SuperellipseCorner;->**(**)**

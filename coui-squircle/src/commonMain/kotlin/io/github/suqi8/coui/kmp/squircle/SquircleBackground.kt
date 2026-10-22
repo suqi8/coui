@@ -29,9 +29,7 @@ import androidx.compose.ui.unit.Dp
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asComposeShader
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
-import io.github.suqi8.coui.kmp.squircle.internal.BakedSquircleSdf
-import io.github.suqi8.coui.kmp.squircle.internal.makeAlphaImageBitmap
-import io.github.suqi8.coui.kmp.squircle.internal.makeLinearShader
+import io.github.suqi8.coui.kmp.squircle.internal.SuperellipseCorner
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -43,15 +41,16 @@ import kotlin.math.floor
  *
  * @param color The fill [Color] of the squircle background.
  * @param cornerRadius The radius applied uniformly to all four corners.
- * @param extension The corner-tile size as a multiple of [cornerRadius]: 1.0 matches a circular
- *   arc, 1.1 is the default continuous-corner look. Clamped to [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners (Oplus smooth round rect weight): 2.0 is a
+ *   circular arc, larger values square the corners off. Clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleBackground(
     color: Color,
     cornerRadius: Dp,
-    extension: Float = SquircleDefaults.Extension,
-): Modifier = squircleBackground(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
+    weight: Float = SquircleDefaults.Weight,
+): Modifier = squircleBackground(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, weight)
 
 /**
  * Per-corner variant of [squircleBackground]. Ordering matches [RoundedCornerShape].
@@ -61,8 +60,8 @@ fun Modifier.squircleBackground(
  * @param topEnd The corner radius of the top-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomEnd The corner radius of the bottom-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomStart The corner radius of the bottom-start corner (flipped by `LocalLayoutDirection`).
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleBackground(
@@ -71,9 +70,9 @@ fun Modifier.squircleBackground(
     topEnd: Dp,
     bottomEnd: Dp,
     bottomStart: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(color, topStart, topEnd, bottomEnd, bottomStart, extension)
+    val brush = rememberSquircleBrush(color, topStart, topEnd, bottomEnd, bottomStart, weight)
         ?: return this.background(
             color = color,
             shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart),
@@ -88,14 +87,14 @@ fun Modifier.squircleBackground(
  * runtime shaders are unavailable.
  *
  * @param cornerRadius The radius applied uniformly to all four corners.
- * @param extension The corner-tile size as a multiple of [cornerRadius], clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleClip(
     cornerRadius: Dp,
-    extension: Float = SquircleDefaults.Extension,
-): Modifier = squircleClip(cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
+    weight: Float = SquircleDefaults.Weight,
+): Modifier = squircleClip(cornerRadius, cornerRadius, cornerRadius, cornerRadius, weight)
 
 /**
  * Per-corner variant of [squircleClip].
@@ -104,8 +103,8 @@ fun Modifier.squircleClip(
  * @param topEnd The corner radius of the top-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomEnd The corner radius of the bottom-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomStart The corner radius of the bottom-start corner (flipped by `LocalLayoutDirection`).
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleClip(
@@ -113,9 +112,9 @@ fun Modifier.squircleClip(
     topEnd: Dp,
     bottomEnd: Dp,
     bottomStart: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(Color.White, topStart, topEnd, bottomEnd, bottomStart, extension)
+    val brush = rememberSquircleBrush(Color.White, topStart, topEnd, bottomEnd, bottomStart, weight)
         ?: return this.clip(RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart))
     return this.squircleShaderMask(brush, fillColor = null)
 }
@@ -126,15 +125,15 @@ fun Modifier.squircleClip(
  *
  * @param color The fill [Color] drawn behind the clipped content.
  * @param cornerRadius The radius applied uniformly to all four corners.
- * @param extension The corner-tile size as a multiple of [cornerRadius], clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleSurface(
     color: Color,
     cornerRadius: Dp,
-    extension: Float = SquircleDefaults.Extension,
-): Modifier = squircleSurface(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, extension)
+    weight: Float = SquircleDefaults.Weight,
+): Modifier = squircleSurface(color, cornerRadius, cornerRadius, cornerRadius, cornerRadius, weight)
 
 /**
  * Per-corner variant of [squircleSurface].
@@ -144,8 +143,8 @@ fun Modifier.squircleSurface(
  * @param topEnd The corner radius of the top-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomEnd The corner radius of the bottom-end corner (flipped by `LocalLayoutDirection`).
  * @param bottomStart The corner radius of the bottom-start corner (flipped by `LocalLayoutDirection`).
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleSurface(
@@ -154,9 +153,9 @@ fun Modifier.squircleSurface(
     topEnd: Dp,
     bottomEnd: Dp,
     bottomStart: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(Color.White, topStart, topEnd, bottomEnd, bottomStart, extension)
+    val brush = rememberSquircleBrush(Color.White, topStart, topEnd, bottomEnd, bottomStart, weight)
         ?: return this
             .clip(RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart))
             .background(color)
@@ -174,8 +173,8 @@ fun Modifier.squircleSurface(
  * @param topRight The physical top-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomRight The physical bottom-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomLeft The physical bottom-left corner radius, never flipped by `LocalLayoutDirection`.
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.absoluteSquircleBackground(
@@ -184,9 +183,9 @@ fun Modifier.absoluteSquircleBackground(
     topRight: Dp,
     bottomRight: Dp,
     bottomLeft: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(color, topLeft, topRight, bottomRight, bottomLeft, extension)
+    val brush = rememberSquircleBrush(color, topLeft, topRight, bottomRight, bottomLeft, weight)
         ?: return this.background(
             color = color,
             shape = AbsoluteRoundedCornerShape(topLeft, topRight, bottomRight, bottomLeft),
@@ -201,8 +200,8 @@ fun Modifier.absoluteSquircleBackground(
  * @param topRight The physical top-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomRight The physical bottom-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomLeft The physical bottom-left corner radius, never flipped by `LocalLayoutDirection`.
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.absoluteSquircleClip(
@@ -210,9 +209,9 @@ fun Modifier.absoluteSquircleClip(
     topRight: Dp,
     bottomRight: Dp,
     bottomLeft: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(Color.White, topLeft, topRight, bottomRight, bottomLeft, extension)
+    val brush = rememberSquircleBrush(Color.White, topLeft, topRight, bottomRight, bottomLeft, weight)
         ?: return this.clip(AbsoluteRoundedCornerShape(topLeft, topRight, bottomRight, bottomLeft))
     return this.squircleShaderMask(brush, fillColor = null)
 }
@@ -225,8 +224,8 @@ fun Modifier.absoluteSquircleClip(
  * @param topRight The physical top-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomRight The physical bottom-right corner radius, never flipped by `LocalLayoutDirection`.
  * @param bottomLeft The physical bottom-left corner radius, never flipped by `LocalLayoutDirection`.
- * @param extension The corner-tile size as a multiple of each corner radius, clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.absoluteSquircleSurface(
@@ -235,9 +234,9 @@ fun Modifier.absoluteSquircleSurface(
     topRight: Dp,
     bottomRight: Dp,
     bottomLeft: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
-    val brush = rememberSquircleBrush(Color.White, topLeft, topRight, bottomRight, bottomLeft, extension)
+    val brush = rememberSquircleBrush(Color.White, topLeft, topRight, bottomRight, bottomLeft, weight)
         ?: return this
             .clip(AbsoluteRoundedCornerShape(topLeft, topRight, bottomRight, bottomLeft))
             .background(color)
@@ -364,53 +363,47 @@ private fun rememberSquircleBrush(
     topEnd: Dp,
     bottomEnd: Dp,
     bottomStart: Dp,
-    extension: Float,
+    weight: Float,
 ): SquircleShaderBrush? {
     if (!LocalSquircleEnabled.current || !isRuntimeShaderSupported()) return null
     val density = LocalDensity.current
-    val extClamped = extension.coerceIn(SquircleDefaults.ExtensionMin, SquircleDefaults.ExtensionMax)
-    val tiles = remember(topStart, topEnd, bottomEnd, bottomStart, extClamped, density) {
+    val exponent = SuperellipseCorner.clampWeight(weight)
+    val radii = remember(topStart, topEnd, bottomEnd, bottomStart, density) {
         with(density) {
             floatArrayOf(
-                topStart.toPx().coerceAtLeast(0f) * extClamped,
-                topEnd.toPx().coerceAtLeast(0f) * extClamped,
-                bottomEnd.toPx().coerceAtLeast(0f) * extClamped,
-                bottomStart.toPx().coerceAtLeast(0f) * extClamped,
+                topStart.toPx().coerceAtLeast(0f),
+                topEnd.toPx().coerceAtLeast(0f),
+                bottomEnd.toPx().coerceAtLeast(0f),
+                bottomStart.toPx().coerceAtLeast(0f),
             )
         }
     }
-    return remember(color, tiles) {
-        SquircleShaderBrush(color, tiles)
+    return remember(color, radii, exponent) {
+        SquircleShaderBrush(color, radii, exponent)
     }
 }
 
-private class SquircleShaderBrush(
+/**
+ * Fills the squircle silhouette with [color] through [SQUIRCLE_SHADER], an analytic signed distance
+ * field of the Oplus smooth round rect: per corner `lpNorm(q, weight) - r`, the same Lp-norm the
+ * libhwui G2 shader evaluates, so no distance-field texture is baked or sampled.
+ */
+internal class SquircleShaderBrush(
     private val color: Color,
-    private val cornerTilesPx: FloatArray,
+    private val cornerRadiiPx: FloatArray,
+    private val weight: Float,
 ) : ShaderBrush() {
     private val runtimeShader = RuntimeShader(SQUIRCLE_SHADER)
-    private val effectiveSizes = FloatArray(4)
-    private val halfRanges = FloatArray(4)
-    private val weights = FloatArray(4)
+    private val effectiveRadii = FloatArray(4)
 
     override fun createShader(size: Size): Shader {
-        val halfMin = minOf(size.width, size.height) * 0.5f
-        val threshold = halfMin * BLEND_THRESHOLD_RATIO
-        val range = halfMin - threshold
         for (i in 0..3) {
-            val tile = cornerTilesPx[i]
-            val effective = effectiveCornerPx(i, size)
-            effectiveSizes[i] = effective
-            halfRanges[i] = BakedSquircleSdf.HALF_RANGE * effective
-            weights[i] = if (range <= 0f) 1f else ((tile - threshold) / range).coerceIn(0f, 1f)
+            effectiveRadii[i] = effectiveCornerPx(i, size)
         }
         runtimeShader.setColorUniform("color", color)
         runtimeShader.setFloatUniform("size", size.width, size.height)
-        runtimeShader.setFloatUniform("cornerSizes", effectiveSizes)
-        runtimeShader.setFloatUniform("halfRangesPx", halfRanges)
-        runtimeShader.setFloatUniform("blendWeights", weights)
-        runtimeShader.setFloatUniform("bitmapSize", BakedSquircleSdf.SIZE.toFloat())
-        runtimeShader.setInputShader("cornerSdf", bakedSdfShader)
+        runtimeShader.setFloatUniform("radii", effectiveRadii)
+        runtimeShader.setFloatUniform("weight", weight)
         return runtimeShader.asComposeShader()
     }
 
@@ -419,33 +412,25 @@ private class SquircleShaderBrush(
 
     fun bottomBandHeightPx(size: Size): Float = maxOf(effectiveCornerPx(2, size), effectiveCornerPx(3, size))
 
-    // Corner tile size the shader uses at [index], clamped to half the smaller side.
-    fun effectiveCornerPx(index: Int, size: Size): Float {
-        val halfMin = minOf(size.width, size.height) * 0.5f
-        return cornerTilesPx[index].coerceIn(0f, halfMin)
-    }
+    // Corner radius the shader uses at [index]: the square of that side is the only area it carves.
+    fun effectiveCornerPx(index: Int, size: Size): Float = SuperellipseCorner.effectiveRadius(cornerRadiiPx[index], size.width, size.height)
 }
 
 // Max node dimension composited in one offscreen layer. 2048 px is the texture-size floor guaranteed
 // by GL ES 3.0 / WebGL2 / Metal, so it never overflows the GPU max texture; larger nodes go banded.
 private const val MAX_OFFSCREEN_PX = 2048f
 
-// π/4 — squircle → circle blend threshold. Above this ratio of cornerSize / halfMin the SDF result
-// is mixed with a pure circle SDF so capsule / pill / circle silhouettes degrade cleanly.
-private const val BLEND_THRESHOLD_RATIO = 0.7853982f
-
-// Decoded once per process; LINEAR-sampled so the corner branch does one bilinear tap (see [makeLinearShader]).
-private val bakedSdfShader: Shader by lazy {
-    makeLinearShader(makeAlphaImageBitmap(BakedSquircleSdf.SIZE, BakedSquircleSdf.bytes))
-}
-
-private const val SQUIRCLE_SHADER = """
-uniform shader cornerSdf;
+/**
+ * The superellipse corner SDF. Inside a corner square, `q` is the offset from the corner center
+ * towards the vertex and the boundary is `lpNorm(q, weight) == r` (Oplus `g2RoundRectCommonFill`
+ * with `superN = weight`). The Lp-norm excess is divided by the norm's gradient length, turning it
+ * into a Euclidean distance near the boundary, so the one-pixel anti-aliasing ramp keeps its width
+ * along the whole curve.
+ */
+internal const val SQUIRCLE_SHADER = """
 uniform float2 size;
-uniform float4 cornerSizes;
-uniform float4 halfRangesPx;
-uniform float4 blendWeights;
-uniform float bitmapSize;
+uniform float4 radii;
+uniform float weight;
 layout(color) uniform half4 color;
 
 half4 main(float2 coord) {
@@ -458,26 +443,20 @@ half4 main(float2 coord) {
     float dx = left ? dxL : dxR;
     float dy = top ? dyT : dyB;
     // vec4 swizzle: AGSL forbids dynamic indexing. Channel order: x=topStart, y=topEnd, z=bottomEnd, w=bottomStart.
-    float cornerSize = top
-        ? (left ? cornerSizes.x : cornerSizes.y)
-        : (left ? cornerSizes.w : cornerSizes.z);
-    float halfRangePx = top
-        ? (left ? halfRangesPx.x : halfRangesPx.y)
-        : (left ? halfRangesPx.w : halfRangesPx.z);
-    float blendWeight = top
-        ? (left ? blendWeights.x : blendWeights.y)
-        : (left ? blendWeights.w : blendWeights.z);
-    if (dx >= cornerSize || dy >= cornerSize) {
+    float r = top ? (left ? radii.x : radii.y) : (left ? radii.w : radii.z);
+    if (dx >= r || dy >= r) {
         return color;
     }
-    float2 uv = float2(dx, dy) / cornerSize;
-    // LINEAR-sampled child: one tap == old 4-tap. Coord is uv*bitmapSize (NO -0.5; sampler adds half-texel).
-    half sdfSample = cornerSdf.eval(uv * bitmapSize).a;
-    float squircleSdf = (1.0 - 2.0 * float(sdfSample)) * halfRangePx;
-    float qx = cornerSize - dx;
-    float qy = cornerSize - dy;
-    float circleSdf = sqrt(qx * qx + qy * qy) - cornerSize;
-    float dist = mix(squircleSdf, circleSdf, blendWeight);
+    float2 q = float2(r - dx, r - dy);
+    float m = max(q.x, q.y);
+    float2 u = q / m;
+    float2 lu = log2(max(u, float2(1e-8)));
+    float s = exp2(lu.x * weight) + exp2(lu.y * weight);
+    float ls = log2(s);
+    float norm = m * exp2(ls / weight);
+    // |grad lpNorm| = |u^(n-1)| * s^((1-n)/n), between 2^(1/n-1/2) and 1.
+    float2 grad = exp2(lu * (weight - 1.0)) * exp2(ls * (1.0 - weight) / weight);
+    float dist = (norm - r) / max(length(grad), 0.5);
     return color * half(smoothstep(0.5, -0.5, dist));
 }
 """

@@ -22,15 +22,15 @@ import androidx.compose.ui.unit.Dp
  * @param width The stroke width of the border.
  * @param color The stroke [Color] of the border.
  * @param cornerRadius The radius applied uniformly to all four corners.
- * @param extension The corner-tile size as a multiple of [cornerRadius], clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleBorder(
     width: Dp,
     color: Color,
     cornerRadius: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
     if (!isSquircleEnabled()) {
         return this.border(width, color, RoundedCornerShape(cornerRadius))
@@ -49,7 +49,7 @@ fun Modifier.squircleBorder(
                 width = innerW,
                 height = innerH,
                 cornerRadius = innerCornerRadius,
-                extension = extension,
+                weight = weight,
             )
         }
         val stroke = Stroke(width = widthPx)
@@ -72,15 +72,15 @@ fun Modifier.squircleBorder(
  * @param width Lambda returning the stroke width, read inside the draw scope each frame.
  * @param color Lambda returning the stroke [Color], read inside the draw scope each frame.
  * @param cornerRadius The radius applied uniformly to all four corners.
- * @param extension The corner-tile size as a multiple of [cornerRadius], clamped to
- *   [SquircleDefaults.ExtensionMin]..[SquircleDefaults.ExtensionMax].
+ * @param weight The superellipse exponent of the corners, clamped to
+ *   [SquircleDefaults.WeightMin]..[SquircleDefaults.WeightMax].
  */
 @Composable
 fun Modifier.squircleBorder(
     width: () -> Dp,
     color: () -> Color,
     cornerRadius: Dp,
-    extension: Float = SquircleDefaults.Extension,
+    weight: Float = SquircleDefaults.Weight,
 ): Modifier {
     val squircleEnabled = isSquircleEnabled()
     return this.drawWithCache {
@@ -99,7 +99,7 @@ fun Modifier.squircleBorder(
                 width = innerW,
                 height = innerH,
                 cornerRadius = innerCornerRadius,
-                extension = extension,
+                weight = weight,
                 squircleEnabled = squircleEnabled,
             )
             translate(halfStroke, halfStroke) {
