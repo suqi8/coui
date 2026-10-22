@@ -172,7 +172,8 @@ fun ToolbarSearchAnchor(
  * Marks the toolbar's search icon, the [ToolbarFloatingSearchBar] grows out of. It reports the
  * icon's bounds, hides the icon while the bar is out (`setToolbarSearchIconAlpha(0)`, restored once
  * the bar has folded back), shrinks with the other toolbar icons, and a touch on it in the last 5%
- * of a collapse completes the collapse at once (`onToolbarSearchIconDownWhileInvisible`).
+ * of a collapse completes the collapse at once (`onToolbarSearchIconDownWhileInvisible`); the click
+ * that follows expands the bar again, as the icon's own action does.
  *
  * @param state the [ToolbarSearchState] driving the search bar.
  */
@@ -233,6 +234,7 @@ fun ToolbarFloatingSearchBar(
         SearchBarIconExpand(
             progress = { state.iconExpandProgress.value },
             sourceCenterX = { state.entryCenterXPx },
+            interactive = { state.expanded },
         )
     }
     var barOrigin by remember { mutableStateOf(Offset.Zero) }
@@ -240,15 +242,29 @@ fun ToolbarFloatingSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .onGloballyPositioned { barOrigin = it.positionInRoot() }
-            // COUI drops the collapsing bar behind the toolbar children (updateLayerInToolBar), so
-            // the search icon takes a touch at its spot; here the bar stays on top and forwards it.
+            // COUI drops the collapsing bar behind the toolbar children (updateLayerInToolBar(false)),
+            // so the bar ignores touches and the (hidden) search icon takes a touch at its spot: the
+            // down may complete a late collapse (onToolbarSearchIconDownWhileInvisible) and the
+            // click that follows runs the icon's action, showInToolBar, which expands the bar again.
+            // Here the bar stays on top, so it swallows the gesture and plays the icon's part.
             .pointerInput(state) {
                 coroutineScope {
                     awaitEachGesture {
                         val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                        if (state.entryBoundsInRoot.contains(barOrigin + down.position)) {
-                            launch { state.onEntryDownWhileInvisible() }
+                        if (state.expanded) return@awaitEachGesture
+                        down.consume()
+                        val onEntry = state.entryBoundsInRoot.contains(barOrigin + down.position)
+                        if (onEntry) launch { state.onEntryDownWhileInvisible() }
+                        var clicked = false
+                        while (true) {
+                            val change = awaitPointerEvent(PointerEventPass.Initial).changes.firstOrNull { it.id == down.id } ?: break
+                            change.consume()
+                            if (!change.pressed) {
+                                clicked = onEntry && state.entryBoundsInRoot.contains(barOrigin + change.position)
+                                break
+                            }
                         }
+                        if (clicked) state.expand()
                     }
                 }
             },

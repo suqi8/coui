@@ -241,8 +241,9 @@ On ColorOS 17 a search bar can live in the toolbar and expand out of its search 
 (`COUISearchBar.showInToolBar`). The capsule starts as a circle on the icon, slides home while it
 widens, its text fades in and it blurs most half way; the cancel button flies out of the icon and
 merges with the capsule like a metaball, while the toolbar's own icons fade and shrink to 0.8
-and its title fades (the toolbar background stays). Touching the search icon in the last 5% of a
-collapse completes the collapse at once.
+and its title fades (the toolbar background stays). While the bar folds back it ignores touches;
+tapping the search icon then expands it again, and a touch in the last 5% of the collapse first
+completes the collapse at once.
 The expansion runs on a response 0.55 / bounce 0.2 spring (0.5 / 0.2 back), the toolbar icons on
 0.4 / 0.3 (0.5 / 0.2 back, growing from 0.5).
 
