@@ -33,6 +33,15 @@ LinearProgressIndicator(progress = progress)
 LinearProgressIndicator()
 ```
 
+::: tip
+The determinate bar ports `COUIHorizontalProgressBar` (no progress animation; it fills from the right in RTL layouts). The indeterminate three-segment loop is a library extension: ColorOS's horizontal progress bar has no indeterminate mode.
+:::
+
+```kotlin
+// Disabled linear progress bar (disabled fill and track colors)
+LinearProgressIndicator(progress = 0.5f, enabled = false)
+```
+
 ### Circular Progress Indicator
 
 Circular progress indicator is suitable for space-saving scenarios:
@@ -49,6 +58,12 @@ CircularProgressIndicator(progress = progress)
 CircularProgressIndicator()
 ```
 
+With a progress value the indicator ports `COUICircularProgressBar`: a neutral arc on a divider track that follows progress changes on a critically damped spring (damping ratio 1, stiffness 50). Without one it ports `COUILoadingView` and defaults to `ProgressIndicatorDefaults.loadingViewColors()`: an accent arc (`#0080FF` / `#1A8CFF`) on an accent-tinted track (`#260080FF` / `#401A8CFF`).
+
+::: info Geometry
+`COUICircularProgressBar` measures `length + 2 × 4dp` but draws a ring of outer diameter `length − 2 × 4dp` (a 48dp view with a 32dp ring for the 40dp large tier). This component draws the ring across the full `size`; the default stays at the 30dp medium tier until the rendered ring is measured on a device.
+:::
+
 ### Infinite Progress Indicator
 
 Infinite progress indicator is suitable for scenarios where operation duration is uncertain. It is tinted with the theme accent color by default, matching the ColorOS "Refreshing…" spinner:
@@ -59,7 +74,7 @@ InfiniteProgressIndicator()
 
 ### Rotating Spinner
 
-`RotatingProgressIndicator` is the ColorOS system-default indeterminate spinner: a bare stroked arc with flat caps and no background ring, whose sweep pulses between 273.6° and 50.4° while the arc spins twice per 1250 ms cycle. It is a direct port of the `coui_rotating_loading.json` asset that `Theme.COUI` binds to the `couiRotatingSpinnerJsonName` attribute, reproduced with a single `drawArc` so it needs no Lottie runtime.
+`RotatingProgressIndicator` is the ColorOS system-default indeterminate spinner: a bare stroked arc with flat caps and no background ring, drawn in black / white at 85% opacity (`#D9000000` / `#D9FFFFFF`), whose sweep pulses between 273.6° and 50.4° while the arc spins twice per 1250 ms cycle. It is a direct port of the `coui_rotating_loading.json` asset that `Theme.COUI` binds to the `couiRotatingSpinnerJsonName` attribute, reproduced with a single `drawArc` so it needs no Lottie runtime.
 
 ```kotlin
 RotatingProgressIndicator()
@@ -126,6 +141,7 @@ CircularProgressIndicator(progress = null)
 | ------------- | ----------------------- | ---------------------------------------------- | -------------------------------------------------------------- | -------- |
 | modifier      | Modifier                | Modifier applied to the progress bar           | Modifier                                                       | No       |
 | progress      | Float?                  | Current progress value, null for indeterminate | null                                                           | No       |
+| enabled       | Boolean                 | Whether the progress bar is enabled            | true                                                           | No       |
 | colors        | ProgressIndicatorColors | Color configuration for the progress bar       | ProgressIndicatorDefaults.progressIndicatorColors()            | No       |
 | height        | Dp                      | Height of the progress bar                     | ProgressIndicatorDefaults.DefaultLinearProgressIndicatorHeight | No       |
 
@@ -135,7 +151,7 @@ CircularProgressIndicator(progress = null)
 | ------------- | ----------------------- | ---------------------------------------------- | --------------------------------------------------------------------- | -------- |
 | modifier      | Modifier                | Modifier applied to the progress indicator     | Modifier                                                              | No       |
 | progress      | Float?                  | Current progress value, null for indeterminate | null                                                                  | No       |
-| colors        | ProgressIndicatorColors | Color configuration for the progress indicator | ProgressIndicatorDefaults.circularProgressIndicatorColors()           | No       |
+| colors        | ProgressIndicatorColors | Color configuration for the progress indicator | circularProgressIndicatorColors() with progress, loadingViewColors() without | No       |
 | strokeWidth   | Dp                      | Stroke width of the circular track             | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth | No       |
 | size          | Dp                      | Size of the circular indicator                 | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize        | No       |
 
@@ -153,7 +169,7 @@ CircularProgressIndicator(progress = null)
 | Property Name | Type     | Description                                            | Default Value                                                            | Required |
 | ------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------ | -------- |
 | modifier      | Modifier | Modifier applied to the indicator                      | Modifier                                                                 | No       |
-| color         | Color    | Color of the arc                                       | COUITheme.colorScheme.onSurfaceContainer                                 | No       |
+| color         | Color    | Color of the arc                                       | ProgressIndicatorDefaults.rotatingProgressIndicatorColor()               | No       |
 | size          | Dp       | Size of the indicator's square view box                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize           | No       |
 | ringDiameter  | Dp       | Diameter of the arc's stroke centerline                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter   | No       |
 | strokeWidth   | Dp       | Stroke width of the arc                                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth    | No       |
@@ -188,7 +204,9 @@ The ProgressIndicatorDefaults object provides default values and color configura
 | Method Name                       | Type                    | Description                                                       |
 | --------------------------------- | ----------------------- | ----------------------------------------------------------------- |
 | progressIndicatorColors()         | ProgressIndicatorColors | Creates default color configuration for linear indicators         |
-| circularProgressIndicatorColors() | ProgressIndicatorColors | Creates default color configuration for the circular indicator    |
+| circularProgressIndicatorColors() | ProgressIndicatorColors | Creates default color configuration for the determinate circular indicator |
+| loadingViewColors()               | ProgressIndicatorColors | Creates the accent color configuration for the indeterminate circular indicator |
+| rotatingProgressIndicatorColor()  | Color                   | Default arc color of the rotating spinner (85% opacity)          |
 
 ### ProgressIndicatorColors Class
 
@@ -197,6 +215,7 @@ The ProgressIndicatorDefaults object provides default values and color configura
 | foregroundColor         | Color | Foreground color of the progress indicator  |
 | disabledForegroundColor | Color | Foreground color when indicator is disabled |
 | backgroundColor         | Color | Background color of the progress indicator  |
+| disabledBackgroundColor | Color | Background color when indicator is disabled (defaults to backgroundColor) |
 
 ## Advanced Usage
 

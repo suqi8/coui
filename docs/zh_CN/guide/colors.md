@@ -77,3 +77,5 @@
 | `press` | 按压态蒙层（COUI `couiColorPress`），由 `COUIIndication` 绘制 | `#1F000000` | `#33FFFFFF` |
 | `hover` | 悬停态蒙层（COUI `couiColorHover`），由 `COUIIndication` 绘制 | `#14000000` | `#26FFFFFF` |
 | `focus` | 列表行焦点/选中蒙层（COUI `couiColorFocus`），由 `COUIIndication` 绘制 | `#1F0080FF` | `#331A8CFF` |
+| `disabledProgress` | 禁用线性进度条的进度色（COUI `coui_progressbar_color_disabled`） | `#FFE6E6E6` | `#FF262626` |
+| `disabledProgressBackground` | 禁用线性进度条的轨道色（COUI `coui_progressbar_background_color_disabled`） | `#08000000` | `#33FFFFFF` |

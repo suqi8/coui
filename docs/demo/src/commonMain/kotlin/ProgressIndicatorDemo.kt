@@ -60,6 +60,10 @@ fun ProgressIndicatorDemo() {
                     modifier = Modifier,
                 )
             }
+            LinearProgressIndicator(
+                progress = 0.5f,
+                enabled = false,
+            )
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,

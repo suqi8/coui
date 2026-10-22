@@ -77,3 +77,5 @@ This page lists all colors in the COUI color scheme with their default light and
 | `press` | Pressed state layer (COUI `couiColorPress`), drawn by `COUIIndication` | `#1F000000` | `#33FFFFFF` |
 | `hover` | Hovered state layer (COUI `couiColorHover`), drawn by `COUIIndication` | `#14000000` | `#26FFFFFF` |
 | `focus` | Focused / selected list row layer (COUI `couiColorFocus`), drawn by `COUIIndication` | `#1F0080FF` | `#331A8CFF` |
+| `disabledProgress` | Disabled linear progress bar fill (COUI `coui_progressbar_color_disabled`) | `#FFE6E6E6` | `#FF262626` |
+| `disabledProgressBackground` | Disabled linear progress bar track (COUI `coui_progressbar_background_color_disabled`) | `#08000000` | `#33FFFFFF` |
