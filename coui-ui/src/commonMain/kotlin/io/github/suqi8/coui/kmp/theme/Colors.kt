@@ -88,6 +88,10 @@ import androidx.compose.ui.graphics.Color
  * @param disabledSliderKeyPoint The off-progress key points of a disabled slider (COUI
  *   coui_seekbar_inactive_mark_disable_color). Cases: Slider.
  * @param sliderThumbShadow The drop shadow of the slider thumb (COUI coui_seekbar_thumb_shadow_color). Cases: Slider.
+ * @param textFieldError The border, underline and selection tint of a text field in error state (COUI
+ *   couiColorErrorTextBg, the COUIEditText couiEditTextErrorColor default). Cases: TextField.
+ * @param disabledTextFieldBorder The border / underline of a disabled text field (COUI
+ *   coui_textinput_stroke_color_disabled via couiDisabledStrokeColor). Cases: TextField.
  */
 @Stable
 class Colors(
@@ -162,6 +166,8 @@ class Colors(
     disabledSliderThumb: Color,
     disabledSliderKeyPoint: Color,
     sliderThumbShadow: Color,
+    textFieldError: Color,
+    disabledTextFieldBorder: Color,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -305,6 +311,10 @@ class Colors(
         internal set
     var sliderThumbShadow by mutableStateOf(sliderThumbShadow, structuralEqualityPolicy())
         internal set
+    var textFieldError by mutableStateOf(textFieldError, structuralEqualityPolicy())
+        internal set
+    var disabledTextFieldBorder by mutableStateOf(disabledTextFieldBorder, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -378,6 +388,8 @@ class Colors(
         disabledSliderThumb: Color = this.disabledSliderThumb,
         disabledSliderKeyPoint: Color = this.disabledSliderKeyPoint,
         sliderThumbShadow: Color = this.sliderThumbShadow,
+        textFieldError: Color = this.textFieldError,
+        disabledTextFieldBorder: Color = this.disabledTextFieldBorder,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -450,6 +462,8 @@ class Colors(
         disabledSliderThumb,
         disabledSliderKeyPoint,
         sliderThumbShadow,
+        textFieldError,
+        disabledTextFieldBorder,
     )
 }
 
@@ -526,6 +540,8 @@ fun lightColorScheme(
     disabledSliderThumb: Color = Color(0x8AFFFFFF),
     disabledSliderKeyPoint: Color = Color(0x42000000),
     sliderThumbShadow: Color = Color(0x1A000000),
+    textFieldError: Color = Color(0x4DE82A18),
+    disabledTextFieldBorder: Color = Color(0x19000000),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -598,6 +614,8 @@ fun lightColorScheme(
     disabledSliderThumb,
     disabledSliderKeyPoint,
     sliderThumbShadow,
+    textFieldError,
+    disabledTextFieldBorder,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -673,6 +691,8 @@ fun darkColorScheme(
     disabledSliderThumb: Color = Color(0x29FFFFFF),
     disabledSliderKeyPoint: Color = Color(0x29FFFFFF),
     sliderThumbShadow: Color = Color(0x40000000),
+    textFieldError: Color = Color(0xFFEA3939),
+    disabledTextFieldBorder: Color = Color(0x19FFFFFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -745,6 +765,8 @@ fun darkColorScheme(
     disabledSliderThumb,
     disabledSliderKeyPoint,
     sliderThumbShadow,
+    textFieldError,
+    disabledTextFieldBorder,
 )
 
 @Stable
@@ -820,6 +842,8 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     disabledSliderThumb = other.disabledSliderThumb
     disabledSliderKeyPoint = other.disabledSliderKeyPoint
     sliderThumbShadow = other.sliderThumbShadow
+    textFieldError = other.textFieldError
+    disabledTextFieldBorder = other.disabledTextFieldBorder
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

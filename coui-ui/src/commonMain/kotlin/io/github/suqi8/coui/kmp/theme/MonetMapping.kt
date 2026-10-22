@@ -177,5 +177,9 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         disabledSliderThumb = Color.White.copy(alpha = if (dark) 0.16f else 0.54f),
         disabledSliderKeyPoint = roles.onSurface.copy(alpha = if (dark) 0.16f else 0.26f),
         sliderThumbShadow = Color.Black.copy(alpha = if (dark) 0.25f else 0.1f),
+        // COUI couiColorErrorTextBg (red 30% / opaque) and coui_textinput_stroke_color_disabled
+        // (black 10% / white 10%).
+        textFieldError = roles.error.copy(alpha = if (dark) 1f else 0.3f),
+        disabledTextFieldBorder = roles.onSurface.copy(alpha = 0.1f),
     )
 }
