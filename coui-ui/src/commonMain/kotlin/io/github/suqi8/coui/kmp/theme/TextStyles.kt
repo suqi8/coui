@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.sp
 /**
  * The default text styles for the COUI components.
  *
+ * Every default step is a COUI type step: its `textSize`, its weight, and a line height of
+ * `fontSize x lineSpacingMultiplier x 1.1719` (Android multiplies the font metrics height, not the font
+ * size), so line boxes match ColorOS in dp on every platform.
+ *
  * @param main The main text style.
  * @param paragraph The paragraph text style.
  * @param body1 The body1 text style.
@@ -143,145 +147,101 @@ fun defaultTextStyles(
     title4,
 )
 
-/** COUI couiTextAppearanceHeadline6 (coui_spacing_multiplier_headline_xs), the closest tier to 17sp. */
+/** COUI couiTextAppearanceBodyXL / TextBodyXL 16sp regular (coui_spacing_multiplier_body_xl 1.158). */
 private val Main: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-            lineHeight = 1.158f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.158f)
 
-/** COUI couiTextAppearanceBodyL (coui_spacing_multiplier_body_l), the closest tier to 17sp. */
+/** COUI couiTextAppearanceBodyL 16sp regular (coui_spacing_multiplier_body_l 1.1321). */
 private val Paragraph: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 17.sp,
-            lineHeight = 1.158f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.1321f)
 
-/** COUI couiTextAppearanceBodyL 16sp (coui_spacing_multiplier_body_l). */
+/** COUI couiTextAppearanceBodyXL / TextBodyXL 16sp regular (coui_spacing_multiplier_body_xl 1.158). */
 private val Body1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-            lineHeight = 1.158f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.158f)
 
-/** COUI couiTextAppearanceBody 14sp (coui_spacing_multiplier_body_m). */
+/** COUI couiTextAppearanceBody / TextBodyM 14sp regular (coui_spacing_multiplier_body_m 1.2245). */
 private val Body2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 14.sp,
-            lineHeight = 1.2245f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 14f, lineSpacingMultiplier = 1.2245f)
 
-/** COUI couiTextAppearanceButtonL 16sp, sans-serif-medium (coui_spacing_multiplier_button_l). */
+/** COUI couiTextAppearanceButtonL 16sp sans-serif-medium (coui_spacing_multiplier_button_l 1.1579). */
 private val Button: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            lineHeight = 1.263f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
-
-/** COUI couiTextAppearanceBody (coui_spacing_multiplier_body_m); COUI has no 13sp tier. */
-private val Footnote1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 13.sp,
-            lineHeight = 1.2245f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
-
-/** COUI couiTextAppearanceDescription 12sp (coui_spacing_multiplier_body_xs); COUI has no 11sp tier. */
-private val Footnote2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 11.sp,
-            lineHeight = 1.143f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.1579f, fontWeight = FontWeight.Medium)
 
 /**
- * COUI couiTextAppearanceHeadline6 16sp (coui_spacing_multiplier_headline_xs), the appearance behind
- * TextAppearance.COUI.List.Title. Confirmed on device: a ColorOS 16 preference title node measures
- * 21.71dp at 560 dpi, which is 16sp rather than the 17sp inherited from Miuix.
+ * COUI couiTextAppearanceArticleBody / TextBodyS 13sp regular (coui_spacing_multiplier_body_s 1.1739), the
+ * appearance behind TextAppearance.COUI.Preference.Summary and the list assignment text.
+ */
+private val Footnote1: TextStyle
+    get() = couiTextStyle(fontSize = 13f, lineSpacingMultiplier = 1.1739f)
+
+/** COUI couiTextAppearanceDescription / TextBodyXS 12sp regular (coui_spacing_multiplier_body_xs 1.143). */
+private val Footnote2: TextStyle
+    get() = couiTextStyle(fontSize = 12f, lineSpacingMultiplier = 1.143f)
+
+/**
+ * COUI couiTextAppearanceHeadline6 16sp sans-serif-medium (coui_spacing_multiplier_headline_xs 1.158), the
+ * appearance behind TextAppearance.COUI.List.Title. Confirmed on device: a ColorOS 16 preference title node
+ * measures 21.71dp at 560 dpi = 16sp x 1.158 x [COUIFontMetricsHeight].
  */
 private val Headline1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-            lineHeight = 1.158f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.158f, fontWeight = FontWeight.Medium)
 
-/** COUI couiTextAppearanceHeadline6 16sp (coui_spacing_multiplier_headline_xs). */
+/** COUI couiTextAppearanceHeadline6 16sp sans-serif-medium (coui_spacing_multiplier_headline_xs 1.158). */
 private val Headline2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 16.sp,
-            lineHeight = 1.158f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 16f, lineSpacingMultiplier = 1.158f, fontWeight = FontWeight.Medium)
 
-/** COUI couiTextAppearanceBody 14sp (coui_spacing_multiplier_body_m). */
+/** COUI couiTextAppearanceButton / TextButtonM 14sp sans-serif-medium (coui_spacing_multiplier_button_m 1.2245). */
 private val Subtitle: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 1.2245f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 14f, lineSpacingMultiplier = 1.2245f, fontWeight = FontWeight.Medium)
 
-/** COUI couiTextAppearanceHeadline1 32sp (coui_spacing_multiplier_display_s). */
+/** COUI couiTextAppearanceHeadline1 32sp, textFontWeight 600 (coui_spacing_multiplier_display_s 1.2322). */
 private val Title1: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 32.sp,
-            lineHeight = 1.2322f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 32f, lineSpacingMultiplier = 1.2322f, fontWeight = FontWeight.SemiBold)
 
-/** COUI couiTextAppearanceHeadline3 24sp (coui_spacing_multiplier_display_xs). */
+/** COUI couiTextAppearanceHeadline3 24sp, textFontWeight 600 (coui_spacing_multiplier_display_xs 1.2). */
 private val Title2: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 24.sp,
-            lineHeight = 1.2f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 24f, lineSpacingMultiplier = 1.2f, fontWeight = FontWeight.SemiBold)
 
-/** COUI couiTextAppearanceHeadline4 20sp (coui_spacing_multiplier_headline_m). */
+/** COUI couiTextAppearanceHeadline4 20sp sans-serif-medium (coui_spacing_multiplier_headline_m 1.1831). */
 private val Title3: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 20.sp,
-            lineHeight = 1.1831f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 20f, lineSpacingMultiplier = 1.1831f, fontWeight = FontWeight.Medium)
 
-/** COUI couiTextAppearanceHeadline5 18sp (coui_spacing_multiplier_headline_s). */
+/** COUI couiTextAppearanceHeadline5 18sp sans-serif-medium (coui_spacing_multiplier_headline_s 1.1429). */
 private val Title4: TextStyle
-    get() =
-        TextStyle(
-            fontSize = 18.sp,
-            lineHeight = 1.2381f.em,
-            lineHeightStyle = COUILineHeightStyle,
-        )
+    get() = couiTextStyle(fontSize = 18f, lineSpacingMultiplier = 1.1429f, fontWeight = FontWeight.Medium)
 
 /**
- * Distributes the extra leading the way Android's lineSpacingMultiplier does: below the line, never
- * trimmed. Compose's default centres and trims it, which would cancel the multipliers out on
- * single-line text.
+ * The height of the font's line box (ascent + descent) in em: Roboto's hhea 1900 + 500 over 2048 units.
+ *
+ * Android's `lineSpacingMultiplier` scales this metrics height, not the font size, so a COUI line is
+ * `fontSize x multiplier x 1.1719` tall. Compose's `lineHeight` is an absolute line box, so the factor
+ * is folded in here and every platform gets the same line heights as ColorOS, whatever font it renders.
+ */
+private val COUIFontMetricsHeight = 1.1719f
+
+/**
+ * Builds a COUI type step from its `textSize` and `android:lineSpacingMultiplier`
+ * (the `values-v35` coui_spacing_multiplier_* dimens, which ColorOS 16 / 17 use).
+ */
+private fun couiTextStyle(
+    fontSize: Float,
+    lineSpacingMultiplier: Float,
+    fontWeight: FontWeight? = null,
+): TextStyle = TextStyle(
+    fontSize = fontSize.sp,
+    fontWeight = fontWeight,
+    lineHeight = (lineSpacingMultiplier * COUIFontMetricsHeight).em,
+    lineHeightStyle = COUILineHeightStyle,
+)
+
+/**
+ * Keeps the extra leading on single-line text, as an Android TextView does, instead of Compose's default
+ * trim, and splits it above and below the glyphs in proportion to the font's ascent and descent. That
+ * keeps the glyphs within a fraction of a dp of where ColorOS draws them (`includeFontPadding` puts
+ * most of the spare room above the ascent).
  */
 private val COUILineHeightStyle = LineHeightStyle(
-    alignment = LineHeightStyle.Alignment.Top,
+    alignment = LineHeightStyle.Alignment.Proportional,
     trim = LineHeightStyle.Trim.None,
 )
 
