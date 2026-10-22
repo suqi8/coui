@@ -146,7 +146,7 @@ Button(
 | modifier          | Modifier                        | Modifier applied to the button         | Modifier                      | No       |
 | enabled           | Boolean                         | Whether the button is clickable        | true                          | No       |
 | pressScaleEnabled | Boolean                         | Whether the button shrinks while pressed (COUIButton `scaleEnable`). Set to `false` for buttons that fill a container cell, such as a dialog button bar, so the only press feedback is the full-cell press tint | true | No       |
-| cornerRadius      | Dp                              | Corner radius of the button; `Dp.Unspecified` rounds it at half the measured height (COUI capsule), an explicit value draws a squircle | ButtonDefaults.CornerRadius   | No       |
+| cornerRadius      | Dp                              | Corner radius of the button; `Dp.Unspecified` rounds it at half the measured height (COUI capsule, the weight-1.0 soft capsule), an explicit value draws a weight-3.0 squircle | ButtonDefaults.CornerRadius   | No       |
 | minWidth          | Dp                              | Minimum width of the button            | ButtonDefaults.MinWidth       | No       |
 | minHeight         | Dp                              | Minimum height of the button           | ButtonDefaults.MinHeight      | No       |
 | colors            | ButtonColors                    | Button color configuration             | ButtonDefaults.buttonColors() | No       |

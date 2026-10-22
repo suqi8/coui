@@ -77,7 +77,7 @@ CodeTextField(
 | -------------------- | ------ | ---------------------------------------------------- | -------------------- |
 | CellCount            | Int    | Default number of cells                              | 6                    |
 | CellSize             | DpSize | Size of one cell                                     | DpSize(42.dp, 46.dp) |
-| CellCornerRadius     | Dp     | Corner radius of one cell                            | 8.dp                 |
+| CellCornerRadius     | Dp     | Corner radius of one cell, drawn with the COUIShapePath Java path (`LegacySquircleShape`) like COUICodeInputView | 8.dp                 |
 | MinCellSpacing       | Dp     | Minimum gap between adjacent cells                   | 4.dp                 |
 | MaxCellSpacing       | Dp     | Maximum gap between adjacent cells                   | 16.dp                |
 | CellStrokeWidth      | Dp     | Stroke width of the active-cell highlight            | 1.6.dp               |

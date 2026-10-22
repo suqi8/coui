@@ -213,8 +213,9 @@ paths, exposed as `COUIRoundCorner.Normal` (card lists, `*_radius_normal_16_1`: 
 `Card` radius) and `COUIRoundCorner.Large` (buttons and card views, `*_radius_large_16_1`). Each family carries its
 smoothing weight, the superellipse exponent the squircle modifiers take as `weight` (see [Squircle](./squircle.md)):
 `COUIRoundCorner.Normal.Weight` = 2.5 (`weight_16_1_normal`), `COUIRoundCorner.Large.Weight` = 3.0
-(`weight_16_1_large`, also dialogs and bottom sheets), and `COUIRoundCorner.CircularWeight` = 2.0 for the base steps,
-capsules and circles, which ColorOS 17 draws without smoothing.
+(`weight_16_1_large`, also dialogs, bottom sheets and tooltips), `COUIRoundCorner.CircularWeight` = 2.0 for the base
+steps and circles, which ColorOS 17 draws without smoothing, and `COUIRoundCorner.CapsuleWeight` = 1.0, the Oplus soft
+capsule of full-round controls (pair it with `COUIRoundCorner.Full`, couiRoundCornerFULL 72dp).
 
 ## State Layers
 

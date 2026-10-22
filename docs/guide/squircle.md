@@ -181,17 +181,18 @@ Modifier.absoluteSquircleSurface(
 passes to `addSmoothRoundRect`. The corner always meets the straight sides at
 `cornerRadius`; the weight only changes how square the curve between them is.
 
-| Parameter | Default | Range    | Effect                                                        |
-| --------- | :-----: | -------- | ------------------------------------------------------------- |
-| `weight`  |  `2.5`  | `[2, 8]` | Superellipse exponent. `2` is a circular arc; `3` is squarer. |
+| Parameter | Default | Range    | Effect                                                                                  |
+| --------- | :-----: | -------- | --------------------------------------------------------------------------------------- |
+| `weight`  |  `2.5`  | `[1, 8]` | Superellipse exponent. `2` is a circular arc; `3` is squarer; below `2`, a soft capsule. |
 
-ColorOS 17 uses three values, exposed on `COUIRoundCorner` in `coui-ui`:
+ColorOS 17 uses these values, exposed on `COUIRoundCorner` in `coui-ui`:
 
-| Weight | COUI source          | Used by                                                     |
-| :----: | -------------------- | ----------------------------------------------------------- |
-| `2.0`  | circular / capsule   | base `coui_round_corner_*` radii, capsules, circles         |
-| `2.5`  | `weight_16_1_normal` | card lists, input cards (`*_radius_normal_16_1`, e.g. 24dp) |
-| `3.0`  | `weight_16_1_large`  | buttons, card views, alert dialogs, bottom sheets (45dp)    |
+| Weight | COUI source                       | Used by                                                                   |
+| :----: | --------------------------------- | ------------------------------------------------------------------------- |
+| `1.0`  | `FULL_RRECT_G2_WEIGHT`            | full-round capsules: capsule buttons, chips, floating toolbars, top tips  |
+| `2.0`  | circular                          | base `coui_round_corner_*` radii, circles                                 |
+| `2.5`  | `weight_16_1_normal`              | card lists, input cards, popup menus (`*_radius_normal_16_1`, e.g. 24dp)  |
+| `3.0`  | `weight_16_1_large`               | buttons, card views, tooltips, alert dialogs, bottom sheets (45dp)        |
 
 ```kotlin
 Modifier.squircleSurface(
@@ -202,7 +203,31 @@ Modifier.squircleSurface(
 ```
 
 Reference the default via `SquircleDefaults.Weight`. On a capsule (`cornerRadius`
-equal to half the height) pass `2`: a larger weight squares the round ends.
+equal to half the height) a larger weight squares the round ends.
+
+### Soft capsule (weight below 2)
+
+A weight below `2` reproduces the Oplus G2 `superN < 2` branch: the outline blends
+from the circular capsule (`weight = 2`) towards the Oplus soft capsule, reached at
+`weight <= 1.005` (`SquircleDefaults.CapsuleWeight` = 1.0, the weight ColorOS gives
+every fully rounded `addSmoothRoundRect`). The soft capsule takes its radius from
+half the shorter side and joins each end cap to the straight sides through a smooth
+maximum instead of a tangent arc, so the joint sits up to about 0.02 r inside the
+circular capsule. Like `OplusPathSmooth`, this only applies to a **fully rounded**
+rect (four equal radii of at least half the shorter side); any other rect draws a
+weight below 2 as 2. Pass a radius that always covers half the height (ColorOS uses
+`couiRoundCornerFULL`, 72dp):
+
+```kotlin
+Modifier.squircleSurface(
+    color = COUITheme.colorScheme.primary,
+    cornerRadius = 72.dp,
+    weight = SquircleDefaults.CapsuleWeight,
+)
+```
+
+The shader evaluates the native distance function; `addSquircleRect` traces its
+zero contour (within 0.001 px).
 
 ::: info Migrating from `extension`
 Earlier versions took an `extension` (corner-tile multiplier, default 1.2819)
@@ -232,6 +257,25 @@ val path = Path().apply {
 Each corner is a few cubic Bézier segments fitted to the superellipse (within
 0.03% of the radius). For static fills and clips prefer the shader-backed
 modifiers — they evaluate the exact superellipse distance per pixel.
+
+## Legacy COUI Path
+
+ColorOS 17 still draws a few components with COUI's Java fallback path
+`COUIShapePath.getRoundRectPath` instead of the superellipse: the hint red dot
+(`Badge`), `COUICodeInputView` (`CodeTextField`) and `COUIRecommendedDrawable`
+(`RecommendedPreference`). `addLegacySquircleRect` ports it exactly — three cubics
+per corner with control points at fixed percentages of the radius, leaving the
+straight side at 128.19 % of the radius (shrinking to 110.4 % once the radius
+reaches 90 % of the shorter half-side). `LegacySquircleShape` wraps it as a
+`Shape` for `background` / `clip` / `border`:
+
+```kotlin
+import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
+
+Modifier.background(COUITheme.colorScheme.surface, LegacySquircleShape(8.dp))
+```
+
+It is path based (no shader) and ignores `LocalSquircleEnabled`.
 
 ## Global Toggle
 
@@ -286,7 +330,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomEnd`    | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
 | `bottomStart`  | `Dp`    | Per-corner radius (per-corner overload)                  | -                               |
-| `weight`       | `Float` | Superellipse exponent, clamped to `[2, 8]`               | `SquircleDefaults.Weight` = 2.5     |
+| `weight`       | `Float` | Superellipse exponent, clamped to `[1, 8]`; below 2 the soft capsule (fully rounded rects only) | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -307,10 +351,21 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `weight`          | `Float`   | Superellipse exponent                                              | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | When `false`, appends a plain rounded rect of the same dimensions  | `true`                          |
 
+### Path.addLegacySquircleRect / LegacySquircleShape
+
+| Parameter      | Type      | Description                                                   | Default |
+| -------------- | --------- | ------------------------------------------------------------- | ------- |
+| `width`        | `Float`   | Path width in pixels                                          | -       |
+| `height`       | `Float`   | Path height in pixels                                         | -       |
+| `cornerRadius` | `Float`   | Corner radius in pixels (`Dp` on `LegacySquircleShape`); not clamped, like COUI | -       |
+| `left` / `top` | `Float`   | Offset of the rect                                            | `0f`    |
+| `topLeft` ... `bottomLeft` | `Boolean` | Which corners are rounded                         | `true`  |
+
 ### SquircleDefaults
 
 | Constant       | Type    | Description                          | Value  |
 | -------------- | ------- | ------------------------------------ | -----: |
 | `Weight`       | `Float` | Default weight (`weight_16_1_normal`) | `2.5`  |
-| `WeightMin`    | `Float` | Lower bound (circular arc)           | `2.0`  |
+| `WeightMin`    | `Float` | Lower bound (soft capsule)           | `1.0`  |
+| `CapsuleWeight`| `Float` | Full-round capsule (`FULL_RRECT_G2_WEIGHT`) | `1.0`  |
 | `WeightMax`    | `Float` | Upper bound                          | `8.0`  |

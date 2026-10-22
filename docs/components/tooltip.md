@@ -219,10 +219,10 @@ Pass `caretShape = TooltipDefaults.caretShape()` to `PlainTooltip` / `RichToolti
 | -------------------------- | ------------- | ---------------------------------------- | -------------------------------------------------- |
 | SpacingBetweenTooltipAndAnchor | Dp        | Spacing between a tooltip and its anchor | 8.dp                                               |
 | PlainTooltipMaxWidth       | Dp            | Maximum width of a plain tooltip         | 200.dp                                             |
-| PlainTooltipCornerRadius   | Dp            | Corner radius of a plain tooltip         | 12.dp                                              |
+| PlainTooltipCornerRadius   | Dp            | Corner radius of a plain tooltip (COUI 17 `coui_tooltips_os_16_1_radius_17_dp`, drawn at weight 3.0) | 17.dp                                              |
 | PlainTooltipInsideMargin   | PaddingValues | Inner padding of a plain tooltip         | PaddingValues(horizontal = 12.dp, vertical = 8.dp) |
 | RichTooltipMaxWidth        | Dp            | Maximum width of a rich tooltip          | 320.dp                                             |
-| RichTooltipCornerRadius    | Dp            | Corner radius of a rich tooltip          | 16.dp                                              |
+| RichTooltipCornerRadius    | Dp            | Corner radius of a rich tooltip (same 17dp panel, weight 3.0) | 17.dp                                              |
 | RichTooltipInsideMargin    | PaddingValues | Inner padding of a rich tooltip          | PaddingValues(all = 16.dp)                         |
 | RichTooltipActionCornerRadius | Dp         | Corner radius of a rich tooltip action button | 8.dp                                          |
 | RichTooltipActionInsideMargin | PaddingValues | Inner padding of a rich tooltip action button | PaddingValues(horizontal = 12.dp, vertical = 6.dp) |

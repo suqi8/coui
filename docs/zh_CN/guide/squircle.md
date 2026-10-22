@@ -170,17 +170,18 @@ Modifier.absoluteSquircleSurface(
 `weight` 是每个角的超椭圆指数，与 ColorOS 传给 `addSmoothRoundRect` 的值相同。
 圆角总在 `cornerRadius` 处与直边相切，权重只改变两切点之间曲线的方正程度。
 
-| 参数     | 默认值 | 范围     | 作用                               |
-| -------- | :----: | -------- | ---------------------------------- |
-| `weight` | `2.5`  | `[2, 8]` | 超椭圆指数。`2` 为圆弧，`3` 更方。 |
+| 参数     | 默认值 | 范围     | 作用                                                   |
+| -------- | :----: | -------- | ------------------------------------------------------ |
+| `weight` | `2.5`  | `[1, 8]` | 超椭圆指数。`2` 为圆弧，`3` 更方；低于 `2` 为软胶囊。 |
 
-ColorOS 17 用到三个值，`coui-ui` 在 `COUIRoundCorner` 上提供：
+ColorOS 17 用到以下值，`coui-ui` 在 `COUIRoundCorner` 上提供：
 
-| 权重  | COUI 来源            | 使用者                                                |
-| :---: | -------------------- | ----------------------------------------------------- |
-| `2.0` | 圆弧 / 胶囊          | 基础 `coui_round_corner_*` 半径、胶囊、圆形           |
-| `2.5` | `weight_16_1_normal` | 卡片列表、输入卡片（`*_radius_normal_16_1`，如 24dp） |
-| `3.0` | `weight_16_1_large`  | 按钮、卡片视图、警告对话框、底部面板（45dp）          |
+| 权重  | COUI 来源              | 使用者                                                     |
+| :---: | ---------------------- | ---------------------------------------------------------- |
+| `1.0` | `FULL_RRECT_G2_WEIGHT` | 全圆胶囊：胶囊按钮、Chip、悬浮工具栏、单行顶部提示         |
+| `2.0` | 圆弧                   | 基础 `coui_round_corner_*` 半径、圆形                      |
+| `2.5` | `weight_16_1_normal`   | 卡片列表、输入卡片、弹出菜单（`*_radius_normal_16_1`，如 24dp） |
+| `3.0` | `weight_16_1_large`    | 按钮、卡片视图、气泡提示、警告对话框、底部面板（45dp）     |
 
 ```kotlin
 Modifier.squircleSurface(
@@ -190,8 +191,28 @@ Modifier.squircleSurface(
 )
 ```
 
-引用默认值用 `SquircleDefaults.Weight`。胶囊（`cornerRadius` 等于高度一半）请传
-`2`：更大的权重会把圆头变方。
+引用默认值用 `SquircleDefaults.Weight`。胶囊（`cornerRadius` 等于高度一半）上
+更大的权重会把圆头变方。
+
+### 软胶囊（权重低于 2）
+
+低于 `2` 的权重复现 Oplus G2 shader 的 `superN < 2` 分支：轮廓从圆弧胶囊
+（`weight = 2`）向 Oplus 软胶囊过渡，`weight <= 1.005` 时即为软胶囊
+（`SquircleDefaults.CapsuleWeight` = 1.0，ColorOS 给所有全圆 `addSmoothRoundRect`
+的权重）。软胶囊的半径取短边一半，直边与端帽之间用平滑最大值衔接而非相切圆弧，
+衔接处最多比圆弧胶囊内收约 0.02 r。与 `OplusPathSmooth` 一致，它只作用于**全圆**
+矩形（四角半径相等且不小于短边一半）；其他矩形会把低于 2 的权重按 2 绘制。
+请传一个总能覆盖半高的半径（ColorOS 用 `couiRoundCornerFULL`，72dp）：
+
+```kotlin
+Modifier.squircleSurface(
+    color = COUITheme.colorScheme.primary,
+    cornerRadius = 72.dp,
+    weight = SquircleDefaults.CapsuleWeight,
+)
+```
+
+shader 直接计算原生距离函数；`addSquircleRect` 追踪其零等值线（误差 0.001 px 以内）。
 
 ::: info 从 `extension` 迁移
 旧版本使用 `extension`（角部区域倍数，默认 1.2819），三次曲线角会延伸到
@@ -221,6 +242,23 @@ val path = Path().apply {
 每个角由若干段拟合超椭圆的三次贝塞尔曲线构成（误差在半径的 0.03% 以内）。
 静态填充 / 裁剪场景请优先用 shader-backed modifier —— 它们逐像素计算精确的
 超椭圆距离。
+
+## COUI 旧版 Path
+
+ColorOS 17 仍有少数组件用 COUI 的 Java 回退 path `COUIShapePath.getRoundRectPath`
+而非超椭圆：提示红点（`Badge`）、`COUICodeInputView`（`CodeTextField`）和
+`COUIRecommendedDrawable`（`RecommendedPreference`）。`addLegacySquircleRect`
+原样移植它 —— 每角三段三次曲线，控制点为半径的固定百分比，在半径的 128.19% 处
+离开直边（半径达到短半边的 90% 时收缩到 110.4%）。`LegacySquircleShape` 把它包装成
+`Shape`，可用于 `background` / `clip` / `border`：
+
+```kotlin
+import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
+
+Modifier.background(COUITheme.colorScheme.surface, LegacySquircleShape(8.dp))
+```
+
+它基于 path（无需 shader），不受 `LocalSquircleEnabled` 影响。
 
 ## 全局开关
 
@@ -275,7 +313,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `topEnd`       | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomEnd`    | `Dp`    | 每角半径（按角重载）                              | -                                   |
 | `bottomStart`  | `Dp`    | 每角半径（按角重载）                              | -                                   |
-| `weight`       | `Float` | 超椭圆指数，钳位到 `[2, 8]`                       | `SquircleDefaults.Weight` = 2.5     |
+| `weight`       | `Float` | 超椭圆指数，钳位到 `[1, 8]`；低于 2 为软胶囊（仅全圆矩形） | `SquircleDefaults.Weight` = 2.5     |
 
 ### squircleBorder
 
@@ -296,10 +334,21 @@ fun OutlinedSurface(cornerRadius: Dp) {
 | `weight`          | `Float`   | 超椭圆指数                                           | `SquircleDefaults.Weight`       |
 | `squircleEnabled` | `Boolean` | 为 `false` 时改为追加同尺寸的圆角矩形                 | `true`                          |
 
+### Path.addLegacySquircleRect / LegacySquircleShape
+
+| 参数           | 类型      | 说明                                                  | 默认值 |
+| -------------- | --------- | ----------------------------------------------------- | ------ |
+| `width`        | `Float`   | path 宽度（像素）                                     | -      |
+| `height`       | `Float`   | path 高度（像素）                                     | -      |
+| `cornerRadius` | `Float`   | 圆角半径（像素；`LegacySquircleShape` 上为 `Dp`），与 COUI 一样不钳位 | -      |
+| `left` / `top` | `Float`   | 矩形偏移                                              | `0f`   |
+| `topLeft` ... `bottomLeft` | `Boolean` | 是否圆化对应角                          | `true` |
+
 ### SquircleDefaults
 
 | 常量           | 类型    | 说明                       |  值    |
 | -------------- | ------- | -------------------------- | -----: |
 | `Weight`       | `Float` | 默认权重（`weight_16_1_normal`） | `2.5`  |
-| `WeightMin`    | `Float` | 权重下限（圆弧）           | `2.0`  |
+| `WeightMin`    | `Float` | 权重下限（软胶囊）         | `1.0`  |
+| `CapsuleWeight`| `Float` | 全圆胶囊（`FULL_RRECT_G2_WEIGHT`） | `1.0`  |
 | `WeightMax`    | `Float` | 权重上限                   | `8.0`  |

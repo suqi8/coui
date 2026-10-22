@@ -146,7 +146,7 @@ Button(
 | modifier          | Modifier                        | 应用于按钮的修饰符       | Modifier                      | 否       |
 | enabled           | Boolean                         | 按钮是否可点击           | true                          | 否       |
 | pressScaleEnabled | Boolean                         | 按压时按钮是否缩放（对应 COUIButton 的 `scaleEnable`）。填满容器单元格的按钮（如对话框按钮栏）应设为 `false`，此时按压反馈只有铺满整格的按压着色 | true | 否       |
-| cornerRadius      | Dp                              | 按钮圆角半径；`Dp.Unspecified` 按实测高度的一半取圆角（COUI 胶囊），显式值绘制超椭圆 | ButtonDefaults.CornerRadius   | 否       |
+| cornerRadius      | Dp                              | 按钮圆角半径；`Dp.Unspecified` 按实测高度的一半取圆角（COUI 胶囊，权重 1.0 软胶囊），显式值绘制权重 3.0 超椭圆 | ButtonDefaults.CornerRadius   | 否       |
 | minWidth          | Dp                              | 按钮最小宽度             | ButtonDefaults.MinWidth       | 否       |
 | minHeight         | Dp                              | 按钮最小高度             | ButtonDefaults.MinHeight      | 否       |
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |

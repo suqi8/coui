@@ -53,14 +53,17 @@ TopTips(
 | actionText   | String?                    | 尾部行动按钮文案                         | null                            | 否   |
 | onAction     | (() -> Unit)?              | 行动按钮点击回调                         | null                            | 否   |
 | onClose      | (() -> Unit)?              | 关闭按钮回调(无 actionText 时显示)    | null                            | 否   |
-| cornerRadius | Dp                         | 提示条圆角                               | TopTipsDefaults.CornerRadius    | 否   |
+| cornerRadius | Dp                         | 提示条圆角；未指定 = COUI 17 自动（单行为权重 1.0 的胶囊，否则 28dp、权重 3.0，切换时 300ms 动画） | Dp.Unspecified    | 否   |
 | colors       | TopTipsColors              | 颜色配置                                 | TopTipsDefaults.topTipsColors() | 否   |
 
 ### TopTipsDefaults
 
 | 常量            | 类型 | 默认值 | COUI 来源                            |
 | --------------- | ---- | ------ | ------------------------------------ |
-| CornerRadius    | Dp   | 12.dp  | couiRoundCornerM                     |
+| CornerRadius    | Dp   | 28.dp  | coui_toptips_view_radius（多行）     |
+| Weight          | Float | 3.0   | `getMultiLineWeight`（weight_16_1_large） |
+| SingleLineCornerRadius | Dp | 72.dp | couiRoundCornerFULL（单行胶囊）  |
+| SingleLineWeight | Float | 1.0  | `getSingleLineWeight`（软胶囊）     |
 | ContentPadding  | Dp   | 12.dp  | coui_toptips_view_btn_margin         |
 | VerticalPadding | Dp   | 12.dp  | coui_toptips_view_title_top_margin   |
 | IconSize        | Dp   | 24.dp  | coui_toptips_view_icon_btn_size      |

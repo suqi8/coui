@@ -77,7 +77,7 @@ CodeTextField(
 | -------------------- | ------ | -------------------------------- | -------------------- |
 | CellCount            | Int    | 默认格数                         | 6                    |
 | CellSize             | DpSize | 单格尺寸                         | DpSize(42.dp, 46.dp) |
-| CellCornerRadius     | Dp     | 单格圆角                         | 8.dp                 |
+| CellCornerRadius     | Dp     | 单格圆角，与 COUICodeInputView 一样用 COUIShapePath Java path 绘制（`LegacySquircleShape`） | 8.dp                 |
 | MinCellSpacing       | Dp     | 相邻格之间的最小间距             | 4.dp                 |
 | MaxCellSpacing       | Dp     | 相邻格之间的最大间距             | 16.dp                |
 | CellStrokeWidth      | Dp     | 活动格描边宽度                   | 1.6.dp               |

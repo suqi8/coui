@@ -219,10 +219,10 @@ val TooltipDefaults.caretSize: DpSize // 16 x 8 dp
 | ------------------------------ | ------------- | ------------------------ | -------------------------------------------------- |
 | SpacingBetweenTooltipAndAnchor | Dp            | tooltip 与锚点之间的间距 | 8.dp                                               |
 | PlainTooltipMaxWidth           | Dp            | plain tooltip 的最大宽度 | 200.dp                                             |
-| PlainTooltipCornerRadius       | Dp            | plain tooltip 的圆角半径 | 12.dp                                              |
+| PlainTooltipCornerRadius       | Dp            | plain tooltip 的圆角半径（COUI 17 `coui_tooltips_os_16_1_radius_17_dp`，权重 3.0） | 17.dp                                              |
 | PlainTooltipInsideMargin       | PaddingValues | plain tooltip 的内边距   | PaddingValues(horizontal = 12.dp, vertical = 8.dp) |
 | RichTooltipMaxWidth            | Dp            | rich tooltip 的最大宽度  | 320.dp                                             |
-| RichTooltipCornerRadius        | Dp            | rich tooltip 的圆角半径  | 16.dp                                              |
+| RichTooltipCornerRadius        | Dp            | rich tooltip 的圆角半径（同 17dp 面板，权重 3.0） | 17.dp                                              |
 | RichTooltipInsideMargin        | PaddingValues | rich tooltip 的内边距    | PaddingValues(all = 16.dp)                         |
 | RichTooltipActionCornerRadius  | Dp            | rich tooltip 操作按钮的圆角半径 | 8.dp                                          |
 | RichTooltipActionInsideMargin  | PaddingValues | rich tooltip 操作按钮的内边距   | PaddingValues(horizontal = 12.dp, vertical = 6.dp) |

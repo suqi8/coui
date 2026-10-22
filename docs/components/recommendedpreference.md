@@ -1,6 +1,6 @@
 # RecommendedPreference
 
-`RecommendedPreference` is a standalone rounded card that recommends related settings, mirroring ColorOS's `COUIRecommendedPreference` (the "You might be looking for:" card at the bottom of ColorOS settings pages). The card is a 24dp rounded container (on ColorOS 17 `COUIRecommendedPreference` swaps `couiRoundCornerM` for `coui_round_corner_xl_radius_normal_16_1`) filled with `couiColorContainer4`, holding a small secondary header followed by one tappable text row per item. Rows draw the standard COUI press overlay while pressed.
+`RecommendedPreference` is a standalone rounded card that recommends related settings, mirroring ColorOS's `COUIRecommendedPreference` (the "You might be looking for:" card at the bottom of ColorOS settings pages). The card is a 24dp rounded container (on ColorOS 17 `COUIRecommendedPreference` swaps `couiRoundCornerXL` for `coui_round_corner_xl_radius_normal_16_1`, and `COUIRecommendedDrawable` draws it with the COUIShapePath Java path, `LegacySquircleShape`) filled with `couiColorContainer4`, holding a small secondary header followed by one tappable text row per item. Rows draw the standard COUI press overlay while pressed.
 
 Nothing is rendered when `items` is empty, matching `COUIRecommendedPreference.setData()` hiding the preference for an empty list.
 

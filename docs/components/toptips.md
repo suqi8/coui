@@ -53,14 +53,17 @@ TopTips(
 | actionText   | String?                    | Optional label of the trailing action button           | null                            | No       |
 | onAction     | (() -> Unit)?              | Callback when the action button is clicked             | null                            | No       |
 | onClose      | (() -> Unit)?              | Callback of the close button (shown without action)    | null                            | No       |
-| cornerRadius | Dp                         | Corner radius of the banner                            | TopTipsDefaults.CornerRadius    | No       |
+| cornerRadius | Dp                         | Corner radius of the banner; unspecified = COUI 17 automatic (single-line capsule at weight 1.0, otherwise 28dp at weight 3.0, animated over 300ms) | Dp.Unspecified    | No       |
 | colors       | TopTipsColors              | Color configuration                                    | TopTipsDefaults.topTipsColors() | No       |
 
 ### TopTipsDefaults
 
 | Constant        | Type | Default Value | COUI Source                          |
 | --------------- | ---- | ------------- | ------------------------------------ |
-| CornerRadius    | Dp   | 12.dp         | couiRoundCornerM                     |
+| CornerRadius    | Dp   | 28.dp         | coui_toptips_view_radius (multi-line) |
+| Weight          | Float | 3.0          | `getMultiLineWeight` (weight_16_1_large) |
+| SingleLineCornerRadius | Dp | 72.dp     | couiRoundCornerFULL (single-line capsule) |
+| SingleLineWeight | Float | 1.0         | `getSingleLineWeight` (soft capsule) |
 | ContentPadding  | Dp   | 12.dp         | coui_toptips_view_btn_margin         |
 | VerticalPadding | Dp   | 12.dp         | coui_toptips_view_title_top_margin   |
 | IconSize        | Dp   | 24.dp         | coui_toptips_view_icon_btn_size      |
