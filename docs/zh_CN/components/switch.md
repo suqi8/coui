@@ -25,6 +25,15 @@ Switch(
 )
 ```
 
+## 交互
+
+`Switch` 对齐 COUI 17 的 `COUISwitch`：
+
+- 轨道 44 x 24 dp，滑块直径 18 dp，行程 20 dp。
+- 切换时滑块按弹簧运动（response 0.4，bounce 0.3），并随位置拉伸，约在行程三分之一处达到 1.3 倍，轨道颜色随之混合；运动途中再次切换会改变目标而不是从头开始。
+- 滑块可拖动：超过触摸阈值后跟随手指，松手后回到较近的一端，或甩向的一端。拖到另一端结束时会调用 `onCheckedChange`；若调用方保持原状态，滑块弹回。
+- 按下与悬停时在轨道上叠加 `COUITheme.colorScheme.press` / `hover`。
+
 ## 组件状态
 
 ### 禁用状态
@@ -69,7 +78,19 @@ Switch(
 
 ### SwitchDefaults 对象
 
-SwitchDefaults 对象提供了 Switch 组件的默认颜色配置。
+SwitchDefaults 对象提供了 Switch 组件的尺寸和默认颜色配置。
+
+#### 常量
+
+| 常量名           | 类型   | 说明                     | 值      |
+| ---------------- | ------ | ------------------------ | ------- |
+| TrackWidth       | Dp     | 轨道宽度                 | 44.dp   |
+| TrackHeight      | Dp     | 轨道高度                 | 24.dp   |
+| ThumbSize        | Dp     | 滑块直径                 | 18.dp   |
+| ThumbStartOffset | Dp     | 未选中时滑块的偏移       | 3.dp    |
+| ThumbEndOffset   | Dp     | 选中时滑块的偏移         | 23.dp   |
+| Travel           | Dp     | 滑块行程                 | 20.dp   |
+| ThumbShadow      | Shadow | 启用时滑块下方的投影     | -       |
 
 #### 方法
 
@@ -81,14 +102,16 @@ SwitchDefaults 对象提供了 Switch 组件的默认颜色配置。
 
 | 属性名                      | 类型  | 说明                         | 默认值 | 是否必须 |
 | --------------------------- | ----- | ---------------------------- | ------ | -------- |
-| checkedThumbColor           | Color | 选中状态时滑块的颜色         | -      | 是       |
-| uncheckedThumbColor         | Color | 未选中状态时滑块的颜色       | -      | 是       |
-| disabledCheckedThumbColor   | Color | 禁用且选中状态时滑块的颜色   | -      | 是       |
-| disabledUncheckedThumbColor | Color | 禁用且未选中状态时滑块的颜色 | -      | 是       |
-| checkedTrackColor           | Color | 选中状态时轨道的颜色         | -      | 是       |
-| uncheckedTrackColor         | Color | 未选中状态时轨道的颜色       | -      | 是       |
-| disabledCheckedTrackColor   | Color | 禁用且选中状态时轨道的颜色   | -      | 是       |
-| disabledUncheckedTrackColor | Color | 禁用且未选中状态时轨道的颜色 | -      | 是       |
+| checkedThumbColor           | Color | 选中状态时滑块的颜色         | `onPrimary`           | 是       |
+| uncheckedThumbColor         | Color | 未选中状态时滑块的颜色       | `onSecondary`         | 是       |
+| disabledCheckedThumbColor   | Color | 禁用且选中状态时滑块的颜色   | `disabledSliderThumb` | 是       |
+| disabledUncheckedThumbColor | Color | 禁用且未选中状态时滑块的颜色 | `disabledSliderThumb` | 是       |
+| checkedTrackColor           | Color | 选中状态时轨道的颜色         | `primary`             | 是       |
+| uncheckedTrackColor         | Color | 未选中状态时轨道的颜色       | `dragHandle`          | 是       |
+| disabledCheckedTrackColor   | Color | 禁用且选中状态时轨道的颜色   | `disabledPrimary`     | 是       |
+| disabledUncheckedTrackColor | Color | 禁用且未选中状态时轨道的颜色 | `secondaryContainer`  | 是       |
+
+表中默认值为 `switchColors()` 使用的 `COUITheme.colorScheme` 色值；启用动态取色时，两种启用态滑块均使用 `onPrimary`。
 
 ## 进阶用法
 

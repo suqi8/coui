@@ -25,6 +25,15 @@ Switch(
 )
 ```
 
+## Interaction
+
+`Switch` follows the COUI 17 `COUISwitch`:
+
+- The 44 x 24 dp track holds an 18 dp thumb that travels 20 dp.
+- Toggling moves the thumb on a spring (response 0.4, bounce 0.3). The thumb stretches with its position, up to 1.3x about a third of the way, and the track colour blends with it. Toggling again mid-flight redirects the thumb instead of restarting it.
+- The thumb can be dragged: past the touch slop it follows the finger, and on release it settles on the nearer end, or on the end it was flung towards. A drag that ends on the other end calls `onCheckedChange`; if the owner keeps the old state, the thumb springs back.
+- Press and hover lay `COUITheme.colorScheme.press` / `hover` over the track.
+
 ## Component States
 
 ### Disabled State
@@ -69,7 +78,19 @@ Switch(
 
 ### SwitchDefaults Object
 
-The SwitchDefaults object provides default color configurations for the Switch component.
+The SwitchDefaults object provides the dimensions and default color configurations for the Switch component.
+
+#### Constants
+
+| Constant Name    | Type   | Description                                   | Value   |
+| ---------------- | ------ | --------------------------------------------- | ------- |
+| TrackWidth       | Dp     | Track width                                   | 44.dp   |
+| TrackHeight      | Dp     | Track height                                  | 24.dp   |
+| ThumbSize        | Dp     | Thumb diameter                                | 18.dp   |
+| ThumbStartOffset | Dp     | Thumb offset in the unchecked position        | 3.dp    |
+| ThumbEndOffset   | Dp     | Thumb offset in the checked position          | 23.dp   |
+| Travel           | Dp     | Distance the thumb travels                    | 20.dp   |
+| ThumbShadow      | Shadow | Drop shadow under the thumb while enabled     | -       |
 
 #### Methods
 
@@ -81,14 +102,16 @@ The SwitchDefaults object provides default color configurations for the Switch c
 
 | Property Name               | Type  | Description                             | Default Value | Required |
 | --------------------------- | ----- | --------------------------------------- | ------------- | -------- |
-| checkedThumbColor           | Color | Thumb color when checked                | -             | Yes      |
-| uncheckedThumbColor         | Color | Thumb color when unchecked              | -             | Yes      |
-| disabledCheckedThumbColor   | Color | Thumb color when disabled and checked   | -             | Yes      |
-| disabledUncheckedThumbColor | Color | Thumb color when disabled and unchecked | -             | Yes      |
-| checkedTrackColor           | Color | Track color when checked                | -             | Yes      |
-| uncheckedTrackColor         | Color | Track color when unchecked              | -             | Yes      |
-| disabledCheckedTrackColor   | Color | Track color when disabled and checked   | -             | Yes      |
-| disabledUncheckedTrackColor | Color | Track color when disabled and unchecked | -             | Yes      |
+| checkedThumbColor           | Color | Thumb color when checked                | `onPrimary`           | Yes      |
+| uncheckedThumbColor         | Color | Thumb color when unchecked              | `onSecondary`         | Yes      |
+| disabledCheckedThumbColor   | Color | Thumb color when disabled and checked   | `disabledSliderThumb` | Yes      |
+| disabledUncheckedThumbColor | Color | Thumb color when disabled and unchecked | `disabledSliderThumb` | Yes      |
+| checkedTrackColor           | Color | Track color when checked                | `primary`             | Yes      |
+| uncheckedTrackColor         | Color | Track color when unchecked              | `dragHandle`          | Yes      |
+| disabledCheckedTrackColor   | Color | Track color when disabled and checked   | `disabledPrimary`     | Yes      |
+| disabledUncheckedTrackColor | Color | Track color when disabled and unchecked | `secondaryContainer`  | Yes      |
+
+The default values in the table are the `COUITheme.colorScheme` tokens `switchColors()` uses. With dynamic colors, both enabled thumbs use `onPrimary`.
 
 ## Advanced Usage
 
