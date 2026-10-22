@@ -39,4 +39,34 @@ class NumberPickerPhysicsTest {
         assertEquals(10, numberPickerHysteresisIndex(3, 10f))
         assertEquals(-2, numberPickerHysteresisIndex(3, -2f))
     }
+
+    @Test
+    fun hapticIntensityFollowsTheCrispRichTapRange() {
+        // VibrateUtils crisp level: intensity 50 at rest, 100 at the max fling velocity.
+        assertEquals(0.5f, numberPickerHapticIntensity(0f, 5000f))
+        assertEquals(0.75f, numberPickerHapticIntensity(2500f, 5000f))
+        assertEquals(1f, numberPickerHapticIntensity(9000f, 5000f))
+    }
+
+    @Test
+    fun epochDaysRoundTrip() {
+        assertEquals(0, epochDayOf(DateValue(1970, 1, 1)))
+        assertEquals(DateValue(2026, 10, 23), dateOfEpochDay(epochDayOf(DateValue(2026, 10, 23))))
+        assertEquals(DateValue(2024, 2, 29), dateOfEpochDay(epochDayOf(DateValue(2024, 3, 1)) - 1))
+        assertEquals(DateValue(1900, 1, 1), dateOfEpochDay(epochDayOf(DateValue(1900, 1, 1))))
+        // 2026-10-23 is a Friday; 1970-01-01 was a Thursday.
+        assertEquals(5, DateValue(2026, 10, 23).dayOfWeek)
+        assertEquals(4, DateValue(1970, 1, 1).dayOfWeek)
+    }
+
+    @Test
+    fun dateFieldOrderFollowsThePattern() {
+        assertEquals(DateFieldOrder.MonthDayYear, DateFieldOrder.fromPattern("MMMM dd, yyyy"))
+        assertEquals(DateFieldOrder.YearMonthDay, DateFieldOrder.fromPattern("yyyy年MMMMdd日"))
+        assertEquals(DateFieldOrder.DayMonthYear, DateFieldOrder.fromPattern("dd. MMMM yyyy"))
+        // Quoted literals are skipped.
+        assertEquals(DateFieldOrder.DayMonthYear, DateFieldOrder.fromPattern("d 'de' MMMM 'de' y"))
+        assertEquals(DateFieldOrder.MonthDayYear, DateFieldOrder.fromPattern("Mdy"))
+        assertEquals(DateFieldOrder.YearMonthDay, DateFieldOrder.fromPattern(""))
+    }
 }

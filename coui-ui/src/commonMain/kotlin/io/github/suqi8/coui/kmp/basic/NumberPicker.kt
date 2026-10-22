@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
-import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import io.github.suqi8.coui.kmp.utils.rememberCouiScaledHaptic
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,6 +57,8 @@ import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * A [NumberPicker] component with COUI style.
@@ -67,9 +69,13 @@ import kotlin.math.sign
  *   inside the band uses [selectedTextSize] and the selected color, the part outside uses
  *   [unselectedTextSize] and the unselected color. There is no gradual blend.
  * - a fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s),
- *   lands on a whole row and finishes with a 300ms snap.
- * - [onValueChange] and a haptic tick fire on every value change while the wheel moves, not only
- *   when it settles.
+ *   lands on a whole row and finishes with a 300ms snap. Android uses these raw px/s values like
+ *   COUI; other platforms treat them as px on a 3.5x reference phone and scale them by the actual
+ *   density, so a flick feels the same.
+ * - [onValueChange] fires on every value change while the wheel moves, not only when it settles.
+ *   Each change also plays a haptic tick whose intensity follows the wheel speed (50..100% up to
+ *   5000 px/s, at most one every 25ms, like COUI's VibrateUtils) and, on Android with touch
+ *   sounds enabled, the COUI click sound.
  * - tapping the row above or below the center steps by one; holding it repeats the step every
  *   [longPressStepInterval] milliseconds.
  *
@@ -126,7 +132,8 @@ fun NumberPicker(
     // COUINumberPicker.updateWrapSelectorWheel: max - min >= rows and wrapping preferred.
     val canWrap = wrapAround && itemCount > visibleItemCount
 
-    val performHaptic = rememberCouiHaptic()
+    val performHaptic = rememberCouiScaledHaptic()
+    val playClick = rememberNumberPickerClickSound()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
 
@@ -140,6 +147,12 @@ fun NumberPicker(
 
     val latestOnValueChange by rememberUpdatedState(onValueChange)
     val latestPerformHaptic by rememberUpdatedState(performHaptic)
+    val latestPlayClick by rememberUpdatedState(playClick)
+    val velocityScale = numberPickerVelocityScale(density.density)
+    val minFlingVelocity = NumberPickerMinFlingVelocity * velocityScale
+    val maxFlingVelocity = NumberPickerMaxFlingVelocity * velocityScale
+    val latestMaxFlingVelocity by rememberUpdatedState(maxFlingVelocity)
+    val latestRowPx by rememberUpdatedState(with(density) { itemHeight.toPx() })
     val latestRangeStart by rememberUpdatedState(range.first)
     val latestItemCount by rememberUpdatedState(itemCount)
     val latestCanWrap by rememberUpdatedState(canWrap)
@@ -164,11 +177,20 @@ fun NumberPicker(
     // change notifies the listener and plays the feedback (setValueInternal -> performFeedback).
     LaunchedEffect(Unit) {
         snapshotFlow { position.value }.collect {
+            val now = TimeSource.Monotonic.markNow()
+            val current = position.value
+            tracker.trackSpeed(current, now, latestRowPx, latestMaxFlingVelocity)
             if (tracker.rebasing) return@collect
-            val next = numberPickerHysteresisIndex(tracker.reported, position.value)
+            val next = numberPickerHysteresisIndex(tracker.reported, current)
             if (next != tracker.reported) {
                 tracker.reported = next
-                latestPerformHaptic(CouiHapticEffect.Strength)
+                if (tracker.takeHapticSlot(now)) {
+                    latestPerformHaptic(
+                        CouiHapticEffect.Strength,
+                        numberPickerHapticIntensity(tracker.speed, latestMaxFlingVelocity),
+                    )
+                }
+                latestPlayClick()
                 latestOnValueChange(latestRangeStart + wrapIndex(next))
             }
         }
@@ -232,6 +254,11 @@ fun NumberPicker(
     // COUI draws the unit with Typeface.DEFAULT (regular weight) at 14dp.
     val unitStyle = remember(density) {
         TextStyle(fontSize = with(density) { NumberPickerDefaults.UnitTextSize.toSp() }, fontWeight = FontWeight.Normal)
+    }
+    // COUI centers every row on the default typeface's top/bottom metrics at the unselected size.
+    val fontCenter = remember(unselectedTextSize, density) {
+        val (top, bottom) = numberPickerFontTopBottom(with(density) { unselectedTextSize.toPx() })
+        (top + bottom) / 2f
     }
     val selectedColor = colors.selectedTextColor(enabled)
     val unselectedColor = colors.unselectedTextColor(enabled)
@@ -312,10 +339,10 @@ fun NumberPicker(
                             pressed = false
 
                             val velocity = tracker.calculateVelocity().y
-                                .coerceIn(-NumberPickerMaxFlingVelocity, NumberPickerMaxFlingVelocity)
+                                .coerceIn(-maxFlingVelocity, maxFlingVelocity)
                             val stepping = animationJob?.isActive == true
                             when {
-                                released && abs(velocity) > NumberPickerMinFlingVelocity ->
+                                released && abs(velocity) > minFlingVelocity ->
                                     fling(velocity * NumberPickerFlingVelocityRatio, rowPx, if (dragging) dragPosition else position.value)
 
                                 !released ||
@@ -347,6 +374,7 @@ fun NumberPicker(
                     selectedStyle = selectedStyle,
                     unselectedStyle = unselectedStyle,
                     unitStyle = unitStyle,
+                    fontCenter = fontCenter,
                     selectedColor = selectedColor,
                     unselectedColor = unselectedColor,
                 )
@@ -365,6 +393,7 @@ private fun DrawScope.drawNumberPickerRows(
     selectedStyle: TextStyle,
     unselectedStyle: TextStyle,
     unitStyle: TextStyle,
+    fontCenter: Float,
     selectedColor: Color,
     unselectedColor: Color,
 ) {
@@ -387,9 +416,10 @@ private fun DrawScope.drawNumberPickerRows(
         val text = labelOf(index)
         val normal = measureRow(textMeasurer, text, unselectedStyle)
         val focus = measureRow(textMeasurer, text, selectedStyle)
-        // Both passes share the normal-size baseline, as in COUINumberPicker.onDraw.
+        // Both passes share one baseline: (2 * rowTop + rowHeight - top - bottom) / 2 with the
+        // default typeface metrics at the normal size, as in COUINumberPicker.onDraw.
         val rowCenter = centerY + (row - position) * rowPx
-        val baseline = rowCenter - normal.size.height / 2f + normal.firstBaseline
+        val baseline = rowCenter - fontCenter
 
         clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Difference) {
             drawText(normal, color = unselectedColor, topLeft = Offset(rowTextX(normal), baseline - normal.firstBaseline))
@@ -402,8 +432,7 @@ private fun DrawScope.drawNumberPickerRows(
     if (unit.isNotEmpty()) {
         // The unit sits on the resting center row's baseline minus 2dp, after an 18dp value slot
         // plus a 4dp margin (coui_number_picker_text_width / _text_margin_start).
-        val metrics = measureRow(textMeasurer, "0", unselectedStyle)
-        val baseline = centerY - metrics.size.height / 2f + metrics.firstBaseline - NumberPickerUnitMarginBottom.toPx()
+        val baseline = centerY - fontCenter - NumberPickerUnitMarginBottom.toPx()
         val unitLayout = measureRow(textMeasurer, unit, unitStyle)
         val x = size.width / 2f + (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
         drawText(unitLayout, color = selectedColor, topLeft = Offset(x, baseline - unitLayout.firstBaseline))
@@ -423,6 +452,31 @@ private class NumberPickerTracker(var reported: Int) {
     var rebasing = false
         private set
 
+    /** Wheel speed in px/s, clamped to the max fling velocity (COUI mScrollerVelocity). */
+    var speed = 0f
+        private set
+    private var lastPosition = Float.NaN
+    private var lastMark: TimeSource.Monotonic.ValueTimeMark? = null
+    private var lastHapticMark: TimeSource.Monotonic.ValueTimeMark? = null
+
+    fun trackSpeed(position: Float, now: TimeSource.Monotonic.ValueTimeMark, rowPx: Float, maxVelocity: Float) {
+        val previous = lastMark
+        if (previous != null && !lastPosition.isNaN()) {
+            val seconds = (now - previous).inWholeMicroseconds / 1_000_000f
+            if (seconds > 0f) speed = (abs(position - lastPosition) * rowPx / seconds).coerceAtMost(maxVelocity)
+        }
+        lastPosition = position
+        lastMark = now
+    }
+
+    /** VibrateUtils.filterVibrator: at most one haptic every 25ms. */
+    fun takeHapticSlot(now: TimeSource.Monotonic.ValueTimeMark): Boolean {
+        val previous = lastHapticMark
+        if (previous != null && (now - previous) < NumberPickerHapticInterval) return false
+        lastHapticMark = now
+        return true
+    }
+
     suspend fun rebase(index: Int, move: suspend () -> Unit) {
         rebasing = true
         try {
@@ -433,6 +487,21 @@ private class NumberPickerTracker(var reported: Int) {
         }
     }
 }
+
+/**
+ * COUI "crisp" picker vibration (VibrateUtils.setLinearMotorVibratorStrength, level 0): the RichTap
+ * intensity runs from 50 to 100 as the speed goes from 0 to the max fling velocity. Returned as a
+ * fraction of full strength.
+ */
+internal fun numberPickerHapticIntensity(speed: Float, maxVelocity: Float): Float {
+    if (maxVelocity <= 0f) return NumberPickerHapticMinIntensity / 100f
+    val intensity = (speed / maxVelocity) * (NumberPickerHapticMaxIntensity - NumberPickerHapticMinIntensity) + NumberPickerHapticMinIntensity
+    return intensity.coerceIn(NumberPickerHapticMinIntensity, NumberPickerHapticMaxIntensity) / 100f
+}
+
+private val NumberPickerHapticMinIntensity = 50f
+private val NumberPickerHapticMaxIntensity = 100f
+private val NumberPickerHapticInterval = 25.milliseconds
 
 /** The spline fling distance (px) and duration (ms) COUINumberPicker uses for a release velocity. */
 internal data class NumberPickerFling(val distance: Float, val durationMillis: Int)
@@ -567,18 +636,18 @@ data class NumberPickerColors(
  * Draws the two COUI picker hairlines at the center ± 24dp, inset 16dp from both sides
  * (COUIDatePicker / COUITimeLimitPicker.dispatchDraw), `max(0.33dp, 1px)` thick.
  */
-internal fun Modifier.numberPickerDividers(color: Color): Modifier = drawBehind {
+internal fun Modifier.numberPickerDividers(color: Color, inset: Dp = NumberPickerDividerInset): Modifier = drawBehind {
     val thickness = NumberPickerDividerThickness.toPx().toInt().coerceAtLeast(1).toFloat()
-    val inset = NumberPickerDividerInset.toPx().toInt().toFloat()
+    val insetPx = inset.toPx().toInt().toFloat()
     val radius = NumberPickerBandHalfHeight.toPx().toInt()
     val center = size.height / 2f
     val top = (center - radius).toInt().toFloat()
     val bottom = (center + radius).toInt().toFloat()
-    val width = size.width - inset * 2
+    val width = size.width - insetPx * 2
     if (width <= 0f) return@drawBehind
-    drawRect(color, topLeft = Offset(inset, top), size = Size(width, thickness))
-    drawRect(color, topLeft = Offset(inset, bottom), size = Size(width, thickness))
+    drawRect(color, topLeft = Offset(insetPx, top), size = Size(width, thickness))
+    drawRect(color, topLeft = Offset(insetPx, bottom), size = Size(width, thickness))
 }
 
 private val NumberPickerDividerThickness = 0.33.dp
-private val NumberPickerDividerInset = 16.dp
+internal val NumberPickerDividerInset = 16.dp

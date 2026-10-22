@@ -31,6 +31,7 @@ kotlin {
         }
         minSdk = BuildConfig.MIN_SDK
         namespace = "${BuildConfig.LIBRARY_ID}.ui"
+        androidResources.enable = true
     }
 
     jvm("desktop")

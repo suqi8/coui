@@ -34,3 +34,16 @@ enum class CouiHapticEffect {
  */
 @Composable
 expect fun rememberCouiHaptic(): (CouiHapticEffect) -> Unit
+
+/**
+ * Performs a [CouiHapticEffect] at a relative intensity in `0..1`, for widgets whose COUI original
+ * scales a RichTap transient with the gesture velocity (COUINumberPicker through
+ * `VibrateUtils.setLinearMotorVibratorStrength`).
+ *
+ * On Android 11+ apps holding the `VIBRATE` permission, on a vibrator that supports composition
+ * primitives, this plays a scaled `VibrationEffect.Composition` primitive (the closest public API to
+ * the RichTap transient) while the system haptic feedback setting is on. Otherwise, and on every
+ * other platform, it falls back to [rememberCouiHaptic] and the intensity is ignored.
+ */
+@Composable
+expect fun rememberCouiScaledHaptic(): (effect: CouiHapticEffect, intensity: Float) -> Unit

@@ -5,6 +5,7 @@ package io.github.suqi8.coui.kmp.basic
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -12,6 +13,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -97,5 +99,32 @@ class NumberPickerTest {
         onNodeWithTag("picker").performTouchInput { swipeUp(durationMillis = 100) }
         waitForIdle()
         assertTrue(value == 10, "value was $value")
+    }
+
+    @Test
+    fun hourWheelLandingOnTwelveFlipsAmPm() = runComposeUiTest {
+        var value by mutableStateOf(DateTimeValue(DateValue(2026, 10, 23), TimeValue(hour = 11, minute = 30)))
+        setContent {
+            COUITheme {
+                DateTimePicker(
+                    value = value,
+                    onValueChange = { value = it },
+                    is24Hour = false,
+                )
+            }
+        }
+        // 11 AM -> tap the row below the hour -> 12 PM (noon), as COUITimePicker does.
+        onNodeWithContentDescription("11, 1 - 12").performTouchInput { click(Offset(centerX, bottom - 10f)) }
+        waitForIdle()
+        assertEquals(TimeValue(12, 30), value.time)
+        assertEquals(DateValue(2026, 10, 23), value.date)
+    }
+
+    @Test
+    fun desktopScalesTheVelocityConstantsAndReadsFontMetrics() {
+        // Raw px/s on a 3.5x phone; a 1x desktop gets 1/3.5 of them.
+        assertEquals(1f / 3.5f, numberPickerVelocityScale(1f))
+        val (top, bottom) = numberPickerFontTopBottom(16f)
+        assertTrue(top < 0f && bottom > 0f, "top=$top bottom=$bottom")
     }
 }
