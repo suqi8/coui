@@ -233,6 +233,9 @@ fun ColorsPreview(colors: Colors) {
             "press" to colors.press,
             "hover" to colors.hover,
             "focus" to colors.focus,
+            "disabledSliderThumb" to colors.disabledSliderThumb,
+            "disabledSliderKeyPoint" to colors.disabledSliderKeyPoint,
+            "sliderThumbShadow" to colors.sliderThumbShadow,
         )
         val colorMap = colorList.toMap()
         colorList.map { (name, color) ->

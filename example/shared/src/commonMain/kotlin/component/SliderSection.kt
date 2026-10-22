@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Slider
 import io.github.suqi8.coui.kmp.basic.SliderDefaults
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
@@ -81,6 +82,27 @@ fun LazyListScope.sliderSection() {
                 title = "Disabled",
                 valueText = "${(disabledValue * 100).toInt()}%",
                 enabled = false,
+            )
+            SliderPreference(
+                value = 4f,
+                onValueChange = {},
+                title = "Disabled with Key Points",
+                valueText = "4/8",
+                valueRange = 0f..8f,
+                steps = 7,
+                showKeyPoints = true,
+                enabled = false,
+            )
+            var materialValue by remember { mutableFloatStateOf(0.5f) }
+            Text(
+                text = "Material (glass thumb + spotlight)",
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
+            )
+            Slider(
+                value = materialValue,
+                onValueChange = { materialValue = it },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                material = true,
             )
         }
 
