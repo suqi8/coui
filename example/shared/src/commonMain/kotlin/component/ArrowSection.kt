@@ -2,13 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package component
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -19,16 +14,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
-import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.basic.TextField
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Contacts
+import io.github.suqi8.coui.kmp.layout.DialogButtonBar
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
 import io.github.suqi8.coui.kmp.preference.SliderPreference
@@ -123,9 +118,10 @@ private fun SliderDialog(
             TextField(
                 // The dialog content slot is unpadded (COUI button bars span the panel), so
                 // custom content brings its own 24dp side margins.
+                // COUI coui_single_inputview_bottom_alert_dialog_layout: 24dp sides, 18dp below.
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 18.dp),
                 value = text,
                 maxLines = 1,
                 onValueChange = { newValue ->
@@ -140,21 +136,9 @@ private fun SliderDialog(
                     }
                 },
             )
-            Row(
-                // COUI assignment-style pill buttons keep 24dp side and bottom margins.
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                TextButton(
-                    text = "Cancel",
-                    onClick = { showDialog.value = false },
-                    modifier = Modifier.weight(1f),
-                )
-                Spacer(Modifier.width(20.dp))
-                TextButton(
+            DialogButtonBar(
+                negative = DialogButtonBarAction(text = "Cancel", onClick = { showDialog.value = false }),
+                positive = DialogButtonBarAction(
                     text = "Confirm",
                     onClick = {
                         val parsed = text.toIntOrNull()
@@ -162,10 +146,8 @@ private fun SliderDialog(
                         onVolumeChange(clamped / 100f)
                         showDialog.value = false
                     },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
-            }
+                ),
+            )
         },
     )
 }

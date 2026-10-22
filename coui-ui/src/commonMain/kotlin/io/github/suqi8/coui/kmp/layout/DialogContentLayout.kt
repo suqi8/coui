@@ -435,9 +435,11 @@ internal fun DialogContent(
                         .padding(horizontal = insideMargin.width)
                         .padding(top = insideMargin.height, bottom = TitleMarginBottom),
                     text = it,
-                    // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp), sans-serif-semibold.
+                    // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp). Its
+                    // sans-serif-semibold family is overridden by the inherited
+                    // android:textFontWeight 550.
                     style = COUITheme.textStyles.title4,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = TitleFontWeight,
                     textAlign = TextAlign.Center,
                     color = titleColor,
                 )
@@ -579,6 +581,9 @@ private val BottomExitDurationMillis = 250
 
 /** COUI coui_center_dialog_exit alpha duration. */
 private val CenterExitDurationMillis = 150
+
+/** COUI couiTextHeadlineS android:textFontWeight. */
+private val TitleFontWeight = FontWeight(550)
 
 /** COUI coui_alert_dialog_title_margin_bottom. */
 private val TitleMarginBottom = 6.dp
