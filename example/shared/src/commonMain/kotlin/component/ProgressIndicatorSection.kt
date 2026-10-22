@@ -50,6 +50,13 @@ fun LazyListScope.progressIndicatorSection() {
                     .padding(bottom = 12.dp),
             )
         }
+        LinearProgressIndicator(
+            progress = 0.5f,
+            enabled = false,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+        )
         FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
