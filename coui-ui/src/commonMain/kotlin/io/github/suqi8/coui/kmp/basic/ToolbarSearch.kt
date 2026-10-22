@@ -3,6 +3,8 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,9 +20,14 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import io.github.suqi8.coui.kmp.effect.TouchMotion
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -39,7 +46,8 @@ fun rememberToolbarSearchState(initiallyExpanded: Boolean = false): ToolbarSearc
  *
  * On expand the bar starts as a circle centred on the search icon, slides home while widening into
  * the full capsule, and the cancel button flies out of the icon, the two merging like metaballs;
- * the toolbar's own children fade and shrink away underneath. Collapsing plays it back. Two springs
+ * the toolbar's own children (not its background) fade and shrink away underneath. Collapsing
+ * plays it back. Two springs
  * drive it, both from `IconExpandToEditParamsHigh` / `IconCollapseToNormalParamsHigh`:
  * - the icon expansion (`mIconExpandAnimation`): response 0.55 / bounce 0.2 out, 0.5 / 0.2 back;
  * - the toolbar children (`mToolbarIconSpringAnimation`): response 0.4 / bounce 0.3 out, scaling to
@@ -62,8 +70,12 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
     /** `mToolbarIconScaleEnd`: the scale the toolbar children shrink to (out) or grow from (back). */
     internal var toolbarScaleEnd by mutableFloatStateOf(ExpandToolbarEndScale)
 
+    /** The toolbar search icon's bounds in root pixels, [Rect.Zero] until measured. */
+    internal var entryBoundsInRoot by mutableStateOf(Rect.Zero)
+
     /** The toolbar search icon's horizontal centre in root pixels, `NaN` until measured. */
-    internal var entryCenterXPx by mutableFloatStateOf(Float.NaN)
+    internal val entryCenterXPx: Float
+        get() = if (entryBoundsInRoot.isEmpty) Float.NaN else entryBoundsInRoot.center.x
 
     /**
      * Whether the bar is on screen: expanded, or still folding back into the icon. COUI keeps the
@@ -74,6 +86,15 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
 
     /** `setToolBarAlpha(1 - q)`. */
     internal fun toolbarAlpha(): Float = (1f - toolbarProgress.value).coerceIn(0f, 1f)
+
+    /**
+     * The alpha for the toolbar's title while the search bar is out, `COUISearchBar.setToolBarAlpha`
+     * applied to the title view. Pass it to the bar's title colour (for example
+     * `titleColor = color.copy(alpha = color.alpha * state.toolbarTitleAlpha)`); a large title is
+     * not part of the toolbar row and stays as it is.
+     */
+    val toolbarTitleAlpha: Float
+        get() = toolbarAlpha()
 
     /** `setToolBarScale(1 - q)`: `end + (1 - end) * (1 - q)`. */
     internal fun toolbarScale(): Float {
@@ -89,6 +110,17 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
     /** Collapses the search bar back into the toolbar's search icon. */
     fun collapse() {
         expanded = false
+    }
+
+    /**
+     * `COUISearchBar.onToolbarSearchIconDownWhileInvisible`: a touch on the (still hidden) search icon
+     * in the last 5% of a collapse completes the collapse at once, so the icon is back to take it.
+     */
+    internal suspend fun onEntryDownWhileInvisible() {
+        if (expanded || !iconExpandProgress.isRunning || iconExpandProgress.value > InterruptCollapseProgress) return
+        // mIconExpandAnimation.cancelComplete(), whose end listener cancels the toolbar icon spring.
+        iconExpandProgress.snapTo(0f)
+        toolbarProgress.stop()
     }
 
     internal suspend fun animateTo(expanded: Boolean) = coroutineScope {
@@ -117,10 +149,9 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
 /**
  * Hosts the toolbar content the search bar expands over.
  *
- * While the bar expands, the content fades out on the toolbar-children spring
- * (`COUISearchBar.setToolBarAlpha`), and fades back in when it collapses. Apply
- * [toolbarSearchItem] to the toolbar's navigation and menu icons for the matching shrink, and
- * [toolbarSearchEntry] to the search icon itself.
+ * COUI fades and shrinks the toolbar's children, never the toolbar itself, so the content is drawn
+ * as it is: apply [toolbarSearchItem] to the navigation and menu icons, [toolbarSearchEntry] to the
+ * search icon, and [ToolbarSearchState.toolbarTitleAlpha] to the title colour.
  *
  * @param state the [ToolbarSearchState] shared with the [ToolbarFloatingSearchBar].
  * @param modifier the [Modifier] to be applied to the anchor.
@@ -133,31 +164,38 @@ fun ToolbarSearchAnchor(
     content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Box(modifier = Modifier.graphicsLayer { alpha = state.toolbarAlpha() }) {
-            content()
-        }
+        content()
     }
 }
 
 /**
  * Marks the toolbar's search icon, the [ToolbarFloatingSearchBar] grows out of. It reports the
- * icon's centre and hides the icon while the bar is out (`setToolbarSearchIconAlpha(0)`, restored
- * once the bar has folded back), and shrinks with the other toolbar icons.
+ * icon's bounds, hides the icon while the bar is out (`setToolbarSearchIconAlpha(0)`, restored once
+ * the bar has folded back), shrinks with the other toolbar icons, and a touch on it in the last 5%
+ * of a collapse completes the collapse at once (`onToolbarSearchIconDownWhileInvisible`).
  *
  * @param state the [ToolbarSearchState] driving the search bar.
  */
 fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
-    .onGloballyPositioned { state.entryCenterXPx = it.boundsInRoot().center.x }
+    .onGloballyPositioned { state.entryBoundsInRoot = it.boundsInRoot() }
+    .pointerInput(state) {
+        coroutineScope {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                launch { state.onEntryDownWhileInvisible() }
+            }
+        }
+    }
     .graphicsLayer {
         val scale = state.toolbarScale()
         scaleX = scale
         scaleY = scale
-        alpha = if (state.barVisible) 0f else 1f
+        alpha = if (state.barVisible) 0f else state.toolbarAlpha()
     }
 
 /**
- * Shrinks a toolbar icon (navigation or menu) while the search bar is out, after
- * `COUISearchBar.applyMenuViewScale` / `applyToolbarIconExternalScale`.
+ * Fades and shrinks a toolbar icon (navigation or menu) while the search bar is out, after
+ * `COUISearchBar.setToolBarAlpha` and `applyMenuViewScale` / `applyToolbarIconExternalScale`.
  *
  * @param state the [ToolbarSearchState] driving the search bar.
  */
@@ -165,6 +203,7 @@ fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graph
     val scale = state.toolbarScale()
     scaleX = scale
     scaleY = scale
+    alpha = state.toolbarAlpha()
 }
 
 /**
@@ -196,7 +235,24 @@ fun ToolbarFloatingSearchBar(
             sourceCenterX = { state.entryCenterXPx },
         )
     }
-    Box(modifier = modifier.fillMaxWidth()) {
+    var barOrigin by remember { mutableStateOf(Offset.Zero) }
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .onGloballyPositioned { barOrigin = it.positionInRoot() }
+            // COUI drops the collapsing bar behind the toolbar children (updateLayerInToolBar), so
+            // the search icon takes a touch at its spot; here the bar stays on top and forwards it.
+            .pointerInput(state) {
+                coroutineScope {
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                        if (state.entryBoundsInRoot.contains(barOrigin + down.position)) {
+                            launch { state.onEntryDownWhileInvisible() }
+                        }
+                    }
+                }
+            },
+    ) {
         if (state.barVisible) {
             CompositionLocalProvider(LocalSearchBarIconExpand provides iconExpand) {
                 content()
@@ -219,6 +275,9 @@ private val CollapseToolbarSpring = TouchMotion.spring(response = 0.5f, bounce =
 
 /** `IconExpandToEditParamsHigh.toolbarEndScale`. */
 private val ExpandToolbarEndScale = 0.8f
+
+/** `onToolbarSearchIconDownWhileInvisible`: the collapse progress below which a touch completes it. */
+private val InterruptCollapseProgress = 0.05f
 
 /** `IconCollapseToNormalParamsHigh.toolbarInitScale`. */
 private val CollapseToolbarInitScale = 0.5f
