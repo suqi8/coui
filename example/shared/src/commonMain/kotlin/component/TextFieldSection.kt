@@ -89,9 +89,20 @@ fun LazyListScope.textFieldSection() {
             singleLine = true,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
-                .padding(bottom = 16.dp),
+                .padding(bottom = 12.dp),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
+        // Disabled: the underline switches to couiDisabledStrokeColor (#19000000 / #19FFFFFF).
+        TextField(
+            value = "",
+            onValueChange = {},
+            label = "Disabled",
+            enabled = false,
+            singleLine = true,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         )
 
         var cardText by remember { mutableStateOf("") }
