@@ -29,7 +29,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.CornerRadius
@@ -55,6 +54,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.squircle.squircleClip
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.COUITheme.isDynamicColor
 import io.github.suqi8.coui.kmp.theme.LocalColors
@@ -90,7 +91,6 @@ fun Switch(
 
     val couiHaptic = rememberCouiHaptic()
 
-    val capsuleShape = CircleShape
     // COUI toggle interpolator, shared by every child animator (COUISwitch.animateWhenStateChanged()).
     val couiToggleEasing = remember { CubicBezierEasing(0.3f, 0f, 0.1f, 1f) }
 
@@ -194,7 +194,9 @@ fun Switch(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
             .size(SwitchDefaults.TrackWidth, SwitchDefaults.TrackHeight)
-            .clip(capsuleShape)
+            // COUISwitch clips the track to its outline, setSmoothRoundRect(rect, height / 2) without a
+            // weight: the COUI 17 soft capsule.
+            .squircleClip(COUIRoundCorner.Full, weight = COUIRoundCorner.UnspecifiedWeight)
             .drawBehind {
                 drawRect(backgroundColorState.value)
                 drawRect(pressOverlayState.value)

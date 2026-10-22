@@ -39,16 +39,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
@@ -64,6 +64,9 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -333,65 +336,72 @@ private fun SegmentButtonRow(
             }
         }
         val onSelectedPressedChange: (Boolean) -> Unit = remember { { pressed -> selectedSegmentPressed = pressed } }
-        val containerPath = remember { Path() }
         val indicatorPath = remember { Path() }
+        val squircleEnabled = isSquircleEnabled()
 
+        // COUISegmentButtonLayout draws the container and the indicator as smooth round rects of
+        // radius height / 2 without a weight (updateSmoothRoundPath): the COUI 17 soft capsule, or
+        // default_g2_weight for a radius below half the height.
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .drawBehind {
+                .drawWithCache {
                     // 1. Container capsule (COUISegmentButtonLayout.drawButtonBackground).
                     val containerRadius = min((cornerRadius + contourPadding).toPx(), size.height / 2f)
-                    if (containerColor.alpha > 0f) {
-                        drawRoundRect(color = containerColor, cornerRadius = CornerRadius(containerRadius))
-                    }
-                    if (segmentWidthsPx.isEmpty()) return@drawBehind
-                    val pad = contourPadding.toPx()
-                    val scale = indicatorScale.value
-                    val indicatorW = indicatorWidth.value * scale
-                    val indicatorH = (size.height - 2f * pad) * scale
-                    if (indicatorW <= 0f || indicatorH <= 0f) return@drawBehind
-                    val centerX = pad + indicatorCenterX.value - scrollOffset
-                    val centerY = size.height / 2f
-                    val rect = Rect(
-                        centerX - indicatorW / 2f,
-                        centerY - indicatorH / 2f,
-                        centerX + indicatorW / 2f,
-                        centerY + indicatorH / 2f,
-                    )
-                    val radius = min(cornerRadius.toPx(), indicatorH / 2f)
-                    indicatorPath.reset()
-                    indicatorPath.addRoundRect(RoundRect(rect, CornerRadius(radius)))
-                    containerPath.reset()
-                    containerPath.addRoundRect(
-                        RoundRect(Rect(Offset.Zero, size), CornerRadius(containerRadius)),
-                    )
-                    clipPath(containerPath) {
-                        // 2. Indicator shadow, clipped outside the indicator (Region.Op.DIFFERENCE);
-                        // the 1dp blur is approximated with a half-alpha penumbra pass.
-                        clipPath(indicatorPath, clipOp = ClipOp.Difference) {
-                            val shadowDy = IndicatorShadowOffsetY.toPx()
-                            val shadowBlur = IndicatorShadowBlurRadius.toPx()
-                            drawRoundRect(
-                                color = shadowPenumbraColor,
-                                topLeft = Offset(rect.left - shadowBlur, rect.top + shadowDy - shadowBlur),
-                                size = Size(indicatorW + 2 * shadowBlur, indicatorH + 2 * shadowBlur),
-                                cornerRadius = CornerRadius(radius + shadowBlur),
-                            )
-                            drawRoundRect(
-                                color = shadowColor,
-                                topLeft = Offset(rect.left, rect.top + shadowDy),
-                                size = Size(indicatorW, indicatorH),
-                                cornerRadius = CornerRadius(radius),
-                            )
-                        }
-                        // 3. Indicator capsule fill.
-                        drawRoundRect(
-                            color = indicatorColor,
-                            topLeft = rect.topLeft,
-                            size = rect.size,
-                            cornerRadius = CornerRadius(radius),
+                    val containerPath = Path().apply {
+                        addSquircleRect(
+                            width = size.width,
+                            height = size.height,
+                            cornerRadius = containerRadius,
+                            weight = COUIRoundCorner.UnspecifiedWeight,
+                            squircleEnabled = squircleEnabled,
                         )
+                    }
+                    onDrawBehind {
+                        if (containerColor.alpha > 0f) {
+                            drawPath(path = containerPath, color = containerColor)
+                        }
+                        if (segmentWidthsPx.isEmpty()) return@onDrawBehind
+                        val pad = contourPadding.toPx()
+                        val scale = indicatorScale.value
+                        val indicatorW = indicatorWidth.value * scale
+                        val indicatorH = (size.height - 2f * pad) * scale
+                        if (indicatorW <= 0f || indicatorH <= 0f) return@onDrawBehind
+                        val centerX = pad + indicatorCenterX.value - scrollOffset
+                        val centerY = size.height / 2f
+                        val rect = Rect(
+                            centerX - indicatorW / 2f,
+                            centerY - indicatorH / 2f,
+                            centerX + indicatorW / 2f,
+                            centerY + indicatorH / 2f,
+                        )
+                        val radius = min(cornerRadius.toPx(), indicatorH / 2f)
+                        indicatorPath.rewind()
+                        indicatorPath.addSquircleRect(
+                            rect = rect,
+                            cornerRadius = radius,
+                            weight = COUIRoundCorner.UnspecifiedWeight,
+                            squircleEnabled = squircleEnabled,
+                        )
+                        clipPath(containerPath) {
+                            // 2. Indicator shadow, clipped outside the indicator (Region.Op.DIFFERENCE);
+                            // the 1dp blur is approximated with a half-alpha penumbra pass.
+                            clipPath(indicatorPath, clipOp = ClipOp.Difference) {
+                                val shadowDy = IndicatorShadowOffsetY.toPx()
+                                val shadowBlur = IndicatorShadowBlurRadius.toPx()
+                                drawRoundRect(
+                                    color = shadowPenumbraColor,
+                                    topLeft = Offset(rect.left - shadowBlur, rect.top + shadowDy - shadowBlur),
+                                    size = Size(indicatorW + 2 * shadowBlur, indicatorH + 2 * shadowBlur),
+                                    cornerRadius = CornerRadius(radius + shadowBlur),
+                                )
+                                translate(top = shadowDy) {
+                                    drawPath(path = indicatorPath, color = shadowColor)
+                                }
+                            }
+                            // 3. Indicator capsule fill.
+                            drawPath(path = indicatorPath, color = indicatorColor)
+                        }
                     }
                 },
         ) {

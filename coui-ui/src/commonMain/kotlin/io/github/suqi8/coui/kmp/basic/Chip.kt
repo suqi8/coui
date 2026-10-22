@@ -65,8 +65,9 @@ import kotlin.coroutines.cancellation.CancellationException
  *   [LocalContentColor] is provided with the current label color so a default [Icon] is tinted
  *   like COUIChip with chipIconApplyTint enabled.
  * @param cornerRadius The corner radius of the [Chip]. COUIChip uses a capsule (half of the
- *   default 32dp height) drawn on the smooth-corner path; a fully rounded chip is drawn as the
- *   weight-1.0 Oplus soft capsule (`COUIChipDrawable.clipSmoothRoundRect`).
+ *   default 32dp height) drawn on the smooth-corner path without a weight
+ *   (`COUIChipDrawable.clipSmoothRoundRect`): a fully rounded chip is the weight-1.0 Oplus soft
+ *   capsule, a smaller radius takes `default_g2_weight` 2.45 ([COUIRoundCorner.UnspecifiedWeight]).
  * @param minWidth The minimum width of the [Chip].
  * @param minHeight The minimum height of the [Chip].
  * @param maxWidth The maximum width of the [Chip].
@@ -157,7 +158,7 @@ fun Chip(
                     scaleY = scale
                 }
                 .widthIn(max = maxWidth)
-                .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CapsuleWeight)
+                .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                 .selectable(
                     selected = selected,
                     interactionSource = interactionSource,

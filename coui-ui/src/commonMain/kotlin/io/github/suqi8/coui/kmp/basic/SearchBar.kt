@@ -69,6 +69,9 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.hasFocusReassignBug
@@ -210,8 +213,13 @@ fun InputField(
     val currentOnSearch by rememberUpdatedState(onSearch)
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val internalInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    // COUISearchBarDrawingProxyDrawable.setBackgroundRect: corner radius = rect.height() / 2.
-    val capsuleShape = CircleShape
+    // SearchBarBackgroundView.updateSmoothRoundPath: radius = height / 2 at the explicit weight 1.0,
+    // the COUI 17 soft capsule.
+    val capsuleShape = if (isSquircleEnabled()) {
+        remember { SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.CapsuleWeight) }
+    } else {
+        CircleShape
+    }
 
     val actualLeadingIcon = leadingIcon ?: {
         // coui_search_view_icon: 20dp glyph filled with couiColorSecondNeutral.
@@ -236,7 +244,7 @@ fun InputField(
                 modifier = Modifier
                     .padding(start = SearchBarDefaults.TrailingIconStartPadding, end = SearchBarDefaults.TrailingIconEndPadding)
                     .size(SearchBarDefaults.TrailingIconTouchTargetSize)
-                    .clip(capsuleShape)
+                    .clip(CircleShape)
                     .clickable { currentOnQueryChange("") }
                     .semantics { contentDescription = "Search Cleanup" },
                 contentAlignment = Alignment.Center,

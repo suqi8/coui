@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -41,6 +40,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.anim.folmeSpring
+import io.github.suqi8.coui.kmp.squircle.drawSquircleRect
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.abs
 import kotlin.math.max
@@ -153,17 +155,18 @@ fun InstallLoadProgress(
             ),
         contentAlignment = Alignment.Center,
     ) {
+        val squircleEnabled = isSquircleEnabled()
         Canvas(modifier = Modifier.matchParentSize()) {
             val fraction = pressFraction.value
             val inset = Offset(size.width * PressInsetFraction * fraction, size.height * PressInsetFraction * fraction)
             val brightness = 1f - (1f - InstallLoadProgressDefaults.PressedBrightness) * fraction
             val progressFill = colors.fillColor(colors.progressColor, enabled, brightness)
             val trackFill = colors.fillColor(colors.trackColor, enabled, brightness)
-            drawCapsule(inset, if (filled) progressFill else trackFill)
+            drawCapsule(inset, if (filled) progressFill else trackFill, squircleEnabled)
             if (showsProgress) {
                 val (left, right) = progressClip(inset.x, visualProgress, isRtl)
                 clipRect(left = left, right = right) {
-                    drawCapsule(inset, progressFill)
+                    drawCapsule(inset, progressFill, squircleEnabled)
                 }
             }
         }
@@ -210,14 +213,19 @@ fun InstallLoadProgress(
     }
 }
 
-/** Draws the button capsule inset by [inset] on each side; COUI uses a smooth capsule of radius h / 2. */
-private fun DrawScope.drawCapsule(inset: Offset, color: Color) {
+/**
+ * Draws the button capsule inset by [inset] on each side. COUIInstallLoadProgress adds a smooth round
+ * rect of radius h / 2 without a weight, which ColorOS 17 draws as the soft capsule.
+ */
+private fun DrawScope.drawCapsule(inset: Offset, color: Color, squircleEnabled: Boolean) {
     val capsule = Size(size.width - inset.x * 2, size.height - inset.y * 2)
-    drawRoundRect(
+    drawSquircleRect(
         color = color,
+        cornerRadius = capsule.height / 2,
         topLeft = inset,
         size = capsule,
-        cornerRadius = CornerRadius(capsule.height / 2),
+        weight = COUIRoundCorner.UnspecifiedWeight,
+        squircleEnabled = squircleEnabled,
     )
 }
 

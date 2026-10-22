@@ -291,7 +291,9 @@ fun RowScope.NavigationBarItem(
  *
  * @param modifier A [Modifier] to be applied to the [FloatingNavigationBar] for additional customization.
  * @param color The background color of the [FloatingNavigationBar].
- * @param cornerRadius The corner radius of the [FloatingNavigationBar], used for rounded corners.
+ * @param cornerRadius The corner radius of the [FloatingNavigationBar]. The default
+ *   [FloatingNavigationBarDefaults.CornerRadius] rounds the bar fully into the COUI 17 soft capsule;
+ *   a smaller radius is drawn at the ColorOS default smoothing weight.
  * @param horizontalAlignment The alignment of the [FloatingNavigationBar] within its parent, typically used to center it horizontally.
  * @param horizontalOutSidePadding The horizontal padding to be applied outside the [FloatingNavigationBar].
  * @param shadowElevation The shadow elevation of the [FloatingNavigationBar].
@@ -304,7 +306,7 @@ fun RowScope.NavigationBarItem(
 fun FloatingNavigationBar(
     modifier: Modifier = Modifier,
     color: Color = COUITheme.colorScheme.surfaceContainer,
-    cornerRadius: Dp = FloatingToolbarDefaults.CornerRadius,
+    cornerRadius: Dp = FloatingNavigationBarDefaults.CornerRadius,
     horizontalAlignment: Alignment.Horizontal = CenterHorizontally,
     horizontalOutSidePadding: Dp = FloatingNavigationBarDefaults.HorizontalOutSidePadding,
     shadowElevation: Dp = FloatingNavigationBarDefaults.ShadowElevation,
@@ -357,7 +359,7 @@ fun FloatingNavigationBar(
                             .squircleBackground(
                                 color = COUITheme.colorScheme.dividerLine,
                                 cornerRadius = cornerRadius,
-                                weight = COUIRoundCorner.CapsuleWeight,
+                                weight = COUIRoundCorner.UnspecifiedWeight,
                             )
                             .padding(0.75.dp)
                     } else {
@@ -378,7 +380,7 @@ fun FloatingNavigationBar(
                         Modifier
                     },
                 )
-                .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.CapsuleWeight)
+                .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                 .then(modifier)
                 .padding(horizontal = FloatingNavigationBarDefaults.HorizontalPadding)
                 .align(horizontalAlignment)
@@ -486,6 +488,13 @@ object NavigationBarDefaults {
 
 /** Contains default values used by [FloatingNavigationBar] and [FloatingNavigationBarItem]. */
 object FloatingNavigationBarDefaults {
+    /**
+     * The default corner radius: [COUIRoundCorner.Full], which rounds the bar fully at any height.
+     * COUI 17 `BaseBottomFloatingMenuView.updateSmoothRoundPath` takes half the content height and
+     * calls `addSmoothRoundRect` without a weight, which draws the soft capsule.
+     */
+    val CornerRadius = COUIRoundCorner.Full
+
     /** The default horizontal outside padding. */
     val HorizontalOutSidePadding = 36.dp
 

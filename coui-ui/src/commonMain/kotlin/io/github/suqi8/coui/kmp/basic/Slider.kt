@@ -41,7 +41,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -77,6 +76,10 @@ import io.github.suqi8.coui.kmp.effect.SpotLightType
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
+import io.github.suqi8.coui.kmp.squircle.drawSquircleRect
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -1018,6 +1021,9 @@ private fun SliderTrack(
     modifier: Modifier = Modifier,
     effects: SliderTrackEffects? = null,
 ) {
+    // COUISeekBarCore draws the background and the progress as smooth round rects of radius
+    // height / 2 without a weight (drawInactiveTrack / StandardProgressRenderer): the soft capsule.
+    val squircleEnabled = isSquircleEnabled()
     Canvas(modifier = modifier) {
         val barHeight = size.height
         val barWidth = size.width
@@ -1035,11 +1041,13 @@ private fun SliderTrack(
             val thumbCenterY = capInset + effectiveFraction * availableHeight
             val centerX = barWidth / 2f
 
-            drawRoundRect(
+            drawSquircleRect(
                 color = backgroundColor,
+                cornerRadius = backgroundWidth / 2f,
                 topLeft = Offset(centerX - backgroundWidth / 2f, capInset - backgroundWidth / 2f),
                 size = Size(backgroundWidth, availableHeight + backgroundWidth),
-                cornerRadius = CornerRadius(backgroundWidth / 2f),
+                weight = COUIRoundCorner.UnspecifiedWeight,
+                squircleEnabled = squircleEnabled,
             )
 
             val halfTrack = trackWidth / 2f
@@ -1085,22 +1093,26 @@ private fun SliderTrack(
             val backgroundTopLeft = Offset(capInset - backgroundHeight / 2f, centerY - backgroundHeight / 2f)
             val backgroundSize = Size(availableWidth + backgroundHeight, backgroundHeight)
 
-            drawRoundRect(
+            drawSquircleRect(
                 color = backgroundColor,
+                cornerRadius = backgroundHeight / 2f,
                 topLeft = backgroundTopLeft,
                 size = backgroundSize,
-                cornerRadius = CornerRadius(backgroundHeight / 2f),
+                weight = COUIRoundCorner.UnspecifiedWeight,
+                squircleEnabled = squircleEnabled,
             )
 
             val halfTrack = trackHeight / 2f
             val progressLeft = if (reverseDirection) thumbCenterX - halfTrack else capInset - halfTrack
             val progressRight = if (reverseDirection) barWidth - capInset + halfTrack else thumbCenterX + halfTrack
             val progressSize = Size((progressRight - progressLeft).coerceAtLeast(0f), trackHeight)
-            drawRoundRect(
+            drawSquircleRect(
                 color = foregroundColor,
+                cornerRadius = halfTrack,
                 topLeft = Offset(progressLeft, centerY - halfTrack),
                 size = progressSize,
-                cornerRadius = CornerRadius(halfTrack),
+                weight = COUIRoundCorner.UnspecifiedWeight,
+                squircleEnabled = squircleEnabled,
             )
 
             if (showKeyPoints && stepFractions.isNotEmpty()) {
@@ -1145,16 +1157,18 @@ private fun SliderTrack(
             // progress ran into.
             val glitterAlpha = sliderGlitterAlpha(effects.motion.glitter.value)
             if (glitterAlpha > 0f && progressSize.width > 0f) {
-                drawRoundRect(
+                drawSquircleRect(
                     brush = Brush.horizontalGradient(
                         colors = if (reverseDirection) GlitterColorsReversed else GlitterColors,
                         startX = progressLeft,
                         endX = progressRight,
                     ),
+                    cornerRadius = halfTrack,
                     topLeft = Offset(progressLeft, centerY - halfTrack),
                     size = progressSize,
-                    cornerRadius = CornerRadius(halfTrack),
+                    weight = COUIRoundCorner.UnspecifiedWeight,
                     alpha = glitterAlpha,
+                    squircleEnabled = squircleEnabled,
                 )
             }
 
@@ -1172,7 +1186,12 @@ private fun SliderTrack(
                     intensity = SpotLightType.OpaqueMedium1.endIntensity(effects.isDark) * glow,
                 )
                 val clip = Path().apply {
-                    addRoundRect(RoundRect(Rect(backgroundTopLeft, backgroundSize), CornerRadius(backgroundHeight / 2f)))
+                    addSquircleRect(
+                        rect = Rect(backgroundTopLeft, backgroundSize),
+                        cornerRadius = backgroundHeight / 2f,
+                        weight = COUIRoundCorner.UnspecifiedWeight,
+                        squircleEnabled = squircleEnabled,
+                    )
                 }
                 clipPath(clip) {
                     drawRect(
@@ -1210,6 +1229,7 @@ private fun RangeSliderTrack(
     isRtl: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val squircleEnabled = isSquircleEnabled()
     Canvas(modifier = modifier) {
         val barHeight = size.height
         val barWidth = size.width
@@ -1230,21 +1250,25 @@ private fun RangeSliderTrack(
 
         val centerY = barHeight / 2f
 
-        drawRoundRect(
+        drawSquircleRect(
             color = backgroundColor,
+            cornerRadius = backgroundHeight / 2f,
             topLeft = Offset(capInset - backgroundHeight / 2f, centerY - backgroundHeight / 2f),
             size = Size(availableWidth + backgroundHeight, backgroundHeight),
-            cornerRadius = CornerRadius(backgroundHeight / 2f),
+            weight = COUIRoundCorner.UnspecifiedWeight,
+            squircleEnabled = squircleEnabled,
         )
 
         val halfTrack = trackHeight / 2f
         val rangeLeft = min(startX, endX)
         val rangeRight = max(startX, endX)
-        drawRoundRect(
+        drawSquircleRect(
             color = foregroundColor,
+            cornerRadius = halfTrack,
             topLeft = Offset(rangeLeft - halfTrack, centerY - halfTrack),
             size = Size(rangeRight - rangeLeft + trackHeight, trackHeight),
-            cornerRadius = CornerRadius(halfTrack),
+            weight = COUIRoundCorner.UnspecifiedWeight,
+            squircleEnabled = squircleEnabled,
         )
 
         if (showKeyPoints && stepFractions.isNotEmpty()) {

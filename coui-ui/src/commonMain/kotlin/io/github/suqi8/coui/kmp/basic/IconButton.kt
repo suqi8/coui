@@ -80,8 +80,9 @@ fun IconButton(
         }
     }
 
-    // ToolbarMaterialEffectDelegate: a wider-than-tall button is a capsule (soft capsule weight 1.0),
-    // a square one a circle (weight 2.0).
+    // ToolbarMaterialEffectDelegate: a wider-than-tall button is a smooth round rect without a weight
+    // (the soft capsule when fully rounded, default_g2_weight 2.45 otherwise), a square one a plain
+    // circle (weight 2.0).
     var isCapsule by remember { mutableStateOf(false) }
 
     Box(
@@ -97,7 +98,7 @@ fun IconButton(
             .squircleSurface(
                 color = backgroundColor,
                 cornerRadius = cornerRadius,
-                weight = if (isCapsule) COUIRoundCorner.CapsuleWeight else COUIRoundCorner.CircularWeight,
+                weight = if (isCapsule) COUIRoundCorner.UnspecifiedWeight else COUIRoundCorner.CircularWeight,
             )
             .then(clickableModifier),
         contentAlignment = Alignment.Center,

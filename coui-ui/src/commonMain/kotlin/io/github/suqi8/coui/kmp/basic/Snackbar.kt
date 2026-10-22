@@ -67,6 +67,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.SearchCleanup
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
@@ -383,9 +386,10 @@ fun SnackbarHost(
  * @param modifier modifier to be applied to the [Snackbar]
  * @param icon optional leading icon, mirroring COUISnackBar's iv_snack_bar_icon slot. Pass it
  *   through [SnackbarHost]'s `content` lambda: `SnackbarHost(state) { Snackbar(it, icon = { ... }) }`.
- * @param cornerRadius corner radius of the [Snackbar] in the vertical (multi-line) layout
+ * @param cornerRadius corner radius of the [Snackbar] in the vertical (multi-line) layout, drawn at
+ *   the ColorOS default smoothing weight ([COUIRoundCorner.UnspecifiedWeight])
  * @param singleLineCornerRadius corner radius of the [Snackbar] in the single-line layout;
- *   [Dp.Unspecified] (the default) rounds it at half its height, the COUI capsule
+ *   [Dp.Unspecified] (the default) rounds it at half its height, the COUI 17 soft capsule
  * @param colors colors of the [Snackbar]
  * @param insideMargin margin inside the [Snackbar]; in the single-line layout the end margin is
  *   replaced by a 4dp action margin when the action button is the trailing element
@@ -406,10 +410,20 @@ fun Snackbar(
     // COUISnackBar.adjustLayout: the horizontal layout keeps the capsule ("default") radius, the
     // vertical one falls back to couiRoundCornerL. The layout below reports which one it chose.
     var isVertical by remember(visuals) { mutableStateOf(false) }
-    val shape = when {
-        isVertical -> RoundedCornerShape(cornerRadius)
-        singleLineCornerRadius == Dp.Unspecified -> CircleShape
-        else -> RoundedCornerShape(singleLineCornerRadius)
+    // COUISnackBar outline on ColorOS 17: setSmoothRoundRect(rect, radius) without a weight, the
+    // soft capsule at half the height and default_g2_weight for couiRoundCornerL.
+    val squircleEnabled = isSquircleEnabled()
+    val radius = when {
+        isVertical -> cornerRadius
+        singleLineCornerRadius == Dp.Unspecified -> COUIRoundCorner.Full
+        else -> singleLineCornerRadius
+    }
+    val shape = remember(radius, squircleEnabled) {
+        when {
+            squircleEnabled -> SquircleShape(radius, COUIRoundCorner.UnspecifiedWeight)
+            radius == COUIRoundCorner.Full -> CircleShape
+            else -> RoundedCornerShape(radius)
+        }
     }
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
 

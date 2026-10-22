@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.theme
 
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.squircle.SquircleDefaults
 
 /**
  * The COUI corner radius steps (`coui_round_corner_*` dimens, the `couiRoundCorner*` theme attributes).
@@ -35,6 +36,23 @@ object COUIRoundCorner {
      * draws it as [CircularWeight].
      */
     val CapsuleWeight = 1f
+
+    /**
+     * The weight ColorOS 17 gives a smooth round rect that is not fully rounded when the caller
+     * passes no weight: 2.45, the fallback of the `persist.sys.oplus.default_g2_weight` system
+     * property (`OplusSmoothRoundedManager.DEFAULT_G2_WEIGHT`).
+     */
+    val DefaultG2Weight = SquircleDefaults.DefaultG2Weight
+
+    /**
+     * The weight of the COUI call sites that leave the weight out (`addSmoothRoundRect(rect, rx, ry,
+     * dir)` / `setSmoothRoundRect(rect, radius)`): it resolves per rect to [CapsuleWeight] when the
+     * rect is fully rounded and to [DefaultG2Weight] otherwise, so a capsule keeps the soft capsule
+     * while a customised, smaller radius draws like ColorOS does. Used by chips, floating toolbars
+     * and navigation bars, capsule icon buttons, switch and slider tracks, segmented controls,
+     * snackbars and the install progress button.
+     */
+    val UnspecifiedWeight = SquircleDefaults.UnspecifiedWeight
 
     /** COUI coui_round_corner_full (couiRoundCornerFULL): a radius that rounds any control fully. */
     val Full = 72.dp
