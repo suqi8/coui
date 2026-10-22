@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTouchInput
@@ -115,9 +116,9 @@ class SliderTest {
         mainClock.advanceTimeBy(1000)
         val held = onRoot().captureToImage().toPixelMap()
 
-        // 2dp above the 20dp track: only the 28dp enlarged background reaches it.
+        // 2dp above the 20dp track, centred in the 28dp layout: only the enlarged background reaches it.
         val x = ((16 + 150) * density.density).toInt()
-        val y = ((16 - 2) * density.density).toInt()
+        val y = ((16 + 4 - 2) * density.density).toInt()
         assertTrue(rest[x, y] != held[x, y], "pressing must grow the track: ${rest[x, y]} vs ${held[x, y]}")
     }
 
@@ -138,7 +139,7 @@ class SliderTest {
         mainClock.autoAdvance = false
         // The thumb centre: 16dp padding + 14dp cap inset + half of the 172dp track.
         val x = ((16 + 14 + 86) * density.density).toInt()
-        val y = ((16 + 10) * density.density).toInt()
+        val y = ((16 + 14) * density.density).toInt()
         val rest = onRoot().captureToImage().toPixelMap()[x, y]
 
         onNodeWithTag("slider").performTouchInput { down(Offset((14 + 86).dp.toPx(), centerY)) }
@@ -147,5 +148,40 @@ class SliderTest {
 
         assertEquals(1f, rest.red, 0.01f)
         assertTrue(held.red < 0.99f, "the pressed glass thumb must let the progress show through: $held")
+    }
+
+    @Test
+    fun theLayoutReservesTheEnlargedTrackHeight() = runComposeUiTest {
+        setContent {
+            COUITheme {
+                Slider(value = 0.5f, onValueChange = {}, modifier = Modifier.width(200.dp).testTag("slider"))
+            }
+        }
+        val bounds = onNodeWithTag("slider").getUnclippedBoundsInRoot()
+        assertEquals(28f, (bounds.bottom - bounds.top).value, 0.5f)
+    }
+
+    @Test
+    fun draggingPullsTheWholeSliderOnTheRubberBand() = runComposeUiTest {
+        setContent {
+            COUITheme {
+                Box(Modifier.padding(16.dp)) {
+                    Slider(value = 0.5f, onValueChange = {}, modifier = Modifier.width(300.dp).testTag("slider"))
+                }
+            }
+        }
+        mainClock.autoAdvance = false
+        onNodeWithTag("slider").performTouchInput {
+            down(Offset(150.dp.toPx(), centerY))
+            moveBy(Offset(100.dp.toPx(), 0f))
+        }
+        mainClock.advanceTimeBy(1000)
+        val dragged = onNodeWithTag("slider").getUnclippedBoundsInRoot()
+        // TouchMotionRubberBand: (1 - 1 / (0.05 * 100 / 28 + 1)) * 28dp = 4.2dp.
+        assertEquals(16f + 4.2f, dragged.left.value, 0.5f)
+
+        onNodeWithTag("slider").performTouchInput { up() }
+        mainClock.advanceTimeBy(3000)
+        assertEquals(16f, onNodeWithTag("slider").getUnclippedBoundsInRoot().left.value, 0.1f)
     }
 }

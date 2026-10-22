@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -49,6 +50,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -59,6 +61,7 @@ import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -73,6 +76,7 @@ import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.effect.SpotLightShader
 import io.github.suqi8.coui.kmp.effect.SpotLightState
 import io.github.suqi8.coui.kmp.effect.SpotLightType
+import io.github.suqi8.coui.kmp.effect.TouchMotionState
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
@@ -105,6 +109,12 @@ import kotlin.math.sqrt
  * a touch spotlight follows the finger, the effects ColorOS 17 adds with its system material
  * switches on, as they are on real devices.
  *
+ * Like `COUISeekBarCore.onMeasure`, the slider lays out at 1.4x of its track [height] (28dp by
+ * default), so the pressed track fits inside its bounds; touches still register within Compose's
+ * minimum touch target around it. While a finger drags, the whole slider follows it horizontally on
+ * the COUI 17 touch-motion rubber band (`TouchMotionEffectRenderer`: up to 28dp, curve ratio 0.05)
+ * and springs back on release.
+ *
  * @param value The current value of the [Slider]. If outside of [valueRange] provided, value will be coerced to this range.
  * @param onValueChange The callback to be called when the value changes.
  * @param modifier The modifier to be applied to the [Slider].
@@ -119,7 +129,7 @@ import kotlin.math.sqrt
  * @param reverseDirection Controls the direction of this slider. When false (default), slider increases from left to right.
  *   When true, slider increases from right to left (useful for RTL layouts or custom direction requirements).
  * @param height The rest height of the [Slider] track. While pressed, the inactive track
- *   enlarges to 1.4x of this height and is drawn beyond the layout bounds, following COUI behavior.
+ *   enlarges to 1.4x of this height; the slider reserves that height in its layout.
  * @param colors The [SliderColors] of the [Slider].
  * @param hapticEffect The haptic effect of the [Slider].
  * @param showKeyPoints Whether to show the key points (step indicators) on the slider. Only works when [keyPoints] is not null.
@@ -163,11 +173,19 @@ fun Slider(
     var isDragging by remember { mutableStateOf(false) }
     var isHoveringThumb by remember { mutableStateOf(false) }
     var layoutWidth by remember { mutableIntStateOf(0) }
-    var layoutHeight by remember { mutableIntStateOf(0) }
+    var containerHeight by remember { mutableIntStateOf(0) }
+    // The geometry (cap inset, thumb hit radius) follows the rest track height; the layout
+    // itself is TrackEnlargeScale times taller, like COUISeekBarCore.onMeasure.
+    val trackHeight by rememberUpdatedState(with(LocalDensity.current) { height.roundToPx() })
     val hapticState = remember { SliderHapticState() }
     val interactionSource = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
     val motion = remember { SliderMotionState() }
+    // TouchMotionEffectRenderer: only the rubber-band translation reaches the view (translateX).
+    val touchMotion = remember { TouchMotionState().apply { deformEnabled = false } }
+    LaunchedEffect(enabled) {
+        if (!enabled) touchMotion.translationX.animateTo(0f)
+    }
 
     val coercedValue = value.coerceIn(valueRange.start, valueRange.endInclusive)
 
@@ -232,16 +250,22 @@ fun Slider(
     }
 
     val currentLayoutWidth = layoutWidth
-    val currentLayoutHeight = layoutHeight
+    val currentTrackHeight = trackHeight
 
     Box(
-        modifier = modifier
+        modifier = Modifier
+            // TouchMotionEffectRenderer: the whole seek bar follows the finger on the rubber band.
+            .graphicsLayer { translationX = touchMotion.translationX.value }
+            .then(modifier)
+            .heightIn(min = height * TrackEnlargeScale)
             .then(
                 if (enabled) {
                     Modifier
                         .onSizeChanged {
                             layoutWidth = it.width
-                            layoutHeight = it.height
+                            containerHeight = it.height
+                            touchMotion.width = it.width.toFloat()
+                            touchMotion.height = it.height.toFloat()
                         }
                         .pointerInput(effectiveReverseDirection, valueRange) {
                             awaitPointerEventScope {
@@ -257,7 +281,7 @@ fun Slider(
                                         continue
                                     }
 
-                                    val capInset = currentLayoutHeight * TrackCapInsetRatio
+                                    val capInset = currentTrackHeight * TrackCapInsetRatio
                                     val availableWidth = (currentLayoutWidth - 2f * capInset).coerceAtLeast(0f)
                                     val hitRadius = capInset
 
@@ -279,19 +303,23 @@ fun Slider(
                                 onPress = { position, uptimeMillis ->
                                     if (motion.stopFling()) onValueChangeFinishedState?.invoke()
                                     motion.press(position, uptimeMillis)
+                                    with(touchMotion) { down(position) }
                                     if (spotLightEnabled) scope.launch { motion.spotLight.glow(position) }
                                 },
                                 onMove = { position, uptimeMillis ->
                                     motion.velocityTracker.addPosition(uptimeMillis, position)
+                                    with(touchMotion) { move(position, scope) }
                                     if (spotLightEnabled) scope.launch { motion.spotLight.follow(position) }
                                 },
                                 onRelease = { tapPosition ->
                                     motion.isPressed = false
+                                    val velocity = motion.velocityTracker.calculateVelocity()
+                                    with(touchMotion) { release(velocity.x, velocity.y, scope) }
                                     scope.launch { motion.spotLight.extinguish() }
                                     if (tapPosition != null) {
                                         // COUISeekBarAdvanced.startClickTransitionAnim: the progress
                                         // springs to the tapped position.
-                                        val visualFraction = horizontalVisualFraction(tapPosition.x, layoutWidth, layoutHeight)
+                                        val visualFraction = horizontalVisualFraction(tapPosition.x, layoutWidth, trackHeight)
                                         val fractionForValue = if (currentReverse) 1f - visualFraction else visualFraction
                                         onValueChangeState(currentFractionToValue(fractionForValue))
                                         onValueChangeFinishedState?.invoke()
@@ -307,7 +335,7 @@ fun Slider(
                             orientation = Orientation.Horizontal,
                             state = rememberDraggableState { dragAmount ->
                                 dragOffset += dragAmount
-                                val visualFraction = horizontalVisualFraction(dragOffset, layoutWidth, layoutHeight)
+                                val visualFraction = horizontalVisualFraction(dragOffset, layoutWidth, trackHeight)
                                 val fractionForValue = if (effectiveReverseDirection) 1f - visualFraction else visualFraction
                                 val calculatedValue = fractionToValue(fractionForValue)
                                 reportValue(calculatedValue)
@@ -320,7 +348,7 @@ fun Slider(
                             onDragStarted = { offset ->
                                 isDragging = true
                                 dragOffset = offset.x
-                                val visualFraction = horizontalVisualFraction(offset.x, layoutWidth, layoutHeight)
+                                val visualFraction = horizontalVisualFraction(offset.x, layoutWidth, trackHeight)
                                 val fractionForValue = if (effectiveReverseDirection) 1f - visualFraction else visualFraction
                                 val calculatedValue = fractionToValue(fractionForValue)
                                 onValueChangeState(calculatedValue)
@@ -328,7 +356,7 @@ fun Slider(
                             },
                             onDragStopped = { velocity ->
                                 isDragging = false
-                                val capInset = layoutHeight * TrackCapInsetRatio
+                                val capInset = trackHeight * TrackCapInsetRatio
                                 val trackLength = layoutWidth - 2f * capInset
                                 // COUISectionSeekBar turns the release fling off (couiSeekBarPhysicsEnable = false).
                                 if (steps == 0 && trackLength > 0f && abs(velocity) >= FlingMinVelocity) {
@@ -397,7 +425,7 @@ fun Slider(
                 glass = material,
                 spotLightShader = spotLightShader,
                 isDark = isDark,
-                containerHeight = layoutHeight,
+                containerHeight = containerHeight,
             ),
         )
     }
@@ -641,7 +669,7 @@ fun VerticalSlider(
  * @param steps If positive, specifies the amount of discrete allowable values between the endpoints of [valueRange].
  * @param onValueChangeFinished Lambda to be invoked when value change has ended.
  * @param height The rest height of the [RangeSlider] track. While pressed, the inactive track
- *   enlarges to 1.4x of this height and is drawn beyond the layout bounds, following COUI behavior.
+ *   enlarges to 1.4x of this height; the range slider reserves that height in its layout.
  * @param colors The [SliderColors] of the [RangeSlider].
  * @param hapticEffect The haptic effect of the [RangeSlider].
  * @param showKeyPoints Whether to show the key points (step indicators) on the slider. Only works when [keyPoints] is not null.
@@ -685,7 +713,9 @@ fun RangeSlider(
     val interactionSource = remember { MutableInteractionSource() }
     var lastDraggedIsStart by remember { mutableStateOf(true) }
     var layoutWidth by remember { mutableIntStateOf(0) }
-    var layoutHeight by remember { mutableIntStateOf(0) }
+    // The geometry (cap inset, thumb hit radius) follows the rest track height; the layout
+    // itself is TrackEnlargeScale times taller, like COUISeekBarCore.onMeasure.
+    val trackHeight by rememberUpdatedState(with(LocalDensity.current) { height.roundToPx() })
     var isPressed by remember { mutableStateOf(false) }
 
     var currentStartValue by remember { mutableFloatStateOf(value.start) }
@@ -737,16 +767,16 @@ fun RangeSlider(
     }
 
     val currentLayoutWidth = layoutWidth
-    val currentLayoutHeight = layoutHeight
+    val currentTrackHeight = trackHeight
 
     Box(
         modifier = modifier
+            .heightIn(min = height * TrackEnlargeScale)
             .then(
                 if (enabled) {
                     Modifier
                         .onSizeChanged {
                             layoutWidth = it.width
-                            layoutHeight = it.height
                         }
                         .pointerInput(isRtl, valueRange) {
                             awaitPointerEventScope {
@@ -763,7 +793,7 @@ fun RangeSlider(
                                         continue
                                     }
 
-                                    val capInset = currentLayoutHeight * TrackCapInsetRatio
+                                    val capInset = currentTrackHeight * TrackCapInsetRatio
                                     val availableWidth = (currentLayoutWidth - 2f * capInset).coerceAtLeast(0f)
                                     val hitRadius = capInset
 
@@ -802,7 +832,7 @@ fun RangeSlider(
                                 if (isDraggingStart) {
                                     lastDraggedIsStart = true
                                     val tentativeStartOffset = startDragOffset + dragAmount
-                                    val visualFractionStart = horizontalVisualFraction(tentativeStartOffset, layoutWidth, layoutHeight)
+                                    val visualFractionStart = horizontalVisualFraction(tentativeStartOffset, layoutWidth, trackHeight)
                                     val fractionForValue = if (isRtl) 1f - visualFractionStart else visualFractionStart
                                     val newStart = fractionToValueRange(fractionForValue).coerceAtMost(currentEndValue)
                                     val crossCondition = if (isRtl) dragAmount < 0f else dragAmount > 0f
@@ -815,7 +845,7 @@ fun RangeSlider(
                                         hapticState.resetEnd(currentEndValue)
                                         hapticState.inheritEndKeyPoint()
 
-                                        val visualFractionEnd = horizontalVisualFraction(endDragOffset, layoutWidth, layoutHeight)
+                                        val visualFractionEnd = horizontalVisualFraction(endDragOffset, layoutWidth, trackHeight)
                                         val fractionForValueEnd = if (isRtl) 1f - visualFractionEnd else visualFractionEnd
                                         val newEnd = fractionToValueRange(fractionForValueEnd).coerceAtLeast(currentStartValue)
                                         currentEndValue = newEnd
@@ -844,7 +874,7 @@ fun RangeSlider(
                                 } else if (isDraggingEnd) {
                                     lastDraggedIsStart = false
                                     val tentativeEndOffset = endDragOffset + dragAmount
-                                    val visualFractionEnd = horizontalVisualFraction(tentativeEndOffset, layoutWidth, layoutHeight)
+                                    val visualFractionEnd = horizontalVisualFraction(tentativeEndOffset, layoutWidth, trackHeight)
                                     val fractionForValue = if (isRtl) 1f - visualFractionEnd else visualFractionEnd
                                     val newEnd = fractionToValueRange(fractionForValue).coerceAtLeast(currentStartValue)
                                     val crossCondition = if (isRtl) dragAmount > 0f else dragAmount < 0f
@@ -856,7 +886,7 @@ fun RangeSlider(
                                         hapticState.resetStart(currentStartValue)
                                         hapticState.inheritStartKeyPoint()
 
-                                        val visualFractionStart = horizontalVisualFraction(startDragOffset, layoutWidth, layoutHeight)
+                                        val visualFractionStart = horizontalVisualFraction(startDragOffset, layoutWidth, trackHeight)
                                         val fractionForValueStart = if (isRtl) 1f - visualFractionStart else visualFractionStart
                                         val newStart = fractionToValueRange(fractionForValueStart).coerceAtMost(currentEndValue)
                                         currentStartValue = newStart
@@ -885,7 +915,7 @@ fun RangeSlider(
                                 }
                             },
                             onDragStarted = { offset ->
-                                val capInset = layoutHeight * TrackCapInsetRatio
+                                val capInset = trackHeight * TrackCapInsetRatio
                                 val availableWidth = (layoutWidth - 2f * capInset).coerceAtLeast(0f)
                                 val startFraction =
                                     (currentStartValue - valueRange.start) / (valueRange.endInclusive - valueRange.start)

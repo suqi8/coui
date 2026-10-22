@@ -87,7 +87,9 @@ Slider(
 - 按下即放大：轨道从 20dp 长到 28dp，拇指从 6dp 长到 8dp 并带轻微回弹（response 0.5 的弹簧，拇指放大 bounce 0.3）。如果抬手时轨道还没长到一半，会等长到一半再收回，快速轻点也能看到反馈。
 - 轻点轨道时进度以弹簧（response 0.3）跳到点击位置；拖动时进度跟手（response 0.15）。
 - 快速松手（至少 100px/s）时进度会继续滑行，按 15/s 的线性阻尼减速。设置了 `steps` 的滑块不滑行，与 `COUISectionSeekBar` 一致。
-- 拖动或滑行撞到最大值时，进度条上会闪过一道白色渐变高光（`GlitterEffectRenderer`）。
+- 拖动或滑行撞到最大值时，进度条上会闪过一道白色渐变高光（`GlitterEffectRenderer`）。滑行到两端时直接停住、不越界回弹：`FlingBehavior` 的边界弹簧被钳制在轨道内（`setFlingScale`）。
+- 拖动时整个滑块会沿 COUI 17 触控橡皮筋横向跟手（`TouchMotionEffectRenderer`：`(1 - 1 / (0.05·|dx| / 28dp + 1)) · 28dp`），松手后弹回（response 0.45、bounce 0.65）。
+- 布局高度为轨道高度的 1.4 倍（默认 28dp，对应 `COUISeekBarCore.onMeasure`），放大后的轨道不再画出边界；触摸命中区按 Compose 最小触控目标（Android 上 48dp）向外扩展。
 
 `VerticalSlider` 与 `RangeSlider` 共享按下放大、弹簧参数和颜色；滑行、触边高光与材质效果仅 `Slider` 提供。
 
@@ -119,7 +121,7 @@ Slider(
 | steps                 | Int                               | 离散值的数量。如果为 0，滑块将连续运行。必须非负                                                                 | 0                                  | 否       |
 | onValueChangeFinished | (() -> Unit)?                     | 值变化结束时调用                                                                                                 | null                               | 否       |
 | reverseDirection      | Boolean                           | 控制滑块的方向。默认 false，方向跟随 LayoutDirection (LTR 时从左到右，RTL 时从右到左)。为 true 时反转方向。                                      | false                              | 否       |
-| height                | Dp                                | 滑块的高度                                                                                                       | SliderDefaults.MinHeight           | 否       |
+| height                | Dp                                | 轨道的静止高度；按下时放大到 1.4 倍，布局按 1.4 倍高度预留                                                       | SliderDefaults.MinHeight           | 否       |
 | colors                | SliderColors                      | 滑块的颜色配置                                                                                                   | SliderDefaults.sliderColors()      | 否       |
 | hapticEffect          | SliderDefaults.SliderHapticEffect | 滑块的触感反馈类型                                                                                               | SliderDefaults.DefaultHapticEffect | 否       |
 | showKeyPoints         | Boolean                           | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | false                              | 否       |
@@ -158,7 +160,7 @@ Slider(
 | valueRange            | ClosedFloatingPointRange\<Float\>           | Range Slider 值可以采用的范围                                                                                    | 0f..1f                             | 否       |
 | steps                 | Int                                         | 离散值的数量                                                                                                     | 0                                  | 否       |
 | onValueChangeFinished | (() -> Unit)?                               | 值变化结束时调用                                                                                                 | null                               | 否       |
-| height                | Dp                                          | 滑块的高度                                                                                                       | SliderDefaults.MinHeight           | 否       |
+| height                | Dp                                          | 轨道的静止高度；按下时放大到 1.4 倍，布局按 1.4 倍高度预留                                                                                                       | SliderDefaults.MinHeight           | 否       |
 | colors                | SliderColors                                | 滑块的颜色配置                                                                                                   | SliderDefaults.sliderColors()      | 否       |
 | hapticEffect          | SliderDefaults.SliderHapticEffect           | 滑块的触感反馈类型                                                                                               | SliderDefaults.DefaultHapticEffect | 否       |
 | showKeyPoints         | Boolean                                     | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | false                              | 否       |

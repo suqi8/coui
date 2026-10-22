@@ -271,6 +271,12 @@ internal class TouchMotionState {
     val translationX = Animatable(0f, visibilityThreshold = TouchMotion.RubberMinimumVisibleChange)
     val translationY = Animatable(0f, visibilityThreshold = TouchMotion.RubberMinimumVisibleChange)
 
+    /**
+     * Whether the drag deforms the element. Hosts that only apply the translation (the COUI 17
+     * seek bar, `TouchMotionEffectRenderer`) turn it off to skip the unused scale springs.
+     */
+    var deformEnabled = true
+
     /** Whether a touch gesture holds the element (the press scale stays in even out of bounds). */
     var touching by mutableStateOf(false)
 
@@ -336,7 +342,7 @@ internal class TouchMotionState {
             scope.launch { translationX.animateTo(tx, spec) }
             scope.launch { translationY.animateTo(ty, spec) }
         }
-        if (abs(deform.x) >= TouchMotion.DeadZonePx || abs(deform.y) >= TouchMotion.DeadZonePx) {
+        if (deformEnabled && (abs(deform.x) >= TouchMotion.DeadZonePx || abs(deform.y) >= TouchMotion.DeadZonePx)) {
             val deformSpec = TouchMotion.spring(TouchMotion.DragSpringResponse, TouchMotion.DragSpringBounce, TouchMotion.DeformMinimumVisibleChange)
             val (sx, sy) = TouchMotion.deformScale(deform.x, deform.y, maxDeform(), TouchMotion.deformMaxScale(width, height))
             scope.launch { scaleX.animateTo(sx, deformSpec) }
