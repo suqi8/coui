@@ -79,6 +79,7 @@ fun AdaptiveTopAppBar(
     scrollBehavior: ScrollBehavior,
     subtitle: String = "",
     color: Color = COUITheme.colorScheme.surface,
+    titleColor: Color = COUITheme.colorScheme.onSurface,
     backdrop: LayerBackdrop? = null,
     blurActive: Boolean = false,
     navigationIcon: @Composable () -> Unit = {},
@@ -106,6 +107,7 @@ fun AdaptiveTopAppBar(
             title = title,
             subtitle = subtitle,
             color = color,
+            titleColor = titleColor,
             scrollBehavior = scrollBehavior,
             defaultWindowInsetsPadding = false,
             // COUI 17 suppresses the bar divider while the material blur is on
@@ -121,6 +123,7 @@ fun AdaptiveTopAppBar(
             title = title,
             subtitle = subtitle,
             color = color,
+            titleColor = titleColor,
             scrollBehavior = scrollBehavior,
             // COUI 17 suppresses the bar divider while the material blur is on
             // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).

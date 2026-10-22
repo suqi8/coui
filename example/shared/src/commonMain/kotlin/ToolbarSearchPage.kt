@@ -38,6 +38,7 @@ import io.github.suqi8.coui.kmp.basic.toolbarSearchItem
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import utils.AdaptiveTopAppBar
 import utils.pageContentPadding
 import utils.pageScrollModifiers
@@ -68,8 +69,10 @@ fun ToolbarSearchPage(
         topBar = {
             Box {
                 ToolbarSearchAnchor(state = searchState) {
+                    val titleColor = COUITheme.colorScheme.onSurface
                     AdaptiveTopAppBar(
                         title = "Toolbar search",
+                        titleColor = titleColor.copy(alpha = titleColor.alpha * searchState.toolbarTitleAlpha),
                         showTopAppBar = appState.showTopAppBar,
                         isWideScreen = isWideScreen,
                         scrollBehavior = topAppBarScrollBehavior,
