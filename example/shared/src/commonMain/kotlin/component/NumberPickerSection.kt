@@ -62,4 +62,23 @@ fun LazyListScope.numberPickerSection() {
             }
         }
     }
+    item(key = "numberPickerUnit") {
+        SmallTitle(text = "NumberPicker (unit, tap or hold a side row)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            var weight by remember { mutableIntStateOf(60) }
+            NumberPicker(
+                value = weight,
+                onValueChange = { weight = it },
+                range = 30..150,
+                unit = "kg",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+            )
+        }
+    }
 }
