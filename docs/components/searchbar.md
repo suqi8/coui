@@ -13,7 +13,14 @@ suggestions display.
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.InputField
+import io.github.suqi8.coui.kmp.basic.CancelButton
 ```
+
+On ColorOS 17 the search capsule and the cancel button are both glass capsules with the top-bar
+material (filtered backdrop, shadow, edge lighting, touch spotlight and press/drag motion), falling
+back to the opaque bar colour (`#FAFAFA` light, `#1E1E1E` dark) where the blend modes are missing.
+Entering and leaving the edit state runs on a spring (response 0.5, bounce 0.25): the capsule
+narrows while the cancel button grows in from half size.
 
 ## Basic Usage
 
@@ -52,7 +59,7 @@ SearchBar(
 | modifier         | Modifier                           | Modifier applied to the search bar              | Modifier            | No       |
 | insideMargin     | DpSize                             | Internal padding                                | SearchBarDefaults.InsideMargin | No       |
 | expanded         | Boolean                            | Whether to show search results                  | false               | No       |
-| outsideEndAction | @Composable (() -> Unit)?          | Action component shown on the end when expanded | null                | No       |
+| outsideEndAction | @Composable (() -> Unit)?          | Action shown on the end when expanded, typically a `CancelButton` | null                | No       |
 | content          | @Composable ColumnScope.() -> Unit | Content shown when expanded                     | -                   | Yes      |
 
 ### InputField Properties
@@ -67,6 +74,7 @@ SearchBar(
 | modifier          | Modifier                  | Modifier applied to the input field  | Modifier             | No       |
 | label             | String                    | Placeholder text when empty          | ""                   | No       |
 | enabled           | Boolean                   | Whether search field is enabled      | true                 | No       |
+| material          | Boolean                   | Whether the capsule uses the COUI 17 glass material; `false` draws a flat `backgroundColor` capsule | true | No       |
 | textStyle         | TextStyle?                | Style of text in search box          | null                 | No       |
 | colors            | SearchBarColors           | Colors of the input field            | SearchBarDefaults.searchBarColors() | No       |
 | leadingIcon       | @Composable (() -> Unit)? | Leading icon                         | default search icon  | No       |
@@ -90,21 +98,40 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 | TrailingIconEndPadding     | Dp       | End padding for default clear button               | 4.dp               |
 | TrailingIconTouchTargetSize | Dp      | Circular touch target size of default clear button | 36.dp              |
 | TrailingIconVisualSize     | Dp       | Visual circle size of default clear button         | 18.dp              |
+| CancelHeight               | Dp       | Height of the CancelButton capsule                 | 40.dp              |
+| CancelPaddingHorizontal    | Dp       | Horizontal label padding inside the CancelButton   | 16.dp              |
+| CancelMaxWidth             | Dp       | Maximum width of the CancelButton                  | 152.dp             |
+| CancelFontSize             | TextUnit | Font size of the CancelButton label                | 14.sp              |
 
 #### Methods
 
 | Method Name       | Type            | Description                             |
 | ----------------- | --------------- | --------------------------------------- |
-| searchBarColors() | SearchBarColors | Creates the default input field colors  |
+| searchBarColors() | SearchBarColors | Creates the default input field and cancel button colors |
 
 ### SearchBarColors Class
 
 | Property Name   | Type  | Description                                                                       |
 | --------------- | ----- | --------------------------------------------------------------------------------- |
-| backgroundColor | Color | Capsule background (translucent; secondaryContainer, 8% black / 15% white)        |
+| backgroundColor | Color | Capsule fill without the material, and the colour a collapsing capsule starts from (bar colour, `#FAFAFA` / `#1E1E1E`) |
 | labelColor      | Color | Label (hint) text color (onSurfaceSecondary, 54% black / 54% white)               |
 | iconColor       | Color | Tint of the default leading search icon (onSurfaceSecondary)                      |
 | clearIconColor  | Color | Fill of the default clear button circle (onSurfaceContainerHigh)                  |
+| cancelTextColor | Color | CancelButton label colour (onSurface, 90% black / 90% white)                      |
+
+### CancelButton Properties
+
+`CancelButton` is the COUI 17 functional button: a 40dp glass capsule with a 14sp medium label.
+Inside `outsideEndAction` its label fades in with the edit-state spring.
+
+| Property Name | Type            | Description                                                   | Default Value                       | Required |
+| ------------- | --------------- | ------------------------------------------------------------- | ----------------------------------- | -------- |
+| onClick       | () -> Unit      | Callback when the button is clicked                           | -                                   | Yes      |
+| modifier      | Modifier        | Modifier applied to the button                                | Modifier                            | No       |
+| text          | String          | Label of the button                                           | "Cancel"                            | No       |
+| enabled       | Boolean         | Whether the button responds to clicks                         | true                                | No       |
+| material      | Boolean         | Whether the capsule uses the COUI 17 glass material           | true                                | No       |
+| colors        | SearchBarColors | Label and fallback fill colours                               | SearchBarDefaults.searchBarColors() | No       |
 
 ## Advanced Usage
 
@@ -179,7 +206,6 @@ var searchText by remember { mutableStateOf("") }
 var expanded by remember { mutableStateOf(false) }
 
 SearchBar(
-    modifier = Modifier.padding(horizontal = 12.dp),
     inputField = {
         InputField(
             query = searchText,
@@ -193,19 +219,12 @@ SearchBar(
     expanded = expanded,
     onExpandedChange = { expanded = it },
     outsideEndAction = {
-        // The SearchBar already provides COUI-accurate spacing around this slot.
-        Text(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = null,
-                    indication = null
-                ) {
-                    expanded = false
-                    searchText = ""
-                },
-            text = "Cancel",
-            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium),
-            color = COUITheme.colorScheme.primary
+        // The SearchBar places this slot 12dp after the capsule and animates it in.
+        CancelButton(
+            onClick = {
+                expanded = false
+                searchText = ""
+            }
         )
     }
 ) {
