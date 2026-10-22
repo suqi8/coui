@@ -15,6 +15,7 @@ actual fun rememberCouiHaptic(): (CouiHapticEffect) -> Unit {
             when (effect) {
                 CouiHapticEffect.Switch -> HapticFeedbackType.ToggleOn
                 CouiHapticEffect.Strength -> HapticFeedbackType.SegmentTick
+                CouiHapticEffect.ScrollEdge -> HapticFeedbackType.SegmentTick
             },
         )
     }

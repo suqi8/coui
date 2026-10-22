@@ -33,13 +33,27 @@ internal object COUILayoutGrid {
         return columnWidth * span + spec.gutter * (span - 1)
     }
 
-    private fun spec(windowWidth: Dp, windowHeight: Dp): GridSpec = when {
-        windowWidth < 600.dp -> Compact
-        windowWidth < 840.dp -> Medium
-        windowHeight < 480.dp -> Medium
-        windowHeight < 900.dp -> Expanded
-        windowHeight > windowWidth && windowWidth < 960.dp -> Medium
-        else -> Expanded
+    /**
+     * The COUI screen tier of a window, as `COUIResponsiveUtils.isSmallScreen` /
+     * `isMediumScreen` / `isLargeScreen(context, width, height)` classify it from
+     * `WindowTotalSizeClass.fromWidthAndHeight`: `MediumPortrait`, `MediumLandScape`,
+     * `MediumSquare`, `ExpandedPortrait` and `ExpandedLandPortrait` all count as medium.
+     */
+    fun screenTier(windowWidth: Dp, windowHeight: Dp): ScreenTier = when {
+        windowWidth < 600.dp -> ScreenTier.Small
+        windowWidth < 840.dp -> ScreenTier.Medium
+        windowHeight < 480.dp -> ScreenTier.Medium
+        windowHeight < 900.dp -> ScreenTier.Large
+        windowHeight > windowWidth && windowWidth < 960.dp -> ScreenTier.Medium
+        else -> ScreenTier.Large
+    }
+
+    enum class ScreenTier { Small, Medium, Large }
+
+    private fun spec(windowWidth: Dp, windowHeight: Dp): GridSpec = when (screenTier(windowWidth, windowHeight)) {
+        ScreenTier.Small -> Compact
+        ScreenTier.Medium -> Medium
+        ScreenTier.Large -> Expanded
     }
 
     private class GridSpec(val columnCount: Int, val margin: Dp, val gutter: Dp)

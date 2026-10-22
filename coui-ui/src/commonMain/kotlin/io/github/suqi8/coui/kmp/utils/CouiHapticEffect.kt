@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
  * The numeric values mirror the OEM `performHapticFeedback` constants used by the real COUI widgets:
  * - [Switch]: tap/confirm on toggle (302)
  * - [Strength]: a discrete step/tick used by pickers and steppers (308)
+ * - [ScrollEdge]: a scroll view hitting its edge or released while overscrolled (307)
  */
 enum class CouiHapticEffect {
     /** Switch / button / checkbox toggle confirm (OPLUS 302). */
@@ -18,6 +19,9 @@ enum class CouiHapticEffect {
 
     /** Stepper / picker discrete tick (OPLUS 308). */
     Strength,
+
+    /** COUIHorizontalScrollView edge feedback (OPLUS 307). */
+    ScrollEdge,
 }
 
 /**

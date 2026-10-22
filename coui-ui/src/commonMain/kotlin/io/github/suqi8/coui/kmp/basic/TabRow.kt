@@ -4,14 +4,22 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -23,11 +31,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -41,11 +51,15 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
@@ -63,10 +77,16 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -88,42 +108,76 @@ import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
+import io.github.suqi8.coui.kmp.utils.COUIPhysicalAnimation
+import io.github.suqi8.coui.kmp.utils.COUIReboundOverScroller
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import kotlin.jvm.JvmName
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+
+/**
+ * A tab of a [TabRow].
+ *
+ * @param text The label of the tab. It may be empty for an icon-only tab.
+ * @param icon An optional 24dp icon shown before the label (`COUITab.setIcon`). A row with both an
+ *   icon and a label grows to 72dp.
+ * @param badge An optional red dot after the label (`COUITab` hint red dot): `null` hides it, `0`
+ *   shows a plain dot and a positive value shows that number, see [Badge].
+ * @param enabled Whether the tab can be selected (`COUITabLayout.enableTab`).
+ */
+@Immutable
+data class TabRowItem(
+    val text: String,
+    val icon: ImageVector? = null,
+    val badge: Int? = null,
+    val enabled: Boolean = true,
+)
 
 /**
  * A [TabRow] with COUI style.
  *
- * A port of the ColorOS sliding tab layout (`COUITabLayout` + `COUISlidingTabStrip`): plain text
- * tabs over a 2dp track, with a 2dp neutral indicator as wide as the selected label (at least
- * 32dp) that slides between tabs. The selected label switches to the medium weight instantly while
- * the label colors crossfade with the indicator.
+ * A port of the ColorOS sliding tab layout (`COUITabLayout` + `COUISlidingTabStrip`): text tabs over
+ * a 2dp track, with a 2dp neutral indicator as wide as the selected label (at least 32dp) that
+ * slides between tabs. The selected label switches to the medium weight instantly while the label
+ * colors crossfade with the indicator.
  *
  * Tabs are laid out like `COUISlidingTabStrip.onMeasure`: when the labels fit into the 360dp
  * content width they are spread with equal gaps, when they fit into the row they are centered with
- * [itemSpacing] between them, and otherwise the row scrolls with fading edges.
+ * [itemSpacing] between them, and otherwise the row scrolls with fading edges and the
+ * `COUIHorizontalScrollView` rubber-band overscroll.
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow].
  * @param onTabSelected The callback when a tab is selected.
  * @param modifier The modifier to be applied to the [TabRow].
+ * @param enabled Whether the tabs can be selected; a disabled row greys out its labels and
+ *   indicator (`COUITabLayout.setEnabled`).
  * @param colors The colors of the [TabRow], see [TabRowDefaults.underlineColors].
- * @param minWidth The minimum width of the label slot of a tab.
- * @param maxWidth The maximum width of the label slot of a tab; longer labels are ellipsized.
+ * @param minWidth The minimum width of the content of a tab.
+ * @param maxWidth The maximum width of the content of a tab; longer labels are ellipsized.
  *   [Dp.Unspecified] uses 70% of the row width like COUI, [Dp.Infinity] removes the limit.
- * @param height The height of the [TabRow].
+ * @param height The height of the [TabRow]. [Dp.Unspecified] uses the COUI height: 48dp, or 72dp
+ *   when a tab has both an icon and a label.
  * @param cornerRadius The corner radius of the press mask of a tab.
- * @param itemSpacing The minimum spacing between two labels. [Dp.Unspecified] uses the COUI
- *   responsive value (20dp below a 600dp wide row, 24dp otherwise).
- * @param horizontalMargin The minimum margin before the first and after the last label.
- *   [Dp.Unspecified] uses the COUI responsive value (16dp, 24dp from 600dp, 40dp from 840dp).
- * @param contentAlignment The content alignment of the label in its tab.
+ * @param itemSpacing The minimum spacing between two tabs. [Dp.Unspecified] uses the COUI
+ *   responsive value (20dp on small screens, 24dp otherwise).
+ * @param horizontalMargin The minimum margin before the first and after the last tab.
+ *   [Dp.Unspecified] uses the COUI responsive value (16dp, 24dp or 40dp by screen size).
+ * @param contentAlignment The alignment of the tab content in its tab.
  * @param listState The [LazyListState] to be used for the [TabRow].
  * @param interactionSource The [MutableInteractionSource] to be used for the [TabRow].
  * @param indication The press mask drawn over a tab, clipped to [cornerRadius].
+ * @param pagerState An optional [PagerState] the row follows while the user drags the pager: the
+ *   indicator, the label colors and the scroll position track the page offset like
+ *   `COUITabLayout.setScrollPosition`.
  */
 @Composable
 fun TabRow(
@@ -131,10 +185,11 @@ fun TabRow(
     selectedTabIndex: Int,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     colors: TabRowColors = TabRowDefaults.underlineColors(),
     minWidth: Dp = TabRowDefaults.TabRowMinWidth,
     maxWidth: Dp = TabRowDefaults.TabRowMaxWidth,
-    height: Dp = TabRowDefaults.TabRowHeight,
+    height: Dp = Dp.Unspecified,
     cornerRadius: Dp = TabRowDefaults.TabRowCornerRadius,
     itemSpacing: Dp = Dp.Unspecified,
     horizontalMargin: Dp = Dp.Unspecified,
@@ -142,32 +197,143 @@ fun TabRow(
     listState: LazyListState? = null,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = LocalIndication.current,
+    pagerState: PagerState? = null,
+) {
+    val items = remember(tabs) { tabs.map { TabRowItem(text = it) } }
+    TabRow(
+        items = items,
+        selectedTabIndex = selectedTabIndex,
+        onTabSelected = onTabSelected,
+        modifier = modifier,
+        enabled = enabled,
+        colors = colors,
+        minWidth = minWidth,
+        maxWidth = maxWidth,
+        height = height,
+        cornerRadius = cornerRadius,
+        itemSpacing = itemSpacing,
+        horizontalMargin = horizontalMargin,
+        contentAlignment = contentAlignment,
+        listState = listState,
+        interactionSource = interactionSource,
+        indication = indication,
+        pagerState = pagerState,
+    )
+}
+
+/**
+ * A [TabRow] with COUI style whose tabs may carry an icon, a red dot badge or be disabled.
+ *
+ * See the [TabRow] overload taking `tabs` for the layout and the motion.
+ *
+ * @param items The tabs to be displayed in the [TabRow].
+ * @param selectedTabIndex The selected tab index of the [TabRow].
+ * @param onTabSelected The callback when a tab is selected.
+ * @param modifier The modifier to be applied to the [TabRow].
+ * @param enabled Whether the tabs can be selected; a disabled row greys out its labels and
+ *   indicator (`COUITabLayout.setEnabled`).
+ * @param colors The colors of the [TabRow], see [TabRowDefaults.underlineColors].
+ * @param minWidth The minimum width of the content of a tab.
+ * @param maxWidth The maximum width of the content of a tab; longer labels are ellipsized.
+ *   [Dp.Unspecified] uses 70% of the row width like COUI, [Dp.Infinity] removes the limit.
+ * @param height The height of the [TabRow]. [Dp.Unspecified] uses the COUI height: 48dp, or 72dp
+ *   when a tab has both an icon and a label.
+ * @param cornerRadius The corner radius of the press mask of a tab.
+ * @param itemSpacing The minimum spacing between two tabs. [Dp.Unspecified] uses the COUI
+ *   responsive value (20dp on small screens, 24dp otherwise).
+ * @param horizontalMargin The minimum margin before the first and after the last tab.
+ *   [Dp.Unspecified] uses the COUI responsive value (16dp, 24dp or 40dp by screen size).
+ * @param contentAlignment The alignment of the tab content in its tab.
+ * @param listState The [LazyListState] to be used for the [TabRow].
+ * @param interactionSource The [MutableInteractionSource] to be used for the [TabRow].
+ * @param indication The press mask drawn over a tab, clipped to [cornerRadius].
+ * @param pagerState An optional [PagerState] the row follows while the user drags the pager.
+ */
+@Composable
+@JvmName("TabRowItems")
+fun TabRow(
+    items: List<TabRowItem>,
+    selectedTabIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: TabRowColors = TabRowDefaults.underlineColors(),
+    minWidth: Dp = TabRowDefaults.TabRowMinWidth,
+    maxWidth: Dp = TabRowDefaults.TabRowMaxWidth,
+    height: Dp = Dp.Unspecified,
+    cornerRadius: Dp = TabRowDefaults.TabRowCornerRadius,
+    itemSpacing: Dp = Dp.Unspecified,
+    horizontalMargin: Dp = Dp.Unspecified,
+    contentAlignment: Alignment = Alignment.Center,
+    listState: LazyListState? = null,
+    interactionSource: MutableInteractionSource? = null,
+    indication: Indication? = LocalIndication.current,
+    pagerState: PagerState? = null,
 ) {
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
+    val windowInfo = LocalWindowInfo.current
+    val performHaptic = rememberCouiHaptic()
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = COUITheme.textStyles.body2
     // COUITabLayout: sans-serif-medium for the selected tab, sans-serif for the others.
     val normalStyle = remember(labelStyle) { labelStyle.copy(fontWeight = FontWeight.Normal) }
     val selectedStyle = remember(labelStyle) { labelStyle.copy(fontWeight = FontWeight.Medium) }
     val trackColor = colors.backgroundColor(false)
-    val indicatorColor = colors.backgroundColor(true)
+    val indicatorColor = if (enabled) colors.backgroundColor(true) else colors.disabledIndicatorColor()
     val normalColor = colors.contentColor(false)
     val selectedColor = colors.contentColor(true)
+    val disabledColor = colors.disabledContentColor()
     val resolvedListState = listState ?: rememberLazyListState()
+    val resolvedHeight = if (height.isSpecified) {
+        height
+    } else if (items.any { it.icon != null && it.text.isNotEmpty() }) {
+        TabRowDefaults.TabRowIconHeight
+    } else {
+        TabRowDefaults.TabRowHeight
+    }
+
+    // COUITabLayout.TabLayoutOnPageChangeListener: only a drag of the pager drives the row; a
+    // programmatic page change after a tab click leaves the click animation in charge.
+    var pagerDragging by remember { mutableStateOf(false) }
+    var pagerSettledIndex by remember { mutableIntStateOf(selectedTabIndex) }
+    if (pagerState != null) {
+        LaunchedEffect(pagerState) {
+            pagerState.interactionSource.interactions.collect { interaction ->
+                if (interaction is DragInteraction.Start) {
+                    if (!pagerDragging) pagerSettledIndex = pagerState.currentPage
+                    pagerDragging = true
+                }
+            }
+        }
+        LaunchedEffect(pagerState) {
+            snapshotFlow { pagerState.isScrollInProgress }.collect { scrolling ->
+                if (!scrolling) {
+                    pagerDragging = false
+                    pagerSettledIndex = pagerState.currentPage
+                }
+            }
+        }
+    }
+    // COUITabView.setSelected switches the typeface once the pager settles.
+    val weightIndex = if (pagerDragging) pagerSettledIndex else selectedTabIndex
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .then(modifier)
-            .height(height),
+            .height(resolvedHeight),
     ) {
         val widthPx = constraints.maxWidth
+        val heightPx = constraints.maxHeight
+        val windowHeight = with(density) { windowInfo.containerSize.height.toDp() }
         val geometry = remember(
-            tabs,
-            selectedTabIndex,
+            items,
+            weightIndex,
             widthPx,
+            heightPx,
+            windowHeight,
             minWidth,
             maxWidth,
             itemSpacing,
@@ -179,26 +345,41 @@ fun TabRow(
             density,
         ) {
             with(density) {
+                val specs = items.mapIndexed { index, item ->
+                    TabContentSpec(
+                        textWidth = if (item.text.isEmpty()) {
+                            0
+                        } else {
+                            textMeasurer.measure(
+                                text = item.text,
+                                style = if (index == weightIndex) selectedStyle else normalStyle,
+                                maxLines = 1,
+                            ).size.width
+                        },
+                        iconWidth = if (item.icon != null) TabIconSize.roundToPx() else 0,
+                        badgeWidth = item.badge?.let { (tabBadgeWidth(it) + BadgeHorizontalOffset).roundToPx() } ?: 0,
+                    )
+                }
                 computeUnderlineTabGeometry(
-                    tabs = tabs,
-                    selectedTabIndex = selectedTabIndex,
+                    specs = specs,
                     widthPx = widthPx,
+                    heightPx = heightPx,
+                    windowHeight = windowHeight,
                     minWidth = minWidth,
                     maxWidth = maxWidth,
                     itemSpacing = itemSpacing,
                     horizontalMargin = horizontalMargin,
                     contentAlignment = contentAlignment,
-                    measureLabel = { label, selected ->
-                        textMeasurer.measure(
-                            text = label,
-                            style = if (selected) selectedStyle else normalStyle,
-                            maxLines = 1,
-                        ).size.width
-                    },
                 )
             }
         }
         val currentGeometry by rememberUpdatedState(geometry)
+        val scope = rememberCoroutineScope()
+        val strip = remember { TabStripScroller() }
+        strip.range = geometry.scrollRange.toFloat()
+        strip.canScroll = geometry.scrollable
+        strip.maxOverScroll = windowInfo.containerSize.width
+        strip.onEdge = { performHaptic(CouiHapticEffect.ScrollEdge) }
 
         // COUISlidingTabStrip.animateIndicatorToPosition: one animator drives the indicator edges
         // and the label color crossfade. The edges lerp from where the indicator was drawn.
@@ -207,19 +388,48 @@ fun TabRow(
         var previousIndex by remember { mutableIntStateOf(-1) }
         var fromLeft by remember { mutableFloatStateOf(0f) }
         var fromRight by remember { mutableFloatStateOf(0f) }
+        val pagerPosition by remember(pagerState) {
+            derivedStateOf {
+                if (pagerState != null && pagerDragging) {
+                    pagerState.currentPage + pagerState.currentPageOffsetFraction
+                } else {
+                    Float.NaN
+                }
+            }
+        }
 
-        val scrollOffset by remember(geometry, resolvedListState) {
+        // The in-range part of the scroll lives in the lazy list; the overscroll translates it.
+        val listScroll by remember(geometry, resolvedListState) {
             derivedStateOf {
                 val firstIndex = resolvedListState.firstVisibleItemIndex
                 (geometry.slotLefts.getOrElse(firstIndex) { 0 } + resolvedListState.firstVisibleItemScrollOffset).toFloat()
             }
         }
+        val overScroll by remember(strip) {
+            derivedStateOf { strip.value - strip.value.coerceIn(0f, strip.range) }
+        }
+        LaunchedEffect(strip, resolvedListState) {
+            snapshotFlow { strip.value.coerceIn(0f, strip.range).roundToInt() }.collect { target ->
+                val geo = currentGeometry
+                val item = geo.itemAt(target)
+                if (item >= 0) resolvedListState.scrollToItem(item, target - geo.slotLefts[item])
+            }
+        }
 
         // Keep the selected tab centered after a layout change (COUITabLayout.onLayout).
-        LaunchedEffect(widthPx, tabs, resolvedListState) {
-            val target = currentGeometry.scrollTargetFor(targetIndex)
-            val item = currentGeometry.itemAt(target)
-            if (item >= 0) resolvedListState.scrollToItem(item, target - currentGeometry.slotLefts[item])
+        LaunchedEffect(widthPx, items) {
+            strip.stop()
+            strip.value = currentGeometry.scrollTargetFor(targetIndex.toFloat())
+        }
+
+        // COUITabLayout.setScrollPosition: a dragged pager scrolls the row with it.
+        LaunchedEffect(strip) {
+            snapshotFlow { pagerPosition }.collect { position ->
+                if (!position.isNaN()) {
+                    strip.stop()
+                    strip.value = currentGeometry.scrollTargetFor(position)
+                }
+            }
         }
 
         LaunchedEffect(selectedTabIndex) {
@@ -227,6 +437,15 @@ fun TabRow(
             if (targetIndex == selectedTabIndex || geo.isEmpty) {
                 targetIndex = selectedTabIndex
                 progress.snapTo(1f)
+                return@LaunchedEffect
+            }
+            if (pagerDragging) {
+                // COUITabLayout.selectTab(tab, false): the indicator already follows the pager,
+                // only the haptic plays.
+                targetIndex = selectedTabIndex
+                previousIndex = -1
+                progress.snapTo(1f)
+                if (enabled) performHaptic(CouiHapticEffect.Switch)
                 return@LaunchedEffect
             }
             val p = progress.value
@@ -241,29 +460,42 @@ fun TabRow(
             targetIndex = selectedTabIndex
             progress.snapTo(0f)
             // COUITabLayout.animateToTab: the scroll animator runs for 300ms on the same easing.
-            launch {
-                val target = geo.scrollTargetFor(selectedTabIndex)
-                val delta = target - scrollOffset
-                if (delta != 0f) {
-                    resolvedListState.animateScrollBy(delta, tween(INDICATOR_MAX_DURATION, easing = IndicatorEasing))
-                }
-            }
+            strip.animateTo(scope, geo.scrollTargetFor(selectedTabIndex.toFloat()), tween(INDICATOR_MAX_DURATION, easing = IndicatorEasing))
             progress.animateTo(1f, tween(duration, easing = IndicatorEasing))
             previousIndex = -1
         }
 
-        val labelColor: (Int, Boolean) -> Color = remember(normalColor, selectedColor) {
+        val labelColor: (Int, Boolean) -> Color = remember(normalColor, selectedColor, disabledColor, enabled, items) {
             { index, pressed ->
-                val p = progress.value
+                val position = pagerPosition
                 when {
+                    !enabled || items.getOrNull(index)?.enabled == false -> disabledColor
+
                     // coui_tab_default_color: the pressed state uses the selected color.
                     pressed -> selectedColor
 
-                    index == targetIndex -> if (p < 1f) lerp(normalColor, selectedColor, p) else selectedColor
+                    // COUITabLayout.setSelectedTabView(position, offset): the label nearest the page
+                    // offset crossfades with the settled one over the second half of the drag.
+                    !position.isNaN() -> {
+                        val settled = pagerSettledIndex
+                        val nearest = position.roundToInt()
+                        val t = (2f * abs(position - settled) - 1f).coerceIn(0f, 1f)
+                        when {
+                            nearest == settled -> if (index == settled) selectedColor else normalColor
+                            index == nearest -> lerp(normalColor, selectedColor, t)
+                            index == settled -> lerp(selectedColor, normalColor, t)
+                            else -> normalColor
+                        }
+                    }
 
-                    index == previousIndex -> lerp(selectedColor, normalColor, p)
-
-                    else -> normalColor
+                    else -> {
+                        val p = progress.value
+                        when (index) {
+                            targetIndex -> if (p < 1f) lerp(normalColor, selectedColor, p) else selectedColor
+                            previousIndex -> lerp(selectedColor, normalColor, p)
+                            else -> normalColor
+                        }
+                    }
                 }
             }
         }
@@ -278,6 +510,7 @@ fun TabRow(
                     drawContent()
                     if (geometry.isEmpty) return@drawWithContent
                     val pad = geometry.padding.toFloat()
+                    val rtl = layoutDirection == LayoutDirection.Rtl
                     // COUITabLayout.dispatchDraw: the track is fixed to the viewport, inset 24dp.
                     val trackInset = TrackHorizontalPadding.toPx()
                     val trackHeight = TrackHeight.toPx()
@@ -290,17 +523,28 @@ fun TabRow(
                     }
                     // The indicator follows the label bounds, at least 32dp wide around their
                     // center (COUISlidingTabStrip.setIndicatorPosition), clipped to the viewport.
-                    val p = progress.value
-                    val index = targetIndex
-                    val left = lerp(fromLeft, geometry.indicatorLeft(index), p)
-                    val right = lerp(fromRight, geometry.indicatorRight(index), p)
+                    val position = pagerPosition
+                    val left: Float
+                    val right: Float
+                    if (!position.isNaN()) {
+                        // COUISlidingTabStrip.updateIndicatorPosition with a selection offset.
+                        val page = floor(position).toInt().coerceIn(0, geometry.lastIndex)
+                        val next = (page + 1).coerceAtMost(geometry.lastIndex)
+                        val offset = (position - page).coerceIn(0f, 1f)
+                        left = lerp(geometry.indicatorLeft(page), geometry.indicatorLeft(next), offset)
+                        right = lerp(geometry.indicatorRight(page), geometry.indicatorRight(next), offset)
+                    } else {
+                        val p = progress.value
+                        left = lerp(fromLeft, geometry.indicatorLeft(targetIndex), p)
+                        right = lerp(fromRight, geometry.indicatorRight(targetIndex), p)
+                    }
                     val halfWidth = max(right - left, IndicatorMinWidth.toPx()) / 2f
                     val center = (left + right) / 2f
-                    val scroll = scrollOffset
+                    val scroll = listScroll + overScroll
                     var start = max(pad + center - halfWidth - scroll, pad)
                     var end = min(pad + center + halfWidth - scroll, size.width - pad)
                     if (end > start) {
-                        if (layoutDirection == LayoutDirection.Rtl) {
+                        if (rtl) {
                             val mirroredStart = size.width - end
                             end = size.width - start
                             start = mirroredStart
@@ -317,7 +561,6 @@ fun TabRow(
                         val fadeLength = FadingEdgeLength.toPx()
                         val startStrength = (scroll / fadeLength).coerceIn(0f, 1f)
                         val endStrength = ((geometry.contentWidth - scroll - geometry.viewportWidth) / fadeLength).coerceIn(0f, 1f)
-                        val rtl = layoutDirection == LayoutDirection.Rtl
                         val leftStrength = if (rtl) endStrength else startStrength
                         val rightStrength = if (rtl) startStrength else endStrength
                         if (leftStrength > 0f) {
@@ -347,26 +590,55 @@ fun TabRow(
                     }
                 },
         ) {
+            val dragState = rememberDraggableState { delta ->
+                strip.drag(if (layoutDirection == LayoutDirection.Rtl) delta else -delta)
+            }
             LazyRow(
                 state = resolvedListState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = with(density) { geometry.padding.toDp() }),
+                    .padding(horizontal = with(density) { geometry.padding.toDp() })
+                    .clipToBounds()
+                    .pointerInput(strip) {
+                        // COUIHorizontalScrollView.onTouchEvent: a touch stops a running fling or
+                        // spring-back, and lifting without a drag springs an overscroll back.
+                        awaitEachGesture {
+                            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            strip.touchDown()
+                            do {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                            } while (event.changes.any { it.pressed })
+                            if (!strip.dragging) strip.releaseWithoutDrag(scope)
+                        }
+                    }
+                    .draggable(
+                        state = dragState,
+                        orientation = Orientation.Horizontal,
+                        enabled = geometry.scrollable,
+                        onDragStarted = { strip.dragStarted() },
+                        onDragStopped = { velocity ->
+                            strip.release(scope, if (layoutDirection == LayoutDirection.Rtl) -velocity else velocity, with(density) { MinimumFlingVelocity.toPx() })
+                        },
+                    )
+                    .graphicsLayer {
+                        translationX = if (layoutDirection == LayoutDirection.Rtl) overScroll else -overScroll
+                    },
                 verticalAlignment = Alignment.CenterVertically,
-                userScrollEnabled = geometry.scrollable,
+                userScrollEnabled = false,
                 overscrollEffect = null,
             ) {
-                itemsIndexed(tabs) { index, label ->
+                itemsIndexed(items) { index, item ->
+                    val tab = geometry.tabs[index]
                     UnderlineTab(
-                        text = label,
+                        item = item,
                         isSelected = selectedTabIndex == index,
+                        enabled = enabled && item.enabled,
                         onClick = { currentOnTabSelected.invoke(index) },
                         width = with(density) { geometry.slotWidths[index].toDp() },
-                        labelPadding = with(density) { geometry.gapHalf.toDp() },
+                        tab = tab,
                         labelColor = { pressed -> labelColor(index, pressed) },
-                        style = if (selectedTabIndex == index) selectedStyle else normalStyle,
+                        style = if (weightIndex == index) selectedStyle else normalStyle,
                         cornerRadius = cornerRadius,
-                        contentAlignment = contentAlignment,
                         interactionSource = interactionSource,
                         indication = indication,
                     )
@@ -378,32 +650,33 @@ fun TabRow(
 
 @Composable
 private fun UnderlineTab(
-    text: String,
+    item: TabRowItem,
     isSelected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
     width: Dp,
-    labelPadding: Dp,
+    tab: TabSlot,
     labelColor: (Boolean) -> Color,
     style: TextStyle,
     cornerRadius: Dp,
-    contentAlignment: Alignment,
     interactionSource: MutableInteractionSource?,
     indication: Indication?,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val hapticFeedback = LocalHapticFeedback.current
+    val performHaptic = rememberCouiHaptic()
     val currentIsSelected by rememberUpdatedState(isSelected)
-    // COUITabView.onTouchEvent: a haptic tick when a non-selected tab is touched down.
-    LaunchedEffect(interactionSource, hapticFeedback) {
+    val currentEnabled by rememberUpdatedState(enabled)
+    // COUITabView.onTouchEvent: haptic 302 when a non-selected tab is touched down.
+    LaunchedEffect(interactionSource) {
         interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press && !currentIsSelected) {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+            if (interaction is PressInteraction.Press && currentEnabled && !currentIsSelected) {
+                performHaptic(CouiHapticEffect.Switch)
             }
         }
     }
-    Box(
+    Layout(
         modifier = Modifier
             .fillMaxHeight()
             .width(width)
@@ -413,60 +686,110 @@ private fun UnderlineTab(
                 selected = isSelected,
                 interactionSource = interactionSource,
                 indication = indication,
+                enabled = enabled,
                 role = Role.Tab,
                 onClick = onClick,
+            ),
+        content = {
+            Text(
+                text = item.text,
+                color = { labelColor(isPressed && !isSelected) },
+                style = style,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            .padding(horizontal = labelPadding),
-        contentAlignment = contentAlignment,
-    ) {
-        Text(
-            text = text,
-            color = { labelColor(isPressed && !isSelected) },
-            style = style,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+            if (item.icon != null) {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(TabIconSize),
+                    tint = labelColor(isPressed && !isSelected),
+                )
+            }
+            if (item.badge != null) {
+                Badge(count = item.badge)
+            }
+        },
+    ) { measurables, constraints ->
+        // COUITabView is a horizontal LinearLayout: [icon][label][red dot], centered as a block.
+        val text = measurables[0].measure(Constraints.fixedWidth(tab.textWidth).copy(minHeight = 0, maxHeight = constraints.maxHeight))
+        var next = 1
+        val icon = if (item.icon != null) measurables[next++].measure(Constraints()) else null
+        val badge = if (item.badge != null) measurables[next].measure(Constraints()) else null
+        val height = constraints.maxHeight
+        layout(constraints.maxWidth, height) {
+            var x = tab.contentStart
+            if (icon != null) {
+                // coui_tab_layout_icon: 8dp bottom margin when the tab also has a label.
+                val bottomMargin = if (item.text.isNotEmpty()) TabIconBottomMargin.roundToPx() else 0
+                icon.placeRelative(x, (height - icon.height - bottomMargin) / 2)
+                x += tab.iconWidth
+            }
+            text.placeRelative(x, (height - text.height) / 2)
+            x += tab.textWidth
+            if (badge != null) {
+                // COUISlidingTabStrip.measureChildWithRedDot: top gravity, 2dp start margin, 5dp
+                // (dot) or 1dp (number) top margin.
+                val top = if ((item.badge ?: 0) > 0) BadgeTopOffsetNumber else BadgeTopOffsetDot
+                badge.placeRelative(x + BadgeHorizontalOffset.roundToPx(), top.roundToPx())
+            }
+        }
     }
 }
+
+/** The measured content of one tab: label, icon and red dot (with its 2dp margin) widths, px. */
+internal class TabContentSpec(val textWidth: Int, val iconWidth: Int, val badgeWidth: Int)
+
+/**
+ * One tab of the layout, in px: [contentStart] is the start of the icon/label/dot block inside
+ * the tab, [iconWidth] and [textWidth] the widths it lays out.
+ */
+@Immutable
+internal class TabSlot(
+    val contentStart: Int,
+    val iconWidth: Int,
+    val textWidth: Int,
+)
 
 /**
  * The horizontal layout of a [TabRow], in pixels.
  *
  * [slotLefts] and [slotWidths] describe each tab including the half gap on both sides, relative to
- * the scrolling content that starts after [padding]. [textLefts] and [textWidths] are the label
- * bounds in the same coordinates.
+ * the scrolling content that starts after [padding]. The indicator spans are in the same
+ * coordinates.
  */
 @Immutable
-private class UnderlineTabGeometry(
+internal class UnderlineTabGeometry(
     val padding: Int,
-    val gapHalf: Int,
     val slotLefts: List<Int>,
     val slotWidths: List<Int>,
-    val textLefts: List<Int>,
-    val textWidths: List<Int>,
+    val tabs: List<TabSlot>,
+    private val indicatorLefts: List<Int>,
+    private val indicatorRights: List<Int>,
     val viewportWidth: Int,
 ) {
     val isEmpty: Boolean get() = slotWidths.isEmpty()
+    val lastIndex: Int get() = slotWidths.lastIndex
     val contentWidth: Int = if (slotWidths.isEmpty()) 0 else slotLefts.last() + slotWidths.last()
+    val scrollRange: Int = max(0, contentWidth - viewportWidth)
     val scrollable: Boolean = contentWidth > viewportWidth
 
-    fun indicatorLeft(index: Int): Float {
-        if (isEmpty) return 0f
-        return textLefts[index.coerceIn(0, textLefts.lastIndex)].toFloat()
-    }
+    fun indicatorLeft(index: Int): Float = if (isEmpty) 0f else indicatorLefts[index.coerceIn(0, lastIndex)].toFloat()
 
-    fun indicatorRight(index: Int): Float {
-        if (isEmpty) return 0f
-        val i = index.coerceIn(0, textLefts.lastIndex)
-        return (textLefts[i] + textWidths[i]).toFloat()
-    }
+    fun indicatorRight(index: Int): Float = if (isEmpty) 0f else indicatorRights[index.coerceIn(0, lastIndex)].toFloat()
 
-    /** COUITabLayout.calculateScrollXForTab: center the tab in the viewport. */
-    fun scrollTargetFor(index: Int): Int {
-        if (isEmpty) return 0
-        val i = index.coerceIn(0, slotWidths.lastIndex)
-        val target = slotLefts[i] + slotWidths[i] / 2 - viewportWidth / 2
-        return target.coerceIn(0, max(0, contentWidth - viewportWidth))
+    /**
+     * COUITabLayout.calculateScrollXForTab: center the tab at [position] (a tab index plus an
+     * offset towards the next tab) in the viewport, clamped like `HorizontalScrollView.scrollTo`.
+     */
+    fun scrollTargetFor(position: Float): Float {
+        if (isEmpty) return 0f
+        val index = floor(position).toInt().coerceIn(0, lastIndex)
+        val offset = (position - index).coerceIn(0f, 1f)
+        val nextWidth = if (index < lastIndex) slotWidths[index + 1] else 0
+        val target = slotWidths[index] / 2 - viewportWidth / 2 + slotLefts[index] +
+            ((slotWidths[index] + nextWidth) * 0.5f * offset).toInt()
+        return target.coerceIn(0, scrollRange).toFloat()
     }
 
     fun itemAt(offset: Int): Int {
@@ -479,39 +802,45 @@ private class UnderlineTabGeometry(
 }
 
 /**
- * COUISlidingTabStrip.onMeasure in fixed mode: measure every label (selected one in the medium
- * weight), then spread them over the 360dp content width, center them with the minimum divider, or
- * let them overflow and scroll.
+ * COUISlidingTabStrip.onMeasure in fixed mode: measure every tab, then spread them over the 360dp
+ * content width, center them with the minimum divider, or let them overflow and scroll.
+ *
+ * The responsive margin follows `parseMinMargin` (row width against the window height) and the
+ * divider `parseMinDivider` (row width against the row height).
  */
-private fun Density.computeUnderlineTabGeometry(
-    tabs: List<String>,
-    selectedTabIndex: Int,
+internal fun Density.computeUnderlineTabGeometry(
+    specs: List<TabContentSpec>,
     widthPx: Int,
+    heightPx: Int,
+    windowHeight: Dp,
     minWidth: Dp,
     maxWidth: Dp,
     itemSpacing: Dp,
     horizontalMargin: Dp,
     contentAlignment: Alignment,
-    measureLabel: (String, Boolean) -> Int,
 ): UnderlineTabGeometry {
-    val count = tabs.size
+    val count = specs.size
     if (count == 0) {
-        return UnderlineTabGeometry(0, 0, emptyList(), emptyList(), emptyList(), emptyList(), 0)
+        return UnderlineTabGeometry(0, emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), 0)
     }
     val width = if (widthPx == Constraints.Infinity) 0 else widthPx
     val widthDp = width.toDp()
+    val heightDp = if (heightPx == Constraints.Infinity) 0.dp else heightPx.toDp()
     val minDivider = if (itemSpacing.isSpecified) {
         itemSpacing.roundToPx()
-    } else if (widthDp >= MediumWidthBreakpoint) {
-        MediumTabSpacing.roundToPx()
-    } else {
+    } else if (COUILayoutGrid.screenTier(widthDp, heightDp) == COUILayoutGrid.ScreenTier.Small) {
         SmallTabSpacing.roundToPx()
+    } else {
+        MediumTabSpacing.roundToPx()
     }
-    val minMargin = when {
-        horizontalMargin.isSpecified -> horizontalMargin.roundToPx()
-        widthDp >= LargeWidthBreakpoint -> LargeHorizontalMargin.roundToPx()
-        widthDp >= MediumWidthBreakpoint -> MediumHorizontalMargin.roundToPx()
-        else -> SmallHorizontalMargin.roundToPx()
+    val minMargin = if (horizontalMargin.isSpecified) {
+        horizontalMargin.roundToPx()
+    } else {
+        when (COUILayoutGrid.screenTier(widthDp, windowHeight)) {
+            COUILayoutGrid.ScreenTier.Small -> SmallHorizontalMargin.roundToPx()
+            COUILayoutGrid.ScreenTier.Medium -> MediumHorizontalMargin.roundToPx()
+            COUILayoutGrid.ScreenTier.Large -> LargeHorizontalMargin.roundToPx()
+        }
     }
     // COUITabLayout.onMeasure: without couiTabMaxWidth a tab is at most 70% of the row.
     val maxTabPx = when {
@@ -520,11 +849,16 @@ private fun Density.computeUnderlineTabGeometry(
         else -> maxWidth.roundToPx()
     }
     val minTabPx = if (minWidth.isSpecified) minWidth.roundToPx() else 0
-    val textWidths = tabs.mapIndexed { index, label -> min(measureLabel(label, index == selectedTabIndex), maxTabPx) }
-    val tabWidths = textWidths.map { min(max(it, minTabPx), maxTabPx) }
+    // measureChildWithRedDot: the label gives way to the icon and the red dot past the maximum.
+    val textWidths = specs.map { spec ->
+        val content = spec.iconWidth + spec.textWidth + spec.badgeWidth
+        if (content <= maxTabPx) spec.textWidth else max(0, maxTabPx - spec.iconWidth - spec.badgeWidth)
+    }
+    val contentWidths = specs.mapIndexed { i, spec -> spec.iconWidth + textWidths[i] + spec.badgeWidth }
+    val tabWidths = contentWidths.map { max(it, minTabPx) }
     val sum = tabWidths.sum()
     val contentMinWidth = ContentMinWidth.roundToPx()
-    val total = minMargin * 2 + sum + max(0, count - 1) * minDivider
+    val total = minMargin * 2 + sum + (count - 1) * minDivider
     val gap: Int
     val padding: Int
     when {
@@ -555,29 +889,211 @@ private fun Density.computeUnderlineTabGeometry(
     val resolvedPadding = max(0, padding)
     val slotLefts = ArrayList<Int>(count)
     val slotWidths = ArrayList<Int>(count)
-    val textLefts = ArrayList<Int>(count)
+    val tabs = ArrayList<TabSlot>(count)
+    val indicatorLefts = ArrayList<Int>(count)
+    val indicatorRights = ArrayList<Int>(count)
     var left = 0
     for (i in 0 until count) {
         val slotWidth = tabWidths[i] + gapHalf * 2
-        slotLefts.add(left)
-        slotWidths.add(slotWidth)
         val alignOffset = contentAlignment.align(
-            IntSize(textWidths[i], 0),
+            IntSize(contentWidths[i], 0),
             IntSize(tabWidths[i], 0),
             LayoutDirection.Ltr,
         ).x
-        textLefts.add(left + gapHalf + alignOffset)
+        val contentStart = gapHalf + alignOffset
+        slotLefts.add(left)
+        slotWidths.add(slotWidth)
+        tabs.add(TabSlot(contentStart = contentStart, iconWidth = specs[i].iconWidth, textWidth = textWidths[i]))
+        // updateIndicatorPosition: the label bounds (coui_tablayout_indicator_padding is 0dp); an
+        // icon-only tab falls back to its content.
+        if (textWidths[i] > 0) {
+            val textLeft = left + contentStart + specs[i].iconWidth
+            indicatorLefts.add(textLeft)
+            indicatorRights.add(textLeft + textWidths[i])
+        } else {
+            indicatorLefts.add(left + contentStart)
+            indicatorRights.add(left + contentStart + contentWidths[i])
+        }
         left += slotWidth
     }
     return UnderlineTabGeometry(
         padding = resolvedPadding,
-        gapHalf = gapHalf,
         slotLefts = slotLefts,
         slotWidths = slotWidths,
-        textLefts = textLefts,
-        textWidths = textWidths,
+        tabs = tabs,
+        indicatorLefts = indicatorLefts,
+        indicatorRights = indicatorRights,
         viewportWidth = max(0, width - resolvedPadding * 2),
     )
+}
+
+/**
+ * The scroll position of the tab strip and its `COUIHorizontalScrollView` motion: rubber-band
+ * drags past the edges, [COUIReboundOverScroller] flings that overshoot and spring back, and
+ * spring-backs on release.
+ */
+@Stable
+private class TabStripScroller {
+    /** The scroll position, px; negative or past [range] while overscrolled. */
+    var value by mutableFloatStateOf(0f)
+    var range = 0f
+    var canScroll = false
+
+    /** `mOverscrollDistance` / `mOverflingDistance`: the screen width, px. */
+    var maxOverScroll = 1
+    var onEdge: () -> Unit = {}
+    var dragging = false
+        private set
+
+    private val scroller = COUIReboundOverScroller(springBackTensionMultiple = HORIZONTAL_SPRING_BACK_TENSION_MULTIPLE)
+    private var flingStrictSpan = false
+    private var job: Job? = null
+    private var pendingDrag = 0f
+
+    fun stop() {
+        job?.cancel()
+        job = null
+        scroller.setAtRest()
+    }
+
+    fun touchDown() {
+        stop()
+        flingStrictSpan = false
+        dragging = false
+    }
+
+    fun dragStarted() {
+        stop()
+        dragging = true
+        pendingDrag = 0f
+    }
+
+    /** ACTION_MOVE: [delta] is in scroll direction, px. */
+    fun drag(delta: Float) {
+        pendingDrag += delta
+        var d = pendingDrag.toInt()
+        if (d == 0) return
+        pendingDrag -= d
+        val rangeInt = range.toInt()
+        val position = value.roundToInt()
+        if (position < 0) {
+            d = COUIPhysicalAnimation.calcRealOverScrollDist(d, position, maxOverScroll)
+        } else if (position > rangeInt) {
+            d = COUIPhysicalAnimation.calcRealOverScrollDist(d, position - rangeInt, maxOverScroll)
+        }
+        overScrolled(position + d)
+    }
+
+    /** ACTION_UP after a drag; [velocity] is the finger velocity, px/s, in screen direction. */
+    fun release(scope: CoroutineScope, velocity: Float, minimumVelocity: Float) {
+        dragging = false
+        val xVelocity = velocity.toInt()
+        val position = value.roundToInt()
+        val rangeInt = range.toInt()
+        if (abs(xVelocity) <= minimumVelocity) {
+            springBack(scope)
+        } else if (position < 0) {
+            if (xVelocity > -FLING_SCROLL_THRESHOLD) {
+                scroller.velocity = -xVelocity.toDouble()
+                springBack(scope)
+            } else {
+                fling(scope, -xVelocity)
+            }
+        } else if (position > rangeInt) {
+            if (xVelocity < FLING_SCROLL_THRESHOLD) {
+                scroller.velocity = -xVelocity.toDouble()
+                springBack(scope)
+            } else {
+                fling(scope, -xVelocity)
+            }
+        } else if (position in 1 until rangeInt) {
+            fling(scope, -xVelocity)
+        }
+        if (position < 0 || position > rangeInt) onEdge()
+    }
+
+    fun releaseWithoutDrag(scope: CoroutineScope) {
+        springBack(scope)
+    }
+
+    /** The tab-click scroll animator (`COUITabLayout.ensureScrollAnimator`). */
+    fun animateTo(scope: CoroutineScope, target: Float, spec: AnimationSpec<Float>) {
+        stop()
+        if (value == target) return
+        job = scope.launch {
+            animate(value, target, animationSpec = spec) { current, _ -> value = current }
+        }
+    }
+
+    private fun springBack(scope: CoroutineScope) {
+        if (scroller.springBack(value.roundToInt(), 0, range.toInt())) run(scope)
+    }
+
+    private fun fling(scope: CoroutineScope, velocity: Int) {
+        flingStrictSpan = true
+        job?.cancel()
+        job = scope.launch {
+            withFrameNanos { nanos ->
+                scroller.fling(value.roundToInt(), velocity, nanos / 1_000_000L, FLING_FRAME_INTERVAL_SEC)
+            }
+            loop()
+        }
+    }
+
+    private fun run(scope: CoroutineScope) {
+        job?.cancel()
+        job = scope.launch { loop() }
+    }
+
+    /** COUIHorizontalScrollView.computeScroll. */
+    private suspend fun loop() {
+        var lastNanos = -1L
+        while (true) {
+            val running = withFrameNanos { nanos ->
+                val delta = if (lastNanos < 0L) 0f else (nanos - lastNanos) / 1_000_000_000f
+                lastNanos = nanos
+                val more = scroller.update(nanos / 1_000_000L, delta)
+                overScrolled(scroller.position.roundToInt())
+                more
+            }
+            if (!running) {
+                scroller.setAtRest()
+                flingStrictSpan = false
+                break
+            }
+        }
+    }
+
+    /** COUIHorizontalScrollView.onOverScrolled. */
+    private fun overScrolled(target: Int) {
+        val rangeInt = range.toInt()
+        var x = target
+        if ((x < 0 || x > rangeInt) && flingStrictSpan) {
+            val edge = if (x >= rangeInt) rangeInt else 0
+            x = COUIPhysicalAnimation.calcOverFlingDecelerateDist(edge, x - edge, maxOverScroll)
+        }
+        // OVER_SCROLL_IF_CONTENT_SCROLLS: no overscroll unless the tabs overflow.
+        if (!canScroll) x = x.coerceIn(0, rangeInt)
+        val current = value.roundToInt()
+        if (current >= 0 && x < 0 && flingStrictSpan) {
+            onEdge()
+            scroller.notifyEdgeReached(x, 0, 0, 0)
+        }
+        if (current <= rangeInt && x > rangeInt && flingStrictSpan) {
+            onEdge()
+            scroller.notifyEdgeReached(x, rangeInt, 0, rangeInt)
+        }
+        value = x.toFloat()
+    }
+}
+
+/** The red dot width COUIHintRedDot measures for [badge] (see [Badge]). */
+private fun tabBadgeWidth(badge: Int): Dp = when {
+    badge <= 0 -> BadgeDefaults.DotDiameter
+    badge < 10 -> BadgeDefaults.SmallWidth
+    badge < 100 -> BadgeDefaults.MediumWidth
+    badge < 1000 -> BadgeDefaults.LargeWidth
+    else -> BadgeDefaults.MediumWidth
 }
 
 /**
@@ -1019,6 +1535,12 @@ object TabRowDefaults {
     val TabRowHeight = 48.dp
 
     /**
+     * The height of a [TabRow] whose tabs have both an icon and a label
+     * (`COUITabLayout.getDefaultHeight`, 72dp).
+     */
+    val TabRowIconHeight = 72.dp
+
+    /**
      * The default height of the [TabRowWithContour]. COUI `SegmentButton` style height (40dp).
      */
     val TabRowWithContourHeight = 40.dp
@@ -1088,6 +1610,9 @@ object TabRowDefaults {
      * @param contentColor The label color of unselected tabs (`couiColorSecondNeutral`).
      * @param selectedContentColor The label color of the selected and pressed tab
      *   (`couiColorPrimaryNeutral`).
+     * @param disabledContentColor The label color of disabled tabs (`couiColorDisabledNeutral`).
+     * @param disabledIndicatorColor The indicator color of a disabled row
+     *   (`couiTabIndicatorDisableColor`).
      */
     @Composable
     fun underlineColors(
@@ -1099,12 +1624,23 @@ object TabRowDefaults {
         indicatorColor: Color = COUITheme.colorScheme.onSurface,
         contentColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         selectedContentColor: Color = COUITheme.colorScheme.onSurface,
-    ): TabRowColors = remember(trackColor, indicatorColor, contentColor, selectedContentColor) {
+        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        disabledIndicatorColor: Color = TabIndicatorDisabled,
+    ): TabRowColors = remember(
+        trackColor,
+        indicatorColor,
+        contentColor,
+        selectedContentColor,
+        disabledContentColor,
+        disabledIndicatorColor,
+    ) {
         TabRowColors(
             backgroundColor = trackColor,
             contentColor = contentColor,
             selectedBackgroundColor = indicatorColor,
             selectedContentColor = selectedContentColor,
+            disabledContentColor = disabledContentColor,
+            disabledSelectedBackgroundColor = disabledIndicatorColor,
         )
     }
 
@@ -1137,18 +1673,38 @@ object TabRowDefaults {
     }
 }
 
+/**
+ * The colors of a [TabRow] or [TabRowWithContour].
+ *
+ * @param backgroundColor The container ([TabRowWithContour]) or the track ([TabRow]).
+ * @param contentColor The label color of unselected tabs.
+ * @param selectedBackgroundColor The sliding indicator.
+ * @param selectedContentColor The label color of the selected tab.
+ * @param disabledContentColor The label color of disabled tabs ([TabRow] only); unspecified falls
+ *   back to [contentColor].
+ * @param disabledSelectedBackgroundColor The indicator of a disabled row ([TabRow] only);
+ *   unspecified falls back to [selectedBackgroundColor].
+ */
 @Immutable
 data class TabRowColors(
     private val backgroundColor: Color,
     private val contentColor: Color,
     private val selectedBackgroundColor: Color,
     private val selectedContentColor: Color,
+    private val disabledContentColor: Color = Color.Unspecified,
+    private val disabledSelectedBackgroundColor: Color = Color.Unspecified,
 ) {
     @Stable
     internal fun backgroundColor(selected: Boolean): Color = if (selected) selectedBackgroundColor else backgroundColor
 
     @Stable
     internal fun contentColor(selected: Boolean): Color = if (selected) selectedContentColor else contentColor
+
+    @Stable
+    internal fun disabledContentColor(): Color = disabledContentColor.takeOrElse { contentColor }
+
+    @Stable
+    internal fun disabledIndicatorColor(): Color = disabledSelectedBackgroundColor.takeOrElse { selectedBackgroundColor }
 }
 
 /** `tablayout_indicator_background` in light themes (#0F000000). */
@@ -1156,6 +1712,35 @@ private val TabTrackLight = Color(0x0F000000)
 
 /** `tablayout_indicator_background` in dark themes (#19FFFFFF). */
 private val TabTrackDark = Color(0x19FFFFFF)
+
+/** `couiTabIndicatorDisableColor` (#FFD9D9D9, no night variant). */
+private val TabIndicatorDisabled = Color(0xFFD9D9D9)
+
+/** `coui_tab_layout_icon`: a 24dp icon with an 8dp bottom margin under a label. */
+private val TabIconSize = 24.dp
+private val TabIconBottomMargin = 8.dp
+
+/** `coui_dot_horizontal_offset` (2dp): the red dot's start margin after the label. */
+private val BadgeHorizontalOffset = 2.dp
+
+/** `coui_dot_vertical_offset_only_red` (5dp) / `coui_dot_vertical_offset_number_red` (1dp). */
+private val BadgeTopOffsetDot = 5.dp
+private val BadgeTopOffsetNumber = 1.dp
+
+/** `ViewConfiguration.MINIMUM_FLING_VELOCITY` (50dp/s). */
+private val MinimumFlingVelocity = 50.dp
+
+/** COUIHorizontalScrollView: `HORIZONTAL_SPRING_BACK_TENSION_MULTIPLE`. */
+private const val HORIZONTAL_SPRING_BACK_TENSION_MULTIPLE = 3.2f
+
+/** COUIHorizontalScrollView: `FLING_SCROLL_THRESHOLD` (px/s) that turns a release into a fling. */
+private const val FLING_SCROLL_THRESHOLD = 1500
+
+/**
+ * The frame interval the fling simulation runs at; the original reads the display's from the
+ * Choreographer, ColorOS phones run at 120Hz.
+ */
+private const val FLING_FRAME_INTERVAL_SEC = 1f / 120f
 
 /** `tablayout_selected_indicator_height` (2dp), used for both the indicator and the track. */
 private val IndicatorHeight = 2.dp
@@ -1189,10 +1774,6 @@ private val MediumHorizontalMargin = 24.dp
 
 /** `coui_tab_layout_large_horizontal_margin` (40dp). */
 private val LargeHorizontalMargin = 40.dp
-
-/** Window size class breakpoints, applied to the row width. */
-private val MediumWidthBreakpoint = 600.dp
-private val LargeWidthBreakpoint = 840.dp
 
 /** COUITabLayout.onMeasure: the tab maximum width without `setRequestedTabMaxWidth`. */
 private const val DEFAULT_TAB_MAX_WIDTH_RATIO = 0.7f

@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalView
 // maps these to dedicated waveforms, while AOSP builds ignore unknown constants (return false).
 private const val OPLUS_HAPTIC_SWITCH = 302
 private const val OPLUS_HAPTIC_STRENGTH = 308
+private const val OPLUS_HAPTIC_SCROLL_EDGE = 307
 
 // AOSP fallbacks (HapticFeedbackConstants) for non-ColorOS devices.
 private const val AOSP_CONTEXT_CLICK = 6 // HapticFeedbackConstants.CONTEXT_CLICK
@@ -25,6 +26,7 @@ actual fun rememberCouiHaptic(): (CouiHapticEffect) -> Unit {
             val (oplus, fallback) = when (effect) {
                 CouiHapticEffect.Switch -> OPLUS_HAPTIC_SWITCH to AOSP_CONTEXT_CLICK
                 CouiHapticEffect.Strength -> OPLUS_HAPTIC_STRENGTH to AOSP_CLOCK_TICK
+                CouiHapticEffect.ScrollEdge -> OPLUS_HAPTIC_SCROLL_EDGE to AOSP_CLOCK_TICK
             }
             // Try the OPLUS constant first; if the device doesn't recognise it, fall back to AOSP.
             if (!view.performHapticFeedback(oplus)) {
