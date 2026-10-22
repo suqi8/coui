@@ -132,7 +132,7 @@ fun SliderPreference(
                     if (valueText != null) {
                         Text(
                             text = valueText,
-                            fontSize = COUITheme.textStyles.body2.fontSize,
+                            fontSize = COUITheme.textStyles.footnote1.fontSize,
                             color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
                         )
                     }
@@ -264,7 +264,7 @@ fun RangeSliderPreference(
                     if (valueText != null) {
                         Text(
                             text = valueText,
-                            fontSize = COUITheme.textStyles.body2.fontSize,
+                            fontSize = COUITheme.textStyles.footnote1.fontSize,
                             color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
                         )
                     }
