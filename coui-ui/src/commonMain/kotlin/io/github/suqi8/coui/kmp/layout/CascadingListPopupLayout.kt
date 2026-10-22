@@ -47,6 +47,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.ListPopupLayoutInfo
+import io.github.suqi8.coui.kmp.basic.PopupCornerRadius
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.popupSurfaceColor
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
@@ -55,7 +56,8 @@ import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-internal val CascadingPopupCornerRadius = 16.dp
+/** The cascading menus share the RoundFrameLayout container corner ([PopupCornerRadius], 28dp). */
+internal val CascadingPopupCornerRadius = PopupCornerRadius
 
 /**
  * Vertical overlap between the anchor row's top edge and the secondary menu's top edge.

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -38,9 +39,11 @@ import io.github.suqi8.coui.kmp.basic.DropdownImpl
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.PopupCornerWeight
 import io.github.suqi8.coui.kmp.basic.PopupLayoutPosition
 import io.github.suqi8.coui.kmp.basic.PopupShadow
 import io.github.suqi8.coui.kmp.basic.popupClipReveal
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 
 private var deeperChildrenWarned = false
@@ -219,6 +222,7 @@ internal fun CascadingSecondaryContent(
     surfaceColor: Color,
 ) {
     val cornerPx = with(LocalDensity.current) { CascadingPopupCornerRadius.toPx() }
+    val squircleEnabled = isSquircleEnabled()
     val anchorTopLeft = anchorLocalInUnion.topLeft
     val secondaryTopLeft = secondaryLocalInUnion.topLeft
     val secondaryWidth = secondaryLocalInUnion.width
@@ -244,34 +248,44 @@ internal fun CascadingSecondaryContent(
                     val topRadius = CornerRadius(rTop, rTop)
                     val bottomRadius = CornerRadius(rBottom, rBottom)
                     innerPath.rewind()
-                    innerPath.addRoundRect(
-                        RoundRect(
-                            left = lerp(
-                                anchorLocalInUnion.left.toFloat(),
-                                secondaryLocalInUnion.left.toFloat(),
-                                frac,
-                            ),
-                            top = lerp(
-                                anchorLocalInUnion.top.toFloat(),
-                                secondaryLocalInUnion.top.toFloat(),
-                                frac,
-                            ),
-                            right = lerp(
-                                anchorLocalInUnion.right.toFloat(),
-                                secondaryLocalInUnion.right.toFloat(),
-                                frac,
-                            ),
-                            bottom = lerp(
-                                anchorLocalInUnion.bottom.toFloat(),
-                                secondaryLocalInUnion.bottom.toFloat(),
-                                frac,
-                            ),
-                            topLeftCornerRadius = topRadius,
-                            topRightCornerRadius = topRadius,
-                            bottomRightCornerRadius = bottomRadius,
-                            bottomLeftCornerRadius = bottomRadius,
+                    val morphRect = RoundRect(
+                        left = lerp(
+                            anchorLocalInUnion.left.toFloat(),
+                            secondaryLocalInUnion.left.toFloat(),
+                            frac,
                         ),
+                        top = lerp(
+                            anchorLocalInUnion.top.toFloat(),
+                            secondaryLocalInUnion.top.toFloat(),
+                            frac,
+                        ),
+                        right = lerp(
+                            anchorLocalInUnion.right.toFloat(),
+                            secondaryLocalInUnion.right.toFloat(),
+                            frac,
+                        ),
+                        bottom = lerp(
+                            anchorLocalInUnion.bottom.toFloat(),
+                            secondaryLocalInUnion.bottom.toFloat(),
+                            frac,
+                        ),
+                        topLeftCornerRadius = topRadius,
+                        topRightCornerRadius = topRadius,
+                        bottomRightCornerRadius = bottomRadius,
+                        bottomLeftCornerRadius = bottomRadius,
                     )
+                    if (squircleEnabled && rTop == rBottom) {
+                        // Uniform corners: the same smooth round rect as the container.
+                        innerPath.addSquircleRect(
+                            width = morphRect.width,
+                            height = morphRect.height,
+                            cornerRadius = rTop,
+                            weight = PopupCornerWeight,
+                        )
+                        innerPath.translate(Offset(morphRect.left, morphRect.top))
+                    } else {
+                        innerPath.addRoundRect(morphRect)
+                    }
                     clipPath(innerPath) {
                         drawRect(
                             color = surfaceColor,

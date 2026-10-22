@@ -999,8 +999,14 @@ object ListPopupDefaults {
     }
 }
 
-/** Corner radius of the popup container (COUI couiRoundCornerM, coui_round_corner_m 12dp). */
-internal val PopupCornerRadius = 12.dp
+/**
+ * Corner radius of the popup container: COUI 17 `RoundFrameLayout.getSmoothRadiusAndWeight` takes
+ * coui_popup_round_frame_layout_corner_radius (28dp) for main and sub menus alike.
+ */
+internal val PopupCornerRadius = 28.dp
+
+/** Smoothing weight of [PopupCornerRadius]: weight_16_1_normal (2.5), from the same method. */
+internal val PopupCornerWeight = COUIRoundCorner.Normal.Weight
 
 /** COUI popup surface in light themes (coui_popup_window_background -> ?couiColorSurfaceTop, coui_color_surface_top #FFFFFF). */
 private val PopupSurfaceLight = Color.White
@@ -1307,7 +1313,7 @@ fun ListPopupContent(
                 transformOrigin = localTransformOrigin
             }
             .dropShadow(shape = shape, shadow = PopupShadow)
-            .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = COUIRoundCorner.CircularWeight),
+            .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight),
     ) {
         content()
     }
@@ -1351,7 +1357,7 @@ internal fun Modifier.popupClipReveal(
             width = size.width,
             height = visibleHeight,
             cornerRadius = cornerRadius.toPx(),
-            weight = COUIRoundCorner.CircularWeight,
+            weight = PopupCornerWeight,
             squircleEnabled = squircleEnabled,
         )
         if (clipStart == 0f) {

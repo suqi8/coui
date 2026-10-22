@@ -40,6 +40,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -48,7 +49,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * A [TopTips] component with COUI style.
  *
  * A tip banner shown at the top of a page, mirroring ColorOS's COUIDefaultTopTips: a rounded
- * card (couiColorContainer4 fill, couiRoundCornerM corners) holding an optional 24dp start icon,
+ * card (couiColorContainer4 fill) holding an optional 24dp start icon,
  * a 14sp message and one trailing element. Like the original view the trailing element is
  * exclusive: providing [actionText] shows an accent colored text button (COUI text-button type),
  * otherwise providing [onClose] shows a round close button (COUI image-button type). When the
@@ -67,7 +68,12 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param onAction The callback when the action button is clicked.
  * @param onClose The callback when the close button is clicked. Only shown when [actionText] is
  *   absent, matching COUIDefaultTopTipsView's exclusive button types.
- * @param cornerRadius The corner radius of the [TopTips].
+ * @param cornerRadius The corner radius of the [TopTips]. [Dp.Unspecified] (the default) follows
+ *   COUI 17 `COUIDefaultTopTips.updateRadius`: a message that fits on one line makes the banner a
+ *   capsule ([TopTipsDefaults.SingleLineCornerRadius], soft capsule weight
+ *   [TopTipsDefaults.SingleLineWeight]), anything longer uses [TopTipsDefaults.CornerRadius] at
+ *   [TopTipsDefaults.Weight], and switching between the two animates radius and weight over 300ms.
+ *   An explicit radius is drawn at [TopTipsDefaults.Weight].
  * @param colors The [TopTipsColors] of the [TopTips].
  */
 @Composable
@@ -79,7 +85,7 @@ fun TopTips(
     actionText: String? = null,
     onAction: (() -> Unit)? = null,
     onClose: (() -> Unit)? = null,
-    cornerRadius: Dp = TopTipsDefaults.CornerRadius,
+    cornerRadius: Dp = Dp.Unspecified,
     colors: TopTipsColors = TopTipsDefaults.topTipsColors(),
 ) {
     // COUICustomTopTips.showWithAnim/dismissWithAnim: ObjectAnimator scaleY 0..1 over 250ms with
@@ -98,30 +104,52 @@ fun TopTips(
     val textStyle = TopTipsDefaults.textStyle()
     val actionStyle = TopTipsDefaults.actionTextStyle()
 
-    Box(
-        modifier = modifier
-            .graphicsLayer { scaleY = visibility.value }
-            .squircleSurface(color = colors.containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight),
+    BoxWithConstraints(
+        modifier = modifier.graphicsLayer { scaleY = visibility.value },
+        propagateMinConstraints = true,
     ) {
-        BoxWithConstraints {
-            // COUIDefaultTopTipsView.isNeedMultiText: the layout switches to the multi-line
-            // variant when the single-line message plus the button clearance would reach into
-            // the action label.
-            val density = LocalDensity.current
-            val textMeasurer = rememberTextMeasurer()
-            val multiLine = hasAction && constraints.hasBoundedWidth && with(density) {
-                val startInset = TopTipsDefaults.ContentPadding +
-                    if (startIcon != null) TopTipsDefaults.IconSize + TopTipsDefaults.IconSpacing else 0.dp
-                val actionWidth = textMeasurer
+        // COUIDefaultTopTipsView.isNeedMultiText: the layout switches to the multi-line
+        // variant when the single-line message plus the button clearance would reach into
+        // the action label.
+        val density = LocalDensity.current
+        val textMeasurer = rememberTextMeasurer()
+        val startInset = TopTipsDefaults.ContentPadding +
+            if (startIcon != null) TopTipsDefaults.IconSize + TopTipsDefaults.IconSpacing else 0.dp
+        val titleWidth = with(density) {
+            textMeasurer.measure(AnnotatedString(text), style = textStyle, maxLines = 1).size.width.toDp()
+        }
+        val actionWidth = if (hasAction) {
+            with(density) {
+                textMeasurer
                     .measure(AnnotatedString(actionText!!), style = actionStyle, maxLines = 1)
                     .size.width.toDp() + ActionPaddingHorizontal * 2
-                val titleWidth = textMeasurer
-                    .measure(AnnotatedString(text), style = textStyle, maxLines = 1)
-                    .size.width.toDp()
-                val actionStart = this@BoxWithConstraints.maxWidth - ActionEndMargin - actionWidth
-                startInset + titleWidth + ButtonClearance >= actionStart
             }
+        } else {
+            0.dp
+        }
+        val boundedWidth = constraints.hasBoundedWidth
+        val multiLine = hasAction && boundedWidth &&
+            startInset + titleWidth + ButtonClearance >= maxWidth - ActionEndMargin - actionWidth
+        // COUIDefaultTopTipsView.mIsSingleLineText: the message fits the single-row layout on one line.
+        val singleLineText = !multiLine && (
+            !boundedWidth || run {
+                val trailing = when {
+                    hasAction -> TitleTrailingSpacing + actionWidth + ActionEndMargin
+                    showClose -> TitleTrailingSpacing + TopTipsDefaults.IconSize + TopTipsDefaults.ContentPadding
+                    else -> TopTipsDefaults.ContentPadding
+                }
+                titleWidth <= maxWidth - startInset - trailing
+            }
+            )
+        val corner = rememberTopTipsCorner(cornerRadius, singleLineText)
 
+        Box(
+            modifier = Modifier.squircleSurface(
+                color = colors.containerColor,
+                cornerRadius = corner.radius,
+                weight = corner.weight,
+            ),
+        ) {
             if (multiLine) {
                 Column(
                     modifier = Modifier
@@ -286,10 +314,49 @@ private fun TopTipsCloseButton(
     }
 }
 
+/** The corner of a [TopTips] banner: the radius with its smoothing weight. */
+private class TopTipsCorner(val radius: Dp, val weight: Float)
+
+/**
+ * The COUI 17 top tips corner (`COUIDefaultTopTips.updateRadius` / `createCornerAnimator`): the
+ * single-line capsule or the multi-line [TopTipsDefaults.CornerRadius], radius and weight animated
+ * together over 300ms with COUIEaseInterpolator when the message changes between the two. An
+ * explicit [cornerRadius] is used as is.
+ */
+@Composable
+private fun rememberTopTipsCorner(cornerRadius: Dp, singleLineText: Boolean): TopTipsCorner {
+    val target = if (singleLineText) 0f else 1f
+    val progress = remember { Animatable(target) }
+    LaunchedEffect(target) {
+        if (progress.value != target) progress.animateTo(target, tween(CornerAnimDurationMillis, easing = CornerAnimEasing))
+    }
+    if (cornerRadius != Dp.Unspecified) return TopTipsCorner(cornerRadius, TopTipsDefaults.Weight)
+    val fraction = progress.value
+    return TopTipsCorner(
+        radius = lerp(TopTipsDefaults.SingleLineCornerRadius, TopTipsDefaults.CornerRadius, fraction),
+        weight = TopTipsDefaults.SingleLineWeight + (TopTipsDefaults.Weight - TopTipsDefaults.SingleLineWeight) * fraction,
+    )
+}
+
 /** Contains default values used by [TopTips]. */
 object TopTipsDefaults {
-    /** The corner radius of the banner (COUI couiRoundCornerM: coui_round_corner_m 12dp). */
-    val CornerRadius = 12.dp
+    /**
+     * The corner radius of a banner whose message wraps or that has its action on its own row (COUI
+     * 17 coui_toptips_view_radius 28dp, `getMultiLineRadius`).
+     */
+    val CornerRadius = 28.dp
+
+    /** The smoothing weight of [CornerRadius] (COUI 17 `getMultiLineWeight`: 3.0). */
+    val Weight = COUIRoundCorner.Large.Weight
+
+    /**
+     * The corner radius of a single-line banner: couiRoundCornerFULL (72dp), a capsule
+     * (`getSingleLineRadius`).
+     */
+    val SingleLineCornerRadius = COUIRoundCorner.Full
+
+    /** The smoothing weight of [SingleLineCornerRadius]: the 1.0 soft capsule (`getSingleLineWeight`). */
+    val SingleLineWeight = COUIRoundCorner.CapsuleWeight
 
     /** The start/end padding of the banner content (COUI coui_toptips_view_btn_margin). */
     val ContentPadding = 12.dp
@@ -409,6 +476,12 @@ private val CloseCrossStrokeWidth = 1.6.dp
 
 /** COUICustomTopTips show/dismiss animation duration (ObjectAnimator setDuration(250)). */
 private val ShowDismissDurationMillis = 250
+
+/** COUIDefaultTopTips.createCornerAnimator duration. */
+private val CornerAnimDurationMillis = 300
+
+/** COUIEaseInterpolator (0.33, 0, 0.67, 1), the corner animator's interpolator. */
+private val CornerAnimEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
 /**
  * The show/dismiss easing: Android's default AccelerateDecelerateInterpolator, closely matched

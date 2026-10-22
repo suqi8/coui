@@ -445,7 +445,7 @@ private fun Modifier.tooltipAnchorSemantics(
  * @param caretShape when non-null, draws a caret pointing at the anchor; null (default) keeps the
  *   Miuix caret-less style.
  * @param maxWidth the maximum width of the tooltip.
- * @param cornerRadius the corner radius of the tooltip.
+ * @param cornerRadius the corner radius of the tooltip, drawn at the COUI 17 tooltip weight 3.0.
  * @param containerColor the container color of the tooltip.
  * @param contentColor the content color of the tooltip.
  * @param insideMargin the margin inside the tooltip.
@@ -489,7 +489,7 @@ fun TooltipScope.PlainTooltip(
  * @param caretShape when non-null, draws a caret pointing at the anchor; null (default) keeps the
  *   Miuix caret-less style.
  * @param maxWidth the maximum width of the tooltip.
- * @param cornerRadius the corner radius of the tooltip.
+ * @param cornerRadius the corner radius of the tooltip, drawn at the COUI 17 tooltip weight 3.0.
  * @param colors the [RichTooltipColors] of the tooltip.
  * @param insideMargin the margin inside the tooltip.
  * @param text the body content of the tooltip.
@@ -597,7 +597,7 @@ private fun TooltipScope.TooltipSurface(
                     shape = RoundedCornerShape(cornerRadius),
                     shadow = Shadow(radius = 10.dp, color = Color.Black, alpha = 0.1f),
                 )
-                .squircleBackground(color = containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
+                .squircleBackground(color = containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
                 .padding(insideMargin),
         ) {
             content()
@@ -826,8 +826,12 @@ object TooltipDefaults {
     /** The default maximum width of a plain tooltip. */
     val PlainTooltipMaxWidth = 200.dp
 
-    /** The default corner radius of a plain tooltip. */
-    val PlainTooltipCornerRadius = 12.dp
+    /**
+     * The default corner radius of a plain tooltip: COUI 17 `COUIToolTips` outlines its panel with
+     * `coui_tooltips_os_16_1_radius_17_dp` (17dp) at weight 3.0 ([COUIRoundCorner.Large.Weight]),
+     * the weight every tooltip is drawn with.
+     */
+    val PlainTooltipCornerRadius = 17.dp
 
     /** The default margin inside a plain tooltip. */
     val PlainTooltipInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
@@ -843,8 +847,8 @@ object TooltipDefaults {
     /** The default maximum width of a rich tooltip. */
     val RichTooltipMaxWidth = 320.dp
 
-    /** The default corner radius of a rich tooltip. */
-    val RichTooltipCornerRadius = 16.dp
+    /** The default corner radius of a rich tooltip: the same 17dp `COUIToolTips` panel radius. */
+    val RichTooltipCornerRadius = 17.dp
 
     /** The default margin inside a rich tooltip. */
     val RichTooltipInsideMargin = PaddingValues(all = 16.dp)
