@@ -98,9 +98,9 @@ import kotlin.math.sqrt
  * height and the thumb to 8dp (with a slight bounce), a tap springs the progress to the touched
  * position, a fast release keeps the progress gliding (`couiSeekBarPhysicsEnable`, continuous
  * sliders only), and running into the maximum flashes a white highlight over the progress
- * (`GlitterEffectRenderer`). With [material] the pressed thumb turns to glass and a touch
- * spotlight follows the finger, the effects ColorOS 17 adds when the system material switches
- * are on.
+ * (`GlitterEffectRenderer`). With [material] (the default) the pressed thumb turns to glass and
+ * a touch spotlight follows the finger, the effects ColorOS 17 adds with its system material
+ * switches on, as they are on real devices.
  *
  * @param value The current value of the [Slider]. If outside of [valueRange] provided, value will be coerced to this range.
  * @param onValueChange The callback to be called when the value changes.
@@ -125,9 +125,10 @@ import kotlin.math.sqrt
  * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
  *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
  * @param material Whether to draw the COUI 17 material effects: the glass thumb while pressed
- *   (`TexturedThumbRenderer`) and the `TYPE_OPAQUE_MEDIUM_1` touch spotlight. `false` by default,
- *   as on ColorOS 17 with the system material switches off. The spotlight needs runtime shaders
- *   (Android 13+ and every Skia target) and is skipped elsewhere.
+ *   (`TexturedThumbRenderer`) and the `TYPE_OPAQUE_MEDIUM_1` touch spotlight. `true` by default:
+ *   `COUISeekBar` follows the system spotlight switch (`onMaterialStateChange`), which is on on
+ *   ColorOS 17 devices. Pass `false` to opt out. The spotlight needs runtime shaders (Android 13+
+ *   and every Skia target) and is skipped elsewhere.
  */
 @Composable
 fun Slider(
@@ -145,7 +146,7 @@ fun Slider(
     showKeyPoints: Boolean = false,
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
-    material: Boolean = false,
+    material: Boolean = true,
 ) {
     require(steps >= 0) { "steps should be >= 0" }
     require(valueRange.start < valueRange.endInclusive) { "valueRange start should be less than end" }
