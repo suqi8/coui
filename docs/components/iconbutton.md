@@ -81,6 +81,7 @@ Scaffold {
 | modifier        | Modifier               | Modifier applied to the button     | Modifier                        | No       |
 | enabled         | Boolean                | Whether button is clickable        | true                            | No       |
 | holdDownState   | Boolean                | Whether button is held down        | false                           | No       |
+| material        | Boolean                | Draw the COUI 17 top-bar button material (filtered backdrop, shadow, edge lighting, touch spotlight, press feedback) | true | No       |
 | backgroundColor | Color                  | Button background color            | Color.Unspecified               | No       |
 | cornerRadius    | Dp                     | Button corner radius               | IconButtonDefaults.CornerRadius | No       |
 | minHeight       | Dp                     | Button minimum height              | IconButtonDefaults.MinHeight    | No       |
@@ -95,9 +96,9 @@ The IconButtonDefaults object provides default values for the icon button compon
 
 | Constant Name | Type | Description           | Default Value |
 | ------------- | ---- | --------------------- | ------------- |
-| MinWidth      | Dp   | Minimum button width  | 48.dp         |
-| MinHeight     | Dp   | Minimum button height | 48.dp         |
-| CornerRadius  | Dp   | Button corner radius  | 24.dp         |
+| MinWidth      | Dp   | Minimum button width  | 40.dp         |
+| MinHeight     | Dp   | Minimum button height | 40.dp         |
+| CornerRadius  | Dp   | Button corner radius  | 20.dp         |
 
 ## Advanced Usage
 

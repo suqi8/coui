@@ -81,6 +81,7 @@ Scaffold {
 | modifier        | Modifier               | 应用于按钮的修饰符    | Modifier                        | 否       |
 | enabled         | Boolean                | 按钮是否可点击        | true                            | 否       |
 | holdDownState   | Boolean                | 是否处于按下状态      | false                           | 否       |
+| material        | Boolean                | 是否绘制 COUI 17 顶栏按钮材质（背景滤镜、阴影、边缘光、跟手聚光、按压反馈） | true | 否       |
 | backgroundColor | Color                  | 按钮的背景颜色        | Color.Unspecified               | 否       |
 | cornerRadius    | Dp                     | 按钮圆角半径          | IconButtonDefaults.CornerRadius | 否       |
 | minHeight       | Dp                     | 按钮最小高度          | IconButtonDefaults.MinHeight    | 否       |
@@ -95,9 +96,9 @@ IconButtonDefaults 对象提供了图标按钮组件的默认值。
 
 | 常量名       | 类型 | 说明           | 默认值 |
 | ------------ | ---- | -------------- | ------ |
-| MinWidth     | Dp   | 按钮的最小宽度 | 48.dp  |
-| MinHeight    | Dp   | 按钮的最小高度 | 48.dp  |
-| CornerRadius | Dp   | 按钮的圆角半径 | 24.dp  |
+| MinWidth     | Dp   | 按钮的最小宽度 | 40.dp  |
+| MinHeight    | Dp   | 按钮的最小高度 | 40.dp  |
+| CornerRadius | Dp   | 按钮的圆角半径 | 20.dp  |
 
 ## 进阶用法
 

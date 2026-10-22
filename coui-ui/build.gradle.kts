@@ -64,6 +64,13 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+        // Skia natives and the UI test harness, so desktop tests can render the runtime shaders.
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.jetbrains.compose.ui.test)
+            }
+        }
     }
 }
 
