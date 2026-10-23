@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,11 +22,15 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlendModeColorFilter
 import androidx.compose.ui.graphics.Color
@@ -37,7 +42,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
-import io.github.suqi8.coui.kmp.icon.basic.ArrowRight
 import io.github.suqi8.coui.kmp.icon.basic.ArrowUpDown
 import io.github.suqi8.coui.kmp.icon.basic.Check
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -62,6 +66,12 @@ fun RowScope.DropdownArrowEndAction(
 /**
  * The implementation of the dropdown.
  *
+ * In popup mode the row follows COUI 17 `coui_popup_list_window_item.xml` as bound by
+ * `MixedPopupListAdapter.VerticalViewHolder`: a 40dp minimum height with 8dp vertical and 20dp
+ * horizontal padding, an optional 20dp icon, the title over an optional description, then — only
+ * when needed — a trailing hint slot and a 24dp state icon (the check of a selected row, or the
+ * sub-menu indicator). Press feedback is the list's shared mask, not a per-row highlight.
+ *
  * @param item The item of the current option.
  * @param optionSize The size of the options.
  * @param isSelected Whether the option is selected.
@@ -69,14 +79,13 @@ fun RowScope.DropdownArrowEndAction(
  * @param dropdownColors The [DropdownColors] used to style the option row.
  * @param enabled Whether the option is clickable. Disabled rows ignore clicks and use the disabled text color.
  * @param dialogMode Whether the item is shown in dialog mode.
- * @param hasSubmenu When true, this row acts as a submenu trigger: a trailing chevron is shown
+ * @param hasSubmenu When true, this row acts as a submenu trigger: the sub-menu indicator is shown
  *   instead of the selection check, and the row's accessibility role becomes [Role.Button].
- * @param isFirst Whether this row is the first row of the entire popup. Controls the larger top
- *   padding in popup mode. Defaults to `index == 0`; multi-entry callers should pass the
- *   popup-global flag so only the actual first row gets extra padding.
- * @param isLast Whether this row is the last row of the entire popup. Controls the larger bottom
- *   padding in popup mode. Defaults to `index == optionSize - 1`; multi-entry callers should pass
- *   the popup-global flag.
+ * @param isFirst Whether this row is the first row of the entire popup. COUI 17 keeps one padding on
+ *   every popup row and insets the list itself, so popup mode no longer reads it; dialog mode never did.
+ * @param isLast Whether this row is the last row of the entire popup; see [isFirst].
+ * @param submenuExpanded Whether the sub menu this row opens is showing. COUI then tints the
+ *   indicator with the selected colour (`PopupListItem.groupState` 1).
  * @param onSelectedIndexChange The callback invoked with [index] when the option is selected.
  */
 @Composable
@@ -91,76 +100,183 @@ fun DropdownImpl(
     hasSubmenu: Boolean = false,
     isFirst: Boolean = index == 0,
     isLast: Boolean = index == optionSize - 1,
+    submenuExpanded: Boolean = false,
     onSelectedIndexChange: (Int) -> Unit,
 ) {
-    val additionalTopPadding =
-        if (!dialogMode && isFirst) {
-            DropdownDefaults.FirstLastVerticalPadding
-        } else {
-            DropdownDefaults.MiddleVerticalPadding
-        }
-    val additionalBottomPadding =
-        if (!dialogMode && isLast) {
-            DropdownDefaults.FirstLastVerticalPadding
-        } else {
-            DropdownDefaults.MiddleVerticalPadding
-        }
-
-    val backgroundColor = if (isSelected) {
-        dropdownColors.selectedContainerColor
+    if (dialogMode) {
+        DialogDropdownRow(
+            item = item,
+            isSelected = isSelected,
+            index = index,
+            dropdownColors = dropdownColors,
+            enabled = enabled,
+            onSelectedIndexChange = onSelectedIndexChange,
+        )
     } else {
-        dropdownColors.containerColor
+        PopupDropdownRow(
+            item = item,
+            isSelected = isSelected,
+            dropdownColors = dropdownColors,
+            enabled = enabled,
+            hasSubmenu = hasSubmenu,
+            submenuExpanded = submenuExpanded,
+            submenuHeader = false,
+            onClick = { onSelectedIndexChange(index) },
+        )
     }
-    val backgroundColorState = rememberUpdatedState(backgroundColor)
+}
 
-    val checkColor = when {
-        !isSelected -> Color.Transparent
-        !enabled -> dropdownColors.disabledContentColor
-        else -> dropdownColors.selectedIndicatorColor
-    }
-
-    // COUI DefaultAdapter.getTitleColor resolves the alert item type (ITEM_TYPE_ALERT) to
-    // couiColorError before the tint selector is consulted, so an enabled alert row is red
-    // whether or not it is selected; disabled alert rows fall back to the selector.
+/**
+ * One COUI 17 popup row (`MixedPopupListAdapter.VerticalViewHolder.bind`).
+ *
+ * @param submenuHeader Whether this row is the copy of the parent item that heads a sub menu on a
+ *   compact window (`PopupListItem.groupState` 2): its title turns medium and its indicator takes the
+ *   selected colour (`setTitleForVertical` / `getTintColorByState`).
+ * @param held Whether the list's shared mask stays locked on this row.
+ * @param pressHandoff Whether this row inherits a fading press when it first appears.
+ * @param onLongClick The action of a 650ms long press, or `null`.
+ */
+@Composable
+internal fun PopupDropdownRow(
+    item: DropdownItem,
+    isSelected: Boolean,
+    dropdownColors: DropdownColors,
+    enabled: Boolean,
+    hasSubmenu: Boolean,
+    submenuExpanded: Boolean,
+    submenuHeader: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    held: Boolean = false,
+    pressHandoff: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
+) {
+    // COUI MixedPopupListAdapter.getTintColorByState: a disabled row takes the disabled state, an
+    // enabled alert row (ITEM_TYPE_ALERT) couiColorError, everything else the tint selector, whose
+    // selected and default states are both couiColorLabelPrimary in COUI 17.
     val titleColor = when {
         !enabled -> dropdownColors.disabledContentColor
         item.alert -> dropdownColors.alertContentColor
         isSelected -> dropdownColors.selectedContentColor
         else -> dropdownColors.contentColor
     }
-
-    // COUI DefaultAdapter.setDescription always paints the description with
-    // couiColorLabelSecondary — no selected or disabled variant, unlike the title selector.
+    // COUI MixedPopupListAdapter.setDescription always paints couiColorLabelSecondary.
     val summaryColor = if (isSelected) dropdownColors.selectedSummaryColor else dropdownColors.summaryColor
+    val backgroundColor = if (isSelected) dropdownColors.selectedContainerColor else dropdownColors.containerColor
+    val backgroundColorState = rememberUpdatedState(backgroundColor)
 
-    val containerModifier = remember(dialogMode, additionalTopPadding, additionalBottomPadding) {
-        val sized = if (dialogMode) {
-            Modifier
-                .heightIn(min = DropdownDefaults.MinHeight)
-                .widthIn(min = DropdownDefaults.MinWidth)
-                .fillMaxWidth()
-                .padding(horizontal = DropdownDefaults.DialogHorizontalPadding)
-        } else {
-            // COUI DefaultAdapter.configItemVerticalPadding enforces a per-row minimum height
-            // (padding included): the base coui_popup_list_window_item_min_height grown, on
-            // first/last rows, by the folded-in list inset carried by the larger edge padding.
-            val minHeight = DropdownDefaults.PopupItemMinHeight +
-                (additionalTopPadding - DropdownDefaults.MiddleVerticalPadding) +
-                (additionalBottomPadding - DropdownDefaults.MiddleVerticalPadding)
-            Modifier
-                .heightIn(min = minHeight)
-                .padding(horizontal = DropdownDefaults.InsideHorizontalPadding)
-        }
-        sized.padding(top = additionalTopPadding, bottom = additionalBottomPadding)
-    }
-    val innerRowModifier = remember(dialogMode) {
-        if (dialogMode) Modifier else Modifier.widthIn(max = DropdownDefaults.MaxItemTextWidth)
+    // COUI MixedPopupListAdapter.setHint hides the whole hint layout on a disabled row.
+    val hint = item.hint?.takeIf { enabled }
+    // setStateIcon: the 24dp state icon only exists for a checked row or a sub-menu trigger.
+    val showStateIcon = isSelected || hasSubmenu
+    val stateColor = when {
+        !enabled -> dropdownColors.disabledContentColor
+        hasSubmenu && (submenuExpanded || submenuHeader) -> dropdownColors.selectedIndicatorColor
+        hasSubmenu -> dropdownColors.submenuIndicatorColor
+        else -> dropdownColors.selectedIndicatorColor
     }
 
-    val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
+    var titleSingleLine by remember { mutableStateOf(true) }
+    val currentOnClick by rememberUpdatedState(onClick)
     val role = if (hasSubmenu) Role.Button else Role.RadioButton
-    // COUI DefaultAdapter.setHint hides the whole hint layout on a disabled row, so the
-    // surrounding gaps collapse with it (setGap only reserves them for a visible hint).
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .drawBehind { drawRect(backgroundColorState.value) }
+            .popupListItem(
+                selected = isSelected,
+                enabled = enabled,
+                role = role,
+                hasIcon = item.icon != null,
+                singleLine = titleSingleLine && item.summary == null,
+                hasSubmenu = hasSubmenu,
+                held = held,
+                pressHandoff = pressHandoff,
+                onLongClick = onLongClick,
+                onClick = { currentOnClick() },
+            )
+            .then(PopupRowModifier),
+    ) {
+        item.icon?.let { it(IconCellModifier) }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.text,
+                modifier = TitleWidthModifier,
+                style = COUITheme.textStyles.paragraph,
+                // COUI coui_popup_list_window_item.xml textFontWeight=400; the sub-menu header turns
+                // medium (MixedPopupListAdapter.setTitleForVertical, groupState 2 at index 0).
+                fontWeight = if (submenuHeader) FontWeight.Medium else FontWeight.Normal,
+                color = titleColor,
+                // COUI setTitleForVertical: 3 lines without a description, 2 with one.
+                maxLines = if (item.summary == null) {
+                    DropdownDefaults.TitleMaxLines
+                } else {
+                    DropdownDefaults.TitleWithSummaryMaxLines
+                },
+                overflow = TextOverflow.Ellipsis,
+                onTextLayout = { titleSingleLine = it.lineCount <= 1 },
+            )
+            item.summary?.let {
+                Text(
+                    text = it,
+                    modifier = TitleWidthModifier,
+                    style = COUITheme.textStyles.footnote2,
+                    color = summaryColor,
+                    maxLines = DropdownDefaults.SummaryMaxLines,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        // setGap: the 8dp title-end gap only exists next to a hint or a state icon, the 4dp
+        // hint-end gap only between the two.
+        if (hint != null || showStateIcon) Spacer(TitleEndGapModifier)
+        if (hint != null) {
+            Box(HintCellModifier, contentAlignment = Alignment.Center) { hint() }
+            if (showStateIcon) Spacer(HintEndGapModifier)
+        }
+        if (showStateIcon) {
+            val colorFilter = remember(stateColor) { BlendModeColorFilter(stateColor, BlendMode.SrcIn) }
+            Image(
+                modifier = StateIconModifier,
+                imageVector = if (hasSubmenu) PopupMenuIcons.ExpandableIndicator else PopupMenuIcons.Check,
+                colorFilter = colorFilter,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+/** The single-choice row of a dropdown shown as a dialog (COUI alert_dialog_singlechoice). */
+@Composable
+private fun DialogDropdownRow(
+    item: DropdownItem,
+    isSelected: Boolean,
+    index: Int,
+    dropdownColors: DropdownColors,
+    enabled: Boolean,
+    onSelectedIndexChange: (Int) -> Unit,
+) {
+    val backgroundColor = if (isSelected) {
+        dropdownColors.selectedContainerColor
+    } else {
+        dropdownColors.containerColor
+    }
+    val backgroundColorState = rememberUpdatedState(backgroundColor)
+    val checkColor = when {
+        !isSelected -> Color.Transparent
+        !enabled -> dropdownColors.disabledContentColor
+        else -> dropdownColors.selectedIndicatorColor
+    }
+    val titleColor = when {
+        !enabled -> dropdownColors.disabledContentColor
+        item.alert -> dropdownColors.alertContentColor
+        isSelected -> dropdownColors.selectedContentColor
+        else -> dropdownColors.contentColor
+    }
+    val summaryColor = if (isSelected) dropdownColors.selectedSummaryColor else dropdownColors.summaryColor
+    val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
     val hint = item.hint?.takeIf { enabled }
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -170,27 +286,24 @@ fun DropdownImpl(
             .popupListItem(
                 selected = isSelected,
                 enabled = enabled,
-                role = role,
+                role = Role.RadioButton,
                 hasIcon = item.icon != null,
                 onClick = { currentOnSelectedIndexChange(index) },
             )
-            .then(containerModifier),
+            .then(DialogRowModifier),
     ) {
         Row(
-            modifier = innerRowModifier,
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start,
         ) {
-            item.icon?.let { it(IconCellModifier) }
+            item.icon?.let { it(DialogIconCellModifier) }
             Column {
                 Text(
                     text = item.text,
                     style = COUITheme.textStyles.body1,
-                    // COUI popup rows are regular weight (coui_popup_list_window_item.xml
-                    // textFontWeight=400); dialog single-choice rows use medium (couiTextAppearanceHeadline6).
-                    fontWeight = if (dialogMode) FontWeight.Medium else FontWeight.Normal,
+                    // Dialog single-choice rows use medium (couiTextAppearanceHeadline6).
+                    fontWeight = FontWeight.Medium,
                     color = titleColor,
-                    // COUI DefaultAdapter.setTitle: 3 lines when the row has no description, 2 when it does.
                     maxLines = if (item.summary == null) {
                         DropdownDefaults.TitleMaxLines
                     } else {
@@ -203,61 +316,36 @@ fun DropdownImpl(
                         text = it,
                         style = COUITheme.textStyles.body2,
                         color = summaryColor,
-                        // COUI DefaultAdapter.setDescription.
                         maxLines = DropdownDefaults.SummaryMaxLines,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
         }
-
         if (hint != null) {
             Spacer(TitleEndGapModifier)
             Box(HintCellModifier, contentAlignment = Alignment.Center) { hint() }
         }
-
-        if (hasSubmenu) {
-            // COUI tints the expandable indicator via the status-icon selector
-            // (coui_popup_list_window_item_status_icon_tint_selector: couiColorLabelTertiary default,
-            // couiColorLabelTheme while expanded). The chevron is intentionally static —
-            // only the cloned header in the secondary popup rotates during expansion.
-            val chevronColor = when {
-                !enabled -> dropdownColors.disabledContentColor
-                isSelected -> dropdownColors.selectedContentColor
-                else -> COUITheme.colorScheme.onSurfaceVariantActions
-            }
-            val chevronColorFilter = remember(chevronColor) {
-                BlendModeColorFilter(chevronColor, BlendMode.SrcIn)
-            }
-            Image(
-                modifier = if (hint != null) HintedChevronIconModifier else ChevronIconBaseModifier,
-                imageVector = COUIIcons.Basic.ArrowRight,
-                colorFilter = chevronColorFilter,
-                contentDescription = null,
-            )
-        } else {
-            val checkColorFilter = remember(checkColor) {
-                BlendModeColorFilter(checkColor, BlendMode.SrcIn)
-            }
-            Image(
-                modifier = if (hint != null) HintedCheckIconModifier else CheckIconBaseModifier,
-                imageVector = COUIIcons.Basic.Check,
-                colorFilter = checkColorFilter,
-                contentDescription = null,
-            )
-        }
+        val checkColorFilter = remember(checkColor) { BlendModeColorFilter(checkColor, BlendMode.SrcIn) }
+        Image(
+            modifier = if (hint != null) HintedCheckIconModifier else CheckIconBaseModifier,
+            imageVector = COUIIcons.Basic.Check,
+            colorFilter = checkColorFilter,
+            contentDescription = null,
+        )
     }
 }
 
 /**
  * A non-clickable group-title row shown inside a dropdown popup
- * (COUI coui_popup_list_window_header_item.xml).
+ * (COUI 17 coui_popup_list_window_header_item.xml): 4dp above and 8dp below the title, 20dp at the
+ * sides, no minimum height, `couiTextDescription` (12sp medium) in couiColorLabelSecondary, at most
+ * two lines. The shared press mask passes over it without changing state.
  *
  * @param text The group title.
  * @param modifier The modifier applied to the header row.
  * @param color The title color.
- * @param isFirst Whether this header is the first row of the entire popup. Like [DropdownImpl], the
- *   top edge then absorbs the folded-in list inset carried by [DropdownDefaults.FirstLastVerticalPadding].
+ * @param isFirst Kept for source compatibility; COUI 17 insets the list instead of the first row.
  */
 @Composable
 fun DropdownHeaderItem(
@@ -266,32 +354,56 @@ fun DropdownHeaderItem(
     color: Color = DropdownDefaults.dropdownColors().headerColor,
     isFirst: Boolean = false,
 ) {
-    val topPadding = if (isFirst) {
-        DropdownDefaults.FirstLastVerticalPadding
-    } else {
-        DropdownDefaults.MiddleVerticalPadding
-    }
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(
-                min = DropdownDefaults.PopupHeaderItemMinHeight +
-                    (topPadding - DropdownDefaults.MiddleVerticalPadding),
-            )
-            .padding(horizontal = DropdownDefaults.InsideHorizontalPadding)
-            .padding(top = topPadding, bottom = DropdownDefaults.MiddleVerticalPadding),
+            .padding(
+                start = DropdownDefaults.InsideHorizontalPadding,
+                top = DropdownDefaults.PopupHeaderTopPadding,
+                end = DropdownDefaults.InsideHorizontalPadding,
+                bottom = DropdownDefaults.MiddleVerticalPadding,
+            ),
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
             text = text,
-            // COUI couiTextDescription: 12sp sans-serif-medium.
-            fontSize = COUITheme.textStyles.footnote2.fontSize,
+            style = COUITheme.textStyles.footnote2,
             fontWeight = FontWeight.Medium,
             color = color,
             maxLines = DropdownDefaults.HeaderMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+/**
+ * The divider COUI 17 draws between two groups of a popup menu (`MixedPopupListAdapter`
+ * `DividerViewHolder`, item view type 4): a 12dp band (coui_popup_list_group_divider_total_height)
+ * with a centred 0.5dp line (coui_popup_list_divider_height) inset 20dp at both sides
+ * (coui_popup_list_default_divider_margin_horizontal), in couiColorDivider.
+ *
+ * @param modifier The modifier applied to the band.
+ * @param color The line color.
+ */
+@Composable
+fun DropdownGroupDivider(
+    modifier: Modifier = Modifier,
+    color: Color = DropdownDefaults.PopupGroupDividerColor,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(DropdownDefaults.PopupGroupDividerThickness)
+            .drawBehind {
+                val inset = DropdownDefaults.PopupGroupDividerMargin.toPx()
+                val line = DropdownDefaults.PopupGroupDividerLineThickness.toPx()
+                drawRect(
+                    color = color,
+                    topLeft = Offset(inset, (size.height - line) / 2f),
+                    size = Size((size.width - 2 * inset).coerceAtLeast(0f), line),
+                )
+            },
+    )
 }
 
 @Composable
@@ -378,6 +490,9 @@ fun SpinnerItemImpl(
  *   [contentColor], i.e. no alert tint unless a caller opts in.
  * @param headerColor The title color of a [DropdownHeaderItem] group header row. Defaults to
  *   [summaryColor], which already carries the same couiColorLabelSecondary value.
+ * @param submenuIndicatorColor The color of the sub-menu indicator while its sub menu is closed
+ *   (COUI coui_popup_list_window_item_status_icon_tint_selector default, couiColorLabelTertiary).
+ *   Defaults to [disabledContentColor], which carries the same value.
  */
 @Immutable
 data class DropdownColors(
@@ -391,6 +506,7 @@ data class DropdownColors(
     val disabledContentColor: Color = contentColor,
     val alertContentColor: Color = contentColor,
     val headerColor: Color = summaryColor,
+    val submenuIndicatorColor: Color = disabledContentColor,
 )
 
 /**
@@ -467,14 +583,15 @@ object DropdownDefaults {
 
     /**
      * Minimum height of each option row in popup mode, vertical padding included
-     * (COUI coui_popup_list_window_item_min_height). Matching COUI
-     * DefaultAdapter.configItemVerticalPadding, the first/last rows additionally grow by the
-     * folded-in list inset (coui_popup_list_padding_vertical), i.e. by
-     * [FirstLastVerticalPadding] - [MiddleVerticalPadding] per affected edge.
+     * (COUI coui_popup_list_window_item_min_height). COUI 17 applies it, and the 8dp vertical
+     * padding, to every row alike (`MixedPopupListAdapter.configItemVerticalPadding`).
      */
-    val PopupItemMinHeight: Dp = 48.dp
+    val PopupItemMinHeight: Dp = 40.dp
 
-    /** Size of the trailing check icon shown on the selected option (COUI coui_popup_list_window_checkbox_width). */
+    /**
+     * Size of the trailing state icon — the check of the selected option or the sub-menu indicator
+     * (COUI coui_popup_list_window_checkbox_width / _height).
+     */
     val CheckIconSize: Dp = 24.dp
 
     /**
@@ -484,18 +601,17 @@ object DropdownDefaults {
     val ArrowSize: DpSize = DpSize(width = 14.dp, height = 24.dp)
 
     /**
-     * Size of the trailing chevron shown on rows that own a submenu
-     * (native box of COUI coui_btn_next_normal.xml, a 12x24dp vector).
+     * Size of the sub-menu indicator (COUI 17 coui_list_expandable_indicator, a 24dp vector in the
+     * 24dp state-icon slot).
      */
-    val ChevronSize: DpSize = DpSize(width = 12.dp, height = 24.dp)
+    val ChevronSize: DpSize = DpSize(width = 24.dp, height = 24.dp)
 
-    /** Minimum size of the leading icon cell (COUI coui_popup_list_window_item.xml icon, a 24dp ImageView). */
-    val IconMinSize: Dp = 24.dp
+    /** Size of the leading icon (COUI coui_popup_list_window_item.xml icon, a 20dp ImageView). */
+    val IconMinSize: Dp = 20.dp
 
     /**
-     * Maximum width of the inner text/icon row when the dropdown is shown in popup mode
-     * (COUI coui_popup_list_window_item_max_width; applied as maxWidth on the title/description
-     * text views in coui_popup_list_window_item.xml).
+     * Maximum width of the title and description in popup mode
+     * (COUI coui_popup_list_window_item_max_width, the maxWidth of both text views).
      */
     val MaxItemTextWidth: Dp = 248.dp
 
@@ -503,46 +619,55 @@ object DropdownDefaults {
      * Horizontal padding of each row in popup mode (COUI coui_popup_list_window_item_icon_margin_left,
      * used as both paddingStart and paddingEnd in coui_popup_list_window_item.xml).
      */
-    val InsideHorizontalPadding: Dp = 16.dp
+    val InsideHorizontalPadding: Dp = 20.dp
 
     /** Horizontal padding of each row in dialog mode. */
     val DialogHorizontalPadding: Dp = 28.dp
 
     /**
-     * Top/bottom padding applied to the first/last row in popup mode: COUI
-     * coui_popup_list_window_item_padding_top_and_bottom (8dp) plus the list inset
-     * coui_popup_list_padding_vertical (2dp) that COUI DefaultAdapter folds into the edge rows.
+     * Former first/last row padding. COUI 17 no longer grows the edge rows: the list carries an 8dp
+     * inset instead (coui_popup_list_padding_vertical), so this now equals [MiddleVerticalPadding].
      */
-    val FirstLastVerticalPadding: Dp = 10.dp
+    @Deprecated("COUI 17 pads every popup row alike and insets the list; use MiddleVerticalPadding.")
+    val FirstLastVerticalPadding: Dp = 8.dp
 
     /**
-     * Top/bottom padding applied to middle rows in popup mode and to all rows in dialog mode
+     * Top/bottom padding of every row in popup mode and in dialog mode
      * (COUI coui_popup_list_window_item_padding_top_and_bottom).
      */
     val MiddleVerticalPadding: Dp = 8.dp
 
     /**
-     * Color of the 4dp group divider band between dropdown groups in popup mode
-     * (COUI coui_popup_list_group_divider_color #14000000). The resource has no values-night
-     * override, so COUI renders the same translucent black band in both light and dark themes.
+     * Top padding of a [DropdownHeaderItem] (COUI 17 coui_popup_list_window_header_item.xml
+     * paddingTop); its bottom padding is [MiddleVerticalPadding].
      */
-    val PopupGroupDividerColor: Color = Color(0x14000000)
+    val PopupHeaderTopPadding: Dp = 4.dp
 
-    /** Thickness of the group divider band (COUI coui_popup_list_group_divider_height). */
-    val PopupGroupDividerThickness: Dp = 4.dp
+    /** Color of the line inside the group divider (COUI `?couiColorDivider`, #1F000000 / #33FFFFFF). */
+    val PopupGroupDividerColor: Color
+        @Composable get() = COUITheme.colorScheme.dividerLine
 
-    /** Padding between the leading icon cell and the title text (COUI coui_popup_list_window_item_icon_margin_right). */
+    /** Height of the group divider band (COUI coui_popup_list_group_divider_total_height). */
+    val PopupGroupDividerThickness: Dp = 12.dp
+
+    /** Thickness of the line inside the group divider band (COUI coui_popup_list_divider_height). */
+    val PopupGroupDividerLineThickness: Dp = 0.5.dp
+
+    /** Side inset of the line inside the group divider band (COUI coui_popup_list_default_divider_margin_horizontal). */
+    val PopupGroupDividerMargin: Dp = 20.dp
+
+    /** Padding between the leading icon and the title text (COUI coui_popup_list_window_item_icon_margin_right). */
     val IconEndPadding: Dp = 12.dp
 
     /**
-     * Padding between the title/summary block and the trailing check icon
+     * Gap between the title/summary block and the trailing hint or state icon
      * (COUI popup_list_window_item_title_end_gap, an 8dp Space in coui_popup_list_window_item.xml).
      */
     val CheckIconStartPadding: Dp = 8.dp
 
     /**
-     * Minimum height of a [DropdownHeaderItem] group header row, vertical padding included
-     * (COUI coui_popup_list_window_header_item_min_height).
+     * Former minimum height of a [DropdownHeaderItem]. The COUI 17 header layout has no minimum
+     * height (coui_popup_list_window_header_item_min_height is unused); kept for compatibility.
      */
     val PopupHeaderItemMinHeight: Dp = 32.dp
 
@@ -558,36 +683,39 @@ object DropdownDefaults {
      */
     val HintEndPadding: Dp = 4.dp
 
-    /** Title line limit on a row without a summary (COUI DefaultAdapter.setTitle). */
+    /** Title line limit on a row without a summary (COUI MixedPopupListAdapter.setTitleForVertical). */
     val TitleMaxLines: Int = 3
 
-    /** Title line limit on a row that also shows a summary (COUI DefaultAdapter.setTitle). */
+    /** Title line limit on a row that also shows a summary (COUI MixedPopupListAdapter.setTitleForVertical). */
     val TitleWithSummaryMaxLines: Int = 2
 
-    /** Summary line limit (COUI DefaultAdapter.setDescription). */
+    /** Summary line limit (COUI MixedPopupListAdapter.setDescription). */
     val SummaryMaxLines: Int = 2
 
     /** Group header line limit (COUI coui_popup_list_window_header_item.xml maxLines). */
     val HeaderMaxLines: Int = 2
 
     /**
-     * Default popup row colors, matching COUI coui_popup_list_window_item_tint_selector
-     * (default couiColorLabelPrimary, selected couiColorLabelTheme, disabled couiColorLabelTertiary).
-     * Summaries always use couiColorLabelSecondary, and row containers stay transparent —
-     * the popup surface provides the fill.
+     * Default popup row colors, matching COUI 17 coui_popup_list_window_item_tint_selector and
+     * coui_popup_list_window_item_status_icon_tint_selector: titles in couiColorLabelPrimary whether
+     * or not they are selected, couiColorLabelTertiary when disabled; the check and an open
+     * sub menu's indicator in couiColorLabelPrimary, a closed indicator in couiColorLabelTertiary.
+     * Summaries always use couiColorLabelSecondary, and row containers stay transparent — the popup
+     * surface provides the fill.
      */
     @Composable
     fun dropdownColors(
         contentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
         summaryColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         containerColor: Color = Color.Transparent,
-        selectedContentColor: Color = COUITheme.colorScheme.primary,
+        selectedContentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
         selectedSummaryColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
         selectedContainerColor: Color = Color.Transparent,
-        selectedIndicatorColor: Color = COUITheme.colorScheme.primary,
+        selectedIndicatorColor: Color = COUITheme.colorScheme.onSurfaceContainer,
         disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
         alertContentColor: Color = COUITheme.colorScheme.error,
         headerColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        submenuIndicatorColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
     ): DropdownColors = rememberDropdownColorsImpl(
         contentColor = contentColor,
         summaryColor = summaryColor,
@@ -599,6 +727,7 @@ object DropdownDefaults {
         disabledContentColor = disabledContentColor,
         alertContentColor = alertContentColor,
         headerColor = headerColor,
+        submenuIndicatorColor = submenuIndicatorColor,
     )
 
     @Composable
@@ -613,6 +742,7 @@ object DropdownDefaults {
         disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
         alertContentColor: Color = COUITheme.colorScheme.error,
         headerColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        submenuIndicatorColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
     ): DropdownColors = rememberDropdownColorsImpl(
         contentColor = contentColor,
         summaryColor = summaryColor,
@@ -624,6 +754,7 @@ object DropdownDefaults {
         disabledContentColor = disabledContentColor,
         alertContentColor = alertContentColor,
         headerColor = headerColor,
+        submenuIndicatorColor = submenuIndicatorColor,
     )
 }
 
@@ -639,6 +770,7 @@ private fun rememberDropdownColorsImpl(
     disabledContentColor: Color,
     alertContentColor: Color,
     headerColor: Color,
+    submenuIndicatorColor: Color,
 ): DropdownColors = remember(
     contentColor,
     summaryColor,
@@ -650,6 +782,7 @@ private fun rememberDropdownColorsImpl(
     disabledContentColor,
     alertContentColor,
     headerColor,
+    submenuIndicatorColor,
 ) {
     DropdownColors(
         contentColor = contentColor,
@@ -662,16 +795,30 @@ private fun rememberDropdownColorsImpl(
         disabledContentColor = disabledContentColor,
         alertContentColor = alertContentColor,
         headerColor = headerColor,
+        submenuIndicatorColor = submenuIndicatorColor,
     )
 }
+
+private val PopupRowModifier = Modifier
+    .heightIn(min = DropdownDefaults.PopupItemMinHeight)
+    .padding(
+        horizontal = DropdownDefaults.InsideHorizontalPadding,
+        vertical = DropdownDefaults.MiddleVerticalPadding,
+    )
+
+private val DialogRowModifier = Modifier
+    .heightIn(min = DropdownDefaults.MinHeight)
+    .widthIn(min = DropdownDefaults.MinWidth)
+    .fillMaxWidth()
+    .padding(horizontal = DropdownDefaults.DialogHorizontalPadding, vertical = DropdownDefaults.MiddleVerticalPadding)
+
+private val TitleWidthModifier = Modifier.widthIn(max = DropdownDefaults.MaxItemTextWidth)
+
+private val StateIconModifier = Modifier.size(DropdownDefaults.CheckIconSize)
 
 private val CheckIconBaseModifier = Modifier
     .padding(start = DropdownDefaults.CheckIconStartPadding)
     .size(DropdownDefaults.CheckIconSize)
-
-private val ChevronIconBaseModifier = Modifier
-    .padding(start = DropdownDefaults.CheckIconStartPadding)
-    .size(width = DropdownDefaults.ChevronSize.width, height = DropdownDefaults.ChevronSize.height)
 
 // With a hint present the 8dp title-end gap already sits before the hint, so the indicator only
 // keeps the 4dp hint-end gap (COUI popup_list_window_item_hint_end_gap).
@@ -679,16 +826,18 @@ private val HintedCheckIconModifier = Modifier
     .padding(start = DropdownDefaults.HintEndPadding)
     .size(DropdownDefaults.CheckIconSize)
 
-private val HintedChevronIconModifier = Modifier
-    .padding(start = DropdownDefaults.HintEndPadding)
-    .size(width = DropdownDefaults.ChevronSize.width, height = DropdownDefaults.ChevronSize.height)
-
 private val TitleEndGapModifier = Modifier.width(DropdownDefaults.CheckIconStartPadding)
+
+private val HintEndGapModifier = Modifier.width(DropdownDefaults.HintEndPadding)
 
 private val HintCellModifier = Modifier.widthIn(max = DropdownDefaults.HintMaxWidth)
 
 private val IconCellModifier = Modifier
-    .sizeIn(minWidth = DropdownDefaults.IconMinSize, minHeight = DropdownDefaults.IconMinSize)
+    .padding(end = DropdownDefaults.IconEndPadding)
+    .size(DropdownDefaults.IconMinSize)
+
+private val DialogIconCellModifier = Modifier
+    .sizeIn(minWidth = 24.dp, minHeight = 24.dp)
     .padding(end = DropdownDefaults.IconEndPadding)
 
 @Deprecated(

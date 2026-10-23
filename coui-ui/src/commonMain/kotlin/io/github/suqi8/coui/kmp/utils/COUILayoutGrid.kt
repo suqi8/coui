@@ -48,6 +48,12 @@ internal object COUILayoutGrid {
         else -> ScreenTier.Large
     }
 
+    /**
+     * The grid margin (`MarginType.MARGIN_SMALL`) of a window: 16dp, 24dp or 40dp by
+     * [screenTier], as `LayoutGridSystem.calculateLayoutGrid` picks `layout_grid_margin_*_small`.
+     */
+    fun margin(windowWidth: Dp, windowHeight: Dp): Dp = spec(windowWidth, windowHeight).margin
+
     enum class ScreenTier { Small, Medium, Large }
 
     private fun spec(windowWidth: Dp, windowHeight: Dp): GridSpec = when (screenTier(windowWidth, windowHeight)) {

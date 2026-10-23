@@ -6,20 +6,18 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import io.github.suqi8.coui.kmp.basic.DropdownColors
-import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
 import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 
 /**
- * Renders a list of [DropdownEntry] groups inside a popup container. Computes popup-global
- * first/last per row internally so only the very first and very last rows of the entire popup
- * receive the larger first/last padding; group boundaries fall back to the middle padding.
+ * Renders a list of [DropdownEntry] groups inside a popup container.
  *
  * A group that declares a [DropdownEntry.title] gets a non-clickable [DropdownHeaderItem] above its
- * items. The header then owns the group's leading edge, so the first option row no longer counts as
- * the popup's first row.
+ * items. Groups are separated by a [DropdownGroupDivider] — but, like COUI 17
+ * `COUIPopupListWindow.setItemListInternal`, only when the menu holds at least
+ * [POPUP_GROUP_MIN_ITEMS] items; a shorter menu shows its groups back to back.
  */
 @Composable
 internal fun DropdownEntriesPopupContent(
@@ -28,17 +26,14 @@ internal fun DropdownEntriesPopupContent(
     onItemClick: (entryIdx: Int, itemIdx: Int) -> Unit,
 ) {
     val lastEntryIdx = entries.lastIndex
+    val showGroupDividers = entries.sumOf { it.items.size } >= POPUP_GROUP_MIN_ITEMS
     entries.forEachIndexed { entryIdx, entry ->
-        val lastItemIdx = entry.items.lastIndex
-        val isFirstEntry = entryIdx == 0
-        val isLastEntry = entryIdx == lastEntryIdx
         val header = entry.title
         if (header != null) {
             key(entryIdx, "header") {
                 DropdownHeaderItem(
                     text = header,
                     color = dropdownColors.headerColor,
-                    isFirst = isFirstEntry,
                 )
             }
         }
@@ -51,20 +46,20 @@ internal fun DropdownEntriesPopupContent(
                     index = itemIdx,
                     dropdownColors = dropdownColors,
                     enabled = entry.enabled && option.enabled,
-                    isFirst = isFirstEntry && header == null && itemIdx == 0,
-                    isLast = isLastEntry && itemIdx == lastItemIdx,
                     onSelectedIndexChange = { idx -> onItemClick(entryIdx, idx) },
                 )
             }
         }
-        if (entryIdx != lastEntryIdx) {
-            HorizontalDivider(
-                thickness = DropdownDefaults.PopupGroupDividerThickness,
-                color = DropdownDefaults.PopupGroupDividerColor,
-            )
+        if (entryIdx != lastEntryIdx && showGroupDividers) {
+            key(entryIdx, "divider") {
+                DropdownGroupDivider()
+            }
         }
     }
 }
+
+/** The smallest menu that shows group dividers (COUI `COUIPopupListWindow.GROUP_MIN_ITEMS`). */
+internal const val POPUP_GROUP_MIN_ITEMS = 3
 
 /**
  * Adds [DropdownEntry] groups to a [LazyListScope] for use inside a dialog. Dialog mode uses
@@ -99,10 +94,7 @@ internal fun LazyListScope.dropdownEntriesDialogItems(
         }
         if (entryIdx != lastEntryIdx) {
             item(key = "divider-$entryIdx") {
-                HorizontalDivider(
-                    thickness = DropdownDefaults.PopupGroupDividerThickness,
-                    color = DropdownDefaults.PopupGroupDividerColor,
-                )
+                DropdownGroupDivider()
             }
         }
     }
