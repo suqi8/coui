@@ -473,6 +473,9 @@ internal class PopupListGestureHost {
     /** The row the gesture currently tracks (COUITouchRecyclerView.mDownView), selectable or not. */
     private var activeItem: PopupListItemHandle? = null
 
+    /** The row whose long press fired during this gesture; lifting on it selects nothing. */
+    private var longPressedItem: PopupListItemHandle? = null
+
     /** List width in pixels, for the mask geometry. */
     var width: Float = 0f
 
@@ -566,6 +569,7 @@ internal class PopupListGestureHost {
 
     /** DOWN: tracks the row under ([x], [y]) and attaches the mask to it when enabled. */
     fun onDown(x: Float, y: Float, scope: CoroutineScope): PopupListItemHandle? {
+        longPressedItem = null
         val target = rowAt(x, y) ?: return null
         activeItem = target
         if (target.enabled) mask.attach(target, geometryOf(target), scope)
@@ -606,12 +610,23 @@ internal class PopupListGestureHost {
         mask.exit(scope)
     }
 
+    /**
+     * Hands the gesture to another list (the finger entered the sub menu): nothing here is selected
+     * on release any more, and the mask fades unless it is locked on the anchor of the open sub menu.
+     */
+    fun yield(scope: CoroutineScope) {
+        activeItem = null
+        if (mask.target !== heldItem) mask.exit(scope)
+    }
+
     /** UP: selects the row the finger rests on (COUI resolves the target at UP, not at DOWN). */
     fun onUp(scope: CoroutineScope) {
         val target = activeItem
+        val longPressed = longPressedItem
         activeItem = null
+        longPressedItem = null
         mask.exit(scope)
-        if (target != null && target.enabled) target.onClick()
+        if (target != null && target.enabled && target !== longPressed) target.onClick()
     }
 
     /**
@@ -622,7 +637,9 @@ internal class PopupListGestureHost {
     fun onLongPress(row: PopupListItemHandle, scope: CoroutineScope): Boolean {
         val action = row.onLongClick
         if (activeItem !== row || !row.enabled || action == null) return false
-        activeItem = null
+        // The row stays the tracked one, so resting on it is not a new selection, but lifting on it
+        // no longer clicks it; dragging away keeps selecting.
+        longPressedItem = row
         mask.exit(scope)
         action()
         return true
@@ -1089,21 +1106,24 @@ private fun Modifier.popupListGestures(
                 }
 
                 if (change.changedToUpIgnoreConsumed()) {
-                    when {
-                        relayed != null -> relayed.onUp(relayed.scope ?: scope)
-                        !longPress.triggered -> host.onUp(scope)
-                    }
+                    if (relayed != null) relayed.onUp(relayed.scope ?: scope) else host.onUp(scope)
                     change.consume()
                     tracking = false
                     break
                 }
 
                 if (longPress.triggered) {
-                    // The sub menu the long press opened takes the touch from the main list
-                    // (onSubMenuStartToEnter: allowListViewDispatchTouchEvent(main, false)); the
-                    // finger steers the sub menu once it has entered (forwardTouchToSubMenuIfNeeded).
+                    // The finger steers the sub menu the long press opened once it has entered and
+                    // the finger is over it (forwardTouchToSubMenuIfNeeded). Elsewhere the drag keeps
+                    // selecting in this list: a deliberate deviation from COUI, which stops the main
+                    // list's touch while a sub menu is open (onSubMenuStartToEnter), so a held finger
+                    // never ends up with a menu that ignores it.
+                    val wasRelayed = relayed != null
                     relayed = relaySubMenuMove(relay, host, relayed, change.position, scope, performHaptic)
-                    continue
+                    if (relayed != null) {
+                        if (!wasRelayed) host.yield(scope)
+                        continue
+                    }
                 }
 
                 val y = change.position.y

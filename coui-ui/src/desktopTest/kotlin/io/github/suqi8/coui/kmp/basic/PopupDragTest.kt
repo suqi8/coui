@@ -3,8 +3,13 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,8 +28,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.overlay.OverlayCascadingListPopup
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.window.WindowListPopup
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -281,5 +288,211 @@ class PopupDragTest {
         mainClock.advanceTimeBy(1000)
         waitForIdle()
         assertEquals(0, picked)
+    }
+
+    /** Opens an [OverlayListPopup] from an anchor tap and returns the row bounds in root pixels. */
+    private fun ComposeUiTest.openOverlayMenu(rows: Int, pageScrolls: Boolean, window: Boolean = false, onPick: (Int) -> Unit) {
+        val items = List(rows) { "Option $it" }
+        setContent {
+            COUITheme {
+                Scaffold {
+                    var show by remember { mutableStateOf(false) }
+                    val page = if (pageScrolls) Modifier.verticalScroll(rememberScrollState()) else Modifier
+                    Column(page.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box {
+                            TextButton(
+                                text = "Anchor",
+                                onClick = { show = true },
+                                modifier = Modifier.testTag("anchor").padding(top = 16.dp),
+                            )
+                            val menu: @Composable () -> Unit = {
+                                ListPopupColumn {
+                                    items.forEachIndexed { index, text ->
+                                        DropdownImpl(
+                                            text = text,
+                                            optionSize = items.size,
+                                            isSelected = false,
+                                            index = index,
+                                            onSelectedIndexChange = {
+                                                onPick(it)
+                                                show = false
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                            if (window) {
+                                WindowListPopup(
+                                    show = show,
+                                    alignment = PopupPositionProvider.Align.TopStart,
+                                    onDismissRequest = { show = false },
+                                    content = menu,
+                                )
+                            } else {
+                                OverlayListPopup(
+                                    show = show,
+                                    alignment = PopupPositionProvider.Align.TopStart,
+                                    onDismissRequest = { show = false },
+                                    content = menu,
+                                )
+                            }
+                        }
+                        if (pageScrolls) Box(Modifier.height(3000.dp))
+                    }
+                }
+            }
+        }
+        onNodeWithTag("anchor").performClick()
+        mainClock.advanceTimeBy(1500)
+        waitForIdle()
+    }
+
+    /** Holds row [from] past every long-press timeout, then drags to row [to] in 2px finger steps. */
+    private fun ComposeUiTest.holdAndCrawl(from: Int, to: Int) {
+        val a = onNodeWithText("Option $from", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val b = onNodeWithText("Option $to", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        // Inject on the row itself, so the gesture reaches whichever window hosts the popup.
+        onNodeWithText("Option $from").performTouchInput {
+            val start = Offset(4.dp.toPx(), height / 2f)
+            val end = start + Offset(0f, ((b.top + b.bottom) / 2 - (a.top + a.bottom) / 2).toPx())
+            down(start)
+            advanceEventTime(1200)
+            val steps = (abs(end.y - start.y) / 2f).toInt().coerceAtLeast(1)
+            for (step in 1..steps) moveTo(start + (end - start) * (step / steps.toFloat()), delayMillis = 8)
+            up()
+        }
+        mainClock.advanceTimeBy(1000)
+        waitForIdle()
+    }
+
+    @Test
+    fun holdingARowThenCrawlingSelectsTheRowUnderTheFinger() = runComposeUiTest {
+        var picked = -1
+        openOverlayMenu(rows = 5, pageScrolls = false) { picked = it }
+        holdAndCrawl(from = 0, to = 3)
+        assertEquals(3, picked)
+    }
+
+    @Test
+    fun holdingARowThenCrawlingUpwardsOverAScrollingPageSelects() = runComposeUiTest {
+        var picked = -1
+        openOverlayMenu(rows = 5, pageScrolls = true) { picked = it }
+        holdAndCrawl(from = 4, to = 1)
+        assertEquals(1, picked)
+    }
+
+    @Test
+    fun holdingARowOfAWindowPopupThenCrawlingSelects() = runComposeUiTest {
+        var picked = -1
+        openOverlayMenu(rows = 5, pageScrolls = true, window = true) { picked = it }
+        holdAndCrawl(from = 0, to = 3)
+        assertEquals(3, picked)
+    }
+    private fun ComposeUiTest.openCascadingMenu(onPick: (String) -> Unit) {
+        val entries = listOf(
+            DropdownEntry(
+                items = listOf(
+                    DropdownItem(text = "Copy", onClick = { onPick("Copy") }),
+                    DropdownItem(
+                        text = "More",
+                        children = listOf("Alpha", "Beta", "Gamma").map { DropdownItem(text = it, onClick = { onPick(it) }) },
+                    ),
+                    DropdownItem(text = "Paste", onClick = { onPick("Paste") }),
+                    DropdownItem(text = "Share", onClick = { onPick("Share") }),
+                ),
+            ),
+        )
+        setContent {
+            COUITheme {
+                Scaffold {
+                    var show by remember { mutableStateOf(false) }
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+                        Box {
+                            TextButton(
+                                text = "Anchor",
+                                onClick = { show = true },
+                                modifier = Modifier.testTag("anchor").padding(top = 16.dp),
+                            )
+                            OverlayCascadingListPopup(
+                                show = show,
+                                entries = entries,
+                                onDismissRequest = { show = false },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        onNodeWithTag("anchor").performClick()
+        mainClock.advanceTimeBy(1500)
+        waitForIdle()
+    }
+
+    private fun ComposeUiTest.centerOf(text: String): Offset {
+        val r = onNodeWithText(text, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        return with(density) { Offset((r.left + 4.dp).toPx(), ((r.top + r.bottom) / 2).toPx()) }
+    }
+
+    private fun ComposeUiTest.crawl(from: Offset, to: Offset) {
+        onRoot().performTouchInput {
+            val steps = (maxOf(abs(to.y - from.y), abs(to.x - from.x)) / 2f).toInt().coerceAtLeast(1)
+            for (step in 1..steps) moveTo(from + (to - from) * (step / steps.toFloat()), delayMillis = 8)
+        }
+    }
+
+    @Test
+    fun holdingAPlainRowOfACascadingMenuThenCrawlingSelects() = runComposeUiTest {
+        var picked = ""
+        openCascadingMenu { picked = it }
+        val start = centerOf("Copy")
+        onRoot().performTouchInput { down(start) }
+        mainClock.advanceTimeBy(1200)
+        crawl(start, centerOf("Share"))
+        onRoot().performTouchInput { up() }
+        mainClock.advanceTimeBy(1000)
+        assertEquals("Share", picked)
+    }
+
+    @Test
+    fun holdingASubMenuRowThenCrawlingIntoTheSubMenuSelects() = runComposeUiTest {
+        var picked = ""
+        openCascadingMenu { picked = it }
+        val start = centerOf("More")
+        onRoot().performTouchInput { down(start) }
+        mainClock.advanceTimeBy(1500)
+        waitForIdle()
+        val beta = centerOf("Beta")
+        crawl(start, beta)
+        onRoot().performTouchInput { up() }
+        mainClock.advanceTimeBy(1000)
+        assertEquals("Beta", picked)
+    }
+
+    @Test
+    fun holdingASubMenuRowThenCrawlingToAnotherMainRowSelectsIt() = runComposeUiTest {
+        var picked = ""
+        openCascadingMenu { picked = it }
+        val start = centerOf("More")
+        onRoot().performTouchInput { down(start) }
+        mainClock.advanceTimeBy(1500)
+        waitForIdle()
+        crawl(start, centerOf("Share"))
+        onRoot().performTouchInput { up() }
+        mainClock.advanceTimeBy(1000)
+        assertEquals("Share", picked)
+    }
+
+    @Test
+    fun liftingOnTheLongPressedRowSelectsNothing() = runComposeUiTest {
+        var picked = ""
+        openCascadingMenu { picked = it }
+        val start = centerOf("More")
+        onRoot().performTouchInput { down(start) }
+        mainClock.advanceTimeBy(1500)
+        onRoot().performTouchInput { up() }
+        mainClock.advanceTimeBy(1000)
+        assertEquals("", picked)
+        // The sub menu the long press opened stays up.
+        onNodeWithText("Beta", useUnmergedTree = true).assertExists()
     }
 }
