@@ -139,7 +139,7 @@ BadgeBox(
 ## Behavior
 
 - `count <= 0` shows the plain dot; 1..9 a 16dp capsule, 10..99 a 20dp capsule, 100..999 a 26dp capsule; 1000 and above a 20dp capsule with a three-dot ellipsis (COUI `red_dot_more`).
-- Count changes animate like COUIHintRedDot: the capsule width eases over 517ms (COUIMoveEaseInterpolator) while the old and new numbers crossfade over 150ms.
+- Count changes animate like COUIHintRedDot: the capsule width eases over 517ms (COUIMoveEaseInterpolator) while the old and new numbers crossfade over 150ms on the framework default accelerate-decelerate curve (the alpha animator sets no interpolator).
 - The count text renders at a density-scaled 10dp (sans-serif medium), ignoring the user font scale like the original.
 - `stroke = true` draws a 1dp white outline; the dot form shrinks its red core by the stroke width, the capsule form insets the red fill inside the white outline.
 - A positive `BadgeBox` overhang lets the badge stick out beyond the content's top end corner and grows the layout accordingly (COUI rectangular anchors); a negative overhang insets the badge inside the corner (COUI circular anchors such as avatars).

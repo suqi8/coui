@@ -139,7 +139,7 @@ BadgeBox(
 ## 行为
 
 - `count <= 0` 显示纯圆点;1..9 为 16dp 胶囊,10..99 为 20dp,100..999 为 26dp;1000 及以上为 20dp 胶囊内的三点省略号(COUI `red_dot_more`)。
-- 数字变化的动画与 COUIHintRedDot 一致:胶囊宽度以 517ms 缓动(COUIMoveEaseInterpolator),新旧数字同时以 150ms 交叉淡变。
+- 数字变化的动画与 COUIHintRedDot 一致:胶囊宽度以 517ms 缓动(COUIMoveEaseInterpolator),新旧数字同时以 150ms 交叉淡变,曲线为框架默认的先加速后减速(透明度动画未设置插值器)。
 - 数字文本按密度换算为 10dp(sans-serif medium)渲染,与原版一样不受用户字体缩放影响。
 - `stroke = true` 绘制 1dp 白色描边;圆点形态的红色圆核按描边宽度缩小,胶囊形态的红色填充内缩于白色描边之内。
 - `BadgeBox` 的 `overhang` 为正时,角标超出内容右上角并相应扩大布局(COUI 矩形锚点);为负时角标内缩于角内(COUI 圆形锚点,如头像)。

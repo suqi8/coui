@@ -4,7 +4,7 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlin.math.PI
+import kotlin.math.cos
 
 /**
  * A [Badge] component with COUI style.
@@ -44,7 +46,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * - [count] >= 1000: a 20dp-wide capsule showing a three-dot ellipsis (COUI red_dot_more).
  *
  * Count changes animate like the original: the capsule width eases over 517ms
- * (COUIMoveEaseInterpolator) while the old and new numbers crossfade over 150ms.
+ * (COUIMoveEaseInterpolator) while the old and new numbers crossfade over 150ms on the framework
+ * default accelerate-decelerate curve.
  *
  * Use [BadgeBox] to anchor a badge at the top end corner of an icon.
  *
@@ -182,7 +185,7 @@ private fun CountBadge(
         Crossfade(
             targetState = count,
             modifier = Modifier.matchParentSize(),
-            animationSpec = tween(durationMillis = CountFadeDurationMillis, easing = LinearEasing),
+            animationSpec = tween(durationMillis = CountFadeDurationMillis, easing = CountFadeEasing),
             label = "badgeCount",
         ) { targetCount ->
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -334,6 +337,13 @@ private val WidthAnimDurationMillis = 517
 
 /** COUIHintRedDot NUM_CHANGE_ALPHA_ANIM_DURATION. */
 private val CountFadeDurationMillis = 150
+
+/**
+ * The count cross-fade easing. COUIHintRedDot.executeAlphaAnim sets no interpolator on its
+ * `ValueAnimator`, so it runs on the framework default AccelerateDecelerateInterpolator:
+ * `cos((t + 1) * PI) / 2 + 0.5`.
+ */
+internal val CountFadeEasing = Easing { fraction -> (cos((fraction + 1) * PI) / 2.0 + 0.5).toFloat() }
 
 /** COUIMoveEaseInterpolator, shared by the width and show / hide animations. */
 private val WidthAnimEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
