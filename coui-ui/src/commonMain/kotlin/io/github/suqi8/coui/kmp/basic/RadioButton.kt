@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Box
@@ -40,7 +41,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * A [RadioButton] component with COUI style.
  *
  * Unselected is an outline ring, selected is a primary disc with a solid center dot; toggling
- * replays the COUI AVD transitions (cross-fade with a 1 -> 1.08 -> 1 pulse).
+ * replays the COUI AVD transitions (cross-fade with a 1 -> 1.08 -> 1 pulse) while enabled; a
+ * disabled radio button jumps to its new state, as coui_btn_radio.xml only animates enabled changes.
  *
  * The button never scales on press. COUI themes a standalone `RadioButton` through the framework
  * `Widget.Material.CompoundButton.RadioButton` style, whose background is the borderless
@@ -77,7 +79,9 @@ fun RadioButton(
     // The unselected ring fades out when selecting and back in when deselecting.
     val ringAlphaState = transition.animateFloat(
         transitionSpec = {
-            if (targetState) {
+            if (!enabled) {
+                snap()
+            } else if (targetState) {
                 tween(durationMillis = 300, easing = CouiRadioSelectEasing)
             } else {
                 tween(durationMillis = 267, easing = CouiRadioDeselectEasing)
@@ -89,7 +93,9 @@ fun RadioButton(
     // The primary disc fades in and out.
     val discAlphaState = transition.animateFloat(
         transitionSpec = {
-            if (targetState) {
+            if (!enabled) {
+                snap()
+            } else if (targetState) {
                 tween(durationMillis = 300, easing = CouiRadioSelectEasing)
             } else {
                 tween(durationMillis = 200, easing = CouiRadioDeselectEasing)
@@ -101,7 +107,9 @@ fun RadioButton(
     // The center dot scales up from the middle and back down.
     val centerScaleState = transition.animateFloat(
         transitionSpec = {
-            if (targetState) {
+            if (!enabled) {
+                snap()
+            } else if (targetState) {
                 tween(durationMillis = 300, easing = CouiRadioSelectEasing)
             } else {
                 tween(durationMillis = 267, easing = CouiRadioDeselectEasing)
@@ -113,7 +121,9 @@ fun RadioButton(
     // The center dot fades in and out.
     val centerAlphaState = transition.animateFloat(
         transitionSpec = {
-            if (targetState) {
+            if (!enabled) {
+                snap()
+            } else if (targetState) {
                 tween(durationMillis = 300, easing = CouiRadioSelectEasing)
             } else {
                 tween(durationMillis = 200, easing = CouiRadioDeselectEasing)
@@ -131,8 +141,10 @@ fun RadioButton(
             isFirstComposition = false
             return@LaunchedEffect
         }
-        val easing = if (selected) CouiRadioSelectEasing else CouiRadioDeselectEasing
         bounceScale.snapTo(1f)
+        // coui_btn_radio.xml only has transitions between the enabled states.
+        if (!enabled) return@LaunchedEffect
+        val easing = if (selected) CouiRadioSelectEasing else CouiRadioDeselectEasing
         bounceScale.animateTo(
             targetValue = 1f,
             animationSpec = keyframes {
@@ -219,8 +231,7 @@ object RadioButtonDefaults {
      * The default radio colors (COUI `coui_btn_radio_*.xml`).
      *
      * - The unselected ring is couiColorLabelTertiary #42000000 / #4DFFFFFF, and
-     *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled (the same values as
-     *   couiColorHover, hence the `hover` slot).
+     *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled.
      * - The selected disc is couiColorPrimary, at 30% (`fillAlpha` 0.3) when disabled.
      * - The centre dot is #FFFFFF at rest and #FAFAFA while a toggle animation plays (both with no
      *   night variant), and `coui_btn_radio_color_on_disabled` #8AFFFFFF / #29FFFFFF when disabled.
@@ -230,7 +241,7 @@ object RadioButtonDefaults {
         selectedColor: Color = COUITheme.colorScheme.primary,
         disabledSelectedColor: Color = COUITheme.colorScheme.disabledPrimary,
         unselectedColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        disabledUnselectedColor: Color = COUITheme.colorScheme.hover,
+        disabledUnselectedColor: Color = COUITheme.colorScheme.quarternaryNeutral,
         // The COUI selected center is hardcoded #ffffff with no night variant.
         centerColor: Color = Color.White,
         disabledCenterColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,

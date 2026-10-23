@@ -79,11 +79,13 @@ RadioButtonDefaults 对象提供了 RadioButton 组件的默认颜色配置。
 | disabledCenterColor     | Color | 禁用且选中状态时中心圆点颜色 |
 | animatingCenterColor    | Color | 切换动画播放期间的中心圆点颜色（默认 #FAFAFA，与 COUI AVD 一致） |
 
-默认颜色对齐 COUI 17（`coui_btn_radio_*.xml`）：外环为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `hover`（#14000000 / #26FFFFFF）；圆盘为 `primary`，禁用时为 `disabledPrimary`；中心圆点为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
+默认颜色对齐 COUI 17（`coui_btn_radio_*.xml`）：外环为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；圆盘为 `primary`，禁用时为 `disabledPrimary`；中心圆点为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
 
 ### 按压反馈
 
 按压时单选按钮不缩小。COUI 中独立的单选按钮使用框架 `Widget.Material.CompoundButton.RadioButton` 样式，其背景为无边界的平台水波纹，因此可交互的 `RadioButton` 会在中心绘制该水波纹半径（17dp，即 24dp 方框对角线的一半）的圆形 `press` 高亮。该框架样式不在 COUI APK 中，此半径与颜色为最接近的近似值而非实测值。若外层行负责点击（如 `RadioButtonPreference`），请传入 `onClick = null`。
+
+只有启用时切换才播放 COUI 动画；禁用的单选按钮直接跳到新状态。
 
 ## 进阶用法
 

@@ -79,11 +79,13 @@ The RadioButtonDefaults object provides default color configurations for the Rad
 | disabledCenterColor     | Color | Center dot color when disabled and selected      |
 | animatingCenterColor    | Color | Center dot color while a toggle animation plays (default #FAFAFA, as in the COUI AVDs) |
 
-Default colors follow COUI 17 (`coui_btn_radio_*.xml`): the ring is `onSurfaceVariantActions` (#42000000 / #4DFFFFFF) and `hover` (#14000000 / #26FFFFFF) when disabled; the disc is `primary`, `disabledPrimary` when disabled; the center dot is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
+Default colors follow COUI 17 (`coui_btn_radio_*.xml`): the ring is `onSurfaceVariantActions` (#42000000 / #4DFFFFFF) and `quarternaryNeutral` (#14000000 / #26FFFFFF) when disabled; the disc is `primary`, `disabledPrimary` when disabled; the center dot is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
 
 ### Press Feedback
 
 The radio button never shrinks on press. COUI themes a standalone radio button through the framework `Widget.Material.CompoundButton.RadioButton` style, whose background is the borderless platform ripple, so an interactive `RadioButton` shows a centered circular `press` highlight with that ripple's radius (17dp, half the 24dp box diagonal). The framework style is not shipped in the COUI APK, so this radius and color are the closest approximation rather than a measured value. Pass `onClick = null` when a surrounding row handles the click, as `RadioButtonPreference` does.
+
+Toggling replays the COUI animation only while enabled; a disabled radio button jumps to its new state.
 
 ## Advanced Usage
 
