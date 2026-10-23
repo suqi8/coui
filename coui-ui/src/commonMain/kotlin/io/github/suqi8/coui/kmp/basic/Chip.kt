@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -27,8 +28,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,7 +59,8 @@ import androidx.compose.animation.Animatable as ColorAnimatable
  * at once. Pressing scales the chip like COUI 17's COUIPressFeedbackHelper (the size-dependent
  * COUIPressAnimatorUnit press, about 0.89 for a 52 x 32dp chip, released on an under-damped
  * spring) while COUIMaskEffectDrawable tints the fill with couiColorPress; hovering tints it with
- * couiColorHover.
+ * couiColorHover. Keyboard focus draws COUIStrokeDrawable's 3dp couiColorFocusOutline ring just
+ * outside the capsule.
  *
  * @param selected Whether the [Chip] is selected.
  * @param onClick The callback when the [Chip] is clicked.
@@ -112,6 +119,14 @@ fun Chip(
     LaunchedEffect(enabled, isHovered) {
         if (!enabled) hoverProgress.snapTo(0f) else hoverProgress.animateTo(if (isHovered) 1f else 0f, ChipPressFeedbackSpring)
     }
+    // COUIStrokeDrawable: the focus outline fades on a response 0.3 / bounce 0 spring and is cleared
+    // at once when the chip is disabled.
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val focusProgress = remember { Animatable(0f) }
+    LaunchedEffect(enabled, isFocused) {
+        if (!enabled) focusProgress.snapTo(0f) else focusProgress.animateTo(if (isFocused) 1f else 0f, ChipPressFeedbackSpring)
+    }
+    val focusOutline = COUITheme.colorScheme.focusOutline
     val tintProgress = remember { Animatable(0f) }
     LaunchedEffect(enabled, isPressed) {
         if (enabled && isPressed) {
@@ -146,6 +161,24 @@ fun Chip(
             modifier = modifier
                 .couiPressScale(pressed = isPressed, enabled = enabled)
                 .widthIn(max = maxWidth)
+                .drawWithContent {
+                    drawContent()
+                    val focus = focusProgress.value
+                    if (focus > 0f) {
+                        // COUIStrokeDrawable TYPE_OUTER: a 2 x default_focus_stroke_radius stroke on the
+                        // plain round rect, clipped to its outside, i.e. a 3dp ring around the chip.
+                        val ring = ChipFocusStrokeWidth.toPx()
+                        val radius = minOf(cornerRadius.toPx(), size.minDimension / 2f)
+                        drawRoundRect(
+                            color = focusOutline,
+                            topLeft = Offset(-ring / 2f, -ring / 2f),
+                            size = Size(size.width + ring, size.height + ring),
+                            cornerRadius = CornerRadius(radius + ring / 2f),
+                            style = Stroke(width = ring),
+                            alpha = focus.coerceIn(0f, 1f),
+                        )
+                    }
+                }
                 .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                 .selectable(
                     selected = selected,
@@ -224,23 +257,23 @@ object ChipDefaults {
     /**
      * The default [ChipColors], mapping the Widget.COUI.Chip color attributes:
      * - uncheckedBackgroundColor / uncheckedDisabledBackgroundColor = couiColorContainer8
-     *   #14000000 / #1AFFFFFF (the `dialogButton` slot);
+     *   #14000000 / #1AFFFFFF;
      * - checkedBackgroundColor = couiColorPrimary, checkedDisabledBackgroundColor = couiColorDisable
      *   #4D0080FF / #4D1A8CFF;
      * - uncheckedTextColor = couiColorLabelPrimary #E6000000 / #E6FFFFFF, checkedTextColor =
      *   couiColorLabelOnColor #FFFFFF;
-     * - chip_unchecked_text_disable_color #42000000 / #29FFFFFF (the same values as the
-     *   `disabledSliderKeyPoint` slot) and chip_checked_text_disable_color #8AFFFFFF / #29FFFFFF.
+     * - chip_unchecked_text_disable_color #42000000 / #29FFFFFF and chip_checked_text_disable_color
+     *   #8AFFFFFF / #29FFFFFF.
      */
     @Composable
     fun chipColors(
-        containerColor: Color = COUITheme.colorScheme.dialogButton,
+        containerColor: Color = COUITheme.colorScheme.container8,
         selectedContainerColor: Color = COUITheme.colorScheme.primary,
-        disabledContainerColor: Color = COUITheme.colorScheme.dialogButton,
+        disabledContainerColor: Color = COUITheme.colorScheme.container8,
         selectedDisabledContainerColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
         contentColor: Color = COUITheme.colorScheme.onSurface,
         selectedContentColor: Color = COUITheme.colorScheme.onPrimary,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledSliderKeyPoint,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledChipText,
         selectedDisabledContentColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): ChipColors = remember(
         containerColor,
@@ -325,6 +358,9 @@ private fun animateChipColor(target: Color, enabled: Boolean): State<Color> {
     }
     return color.asState()
 }
+
+/** The visible width of the focus outline: COUI default_focus_stroke_radius. */
+private val ChipFocusStrokeWidth = 3.dp
 
 /**
  * The COUI check tint spring for colors: COUIChipDrawable.TintAnimation uses

@@ -118,13 +118,13 @@ Chip(
 
 | Parameter                      | Type  | Default                                            | COUI Attribute                    |
 | ------------------------------ | ----- | -------------------------------------------------- | --------------------------------- |
-| containerColor                 | Color | COUITheme.colorScheme.dialogButton                | uncheckedBackgroundColor          |
+| containerColor                 | Color | COUITheme.colorScheme.container8                  | uncheckedBackgroundColor          |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor            |
-| disabledContainerColor         | Color | COUITheme.colorScheme.dialogButton                | uncheckedDisabledBackgroundColor  |
+| disabledContainerColor         | Color | COUITheme.colorScheme.container8                  | uncheckedDisabledBackgroundColor  |
 | selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor    |
 | contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor                |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                  |
-| disabledContentColor           | Color | COUITheme.colorScheme.disabledSliderKeyPoint      | uncheckedDisabledTextColor        |
+| disabledContentColor           | Color | COUITheme.colorScheme.disabledChipText            | uncheckedDisabledTextColor        |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor          |
 
 ## Behavior
@@ -132,5 +132,6 @@ Chip(
 - Selecting/deselecting cross-fades the capsule, label and icon colors on a critically damped spring (COUIChipDrawable.TintAnimation, response 0.3s / bounce 0).
 - Enabling or disabling the chip switches its colors at once, without the spring (COUIChipDrawable cancels the tint animation).
 - Pressing scales the chip like COUI 17's COUIPressFeedbackHelper: the size-dependent COUIPressAnimatorUnit press (about 0.89 for a 52 x 32dp chip, 0.91 for a 100 x 32dp one) released on an under-damped spring, with no rubber or deformation. The fill takes the `press` tint (COUIMaskEffectDrawable); a quick tap still flashes the tint visibly. Hovering overlays the `hover` tint.
+- Keyboard focus draws a 3dp `focusOutline` ring just outside the capsule (COUIStrokeDrawable, `default_focus_stroke_radius`), fading on the COUI response 0.3 spring.
 - Default colors follow COUI 17: the unselected capsule is couiColorContainer8 (#14000000 / #1AFFFFFF) whether enabled or not; the disabled labels are #42000000 / #29FFFFFF (unselected) and #8AFFFFFF / #29FFFFFF (selected).
 - The label is single line and ellipsized beyond `TextMaxWidth`; the whole chip is clamped between `MinWidth` and `MaxWidth`.

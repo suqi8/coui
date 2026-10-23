@@ -118,13 +118,13 @@ Chip(
 
 | 参数                           | 类型  | 默认值                                             | COUI 属性                        |
 | ------------------------------ | ----- | -------------------------------------------------- | -------------------------------- |
-| containerColor                 | Color | COUITheme.colorScheme.dialogButton                | uncheckedBackgroundColor         |
+| containerColor                 | Color | COUITheme.colorScheme.container8                  | uncheckedBackgroundColor         |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor           |
-| disabledContainerColor         | Color | COUITheme.colorScheme.dialogButton                | uncheckedDisabledBackgroundColor |
+| disabledContainerColor         | Color | COUITheme.colorScheme.container8                  | uncheckedDisabledBackgroundColor |
 | selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor   |
 | contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor               |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                 |
-| disabledContentColor           | Color | COUITheme.colorScheme.disabledSliderKeyPoint      | uncheckedDisabledTextColor       |
+| disabledContentColor           | Color | COUITheme.colorScheme.disabledChipText            | uncheckedDisabledTextColor       |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor         |
 
 ## 行为
@@ -132,5 +132,6 @@ Chip(
 - 选中/取消选中时,胶囊、标签与图标颜色在临界阻尼弹簧上交叉渐变(COUIChipDrawable.TintAnimation,response 0.3s / bounce 0)。
 - 启用/禁用切换时颜色立即变化,不走弹簧(COUIChipDrawable 会取消着色动画)。
 - 按压缩放对齐 COUI 17 的 COUIPressFeedbackHelper:按尺寸计算的 COUIPressAnimatorUnit 按压(52 x 32dp 约 0.89,100 x 32dp 约 0.91),松手时走欠阻尼弹簧回弹,无橡皮筋与形变。填充叠加 `press` 按压色(COUIMaskEffectDrawable);快速点按也会明显闪现按压色。悬停时叠加 `hover` 色。
+- 键盘焦点时在胶囊外侧绘制 3dp 的 `focusOutline` 描边(COUIStrokeDrawable,`default_focus_stroke_radius`),以 COUI response 0.3 弹簧淡入淡出。
 - 默认颜色对齐 COUI 17:未选中胶囊无论是否启用均为 couiColorContainer8(#14000000 / #1AFFFFFF);禁用标签色为 #42000000 / #29FFFFFF(未选中)与 #8AFFFFFF / #29FFFFFF(选中)。
 - 标签单行显示,超过 `TextMaxWidth` 省略;整个 Chip 宽度被钳制在 `MinWidth` 与 `MaxWidth` 之间。
