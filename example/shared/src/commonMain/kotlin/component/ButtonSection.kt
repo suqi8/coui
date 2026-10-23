@@ -29,6 +29,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonMaterial
+import io.github.suqi8.coui.kmp.basic.FloatingActionButton
+import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Stepper
 import io.github.suqi8.coui.kmp.basic.Text
@@ -36,6 +38,8 @@ import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Add
 import io.github.suqi8.coui.kmp.shared.generated.resources.Res
 import io.github.suqi8.coui.kmp.shared.generated.resources.blur_test_bg
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -186,6 +190,60 @@ fun LazyListScope.buttonSection() {
                 maxValue = 10,
             )
         }
+        // The COUI default range (-999..9999): hold a button to repeat every 100ms.
+        var wideStepperValue by remember { mutableIntStateOf(0) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = "Stepper (hold to repeat)")
+            Stepper(
+                value = wideStepperValue,
+                onValueChange = { wideStepperValue = it },
+            )
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(text = "Stepper (disabled)")
+            Stepper(
+                value = 3,
+                onValueChange = {},
+                enabled = false,
+            )
+        }
+        FloatingActionButtons()
+    }
+}
+
+/** The COUI 17 floating action button: material on and off, and disabled. */
+@Composable
+private fun FloatingActionButtons() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 8.dp, bottom = 40.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        FloatingActionButton(onClick = {}) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
+        FloatingActionButton(onClick = {}, material = false) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
+        FloatingActionButton(onClick = {}, enabled = false) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
     }
 }
 
@@ -250,6 +308,11 @@ private fun MaterialBackdropButtons() {
                         textStyle = ButtonDefaults.textStyleSmall(),
                         colors = ButtonDefaults.textButtonColorsPrimary(),
                     )
+                    Spacer(Modifier.weight(1f))
+                    // The FAB takes the TYPE_FRAMEWORK_FAB backdrop blur in place of its fill.
+                    FloatingActionButton(onClick = {}, shadowElevation = 0.dp) {
+                        Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+                    }
                 }
             }
         }
