@@ -17,7 +17,7 @@ data class AppState(
     val showNavigationBar: Boolean = true,
     val navigationBarMode: Int = 0,
     val navigationRailMode: Int = 0,
-    val useFloatingNavigationBar: Boolean = false,
+    val useFloatingNavigationBar: Boolean = true,
     val floatingNavigationBarPosition: Int = 0,
     val floatingNavigationBarStyle: Int = 0,
     val showFloatingToolbar: Boolean = false,
