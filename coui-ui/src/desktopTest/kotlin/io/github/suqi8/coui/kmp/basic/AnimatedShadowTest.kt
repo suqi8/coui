@@ -4,6 +4,7 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -110,5 +111,43 @@ class AnimatedShadowTest {
 
         assertTrue(rest < 252, "the capsule must cast a shadow below it, got $rest")
         assertTrue(hiding < 254, "the hiding capsule must keep its shadow below it, got $hiding")
+    }
+
+    @Test
+    fun aFloatingToolbarScalesOutWithItsShadowAndHides() = runComposeUiTest {
+        var visible by mutableStateOf(true)
+        setContent {
+            COUITheme {
+                Box(Modifier.background(Color.White).padding(40.dp)) {
+                    FloatingToolbar(
+                        modifier = Modifier.testTag("toolbar"),
+                        visible = visible,
+                        color = Color.Black,
+                        outSidePadding = PaddingValues(0.dp),
+                    ) {
+                        Box(Modifier.size(120.dp, 44.dp))
+                    }
+                }
+            }
+        }
+        mainClock.autoAdvance = false
+        mainClock.advanceTimeBy(1000)
+        val d = density.density
+        val bounds = onNodeWithTag("toolbar").getBoundsInRoot()
+        val cx = (bounds.left.value + bounds.right.value) / 2f
+        val cy = (bounds.top.value + bounds.bottom.value) / 2f
+        // 4dp below the toolbar, where only its shadow reaches.
+        val below = bounds.bottom.value + 4f
+        val rest = onRoot().captureToImage().toPixelMap()
+        assertTrue(rest.red(cx, cy, d) < 10, "the toolbar must be drawn at rest")
+        assertTrue(rest.red(cx, below, d) < 254, "the toolbar must cast a shadow below it")
+
+        visible = false
+        mainClock.advanceTimeBy(1000)
+        val hidden = onRoot().captureToImage().toPixelMap()
+        assertTrue(hidden.red(cx, cy, d) == 255 && hidden.red(cx, below, d) == 255, "a hidden toolbar draws nothing")
+        // It keeps its place in the layout.
+        val hiddenBounds = onNodeWithTag("toolbar", useUnmergedTree = true).getBoundsInRoot()
+        assertTrue(hiddenBounds == bounds, "the hidden toolbar must keep its bounds: $bounds vs $hiddenBounds")
     }
 }
