@@ -81,7 +81,7 @@ SliderPreference(
 | magnetThreshold       | Float                             | Magnetic snap threshold as a fraction (0.0 to 1.0). When slider value is within this distance from a key point, it will snap to that point. Only applies when keyPoints is set | 0.02f                              | No       |
 | material              | Boolean                           | Whether the slider draws the COUI 17 material effects (glass thumb while pressed, touch spotlight), see `Slider`                                                              | true                               | No       |
 | insideMargin          | PaddingValues                     | Internal content padding                                                                                                                                                       | BasicComponentDefaults.InsideMargin | No       |
-| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
+| cardListPosition | CardListPosition | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No |
 
 ## Advanced Usage
 

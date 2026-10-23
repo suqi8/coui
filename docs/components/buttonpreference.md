@@ -98,7 +98,7 @@ Scaffold {
 | buttonCornerRadius | Dp                              | Corner radius of the inline button           | ButtonPreferenceDefaults.ButtonCornerRadius | No     |
 | buttonInsideMargin | PaddingValues                   | Padding inside the inline button             | ButtonPreferenceDefaults.ButtonInsideMargin | No     |
 | insideMargin       | PaddingValues                   | Component internal content padding           | BasicComponentDefaults.InsideMargin       | No       |
-| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
+| cardListPosition | CardListPosition | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No |
 | onClick            | (() -> Unit)?                   | Callback when the row (not the button) is clicked | null                                 | No       |
 | holdDownState      | Boolean                         | Whether the component is held down           | false                                     | No       |
 | enabled            | Boolean                         | Component interactive state                  | true                                      | No       |

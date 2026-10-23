@@ -81,7 +81,7 @@ SliderPreference(
 | magnetThreshold       | Float                             | 磁吸对齐阈值，以分数表示 (0.0 到 1.0)。当滑块值与关键点的距离在此阈值内时，将对齐到该点。仅在设置 keyPoints 时生效 | 0.02f                              | 否       |
 | material              | Boolean                           | 滑块是否绘制 COUI 17 材质效果（按下时的玻璃拇指、跟手聚光），见 `Slider`                                         | true                               | 否       |
 | insideMargin          | PaddingValues                     | 组件内部内容的边距                                                                                               | BasicComponentDefaults.InsideMargin | 否       |
-| cardListPosition | CardListPosition | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否 |
+| cardListPosition | CardListPosition | 该行在卡片组（[CardListGroup](./card.md#cardlistgroup)）中的位置，圆角外边缘会获得额外内边距 | LocalCardListPosition.current（CardListGroup 之外为 None） | 否 |
 
 ## 进阶用法
 

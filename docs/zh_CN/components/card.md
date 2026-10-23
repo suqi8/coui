@@ -173,8 +173,8 @@ Card(
 ### 卡片组内的行位置
 
 COUI 会给卡片组的圆角外边缘增加 `coui_list_card_head_or_tail_padding`（2dp）。给 `Card` 内堆叠的
-preference 行传入 `CardListPosition`，即可让每一行只在真正带圆角的那一侧获得该内边距。
-`CardListPosition.None`（默认值）不增加任何内边距，因此现有调用点不受影响。
+preference 行传入 `CardListPosition`，即可让每一行只在真正带圆角的那一侧获得该内边距；也可以交给
+[`CardListGroup`](#cardlistgroup) 自动分配。不在分组内的行默认为 `CardListPosition.None`，不增加任何内边距。
 
 | 位置 | 顶部额外内边距 | 底部额外内边距 | 合计 |
 | :--- | :------------- | :------------- | :--- |
@@ -202,3 +202,39 @@ Card {
     }
 }
 ```
+
+### CardListGroup
+
+`CardListGroup` 会自动为各行编号：第一行为 `Head`，最后一行为 `Tail`，中间的行为 `Middle`，只有一行时为
+`Full`。用 `item { }` 声明每一行；分组本身不引入任何布局，行会直接输出到 `Card` 的列中。各行组件
+（`BasicComponent` 及各 preference 行）从 `LocalCardListPosition` 读取位置，作为 `cardListPosition` 的默认值。
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.CardListGroup
+
+Card {
+    CardListGroup {
+        item {
+            SwitchPreference(title = "WLAN", checked = wifi, onCheckedChange = { wifi = it })
+        }
+        if (wifi) {
+            item(key = "networks") {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                ArrowPreference(title = "网络", onClick = {})
+            }
+        }
+        options.forEach { option ->
+            item(key = option) {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                MarkPreference(title = option, checked = selected == option, onClick = { selected = option })
+            }
+        }
+    }
+}
+```
+
+- 每个 `item` 只放一行；属于该行的分割线或它打开的对话框可以放在同一个 `item` 中。
+- 位置按实际存在的行计算，因此条件行（`if (...) item { }`）也能得到正确编号。条件行和循环生成的行应传入
+  `key`，以便前面的行变化时保留自身状态。
+- 不在分组内的行保持 `CardListPosition.None`；对话框、底部面板和弹出菜单会把其内容重置为 `None`。
+- 显式传入 `cardListPosition` 的行以显式值为准，分组只提供默认值。

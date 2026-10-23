@@ -127,7 +127,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | 组件右侧的可组合内容 | null                                  | 否       |
 | bottomAction      | @Composable (() -> Unit)?          | 组件底部的可组合内容 | null                                  | 否       |
 | insideMargin      | PaddingValues                      | 组件内部边距         | BasicComponentDefaults.InsideMargin   | 否       |
-| cardListPosition  | CardListPosition                   | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否       |
+| cardListPosition  | CardListPosition                   | 该行在卡片组（[CardListGroup](./card.md#cardlistgroup)）中的位置，圆角外边缘会获得额外内边距 | LocalCardListPosition.current（CardListGroup 之外为 None） | 否       |
 | onClick           | (() -> Unit)?                      | 点击组件时触发的回调 | null                                  | 否       |
 | onClickLabel      | String?                            | 无障碍点击操作描述   | null                                  | 否       |
 | role              | Role?                              | 无障碍语义角色       | null                                  | 否       |
@@ -144,7 +144,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | 组件右侧的可组合内容 | null                                | 否       |
 | bottomAction      | @Composable (() -> Unit)?          | 组件底部的可组合内容 | null                                | 否       |
 | insideMargin      | PaddingValues                      | 组件内部边距         | BasicComponentDefaults.InsideMargin | 否       |
-| cardListPosition  | CardListPosition                   | 该行在卡片组中的位置，圆角外边缘会获得额外内边距 | CardListPosition.None | 否       |
+| cardListPosition  | CardListPosition                   | 该行在卡片组（[CardListGroup](./card.md#cardlistgroup)）中的位置，圆角外边缘会获得额外内边距 | LocalCardListPosition.current（CardListGroup 之外为 None） | 否       |
 | onClick           | (() -> Unit)?                      | 点击组件时触发的回调 | null                                | 否       |
 | onClickLabel      | String?                            | 无障碍点击操作描述   | null                                | 否       |
 | role              | Role?                              | 无障碍语义角色       | null                                | 否       |
@@ -248,6 +248,27 @@ Column {
             title = option,
             onClick = { /* 处理选项点击 */ }
         )
+    }
+}
+```
+
+### 在卡片组中使用
+
+在 `Card` 中用 `CardListGroup` 包裹各行，每一行即可获得其卡片列表位置（圆角边缘上 2dp 的首 / 尾内边距）。
+不在分组内的行保持 `CardListPosition.None`，显式传入的 `cardListPosition` 始终优先。详见 [Card](./card.md#cardlistgroup)。
+
+```kotlin
+Card {
+    CardListGroup {
+        options.forEachIndexed { index, option ->
+            item(key = option) {
+                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                BasicComponent(
+                    title = option,
+                    onClick = { /* 处理选项点击 */ }
+                )
+            }
+        }
     }
 }
 ```

@@ -127,7 +127,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | Composable content on the end side of the component   | null                                  | No       |
 | bottomAction      | @Composable (() -> Unit)?          | Composable content at the bottom of the component     | null                                  | No       |
 | insideMargin      | PaddingValues                      | Internal padding of the component                     | BasicComponentDefaults.InsideMargin   | No       |
-| cardListPosition  | CardListPosition                   | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No       |
+| cardListPosition  | CardListPosition                   | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No       |
 | onClick           | (() -> Unit)?                      | Callback triggered when the component is clicked      | null                                  | No       |
 | onClickLabel      | String?                            | Accessibility label describing the click action       | null                                  | No       |
 | role              | Role?                              | Semantic role for accessibility services              | null                                  | No       |
@@ -144,7 +144,7 @@ BasicComponent(
 | endActions        | @Composable (RowScope.() -> Unit)? | Composable content on the end side of the component   | null                                | No       |
 | bottomAction      | @Composable (() -> Unit)?          | Composable content at the bottom of the component     | null                                | No       |
 | insideMargin      | PaddingValues                      | Internal padding of the component                     | BasicComponentDefaults.InsideMargin | No       |
-| cardListPosition  | CardListPosition                   | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No       |
+| cardListPosition  | CardListPosition                   | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No       |
 | onClick           | (() -> Unit)?                      | Callback triggered when the component is clicked      | null                                | No       |
 | onClickLabel      | String?                            | Accessibility label describing the click action       | null                                | No       |
 | role              | Role?                              | Semantic role for accessibility services              | null                                | No       |
@@ -250,6 +250,28 @@ Column {
             title = option,
             onClick = { /* Handle option click */ }
         )
+    }
+}
+```
+
+### Usage in a Card Group
+
+Inside a `Card`, wrap the rows in a `CardListGroup` so each row gets its card list position (the
+2dp head / tail padding on the rounded edges). Rows outside a group keep `CardListPosition.None`,
+and an explicit `cardListPosition` always wins. See [Card](./card.md#cardlistgroup).
+
+```kotlin
+Card {
+    CardListGroup {
+        options.forEachIndexed { index, option ->
+            item(key = option) {
+                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                BasicComponent(
+                    title = option,
+                    onClick = { /* Handle option click */ }
+                )
+            }
+        }
     }
 }
 ```

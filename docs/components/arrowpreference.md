@@ -86,7 +86,7 @@ Scaffold {
 | endActions    | @Composable RowScope.() -> Unit | Custom end side content (slot)   | {}                                    | No       |
 | bottomAction  | @Composable (() -> Unit)?       | Custom bottom content            | null                                  | No       |
 | insideMargin  | PaddingValues                   | Internal content padding         | BasicComponentDefaults.InsideMargin   | No       |
-| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
+| cardListPosition | CardListPosition | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No |
 | onClick       | (() -> Unit)?                   | Callback triggered on click      | null                                  | No       |
 | holdDownState | Boolean                         | Whether component is held down   | false                                 | No       |
 | enabled       | Boolean                         | Whether component is interactive | true                                  | No       |

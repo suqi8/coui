@@ -86,7 +86,7 @@ As in COUI's radio and mark preferences, the whole row is the touch target: the 
 | radioButtonLocation | RadioButtonLocation               | Location of the radio button control    | RadioButtonLocation.Start                 | No       |
 | bottomAction      | @Composable (() -> Unit)?       | Custom bottom content                   | null                                      | No       |
 | insideMargin      | PaddingValues                   | Internal content padding                | BasicComponentDefaults.InsideMargin       | No       |
-| cardListPosition | CardListPosition | Row position inside its card group; rounded outer edges gain extra padding | CardListPosition.None | No |
+| cardListPosition | CardListPosition | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No |
 | holdDownState     | Boolean                         | Whether the component is held down      | false                                     | No       |
 | enabled           | Boolean                         | Whether component is interactive        | true                                      | No       |
 

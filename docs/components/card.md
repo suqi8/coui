@@ -175,8 +175,8 @@ Card(
 
 COUI grows the rounded outer edges of a card group by `coui_list_card_head_or_tail_padding` (2dp).
 Pass a `CardListPosition` to the preference rows stacked inside a `Card` so each row gets the padding
-on the edges that are actually rounded. `CardListPosition.None` (the default) adds nothing, so
-existing call sites are unaffected.
+on the edges that are actually rounded, or let a [`CardListGroup`](#cardlistgroup) assign them.
+Outside a group a row defaults to `CardListPosition.None`, which adds nothing.
 
 | Position | Extra top | Extra bottom | Total |
 | :------- | :-------- | :----------- | :---- |
@@ -204,3 +204,42 @@ Card {
     }
 }
 ```
+
+### CardListGroup
+
+`CardListGroup` numbers the rows for you: the first row is `Head`, the last `Tail`, the rows
+between `Middle`, and a single row `Full`. Declare each row with `item { }`; the group adds no
+layout of its own and emits the rows straight into the `Card`'s column. Each row composable
+(`BasicComponent` and the preference rows) reads its position from `LocalCardListPosition` as the
+default of `cardListPosition`.
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.CardListGroup
+
+Card {
+    CardListGroup {
+        item {
+            SwitchPreference(title = "Wi-Fi", checked = wifi, onCheckedChange = { wifi = it })
+        }
+        if (wifi) {
+            item(key = "networks") {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                ArrowPreference(title = "Networks", onClick = {})
+            }
+        }
+        options.forEach { option ->
+            item(key = option) {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                MarkPreference(title = option, checked = selected == option, onClick = { selected = option })
+            }
+        }
+    }
+}
+```
+
+- Keep one row per `item`; a divider or a dialog that belongs to the row can share its `item`.
+- Positions follow the rows present, so conditional rows (`if (...) item { }`) are numbered correctly.
+  Give such rows and looped rows a `key` so they keep their state when rows before them change.
+- Rows outside a group keep `CardListPosition.None`, and dialogs, sheets and popups reset it to `None`
+  for their content.
+- A row that passes `cardListPosition` explicitly keeps it; the group only supplies the default.
