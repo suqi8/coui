@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.TextButton
@@ -40,8 +42,11 @@ fun OverlayDropdownPopup(
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
     renderInRootScaffold: Boolean,
+    backgroundModifier: Modifier = Modifier,
     collapseOnSelection: Boolean = true,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
     val entries = remember(entry) { listOf(entry) }
     OverlayDropdownPopup(
@@ -54,6 +59,9 @@ fun OverlayDropdownPopup(
         renderInRootScaffold = renderInRootScaffold,
         collapseOnSelection = collapseOnSelection,
         preciseClickState = preciseClickState,
+        backgroundModifier = backgroundModifier,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
     )
 }
 
@@ -61,6 +69,10 @@ fun OverlayDropdownPopup(
  * Overlay dropdown popup for one or more [DropdownEntry] groups.
  *
  * Groups are separated by dividers. Entries without selection state can be used as action menus.
+ *
+ * [backgroundModifier], [backgroundColor] and [materialEffect] reach the popup surface: pass
+ * coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` with a
+ * transparent color and `materialEffect = true` for the COUI 17 blurred popup.
  */
 @Composable
 fun OverlayDropdownPopup(
@@ -71,17 +83,17 @@ fun OverlayDropdownPopup(
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
     renderInRootScaffold: Boolean,
+    backgroundModifier: Modifier = Modifier,
     collapseOnSelection: Boolean = entries.size <= 1,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
     val currentOnDismiss by rememberUpdatedState(onDismiss)
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val onItemClicked: (Int, Int) -> Unit = remember {
         { entryIdx, itemIdx ->
-            currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
             currentEntries.getOrNull(entryIdx)?.let { entry ->
                 entry.items.getOrNull(itemIdx)?.onClick?.invoke()
             }
@@ -98,6 +110,9 @@ fun OverlayDropdownPopup(
         maxHeight = maxHeight,
         renderInRootScaffold = renderInRootScaffold,
         preciseClickState = preciseClickState,
+        backgroundModifier = backgroundModifier,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
     ) {
         ListPopupColumn {
             DropdownEntriesPopupContent(

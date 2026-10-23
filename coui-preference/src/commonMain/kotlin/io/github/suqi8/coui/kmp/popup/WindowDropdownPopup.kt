@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.TextButton
@@ -40,8 +42,11 @@ fun WindowDropdownPopup(
     onDismissFinished: () -> Unit,
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
+    backgroundModifier: Modifier = Modifier,
     collapseOnSelection: Boolean = true,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
     val entries = remember(entry) { listOf(entry) }
     WindowDropdownPopup(
@@ -53,6 +58,9 @@ fun WindowDropdownPopup(
         dropdownColors = dropdownColors,
         collapseOnSelection = collapseOnSelection,
         preciseClickState = preciseClickState,
+        backgroundModifier = backgroundModifier,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
     )
 }
 
@@ -60,6 +68,10 @@ fun WindowDropdownPopup(
  * Window-layer dropdown popup for one or more [DropdownEntry] groups.
  *
  * Groups are separated by dividers. Entries without selection state can be used as action menus.
+ *
+ * [backgroundModifier], [backgroundColor] and [materialEffect] reach the popup surface: pass
+ * coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` with a
+ * transparent color and `materialEffect = true` for the COUI 17 blurred popup.
  */
 @Composable
 fun WindowDropdownPopup(
@@ -69,13 +81,14 @@ fun WindowDropdownPopup(
     onDismissFinished: () -> Unit,
     maxHeight: Dp?,
     dropdownColors: DropdownColors,
+    backgroundModifier: Modifier = Modifier,
     collapseOnSelection: Boolean = entries.size <= 1,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     WindowListPopup(
         show = show,
         alignment = PopupPositionProvider.Align.End,
@@ -83,12 +96,14 @@ fun WindowDropdownPopup(
         onDismissFinished = onDismissFinished,
         maxHeight = maxHeight,
         preciseClickState = preciseClickState,
+        backgroundModifier = backgroundModifier,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
     ) {
         val dismiss = LocalDismissState.current
         val currentDismiss by rememberUpdatedState(dismiss)
         val onItemClicked: (Int, Int) -> Unit = remember {
             { entryIdx, itemIdx ->
-                currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
                 currentEntries.getOrNull(entryIdx)?.let { entry ->
                     entry.items.getOrNull(itemIdx)?.onClick?.invoke()
                 }
