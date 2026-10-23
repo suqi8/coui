@@ -125,7 +125,9 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 ### CancelButton Properties
 
 `CancelButton` is the COUI 17 functional button: a 40dp glass capsule with a 14sp medium label.
-Inside `outsideEndAction` its label fades in with the edit-state spring.
+Inside `outsideEndAction` it follows the edit-state spring both ways: it scales between half and full
+size, its glass capsule comes out of (or dissolves into) a blur of up to 30px and is opaque for all
+but the first fifth of the progress, and its label fades with the progress.
 
 | Property Name | Type            | Description                                                   | Default Value                       | Required |
 | ------------- | --------------- | ------------------------------------------------------------- | ----------------------------------- | -------- |

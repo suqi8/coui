@@ -221,7 +221,7 @@ fun SearchBar(
                 if (expanded || actionInMotion) {
                     val actionTextAlpha = remember(iconExpand) {
                         if (iconExpand == null) {
-                            { searchBarActionTextAlpha(progress.value) }
+                            { searchBarActionFrame(progress.value, blurred = capsuleInfo.material).textAlpha }
                         } else {
                             { 1f }
                         }
@@ -249,13 +249,15 @@ fun SearchBar(
                                 layout(width, placeable.height) {
                                     placeable.placeRelativeWithLayer(width - placeable.width, 0) {
                                         if (iconExpand == null) {
-                                            val p = progress.value
-                                            val scale = searchBarActionScale(p)
-                                            scaleX = scale
-                                            scaleY = scale
-                                            translationX = direction * ActionOffsetPx * (1f - p)
-                                            alpha = searchBarActionAlpha(p)
-                                            renderEffect = null
+                                            // COUISearchBar fun-button listener, the same frame
+                                            // function both ways: scale, offset, alpha and blur.
+                                            val frame = searchBarActionFrame(progress.value, blurred = capsuleInfo.material)
+                                            scaleX = frame.scale
+                                            scaleY = frame.scale
+                                            translationX = direction * frame.translationPx
+                                            alpha = frame.alpha
+                                            val blur = frame.blurPx
+                                            renderEffect = if (blur > 0f) BlurEffect(blur, blur, TileMode.Decal) else null
                                         } else {
                                             // funBtnAnimateIconExpand: the button flies from the
                                             // toolbar icon centre (mFunctionalButtonStartX).
@@ -352,10 +354,10 @@ private fun DrawScope.drawSearchBarNeck(
     if (iconExpand == null) {
         if (progress <= 0f || progress >= 1f) return
         capsule = Rect(input.left, capsuleTop, input.right, capsuleBottom)
-        val scale = searchBarActionScale(progress)
+        val frame = searchBarActionFrame(progress, blurred = true)
         val direction = if (layoutDirection == LayoutDirection.Rtl) -1f else 1f
-        button = action.scaledAround(scale).translate(direction * ActionOffsetPx * (1f - progress), 0f)
-        alpha = searchBarActionAlpha(progress)
+        button = action.scaledAround(frame.scale).translate(direction * frame.translationPx, 0f)
+        alpha = frame.alpha
     } else {
         val p = iconExpand.progress()
         if (p <= 0f || p >= 1f) return
@@ -1008,12 +1010,12 @@ fun CancelButton(
 
 /**
  * The extra alpha the [CancelButton] label applies inside a [SearchBar] action slot, on top of the
- * slot's own [searchBarActionAlpha]; `null` outside a [SearchBar].
+ * slot's own [SearchBarActionFrame.alpha]; `null` outside a [SearchBar].
  */
 private val LocalSearchBarActionTextAlpha = staticCompositionLocalOf<(() -> Float)?> { null }
 
 /** COUI 17 `StateChangedToEditParamsHigh` / `StateChangedToNormalParamsHigh`: response 0.5, bounce 0.25. */
-private val StateChangeSpring = TouchMotion.spring(response = 0.5f, bounce = 0.25f, visibilityThreshold = 0.001f)
+internal val StateChangeSpring = TouchMotion.spring(response = 0.5f, bounce = 0.25f, visibilityThreshold = 0.001f)
 
 /**
  * `COUISearchBar.mFunctionalInitScale`: `functionalButtonInitScale` (to edit) and
@@ -1035,24 +1037,43 @@ private val ActionOffsetPx = 20f
 /** Gap between the capsule and the action: COUI `coui_search_bar_functional_button_start_gap` (12dp). */
 private val ActionStartGap = 12.dp
 
-/** The action scale at edit-state [progress]: `initScale + (1 - initScale) * progress`. */
-internal fun searchBarActionScale(progress: Float): Float = ActionInitScale + (1f - ActionInitScale) * progress
-
 /**
- * The action alpha at edit-state [progress]: `COUISearchBar.remapAlphaProgress(p, 0.2)`, which a
- * blurred functional button uses, so the capsule is solid before the label has faded in.
+ * One frame of the functional (cancel) button during the edit-state change, from the
+ * `mFunBtnSpringAnimation` update listener in `COUISearchBar`. Expanding and collapsing run the
+ * same function on the same spring, the progress rising from 0 to 1 or falling from 1 to 0.
+ *
+ * @property scale `mFunctionalInitScale + (1 - mFunctionalInitScale) * p`, 0.5 at rest both ways.
+ * @property translationPx `mFunctionalButtonOffsetX * (1 - p)`, toward the end edge, raw pixels.
+ * @property alpha the button alpha: `remapAlphaProgress(p, 0.2)` for a blurred (material) button,
+ *   which is opaque from 20% on, else `p`.
+ * @property textAlpha the extra label alpha inside the button: `setFunctionalButtonTextAlpha(p)`
+ *   for a blurred button (so the label shows at `alpha * p`), else 1.
+ * @property blurPx `updateBlurWithAnimationProgress(button, 1 - p)`: `30 * (1 - p)` raw pixels for a
+ *   blurred button, so the opaque capsule dissolves into blur before it fades out.
  */
-internal fun searchBarActionAlpha(progress: Float): Float {
-    val p = progress.coerceIn(0f, 1f)
-    return if (p < ActionAlphaRemapProgress) p / ActionAlphaRemapProgress else 1f
+@Immutable
+internal data class SearchBarActionFrame(
+    val scale: Float,
+    val translationPx: Float,
+    val alpha: Float,
+    val textAlpha: Float,
+    val blurPx: Float,
+)
+
+/** The [SearchBarActionFrame] at edit-state [progress]; [blurred] is `isBlurEnable()`. */
+internal fun searchBarActionFrame(progress: Float, blurred: Boolean): SearchBarActionFrame {
+    val clamped = progress.coerceIn(0f, 1f)
+    return SearchBarActionFrame(
+        scale = ActionInitScale + (1f - ActionInitScale) * progress,
+        translationPx = ActionOffsetPx * (1f - progress),
+        alpha = if (blurred) remapAlphaProgress(clamped, ActionAlphaRemapProgress) else clamped,
+        textAlpha = if (blurred) clamped else 1f,
+        blurPx = if (blurred) max(1f - progress, 0f) * ActionBlurPx else 0f,
+    )
 }
 
-/**
- * The extra label alpha that makes the [CancelButton] text, already under [searchBarActionAlpha],
- * end up at `progress` (`setFunctionalButtonTextAlpha`).
- */
-internal fun searchBarActionTextAlpha(progress: Float): Float {
-    val p = progress.coerceIn(0f, 1f)
-    val outer = searchBarActionAlpha(p)
-    return if (outer > 0f) p / outer else 0f
-}
+/** `COUISearchBar.remapAlphaProgress`: `p / limit` below [limit], 1 from there on. */
+private fun remapAlphaProgress(progress: Float, limit: Float): Float = if (progress < limit && limit > 0f) progress / limit else 1f
+
+/** `updateBlurWithAnimationProgress`: the blur radius scale, in raw pixels. */
+private val ActionBlurPx = 30f
