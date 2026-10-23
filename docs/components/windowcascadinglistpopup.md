@@ -82,6 +82,10 @@ Box {
 Cascading depth is capped at 2. Items at the secondary level cannot have their own `children`; deeper trees are silently ignored.
 :::
 
+## Sub Menu Behavior
+
+The sub menu follows COUI 17. On a compact window (narrower than 600dp) it covers the main menu: it is as wide as the main menu and starts with a copy of the parent row (medium title, tinted indicator) sitting on that row, then slides up to 14dp above it while its outline grows from the row; the main menu shrinks to 0.9, moves up to keep a 12dp strip visible and dims its rows to 30%. On wider windows the main menu shrinks to 0.9 with its rows at 70% while the sub menu scales in beside it, overlapping 14dp. Tapping the main menu, the copied header, outside the popup, or going back collapses the sub menu; dragging across the main menu collapses it after 500ms; at the top level, back and outside taps dismiss the popup via `onDismissRequest`. Predictive back previews the collapse or dismissal and restores the popup when cancelled.
+
 ## Properties
 
 ### WindowCascadingListPopup
@@ -95,11 +99,14 @@ Cascading depth is capped at 2. Items at the secondary level cannot have their o
 | onDismissFinished     | (() -> Unit)?               | Called after the exit animation finishes.                                                    | null                                       |
 | popupPositionProvider | PopupPositionProvider       | Position strategy for the primary popup relative to its anchor.                              | ListPopupDefaults.DropdownPositionProvider |
 | alignment             | PopupPositionProvider.Align | Alignment of the primary popup.                                                              | PopupPositionProvider.Align.End            |
-| enableWindowDim       | Boolean                     | Whether to dim the rest of the window while the popup is shown.                              | true                                       |
+| enableWindowDim       | Boolean                     | Whether to dim the rest of the window while the popup is shown.                              | false                                       |
 | maxHeight             | Dp?                         | Maximum height of either side. Null bounds it by the safe area.                              | null                                       |
-| minWidth              | Dp                          | Minimum width of the popup.                                                                  | 200.dp                                     |
+| minWidth              | Dp                          | Minimum width of the popup.                                                                  | ListPopupDefaults.MinWidth                 |
 | dropdownColors        | DropdownColors              | Colors used by every row.                                                                    | DropdownDefaults.dropdownColors()          |
 | collapseOnSelection   | Boolean                     | When true, selecting any leaf dismisses the popup.                                           | true                                       |
+| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows; the slot for the COUI 17 blurred background, e.g. coui-blur `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. | Modifier |
+| backgroundColor       | Color                       | Popup surface fill (couiColorBackgroundTop). Pass a transparent color with a blurring `backgroundModifier`. | ListPopupDefaults.backgroundColor() |
+| materialEffect        | Boolean                     | Draws the material effects of a blurred COUI 17 popup: the shadow-edge stroke and the touch spotlight. | false |
 
 ### DropdownEntry
 
@@ -137,6 +144,7 @@ Cascading depth is capped at 2. Items at the secondary level cannot have their o
 | disabledContentColor   | Color | Title color of a disabled option        |
 | alertContentColor      | Color | Title color of an alert option          |
 | headerColor            | Color | Title color of a group header row       |
+| submenuIndicatorColor  | Color | Indicator color while the sub menu is closed |
 
 ### PopupPositionProvider.Align
 

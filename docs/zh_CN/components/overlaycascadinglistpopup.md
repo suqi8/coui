@@ -99,14 +99,14 @@ OverlayCascadingListPopup(
 )
 ```
 
-### 禁用窗口变暗
+### 窗口变暗
 
 ```kotlin
 OverlayCascadingListPopup(
     show = showPopup,
     entries = entries,
     onDismissRequest = { showPopup = false },
-    enableWindowDim = false,
+    enableWindowDim = true, // COUI popups do not dim; opt in here
 )
 ```
 
@@ -135,9 +135,9 @@ DropdownItem(
 )
 ```
 
-### 返回导航与变形行为
+### 子菜单行为
 
-返回处理与点击外部的规则一致：二级列表展开时，返回手势（或点击弹窗外部、点击克隆的子菜单标题行）会将二级列表收起回主列表；处于主列表层级时，返回与点击外部会通过 `onDismissRequest` 关闭弹窗。预测式返回手势会预览收起/关闭过程，取消手势时弹窗会自动恢复，无需额外配置。
+子菜单遵循 COUI 17。紧凑窗口（宽度小于 600dp）下子菜单覆盖在主菜单上：宽度与主菜单一致，首行是父项的副本（中粗标题、着色指示器），起始时正好盖在父项所在行上，随后上移到该行上方 14dp，同时轮廓从该行逐渐展开；主菜单缩小到 0.9、上移以保留 12dp 可见，并把行的不透明度降到 30%。较宽窗口下主菜单缩小到 0.9、行不透明度 70%，子菜单在其旁边缩放出现并重叠 14dp。点击主菜单、点击副本标题行、点击弹窗外部或返回会收起子菜单；在主菜单上拖动 500ms 后也会收起；处于主菜单层级时，返回与点击外部通过 `onDismissRequest` 关闭弹窗。预测式返回会预览收起或关闭过程，取消时弹窗恢复。
 
 ## 属性
 
@@ -152,12 +152,15 @@ DropdownItem(
 | onDismissFinished     | (() -> Unit)?               | 退出动画结束后调用                                                                                             | null                                       |
 | popupPositionProvider | PopupPositionProvider       | 主弹窗相对锚点的定位策略                                                                                       | ListPopupDefaults.DropdownPositionProvider |
 | alignment             | PopupPositionProvider.Align | 主弹窗的对齐方式                                                                                               | PopupPositionProvider.Align.End            |
-| enableWindowDim       | Boolean                     | 弹窗显示时是否变暗背景                                                                                         | true                                       |
+| enableWindowDim       | Boolean                     | 弹窗显示时是否变暗背景                                                                                         | false                                       |
 | maxHeight             | Dp?                         | 任一面的最大高度。null 时由安全区限制                                                                          | null                                       |
-| minWidth              | Dp                          | 弹窗的最小宽度                                                                                                 | 200.dp                                     |
+| minWidth              | Dp                          | 弹窗的最小宽度                                                                                                 | ListPopupDefaults.MinWidth                 |
 | renderInRootScaffold  | Boolean                     | 是否在根（最外层）Scaffold 中渲染弹窗。为 true 时，弹窗覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染并进行位置补偿 | true                                       |
 | dropdownColors        | DropdownColors              | 每一行使用的颜色配置                                                                                           | DropdownDefaults.dropdownColors()          |
 | collapseOnSelection   | Boolean                     | 为 true 时，选中任何叶子项后即关闭弹窗                                                                         | true                                       |
+| backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下；用于绘制 COUI 17 模糊背景，例如 coui-blur 的 `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` | Modifier |
+| backgroundColor       | Color                       | 弹窗表面填充色（couiColorBackgroundTop）。与模糊 `backgroundModifier` 搭配时传入透明色 | ListPopupDefaults.backgroundColor() |
+| materialEffect        | Boolean                     | 绘制 COUI 17 模糊弹窗的材质效果：阴影描边与跟手光斑 | false |
 
 ### DropdownEntry
 
@@ -195,6 +198,7 @@ DropdownItem(
 | disabledContentColor | Color | 禁用项标题颜色 |
 | alertContentColor | Color | 警示项标题颜色 |
 | headerColor | Color | 分组标题行的标题颜色 |
+| submenuIndicatorColor  | Color | 子菜单收起时指示器的颜色                |
 
 ### PopupPositionProvider.Align
 

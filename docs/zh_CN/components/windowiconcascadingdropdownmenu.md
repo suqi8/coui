@@ -195,3 +195,4 @@ WindowIconCascadingDropdownMenu(
 | disabledContentColor | Color | 禁用项标题颜色 |
 | alertContentColor | Color | 警示项标题颜色 |
 | headerColor | Color | 分组标题行的标题颜色 |
+| submenuIndicatorColor  | Color | 子菜单收起时指示器的颜色                |

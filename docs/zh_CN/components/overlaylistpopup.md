@@ -90,7 +90,7 @@ OverlayListPopup(
 }
 ```
 
-### 禁用窗口变暗
+### 窗口变暗
 
 ```kotlin
 var showPopup by remember { mutableStateOf(false) }
@@ -98,7 +98,7 @@ var showPopup by remember { mutableStateOf(false) }
 OverlayListPopup(
     show = showPopup,
     onDismissRequest = { showPopup = false }, // Close the popup menu
-    enableWindowDim = false // Disable dimming layer
+    enableWindowDim = true // COUI popups do not dim; opt in here
 ) {
     ListPopupColumn {
         // Custom content
@@ -127,6 +127,34 @@ OverlayListPopup(
 
 你也可以通过 `ListPopupDefaults.dropdownPositionProvider(verticalMargin, horizontalMargin)` 构建带自定义边距的下拉定位器。
 
+## COUI 17 行为
+
+弹窗遵循 COUI 17 `COUIPopupListWindow`：
+
+- **尺寸**：每行最小 40dp，上下内边距 8dp、左右 20dp，列表上下各留 8dp 内边距。弹窗宽度取最宽的行，限制在 168–256dp（有子菜单行时最小 196dp），高度只显示完整的行。
+- **行**：选中行标题仍为 `couiColorLabelPrimary`，尾部显示对勾；子菜单行显示上下箭头指示器。行与行之间没有分割线；分组之间是 12dp 高、带 0.5dp 分割线的间隔，且仅在总项数不少于 3 时出现。
+- **按压反馈**：整列共享一个圆角遮罩（单行行为胶囊形），在行间滑动；手指拖动时遮罩跟随并在每次换行时轻震，松手选中手指下的行。长按子菜单行 650ms 会展开子菜单。
+- **定位**：以锚点（或配合 `preciseClickState` 时的按下位置）水平居中，位于锚点下方 8dp，下方放不下则放在上方，两侧都放不下时放在可用区域顶部；与状态栏保持 16dp、与导航栏或键盘保持 32dp、与左右边缘保持栅格边距（16 / 24 / 40dp）。
+- **动效**：弹窗以中心为原点从 0 放大，同时中心沿一条轻微弯曲的路径从锚点飞出并淡入；关闭时沿原路径返回。
+- **默认不压暗**：COUI 弹窗不会压暗其后的内容。
+
+## 模糊背景
+
+COUI 默认不开启弹窗模糊，需要应用主动开启。通过 `backgroundModifier` 传入模糊并配合透明的 `backgroundColor`，再打开 `materialEffect` 即可获得描边与光斑：
+
+```kotlin
+val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+OverlayListPopup(
+    show = showPopup,
+    onDismissRequest = { showPopup = false },
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark)),
+    backgroundColor = Color.Transparent,
+    materialEffect = true,
+) {
+    ListPopupColumn { /* 行 */ }
+}
+```
+
 ## 属性
 
 ### OverlayListPopup
@@ -137,12 +165,15 @@ OverlayListPopup(
 | popupModifier         | Modifier                    | 应用于弹窗容器的修饰符               | Modifier                                   |
 | popupPositionProvider | PopupPositionProvider       | 提供弹窗的位置计算逻辑               | ListPopupDefaults.DropdownPositionProvider |
 | alignment             | PopupPositionProvider.Align | 指定弹窗相对于锚点的对齐方式         | PopupPositionProvider.Align.Start          |
-| enableWindowDim       | Boolean                     | 是否在弹窗显示时使背景变暗           | true                                       |
+| enableWindowDim       | Boolean                     | 是否在弹窗显示时使背景变暗           | false                                       |
 | onDismissRequest      | (() -> Unit)?               | 当用户请求关闭（例如点击外部）时触发 | null                                       |
 | onDismissFinished     | (() -> Unit)?               | 关闭动画完成后调用；若关闭过程被中途取消（例如 `show` 被设回 true），则不会触发 | null    |
 | maxHeight             | Dp?                         | 弹窗内容的最大高度                   | null                                       |
 | minWidth              | Dp                          | 弹窗内容的最小宽度                   | ListPopupDefaults.MinWidth                 |
 | renderInRootScaffold  | Boolean                     | 是否在根（最外层）Scaffold 中渲染弹窗。为 true 时，弹窗覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染并进行位置补偿 | true |
+| backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下；用于绘制 COUI 17 模糊背景，例如 coui-blur 的 `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` | Modifier |
+| backgroundColor       | Color                       | 弹窗表面填充色（couiColorBackgroundTop）。与模糊 `backgroundModifier` 搭配时传入透明色 | ListPopupDefaults.backgroundColor() |
+| materialEffect        | Boolean                     | 绘制 COUI 17 模糊弹窗的材质效果：阴影描边与跟手光斑 | false |
 | content               | @Composable () -> Unit      | 要在弹窗内显示的内容                 | -                                          |
 
 ### ListPopupColumn
@@ -190,9 +221,9 @@ DropdownImpl(
 | dropdownColors        | DropdownColors | 选项颜色配置                                                               | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | 此选项是否可点击                                                           | item.enabled                      |
 | dialogMode            | Boolean        | 是否以对话框模式显示此行                                                   | false                             |
-| hasSubmenu            | Boolean        | 为 true 时此行作为子菜单触发行：尾部显示 chevron 而非选中对勾              | false                             |
-| isFirst               | Boolean        | 此行是否为整个弹窗的第一行（控制弹窗模式下更大的顶部内边距）               | index == 0                        |
-| isLast                | Boolean        | 此行是否为整个弹窗的最后一行（控制弹窗模式下更大的底部内边距）             | index == optionSize - 1           |
+| hasSubmenu            | Boolean        | 为 true 时此行作为子菜单触发行：尾部显示上下箭头指示器而非选中对勾              | false                             |
+| isFirst               | Boolean        | 兼容保留；COUI 17 各行内边距一致、由列表统一留白，弹窗模式不再读取               | index == 0                        |
+| isLast                | Boolean        | 兼容保留，同 `isFirst`             | index == optionSize - 1           |
 | onSelectedIndexChange | (Int) -> Unit  | 点击此选项时的回调                                                         | -                                 |
 
 ### PopupPositionProvider.Align
@@ -214,8 +245,13 @@ ListPopupDefaults 对象提供弹窗的默认值与定位器。
 
 | 常量名         | 类型 | 说明                                   | 值     |
 | -------------- | ---- | -------------------------------------- | ------ |
-| MinWidth       | Dp   | 弹窗的默认最小宽度                     | 178.dp |
-| MaxWidth       | Dp   | `ListPopupColumn` 使用的最大宽度上限   | 232.dp |
+| MinWidth            | Dp   | 弹窗的默认最小宽度（coui_popup_list_window_min_width）              | 168.dp |
+| MinWidthWithSubmenu | Dp   | 含子菜单行时的最小宽度（coui_popup_list_window_width_with_icon）    | 196.dp |
+| MaxWidth            | Dp   | `ListPopupColumn` 使用的最大宽度上限                                | 256.dp |
+| AnchorGap           | Dp   | 锚点与弹窗之间的间距                                                | 8.dp   |
+| TopBarrier          | Dp   | 状态栏下方保留的间距                                                | 16.dp  |
+| BottomBarrier       | Dp   | 导航栏或键盘上方保留的间距                                          | 32.dp  |
+| HorizontalBarrier   | Dp   | 紧凑窗口的左右间距；参见 `horizontalBarrier(widthDp, heightDp)`     | 16.dp  |
 | MinPopupHeight | Dp   | 弹窗测量时占用的最小高度               | 50.dp  |
 
 #### 定位器

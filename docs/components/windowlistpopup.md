@@ -65,6 +65,34 @@ Box {
 }
 ```
 
+## COUI 17 Behavior
+
+The popup follows COUI 17 `COUIPopupListWindow`:
+
+- **Size**: rows are at least 40dp tall with 8dp vertical and 20dp side padding, and the list is inset by 8dp at the top and bottom. The popup is as wide as its widest row, clamped to 168–256dp (196dp minimum when a row opens a sub menu), and its height ends on a whole row.
+- **Rows**: titles stay `couiColorLabelPrimary` when selected; a selected row shows a check and a sub-menu row the up/down indicator. There is no line between rows; groups are separated by a 12dp band with a 0.5dp divider, from three items on.
+- **Press feedback**: one rounded mask (capsule on a single-line row) slides between rows; dragging moves it with a haptic tick per row and selects the row under the finger on release. Holding a sub-menu row for 650ms opens it.
+- **Placement**: centred on the anchor (or the touched point with `preciseClickState`), 8dp below it, above it when there is no room, otherwise at the top of the available area; it keeps 16dp from the status bar, 32dp from the navigation bar or keyboard and the grid margin (16 / 24 / 40dp) from the sides.
+- **Motion**: the popup grows from 0 about its centre while its centre travels a slightly curved path out of the anchor, and fades in; dismissal runs the same path back.
+- **No dimming** by default: COUI popups leave the content behind them untouched.
+
+## Blurred Background
+
+COUI leaves popup blur off unless an app asks for it. Pass the blur through `backgroundModifier` together with a transparent `backgroundColor`, and turn on `materialEffect` for the stroke and spotlight:
+
+```kotlin
+val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+OverlayListPopup(
+    show = showPopup,
+    onDismissRequest = { showPopup = false },
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark)),
+    backgroundColor = Color.Transparent,
+    materialEffect = true,
+) {
+    ListPopupColumn { /* rows */ }
+}
+```
+
 ## Properties
 
 ### WindowListPopup
@@ -75,11 +103,14 @@ Box {
 | popupModifier         | Modifier                    | Modifier applied to the popup container.                         | Modifier                                   |
 | popupPositionProvider | PopupPositionProvider       | Provides position calculation logic for the popup.               | ListPopupDefaults.DropdownPositionProvider |
 | alignment             | PopupPositionProvider.Align | Specifies the alignment of the popup relative to the anchor.     | PopupPositionProvider.Align.Start          |
-| enableWindowDim       | Boolean                     | Whether to dim the background when popup is shown.               | true                                       |
+| enableWindowDim       | Boolean                     | Whether to dim the background when popup is shown.               | false                                       |
 | onDismissRequest      | (() -> Unit)?               | Called when the user requests dismissal (e.g., clicking outside) | null                                       |
 | onDismissFinished     | (() -> Unit)?               | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null         |
 | maxHeight             | Dp?                         | Maximum height of the popup content.                             | null                                       |
 | minWidth              | Dp                          | Minimum width of the popup content.                              | ListPopupDefaults.MinWidth                 |
+| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows; the slot for the COUI 17 blurred background, e.g. coui-blur `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. | Modifier |
+| backgroundColor       | Color                       | Popup surface fill (couiColorBackgroundTop). Pass a transparent color with a blurring `backgroundModifier`. | ListPopupDefaults.backgroundColor() |
+| materialEffect        | Boolean                     | Draws the material effects of a blurred COUI 17 popup: the shadow-edge stroke and the touch spotlight. | false |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                         | -                                          |
 
 ### ListPopupColumn
@@ -114,7 +145,7 @@ DropdownImpl(
 | dialogMode            | Boolean        | Use dialog-style row metrics instead of popup metrics | false            |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked | -                                 |
 
-`DropdownImpl` also provides an overload that takes a full `DropdownItem` instead of `text`, enabling rows with an icon or summary. It additionally accepts `hasSubmenu` (renders a trailing chevron), and `isFirst` / `isLast` (control the larger edge padding of the first/last row, defaulting to `index == 0` and `index == optionSize - 1`); `enabled` defaults to `item.enabled`.
+`DropdownImpl` also provides an overload that takes a full `DropdownItem` instead of `text`, enabling rows with an icon or summary. It additionally accepts `hasSubmenu` (renders the up/down indicator), `submenuExpanded` (tints the indicator while its sub menu is open), and `isFirst` / `isLast`, kept for compatibility and ignored in popup mode by COUI 17; `enabled` defaults to `item.enabled`.
 
 ```kotlin
 DropdownImpl(

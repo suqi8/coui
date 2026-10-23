@@ -90,7 +90,7 @@ OverlayListPopup(
 }
 ```
 
-### Disable Window Dimming
+### Window Dimming
 
 ```kotlin
 var showPopup by remember { mutableStateOf(false) }
@@ -98,7 +98,7 @@ var showPopup by remember { mutableStateOf(false) }
 OverlayListPopup(
     show = showPopup,
     onDismissRequest = { showPopup = false }, // Close the popup menu
-    enableWindowDim = false // Disable dimming layer
+    enableWindowDim = true // COUI popups do not dim; opt in here
 ) {
     ListPopupColumn {
         // Custom content
@@ -127,6 +127,34 @@ OverlayListPopup(
 
 You can also build a dropdown provider with custom margins via `ListPopupDefaults.dropdownPositionProvider(verticalMargin, horizontalMargin)`.
 
+## COUI 17 Behavior
+
+The popup follows COUI 17 `COUIPopupListWindow`:
+
+- **Size**: rows are at least 40dp tall with 8dp vertical and 20dp side padding, and the list is inset by 8dp at the top and bottom. The popup is as wide as its widest row, clamped to 168–256dp (196dp minimum when a row opens a sub menu), and its height ends on a whole row.
+- **Rows**: titles stay `couiColorLabelPrimary` when selected; a selected row shows a check and a sub-menu row the up/down indicator. There is no line between rows; groups are separated by a 12dp band with a 0.5dp divider, from three items on.
+- **Press feedback**: one rounded mask (capsule on a single-line row) slides between rows; dragging moves it with a haptic tick per row and selects the row under the finger on release. Holding a sub-menu row for 650ms opens it.
+- **Placement**: centred on the anchor (or the touched point with `preciseClickState`), 8dp below it, above it when there is no room, otherwise at the top of the available area; it keeps 16dp from the status bar, 32dp from the navigation bar or keyboard and the grid margin (16 / 24 / 40dp) from the sides.
+- **Motion**: the popup grows from 0 about its centre while its centre travels a slightly curved path out of the anchor, and fades in; dismissal runs the same path back.
+- **No dimming** by default: COUI popups leave the content behind them untouched.
+
+## Blurred Background
+
+COUI leaves popup blur off unless an app asks for it. Pass the blur through `backgroundModifier` together with a transparent `backgroundColor`, and turn on `materialEffect` for the stroke and spotlight:
+
+```kotlin
+val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+OverlayListPopup(
+    show = showPopup,
+    onDismissRequest = { showPopup = false },
+    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark)),
+    backgroundColor = Color.Transparent,
+    materialEffect = true,
+) {
+    ListPopupColumn { /* rows */ }
+}
+```
+
 ## Properties
 
 ### OverlayListPopup
@@ -137,12 +165,15 @@ You can also build a dropdown provider with custom margins via `ListPopupDefault
 | popupModifier         | Modifier                    | Modifier applied to the popup container.                          | Modifier                                   |
 | popupPositionProvider | PopupPositionProvider       | Provides position calculation logic for the popup.                | ListPopupDefaults.DropdownPositionProvider |
 | alignment             | PopupPositionProvider.Align | Specifies the alignment of the popup relative to the anchor.      | PopupPositionProvider.Align.Start          |
-| enableWindowDim       | Boolean                     | Whether to dim the background when popup is shown.                | true                                       |
+| enableWindowDim       | Boolean                     | Whether to dim the background when popup is shown.                | false                                       |
 | onDismissRequest      | (() -> Unit)?               | Called when the user requests dismissal (e.g., clicking outside). | null                                       |
 | onDismissFinished     | (() -> Unit)?               | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null         |
 | maxHeight             | Dp?                         | Maximum height of the popup content.                              | null                                       |
 | minWidth              | Dp                          | Minimum width of the popup content.                               | ListPopupDefaults.MinWidth                 |
 | renderInRootScaffold  | Boolean                     | Whether to render the popup in the root (outermost) Scaffold. When true, the popup covers the full screen. When false, it renders within the current Scaffold's bounds with position compensation. | true |
+| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows; the slot for the COUI 17 blurred background, e.g. coui-blur `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. | Modifier |
+| backgroundColor       | Color                       | Popup surface fill (couiColorBackgroundTop). Pass a transparent color with a blurring `backgroundModifier`. | ListPopupDefaults.backgroundColor() |
+| materialEffect        | Boolean                     | Draws the material effects of a blurred COUI 17 popup: the shadow-edge stroke and the touch spotlight. | false |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                          | -                                          |
 
 ### ListPopupColumn
@@ -190,9 +221,9 @@ The item-based overload accepts a `DropdownItem` (with optional `icon` and `summ
 | dropdownColors        | DropdownColors | Color configuration for the option                                                                           | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | Whether this option can be clicked                                                                           | item.enabled                      |
 | dialogMode            | Boolean        | Whether the row is shown in dialog mode                                                                      | false                             |
-| hasSubmenu            | Boolean        | When true, the row acts as a submenu trigger: a trailing chevron is shown instead of the selection check     | false                             |
-| isFirst               | Boolean        | Whether this row is the first row of the entire popup (controls the larger top padding in popup mode)        | index == 0                        |
-| isLast                | Boolean        | Whether this row is the last row of the entire popup (controls the larger bottom padding in popup mode)      | index == optionSize - 1           |
+| hasSubmenu            | Boolean        | When true, the row acts as a submenu trigger: the up/down indicator is shown instead of the selection check     | false                             |
+| isFirst               | Boolean        | Kept for compatibility; COUI 17 pads every row alike and insets the list, so popup mode ignores it        | index == 0                        |
+| isLast                | Boolean        | Kept for compatibility, see `isFirst`      | index == optionSize - 1           |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked                                                                         | -                                 |
 
 ### PopupPositionProvider.Align
@@ -214,8 +245,13 @@ The ListPopupDefaults object provides default values and position providers for 
 
 | Constant Name  | Type | Description                                          | Value  |
 | -------------- | ---- | ---------------------------------------------------- | ------ |
-| MinWidth       | Dp   | Default minimum width of the popup                   | 178.dp |
-| MaxWidth       | Dp   | Maximum width clamp used by `ListPopupColumn`        | 232.dp |
+| MinWidth            | Dp   | Default minimum width of the popup (coui_popup_list_window_min_width)              | 168.dp |
+| MinWidthWithSubmenu | Dp   | Minimum width when a row opens a sub menu (coui_popup_list_window_width_with_icon) | 196.dp |
+| MaxWidth            | Dp   | Maximum width clamp used by `ListPopupColumn`                                      | 256.dp |
+| AnchorGap           | Dp   | Gap between the anchor and the popup                                               | 8.dp   |
+| TopBarrier          | Dp   | Clearance kept below the status bar                                                | 16.dp  |
+| BottomBarrier       | Dp   | Clearance kept above the navigation bar or keyboard                                | 32.dp  |
+| HorizontalBarrier   | Dp   | Side clearance of a compact window; see `horizontalBarrier(widthDp, heightDp)`     | 16.dp  |
 | MinPopupHeight | Dp   | Minimum height the popup will occupy when measured   | 50.dp  |
 
 #### Position Providers

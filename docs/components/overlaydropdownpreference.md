@@ -271,3 +271,4 @@ Group titles are reserved for future use. The COUI dropdown style currently has 
 | disabledContentColor   | Color | Title color of a disabled option        |
 | alertContentColor      | Color | Title color of an alert option          |
 | headerColor            | Color | Title color of a group header row       |
+| submenuIndicatorColor  | Color | Indicator color while the sub menu is closed |
