@@ -2,6 +2,21 @@
 
 ## 未发布
 
+### 弹出菜单默认模糊
+
+列表弹窗、级联菜单与下拉 / Spinner 弹窗现在默认使用 COUI 17 弹窗材质（160px 模糊、glow overlay
+混合、阴影描边、跟手光斑），即 ColorOS 17 的观感；COUI 自身的弹窗模糊需要应用主动开启。模糊由新增的
+`LocalPopupMaterialBlur` 提供者（`MaterialBlurProvider`、`MaterialBlurSpec`）绘制；未提供时弹窗保持
+不透明表面，因此在提供之前外观不变。
+
+- `OverlayListPopup`、`WindowListPopup`、`OverlayCascadingListPopup`、`WindowCascadingListPopup`、
+  `OverlayDropdownPopup` 与 `WindowDropdownPopup` 新增 `materialBlur` 参数（默认 `true`），传 `false`
+  即可关闭。基于它们的菜单与偏好项跟随提供者；在其外层提供 `LocalPopupMaterialBlur provides null` 即可关闭。
+- `materialEffect` 默认改为 `true`，且只在模糊表面上绘制（默认模糊，或半透明 `backgroundColor` 配合自定义的
+  模糊 `backgroundModifier`）。
+- `backgroundColor` 是非模糊时的填充色；使用默认模糊的弹窗会忽略它。
+- 对话框与底部弹窗会为其内容重置提供者，在面板上打开的菜单保持不透明。
+
 ### TabRow 改为滑动标签栏
 
 普通 `TabRow` 过去绘制的是去掉容器的分段按钮，COUI 并没有这种形态。现在它是 ColorOS 的滑动标签栏（`COUITabLayout`）：48dp 高的文字标签行，底部 2dp 轨道，选中标签下方是 2dp 下划线指示器。`TabRowWithContour` 保持不变，仍是分段按钮。

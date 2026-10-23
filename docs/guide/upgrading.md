@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+### Popup menus are blurred by default
+
+List popups, cascading menus and the dropdown / spinner popups now use the COUI 17 popup material
+(160px blur, glow-overlay blend, shadow-edge stroke, touch spotlight) by default, the ColorOS 17
+look, where COUI itself leaves popup blur opt-in. The blur is drawn by the new
+`LocalPopupMaterialBlur` provider (`MaterialBlurProvider`, `MaterialBlurSpec`); without one the
+popups keep their opaque surface, so nothing changes until you provide it.
+
+- New `materialBlur` parameter (default `true`) on `OverlayListPopup`, `WindowListPopup`,
+  `OverlayCascadingListPopup`, `WindowCascadingListPopup`, `OverlayDropdownPopup` and
+  `WindowDropdownPopup`; pass `false` to opt out. Menus and preferences built on them follow the
+  provider; provide `LocalPopupMaterialBlur provides null` around them to opt out.
+- `materialEffect` now defaults to `true` and only draws on a blurred surface (the default blur, or
+  a translucent `backgroundColor` with your own blurring `backgroundModifier`).
+- `backgroundColor` is the non-blur fill; a popup drawn with the default blur ignores it.
+- Dialogs and bottom sheets reset the provider for their content, so menus opened on a panel stay
+  opaque.
+
 ### TabRow is the sliding tab layout
 
 The plain `TabRow` used to draw the segment button without its container — a shape COUI does not

@@ -142,20 +142,29 @@ OverlayListPopup(
 
 ## 模糊背景
 
-COUI 默认不开启弹窗模糊，需要应用主动开启。通过 `backgroundModifier` 传入模糊并配合透明的 `backgroundColor`，再打开 `materialEffect` 即可获得描边与光斑：
+与 ColorOS 17 一致，弹窗默认模糊：绘制 COUI 17 弹窗材质（`ListPopupDefaults.materialBlurSpec`：
+160px 模糊、glow overlay 混合，mix `#99CDCDCD` / `#99262626`，blend `#BFEEEEEE` / `#99262626`），
+并带阴影描边与跟手光斑。coui-ui 自身不采集背景，模糊由调用处作用域内的 `LocalPopupMaterialBlur`
+提供者绘制。在脚手架外层提供一次即可，录制菜单所覆盖的页面：
 
 ```kotlin
-val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-OverlayListPopup(
-    show = showPopup,
-    onDismissRequest = { showPopup = false },
-    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark)),
-    backgroundColor = Color.Transparent,
-    materialEffect = true,
-) {
-    ListPopupColumn { /* 行 */ }
+val backdrop = rememberLayerBackdrop()
+val popupBlur = remember(backdrop) {
+    MaterialBlurProvider { spec, shape ->
+        Modifier.couiMaterialBlur(backdrop, spec.toMaterialBlurStyle(), shape) // coui-blur
+    }
+}
+Box(Modifier.layerBackdrop(backdrop)) {
+    CompositionLocalProvider(LocalPopupMaterialBlur provides popupBlur) {
+        Page() // 从这里打开的菜单都会模糊
+    }
 }
 ```
+
+`toMaterialBlurStyle()` 将 `MaterialBlurSpec` 逐字段映射为 coui-blur 的 `MaterialBlurStyle`（参见示例应用
+`utils/PanelBlur.kt`）。没有提供者或不支持 runtime shader 时，弹窗保持不透明的 `backgroundColor`，
+即 COUI 的非模糊背景。对话框与底部弹窗会为其内容关闭该提供者。传入 `materialBlur = false`
+可让单个弹窗不模糊。
 
 ## 属性
 
@@ -173,9 +182,10 @@ OverlayListPopup(
 | maxHeight             | Dp?                         | 弹窗内容的最大高度                   | null                                       |
 | minWidth              | Dp                          | 弹窗内容的最小宽度                   | ListPopupDefaults.MinWidth                 |
 | renderInRootScaffold  | Boolean                     | 是否在根（最外层）Scaffold 中渲染弹窗。为 true 时，弹窗覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染并进行位置补偿 | true |
-| backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下；用于绘制 COUI 17 模糊背景，例如 coui-blur 的 `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` | Modifier |
-| backgroundColor       | Color                       | 弹窗表面填充色（couiColorBackgroundTop）。与模糊 `backgroundModifier` 搭配时传入透明色 | ListPopupDefaults.backgroundColor() |
-| materialEffect        | Boolean                     | 绘制 COUI 17 模糊弹窗的材质效果：阴影描边与跟手光斑 | false |
+| backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下，叠加在默认材质模糊之上 | Modifier |
+| backgroundColor       | Color                       | 弹窗不模糊时的表面填充色（couiColorBackgroundTop，即 COUI 的非模糊背景） | ListPopupDefaults.backgroundColor() |
+| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | true |
+| materialEffect        | Boolean                     | 弹窗模糊时绘制阴影描边与跟手光斑 | true |
 | content               | @Composable () -> Unit      | 要在弹窗内显示的内容                 | -                                          |
 
 ### ListPopupColumn

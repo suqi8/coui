@@ -80,20 +80,32 @@ The popup follows COUI 17 `COUIPopupListWindow`:
 
 ## Blurred Background
 
-COUI leaves popup blur off unless an app asks for it. Pass the blur through `backgroundModifier` together with a transparent `backgroundColor`, and turn on `materialEffect` for the stroke and spotlight:
+Like ColorOS 17, the popup is blurred by default: it draws the COUI 17 popup material
+(`ListPopupDefaults.materialBlurSpec`: 160px blur, glow-overlay blend, mix `#99CDCDCD` /
+`#99262626`, blend `#BFEEEEEE` / `#99262626`) with the shadow-edge stroke and the touch spotlight.
+coui-ui has no backdrop capture of its own, so the blur comes from the `LocalPopupMaterialBlur`
+provider in scope where the popup is called. Provide it once around your scaffold, recording the
+page the menus open over:
 
 ```kotlin
-val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-OverlayListPopup(
-    show = showPopup,
-    onDismissRequest = { showPopup = false },
-    backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark)),
-    backgroundColor = Color.Transparent,
-    materialEffect = true,
-) {
-    ListPopupColumn { /* rows */ }
+val backdrop = rememberLayerBackdrop()
+val popupBlur = remember(backdrop) {
+    MaterialBlurProvider { spec, shape ->
+        Modifier.couiMaterialBlur(backdrop, spec.toMaterialBlurStyle(), shape) // coui-blur
+    }
+}
+Box(Modifier.layerBackdrop(backdrop)) {
+    CompositionLocalProvider(LocalPopupMaterialBlur provides popupBlur) {
+        Page() // every menu opened from here is blurred
+    }
 }
 ```
+
+`toMaterialBlurStyle()` maps `MaterialBlurSpec` field by field onto coui-blur's `MaterialBlurStyle`
+(see `utils/PanelBlur.kt` in the example app). Without a provider, or where runtime shaders are
+missing, the popup keeps the opaque `backgroundColor`, COUI's non-blur background. Dialogs and
+bottom sheets turn the provider off for their content. Pass `materialBlur = false` to opt one popup
+out. The window variant draws the same page recording into its own window; on Android it does not use the platform blur-behind, which blurs the whole screen behind a window rather than the menu's rounded rect.
 
 ## Properties
 
@@ -110,9 +122,10 @@ OverlayListPopup(
 | onDismissFinished     | (() -> Unit)?               | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null         |
 | maxHeight             | Dp?                         | Maximum height of the popup content.                             | null                                       |
 | minWidth              | Dp                          | Minimum width of the popup content.                              | ListPopupDefaults.MinWidth                 |
-| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows; the slot for the COUI 17 blurred background, e.g. coui-blur `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. | Modifier |
-| backgroundColor       | Color                       | Popup surface fill (couiColorBackgroundTop). Pass a transparent color with a blurring `backgroundModifier`. | ListPopupDefaults.backgroundColor() |
-| materialEffect        | Boolean                     | Draws the material effects of a blurred COUI 17 popup: the shadow-edge stroke and the touch spotlight. | false |
+| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows, on top of the default material blur. | Modifier |
+| backgroundColor       | Color                       | Surface fill when the popup is not blurred (couiColorBackgroundTop, COUI's non-blur background). | ListPopupDefaults.backgroundColor() |
+| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | true |
+| materialEffect        | Boolean                     | On a blurred popup, draws the shadow-edge stroke and the touch spotlight. | true |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                         | -                                          |
 
 ### ListPopupColumn

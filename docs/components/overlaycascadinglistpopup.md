@@ -139,6 +139,35 @@ DropdownItem(
 
 The sub menu follows COUI 17. On a compact window (narrower than 600dp) it covers the main menu: it is as wide as the main menu and starts with a copy of the parent row (medium title, tinted indicator) sitting on that row, then slides up to 14dp above it while its outline grows from the row; the main menu shrinks to 0.9, moves up to keep a 12dp strip visible and dims its rows to 30%. On wider windows the main menu shrinks to 0.9 with its rows at 70% while the sub menu scales in beside it, overlapping 14dp. Tapping the main menu, the copied header, outside the popup, or going back collapses the sub menu; dragging across the main menu collapses it after 500ms; holding a sub-menu row for 650ms opens it and the same finger can then slide into the sub menu and lift over a row to pick it; on a compact window the sub menu's shadow fades in with it; at the top level, back and outside taps dismiss the popup via `onDismissRequest`. Predictive back previews the collapse or dismissal and restores the popup when cancelled.
 
+## Blurred Background
+
+Like ColorOS 17, the popup is blurred by default: it draws the COUI 17 popup material
+(`ListPopupDefaults.materialBlurSpec`: 160px blur, glow-overlay blend, mix `#99CDCDCD` /
+`#99262626`, blend `#BFEEEEEE` / `#99262626`) with the shadow-edge stroke and the touch spotlight.
+coui-ui has no backdrop capture of its own, so the blur comes from the `LocalPopupMaterialBlur`
+provider in scope where the popup is called. Provide it once around your scaffold, recording the
+page the menus open over:
+
+```kotlin
+val backdrop = rememberLayerBackdrop()
+val popupBlur = remember(backdrop) {
+    MaterialBlurProvider { spec, shape ->
+        Modifier.couiMaterialBlur(backdrop, spec.toMaterialBlurStyle(), shape) // coui-blur
+    }
+}
+Box(Modifier.layerBackdrop(backdrop)) {
+    CompositionLocalProvider(LocalPopupMaterialBlur provides popupBlur) {
+        Page() // every menu opened from here is blurred
+    }
+}
+```
+
+`toMaterialBlurStyle()` maps `MaterialBlurSpec` field by field onto coui-blur's `MaterialBlurStyle`
+(see `utils/PanelBlur.kt` in the example app). Without a provider, or where runtime shaders are
+missing, the popup keeps the opaque `backgroundColor`, COUI's non-blur background. Dialogs and
+bottom sheets turn the provider off for their content. Pass `materialBlur = false` to opt one popup
+out.
+
 ## Properties
 
 ### OverlayCascadingListPopup
@@ -158,9 +187,10 @@ The sub menu follows COUI 17. On a compact window (narrower than 600dp) it cover
 | renderInRootScaffold  | Boolean                     | Whether to render the popup in the root (outermost) Scaffold. When true, the popup covers the full screen. When false, it renders within the current Scaffold's bounds with position compensation. | true |
 | dropdownColors        | DropdownColors              | Colors used by every row.                                                                                                                                                    | DropdownDefaults.dropdownColors()          |
 | collapseOnSelection   | Boolean                     | When true, selecting any leaf dismisses the popup.                                                                                                                           | true                                       |
-| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows; the slot for the COUI 17 blurred background, e.g. coui-blur `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. | Modifier |
-| backgroundColor       | Color                       | Popup surface fill (couiColorBackgroundTop). Pass a transparent color with a blurring `backgroundModifier`. | ListPopupDefaults.backgroundColor() |
-| materialEffect        | Boolean                     | Draws the material effects of a blurred COUI 17 popup: the shadow-edge stroke and the touch spotlight. | false |
+| backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows, on top of the default material blur. | Modifier |
+| backgroundColor       | Color                       | Surface fill when the popup is not blurred (couiColorBackgroundTop, COUI's non-blur background). | ListPopupDefaults.backgroundColor() |
+| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | true |
+| materialEffect        | Boolean                     | On a blurred popup, draws the shadow-edge stroke and the touch spotlight. | true |
 
 ### DropdownEntry
 
