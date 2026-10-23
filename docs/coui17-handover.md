@@ -98,6 +98,32 @@ COUI17 复刻的 **token 层（色值/字号/圆角/高度）大部分已对齐�
 - 平滑圆角（已完成）：Oplus `addSmoothRoundRect` 的 weight 即 Lamé 超椭圆指数 n（`|x|^n+|y|^n=r^n`，在 r 处与直边相切；17 对话框截图拟合 r=45.1dp、n=3.00）。`coui-squircle` 已改为 `weight` 参数（默认 2.5），shader 用与 libhwui G2 相同的 Lp-norm SDF，Path 用超椭圆三次拟合；调用点按 `COUIRoundCorner.Normal.Weight`=2.5 / `Large.Weight`=3.0 / `CircularWeight`=2.0 传入。权重 <2（2026-10-23 补齐）：按 libhwui `g2RoundRectCommonFill` 的 `superN<2` 分支实现 `mix(sdRoundRect(n=2), sdCapsule, smoothstep(2,1,n))`，`sdCapsule` 半径取短边一半、kMax 26.6 / 带宽 70·60 × r·0.0125、kAbs 1px；与 `OplusPathSmooth` 一致仅在全圆（四角相等且 ≥ 短边一半）时生效，否则按 2.0。shader 逐像素与原生公式差 ≤0.002 alpha，Path 追踪零等值线差 ≤0.001px；软胶囊衔接处比圆弧胶囊内收约 0.020r。胶囊调用点改用 `COUIRoundCorner.CapsuleWeight`=1.0（COUIButton 胶囊、Chip、FloatingToolbar、FloatingNavigationBar、宽>高的 IconButton；圆形 IconButton 保持 2.0）。Tooltip 改 17dp/3.0（`coui_tooltips_os_16_1_radius_17_dp`）；TopTips 单行=72dp 胶囊/1.0、多行=28dp/3.0、切换 300ms 动画（`COUIDefaultTopTips.updateRadius`）；ListPopup 与级联菜单改 28dp/2.5（`RoundFrameLayout.getSmoothRadiusAndWeight`），揭示裁剪与级联展开形变（等半径时）同步。CodeTextField、Badge 数字胶囊、RecommendedPreference 改用 `LegacySquircleShape`（`COUIShapePath.getRoundRectPath` 逐字移植，128.19% 延伸）。第三轮（2026-10-23）：① FloatingNavigationBar 默认圆角改为 `FloatingNavigationBarDefaults.CornerRadius` = 72dp（任意高度全圆，对应 `BaseBottomFloatingMenuView.updateSmoothRoundPath` 半高 + 不传权重）；② 新增 `SquircleDefaults/COUIRoundCorner.UnspecifiedWeight`（=0 标记）与 `DefaultG2Weight` = 2.45（`persist.sys.oplus.default_g2_weight` 回退值，`OplusSmoothRoundedManager.DEFAULT_G2_WEIGHT`），全圆解析为 1.0、否则 2.45；COUI 不传权重的调用点（Chip、FloatingToolbar、FloatingNavigationBar、胶囊 IconButton、Switch 轨道、Slider 背景/进度、TabRow/TabRowWithContour 容器与滑块、Snackbar 单行与多行、InstallLoadProgress）改用它；SearchBar 背景按 `SearchBarBackgroundView` 显式 1.0 画软胶囊；③ `addSquircleRect` 新增 `Rect` 与逐角重载（逐角各自钳位到短边一半、共用权重，与 G2 shader `getNormalizedRadius` 一致；k 缩放在钳位后恒为 1），级联展开形变的上下不等半径帧改走逐角超椭圆；另有 `SquircleShape`、`DrawScope.drawSquircleRect`；软胶囊 path 构造改用隐函数解析切线（约 60µs/条，desktop）。仍保持原样：Badge 描边外圈（COUI `drawPointWithStroke` 传未钳位 72dp 致路径自交，不复刻）；纵向 Slider 进度（`StandardProgressRenderer` 带滑块时画直角 drawRect，与本库模型不符，保留圆头）；Slider/Switch 滑块、FAB、线性进度条（`COUIHorizontalProgressBar` 普通 addRoundRect）、各类涟漪遮罩（Snackbar 动作/关闭、TopTips、TextField 清除/密码、SearchBar 清除按钮）仍为普通圆/圆角；ColorPicker、BreadcrumbBar 无 COUI 对应实现；NavDisplay 转场裁剪仍用屏幕圆角 2.5。
 - 按钮焦散阴影（未做）：只有原生实现，`OplusMaterialUtil.setOutlineCausticShadow*` 带六个参数和动画 speed，APK 里没有对应的 Java/AGSL 源码。另外它只在 `setCausticShadow(6|7)` 时才开启，默认 -1 = 无阴影，Settings 里只有存储页的「清理」按钮用到。因此本库 Button 默认不画，也暂不提供静态近似：近似无法取证校准，不值得为它新增公开参数。参数记录在材质 spec §2。
 - 列表选中态：COUI 17 选中行画 `couiColorFocus` 蒙层并隐藏相邻分隔线（`COUIPreferenceItemDecoration`）；本库只在键盘焦点上画 `focus` 层，`BasicComponent` 无 selected 参数，分隔线也不会自动隐藏。
+- FAB 阴影透明度：`FloatingActionButtonDefaults` 用 86/255（spec 值）。Android 渲染时可能还要乘主题 `spotShadowAlpha`（默认 0.19，即约 0.064），APK 内查不到覆盖值，需要在 COUI 17 真机上比对后再定。
+
+### 4.4 COUI 17 中没有的组件（只记录，暂不删除）
+2026-10-23 盘点：对照 `coui17_settings` 的 88 个 COUI 包，并在另外 12 个自带 COUI 的应用里核对包列表。「找不到」算强反证，但不是证明。完整报告（含依赖方和风险）见会话 scratchpad `delete-candidates.md`。
+
+| 组件 / 符号 | 类别 | 理由 |
+| :-- | :-- | :-- |
+| `BreadcrumbBar` 全族 | Miuix 独有 | 13 个应用都没有 |
+| `ColorPicker`、`ColorPalette`、`color/` 色彩空间包 | Miuix 独有 | 同上；`color/` 只被这两个组件引用 |
+| `RangeSlider`、`RangeSliderPreference` | Miuix 独有 | 5 个 seekbar 包里都没有双滑块（`VerticalSlider` 有对应，保留） |
+| `PressFeedbackType.Tilt`、`TiltFeedback` | Miuix 独有 | COUI 按压反馈只有缩放加亮度 |
+| `HorizontalScrollBar` | Miuix 独有 | `COUIScrollBar` 只支持纵向 |
+| coui-blur `Highlight`、`BloomStroke`、`LightSource`、`TiltLight`、`DeviceTilt`；`BlurBlendMode` 100–203 | Miuix 独有 | COUI 17 用 ShadowEdge + SpotLight 和标准混合模式 0–28 |
+| example 的 OS2/OS3 背景（`effect/`）、`blend/`、`liquid/` | 仅 example | 不影响库 API |
+| Spinner 对话框模式、`Overlay/WindowDropdownDialog` | 重复实现 | 与 `ListPreference` 重复；普通下拉对应 `COUIMenuPreference`，保留 |
+| `RadioButtonPreference` | 重复实现 | 13 个应用都没有 Radio 偏好类，`MarkPreference` 已覆盖 |
+| `InfiniteProgressIndicator` | 重复实现（可选） | `RotatingProgressIndicator` 的薄包装，`LoadingDialogLayout` 在用 |
+| `ButtonDefaults.PressedScale` / `PressedBrightness`、Deprecated 的 `SpinnerItemImpl` / `SpinnerDefaults` / `SpinnerColors` / `SpinnerEntry` | COUI 16 / 上游遗留 | 已不再使用 |
+
+还需要补证据的：
+- `PullToRefresh`：倾向于 COUI 17 没有。需要反编译一个确实有下拉刷新的 ColorOS 应用确认；删除时要一起剥掉 `Overscroll` 里与它的联动。
+- `ColorSwatchPicker`：来源是 ColorOS 16 uxdesign 的 `UxColorSelectableView`，需要 17 版 `com.oplus.uxdesign` 或主题商店 APK 对照。
+- NavigationBar 的 TextOnly / IconOnly / IconWithSelectedLabel 三种模式：要查 `COUINavigationMenuView` 的 item 类型才能定。
+- `coui-icons` 的 156 个 Miuix 扩展图标：建议换成 COUI 矢量，不直接删。
+
+`Tooltip` 不删，改为按 `COUIToolTips` 的三种带箭头气泡样式重写。
 
 ## 5. 已知坑（血泪记录，勿重蹈）
 
