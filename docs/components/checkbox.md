@@ -95,6 +95,12 @@ The CheckboxDefaults object provides default color configurations for the Checkb
 
 > The indeterminate state shares the same colors as the checked state.
 
+Default colors follow COUI 17 (`coui_btn_check_*.xml`): the unchecked ring is `onSurfaceVariantActions` (#42000000 / #4DFFFFFF) and `hover` (#14000000 / #26FFFFFF) when disabled; the checked fill is `primary`, `disabledPrimary` when disabled; the checkmark is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
+
+### Press Feedback
+
+Like `COUICheckBox`, the box never shrinks on press. An interactive checkbox (`onClick != null`) shows a 40dp circular highlight in `press` (#1F000000 / #33FFFFFF) behind the 24dp box, following the platform ripple timing. Pass `onClick = null` when a surrounding row handles the click (as `CheckboxPreference` does) so only the row shows its press state.
+
 ## Advanced Usage
 
 ### Custom Colors

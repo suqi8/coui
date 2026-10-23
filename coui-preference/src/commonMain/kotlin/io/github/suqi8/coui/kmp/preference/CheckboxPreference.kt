@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,9 +23,14 @@ import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
 import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 
 /**
  * A checkbox with a title and a summary.
+ *
+ * As in `COUICheckBoxPreference`, the whole row is the touch target: the checkbox is drawn without
+ * its own press highlight, and toggling plays the COUI 302 haptic.
  *
  * @param title The title of the [CheckboxPreference].
  * @param checked The checked state of the [CheckboxPreference].
@@ -66,6 +70,7 @@ fun CheckboxPreference(
     enabled: Boolean = true,
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
+    val haptic = rememberCouiHaptic()
 
     BasicComponent(
         modifier = modifier,
@@ -81,7 +86,6 @@ fun CheckboxPreference(
                     if (checkboxLocation == CheckboxLocation.Start) {
                         CheckboxPreferenceStartAction(
                             checked = checked,
-                            onCheckedChange = currentOnCheckedChange,
                             enabled = enabled,
                             checkboxColors = checkboxColors,
                         )
@@ -116,7 +120,6 @@ fun CheckboxPreference(
             if (checkboxLocation == CheckboxLocation.End) {
                 CheckboxPreferenceEndAction(
                     checked = checked,
-                    onCheckedChange = currentOnCheckedChange,
                     enabled = enabled,
                     checkboxColors = checkboxColors,
                 )
@@ -124,7 +127,10 @@ fun CheckboxPreference(
         },
         bottomAction = bottomAction,
         onClick = {
-            currentOnCheckedChange.takeIf { enabled }?.invoke(!checked)
+            currentOnCheckedChange.takeIf { enabled }?.let {
+                haptic(CouiHapticEffect.Switch)
+                it(!checked)
+            }
         },
         role = Role.Checkbox,
         holdDownState = holdDownState,
@@ -132,27 +138,18 @@ fun CheckboxPreference(
     )
 }
 
+// COUI preference_checkbox.xml: the COUICheckBox is not clickable; the row handles the press.
 @Composable
 private fun CheckboxPreferenceStartAction(
     checked: Boolean,
-    onCheckedChange: ((Boolean) -> Unit)?,
     enabled: Boolean,
     checkboxColors: CheckboxColors,
 ) {
-    val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
-    val currentChecked by rememberUpdatedState(checked)
-    val onClick = remember(onCheckedChange != null) {
-        if (onCheckedChange != null) {
-            { currentOnCheckedChange?.invoke(!currentChecked) ?: Unit }
-        } else {
-            null
-        }
-    }
     Checkbox(
         modifier = Modifier
             .padding(end = 5.dp),
         state = ToggleableState(checked),
-        onClick = onClick,
+        onClick = null,
         enabled = enabled,
         colors = checkboxColors,
     )
@@ -161,22 +158,12 @@ private fun CheckboxPreferenceStartAction(
 @Composable
 private fun CheckboxPreferenceEndAction(
     checked: Boolean,
-    onCheckedChange: ((Boolean) -> Unit)?,
     enabled: Boolean,
     checkboxColors: CheckboxColors,
 ) {
-    val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
-    val currentChecked by rememberUpdatedState(checked)
-    val onClick = remember(onCheckedChange != null) {
-        if (onCheckedChange != null) {
-            { currentOnCheckedChange?.invoke(!currentChecked) ?: Unit }
-        } else {
-            null
-        }
-    }
     Checkbox(
         state = ToggleableState(checked),
-        onClick = onClick,
+        onClick = null,
         enabled = enabled,
         colors = checkboxColors,
     )

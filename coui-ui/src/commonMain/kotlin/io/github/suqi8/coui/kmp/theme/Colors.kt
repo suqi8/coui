@@ -20,7 +20,8 @@ import androidx.compose.ui.graphics.Color
  * @param disabledPrimary The disabled primary color of the switch.
  * @param disabledOnPrimary The color of the switch on disabled primary color.
  * @param disabledPrimaryButton The disabled primary color of the button.
- * @param disabledOnPrimaryButton The color of the button on disabled primary color.
+ * @param disabledOnPrimaryButton The color of the button on disabled primary color (COUI coui_button_main_disable_text
+ *   #8AFFFFFF / #29FFFFFF, also the disabled checkbox tick and radio centre).
  * @param disabledPrimarySlider The disabled progress color of the slider (COUI couiColorDisable, the disabled state of
  *   coui_seekbar_progress_selector).
  * @param primaryContainer The container color of the primary color.
@@ -631,7 +632,7 @@ fun darkColorScheme(
     disabledPrimary: Color = Color(0x4D1A8CFF),
     disabledOnPrimary: Color = Color(0xFF404040),
     disabledPrimaryButton: Color = Color(0x4D1A8CFF),
-    disabledOnPrimaryButton: Color = Color(0x28FFFFFF),
+    disabledOnPrimaryButton: Color = Color(0x29FFFFFF),
     disabledPrimarySlider: Color = Color(0x4D1A8CFF),
     primaryContainer: Color = Color(0xFF1A8CFF),
     onPrimaryContainer: Color = Color.White,

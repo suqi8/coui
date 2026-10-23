@@ -6,15 +6,12 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.selection.triStateToggleable
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +22,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -47,11 +43,14 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import io.github.suqi8.coui.kmp.utils.SinkFeedback
-import io.github.suqi8.coui.kmp.utils.pressable
 
 /**
  * A [Checkbox] component with COUI style, supporting three states: On, Off, and Indeterminate.
+ *
+ * Like `COUICheckBox`, the box itself never scales on press: an interactive checkbox shows a 40dp
+ * circular press highlight (`checkbox_ripple_bg_radius` 20dp, couiColorPress) behind the 24dp
+ * drawable. Pass `onClick = null` when a surrounding row handles the click, as the COUI checkbox
+ * preference does, so only the row shows its press state.
  *
  * @param state The current [ToggleableState] of the [Checkbox].
  * @param onClick The callback to be called when the [Checkbox] is clicked. The caller is
@@ -132,7 +131,8 @@ fun Checkbox(
     val markColor = colors.checkedForegroundColor(enabled)
 
     val checkPath = remember { Path() }
-    val sinkFeedback = remember { SinkFeedback(sinkAmount = 0.85f, animationSpec = spring(0.99f, 986.96f)) }
+    val pressColor = COUITheme.colorScheme.press
+    val pressIndication = remember(pressColor) { CircularPressIndication(CheckboxPressRadius, pressColor) }
 
     val finalModifier = if (onClick != null) {
         Modifier.triStateToggleable(
@@ -150,6 +150,7 @@ fun Checkbox(
             enabled = enabled,
             role = Role.Checkbox,
             interactionSource = null,
+            indication = pressIndication,
         )
     } else {
         Modifier.semantics {
@@ -163,13 +164,8 @@ fun Checkbox(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
             .requiredSize(24.dp)
-            .pressable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = sinkFeedback,
-                enabled = enabled,
-                delay = null,
-            )
-            .clip(CheckboxClipShape)
+            // Before the drawing so the press highlight sits behind the box, like a view background.
+            .then(finalModifier)
             .drawWithCache {
                 val d = size.minDimension
 
@@ -235,8 +231,7 @@ fun Checkbox(
                         }
                     }
                 }
-            }
-            .then(finalModifier),
+            },
     ) {}
 }
 
@@ -285,16 +280,26 @@ private fun DrawScope.drawTrimmedCheckmark(
 }
 
 object CheckboxDefaults {
+    /**
+     * The default checkbox colors (COUI `coui_btn_check_*.xml`).
+     *
+     * - The checkmark / indeterminate bar is white, and `coui_btn_check_inner_color_on_disabled`
+     *   #8AFFFFFF / #29FFFFFF when disabled.
+     * - The unchecked ring is couiColorLabelTertiary #42000000 / #4DFFFFFF, and
+     *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled (the same values as
+     *   couiColorHover, hence the `hover` slot).
+     * - The checked fill is couiColorPrimary, at 30% (`fillAlpha` 0.3) when disabled.
+     */
     @Composable
     fun checkboxColors(
         checkedForegroundColor: Color = COUITheme.colorScheme.onPrimary,
-        uncheckedForegroundColor: Color = COUITheme.colorScheme.secondary,
-        disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimary,
-        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimary,
+        uncheckedForegroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
+        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.hover,
         checkedBackgroundColor: Color = COUITheme.colorScheme.primary,
-        uncheckedBackgroundColor: Color = COUITheme.colorScheme.secondary,
+        uncheckedBackgroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
         disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disabledPrimary,
-        disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.disabledSecondary,
+        disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.hover,
     ): CheckboxColors = remember(
         checkedForegroundColor,
         uncheckedForegroundColor,
@@ -352,11 +357,12 @@ private val RingSizeFraction = 16.4f / ViewportSize
 private val RingCornerRadiusFraction = 3.2f / ViewportSize
 private val RingStrokeWidthFraction = 1.3f / ViewportSize
 
-// Checkmark centerline derived from the filled outline in coui_btn_check_on_normal.xml.
-private val CheckStrokeWidthFraction = 1.38f / ViewportSize
-private val CheckStartPoint = Offset(7.4835f / ViewportSize, 11.8935f / ViewportSize)
-private val CheckMiddlePoint = Offset(10.831f / ViewportSize, 15.3035f / ViewportSize)
-private val CheckEndPoint = Offset(17.5165f / ViewportSize, 8.4925f / ViewportSize)
+// Checkmark stroke of the COUI check AVD ($coui_checkbox_unselected_to_selected__0.xml): the 72-unit
+// polyline (-14.12,-1) -> (-3.44,9.69) -> (16.97,-10.91) around (36, 36.764), 3.9 wide, divided by 3.
+private val CheckStrokeWidthFraction = 1.3f / ViewportSize
+private val CheckStartPoint = Offset(7.2933f / ViewportSize, 11.9213f / ViewportSize)
+private val CheckMiddlePoint = Offset(10.8533f / ViewportSize, 15.4847f / ViewportSize)
+private val CheckEndPoint = Offset(17.6567f / ViewportSize, 8.618f / ViewportSize)
 
 // Indeterminate state (coui_btn_part_check_on_normal.xml): 10x1.6 centered bar revealed from the left.
 private val BarStartFraction = 7f / ViewportSize
@@ -370,5 +376,5 @@ private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
 private val PopPeakScale = 1.08f
 private val PopHalfDurationMillis = 150
 
-// Clip proportional to the drawn square, scaled up to the 24dp layout box (24 * 4 / 18).
-private val CheckboxClipShape = RoundedCornerShape((ViewportSize * 4f / 18f).dp)
+// COUICheckBox press ripple: circle mask of checkbox_ripple_bg_radius.
+private val CheckboxPressRadius = 20.dp
