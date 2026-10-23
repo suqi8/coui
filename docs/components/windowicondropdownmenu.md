@@ -224,6 +224,7 @@ All other parameters are identical to the entries overload above.
 | items         | List\<DropdownItem> | Items shown in this dropdown group                                                                     | -             | Yes      |
 | enabled       | Boolean             | Whether this group is enabled. False disables all items; true still respects each item's enabled state | true          | No       |
 | title         | String?             | Optional non-clickable group header rendered above the items (12sp medium, secondary label, max 2 lines) | null          | No       |
+| horizontal    | Boolean             | Render the group as the COUI 17 row of horizontal items (up to 5 icons, or 3 icons with labels); popup mode only, always followed by a divider | false | No |
 
 ### DropdownItem Properties
 

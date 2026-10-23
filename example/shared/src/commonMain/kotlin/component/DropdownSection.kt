@@ -369,8 +369,18 @@ private fun PopupMotionAndMaterial() {
     var sortIndex by remember { mutableIntStateOf(0) }
     var blurIndex by remember { mutableIntStateOf(0) }
 
-    val cascadeEntries = remember(sortIndex) {
+    val iconTint = COUITheme.colorScheme.onSurfaceContainer
+    val cascadeEntries = remember(sortIndex, iconTint) {
         listOf(
+            DropdownEntry(
+                horizontal = true,
+                items = listOf(COUIIcons.Edit to "Edit", COUIIcons.Sort to "Sort").map { (icon, label) ->
+                    DropdownItem(
+                        text = label,
+                        icon = { modifier -> Icon(modifier = modifier, imageVector = icon, tint = iconTint, contentDescription = null) },
+                    )
+                },
+            ),
             DropdownEntry(
                 items = listOf(
                     DropdownItem(text = "New folder"),

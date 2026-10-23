@@ -133,6 +133,7 @@ The popup follows COUI 17 `COUIPopupListWindow`:
 
 - **Size**: rows are at least 40dp tall with 8dp vertical and 20dp side padding, and the list is inset by 8dp at the top and bottom. The popup is as wide as its widest row, clamped to 168–256dp (196dp minimum when a row opens a sub menu), and its height ends on a whole row.
 - **Rows**: titles stay `couiColorLabelPrimary` when selected; a selected row shows a check and a sub-menu row the up/down indicator. There is no line between rows; groups are separated by a 12dp band with a 0.5dp divider, from three items on.
+- **Horizontal items**: `DropdownHorizontalItems` (or `DropdownEntry(horizontal = true)`) puts a row of up to five icons, or three icons with labels, at the top of the list, each cell with its own rounded press mask.
 - **Press feedback**: one rounded mask (capsule on a single-line row) slides between rows; dragging moves it with a haptic tick per row and selects the row under the finger on release. Holding a sub-menu row for 650ms opens it.
 - **Placement**: centred on the anchor (or the touched point with `preciseClickState`), 8dp below it, above it when there is no room, otherwise at the top of the available area; it keeps 16dp from the status bar, 32dp from the navigation bar or keyboard and the grid margin (16 / 24 / 40dp) from the sides.
 - **Motion**: the popup grows from 0 about its centre while its centre travels a slightly curved path out of the anchor, and fades in; dismissal runs the same path back.

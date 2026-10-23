@@ -324,6 +324,7 @@ Scaffold {
 | items   | List\<DropdownItem> | 此分组中显示的条目         | -      | 是       |
 | enabled | Boolean             | 此分组是否启用。为 false 时禁用整组条目；为 true 时仍会遵循每个条目的 enabled 状态 | true   | 否       |
 | title | String?             | 可选的不可点击分组标题，渲染在各项之上（12sp 中等字重、次级标签色、最多 2 行） | null   | 否       |
+| horizontal    | Boolean             | 是否作为 COUI 17 横向条目行（最多 5 个纯图标或 3 个图标+文字），仅弹窗模式，后接分组分割线 | false | 否 |
 
 分组标题预留给后续使用。COUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
 
