@@ -2045,7 +2045,6 @@ fun ListPopupContent(
                 val scale = fractionProgress().coerceAtLeast(0f)
                 scaleX = scale
                 scaleY = scale
-                alpha = alphaProgress().coerceIn(0f, 1f)
                 val offset = translation()
                 translationX = offset.x
                 translationY = offset.y
@@ -2054,7 +2053,10 @@ fun ListPopupContent(
             // COUI BasePopupMenuAnimationController.makeAnimator: deformation and rubber band
             // follow a finger on the menu, without the press scale.
             .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
-            .popupDropShadow(shape)
+            // The shadow fades by its own colour outside the fading layer: a layer below full
+            // alpha renders offscreen at its own bounds and would cut the shadow off.
+            .popupDropShadow(shape, alpha = alphaProgress)
+            .graphicsLayer { alpha = alphaProgress().coerceIn(0f, 1f) }
             .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight)
             .then(backgroundModifier)
             .popupMaterialEffect(enabled = materialEffect)

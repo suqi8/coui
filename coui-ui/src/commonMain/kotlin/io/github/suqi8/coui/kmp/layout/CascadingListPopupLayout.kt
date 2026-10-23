@@ -610,9 +610,10 @@ internal fun CascadingListPopupLayout(
                                                 val minTravel = geometryHolder.availableTopOffset
                                                 translationY = max(minTravel, travel)
                                             } else {
+                                                // The fade sits on the surface below, so the
+                                                // shadow is not cut off by an offscreen layer.
                                                 scaleX = p
                                                 scaleY = p
-                                                alpha = p
                                                 transformOrigin = geometry.subPivot
                                             }
                                         }
@@ -624,7 +625,9 @@ internal fun CascadingListPopupLayout(
                                     // a compact window it grows from the anchor row band, carrying
                                     // its shadow, fill and blur with it.
                                     // The shadow fades in with the band, like the override outline
-                                    // alpha (setOverrideOutline(..., progress)).
+                                    // alpha (setOverrideOutline(..., progress)); a full sub menu
+                                    // fades its shadow by the same progress, outside the layer
+                                    // that fades the surface and rows.
                                     Box(
                                         modifier = Modifier
                                             .matchParentSize()
@@ -632,29 +635,36 @@ internal fun CascadingListPopupLayout(
                                             .popupDropShadow(
                                                 shape = shape,
                                                 alpha = {
-                                                    if (geometryHolder.submenu?.compact == true) sub().coerceIn(0f, 1f) else 1f
+                                                    if (geometryHolder.submenu != null) sub().coerceIn(0f, 1f) else 1f
                                                 },
                                             ),
                                     )
                                     Box(
-                                        modifier = Modifier
-                                            .matchParentSize()
-                                            .cascadeBand(geometryHolder, sub)
-                                            .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
-                                            .then(surface.backgroundModifier)
-                                            .popupMaterialEffect(enabled = surface.materialEffect, spotLight = subSpotLight, trackTouches = false),
-                                    )
-                                    Box(modifier = Modifier.cascadeContentClip(geometryHolder, sub, squircleEnabled)) {
-                                        CascadingSubList(
-                                            parent = shown,
-                                            showHeader = compact,
-                                            dropdownColors = dropdownColors,
-                                            onHeaderClick = requestCollapse,
-                                            onLeafSelected = { item ->
-                                                item.onClick?.invoke()
-                                                if (collapseOnSelection) currentOnDismiss()
-                                            },
+                                        modifier = Modifier.graphicsLayer {
+                                            val geometry = geometryHolder.submenu
+                                            alpha = if (geometry != null && !geometry.compact) sub().coerceIn(0f, 1f) else 1f
+                                        },
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .cascadeBand(geometryHolder, sub)
+                                                .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
+                                                .then(surface.backgroundModifier)
+                                                .popupMaterialEffect(enabled = surface.materialEffect, spotLight = subSpotLight, trackTouches = false),
                                         )
+                                        Box(modifier = Modifier.cascadeContentClip(geometryHolder, sub, squircleEnabled)) {
+                                            CascadingSubList(
+                                                parent = shown,
+                                                showHeader = compact,
+                                                dropdownColors = dropdownColors,
+                                                onHeaderClick = requestCollapse,
+                                                onLeafSelected = { item ->
+                                                    item.onClick?.invoke()
+                                                    if (collapseOnSelection) currentOnDismiss()
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
