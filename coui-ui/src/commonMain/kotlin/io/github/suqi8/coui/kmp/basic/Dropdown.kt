@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -35,15 +41,20 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlendModeColorFilter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.ArrowUpDown
 import io.github.suqi8.coui.kmp.icon.basic.Check
+import io.github.suqi8.coui.kmp.squircle.drawSquircleRect
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
@@ -520,12 +531,16 @@ data class DropdownColors(
  * @param title Optional group header rendered above [items] as a non-clickable
  *   [DropdownHeaderItem] (COUI coui_popup_list_window_header_item.xml). Popup mode only; dialog
  *   mode has no COUI header presentation and ignores it.
+ * @param horizontal Whether the group is the COUI 17 row of horizontal items
+ *   ([DropdownHorizontalItems], `PopupListItem.MENU_ITEM_TYPE_HORIZONTAL`): up to five icons, or
+ *   three icons with labels, side by side. Popup mode only; it is always followed by a divider.
  */
 @Stable
 data class DropdownEntry(
     val items: List<DropdownItem>,
     val enabled: Boolean = true,
     val title: String? = null,
+    val horizontal: Boolean = false,
 )
 
 /**
@@ -655,6 +670,45 @@ object DropdownDefaults {
 
     /** Side inset of the line inside the group divider band (COUI coui_popup_list_default_divider_margin_horizontal). */
     val PopupGroupDividerMargin: Dp = 20.dp
+
+    /** Size of an icon-only horizontal cell (coui_popup_list_window_horizontal_item_icon_only_width / _height). */
+    val HorizontalIconCellSize: Dp = 40.dp
+
+    /** Icon size of an icon-only horizontal cell (coui_popup_list_window_horizontal_item_icon_size_icon_only). */
+    val HorizontalIconSize: Dp = 24.dp
+
+    /** Menu-edge margin of icon-only horizontal cells (coui_popup_list_window_horizontal_item_icon_only_edge_margin). */
+    val HorizontalIconEdgeMargin: Dp = 12.dp
+
+    /** Spacing of icon-only horizontal cells (coui_popup_list_window_horizontal_item_icon_only_spacing_default). */
+    val HorizontalIconSpacing: Dp = 8.dp
+
+    /** Menu-edge margin of labelled horizontal cells (coui_popup_list_window_horizontal_item_text_edge_margin). */
+    val HorizontalTextEdgeMargin: Dp = 8.dp
+
+    /** Spacing of labelled horizontal cells (coui_popup_list_window_horizontal_item_text_spacing_default). */
+    val HorizontalTextSpacing: Dp = 4.dp
+
+    /** The spacing horizontal cells never shrink below (coui_popup_list_window_horizontal_item_spacing_min). */
+    val HorizontalMinSpacing: Dp = 4.dp
+
+    /** Minimum width of a labelled horizontal cell (coui_popup_list_window_horizontal_item_min_width_with_text). */
+    val HorizontalTextMinWidth: Dp = 52.dp
+
+    /** Minimum height of a labelled horizontal cell (coui_popup_list_window_horizontal_item_text_min_height). */
+    val HorizontalTextMinHeight: Dp = 40.dp
+
+    /** Padding of a labelled horizontal cell (coui_popup_list_window_horizontal_item_text_padding_*). */
+    val HorizontalTextPadding: Dp = 6.dp
+
+    /** Gap between the icon and the label of a horizontal cell (coui_popup_list_window_horizontal_item_icon_title_gap). */
+    val HorizontalIconTitleGap: Dp = 4.dp
+
+    /** Press-mask radius of an icon-only horizontal cell (coui_popup_list_window_horizontal_mask_radius_icon_only_16_1). */
+    val HorizontalIconMaskRadius: Dp = 17.dp
+
+    /** Press-mask radius of a labelled horizontal cell (coui_popup_list_window_horizontal_mask_radius_with_text_16_1). */
+    val HorizontalTextMaskRadius: Dp = 23.dp
 
     /** Padding between the leading icon and the title text (COUI coui_popup_list_window_item_icon_margin_right). */
     val IconEndPadding: Dp = 12.dp
@@ -907,3 +961,151 @@ typealias SpinnerColors = DropdownColors
     replaceWith = ReplaceWith("DropdownItem"),
 )
 typealias SpinnerEntry = DropdownItem
+
+/**
+ * The row of horizontal items COUI 17 can put at the top of a popup menu
+ * (`MixedPopupListAdapter.HorizontalViewHolder`, item type 4, laid out by a `GridLayoutManager`):
+ * icon-only cells (up to five) or icon-and-label cells (up to three), each with its own rounded
+ * press mask. Extra items are dropped, as `MixedPopupListAdapter.setItemList` does.
+ *
+ * Icon-only cells are 40dp tall with a 24dp icon, 12dp from the menu edges and 8dp apart; labelled
+ * cells are at least 52dp wide and 40dp tall, 6dp padded, with a 20dp icon, a 4dp gap and a
+ * two-line 12sp label, 8dp from the edges and 4dp apart. The grid has three columns, or as many as
+ * there are icon-only cells up to five.
+ *
+ * Unlike the vertical rows these cells do not join the list's shared mask or its drag selection.
+ *
+ * @param items The items; [DropdownItem.icon] draws each icon, [DropdownItem.text] the label (a
+ *   blank text makes the row icon-only).
+ * @param onItemClick Invoked with the index of a clicked enabled item.
+ * @param modifier The modifier applied to the row.
+ * @param enabled Whether the row reacts to input; each item's own [DropdownItem.enabled] still applies.
+ * @param dropdownColors Colors of the labels.
+ */
+@Composable
+fun DropdownHorizontalItems(
+    items: List<DropdownItem>,
+    onItemClick: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
+) {
+    val hasText = items.any { it.text.isNotBlank() }
+    val limit = if (hasText) HORIZONTAL_MAX_WITH_TEXT else HORIZONTAL_MAX_ICON_ONLY
+    val shown = items.take(limit)
+    if (shown.isEmpty()) return
+    // createMenuGridLayoutManager: 3 columns with labels, otherwise 3..5 by the item count.
+    val columns = if (hasText) 3 else shown.size.coerceIn(3, 5)
+    val edge = if (hasText) DropdownDefaults.HorizontalTextEdgeMargin else DropdownDefaults.HorizontalIconEdgeMargin
+    val spacing = if (hasText) DropdownDefaults.HorizontalTextSpacing else DropdownDefaults.HorizontalIconSpacing
+    val currentOnItemClick by rememberUpdatedState(onItemClick)
+
+    Layout(
+        modifier = modifier.fillMaxWidth(),
+        content = {
+            shown.forEachIndexed { index, item ->
+                DropdownHorizontalCell(
+                    item = item,
+                    hasText = hasText,
+                    enabled = enabled && item.enabled,
+                    dropdownColors = dropdownColors,
+                    onClick = { currentOnItemClick(index) },
+                )
+            }
+        },
+    ) { measurables, constraints ->
+        val edgePx = edge.roundToPx()
+        val minSpacing = DropdownDefaults.HorizontalMinSpacing.roundToPx()
+        val defaultSpacing = spacing.roundToPx()
+        val minCell = if (hasText) DropdownDefaults.HorizontalTextMinWidth.roundToPx() else DropdownDefaults.HorizontalIconCellSize.roundToPx()
+        val naturalWidth = 2 * edgePx + columns * minCell + (columns - 1) * defaultSpacing
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else naturalWidth
+        // configHorizontalItemLayout: shrink the spacing (not below 4dp) before the cells.
+        val spacingPx = if (columns > 1) {
+            ((width - 2 * edgePx - columns * minCell) / (columns - 1)).coerceIn(minSpacing, defaultSpacing)
+        } else {
+            0
+        }
+        val cellWidth = ((width - 2 * edgePx - (columns - 1) * spacingPx) / columns).coerceAtLeast(0)
+        val placeables = measurables.map { it.measure(Constraints.fixedWidth(cellWidth)) }
+        val height = placeables.maxOfOrNull { it.height } ?: 0
+        layout(width.coerceAtLeast(constraints.minWidth), height) {
+            placeables.forEachIndexed { index, placeable ->
+                placeable.placeRelative(edgePx + index * (cellWidth + spacingPx), 0)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DropdownHorizontalCell(
+    item: DropdownItem,
+    hasText: Boolean,
+    enabled: Boolean,
+    dropdownColors: DropdownColors,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val press = remember { Animatable(0f) }
+    LaunchedEffect(pressed) {
+        // COUIMaskEffectDrawable: response 0.3 / bounce 0, touch-enter held to 0.7 before fading.
+        if (pressed) {
+            press.animateTo(1f, spring(dampingRatio = 1f, stiffness = 438.65f))
+        } else {
+            if (press.value in 0.001f..0.7f) press.animateTo(0.7f, spring(dampingRatio = 1f, stiffness = 438.65f))
+            press.animateTo(0f, spring(dampingRatio = 1f, stiffness = 438.65f))
+        }
+    }
+    val maskColor = COUITheme.colorScheme.hover
+    val squircleEnabled = isSquircleEnabled()
+    val labelColor = if (enabled) dropdownColors.contentColor else dropdownColors.disabledContentColor
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .heightIn(min = if (hasText) DropdownDefaults.HorizontalTextMinHeight else DropdownDefaults.HorizontalIconCellSize)
+            .drawBehind {
+                val progress = press.value
+                if (progress <= 0f) return@drawBehind
+                // configureHorizontalItemMaskPath (> 37): 17dp icon-only / 23dp labelled, weight 3.
+                val radius = (if (hasText) DropdownDefaults.HorizontalTextMaskRadius else DropdownDefaults.HorizontalIconMaskRadius).toPx()
+                val maskHeight = if (hasText) size.height else minOf(size.height, DropdownDefaults.HorizontalIconCellSize.toPx())
+                drawSquircleRect(
+                    color = maskColor,
+                    cornerRadius = radius,
+                    size = Size(size.width, maskHeight),
+                    weight = 3f,
+                    alpha = progress,
+                    squircleEnabled = squircleEnabled,
+                )
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClickLabel = null,
+                onClick = onClick,
+            )
+            .padding(if (hasText) DropdownDefaults.HorizontalTextPadding else 0.dp),
+    ) {
+        item.icon?.invoke(
+            Modifier.size(if (hasText) DropdownDefaults.IconMinSize else DropdownDefaults.HorizontalIconSize),
+        )
+        if (hasText) {
+            Text(
+                text = item.text,
+                modifier = Modifier.padding(top = DropdownDefaults.HorizontalIconTitleGap),
+                style = COUITheme.textStyles.footnote2,
+                color = labelColor,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private const val HORIZONTAL_MAX_ICON_ONLY = 5
+private const val HORIZONTAL_MAX_WITH_TEXT = 3

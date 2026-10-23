@@ -78,6 +78,34 @@ class ListPopupColumnTest {
     }
 
     @Test
+    fun fiveIconsFillTheMaximumWidth() = runComposeUiTest {
+        setContent {
+            COUITheme {
+                Box(Modifier.testTag("menu")) {
+                    ListPopupColumn {
+                        DropdownHorizontalItems(
+                            items = List(6) { DropdownItem(text = "") },
+                            onItemClick = {},
+                        )
+                        DropdownImpl(
+                            item = DropdownItem(text = "Row"),
+                            optionSize = 1,
+                            isSelected = false,
+                            index = 0,
+                            onSelectedIndexChange = {},
+                        )
+                    }
+                }
+            }
+        }
+        // Five 40dp icon cells (the sixth is dropped), 8dp apart, 12dp from both edges = 256dp.
+        val menu = onNodeWithTag("menu").getUnclippedBoundsInRoot()
+        assertDp(256.dp, menu.width, "menu width")
+        // 8dp inset + 40dp icon row + 40dp row + 8dp inset.
+        assertDp(96.dp, menu.height, "menu height")
+    }
+
+    @Test
     fun theViewportEndsOnAWholeRow() = runComposeUiTest {
         setContent {
             COUITheme {

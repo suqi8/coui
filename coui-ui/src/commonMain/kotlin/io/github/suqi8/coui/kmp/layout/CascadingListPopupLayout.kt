@@ -63,6 +63,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
 import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
+import io.github.suqi8.coui.kmp.basic.DropdownHorizontalItems
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
@@ -798,6 +799,18 @@ private fun CascadingMainList(
     ListPopupColumn {
         val lastEntryIdx = entries.lastIndex
         entries.forEachIndexed { entryIndex, entry ->
+            if (entry.horizontal) {
+                key("horizontal", entryIndex) {
+                    DropdownHorizontalItems(
+                        items = entry.items,
+                        onItemClick = { index -> entry.items.getOrNull(index)?.let(onLeafSelected) },
+                        enabled = entry.enabled,
+                        dropdownColors = dropdownColors,
+                    )
+                }
+                if (entryIndex != lastEntryIdx) key("divider", entryIndex) { DropdownGroupDivider() }
+                return@forEachIndexed
+            }
             entry.title?.let { title ->
                 key("header", entryIndex) { DropdownHeaderItem(text = title, color = dropdownColors.headerColor) }
             }

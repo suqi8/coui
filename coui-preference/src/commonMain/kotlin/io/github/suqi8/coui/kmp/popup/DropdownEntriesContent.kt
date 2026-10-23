@@ -9,6 +9,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
 import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
+import io.github.suqi8.coui.kmp.basic.DropdownHorizontalItems
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
 
 /**
@@ -28,6 +29,19 @@ internal fun DropdownEntriesPopupContent(
     val lastEntryIdx = entries.lastIndex
     val showGroupDividers = entries.sumOf { it.items.size } >= POPUP_GROUP_MIN_ITEMS
     entries.forEachIndexed { entryIdx, entry ->
+        if (entry.horizontal) {
+            key(entryIdx, "horizontal") {
+                DropdownHorizontalItems(
+                    items = entry.items,
+                    onItemClick = { itemIdx -> onItemClick(entryIdx, itemIdx) },
+                    enabled = entry.enabled,
+                    dropdownColors = dropdownColors,
+                )
+            }
+            // MixedPopupListAdapter always follows the horizontal row with a group divider.
+            if (entryIdx != lastEntryIdx) key(entryIdx, "divider") { DropdownGroupDivider() }
+            return@forEachIndexed
+        }
         val header = entry.title
         if (header != null) {
             key(entryIdx, "header") {
@@ -74,6 +88,8 @@ internal fun LazyListScope.dropdownEntriesDialogItems(
 ) {
     val lastEntryIdx = entries.lastIndex
     entries.forEachIndexed { entryIdx, entry ->
+        // Dialog mode has no horizontal row; its items are left out there.
+        if (entry.horizontal) return@forEachIndexed
         entry.title?.let { header ->
             item(key = "header-$entryIdx") {
                 DropdownHeaderItem(text = header, color = dropdownColors.headerColor)
