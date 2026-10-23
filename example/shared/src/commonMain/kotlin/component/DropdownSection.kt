@@ -20,9 +20,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
-import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.SmallTitle
-import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Edit
 import io.github.suqi8.coui.kmp.icon.extended.Sort
@@ -33,7 +31,6 @@ import io.github.suqi8.coui.kmp.popup.OverlayDropdownPopup
 import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import io.github.suqi8.coui.kmp.preference.WindowDropdownPreference
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import utils.panelBlur
 
 fun LazyListScope.dropdownSection() {
     item(key = "dropdown") {
@@ -407,8 +404,6 @@ private fun PopupMotionAndMaterial() {
             },
         )
     }
-    val blur = panelBlur(MaterialBlurDefaults::popup)
-
     SmallTitle(text = "Popup Motion and Material")
     Card(
         modifier = Modifier
@@ -430,8 +425,8 @@ private fun PopupMotionAndMaterial() {
         )
         HorizontalDivider(Modifier.padding(horizontal = 16.dp))
         BasicComponent(
-            title = "Blurred popup",
-            summary = if (blur != null) "160px glow-overlay blur, stroke and spotlight" else "Turn on blur to see the material",
+            title = "Opaque popup",
+            summary = "materialBlur = false: COUI's non-blur surface, next to the blurred default menus",
             onClick = { blurShown = true },
             holdDownState = blurShown,
             endActions = {
@@ -443,9 +438,7 @@ private fun PopupMotionAndMaterial() {
                     maxHeight = null,
                     dropdownColors = DropdownDefaults.dropdownColors(),
                     renderInRootScaffold = true,
-                    backgroundModifier = blur?.backgroundModifier ?: Modifier,
-                    backgroundColor = blur?.backgroundColor ?: ListPopupDefaults.backgroundColor(),
-                    materialEffect = blur != null,
+                    materialBlur = false,
                 )
             },
         )

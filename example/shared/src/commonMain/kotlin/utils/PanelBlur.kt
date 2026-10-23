@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import io.github.suqi8.coui.kmp.blur.Backdrop
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
+import io.github.suqi8.coui.kmp.blur.MaterialBlendMode
 import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.blur.MaterialBlurStyle
 import io.github.suqi8.coui.kmp.blur.ViewBlurStyle
@@ -21,6 +22,9 @@ import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropProvider
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
+import io.github.suqi8.coui.kmp.effect.MaterialBlurBlendMode
+import io.github.suqi8.coui.kmp.effect.MaterialBlurProvider
+import io.github.suqi8.coui.kmp.effect.MaterialBlurSpec
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -91,4 +95,42 @@ private fun MaterialBackdropSpec.toViewBlurStyle(): ViewBlurStyle = ViewBlurStyl
     mode1 = mode1,
     layer2 = layer2,
     mode2 = mode2,
+)
+
+/**
+ * Bridges a coui-blur [Backdrop] to coui-ui's popup material blur
+ * ([io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur]), so every list popup, cascading menu
+ * and dropdown called under it blurs the content behind it with [couiMaterialBlur], as ColorOS 17
+ * menus do. Returns null when the blur setting is off, no backdrop is given or runtime shaders are
+ * unavailable; the popups then keep their opaque surface.
+ *
+ * The popups render in the root scaffold's popup host (or their own window), outside the page
+ * recording, so the page backdrop ([LocalPageBackdrop]) is the right one to hand them.
+ *
+ * @param backdrop The backdrop recording the page the menus open over.
+ */
+@Composable
+fun rememberPopupMaterialBlur(backdrop: Backdrop?): MaterialBlurProvider? {
+    val active = LocalAppState.current.enableBlur && backdrop != null && isRuntimeShaderSupported()
+    return remember(backdrop, active) {
+        if (active && backdrop != null) {
+            MaterialBlurProvider { spec, shape ->
+                Modifier.couiMaterialBlur(backdrop = backdrop, style = spec.toMaterialBlurStyle(), shape = shape)
+            }
+        } else {
+            null
+        }
+    }
+}
+
+private fun MaterialBlurSpec.toMaterialBlurStyle(): MaterialBlurStyle = MaterialBlurStyle(
+    blurRadiusPx = blurRadiusPx,
+    mixColor = mixColor,
+    blendColor = blendColor,
+    blendMode = when (blendMode) {
+        MaterialBlurBlendMode.Overlay -> MaterialBlendMode.Overlay
+        MaterialBlurBlendMode.ColorDodge -> MaterialBlendMode.ColorDodge
+        MaterialBlurBlendMode.GlowOverlay -> MaterialBlendMode.GlowOverlay
+        MaterialBlurBlendMode.GlowColorDodge -> MaterialBlendMode.GlowColorDodge
+    },
 )

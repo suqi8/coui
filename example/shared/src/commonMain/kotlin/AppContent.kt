@@ -95,6 +95,7 @@ import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import io.github.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Create
 import io.github.suqi8.coui.kmp.icon.extended.Delete
@@ -120,6 +121,7 @@ import utils.FPSMonitor
 import utils.LocalPageBackdrop
 import utils.rememberBlurBackdrop
 import utils.rememberMaterialBackdropProvider
+import utils.rememberPopupMaterialBlur
 import utils.shouldShowSplitPane
 import kotlin.math.abs
 
@@ -372,7 +374,10 @@ private fun WideScreenContent(
             floatingToolbarPosition = appState.floatingToolbarPosition.toToolbarPosition(),
         ) { padding ->
             Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-                CompositionLocalProvider(LocalPageBackdrop provides backdrop) {
+                CompositionLocalProvider(
+                    LocalPageBackdrop provides backdrop,
+                    LocalPopupMaterialBlur provides rememberPopupMaterialBlur(backdrop),
+                ) {
                     AppPager(
                         snackbarHostState = snackbarHostState,
                         padding = PaddingValues(top = padding.calculateTopPadding()),
@@ -426,7 +431,10 @@ private fun CompactScreenLayout(
         },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().layerBackdrop(backdrop)) {
-            CompositionLocalProvider(LocalPageBackdrop provides backdrop) {
+            CompositionLocalProvider(
+                LocalPageBackdrop provides backdrop,
+                LocalPopupMaterialBlur provides rememberPopupMaterialBlur(backdrop),
+            ) {
                 AppPager(
                     snackbarHostState = snackbarHostState,
                     padding = innerPadding,
