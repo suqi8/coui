@@ -45,6 +45,7 @@ import component.SearchPager
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.Text
@@ -192,28 +193,32 @@ fun IconsPage(
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     ) {
-                        BasicComponent(
-                            title = iconNames[index],
-                            startAction = {
-                                Icon(
-                                    imageVector = regularIcons[index],
-                                    contentDescription = iconNames[index],
-                                    tint = colorScheme.onBackground,
-                                    modifier = Modifier.size(24.dp),
+                        CardListGroup {
+                            item {
+                                BasicComponent(
+                                    title = iconNames[index],
+                                    startAction = {
+                                        Icon(
+                                            imageVector = regularIcons[index],
+                                            contentDescription = iconNames[index],
+                                            tint = colorScheme.onBackground,
+                                            modifier = Modifier.size(24.dp),
+                                        )
+                                    },
+                                    onClick = {
+                                        searchStatus = searchStatus.copy(
+                                            searchText = "",
+                                            current = SearchStatus.Status.COLLAPSING,
+                                        )
+                                        coroutineScope.launch {
+                                            delay(350.milliseconds)
+                                            // item 0 = header, icon rows start at item 1
+                                            lazyListState.animateScrollToItem(index + 1)
+                                        }
+                                    },
                                 )
-                            },
-                            onClick = {
-                                searchStatus = searchStatus.copy(
-                                    searchText = "",
-                                    current = SearchStatus.Status.COLLAPSING,
-                                )
-                                coroutineScope.launch {
-                                    delay(350.milliseconds)
-                                    // item 0 = header, icon rows start at item 1
-                                    lazyListState.animateScrollToItem(index + 1)
-                                }
-                            },
-                        )
+                            }
+                        }
                     }
                 }
                 item {

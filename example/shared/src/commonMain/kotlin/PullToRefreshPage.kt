@@ -38,6 +38,7 @@ import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.PullToRefresh
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
+import io.github.suqi8.coui.kmp.basic.cardListPositionOf
 import io.github.suqi8.coui.kmp.basic.rememberPullToRefreshState
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
@@ -141,6 +142,9 @@ fun PullToRefreshPage(
                                 isLast -> DropdownListBottomShape
                                 else -> RectangleShape
                             }
+                            // The card spans lazy items, so a CardListGroup can't number these rows;
+                            // the position is resolved from the index instead.
+                            val position = cardListPositionOf(i, dropdownCount)
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -156,6 +160,7 @@ fun PullToRefreshPage(
                                         onSelectedIndexChange = { newOption ->
                                             dropdownSelectedOption = newOption
                                         },
+                                        cardListPosition = position,
                                     )
                                 } else {
                                     WindowDropdownPreference(
@@ -165,6 +170,7 @@ fun PullToRefreshPage(
                                         onSelectedIndexChange = { newOption ->
                                             dropdownSelectedOption = newOption
                                         },
+                                        cardListPosition = position,
                                     )
                                 }
                                 if (!isLast) {

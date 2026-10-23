@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -32,18 +33,28 @@ fun LazyListScope.checkboxSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            CheckboxRow()
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            CheckboxPreferenceEndDemo()
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            CheckboxPreferenceDemo()
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            CheckboxPreference(
-                title = "Disabled Checkbox",
-                checked = true,
-                enabled = false,
-                onCheckedChange = {},
-            )
+            CardListGroup {
+                item {
+                    CheckboxRow()
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    CheckboxPreferenceEndDemo()
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    CheckboxPreferenceDemo()
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    CheckboxPreference(
+                        title = "Disabled Checkbox",
+                        checked = true,
+                        enabled = false,
+                        onCheckedChange = {},
+                    )
+                }
+            }
         }
     }
 }

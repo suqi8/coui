@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Slider
 import io.github.suqi8.coui.kmp.basic.SliderDefaults
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -36,74 +37,90 @@ fun LazyListScope.sliderSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            var sliderValue by remember { mutableFloatStateOf(0.3f) }
-            SliderPreference(
-                value = sliderValue,
-                onValueChange = { sliderValue = it },
-                title = "Normal",
-                valueText = "${(sliderValue * 100).toInt()}%",
-            )
-            var stepsValue by remember { mutableFloatStateOf(100f) }
-            SliderPreference(
-                value = stepsValue,
-                onValueChange = { stepsValue = it },
-                title = "Steps",
-                valueText = "${stepsValue.toInt()}/200",
-                valueRange = 0f..200f,
-                steps = 199,
-                hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-            )
-            var stepsWithKeyPointsValue by remember { mutableFloatStateOf(5f) }
-            SliderPreference(
-                value = stepsWithKeyPointsValue,
-                onValueChange = { stepsWithKeyPointsValue = it },
-                title = "Steps with Key Points",
-                valueText = "${stepsWithKeyPointsValue.toInt()}/8",
-                valueRange = 0f..8f,
-                steps = 7,
-                hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                showKeyPoints = true,
-            )
-            var customKeyPointsValue by remember { mutableFloatStateOf(25f) }
-            SliderPreference(
-                value = customKeyPointsValue,
-                onValueChange = { customKeyPointsValue = it },
-                title = "Custom Key Points",
-                valueText = "${customKeyPointsValue.toInt()}%",
-                valueRange = 0f..100f,
-                showKeyPoints = true,
-                hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                keyPoints = listOf(0f, 25f, 50f, 75f, 100f),
-            )
-            val disabledValue by remember { mutableFloatStateOf(0.7f) }
-            SliderPreference(
-                value = disabledValue,
-                onValueChange = {},
-                title = "Disabled",
-                valueText = "${(disabledValue * 100).toInt()}%",
-                enabled = false,
-            )
-            SliderPreference(
-                value = 4f,
-                onValueChange = {},
-                title = "Disabled with Key Points",
-                valueText = "4/8",
-                valueRange = 0f..8f,
-                steps = 7,
-                showKeyPoints = true,
-                enabled = false,
-            )
-            var materialValue by remember { mutableFloatStateOf(0.5f) }
-            Text(
-                text = "Material (glass thumb + spotlight)",
-                modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
-            )
-            Slider(
-                value = materialValue,
-                onValueChange = { materialValue = it },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-                material = true,
-            )
+            CardListGroup {
+                item {
+                    var sliderValue by remember { mutableFloatStateOf(0.3f) }
+                    SliderPreference(
+                        value = sliderValue,
+                        onValueChange = { sliderValue = it },
+                        title = "Normal",
+                        valueText = "${(sliderValue * 100).toInt()}%",
+                    )
+                }
+                item {
+                    var stepsValue by remember { mutableFloatStateOf(100f) }
+                    SliderPreference(
+                        value = stepsValue,
+                        onValueChange = { stepsValue = it },
+                        title = "Steps",
+                        valueText = "${stepsValue.toInt()}/200",
+                        valueRange = 0f..200f,
+                        steps = 199,
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                    )
+                }
+                item {
+                    var stepsWithKeyPointsValue by remember { mutableFloatStateOf(5f) }
+                    SliderPreference(
+                        value = stepsWithKeyPointsValue,
+                        onValueChange = { stepsWithKeyPointsValue = it },
+                        title = "Steps with Key Points",
+                        valueText = "${stepsWithKeyPointsValue.toInt()}/8",
+                        valueRange = 0f..8f,
+                        steps = 7,
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                        showKeyPoints = true,
+                    )
+                }
+                item {
+                    var customKeyPointsValue by remember { mutableFloatStateOf(25f) }
+                    SliderPreference(
+                        value = customKeyPointsValue,
+                        onValueChange = { customKeyPointsValue = it },
+                        title = "Custom Key Points",
+                        valueText = "${customKeyPointsValue.toInt()}%",
+                        valueRange = 0f..100f,
+                        showKeyPoints = true,
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                        keyPoints = listOf(0f, 25f, 50f, 75f, 100f),
+                    )
+                }
+                item {
+                    val disabledValue by remember { mutableFloatStateOf(0.7f) }
+                    SliderPreference(
+                        value = disabledValue,
+                        onValueChange = {},
+                        title = "Disabled",
+                        valueText = "${(disabledValue * 100).toInt()}%",
+                        enabled = false,
+                    )
+                }
+                item {
+                    SliderPreference(
+                        value = 4f,
+                        onValueChange = {},
+                        title = "Disabled with Key Points",
+                        valueText = "4/8",
+                        valueRange = 0f..8f,
+                        steps = 7,
+                        showKeyPoints = true,
+                        enabled = false,
+                    )
+                }
+                item {
+                    var materialValue by remember { mutableFloatStateOf(0.5f) }
+                    Text(
+                        text = "Material (glass thumb + spotlight)",
+                        modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
+                    )
+                    Slider(
+                        value = materialValue,
+                        onValueChange = { materialValue = it },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                        material = true,
+                    )
+                }
+            }
         }
 
         // RangeSlider
@@ -113,43 +130,53 @@ fun LazyListScope.sliderSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            var rangeValue by remember { mutableStateOf(0.2f..0.8f) }
-            RangeSliderPreference(
-                value = rangeValue,
-                onValueChange = { rangeValue = it },
-                title = "Range",
-                valueText = "${(rangeValue.start * 100).toInt()}% - ${(rangeValue.endInclusive * 100).toInt()}%",
-            )
-            var rangeStepsValue by remember { mutableStateOf(2f..8f) }
-            RangeSliderPreference(
-                value = rangeStepsValue,
-                onValueChange = { rangeStepsValue = it },
-                title = "Range with Key Points",
-                valueText = "${rangeStepsValue.start.toInt()} - ${rangeStepsValue.endInclusive.toInt()}",
-                valueRange = 0f..8f,
-                steps = 7,
-                hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                showKeyPoints = true,
-            )
-            var customRangeValue by remember { mutableStateOf(20f..80f) }
-            RangeSliderPreference(
-                value = customRangeValue,
-                onValueChange = { customRangeValue = it },
-                title = "Custom Range Points",
-                valueText = "${customRangeValue.start.toInt()}% - ${customRangeValue.endInclusive.toInt()}%",
-                valueRange = 0f..100f,
-                showKeyPoints = true,
-                hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                keyPoints = listOf(0f, 20f, 40f, 60f, 80f, 100f),
-            )
-            var disabledRangeValue by remember { mutableStateOf(0.3f..0.7f) }
-            RangeSliderPreference(
-                value = disabledRangeValue,
-                onValueChange = {},
-                title = "Disabled",
-                valueText = "${(disabledRangeValue.start * 100).toInt()}% - ${(disabledRangeValue.endInclusive * 100).toInt()}%",
-                enabled = false,
-            )
+            CardListGroup {
+                item {
+                    var rangeValue by remember { mutableStateOf(0.2f..0.8f) }
+                    RangeSliderPreference(
+                        value = rangeValue,
+                        onValueChange = { rangeValue = it },
+                        title = "Range",
+                        valueText = "${(rangeValue.start * 100).toInt()}% - ${(rangeValue.endInclusive * 100).toInt()}%",
+                    )
+                }
+                item {
+                    var rangeStepsValue by remember { mutableStateOf(2f..8f) }
+                    RangeSliderPreference(
+                        value = rangeStepsValue,
+                        onValueChange = { rangeStepsValue = it },
+                        title = "Range with Key Points",
+                        valueText = "${rangeStepsValue.start.toInt()} - ${rangeStepsValue.endInclusive.toInt()}",
+                        valueRange = 0f..8f,
+                        steps = 7,
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                        showKeyPoints = true,
+                    )
+                }
+                item {
+                    var customRangeValue by remember { mutableStateOf(20f..80f) }
+                    RangeSliderPreference(
+                        value = customRangeValue,
+                        onValueChange = { customRangeValue = it },
+                        title = "Custom Range Points",
+                        valueText = "${customRangeValue.start.toInt()}% - ${customRangeValue.endInclusive.toInt()}%",
+                        valueRange = 0f..100f,
+                        showKeyPoints = true,
+                        hapticEffect = SliderDefaults.SliderHapticEffect.Step,
+                        keyPoints = listOf(0f, 20f, 40f, 60f, 80f, 100f),
+                    )
+                }
+                item {
+                    var disabledRangeValue by remember { mutableStateOf(0.3f..0.7f) }
+                    RangeSliderPreference(
+                        value = disabledRangeValue,
+                        onValueChange = {},
+                        title = "Disabled",
+                        valueText = "${(disabledRangeValue.start * 100).toInt()}% - ${(disabledRangeValue.endInclusive * 100).toInt()}%",
+                        enabled = false,
+                    )
+                }
+            }
         }
 
         // VerticalSlider

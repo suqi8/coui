@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardDefaults
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
@@ -63,25 +64,31 @@ fun LazyListScope.bottomSheetSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            ArrowPreference(
-                title = "BottomSheet (O)",
-                summary = "Click to show an OverlayBottomSheet",
-                onClick = {
-                    showSuperBottomSheet = true
-                    superBottomSheetHoldDown = true
-                },
-                holdDownState = superBottomSheetHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "BottomSheet (W)",
-                summary = "Click to show a WindowBottomSheet",
-                onClick = {
-                    showWindowBottomSheet = true
-                    windowBottomSheetHoldDown = true
-                },
-                holdDownState = windowBottomSheetHoldDown,
-            )
+            CardListGroup {
+                item {
+                    ArrowPreference(
+                        title = "BottomSheet (O)",
+                        summary = "Click to show an OverlayBottomSheet",
+                        onClick = {
+                            showSuperBottomSheet = true
+                            superBottomSheetHoldDown = true
+                        },
+                        holdDownState = superBottomSheetHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "BottomSheet (W)",
+                        summary = "Click to show a WindowBottomSheet",
+                        onClick = {
+                            showWindowBottomSheet = true
+                            windowBottomSheetHoldDown = true
+                        },
+                        holdDownState = windowBottomSheetHoldDown,
+                    )
+                }
+            }
         }
 
         SuperBottomSheetDemo(
@@ -170,19 +177,25 @@ private fun SuperBottomSheetDemo(
                         color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
-                    SwitchPreference(
-                        title = "Allow Dismiss",
-                        summary = "Drag or Back to dismiss",
-                        checked = allowDismiss,
-                        onCheckedChange = { allowDismiss = it },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Enable NestedScroll",
-                        summary = "Scroll content vs Drag sheet",
-                        checked = enableNestedScroll,
-                        onCheckedChange = { enableNestedScroll = it },
-                    )
+                    CardListGroup {
+                        item {
+                            SwitchPreference(
+                                title = "Allow Dismiss",
+                                summary = "Drag or Back to dismiss",
+                                checked = allowDismiss,
+                                onCheckedChange = { allowDismiss = it },
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable NestedScroll",
+                                summary = "Scroll content vs Drag sheet",
+                                checked = enableNestedScroll,
+                                onCheckedChange = { enableNestedScroll = it },
+                            )
+                        }
+                    }
                 }
             }
             item {
@@ -206,18 +219,24 @@ private fun SuperBottomSheetDemo(
                         color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
-                    OverlayDropdownPreference(
-                        title = "DropdownPref (O)",
-                        items = BottomSheetDropdownOptions,
-                        selectedIndex = dropdownSelectedIndex,
-                        onSelectedIndexChange = onDropdownSelectedIndexChange,
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "SwitchPref",
-                        checked = switchChecked,
-                        onCheckedChange = onSwitchCheckedChange,
-                    )
+                    CardListGroup {
+                        item {
+                            OverlayDropdownPreference(
+                                title = "DropdownPref (O)",
+                                items = BottomSheetDropdownOptions,
+                                selectedIndex = dropdownSelectedIndex,
+                                onSelectedIndexChange = onDropdownSelectedIndexChange,
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "SwitchPref",
+                                checked = switchChecked,
+                                onCheckedChange = onSwitchCheckedChange,
+                            )
+                        }
+                    }
                 }
                 Spacer(
                     Modifier.padding(
@@ -291,19 +310,25 @@ private fun WindowBottomSheetDemo(
                         color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
-                    SwitchPreference(
-                        title = "Allow Dismiss",
-                        summary = "Drag or Back to dismiss",
-                        checked = allowDismiss,
-                        onCheckedChange = { allowDismiss = it },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Enable NestedScroll",
-                        summary = "Scroll content vs Drag sheet",
-                        checked = enableNestedScroll,
-                        onCheckedChange = { enableNestedScroll = it },
-                    )
+                    CardListGroup {
+                        item {
+                            SwitchPreference(
+                                title = "Allow Dismiss",
+                                summary = "Drag or Back to dismiss",
+                                checked = allowDismiss,
+                                onCheckedChange = { allowDismiss = it },
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable NestedScroll",
+                                summary = "Scroll content vs Drag sheet",
+                                checked = enableNestedScroll,
+                                onCheckedChange = { enableNestedScroll = it },
+                            )
+                        }
+                    }
                 }
             }
             item {
@@ -327,18 +352,24 @@ private fun WindowBottomSheetDemo(
                         color = COUITheme.colorScheme.secondaryContainer,
                     ),
                 ) {
-                    WindowDropdownPreference(
-                        title = "DropdownPref (W)",
-                        items = BottomSheetDropdownOptions,
-                        selectedIndex = dropdownSelectedIndex,
-                        onSelectedIndexChange = onDropdownSelectedIndexChange,
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "SwitchPref",
-                        checked = switchChecked,
-                        onCheckedChange = onSwitchCheckedChange,
-                    )
+                    CardListGroup {
+                        item {
+                            WindowDropdownPreference(
+                                title = "DropdownPref (W)",
+                                items = BottomSheetDropdownOptions,
+                                selectedIndex = dropdownSelectedIndex,
+                                onSelectedIndexChange = onDropdownSelectedIndexChange,
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "SwitchPref",
+                                checked = switchChecked,
+                                onCheckedChange = onSwitchCheckedChange,
+                            )
+                        }
+                    }
                 }
                 Spacer(
                     Modifier.padding(

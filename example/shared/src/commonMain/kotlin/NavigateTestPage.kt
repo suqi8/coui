@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
@@ -131,11 +132,15 @@ fun NavTestPage(
                             .padding(horizontal = 16.dp)
                             .padding(top = 12.dp, bottom = 16.dp),
                     ) {
-                        val navigator = LocalNavigator.current
-                        ArrowPreference(
-                            title = "Push another Navigation Page",
-                            onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
-                        )
+                        CardListGroup {
+                            item {
+                                val navigator = LocalNavigator.current
+                                ArrowPreference(
+                                    title = "Push another Navigation Page",
+                                    onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
+                                )
+                            }
+                        }
                     }
                 }
                 item(key = "nav_layout") {
@@ -143,93 +148,109 @@ fun NavTestPage(
                         modifier = Modifier
                             .padding(horizontal = 16.dp),
                     ) {
-                        ArrowPreference(
-                            title = "Long Long Long Long Long Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Start")
-                            },
-                            endActions = {
-                                Text(text = "End1", textAlign = TextAlign.End)
-                                Spacer(Modifier.width(8.dp))
-                                Text(text = "End2", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Title",
-                            summary = "Long Long Long Long Long Summary",
-                            startAction = {
-                                Text(text = "Start")
-                            },
-                            endActions = {
-                                Text(text = "End1", textAlign = TextAlign.End)
-                                Spacer(Modifier.width(8.dp))
-                                Text(text = "End2", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Start")
-                            },
-                            endActions = {
-                                Text(
-                                    text = "Long Long Long Long Long End",
-                                    textAlign = TextAlign.End,
+                        CardListGroup {
+                            item {
+                                ArrowPreference(
+                                    title = "Long Long Long Long Long Title",
+                                    summary = "Summary",
+                                    startAction = {
+                                        Text(text = "Start")
+                                    },
+                                    endActions = {
+                                        Text(text = "End1", textAlign = TextAlign.End)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(text = "End2", textAlign = TextAlign.End)
+                                    },
+                                    enabled = true,
                                 )
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Long Long Long Long Long Title",
-                            summary = "Summary",
-                            startAction = {
-                                Text(text = "Start")
-                            },
-                            endActions = {
-                                Text(
-                                    text = "Long Long Long Long Long End",
-                                    textAlign = TextAlign.End,
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Title",
+                                    summary = "Long Long Long Long Long Summary",
+                                    startAction = {
+                                        Text(text = "Start")
+                                    },
+                                    endActions = {
+                                        Text(text = "End1", textAlign = TextAlign.End)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(text = "End2", textAlign = TextAlign.End)
+                                    },
+                                    enabled = true,
                                 )
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Title",
-                            summary = "Long Long Long Long Long Summary",
-                            endActions = {
-                                Text(
-                                    text = "Long Long Long Long Long End",
-                                    textAlign = TextAlign.End,
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Title",
+                                    summary = "Summary",
+                                    startAction = {
+                                        Text(text = "Start")
+                                    },
+                                    endActions = {
+                                        Text(
+                                            text = "Long Long Long Long Long End",
+                                            textAlign = TextAlign.End,
+                                        )
+                                    },
+                                    enabled = true,
                                 )
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Long Long Long Long Long Title",
-                            summary = "Summary",
-                            endActions = {
-                                Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Title",
-                            summary = "Long Long Long Long Long Summary",
-                            endActions = {
-                                Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
-                            },
-                            enabled = true,
-                        )
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Long Long Long Long Long Title",
+                                    summary = "Summary",
+                                    startAction = {
+                                        Text(text = "Start")
+                                    },
+                                    endActions = {
+                                        Text(
+                                            text = "Long Long Long Long Long End",
+                                            textAlign = TextAlign.End,
+                                        )
+                                    },
+                                    enabled = true,
+                                )
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Title",
+                                    summary = "Long Long Long Long Long Summary",
+                                    endActions = {
+                                        Text(
+                                            text = "Long Long Long Long Long End",
+                                            textAlign = TextAlign.End,
+                                        )
+                                    },
+                                    enabled = true,
+                                )
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Long Long Long Long Long Title",
+                                    summary = "Summary",
+                                    endActions = {
+                                        Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
+                                    },
+                                    enabled = true,
+                                )
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Title",
+                                    summary = "Long Long Long Long Long Summary",
+                                    endActions = {
+                                        Text(text = "Long Long Long Long Long End", textAlign = TextAlign.End)
+                                    },
+                                    enabled = true,
+                                )
+                            }
+                        }
                     }
                 }
             }

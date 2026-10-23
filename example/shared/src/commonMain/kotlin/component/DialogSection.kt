@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
@@ -49,65 +50,79 @@ fun LazyListScope.dialogSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            ArrowPreference(
-                title = "Dialog (O)",
-                summary = "Click to show an OverlayDialog",
-                onClick = {
-                    showSuperDialog = true
-                    superDialogHoldDown = true
-                },
-                holdDownState = superDialogHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Dialog (W)",
-                summary = "Click to show a WindowDialog",
-                onClick = {
-                    showWindowDialog = true
-                    windowDialogHoldDown = true
-                },
-                holdDownState = windowDialogHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Loading Dialog (O)",
-                summary = "Click to show an OverlayLoadingDialog",
-                onClick = {
-                    showLoadingDialog = true
-                    loadingDialogHoldDown = true
-                },
-                holdDownState = loadingDialogHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Stacked Button Bar (O)",
-                summary = "Long labels flip the bar to a vertical stack",
-                onClick = {
-                    showStackedDialog = true
-                    stackedDialogHoldDown = true
-                },
-                holdDownState = stackedDialogHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Recommended Button (O)",
-                summary = "The recommended action becomes a primary capsule",
-                onClick = {
-                    showRecommendDialog = true
-                    recommendDialogHoldDown = true
-                },
-                holdDownState = recommendDialogHoldDown,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Security Dialog (O)",
-                summary = "Click to show an OverlaySecurityDialog",
-                onClick = {
-                    showSecurityDialog = true
-                    securityDialogHoldDown = true
-                },
-                holdDownState = securityDialogHoldDown,
-            )
+            CardListGroup {
+                item {
+                    ArrowPreference(
+                        title = "Dialog (O)",
+                        summary = "Click to show an OverlayDialog",
+                        onClick = {
+                            showSuperDialog = true
+                            superDialogHoldDown = true
+                        },
+                        holdDownState = superDialogHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Dialog (W)",
+                        summary = "Click to show a WindowDialog",
+                        onClick = {
+                            showWindowDialog = true
+                            windowDialogHoldDown = true
+                        },
+                        holdDownState = windowDialogHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Loading Dialog (O)",
+                        summary = "Click to show an OverlayLoadingDialog",
+                        onClick = {
+                            showLoadingDialog = true
+                            loadingDialogHoldDown = true
+                        },
+                        holdDownState = loadingDialogHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Stacked Button Bar (O)",
+                        summary = "Long labels flip the bar to a vertical stack",
+                        onClick = {
+                            showStackedDialog = true
+                            stackedDialogHoldDown = true
+                        },
+                        holdDownState = stackedDialogHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Recommended Button (O)",
+                        summary = "The recommended action becomes a primary capsule",
+                        onClick = {
+                            showRecommendDialog = true
+                            recommendDialogHoldDown = true
+                        },
+                        holdDownState = recommendDialogHoldDown,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Security Dialog (O)",
+                        summary = "Click to show an OverlaySecurityDialog",
+                        onClick = {
+                            showSecurityDialog = true
+                            securityDialogHoldDown = true
+                        },
+                        holdDownState = securityDialogHoldDown,
+                    )
+                }
+            }
         }
 
         SuperDialogDemo(

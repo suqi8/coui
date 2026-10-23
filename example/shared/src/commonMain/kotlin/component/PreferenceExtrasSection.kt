@@ -11,10 +11,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
-import io.github.suqi8.coui.kmp.basic.cardListPositionOf
 import io.github.suqi8.coui.kmp.preference.ButtonPreference
 import io.github.suqi8.coui.kmp.preference.MarkPreference
 import io.github.suqi8.coui.kmp.preference.RecommendedItem
@@ -42,26 +42,30 @@ fun LazyListScope.preferenceExtrasSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            SwitchLoadingPreference(
-                checked = loadingChecked.value,
-                onCheckedChange = {
-                    loadingTarget.value = it
-                    isLoading.value = true
-                },
-                title = "Async Switch",
-                summary = "Applies the change after a short delay",
-                isLoading = isLoading.value,
-                cardListPosition = CardListPosition.Head,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            SwitchLoadingPreference(
-                checked = true,
-                onCheckedChange = {},
-                title = "Always Loading",
-                summary = "A switch stuck in the loading state",
-                isLoading = true,
-                cardListPosition = CardListPosition.Tail,
-            )
+            CardListGroup {
+                item {
+                    SwitchLoadingPreference(
+                        checked = loadingChecked.value,
+                        onCheckedChange = {
+                            loadingTarget.value = it
+                            isLoading.value = true
+                        },
+                        title = "Async Switch",
+                        summary = "Applies the change after a short delay",
+                        isLoading = isLoading.value,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    SwitchLoadingPreference(
+                        checked = true,
+                        onCheckedChange = {},
+                        title = "Always Loading",
+                        summary = "A switch stuck in the loading state",
+                        isLoading = true,
+                    )
+                }
+            }
         }
 
         // MarkPreference: a single-select group where the mark follows the checked row.
@@ -74,20 +78,25 @@ fun LazyListScope.preferenceExtrasSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            markOptions.forEachIndexed { index, option ->
-                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                MarkPreference(
-                    title = option,
-                    checked = selectedMark.intValue == index,
-                    onClick = { selectedMark.intValue = index },
-                    // Head gets 2dp on top, Tail 2dp on the bottom, Middle none.
-                    cardListPosition = cardListPositionOf(index, markOptions.size),
-                )
+            // The group gives the first row Head (2dp on top), the last Tail (2dp on the bottom)
+            // and the rows between Middle (none).
+            CardListGroup {
+                markOptions.forEachIndexed { index, option ->
+                    item(key = option) {
+                        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                        MarkPreference(
+                            title = option,
+                            checked = selectedMark.intValue == index,
+                            onClick = { selectedMark.intValue = index },
+                        )
+                    }
+                }
             }
         }
 
         // A standalone row is CardListPosition.Full: both rounded edges get the padding, so this
-        // card is 4dp taller than a middle row of the group above.
+        // card is 4dp taller than a middle row of the group above. Outside a CardListGroup a row
+        // defaults to CardListPosition.None, so the position is passed explicitly here.
         SmallTitle(text = "MarkPreference (standalone, Full)")
         Card(
             modifier = Modifier
@@ -111,26 +120,30 @@ fun LazyListScope.preferenceExtrasSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            ButtonPreference(
-                title = "Account",
-                summary = if (signInCount.intValue > 0) {
-                    "Button clicked ${signInCount.intValue} time(s)"
-                } else {
-                    "Sign in to sync your data"
-                },
-                buttonText = "Sign in",
-                onButtonClick = { signInCount.intValue++ },
-                cardListPosition = CardListPosition.Head,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ButtonPreference(
-                title = "Disabled Row",
-                summary = "Button and row are disabled",
-                buttonText = "Action",
-                onButtonClick = {},
-                enabled = false,
-                cardListPosition = CardListPosition.Tail,
-            )
+            CardListGroup {
+                item {
+                    ButtonPreference(
+                        title = "Account",
+                        summary = if (signInCount.intValue > 0) {
+                            "Button clicked ${signInCount.intValue} time(s)"
+                        } else {
+                            "Sign in to sync your data"
+                        },
+                        buttonText = "Sign in",
+                        onButtonClick = { signInCount.intValue++ },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ButtonPreference(
+                        title = "Disabled Row",
+                        summary = "Button and row are disabled",
+                        buttonText = "Action",
+                        onButtonClick = {},
+                        enabled = false,
+                    )
+                }
+            }
         }
 
         // RecommendedPreference: a standalone rounded card with related settings entries.

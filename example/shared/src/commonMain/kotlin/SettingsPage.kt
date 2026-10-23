@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
@@ -123,74 +125,94 @@ private fun SettingsContent(
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 16.dp),
                 ) {
-                    SwitchPreference(
-                        title = "Show FPS Monitor",
-                        checked = appState.showFPSMonitor,
-                        onCheckedChange = { updateAppState { state -> state.copy(showFPSMonitor = it) } },
-                    )
-                    AnimatedVisibility(visible = isRuntimeShaderSupported()) {
-                        Column {
+                    CardListGroup {
+                        item {
+                            SwitchPreference(
+                                title = "Show FPS Monitor",
+                                checked = appState.showFPSMonitor,
+                                onCheckedChange = { updateAppState { state -> state.copy(showFPSMonitor = it) } },
+                            )
+                        }
+                        item {
+                            AnimatedVisibility(visible = isRuntimeShaderSupported()) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    SwitchPreference(
+                                        title = "Enable Squircle Shapes",
+                                        checked = appState.enableSquircle,
+                                        onCheckedChange = { updateAppState { state -> state.copy(enableSquircle = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            AnimatedVisibility(visible = isRuntimeShaderSupported()) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    SwitchPreference(
+                                        title = "Enable Blur Effect",
+                                        checked = appState.enableBlur,
+                                        onCheckedChange = { updateAppState { state -> state.copy(enableBlur = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
-                                title = "Enable Squircle Shapes",
-                                checked = appState.enableSquircle,
-                                onCheckedChange = { updateAppState { state -> state.copy(enableSquircle = it) } },
+                                title = "Show TopAppBar",
+                                checked = appState.showTopAppBar,
+                                onCheckedChange = { updateAppState { state -> state.copy(showTopAppBar = it) } },
                             )
                         }
-                    }
-                    AnimatedVisibility(visible = isRuntimeShaderSupported()) {
-                        Column {
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
-                                title = "Enable Blur Effect",
-                                checked = appState.enableBlur,
-                                onCheckedChange = { updateAppState { state -> state.copy(enableBlur = it) } },
+                                title = if (isWideScreen) "Show NavigationRail" else "Show NavigationBar",
+                                checked = appState.showNavigationBar,
+                                onCheckedChange = { updateAppState { state -> state.copy(showNavigationBar = it) } },
                             )
                         }
-                    }
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Show TopAppBar",
-                        checked = appState.showTopAppBar,
-                        onCheckedChange = { updateAppState { state -> state.copy(showTopAppBar = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = if (isWideScreen) "Show NavigationRail" else "Show NavigationBar",
-                        checked = appState.showNavigationBar,
-                        onCheckedChange = { updateAppState { state -> state.copy(showNavigationBar = it) } },
-                    )
-                    AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && !appState.useFloatingNavigationBar) {
-                        Column {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "NavigationBar Mode",
-                                items = NavigationBarDisplayModeOptions,
-                                selectedIndex = appState.navigationBarMode,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(navigationBarMode = it) } },
-                            )
+                        item {
+                            AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && !appState.useFloatingNavigationBar) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "NavigationBar Mode",
+                                        items = NavigationBarDisplayModeOptions,
+                                        selectedIndex = appState.navigationBarMode,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(navigationBarMode = it) } },
+                                    )
+                                }
+                            }
                         }
-                    }
-                    AnimatedVisibility(visible = appState.showNavigationBar && isWideScreen) {
-                        Column {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "NavigationRail Mode",
-                                items = NavigationRailDisplayModeOptions,
-                                selectedIndex = appState.navigationRailMode,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(navigationRailMode = it) } },
-                            )
+                        item {
+                            AnimatedVisibility(visible = appState.showNavigationBar && isWideScreen) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "NavigationRail Mode",
+                                        items = NavigationRailDisplayModeOptions,
+                                        selectedIndex = appState.navigationRailMode,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(navigationRailMode = it) } },
+                                    )
+                                }
+                            }
                         }
-                    }
-                    AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen) {
-                        Column {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            SwitchPreference(
-                                title = "Use FloatingNavigationBar",
-                                checked = appState.useFloatingNavigationBar,
-                                onCheckedChange = { updateAppState { state -> state.copy(useFloatingNavigationBar = it) } },
-                            )
-                            AnimatedVisibility(visible = appState.useFloatingNavigationBar) {
+                        item {
+                            AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    SwitchPreference(
+                                        title = "Use FloatingNavigationBar",
+                                        checked = appState.useFloatingNavigationBar,
+                                        onCheckedChange = { updateAppState { state -> state.copy(useFloatingNavigationBar = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && appState.useFloatingNavigationBar) {
                                 Column {
                                     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
@@ -199,108 +221,149 @@ private fun SettingsContent(
                                         selectedIndex = appState.floatingNavigationBarStyle,
                                         onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarStyle = it) } },
                                     )
-                                    AnimatedVisibility(visible = appState.floatingNavigationBarStyle == 0) {
-                                        Column {
-                                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                                            OverlayDropdownPreference(
-                                                title = "FloatingNavigationBar Position",
-                                                items = FloatingNavigationBarPositionOptions,
-                                                selectedIndex = appState.floatingNavigationBarPosition,
-                                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarPosition = it) } },
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
-                    }
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Show FloatingToolbar",
-                        checked = appState.showFloatingToolbar,
-                        onCheckedChange = { updateAppState { state -> state.copy(showFloatingToolbar = it) } },
-                    )
-                    AnimatedVisibility(visible = appState.showFloatingToolbar) {
-                        Column {
+                        item {
+                            AnimatedVisibility(
+                                visible = appState.showNavigationBar &&
+                                    !isWideScreen &&
+                                    appState.useFloatingNavigationBar &&
+                                    appState.floatingNavigationBarStyle == 0,
+                            ) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "FloatingNavigationBar Position",
+                                        items = FloatingNavigationBarPositionOptions,
+                                        selectedIndex = appState.floatingNavigationBarPosition,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingNavigationBarPosition = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "FloatingToolbar Position",
-                                items = FloatingToolbarPositionOptions,
-                                selectedIndex = appState.floatingToolbarPosition,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingToolbarPosition = it) } },
-                            )
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "FloatingToolbar Orientation",
-                                items = FloatingToolbarOrientationOptions,
-                                selectedIndex = appState.floatingToolbarOrientation,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingToolbarOrientation = it) } },
+                            SwitchPreference(
+                                title = "Show FloatingToolbar",
+                                checked = appState.showFloatingToolbar,
+                                onCheckedChange = { updateAppState { state -> state.copy(showFloatingToolbar = it) } },
                             )
                         }
-                    }
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Show FloatingActionButton",
-                        checked = appState.showFloatingActionButton,
-                        onCheckedChange = { updateAppState { state -> state.copy(showFloatingActionButton = it) } },
-                    )
-                    AnimatedVisibility(visible = appState.showFloatingActionButton) {
-                        Column {
+                        item {
+                            AnimatedVisibility(visible = appState.showFloatingToolbar) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "FloatingToolbar Position",
+                                        items = FloatingToolbarPositionOptions,
+                                        selectedIndex = appState.floatingToolbarPosition,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingToolbarPosition = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            AnimatedVisibility(visible = appState.showFloatingToolbar) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "FloatingToolbar Orientation",
+                                        items = FloatingToolbarOrientationOptions,
+                                        selectedIndex = appState.floatingToolbarOrientation,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingToolbarOrientation = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "FloatingActionButton Position",
-                                items = FabPositionOptions,
-                                selectedIndex = appState.floatingActionButtonPosition,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(floatingActionButtonPosition = it) } },
+                            SwitchPreference(
+                                title = "Show FloatingActionButton",
+                                checked = appState.showFloatingActionButton,
+                                onCheckedChange = { updateAppState { state -> state.copy(showFloatingActionButton = it) } },
                             )
                         }
-                    }
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Enable Scroll End Haptic",
-                        checked = appState.enableScrollEndHaptic,
-                        onCheckedChange = { updateAppState { state -> state.copy(enableScrollEndHaptic = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Enable Page User Scroll",
-                        checked = appState.enablePageUserScroll,
-                        onCheckedChange = { updateAppState { state -> state.copy(enablePageUserScroll = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    OverlayDropdownPreference(
-                        title = "Color Mode",
-                        items = ColorModeOptions,
-                        selectedIndex = appState.colorMode,
-                        onSelectedIndexChange = { updateAppState { state -> state.copy(colorMode = it) } },
-                    )
-                    AnimatedVisibility(visible = appState.colorMode in 3..5) {
-                        Column {
+                        item {
+                            AnimatedVisibility(visible = appState.showFloatingActionButton) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "FloatingActionButton Position",
+                                        items = FabPositionOptions,
+                                        selectedIndex = appState.floatingActionButtonPosition,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(floatingActionButtonPosition = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "Key Color",
-                                items = KeyColorOptions,
-                                selectedIndex = appState.seedIndex,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(seedIndex = it) } },
+                            SwitchPreference(
+                                title = "Enable Scroll End Haptic",
+                                checked = appState.enableScrollEndHaptic,
+                                onCheckedChange = { updateAppState { state -> state.copy(enableScrollEndHaptic = it) } },
                             )
                         }
-                    }
-                    AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
-                        Column {
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable Page User Scroll",
+                                checked = appState.enablePageUserScroll,
+                                onCheckedChange = { updateAppState { state -> state.copy(enablePageUserScroll = it) } },
+                            )
+                        }
+                        item {
                             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
-                                title = "Palette Style",
-                                items = PaletteStyleOptions,
-                                selectedIndex = appState.paletteStyle,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(paletteStyle = it) } },
+                                title = "Color Mode",
+                                items = ColorModeOptions,
+                                selectedIndex = appState.colorMode,
+                                onSelectedIndexChange = { updateAppState { state -> state.copy(colorMode = it) } },
+                                // The rows below animate in and out but stay in the group, so this row is the
+                                // visual tail only while they are hidden.
+                                cardListPosition = if (appState.colorMode in 3..5) CardListPosition.Middle else CardListPosition.Tail,
                             )
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                            OverlayDropdownPreference(
-                                title = "Color Spec",
-                                items = ColorSpecOptions,
-                                selectedIndex = appState.colorSpec,
-                                onSelectedIndexChange = { updateAppState { state -> state.copy(colorSpec = it) } },
-                            )
+                        }
+                        item {
+                            AnimatedVisibility(visible = appState.colorMode in 3..5) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "Key Color",
+                                        items = KeyColorOptions,
+                                        selectedIndex = appState.seedIndex,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(seedIndex = it) } },
+                                        cardListPosition = if (appState.seedIndex > 0) CardListPosition.Middle else CardListPosition.Tail,
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "Palette Style",
+                                        items = PaletteStyleOptions,
+                                        selectedIndex = appState.paletteStyle,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(paletteStyle = it) } },
+                                    )
+                                }
+                            }
+                        }
+                        item {
+                            AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
+                                Column {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayDropdownPreference(
+                                        title = "Color Spec",
+                                        items = ColorSpecOptions,
+                                        selectedIndex = appState.colorSpec,
+                                        onSelectedIndexChange = { updateAppState { state -> state.copy(colorSpec = it) } },
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -310,33 +373,43 @@ private fun SettingsContent(
                 Card(
                     modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                 ) {
-                    SwitchPreference(
-                        title = "Enable Corner Clip",
-                        summary = "Clip the top scene with rounded corners during transitions",
-                        checked = appState.enableCornerClip,
-                        onCheckedChange = { updateAppState { state -> state.copy(enableCornerClip = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Enable Dim",
-                        summary = "Dim the scene behind during transitions",
-                        checked = appState.enableDim,
-                        onCheckedChange = { updateAppState { state -> state.copy(enableDim = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Block Input During Transition",
-                        summary = "Block touch input on the non-target scene",
-                        checked = appState.blockInputDuringTransition,
-                        onCheckedChange = { updateAppState { state -> state.copy(blockInputDuringTransition = it) } },
-                    )
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                    SwitchPreference(
-                        title = "Pop Follows Swipe Edge",
-                        summary = "Pop animation direction follows the finger swipe edge",
-                        checked = appState.popDirectionFollowsSwipeEdge,
-                        onCheckedChange = { updateAppState { state -> state.copy(popDirectionFollowsSwipeEdge = it) } },
-                    )
+                    CardListGroup {
+                        item {
+                            SwitchPreference(
+                                title = "Enable Corner Clip",
+                                summary = "Clip the top scene with rounded corners during transitions",
+                                checked = appState.enableCornerClip,
+                                onCheckedChange = { updateAppState { state -> state.copy(enableCornerClip = it) } },
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Enable Dim",
+                                summary = "Dim the scene behind during transitions",
+                                checked = appState.enableDim,
+                                onCheckedChange = { updateAppState { state -> state.copy(enableDim = it) } },
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Block Input During Transition",
+                                summary = "Block touch input on the non-target scene",
+                                checked = appState.blockInputDuringTransition,
+                                onCheckedChange = { updateAppState { state -> state.copy(blockInputDuringTransition = it) } },
+                            )
+                        }
+                        item {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Pop Follows Swipe Edge",
+                                summary = "Pop animation direction follows the finger swipe edge",
+                                checked = appState.popDirectionFollowsSwipeEdge,
+                                onCheckedChange = { updateAppState { state -> state.copy(popDirectionFollowsSwipeEdge = it) } },
+                            )
+                        }
+                    }
                 }
             }
             item(key = "settingsAbout") {
@@ -344,11 +417,15 @@ private fun SettingsContent(
                 Card(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
-                    ArrowPreference(
-                        title = "About",
-                        summary = "About this example App",
-                        onClick = { navigator.push(Route.About) },
-                    )
+                    CardListGroup {
+                        item {
+                            ArrowPreference(
+                                title = "About",
+                                summary = "About this example App",
+                                onClick = { navigator.push(Route.About) },
+                            )
+                        }
+                    }
                 }
             }
             item { Spacer(modifier = Modifier.height(32.dp)) }

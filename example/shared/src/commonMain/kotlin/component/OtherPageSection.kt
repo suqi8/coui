@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
@@ -22,37 +23,49 @@ fun LazyListScope.otherPageSection() {
             modifier = Modifier
                 .padding(horizontal = 16.dp),
         ) {
-            ArrowPreference(
-                title = "PullToRefresh Test",
-                summary = "Navigate to a PullToRefresh Page",
-                onClick = {
-                    navigator.push(Route.PullToRefresh)
-                },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Navigation test",
-                summary = "Navigate to a Navigation Page",
-                onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "MultiScaffold Test",
-                summary = "Navigate to a MultiScaffold Page",
-                onClick = { navigator.push(Route.MultiScaffold) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Toolbar Search Test",
-                summary = "A search bar that expands out of the toolbar search icon",
-                onClick = { navigator.push(Route.ToolbarSearch) },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "COUI 17 Settings Top Bar",
-                summary = "116dp large title at 40sp, capsule search, condensed-light glow",
-                onClick = { navigator.push(Route.SettingsHomeTopBar) },
-            )
+            CardListGroup {
+                item {
+                    ArrowPreference(
+                        title = "PullToRefresh Test",
+                        summary = "Navigate to a PullToRefresh Page",
+                        onClick = {
+                            navigator.push(Route.PullToRefresh)
+                        },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Navigation test",
+                        summary = "Navigate to a Navigation Page",
+                        onClick = { navigator.push(Route.Navigation(Random.nextLong().toString())) },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "MultiScaffold Test",
+                        summary = "Navigate to a MultiScaffold Page",
+                        onClick = { navigator.push(Route.MultiScaffold) },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Toolbar Search Test",
+                        summary = "A search bar that expands out of the toolbar search icon",
+                        onClick = { navigator.push(Route.ToolbarSearch) },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "COUI 17 Settings Top Bar",
+                        summary = "116dp large title at 40sp, capsule search, condensed-light glow",
+                        onClick = { navigator.push(Route.SettingsHomeTopBar) },
+                    )
+                }
+            }
         }
     }
 }

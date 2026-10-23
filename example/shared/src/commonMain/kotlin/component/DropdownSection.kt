@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Badge
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
@@ -150,59 +151,73 @@ fun LazyListScope.dropdownSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            OverlayDropdownPreference(
-                title = "DropdownPref (O)",
-                summary = if (overlayExpanded) "Expanded" else "Collapsed",
-                items = dropdownOptions,
-                selectedIndex = overlayDropdownOptionSelected,
-                onSelectedIndexChange = { newOption ->
-                    overlayDropdownOptionSelected = newOption
-                },
-                onExpandedChange = { overlayExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowDropdownPreference(
-                title = "DropdownPref (W)",
-                summary = if (windowExpanded) "Expanded" else "Collapsed",
-                items = dropdownLongOptions,
-                selectedIndex = windowDropdownOptionSelected,
-                onSelectedIndexChange = { newOption ->
-                    windowDropdownOptionSelected = newOption
-                },
-                onExpandedChange = { windowExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlayDropdownPreference(
-                title = "Grouped DropdownPref (O)",
-                summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
-                entries = overlayMultiGroupOptions,
-                collapseOnSelection = false,
-                onExpandedChange = { overlayGroupedExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowDropdownPreference(
-                title = "Grouped DropdownPref (W)",
-                summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
-                entries = windowMultiGroupOptions,
-                collapseOnSelection = false,
-                onExpandedChange = { windowGroupedExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlayDropdownPreference(
-                title = "Disabled DropdownPref (O)",
-                items = listOf("Option 1"),
-                selectedIndex = 0,
-                onSelectedIndexChange = {},
-                enabled = false,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowDropdownPreference(
-                title = "Disabled DropdownPref (W)",
-                items = listOf("Option 1"),
-                selectedIndex = 0,
-                onSelectedIndexChange = {},
-                enabled = false,
-            )
+            CardListGroup {
+                item {
+                    OverlayDropdownPreference(
+                        title = "DropdownPref (O)",
+                        summary = if (overlayExpanded) "Expanded" else "Collapsed",
+                        items = dropdownOptions,
+                        selectedIndex = overlayDropdownOptionSelected,
+                        onSelectedIndexChange = { newOption ->
+                            overlayDropdownOptionSelected = newOption
+                        },
+                        onExpandedChange = { overlayExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowDropdownPreference(
+                        title = "DropdownPref (W)",
+                        summary = if (windowExpanded) "Expanded" else "Collapsed",
+                        items = dropdownLongOptions,
+                        selectedIndex = windowDropdownOptionSelected,
+                        onSelectedIndexChange = { newOption ->
+                            windowDropdownOptionSelected = newOption
+                        },
+                        onExpandedChange = { windowExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlayDropdownPreference(
+                        title = "Grouped DropdownPref (O)",
+                        summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
+                        entries = overlayMultiGroupOptions,
+                        collapseOnSelection = false,
+                        onExpandedChange = { overlayGroupedExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowDropdownPreference(
+                        title = "Grouped DropdownPref (W)",
+                        summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
+                        entries = windowMultiGroupOptions,
+                        collapseOnSelection = false,
+                        onExpandedChange = { windowGroupedExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlayDropdownPreference(
+                        title = "Disabled DropdownPref (O)",
+                        items = listOf("Option 1"),
+                        selectedIndex = 0,
+                        onSelectedIndexChange = {},
+                        enabled = false,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowDropdownPreference(
+                        title = "Disabled DropdownPref (W)",
+                        items = listOf("Option 1"),
+                        selectedIndex = 0,
+                        onSelectedIndexChange = {},
+                        enabled = false,
+                    )
+                }
+            }
         }
 
         DropdownItemVariants()
@@ -324,33 +339,43 @@ private fun DropdownItemVariants() {
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
     ) {
-        OverlayDropdownMenu(
-            entries = variantEntries,
-            title = "Item variants (O)",
-            summary = "Icon, description, hint, alert, clamping",
-            collapseOnSelection = false,
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        WindowDropdownMenu(
-            entries = variantEntries,
-            title = "Item variants (W)",
-            summary = "Same rows in a window popup",
-            collapseOnSelection = false,
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        OverlayDropdownMenu(
-            entries = headerEntries,
-            title = "Group headers (O)",
-            summary = "Non-clickable header rows",
-            collapseOnSelection = false,
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        WindowDropdownMenu(
-            entries = headerEntries,
-            title = "Group headers (W)",
-            summary = "Headers plus 12dp group dividers",
-            collapseOnSelection = false,
-        )
+        CardListGroup {
+            item {
+                OverlayDropdownMenu(
+                    entries = variantEntries,
+                    title = "Item variants (O)",
+                    summary = "Icon, description, hint, alert, clamping",
+                    collapseOnSelection = false,
+                )
+            }
+            item {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                WindowDropdownMenu(
+                    entries = variantEntries,
+                    title = "Item variants (W)",
+                    summary = "Same rows in a window popup",
+                    collapseOnSelection = false,
+                )
+            }
+            item {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                OverlayDropdownMenu(
+                    entries = headerEntries,
+                    title = "Group headers (O)",
+                    summary = "Non-clickable header rows",
+                    collapseOnSelection = false,
+                )
+            }
+            item {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                WindowDropdownMenu(
+                    entries = headerEntries,
+                    title = "Group headers (W)",
+                    summary = "Headers plus 12dp group dividers",
+                    collapseOnSelection = false,
+                )
+            }
+        }
     }
 }
 
@@ -410,37 +435,43 @@ private fun PopupMotionAndMaterial() {
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp),
     ) {
-        BasicComponent(
-            title = "Sub menus",
-            summary = "Hold \"Sort by\", then slide into the sub menu; drag across the icons",
-            onClick = { cascadeShown = true },
-            holdDownState = cascadeShown,
-            endActions = {
-                OverlayCascadingListPopup(
-                    show = cascadeShown,
-                    entries = cascadeEntries,
-                    onDismissRequest = { cascadeShown = false },
+        CardListGroup {
+            item {
+                BasicComponent(
+                    title = "Sub menus",
+                    summary = "Hold \"Sort by\", then slide into the sub menu; drag across the icons",
+                    onClick = { cascadeShown = true },
+                    holdDownState = cascadeShown,
+                    endActions = {
+                        OverlayCascadingListPopup(
+                            show = cascadeShown,
+                            entries = cascadeEntries,
+                            onDismissRequest = { cascadeShown = false },
+                        )
+                    },
                 )
-            },
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        BasicComponent(
-            title = "Opaque popup",
-            summary = "materialBlur = false: COUI's non-blur surface, next to the blurred default menus",
-            onClick = { blurShown = true },
-            holdDownState = blurShown,
-            endActions = {
-                OverlayDropdownPopup(
-                    entry = blurEntry,
-                    show = blurShown,
-                    onDismiss = { blurShown = false },
-                    onDismissFinished = {},
-                    maxHeight = null,
-                    dropdownColors = DropdownDefaults.dropdownColors(),
-                    renderInRootScaffold = true,
-                    materialBlur = false,
+            }
+            item {
+                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                BasicComponent(
+                    title = "Opaque popup",
+                    summary = "materialBlur = false: COUI's non-blur surface, next to the blurred default menus",
+                    onClick = { blurShown = true },
+                    holdDownState = blurShown,
+                    endActions = {
+                        OverlayDropdownPopup(
+                            entry = blurEntry,
+                            show = blurShown,
+                            onDismiss = { blurShown = false },
+                            onDismissFinished = {},
+                            maxHeight = null,
+                            dropdownColors = DropdownDefaults.dropdownColors(),
+                            renderInRootScaffold = true,
+                            materialBlur = false,
+                        )
+                    },
                 )
-            },
-        )
+            }
+        }
     }
 }

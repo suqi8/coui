@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Switch
@@ -39,81 +40,90 @@ fun LazyListScope.switchSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Switch(
-                    checked = switch.value,
-                    onCheckedChange = { switch.value = it },
-                )
-                Switch(
-                    checked = switchTrue.value,
-                    onCheckedChange = { switchTrue.value = it },
-                    modifier = Modifier.padding(start = 6.dp),
-                )
-                Switch(
-                    checked = false,
-                    onCheckedChange = { },
-                    modifier = Modifier.padding(start = 6.dp),
-                    enabled = false,
-                )
-                Switch(
-                    checked = true,
-                    onCheckedChange = { },
-                    modifier = Modifier.padding(start = 6.dp),
-                    enabled = false,
-                )
-                Switch(
-                    checked = switchTrue.value,
-                    onCheckedChange = { switchTrue.value = it },
-                    modifier = Modifier.padding(start = 6.dp),
-                    isLoading = true,
-                )
-            }
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            SwitchPreference(
-                title = "Switch",
-                summary = "Click to expand a Switch",
-                checked = superSwitchAnimState.value,
-                onCheckedChange = {
-                    superSwitchAnimState.value = it
-                },
-            )
-
-            AnimatedVisibility(
-                visible = superSwitchAnimState.value,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                // Divider lives inside the animated block so it only shows when expanded.
-                Column {
+            CardListGroup {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Switch(
+                            checked = switch.value,
+                            onCheckedChange = { switch.value = it },
+                        )
+                        Switch(
+                            checked = switchTrue.value,
+                            onCheckedChange = { switchTrue.value = it },
+                            modifier = Modifier.padding(start = 6.dp),
+                        )
+                        Switch(
+                            checked = false,
+                            onCheckedChange = { },
+                            modifier = Modifier.padding(start = 6.dp),
+                            enabled = false,
+                        )
+                        Switch(
+                            checked = true,
+                            onCheckedChange = { },
+                            modifier = Modifier.padding(start = 6.dp),
+                            enabled = false,
+                        )
+                        Switch(
+                            checked = switchTrue.value,
+                            onCheckedChange = { switchTrue.value = it },
+                            modifier = Modifier.padding(start = 6.dp),
+                            isLoading = true,
+                        )
+                    }
+                }
+                item {
                     HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Switch",
-                        checked = superSwitchState.value,
-                        endActions = {
-                            Text(
-                                text = superSwitch.value,
-                                color = COUITheme.colorScheme.onSurfaceVariantActions,
-                            )
-                        },
+                        summary = "Click to expand a Switch",
+                        checked = superSwitchAnimState.value,
                         onCheckedChange = {
-                            superSwitchState.value = it
-                            superSwitch.value = "$it"
+                            superSwitchAnimState.value = it
                         },
                     )
                 }
+                item {
+                    AnimatedVisibility(
+                        visible = superSwitchAnimState.value,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically(),
+                    ) {
+                        // Divider lives inside the animated block so it only shows when expanded.
+                        Column {
+                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                            SwitchPreference(
+                                title = "Switch",
+                                checked = superSwitchState.value,
+                                endActions = {
+                                    Text(
+                                        text = superSwitch.value,
+                                        color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                    )
+                                },
+                                onCheckedChange = {
+                                    superSwitchState.value = it
+                                    superSwitch.value = "$it"
+                                },
+                            )
+                        }
+                    }
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    SwitchPreference(
+                        title = "Disabled Switch",
+                        checked = true,
+                        enabled = false,
+                        onCheckedChange = {},
+                    )
+                }
             }
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            SwitchPreference(
-                title = "Disabled Switch",
-                checked = true,
-                enabled = false,
-                onCheckedChange = {},
-            )
         }
     }
 }

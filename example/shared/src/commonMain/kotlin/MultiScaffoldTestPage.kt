@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
@@ -114,13 +115,17 @@ fun MultiScaffoldTestPage(
                         Card(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            OverlayDropdownPreference(
-                                title = "Dropdown",
-                                items = dropdownOptions,
-                                selectedIndex = topLeftSelected.intValue,
-                                onSelectedIndexChange = { index -> topLeftSelected.intValue = index },
-                                renderInRootScaffold = false,
-                            )
+                            CardListGroup {
+                                item {
+                                    OverlayDropdownPreference(
+                                        title = "Dropdown",
+                                        items = dropdownOptions,
+                                        selectedIndex = topLeftSelected.intValue,
+                                        onSelectedIndexChange = { index -> topLeftSelected.intValue = index },
+                                        renderInRootScaffold = false,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -134,13 +139,17 @@ fun MultiScaffoldTestPage(
                         Card(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            OverlayDropdownPreference(
-                                title = "Dropdown",
-                                items = dropdownOptions,
-                                selectedIndex = topRightSelected.intValue,
-                                onSelectedIndexChange = { index -> topRightSelected.intValue = index },
-                                renderInRootScaffold = false,
-                            )
+                            CardListGroup {
+                                item {
+                                    OverlayDropdownPreference(
+                                        title = "Dropdown",
+                                        items = dropdownOptions,
+                                        selectedIndex = topRightSelected.intValue,
+                                        onSelectedIndexChange = { index -> topRightSelected.intValue = index },
+                                        renderInRootScaffold = false,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -159,13 +168,17 @@ fun MultiScaffoldTestPage(
                         Card(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            OverlayDropdownPreference(
-                                title = "Dropdown",
-                                items = dropdownOptions,
-                                selectedIndex = bottomLeftSelected.intValue,
-                                onSelectedIndexChange = { index -> bottomLeftSelected.intValue = index },
-                                renderInRootScaffold = false,
-                            )
+                            CardListGroup {
+                                item {
+                                    OverlayDropdownPreference(
+                                        title = "Dropdown",
+                                        items = dropdownOptions,
+                                        selectedIndex = bottomLeftSelected.intValue,
+                                        onSelectedIndexChange = { index -> bottomLeftSelected.intValue = index },
+                                        renderInRootScaffold = false,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -179,13 +192,17 @@ fun MultiScaffoldTestPage(
                         Card(
                             modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
-                            OverlayDropdownPreference(
-                                title = "Dropdown",
-                                items = dropdownOptions,
-                                selectedIndex = bottomRightSelected.intValue,
-                                onSelectedIndexChange = { index -> bottomRightSelected.intValue = index },
-                                renderInRootScaffold = false,
-                            )
+                            CardListGroup {
+                                item {
+                                    OverlayDropdownPreference(
+                                        title = "Dropdown",
+                                        items = dropdownOptions,
+                                        selectedIndex = bottomRightSelected.intValue,
+                                        onSelectedIndexChange = { index -> bottomRightSelected.intValue = index },
+                                        renderInRootScaffold = false,
+                                    )
+                                }
+                            }
                         }
                     }
                 }

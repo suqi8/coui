@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -41,52 +42,60 @@ fun LazyListScope.arrowSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            ArrowPreference(
-                title = "Arrow",
-                startAction = {
-                    Box(
-                        modifier = Modifier.padding(end = 8.dp),
-                    ) {
-                        Icon(
-                            imageVector = COUIIcons.Contacts,
-                            contentDescription = "Personal",
-                            tint = COUITheme.colorScheme.onBackground,
-                        )
-                    }
-                },
-                endActions = {
-                    Text(
-                        text = "End",
-                        fontSize = COUITheme.textStyles.body2.fontSize,
-                        color = COUITheme.colorScheme.onSurfaceVariantActions,
+            CardListGroup {
+                item {
+                    ArrowPreference(
+                        title = "Arrow",
+                        startAction = {
+                            Box(
+                                modifier = Modifier.padding(end = 8.dp),
+                            ) {
+                                Icon(
+                                    imageVector = COUIIcons.Contacts,
+                                    contentDescription = "Personal",
+                                    tint = COUITheme.colorScheme.onBackground,
+                                )
+                            }
+                        },
+                        endActions = {
+                            Text(
+                                text = "End",
+                                fontSize = COUITheme.textStyles.body2.fontSize,
+                                color = COUITheme.colorScheme.onSurfaceVariantActions,
+                            )
+                        },
+                        onClick = {},
                     )
-                },
-                onClick = {},
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            SliderPreference(
-                title = "Volume",
-                valueText = "${(volume * 100).toInt()}%",
-                value = volume,
-                onValueChange = { volume = it },
-                onClick = {
-                    showVolumeDialog.value = true
-                    volumeDialogHoldDown.value = true
-                },
-                holdDownState = volumeDialogHoldDown.value,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            ArrowPreference(
-                title = "Disabled Arrow",
-                endActions = {
-                    Text(
-                        text = "End",
-                        fontSize = COUITheme.textStyles.body2.fontSize,
-                        color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    SliderPreference(
+                        title = "Volume",
+                        valueText = "${(volume * 100).toInt()}%",
+                        value = volume,
+                        onValueChange = { volume = it },
+                        onClick = {
+                            showVolumeDialog.value = true
+                            volumeDialogHoldDown.value = true
+                        },
+                        holdDownState = volumeDialogHoldDown.value,
                     )
-                },
-                enabled = false,
-            )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    ArrowPreference(
+                        title = "Disabled Arrow",
+                        endActions = {
+                            Text(
+                                text = "End",
+                                fontSize = COUITheme.textStyles.body2.fontSize,
+                                color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                            )
+                        },
+                        enabled = false,
+                    )
+                }
+            }
         }
 
         SliderDialog(

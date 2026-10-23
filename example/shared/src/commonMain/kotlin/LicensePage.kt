@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import component.BackNavigationIcon
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
@@ -121,15 +122,19 @@ fun LicensePage(
                                 .padding(horizontal = 16.dp)
                                 .padding(bottom = 16.dp),
                         ) {
-                            ArrowPreference(
-                                title = library.name,
-                                summary = "${library.artifactVersion}, ${library.licenses.firstOrNull()}",
-                                onClick = {
-                                    library.website?.let {
-                                        uriHandler.openUri(library.website)
-                                    }
-                                },
-                            )
+                            CardListGroup {
+                                item {
+                                    ArrowPreference(
+                                        title = library.name,
+                                        summary = "${library.artifactVersion}, ${library.licenses.firstOrNull()}",
+                                        onClick = {
+                                            library.website?.let {
+                                                uriHandler.openUri(library.website)
+                                            }
+                                        },
+                                    )
+                                }
+                            }
                         }
                     }
                 }

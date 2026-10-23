@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
@@ -175,93 +176,115 @@ fun LazyListScope.spinnerSection() {
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            OverlaySpinnerPreference(
-                title = "SpinnerPref (O)",
-                summary = if (overlayExpanded) "Expanded" else "Collapsed",
-                items = spinnerOptions,
-                selectedIndex = superSpinnerOptionSelected.value,
-                onSelectedIndexChange = { newOption -> superSpinnerOptionSelected.value = newOption },
-                onExpandedChange = { overlayExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowSpinnerPreference(
-                title = "SpinnerPref (W)",
-                summary = if (windowExpanded) "Expanded" else "Collapsed",
-                items = spinnerOptions,
-                selectedIndex = windowSpinnerOptionSelected.value,
-                onSelectedIndexChange = { newOption -> windowSpinnerOptionSelected.value = newOption },
-                onExpandedChange = { windowExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlaySpinnerPreference(
-                title = "SpinnerPref (O)",
-                summary = "As Dialog (O)" + if (overlayDialogExpanded) " (Expanded)" else " (Collapsed)",
-                dialogButtonString = "OK",
-                items = spinnerOptions,
-                selectedIndex = superSpinnerOptionSelectedDialog.value,
-                onSelectedIndexChange = { newOption -> superSpinnerOptionSelectedDialog.value = newOption },
-                onExpandedChange = { overlayDialogExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowSpinnerPreference(
-                title = "SpinnerPref (W)",
-                summary = "As Dialog (W)" + if (windowDialogExpanded) " (Expanded)" else " (Collapsed)",
-                dialogButtonString = "OK",
-                items = spinnerOptions,
-                selectedIndex = windowSpinnerOptionSelectedDialog.value,
-                onSelectedIndexChange = { newOption -> windowSpinnerOptionSelectedDialog.value = newOption },
-                onExpandedChange = { windowDialogExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlaySpinnerPreference(
-                title = "Grouped SpinnerPref (O)",
-                summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
-                entries = overlayGroupedSpinnerOptions,
-                collapseOnSelection = false,
-                onExpandedChange = { overlayGroupedExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowSpinnerPreference(
-                title = "Grouped SpinnerPref (W)",
-                summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
-                entries = windowGroupedSpinnerOptions,
-                collapseOnSelection = false,
-                onExpandedChange = { windowGroupedExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlaySpinnerPreference(
-                title = "Grouped SpinnerPref (O)",
-                summary = "As Dialog (O)" + if (overlayGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
-                dialogButtonString = "OK",
-                entries = overlayGroupedDialogSpinnerOptions,
-                onExpandedChange = { overlayGroupedDialogExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowSpinnerPreference(
-                title = "Grouped SpinnerPref (W)",
-                summary = "As Dialog (W)" + if (windowGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
-                dialogButtonString = "OK",
-                entries = windowGroupedDialogSpinnerOptions,
-                onExpandedChange = { windowGroupedDialogExpanded = it },
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            OverlaySpinnerPreference(
-                title = "Disabled SpinnerPref (O)",
-                summary = "Collapsed",
-                items = listOf(DropdownItem(text = "Option 5")),
-                selectedIndex = 0,
-                onSelectedIndexChange = {},
-                enabled = false,
-            )
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            WindowSpinnerPreference(
-                title = "Disabled SpinnerPref (W)",
-                summary = "Collapsed",
-                items = listOf(DropdownItem(text = "Option 6")),
-                selectedIndex = 0,
-                onSelectedIndexChange = {},
-                enabled = false,
-            )
+            CardListGroup {
+                item {
+                    OverlaySpinnerPreference(
+                        title = "SpinnerPref (O)",
+                        summary = if (overlayExpanded) "Expanded" else "Collapsed",
+                        items = spinnerOptions,
+                        selectedIndex = superSpinnerOptionSelected.value,
+                        onSelectedIndexChange = { newOption -> superSpinnerOptionSelected.value = newOption },
+                        onExpandedChange = { overlayExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowSpinnerPreference(
+                        title = "SpinnerPref (W)",
+                        summary = if (windowExpanded) "Expanded" else "Collapsed",
+                        items = spinnerOptions,
+                        selectedIndex = windowSpinnerOptionSelected.value,
+                        onSelectedIndexChange = { newOption -> windowSpinnerOptionSelected.value = newOption },
+                        onExpandedChange = { windowExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlaySpinnerPreference(
+                        title = "SpinnerPref (O)",
+                        summary = "As Dialog (O)" + if (overlayDialogExpanded) " (Expanded)" else " (Collapsed)",
+                        dialogButtonString = "OK",
+                        items = spinnerOptions,
+                        selectedIndex = superSpinnerOptionSelectedDialog.value,
+                        onSelectedIndexChange = { newOption -> superSpinnerOptionSelectedDialog.value = newOption },
+                        onExpandedChange = { overlayDialogExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowSpinnerPreference(
+                        title = "SpinnerPref (W)",
+                        summary = "As Dialog (W)" + if (windowDialogExpanded) " (Expanded)" else " (Collapsed)",
+                        dialogButtonString = "OK",
+                        items = spinnerOptions,
+                        selectedIndex = windowSpinnerOptionSelectedDialog.value,
+                        onSelectedIndexChange = { newOption -> windowSpinnerOptionSelectedDialog.value = newOption },
+                        onExpandedChange = { windowDialogExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlaySpinnerPreference(
+                        title = "Grouped SpinnerPref (O)",
+                        summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
+                        entries = overlayGroupedSpinnerOptions,
+                        collapseOnSelection = false,
+                        onExpandedChange = { overlayGroupedExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowSpinnerPreference(
+                        title = "Grouped SpinnerPref (W)",
+                        summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
+                        entries = windowGroupedSpinnerOptions,
+                        collapseOnSelection = false,
+                        onExpandedChange = { windowGroupedExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlaySpinnerPreference(
+                        title = "Grouped SpinnerPref (O)",
+                        summary = "As Dialog (O)" + if (overlayGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
+                        dialogButtonString = "OK",
+                        entries = overlayGroupedDialogSpinnerOptions,
+                        onExpandedChange = { overlayGroupedDialogExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowSpinnerPreference(
+                        title = "Grouped SpinnerPref (W)",
+                        summary = "As Dialog (W)" + if (windowGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
+                        dialogButtonString = "OK",
+                        entries = windowGroupedDialogSpinnerOptions,
+                        onExpandedChange = { windowGroupedDialogExpanded = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    OverlaySpinnerPreference(
+                        title = "Disabled SpinnerPref (O)",
+                        summary = "Collapsed",
+                        items = listOf(DropdownItem(text = "Option 5")),
+                        selectedIndex = 0,
+                        onSelectedIndexChange = {},
+                        enabled = false,
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    WindowSpinnerPreference(
+                        title = "Disabled SpinnerPref (W)",
+                        summary = "Collapsed",
+                        items = listOf(DropdownItem(text = "Option 6")),
+                        selectedIndex = 0,
+                        onSelectedIndexChange = {},
+                        enabled = false,
+                    )
+                }
+            }
         }
     }
 }

@@ -51,6 +51,7 @@ import component.effect.BgEffectBackground
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardDefaults
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
@@ -379,29 +380,35 @@ private fun AboutContent(
                             Color.Transparent,
                         ),
                     ) {
-                        ArrowPreference(
-                            title = "View Source",
-                            endActions = {
-                                Text(
-                                    text = "GitHub",
-                                    fontSize = COUITheme.textStyles.body2.fontSize,
-                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
+                        CardListGroup {
+                            item {
+                                ArrowPreference(
+                                    title = "View Source",
+                                    endActions = {
+                                        Text(
+                                            text = "GitHub",
+                                            fontSize = COUITheme.textStyles.body2.fontSize,
+                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                        )
+                                    },
+                                    onClick = { uriHandler.openUri("https://github.com/compose-coui-ui/coui") },
                                 )
-                            },
-                            onClick = { uriHandler.openUri("https://github.com/compose-coui-ui/coui") },
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Join Group",
-                            endActions = {
-                                Text(
-                                    text = "Telegram",
-                                    fontSize = COUITheme.textStyles.body2.fontSize,
-                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Join Group",
+                                    endActions = {
+                                        Text(
+                                            text = "Telegram",
+                                            fontSize = COUITheme.textStyles.body2.fontSize,
+                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                        )
+                                    },
+                                    onClick = { uriHandler.openUri("https://t.me/YuKongA13579") },
                                 )
-                            },
-                            onClick = { uriHandler.openUri("https://t.me/YuKongA13579") },
-                        )
+                            }
+                        }
                     }
                     Card(
                         modifier = Modifier
@@ -431,24 +438,30 @@ private fun AboutContent(
                             Color.Transparent,
                         ),
                     ) {
-                        ArrowPreference(
-                            title = "License",
-                            endActions = {
-                                Text(
-                                    text = "Apache-2.0",
-                                    fontSize = COUITheme.textStyles.body2.fontSize,
-                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
+                        CardListGroup {
+                            item {
+                                ArrowPreference(
+                                    title = "License",
+                                    endActions = {
+                                        Text(
+                                            text = "Apache-2.0",
+                                            fontSize = COUITheme.textStyles.body2.fontSize,
+                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                        )
+                                    },
+                                    onClick = {
+                                        uriHandler.openUri("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                                    },
                                 )
-                            },
-                            onClick = {
-                                uriHandler.openUri("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                            },
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-                        ArrowPreference(
-                            title = "Third Party Licenses",
-                            onClick = { navigator.push(Route.License) },
-                        )
+                            }
+                            item {
+                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                ArrowPreference(
+                                    title = "Third Party Licenses",
+                                    onClick = { navigator.push(Route.License) },
+                                )
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                 }

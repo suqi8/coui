@@ -3,7 +3,6 @@
 package component
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.RadioButton
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -23,22 +23,55 @@ import io.github.suqi8.coui.kmp.preference.RadioButtonPreference
 
 fun LazyListScope.radioButtonSection() {
     item(key = "radioButton") {
+        var selectedIndex by remember { mutableIntStateOf(0) }
+
         SmallTitle(text = "RadioButton")
         Card(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp),
         ) {
-            RadioButtonRow()
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            SuperRadioButtonDemo()
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-            RadioButtonPreference(
-                title = "Disabled RadioButton",
-                selected = true,
-                enabled = false,
-                onClick = {},
-            )
+            CardListGroup {
+                item {
+                    RadioButtonRow()
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    RadioButtonPreference(
+                        title = "Option A",
+                        summary = "Selected: ${selectedIndex == 0}",
+                        selected = selectedIndex == 0,
+                        onClick = { selectedIndex = 0 },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    RadioButtonPreference(
+                        title = "Option B",
+                        summary = "Selected: ${selectedIndex == 1}",
+                        selected = selectedIndex == 1,
+                        onClick = { selectedIndex = 1 },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    RadioButtonPreference(
+                        title = "Option C",
+                        summary = "Selected: ${selectedIndex == 2}",
+                        selected = selectedIndex == 2,
+                        onClick = { selectedIndex = 2 },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    RadioButtonPreference(
+                        title = "Disabled RadioButton",
+                        selected = true,
+                        enabled = false,
+                        onClick = {},
+                    )
+                }
+            }
         }
     }
 }
@@ -71,34 +104,6 @@ private fun RadioButtonRow() {
             selected = true,
             onClick = null,
             enabled = false,
-        )
-    }
-}
-
-@Composable
-private fun SuperRadioButtonDemo() {
-    var selectedIndex by remember { mutableIntStateOf(0) }
-
-    Column {
-        RadioButtonPreference(
-            title = "Option A",
-            summary = "Selected: ${selectedIndex == 0}",
-            selected = selectedIndex == 0,
-            onClick = { selectedIndex = 0 },
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        RadioButtonPreference(
-            title = "Option B",
-            summary = "Selected: ${selectedIndex == 1}",
-            selected = selectedIndex == 1,
-            onClick = { selectedIndex = 1 },
-        )
-        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        RadioButtonPreference(
-            title = "Option C",
-            summary = "Selected: ${selectedIndex == 2}",
-            selected = selectedIndex == 2,
-            onClick = { selectedIndex = 2 },
         )
     }
 }

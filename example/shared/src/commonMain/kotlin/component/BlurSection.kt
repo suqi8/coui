@@ -33,6 +33,7 @@ import component.effect.BgEffectBackground
 import component.highlight.HighlightConfig
 import component.highlight.rememberContainerHighlight
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
@@ -116,116 +117,127 @@ private fun BlurDemo() {
         Card(
             modifier = Modifier.padding(bottom = 16.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp),
-            ) {
-                // Background layer (captured by layerBackdrop)
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .layerBackdrop(backdrop),
-                ) {
-                    StaticBackground()
-                }
+            CardListGroup {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                    ) {
+                        // Background layer (captured by layerBackdrop)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .layerBackdrop(backdrop),
+                        ) {
+                            StaticBackground()
+                        }
 
-                // Blur overlay
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(140.dp)
-                        .align(Alignment.Center)
-                        .textureBlur(
-                            backdrop = backdrop,
-                            shape = RoundedCornerShape(24.dp),
-                            blurRadiusX = blurRadiusX,
-                            blurRadiusY = blurRadiusY,
-                            noiseCoefficient = noiseCoefficient,
-                            colors = BlurDefaults.blurColors(
-                                blendColors = currentBlend.second,
-                                brightness = brightness,
-                                contrast = contrast,
-                                saturation = saturation,
-                            ),
-                            highlight = highlight,
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Texture Blur | R=${blurRadiusX.toInt()}",
-                            style = COUITheme.textStyles.headline2,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "${currentBlend.first} | ${containerItems[containerIndex]}",
-                            style = COUITheme.textStyles.body2,
-                            color = COUITheme.colorScheme.onSurfaceVariantActions,
-                        )
+                        // Blur overlay
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .height(140.dp)
+                                .align(Alignment.Center)
+                                .textureBlur(
+                                    backdrop = backdrop,
+                                    shape = RoundedCornerShape(24.dp),
+                                    blurRadiusX = blurRadiusX,
+                                    blurRadiusY = blurRadiusY,
+                                    noiseCoefficient = noiseCoefficient,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = currentBlend.second,
+                                        brightness = brightness,
+                                        contrast = contrast,
+                                        saturation = saturation,
+                                    ),
+                                    highlight = highlight,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Texture Blur | R=${blurRadiusX.toInt()}",
+                                    style = COUITheme.textStyles.headline2,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "${currentBlend.first} | ${containerItems[containerIndex]}",
+                                    style = COUITheme.textStyles.body2,
+                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                )
+                            }
+                        }
                     }
                 }
+                item {
+                    OverlayDropdownPreference(
+                        title = "Blend Mode",
+                        items = blendModeItems,
+                        selectedIndex = blendModeIndex,
+                        onSelectedIndexChange = { blendModeIndex = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
+                    OverlayDropdownPreference(
+                        title = "Highlight",
+                        items = containerItems,
+                        selectedIndex = containerIndex,
+                        onSelectedIndexChange = { containerIndex = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+
+                    SliderPreference(
+                        title = "Blur Radius",
+                        valueText = "${blurRadiusX.toInt()}",
+                        value = blurRadiusX / 200f,
+                        onValueChange = {
+                            blurRadiusX = it * 200f
+                            blurRadiusY = it * 200f
+                        },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Noise",
+                        valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
+                        value = noiseCoefficient / 0.1f,
+                        onValueChange = { noiseCoefficient = it * 0.1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Brightness",
+                        valueText = "${(brightness * 100).toInt() / 100f}",
+                        value = (brightness + 1f) / 2f,
+                        onValueChange = { brightness = it * 2f - 1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Contrast",
+                        valueText = "${(contrast * 100).toInt() / 100f}",
+                        value = contrast / 3f,
+                        onValueChange = { contrast = it * 3f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Saturation",
+                        valueText = "${(saturation * 100).toInt() / 100f}",
+                        value = saturation / 3f,
+                        onValueChange = { saturation = it * 3f },
+                    )
+                }
             }
-
-            OverlayDropdownPreference(
-                title = "Blend Mode",
-                items = blendModeItems,
-                selectedIndex = blendModeIndex,
-                onSelectedIndexChange = { blendModeIndex = it },
-            )
-
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
-            OverlayDropdownPreference(
-                title = "Highlight",
-                items = containerItems,
-                selectedIndex = containerIndex,
-                onSelectedIndexChange = { containerIndex = it },
-            )
-
-            HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-
-            SliderPreference(
-                title = "Blur Radius",
-                valueText = "${blurRadiusX.toInt()}",
-                value = blurRadiusX / 200f,
-                onValueChange = {
-                    blurRadiusX = it * 200f
-                    blurRadiusY = it * 200f
-                },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Noise",
-                valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
-                value = noiseCoefficient / 0.1f,
-                onValueChange = { noiseCoefficient = it * 0.1f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Brightness",
-                valueText = "${(brightness * 100).toInt() / 100f}",
-                value = (brightness + 1f) / 2f,
-                onValueChange = { brightness = it * 2f - 1f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Contrast",
-                valueText = "${(contrast * 100).toInt() / 100f}",
-                value = contrast / 3f,
-                onValueChange = { contrast = it * 3f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Saturation",
-                valueText = "${(saturation * 100).toInt() / 100f}",
-                value = saturation / 3f,
-                onValueChange = { saturation = it * 3f },
-            )
         }
     }
 }
@@ -282,109 +294,121 @@ private fun ForegroundBlurDemo() {
         Card(
             modifier = Modifier.padding(bottom = 16.dp),
         ) {
-            BgEffectBackground(
-                dynamicBackground = dynamicBackground.value,
-                isFullSize = true,
-                isOs3Effect = isOs3Effect,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp),
-                bgModifier = Modifier.layerBackdrop(backdrop),
-            ) {
-                // Foreground blur text
-                Text(
-                    text = "Foreground Blur\nCOUI Demo",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.Center)
-                        .textureBlur(
-                            backdrop = backdrop,
-                            shape = RoundedCornerShape(0.dp),
-                            blurRadiusX = blurRadiusX,
-                            blurRadiusY = blurRadiusY,
-                            noiseCoefficient = noiseCoefficient,
-                            colors = BlurDefaults.blurColors(
-                                blendColors = currentBlend.second,
-                                brightness = brightness,
-                                contrast = contrast,
-                                saturation = saturation,
-                            ),
-                            contentBlendMode = ComposeBlendMode.DstIn,
-                        ),
-                )
+            CardListGroup {
+                item {
+                    BgEffectBackground(
+                        dynamicBackground = dynamicBackground.value,
+                        isFullSize = true,
+                        isOs3Effect = isOs3Effect,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        bgModifier = Modifier.layerBackdrop(backdrop),
+                    ) {
+                        // Foreground blur text
+                        Text(
+                            text = "Foreground Blur\nCOUI Demo",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center)
+                                .textureBlur(
+                                    backdrop = backdrop,
+                                    shape = RoundedCornerShape(0.dp),
+                                    blurRadiusX = blurRadiusX,
+                                    blurRadiusY = blurRadiusY,
+                                    noiseCoefficient = noiseCoefficient,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = currentBlend.second,
+                                        brightness = brightness,
+                                        contrast = contrast,
+                                        saturation = saturation,
+                                    ),
+                                    contentBlendMode = ComposeBlendMode.DstIn,
+                                ),
+                        )
+                    }
+                }
+                item {
+                    val effectVariantOptions = listOf("OS2", "OS3")
+                    OverlayDropdownPreference(
+                        title = "Effect Variant",
+                        items = effectVariantOptions,
+                        selectedIndex = if (isOs3Effect) 1 else 0,
+                        onSelectedIndexChange = { isOs3Effect = (it == 1) },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
+                    OverlayDropdownPreference(
+                        title = "Blend Mode",
+                        items = blendModeItems,
+                        selectedIndex = blendModeIndex,
+                        onSelectedIndexChange = { blendModeIndex = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+
+                    SwitchPreference(
+                        title = "Dynamic Background",
+                        checked = dynamicBackground.value,
+                        onCheckedChange = { dynamicBackground.value = it },
+                    )
+                }
+                item {
+                    HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+
+                    SliderPreference(
+                        title = "Blur Radius",
+                        valueText = "${blurRadiusX.toInt()}",
+                        value = blurRadiusX / 200f,
+                        onValueChange = {
+                            blurRadiusX = it * 200f
+                            blurRadiusY = it * 200f
+                        },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Noise",
+                        valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
+                        value = noiseCoefficient / 0.1f,
+                        onValueChange = { noiseCoefficient = it * 0.1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Brightness",
+                        valueText = "${(brightness * 100).toInt() / 100f}",
+                        value = (brightness + 1f) / 2f,
+                        onValueChange = { brightness = it * 2f - 1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Contrast",
+                        valueText = "${(contrast * 100).toInt() / 100f}",
+                        value = contrast / 3f,
+                        onValueChange = { contrast = it * 3f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Saturation",
+                        valueText = "${(saturation * 100).toInt() / 100f}",
+                        value = saturation / 3f,
+                        onValueChange = { saturation = it * 3f },
+                    )
+                }
             }
-
-            val effectVariantOptions = listOf("OS2", "OS3")
-            OverlayDropdownPreference(
-                title = "Effect Variant",
-                items = effectVariantOptions,
-                selectedIndex = if (isOs3Effect) 1 else 0,
-                onSelectedIndexChange = { isOs3Effect = (it == 1) },
-            )
-
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
-            OverlayDropdownPreference(
-                title = "Blend Mode",
-                items = blendModeItems,
-                selectedIndex = blendModeIndex,
-                onSelectedIndexChange = { blendModeIndex = it },
-            )
-
-            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
-            SwitchPreference(
-                title = "Dynamic Background",
-                checked = dynamicBackground.value,
-                onCheckedChange = { dynamicBackground.value = it },
-            )
-
-            HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-
-            SliderPreference(
-                title = "Blur Radius",
-                valueText = "${blurRadiusX.toInt()}",
-                value = blurRadiusX / 200f,
-                onValueChange = {
-                    blurRadiusX = it * 200f
-                    blurRadiusY = it * 200f
-                },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Noise",
-                valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
-                value = noiseCoefficient / 0.1f,
-                onValueChange = { noiseCoefficient = it * 0.1f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Brightness",
-                valueText = "${(brightness * 100).toInt() / 100f}",
-                value = (brightness + 1f) / 2f,
-                onValueChange = { brightness = it * 2f - 1f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Contrast",
-                valueText = "${(contrast * 100).toInt() / 100f}",
-                value = contrast / 3f,
-                onValueChange = { contrast = it * 3f },
-                insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
-            )
-
-            SliderPreference(
-                title = "Saturation",
-                valueText = "${(saturation * 100).toInt() / 100f}",
-                value = saturation / 3f,
-                onValueChange = { saturation = it * 3f },
-            )
         }
     }
 }
