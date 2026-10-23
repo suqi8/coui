@@ -590,7 +590,12 @@ internal class PopupListGestureHost {
             mask.attach(target, geometryOf(target), scope)
             true
         } else {
-            mask.exit(scope)
+            // Deliberate deviation from COUI 17, which fades the mask out over a disabled row
+            // (clearSharedMask(true)) and snaps it onto the next enabled row: a pressed mask keeps
+            // its full press and slides onto the disabled row on the travel spring, so a drag never
+            // breaks the mask's motion. The row stays unselectable: no haptic, and releasing over
+            // it selects nothing (onUp checks enabled).
+            if (mask.target != null && !mask.exiting) mask.attach(target, geometryOf(target), scope)
             false
         }
     }

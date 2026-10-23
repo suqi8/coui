@@ -118,51 +118,61 @@ class PopupDragTest {
     }
 
     @Test
-    fun aDisabledRowFadesTheMaskInPlaceAndTheNextRowPressesBackIn() = runComposeUiTest {
+    fun theMaskSlidesAcrossADisabledRowWithoutFading() = runComposeUiTest {
         val host = PopupListGestureHost()
         var picked = -1
         setRows(host, enabled = listOf(true, false, true), onPick = { picked = it })
         mainClock.autoAdvance = false
         val rows = host.sortedItems()
+        val distance = rows[1].top - rows[0].top
 
         onRoot().performTouchInput { down(host.centerOf(0)) }
         mainClock.advanceTimeBy(400)
         assertEquals(1f, host.mask.press, 0.01f)
 
-        // Finger onto the disabled row: COUITouchRecyclerView.clearSharedMask(true) — the mask
-        // keeps its bounds on row 0 and only its press fades.
+        // Deviation from COUI (which fades the mask over a disabled row and snaps it onto the next
+        // enabled row): the pressed mask rides the travel spring onto the disabled row and on to
+        // row 2, every frame within one spring step, at full press.
+        // A re-target mid-travel restarts the spring towards a target up to ~1.25 rows away.
+        val maxStep = distance * 1.25f * maxTravelStep
+        val tops = mutableListOf<Float>()
+        var previous = host.sample().top
+        fun advance(frames: Int) = repeat(frames) {
+            mainClock.advanceTimeByFrame()
+            val now = host.sample()
+            tops += now.top
+            assertTrue(
+                abs(now.top - previous) <= maxStep,
+                "frame ${tops.size} jumped ${now.top - previous}px of a ${distance}px row: $tops",
+            )
+            assertTrue(now.press >= 0.99f, "frame ${tops.size}: the press never drops (${now.press})")
+            previous = now.top
+        }
         onRoot().performTouchInput { moveTo(host.centerOf(1)) }
-        var last = host.sample()
-        repeat(6) {
-            mainClock.advanceTimeByFrame()
-            val now = host.sample()
-            assertEquals(rows[0].top, now.top, "frame $it over the disabled row: mask stays put")
-            assertTrue(now.press <= last.press + 1e-4f, "frame $it: the press only fades")
-            last = now
-        }
-        assertTrue(last.press in 0.05f..0.95f, "the mask is mid-fade (${last.press})")
-
-        // Finger onto row 2: attachSharedMaskToView after an exit snaps to the row and presses in
-        // from what is left of the fade, never from a full press.
+        advance(4)
         onRoot().performTouchInput { moveTo(host.centerOf(2)) }
-        mainClock.advanceTimeByFrame()
-        val entered = host.sample()
-        assertEquals(rows[2].top, entered.top, "mask moved to row 2")
-        assertTrue(
-            entered.press <= last.press + maxTravelStep,
-            "press resumed from the fade (${last.press} -> ${entered.press})",
-        )
-        var press = entered.press
-        repeat(20) {
-            mainClock.advanceTimeByFrame()
-            val now = host.sample()
-            assertEquals(rows[2].top, now.top, "frame $it: no travel after the snap")
-            assertTrue(now.press - press <= maxTravelStep, "frame $it: press steps smoothly")
-            press = now.press
-        }
+        advance(20)
+        assertEquals(rows[2].top, previous, 0.5f, "mask settles on row 2: $tops")
+
         onRoot().performTouchInput { up() }
         mainClock.advanceTimeBy(500)
         assertEquals(2, picked)
+    }
+
+    @Test
+    fun releasingOverADisabledRowSelectsNothing() = runComposeUiTest {
+        val host = PopupListGestureHost()
+        var picked = -1
+        setRows(host, enabled = listOf(true, false, true), onPick = { picked = it })
+        onRoot().performTouchInput {
+            down(host.centerOf(0))
+            moveTo(host.centerOf(1))
+        }
+        mainClock.advanceTimeBy(300)
+        assertEquals(host.sortedItems()[1].top, host.mask.current()?.top, "the mask followed onto the disabled row")
+        onRoot().performTouchInput { up() }
+        mainClock.advanceTimeBy(500)
+        assertEquals(-1, picked)
     }
 
     @Test
