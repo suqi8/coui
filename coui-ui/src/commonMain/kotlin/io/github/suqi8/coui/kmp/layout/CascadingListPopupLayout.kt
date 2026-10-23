@@ -59,6 +59,7 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
@@ -67,6 +68,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownHorizontalItems
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.LocalPopupGestureRelay
 import io.github.suqi8.coui.kmp.basic.LocalPopupListRole
 import io.github.suqi8.coui.kmp.basic.PopupCornerRadius
@@ -463,6 +465,7 @@ internal fun CascadingListPopupLayout(
             LocalDismissState provides { currentOnDismiss() },
             LocalMaterialBackdrop provides null,
             LocalPopupMaterialBlur provides null,
+            LocalCardListPosition provides CardListPosition.None,
             LocalPopupGestureRelay provides gestureRelay,
         ) {
             val dimColor = COUITheme.colorScheme.windowDimming

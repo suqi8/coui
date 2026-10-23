@@ -29,6 +29,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
 import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
@@ -50,7 +51,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param startAction The [Composable] content on the start side of the [WindowSpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowSpinnerPreference].
  * @param insideMargin The [PaddingValues] to be applied inside the [WindowSpinnerPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param maxHeight The maximum height of the dropdown popup.
  * @param enabled Whether the [WindowSpinnerPreference] is enabled.
  * @param showValue Whether to show the value of the [WindowSpinnerPreference].
@@ -70,7 +72,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -122,7 +124,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -162,7 +164,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     maxHeight: Dp? = null,
     enabled: Boolean = true,
     showValue: Boolean = true,
@@ -285,7 +287,8 @@ fun WindowSpinnerPreference(
  * @param startAction the action to be shown at the start side of the [WindowSpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowSpinnerPreference].
  * @param insideMargin the [PaddingValues] to be applied inside the [WindowSpinnerPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param enabled whether the [WindowSpinnerPreference] is enabled.
  * @param showValue whether to show the value of the [WindowSpinnerPreference].
  * @param onExpandedChange the callback to be invoked when the expanded state of the [WindowSpinnerPreference] changes.
@@ -306,7 +309,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     enabled: Boolean = true,
     showValue: Boolean = true,
     collapseOnSelection: Boolean = true,
@@ -361,7 +364,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     enabled: Boolean = true,
     showValue: Boolean = true,
     collapseOnSelection: Boolean = true,
@@ -403,7 +406,7 @@ fun WindowSpinnerPreference(
     startAction: @Composable (() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     enabled: Boolean = true,
     showValue: Boolean = true,
     collapseOnSelection: Boolean = entries.size <= 1,

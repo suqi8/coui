@@ -25,6 +25,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.CardListPosition
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.RangeSlider
 import io.github.suqi8.coui.kmp.basic.Slider
 import io.github.suqi8.coui.kmp.basic.SliderColors
@@ -76,7 +77,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param material Whether the [Slider] draws the COUI 17 material effects (the glass thumb while pressed
  *   and the touch spotlight), see the `material` parameter of [Slider].
  * @param insideMargin The margin inside the [SliderPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  */
 @Composable
 @NonRestartableComposable
@@ -107,7 +109,7 @@ fun SliderPreference(
     magnetThreshold: Float = 0.02f,
     material: Boolean = true,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
 ) {
     val currentOnValueChange by rememberUpdatedState(onValueChange)
     val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
@@ -211,7 +213,8 @@ fun SliderPreference(
  * @param magnetThreshold The magnetic snap threshold as a fraction (0.0 to 1.0). When the slider value is within this
  *   distance from a key point, it will snap to that point. Default is 0.02 (2%). Only applies when [keyPoints] is set.
  * @param insideMargin The margin inside the [RangeSliderPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  */
 @Composable
 @NonRestartableComposable
@@ -240,7 +243,7 @@ fun RangeSliderPreference(
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
 ) {
     val currentOnValueChange by rememberUpdatedState(onValueChange)
     val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)

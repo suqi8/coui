@@ -22,6 +22,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.CardListPosition
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.ArrowRight
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -38,7 +39,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param bottomAction The [Composable] content at the bottom of the [ArrowPreference].
  * @param modifier The modifier to be applied to the [ArrowPreference].
  * @param insideMargin The margin inside the [ArrowPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [ArrowPreference] is clickable.
  */
@@ -54,7 +56,7 @@ fun ArrowPreference(
     endActions: @Composable RowScope.() -> Unit = {},
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     onClick: (() -> Unit)? = null,
     holdDownState: Boolean = false,
     enabled: Boolean = true,

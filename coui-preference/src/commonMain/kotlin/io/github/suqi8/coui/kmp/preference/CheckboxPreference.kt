@@ -22,6 +22,7 @@ import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
@@ -45,7 +46,8 @@ import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
  * @param checkboxLocation The location of checkbox, [CheckboxLocation.Start] or [CheckboxLocation.End].
  * @param bottomAction The [Composable] content at the bottom of the [CheckboxPreference].
  * @param insideMargin The margin inside the [CheckboxPreference].
- * @param cardListPosition The row's position inside its card group. Rounded outer edges receive extra padding.
+ * @param cardListPosition The row's position inside its card group, by default the one a
+ *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [CheckboxPreference] is clickable.
  */
@@ -65,7 +67,7 @@ fun CheckboxPreference(
     checkboxLocation: CheckboxLocation = CheckboxLocation.Start,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
 ) {

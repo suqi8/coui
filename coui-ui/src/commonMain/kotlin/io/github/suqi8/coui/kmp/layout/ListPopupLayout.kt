@@ -37,8 +37,10 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.ListPopupContent
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.PopupGravityPath
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
@@ -332,6 +334,7 @@ internal fun ListPopupLayout(
                             LocalDismissState provides requestDismiss,
                             LocalMaterialBackdrop provides null,
                             LocalPopupMaterialBlur provides null,
+                            LocalCardListPosition provides CardListPosition.None,
                         ) {
                             content()
                         }

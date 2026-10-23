@@ -45,7 +45,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param bottomAction The [Composable] content at the bottom of the [BasicComponent].
  * @param insideMargin The margin inside the [BasicComponent].
  * @param cardListPosition The row's position inside its card group. Rounded outer edges receive an
- *   extra [CardListPosition.HeadOrTailPadding]. Defaults to [CardListPosition.None].
+ *   extra [CardListPosition.HeadOrTailPadding]. Defaults to the position a [CardListGroup] provides ([CardListPosition.None] outside one).
  * @param onClick The callback when the [BasicComponent] is clicked.
  * @param onClickLabel Optional label describing the click action for accessibility services.
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
@@ -66,7 +66,7 @@ fun BasicComponent(
     endActions: @Composable (RowScope.() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     onClick: (() -> Unit)? = null,
     onClickLabel: String? = null,
     role: Role? = null,
@@ -117,7 +117,7 @@ fun BasicComponent(
  * @param insideMargin The margin inside the [BasicComponent].
  * @param cardListPosition The row's position inside its card group. Rounded outer edges receive an
  *   extra [CardListPosition.HeadOrTailPadding], so a standalone row is 4dp taller than a middle row
- *   and a head/tail row is 2dp taller. Defaults to [CardListPosition.None] (no extra padding).
+ *   and a head/tail row is 2dp taller. Defaults to the position a [CardListGroup] provides ([CardListPosition.None], no extra padding, outside one).
  * @param onClick The callback when the [BasicComponent] is clicked.
  * @param onClickLabel Optional label describing the click action for accessibility services.
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
@@ -135,7 +135,7 @@ fun BasicComponent(
     endActions: @Composable (RowScope.() -> Unit)? = null,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
-    cardListPosition: CardListPosition = CardListPosition.None,
+    cardListPosition: CardListPosition = LocalCardListPosition.current,
     onClick: (() -> Unit)? = null,
     onClickLabel: String? = null,
     role: Role? = null,

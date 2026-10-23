@@ -75,6 +75,8 @@ import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.anim.folmeSpring
+import io.github.suqi8.coui.kmp.basic.CardListPosition
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
@@ -330,10 +332,10 @@ internal fun BottomSheetContentLayout(
                 backgroundModifier = backgroundModifier,
                 materialStroke = materialStroke,
                 startAction = startAction?.let { action ->
-                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null) { action() } }
+                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null, LocalCardListPosition provides CardListPosition.None) { action() } }
                 },
                 endAction = endAction?.let { action ->
-                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null) { action() } }
+                    { CompositionLocalProvider(LocalDismissState provides requestDismiss, LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null, LocalCardListPosition provides CardListPosition.None) { action() } }
                 },
                 content = {
                     // The page backdrop lies behind the sheet; buttons on it keep their fill.
@@ -341,6 +343,7 @@ internal fun BottomSheetContentLayout(
                         LocalDismissState provides requestDismiss,
                         LocalMaterialBackdrop provides null,
                         LocalPopupMaterialBlur provides null,
+                        LocalCardListPosition provides CardListPosition.None,
                     ) {
                         content()
                     }

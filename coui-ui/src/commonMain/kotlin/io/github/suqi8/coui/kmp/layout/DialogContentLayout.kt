@@ -60,6 +60,8 @@ import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
+import io.github.suqi8.coui.kmp.basic.CardListPosition
+import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
@@ -293,6 +295,7 @@ internal fun DialogContentLayout(
                     LocalMaterialBackdrop provides null,
                     // A menu opened on the panel would blur the page beneath it, not the panel.
                     LocalPopupMaterialBlur provides null,
+                    LocalCardListPosition provides CardListPosition.None,
                 ) {
                     content()
                 }
