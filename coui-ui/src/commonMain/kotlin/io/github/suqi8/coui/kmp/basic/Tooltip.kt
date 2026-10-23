@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BasicTooltipDefaults
 import androidx.compose.foundation.Canvas
@@ -37,12 +36,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,19 +76,24 @@ import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -109,12 +116,14 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.jvm.JvmInline
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -213,7 +222,83 @@ internal class TooltipLayoutState(density: Float) {
     var arrowFollowsOffset: Boolean = false
     var metrics: TooltipMetrics = TooltipMetrics.of(density, 13f, 13f, 13f, 13f)
     var fallbackSide: TooltipSide? = null
+    var anchorContainer: TooltipAnchorContainer? = null
+    private val density = density
+
+    /** `WindowSpacingControlHelper.getAnchorViewTypeEnum` + `getAnchorViewSpacing` for [anchor]. */
+    fun anchorSpacing(anchor: IntRect): TooltipAnchorSpacing {
+        val container = anchorContainer ?: return TooltipAnchorSpacing.Normal
+        return when (container.type) {
+            TooltipAnchorType.Toolbar -> TooltipAnchorSpacing.toolbar(density)
+
+            TooltipAnchorType.Navigation -> {
+                val coordinates = container.coordinates?.takeIf { it.isAttached }
+                val containerTop = coordinates?.positionInWindow()?.y?.roundToInt() ?: anchor.top
+                TooltipAnchorSpacing.navigation(density, containerTop, anchor.top)
+            }
+
+            TooltipAnchorType.Normal -> TooltipAnchorSpacing.Normal
+        }
+    }
 }
+
+/**
+ * The kind of container a tooltip anchor sits in, which changes the anchor gap the way
+ * `WindowSpacingControlHelper.AnchorViewTypeEnum` does: an anchor inside a toolbar ([Toolbar]) or a
+ * bottom navigation bar ([Navigation]) pulls its bubble window into the bar instead of keeping the
+ * plain 5.4dp gap.
+ */
+enum class TooltipAnchorType {
+    /** A plain anchor (`NORMAL`). */
+    Normal,
+
+    /** An anchor inside a toolbar (`TOOLBAR`, `coui_tooltips_toolbar_margin` -10.1dp). */
+    Toolbar,
+
+    /** An anchor inside a bottom navigation bar (`NAVIGATION`, `coui_tooltips_navigation_margin` -3.3dp). */
+    Navigation,
+}
+
+/**
+ * A toolbar / bottom navigation container that [TooltipBox] anchors inside it detect, the Compose
+ * stand-in for COUI walking up the View tree to a `Toolbar` / `BottomNavigationView`. [TopAppBar],
+ * [SmallTopAppBar] and [NavigationBar] provide one; wrap a custom bar with
+ * [ProvideTooltipAnchorContainer] to get the same spacing.
+ */
+@Stable
+class TooltipAnchorContainer internal constructor(val type: TooltipAnchorType) {
+    internal var coordinates: LayoutCoordinates? = null
+}
+
+/** The [TooltipAnchorContainer] tooltip anchors are placed in, or null for a plain anchor. */
+val LocalTooltipAnchorContainer = staticCompositionLocalOf<TooltipAnchorContainer?> { null }
+
+/**
+ * Marks [content] as a toolbar / navigation container for the tooltips anchored inside it (see
+ * [TooltipAnchorType]).
+ *
+ * @param type the container type.
+ * @param modifier the modifier applied to the container wrapper.
+ * @param content the container content.
+ */
+@Composable
+fun ProvideTooltipAnchorContainer(
+    type: TooltipAnchorType,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val container = rememberTooltipAnchorContainer(type)
+    Box(modifier = modifier.tooltipAnchorContainer(container), propagateMinConstraints = true) {
+        CompositionLocalProvider(LocalTooltipAnchorContainer provides container, content = content)
+    }
+}
+
+/** Remembers a [TooltipAnchorContainer] of [type]; track its bounds with [tooltipAnchorContainer]. */
+@Composable
+internal fun rememberTooltipAnchorContainer(type: TooltipAnchorType): TooltipAnchorContainer = remember(type) { TooltipAnchorContainer(type) }
+
+/** Records the bounds of [container] (needed by [TooltipAnchorType.Navigation]). */
+internal fun Modifier.tooltipAnchorContainer(container: TooltipAnchorContainer): Modifier = onGloballyPositioned { container.coordinates = it }
 
 private class CouiTooltipScopeImpl(
     override val positioning: TooltipAnchorPosition,
@@ -235,6 +320,7 @@ private class CouiTooltipPositionProvider(private val layoutState: TooltipLayout
         if (layoutState.viewport != windowSize) layoutState.viewport = windowSize
         val requested = layoutState.fallbackSide ?: layoutState.position.toTooltipSide(layoutDirection)
         val placement = calculateTooltipPlacement(
+            spacing = layoutState.anchorSpacing(anchorBounds),
             anchor = anchorBounds,
             viewport = windowSize,
             windowSize = popupContentSize,
@@ -286,15 +372,43 @@ private class TooltipStateImpl(
     override val isPersistent: Boolean,
     private val mutatorMutex: MutatorMutex,
 ) : TooltipState {
-    override val transition: MutableTransitionState<Boolean> =
-        MutableTransitionState(initialIsVisible)
+    private var transitionState by mutableStateOf(MutableTransitionState(initialIsVisible))
+
+    override val transition: MutableTransitionState<Boolean>
+        get() = transitionState
+
+    /**
+     * Set by the COUI [TooltipBox] while its bubble is on screen, so the popup stays composed through
+     * the 320ms exit, which no Transition consumes.
+     */
+    var exitHold by mutableStateOf(false)
+
+    /** Counts [dismiss] calls; a second dismiss during the exit removes the tooltip at once. */
+    var dismissRequests by mutableIntStateOf(0)
+        private set
 
     override val isVisible: Boolean
         // Keep the popup composed while shown or still animating. Gating on currentState would
         // hard-cut the exit when a dismiss interrupts an unfinished enter, since currentState only
         // flips to true once the enter has settled; !isIdle keeps it through the reversal so the
         // exit can animate out.
-        get() = transition.targetState || !transition.isIdle
+        get() = transition.targetState || !transition.isIdle || exitHold
+
+    /** Ends the COUI exit: drops the hold and snaps the transition to hidden. */
+    fun finishExit() {
+        exitHold = false
+        val current = transitionState
+        if (!current.targetState && (current.currentState || !current.isIdle)) {
+            transitionState = MutableTransitionState(false)
+        }
+    }
+
+    /** `COUIToolTips.dismissImmediately`: hides the tooltip without the exit animation. */
+    fun dismissImmediately() {
+        transition.targetState = false
+        if (isPersistent) job?.cancel()
+        finishExit()
+    }
 
     /** continuation used to clean up */
     private var job: (CancellableContinuation<Unit>)? = null
@@ -324,6 +438,7 @@ private class TooltipStateImpl(
 
     override fun dismiss() {
         transition.targetState = false
+        dismissRequests++
         if (isPersistent) {
             job?.cancel()
         }
@@ -353,10 +468,18 @@ fun rememberTooltipState(
 }
 
 /** `COUIToolTips.animateSpring` scale spring: COUISpringForce bounce 0.2 / response 0.4. */
-private val TooltipScaleSpring = spring(dampingRatio = 0.8f, stiffness = 246.74f, visibilityThreshold = 0.01f)
+private val TooltipScaleSpring = spring(dampingRatio = 0.8f, stiffness = 246.74f, visibilityThreshold = 0.0001f)
 
 /** `COUIToolTips.animateSpring` alpha spring: COUISpringForce bounce 0.2 / response 0.3. */
-private val TooltipAlphaSpring = spring(dampingRatio = 0.8f, stiffness = 438.65f, visibilityThreshold = 0.01f)
+private val TooltipAlphaSpring = spring(dampingRatio = 0.8f, stiffness = 438.65f, visibilityThreshold = 0.0001f)
+
+/** `COUIToolTips.animateExit`: the window is torn down 320ms after the exit starts (`mCheckAnimateExit`). */
+private const val TOOLTIP_EXIT_CUT_MILLIS = 320L
+
+/** Hides [this] at once (COUI `dismissImmediately`); falls back to [TooltipState.dismiss] for custom states. */
+private fun TooltipState.dismissImmediately() {
+    if (this is TooltipStateImpl) dismissImmediately() else dismiss()
+}
 
 /**
  * A COUI 17 tooltip (`COUIToolTips`) anchored to [content]: a [Tooltip], [IconTooltip] or
@@ -399,6 +522,7 @@ fun TooltipBox(
 ) {
     val density = LocalDensity.current
     val layoutState = remember { TooltipLayoutState(density.density) }
+    layoutState.anchorContainer = LocalTooltipAnchorContainer.current
     layoutState.position = placement
     layoutState.showArrow = showArrow
     layoutState.arrowFollowsOffset = arrowFollowsOffset
@@ -414,7 +538,12 @@ fun TooltipBox(
         positionProvider = positionProvider,
         tooltip = { TooltipAnimatedContent(state = state, layoutState = layoutState) { scope.tooltip() } },
         state = state,
-        modifier = modifier.onGloballyPositioned { anchorCoordinates = it },
+        modifier = modifier.onGloballyPositioned { coordinates ->
+            anchorCoordinates = coordinates
+            // COUIToolTips.refreshWhileLayoutChange: an anchor that is no longer in its visible rect
+            // (scrolled off, clipped away or collapsed to zero size) dismisses the tooltip at once.
+            if (state.isVisible && !coordinates.isVisibleInWindow()) state.dismissImmediately()
+        },
         properties = PopupProperties(
             focusable = dismissOnTouchOutside,
             dismissOnBackPress = dismissOnTouchOutside,
@@ -423,11 +552,25 @@ fun TooltipBox(
         enableUserInput = enableUserInput,
         content = content,
     )
+
+    // COUI dismisses a tooltip whose anchor is gone; an anchor leaving the composition takes the
+    // popup with it, so reset the state without an exit animation.
+    DisposableEffect(state) { onDispose { state.dismissImmediately() } }
+}
+
+/** Whether the anchor still has a visible, non-empty rect in its window (`UIUtil.isInVisibleRect`). */
+private fun LayoutCoordinates.isVisibleInWindow(): Boolean {
+    if (!isAttached || size.width <= 0 || size.height <= 0) return false
+    val bounds = boundsInWindow()
+    return bounds.width > 0f && bounds.height > 0f
 }
 
 /**
- * `COUIToolTips.animateSpring`: scale and alpha springs from 0 to 1 on enter and back to 0 on exit,
- * pivoted at the arrow tip. The shadow is dropped and touches are blocked while the tooltip exits.
+ * `COUIToolTips.animateSpring`: every enter and every exit restarts a 0 -> 1 progress spring for the
+ * scale and one for the alpha (`setStartValue(0)`), mapped to 0 -> 1 on enter and 1 -> 0 on exit, so
+ * an exit that interrupts an enter jumps back to full size first. The window is pivoted at the arrow
+ * tip, drops its shadow and ignores touches while exiting, and is removed 320ms after the exit starts
+ * (`mCheckAnimateExit`), or at once on a second dismiss.
  */
 @Composable
 private fun TooltipAnimatedContent(
@@ -435,24 +578,51 @@ private fun TooltipAnimatedContent(
     layoutState: TooltipLayoutState,
     content: @Composable () -> Unit,
 ) {
-    val transition = rememberTransition(state.transition, label = "Tooltip")
-    val scale by transition.animateFloat(transitionSpec = { TooltipScaleSpring }, label = "TooltipScale") {
-        if (it) 1f else 0f
+    val impl = state as? TooltipStateImpl
+    val scale = remember { Animatable(0f) }
+    val alpha = remember { Animatable(0f) }
+    val showing = state.transition.targetState
+    var exitStartRequests by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(showing) {
+        if (showing) {
+            impl?.exitHold = true
+            exitStartRequests = -1
+            launch {
+                alpha.snapTo(0f)
+                alpha.animateTo(1f, TooltipAlphaSpring)
+            }
+            scale.snapTo(0f)
+            scale.animateTo(1f, TooltipScaleSpring)
+        } else {
+            exitStartRequests = impl?.dismissRequests ?: 0
+            launch {
+                alpha.snapTo(1f)
+                alpha.animateTo(0f, TooltipAlphaSpring)
+            }
+            launch {
+                scale.snapTo(1f)
+                scale.animateTo(0f, TooltipScaleSpring)
+            }
+            delay(TOOLTIP_EXIT_CUT_MILLIS)
+            impl?.finishExit()
+        }
     }
-    val alpha by transition.animateFloat(transitionSpec = { TooltipAlphaSpring }, label = "TooltipAlpha") {
-        if (it) 1f else 0f
+    // COUIToolTips.dismiss: a dismiss while the exit runs tears the window down immediately.
+    val requests = impl?.dismissRequests ?: 0
+    LaunchedEffect(requests) {
+        if (!state.transition.targetState && exitStartRequests >= 0 && requests > exitStartRequests) {
+            impl?.finishExit()
+        }
     }
-    val exiting = !state.transition.targetState
     Box(
         modifier = Modifier
             .graphicsLayer {
-                val s = scale.coerceAtLeast(0f)
-                scaleX = s
-                scaleY = s
-                this.alpha = alpha.coerceIn(0f, 1f)
+                scaleX = scale.value
+                scaleY = scale.value
+                this.alpha = alpha.value.coerceIn(0f, 1f)
                 transformOrigin = layoutState.placement?.pivot ?: TransformOrigin.Center
             }
-            .then(if (exiting) Modifier.blockPointerInput() else Modifier),
+            .then(if (!showing) Modifier.blockPointerInput() else Modifier),
     ) {
         content()
     }
@@ -470,7 +640,6 @@ private fun Modifier.blockPointerInput(): Modifier = pointerInput(Unit) {
 
 private const val TOOLTIP_LONG_PRESS_LABEL = "Show tooltip"
 private const val TOOLTIP_PANE_TITLE = "Tooltip"
-private const val TOOLTIP_CLOSE_DESCRIPTION = "Close this tip"
 
 /**
  * The tooltip host. Forked from the experimental foundation `BasicTooltipBox` so the mouse hover
@@ -643,73 +812,98 @@ fun TooltipScope.TooltipBubble(
     val showing = couiScope?.state?.transition?.targetState ?: true
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
 
-    Box(
-        modifier = modifier
-            .tooltipBubbleSize(layoutState, metrics, maxWidthPx, minWidthPx, fixedWidth)
-            .then(
-                if (showing) {
-                    Modifier.dropShadow(shape = shape, shadow = if (isDark) TooltipShadowDark else TooltipShadowLight)
-                } else {
-                    Modifier
-                },
-            )
-            .background(color = containerColor, shape = shape)
-            .padding(horizontal = insetLeft, vertical = insetTop),
-        propagateMinConstraints = true,
-    ) {
+    val shadow = if (showing) {
+        Modifier.dropShadow(shape = shape, shadow = if (isDark) TooltipShadowDark else TooltipShadowLight)
+    } else {
+        Modifier
+    }
+    val bubble: @Composable () -> Unit = {
         Box(
-            modifier = Modifier
-                .clip(SquircleShape(cornerRadius, TooltipDefaults.CornerWeight))
-                .semantics(mergeDescendants = false) { isTraversalGroup = true },
+            modifier = shadow
+                .background(color = containerColor, shape = shape)
+                .padding(horizontal = insetLeft, vertical = insetTop),
+            propagateMinConstraints = true,
         ) {
-            content()
+            Box(
+                modifier = Modifier
+                    .clip(SquircleShape(cornerRadius, TooltipDefaults.CornerWeight))
+                    .semantics(mergeDescendants = false) { isTraversalGroup = true },
+            ) {
+                content()
+            }
         }
+    }
+
+    // Only the placed subcomposition carries semantics; the measure-only ones are cleared.
+    var placedSlot by remember { mutableStateOf(TooltipBubbleSlot.Main) }
+    val placedContent: @Composable () -> Unit = { TooltipBubbleSlotContent(probe = false, bubble = bubble) }
+    val probeContent: @Composable () -> Unit = { TooltipBubbleSlotContent(probe = true, bubble = bubble) }
+
+    // COUIToolTips.sizePopupWindow + the height half of refreshCoordinated, measured for real: the
+    // window width is capped at the style max (and the room beside the anchor for a left / right
+    // tooltip); a left / right tooltip that would reach the window bottom is re-measured above the
+    // anchor at full width; a tooltip that fits neither above nor below is re-measured at the height of
+    // the larger side, where its content scrolls.
+    SubcomposeLayout(modifier = modifier) { constraints ->
+        var finalSlot = TooltipBubbleSlot.Main
+
+        fun measure(slot: TooltipBubbleSlot, maxWidth: Int, maxHeight: Int): Placeable {
+            val width = max(min(maxWidth, constraints.maxWidth), 0)
+            val minWidth = if (fixedWidth) width else min(minWidthPx, width)
+            finalSlot = slot
+            val slotContent = if (slot == placedSlot) placedContent else probeContent
+            return subcompose(slot, slotContent).first().measure(
+                Constraints(minWidth = max(minWidth, 0), maxWidth = width, minHeight = 0, maxHeight = maxHeight),
+            )
+        }
+
+        val maxHeight = constraints.maxHeight
+        val anchor = layoutState?.anchorBounds
+        val viewport = layoutState?.viewport ?: IntSize.Zero
+        val placeable = if (layoutState == null || anchor == null || viewport == IntSize.Zero) {
+            measure(TooltipBubbleSlot.Main, maxWidthPx + metrics.insetLeft + metrics.insetRight, maxHeight)
+        } else {
+            val spacing = layoutState.anchorSpacing(anchor)
+            var side = layoutState.position.toTooltipSide(layoutDirection)
+            var fallback: TooltipSide? = null
+            var sidePlaceable: Placeable? = null
+            if (side == TooltipSide.Left || side == TooltipSide.Right) {
+                val sideWidth = tooltipMaxWindowWidth(side, anchor, viewport, metrics, maxWidthPx, spacing)
+                val measured = measure(TooltipBubbleSlot.Main, sideWidth, maxHeight)
+                if (tooltipSideFallsBackToVertical(anchor, viewport, metrics, measured.height)) {
+                    side = TooltipSide.Above
+                    fallback = TooltipSide.Above
+                } else {
+                    sidePlaceable = measured
+                }
+            }
+            layoutState.fallbackSide = fallback
+            sidePlaceable ?: run {
+                val width = tooltipMaxWindowWidth(side, anchor, viewport, metrics, maxWidthPx, spacing)
+                val slot = if (fallback != null) TooltipBubbleSlot.Fallback else TooltipBubbleSlot.Main
+                val measured = measure(slot, width, maxHeight)
+                val cap = tooltipVerticalSide(side, anchor, viewport, measured.height, spacing).second
+                if (cap != null && cap < measured.height) {
+                    measure(TooltipBubbleSlot.Shrunk, width, max(cap, 0))
+                } else {
+                    measured
+                }
+            }
+        }
+        if (placedSlot != finalSlot) placedSlot = finalSlot
+        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
     }
 }
 
-/**
- * `COUIToolTips.sizePopupWindow` + the height half of `refreshCoordinated`: caps the window width at
- * the style max (and the room beside the anchor for a left / right tooltip, which falls back to above
- * when it would reach the window bottom), and caps the height at the larger side when the tooltip fits
- * neither above nor below.
- */
-private fun Modifier.tooltipBubbleSize(
-    layoutState: TooltipLayoutState?,
-    metrics: TooltipMetrics,
-    styleMaxWidth: Int,
-    minWidth: Int,
-    fixedWidth: Boolean,
-): Modifier = layout { measurable, constraints ->
-    var maxWidth = min(styleMaxWidth + metrics.insetLeft + metrics.insetRight, constraints.maxWidth)
-    var maxHeight = constraints.maxHeight
-    val anchor = layoutState?.anchorBounds
-    val viewport = layoutState?.viewport ?: IntSize.Zero
-    if (layoutState != null && anchor != null && viewport != IntSize.Zero) {
-        var side = layoutState.position.toTooltipSide(layoutDirection)
-        var fallback: TooltipSide? = null
-        if (side == TooltipSide.Left || side == TooltipSide.Right) {
-            val sideWidth = min(tooltipMaxWindowWidth(side, anchor, viewport, metrics, styleMaxWidth), constraints.maxWidth)
-            val height = measurable.maxIntrinsicHeight(sideWidth)
-            if (tooltipSideFallsBackToVertical(anchor, viewport, metrics, height)) {
-                side = TooltipSide.Above
-                fallback = TooltipSide.Above
-            } else {
-                maxWidth = sideWidth
-            }
-        }
-        if (side == TooltipSide.Above || side == TooltipSide.Below) {
-            maxWidth = min(tooltipMaxWindowWidth(side, anchor, viewport, metrics, styleMaxWidth), constraints.maxWidth)
-            val height = measurable.maxIntrinsicHeight(maxWidth)
-            val cap = tooltipVerticalSide(side, anchor, viewport, height).second
-            if (cap != null) maxHeight = min(maxHeight, max(cap, 0))
-        }
-        layoutState.fallbackSide = fallback
+/** The [TooltipBubble] subcompositions: the first measure, the side fallback and the shrunk window. */
+private enum class TooltipBubbleSlot { Main, Fallback, Shrunk }
+
+/** One [TooltipBubble] subcomposition; a measure-only [probe] keeps out of the semantics tree. */
+@Composable
+private fun TooltipBubbleSlotContent(probe: Boolean, bubble: @Composable () -> Unit) {
+    Box(modifier = if (probe) Modifier.clearAndSetSemantics {} else Modifier, propagateMinConstraints = true) {
+        bubble()
     }
-    val minW = if (fixedWidth) maxWidth else min(minWidth, maxWidth)
-    val placeable = measurable.measure(
-        Constraints(minWidth = max(minW, 0), maxWidth = max(maxWidth, 0), minHeight = 0, maxHeight = maxHeight),
-    )
-    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
 }
 
 /**
@@ -1110,12 +1304,13 @@ private fun TooltipCloseIcon(
     modifier: Modifier = Modifier,
 ) {
     val base = LocalViewConfiguration.current
+    val description = tooltipCloseDescription(Locale.current)
     val configuration = remember(base) { ExpandedTouchTargetConfiguration(base, TooltipDefaults.CloseIconTouchTarget) }
     CompositionLocalProvider(LocalViewConfiguration provides configuration) {
         Canvas(
             modifier = modifier
                 .size(TooltipDefaults.CloseIconSize)
-                .semantics { contentDescription = TOOLTIP_CLOSE_DESCRIPTION }
+                .semantics { contentDescription = description }
                 .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick),
         ) {
             val unit = size.width / 18f
@@ -1129,6 +1324,73 @@ private fun TooltipCloseIcon(
         }
     }
 }
+
+/**
+ * `@string/coui_tool_tips_delete_icon_description` in [locale], taken from the COUI `values-*`
+ * resources and resolved the way Android picks a `values-<lang>[-r<REGION>]` folder (English
+ * otherwise).
+ */
+internal fun tooltipCloseDescription(locale: Locale): String {
+    val region = locale.region.uppercase()
+    return when (locale.language.lowercase()) {
+        "zh" -> if (locale.script.equals("Hant", ignoreCase = true) || region == "HK" || region == "TW" || region == "MO") {
+            "關閉提示"
+        } else {
+            "关闭提示"
+        }
+
+        "es" -> if (region == "MX") "Cerrar esta sugerencia" else "Cerrar este consejo"
+
+        "pt" -> if (region == "BR") "Fechar dica" else TOOLTIP_CLOSE_DESCRIPTION_DEFAULT
+
+        "ar" -> "إغلاق هذا التلميح"
+
+        "bn" -> "এই টিপটি বন্ধ করুন"
+
+        "bo" -> "གསལ་འདེབས་ཁ་རྒྱག"
+
+        "de" -> "Diesen Tipp schließen"
+
+        "fr" -> "Fermer cette info-bulle"
+
+        "hi" -> "इस सुझाव को बंद करें"
+
+        "in", "id" -> "Tutup kiat ini"
+
+        "it" -> "Chiudi questo suggerimento"
+
+        "ja" -> "このヒントを閉じる"
+
+        "km" -> "បិទគន្លឹះនេះ"
+
+        "ko" -> "이 팁을 닫습니다"
+
+        "lo" -> "​ປິດ​ເຄັດ​ລັບ​ນີ້"
+
+        "ms" -> "Tutup petua ini"
+
+        "my" -> "ဤအကြံပြုချက်ကို ပိတ်ပါ"
+
+        "ne" -> "यो सुझाव बन्द गर्नुहोस्"
+
+        "nl" -> "Deze tip sluiten"
+
+        "ru" -> "Закрыть совет"
+
+        "th" -> "ปิดเคล็ดลับนี้"
+
+        "tl", "fil" -> "Isara ang tip na ito"
+
+        "ug" -> "ئەسكەرتمىنى ئېتىش"
+
+        "vi" -> "Đóng mẹo này"
+
+        else -> TOOLTIP_CLOSE_DESCRIPTION_DEFAULT
+    }
+}
+
+/** `@string/coui_tool_tips_delete_icon_description` in `values/`. */
+private const val TOOLTIP_CLOSE_DESCRIPTION_DEFAULT = "Close this tip"
 
 private const val TOOLTIP_CLOSE_CROSS_PATH =
     "M9,7.87 L6.6,5.46a0.81,0.81 0,0 0,-1.14 0h0a0.81,0.81 0,0 0,0 1.14L7.87,9 5.46,11.4a0.81,0.81 0,0 0,0 1.14h0" +

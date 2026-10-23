@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -150,14 +151,22 @@ fun TopAppBar(
     glow: @Composable BoxScope.() -> Unit = {},
     bottomContent: @Composable () -> Unit = {},
 ) {
-    // Wrap the given actions in a Row.
+    // Wrap the given actions in a Row. The actions and the navigation icon are COUI toolbar items,
+    // so tooltips anchored to them use the toolbar spacing.
+    val toolbarContainer = rememberTooltipAnchorContainer(TooltipAnchorType.Toolbar)
     val actionsRow =
         @Composable {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions,
-            )
+            CompositionLocalProvider(LocalTooltipAnchorContainer provides toolbarContainer) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = actions,
+                )
+            }
+        }
+    val toolbarNavigationIcon =
+        @Composable {
+            CompositionLocalProvider(LocalTooltipAnchorContainer provides toolbarContainer, content = navigationIcon)
         }
 
     // Compose a Surface with a TopAppBarLayout content.
@@ -173,7 +182,7 @@ fun TopAppBar(
         subtitle = subtitle,
         subtitleColor = subtitleColor,
         dividerColor = dividerColor,
-        navigationIcon = navigationIcon,
+        navigationIcon = toolbarNavigationIcon,
         actions = actionsRow,
         titlePadding = titlePadding,
         navigationIconPadding = navigationIconPadding,
@@ -272,14 +281,22 @@ fun SmallTopAppBar(
         }
     }
 
-    // Wrap the given actions in a Row.
+    // Wrap the given actions in a Row. The actions and the navigation icon are COUI toolbar items,
+    // so tooltips anchored to them use the toolbar spacing.
+    val toolbarContainer = rememberTooltipAnchorContainer(TooltipAnchorType.Toolbar)
     val actionsRow =
         @Composable {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions,
-            )
+            CompositionLocalProvider(LocalTooltipAnchorContainer provides toolbarContainer) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(TopAppBarDefaults.ActionItemSpacing, Alignment.End),
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = actions,
+                )
+            }
+        }
+    val toolbarNavigationIcon =
+        @Composable {
+            CompositionLocalProvider(LocalTooltipAnchorContainer provides toolbarContainer, content = navigationIcon)
         }
 
     // Compose a Surface with a SmallTopAppBarLayout content.
@@ -293,7 +310,7 @@ fun SmallTopAppBar(
         subtitle = subtitle,
         subtitleColor = subtitleColor,
         dividerColor = dividerColor,
-        navigationIcon = navigationIcon,
+        navigationIcon = toolbarNavigationIcon,
         actions = actionsRow,
         titlePadding = titlePadding,
         navigationIconPadding = navigationIconPadding,

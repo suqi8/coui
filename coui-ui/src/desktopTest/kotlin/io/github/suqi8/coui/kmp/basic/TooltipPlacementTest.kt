@@ -174,6 +174,33 @@ class TooltipPlacementTest {
     }
 
     @Test
+    fun toolbarSpacingPullsTheWindowIntoTheAnchor() {
+        val anchor = IntRect(500, 100, 600, 200)
+        val toolbar = TooltipAnchorSpacing.toolbar(3f)
+        assertEquals(-30, toolbar.overflow) // -10.1dp
+        val below = calculateTooltipPlacement(anchor, viewport, window, TooltipSide.Below, metrics, true, spacing = toolbar)
+        assertEquals(200 - 30, below.position.y)
+        // The toolbar spacing also counts toward the room below the anchor.
+        val (side, _) = tooltipVerticalSide(TooltipSide.Below, IntRect(500, 2230, 600, 2260), viewport, 165, toolbar)
+        assertEquals(TooltipSide.Below, side)
+        val (normalSide, _) = tooltipVerticalSide(TooltipSide.Below, IntRect(500, 2230, 600, 2260), viewport, 165)
+        assertEquals(TooltipSide.Above, normalSide)
+    }
+
+    @Test
+    fun navigationSpacingAddsTheOffsetFromTheBarTop() {
+        // Bar top 2200, anchor top 2212: overflow = -3.3dp (-10px) + (2200 - 2212).
+        val navigation = TooltipAnchorSpacing.navigation(3f, containerTop = 2200, anchorTop = 2212)
+        assertEquals(-10 - 12, navigation.overflow)
+        assertEquals(-10, navigation.spaceBelowSpacing)
+        val anchor = IntRect(500, 2212, 600, 2350)
+        val above = calculateTooltipPlacement(anchor, viewport, window, TooltipSide.Above, metrics, true, spacing = navigation)
+        assertEquals(2212 - 150 + 22, above.position.y)
+        // Side tooltips use the same overflow.
+        assertEquals(1080 - 600 + 22 + 39 - 48, tooltipMaxWindowWidth(TooltipSide.Right, anchor, viewport, metrics, 984, navigation))
+    }
+
+    @Test
     fun noArrowWhenHidden() {
         val placement = calculateTooltipPlacement(IntRect(500, 1000, 600, 1100), viewport, window, TooltipSide.Above, metrics, showArrow = false)
         assertNull(placement.arrow)

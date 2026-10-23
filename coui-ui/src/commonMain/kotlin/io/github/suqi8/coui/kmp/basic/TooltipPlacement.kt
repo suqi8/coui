@@ -172,6 +172,36 @@ internal data class TooltipMetrics(
     }
 }
 
+/**
+ * The anchor-type spacing of `WindowSpacingControlHelper`. A plain anchor uses the per-side
+ * [TooltipMetrics] gaps; an anchor inside a toolbar or a bottom navigation bar replaces them with one
+ * [overflow] for every side (`COUIToolTips.showWithDirection` sets `mArrowOverflow` once and
+ * `checkViewTypeEnum` leaves it alone) and reserves [spaceBelowSpacing] off the room below the anchor
+ * (`refreshCoordinated`'s `getAnchorViewSpacing`).
+ */
+@Immutable
+internal data class TooltipAnchorSpacing(val overflow: Int? = null, val spaceBelowSpacing: Int = 0) {
+    companion object {
+        /** A plain anchor (`AnchorViewTypeEnum.NORMAL`). */
+        val Normal = TooltipAnchorSpacing()
+
+        /** An anchor inside a toolbar: `coui_tooltips_toolbar_margin` -10.1dp for both. */
+        fun toolbar(density: Float): TooltipAnchorSpacing {
+            val margin = (-10.1f * density).roundToInt()
+            return TooltipAnchorSpacing(overflow = margin, spaceBelowSpacing = margin)
+        }
+
+        /**
+         * An anchor inside a bottom navigation bar: `coui_tooltips_navigation_margin` -3.3dp, plus (for
+         * the overflow only) the `ORIENTATION_VERTICAL_TOP` offset `containerTop - anchorTop`.
+         */
+        fun navigation(density: Float, containerTop: Int, anchorTop: Int): TooltipAnchorSpacing {
+            val margin = (-3.3f * density).roundToInt()
+            return TooltipAnchorSpacing(overflow = margin + (containerTop - anchorTop), spaceBelowSpacing = margin)
+        }
+    }
+}
+
 /** The resolved position of a COUI tooltip window, its arrow and its scale pivot. */
 @Immutable
 internal data class TooltipPlacement(
@@ -203,16 +233,18 @@ internal fun tooltipMaxWindowWidth(
     viewport: IntSize,
     metrics: TooltipMetrics,
     styleMaxWidth: Int,
+    spacing: TooltipAnchorSpacing = TooltipAnchorSpacing.Normal,
 ): Int {
     var maxWidth = styleMaxWidth + metrics.insetLeft + metrics.insetRight
+    val overflow = spacing.overflow ?: metrics.overflowSide
     when (side) {
         TooltipSide.Right -> maxWidth = min(
-            viewport.width - anchor.right - metrics.overflowSide + metrics.insetRight - metrics.screenMargin,
+            viewport.width - anchor.right - overflow + metrics.insetRight - metrics.screenMargin,
             maxWidth,
         )
 
         TooltipSide.Left -> maxWidth = min(
-            anchor.left - metrics.overflowSide - (metrics.screenMargin - metrics.insetLeft),
+            anchor.left - overflow - (metrics.screenMargin - metrics.insetLeft),
             maxWidth,
         )
 
@@ -245,9 +277,10 @@ internal fun tooltipVerticalSide(
     anchor: IntRect,
     viewport: IntSize,
     windowHeight: Int,
+    spacing: TooltipAnchorSpacing = TooltipAnchorSpacing.Normal,
 ): Pair<TooltipSide, Int?> {
     val spaceAbove = anchor.top
-    val spaceBelow = viewport.height - anchor.bottom
+    val spaceBelow = viewport.height - anchor.bottom - spacing.spaceBelowSpacing
     return if (preferred == TooltipSide.Below) {
         when {
             spaceBelow >= windowHeight -> TooltipSide.Below to null
@@ -275,6 +308,7 @@ internal fun tooltipVerticalSide(
  * @param offset the extra window offset (`showWithDirection` offsetX / offsetY); x is mirrored in RTL.
  * @param arrowFollowsOffset when false (the COUI default) the arrow is shifted back by [offset] so it
  *   keeps pointing at the anchor.
+ * @param spacing the toolbar / navigation anchor spacing, see [TooltipAnchorSpacing].
  */
 internal fun calculateTooltipPlacement(
     anchor: IntRect,
@@ -286,6 +320,7 @@ internal fun calculateTooltipPlacement(
     offset: IntOffset = IntOffset.Zero,
     arrowFollowsOffset: Boolean = false,
     layoutDirection: LayoutDirection = LayoutDirection.Ltr,
+    spacing: TooltipAnchorSpacing = TooltipAnchorSpacing.Normal,
 ): TooltipPlacement {
     val w = windowSize.width
     val h = windowSize.height
@@ -298,17 +333,18 @@ internal fun calculateTooltipPlacement(
     when (requested) {
         TooltipSide.Above, TooltipSide.Below -> {
             x = min(anchorCenterX - w / 2, viewport.width - ((w - metrics.insetRight) + metrics.screenMargin))
-            side = tooltipVerticalSide(requested, anchor, viewport, h).first
+            side = tooltipVerticalSide(requested, anchor, viewport, h, spacing).first
             y = if (side == TooltipSide.Above) {
-                anchor.top - h - metrics.overflowAbove
+                anchor.top - h - (spacing.overflow ?: metrics.overflowAbove)
             } else {
-                anchor.bottom + metrics.overflowBelow
+                anchor.bottom + (spacing.overflow ?: metrics.overflowBelow)
             }
         }
 
         TooltipSide.Left, TooltipSide.Right -> {
             side = requested
-            x = if (side == TooltipSide.Left) anchor.left - w - metrics.overflowSide else anchor.right + metrics.overflowSide
+            val overflow = spacing.overflow ?: metrics.overflowSide
+            x = if (side == TooltipSide.Left) anchor.left - w - overflow else anchor.right + overflow
             y = max(anchorCenterY - (h + metrics.insetTop - metrics.insetBottom) / 2, -metrics.insetTop)
         }
     }

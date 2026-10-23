@@ -106,8 +106,12 @@ fun NavigationBar(
         )
     }
 
+    // COUINavigationView is a BottomNavigationView: tooltips anchored to its items use the
+    // navigation spacing, measured from the top of the bar.
+    val tooltipContainer = rememberTooltipAnchorContainer(TooltipAnchorType.Navigation)
     Column(
         modifier = modifier
+            .tooltipAnchorContainer(tooltipContainer)
             .layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints)
                 // bottomMargin = -fraction * height: the layout shrinks and the bar slides down.
@@ -129,7 +133,10 @@ fun NavigationBar(
                 .padding(horizontal = NavigationBarDefaults.HorizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CompositionLocalProvider(LocalNavigationBarDisplayMode provides mode) {
+            CompositionLocalProvider(
+                LocalNavigationBarDisplayMode provides mode,
+                LocalTooltipAnchorContainer provides tooltipContainer,
+            ) {
                 content()
             }
         }
