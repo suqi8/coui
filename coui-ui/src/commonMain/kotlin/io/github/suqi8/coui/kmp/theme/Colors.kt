@@ -93,6 +93,14 @@ import androidx.compose.ui.graphics.Color
  *   couiColorErrorTextBg, the COUIEditText couiEditTextErrorColor default). Cases: TextField.
  * @param disabledTextFieldBorder The border / underline of a disabled text field (COUI
  *   coui_textinput_stroke_color_disabled via couiDisabledStrokeColor). Cases: TextField.
+ * @param quarternaryNeutral The faintest neutral (COUI couiColorQuarternaryNeutral #14000000 / #26FFFFFF).
+ *   Cases: the disabled Checkbox and RadioButton rings.
+ * @param container8 The translucent container fill (COUI couiColorContainer8 #14000000 / #1AFFFFFF).
+ *   Cases: the unselected Chip fill.
+ * @param disabledChipText The label of a disabled unselected chip (COUI chip_unchecked_text_disable_color
+ *   #42000000 / #29FFFFFF). Cases: Chip.
+ * @param focusOutline The keyboard focus outline (COUI couiColorFocusOutline, coui_color_focus_outline_blue
+ *   #660080FF / #665C9DFF). Cases: Chip.
  */
 @Stable
 class Colors(
@@ -169,6 +177,10 @@ class Colors(
     sliderThumbShadow: Color,
     textFieldError: Color,
     disabledTextFieldBorder: Color,
+    quarternaryNeutral: Color = Color(0x14000000),
+    container8: Color = Color(0x14000000),
+    disabledChipText: Color = Color(0x42000000),
+    focusOutline: Color = Color(0x660080FF),
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
@@ -316,6 +328,14 @@ class Colors(
         internal set
     var disabledTextFieldBorder by mutableStateOf(disabledTextFieldBorder, structuralEqualityPolicy())
         internal set
+    var quarternaryNeutral by mutableStateOf(quarternaryNeutral, structuralEqualityPolicy())
+        internal set
+    var container8 by mutableStateOf(container8, structuralEqualityPolicy())
+        internal set
+    var disabledChipText by mutableStateOf(disabledChipText, structuralEqualityPolicy())
+        internal set
+    var focusOutline by mutableStateOf(focusOutline, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
@@ -391,6 +411,10 @@ class Colors(
         sliderThumbShadow: Color = this.sliderThumbShadow,
         textFieldError: Color = this.textFieldError,
         disabledTextFieldBorder: Color = this.disabledTextFieldBorder,
+        quarternaryNeutral: Color = this.quarternaryNeutral,
+        container8: Color = this.container8,
+        disabledChipText: Color = this.disabledChipText,
+        focusOutline: Color = this.focusOutline,
     ): Colors = Colors(
         primary,
         onPrimary,
@@ -465,6 +489,10 @@ class Colors(
         sliderThumbShadow,
         textFieldError,
         disabledTextFieldBorder,
+        quarternaryNeutral,
+        container8,
+        disabledChipText,
+        focusOutline,
     )
 }
 
@@ -543,6 +571,10 @@ fun lightColorScheme(
     sliderThumbShadow: Color = Color(0x1A000000),
     textFieldError: Color = Color(0x4DE82A18),
     disabledTextFieldBorder: Color = Color(0x19000000),
+    quarternaryNeutral: Color = Color(0x14000000),
+    container8: Color = Color(0x14000000),
+    disabledChipText: Color = Color(0x42000000),
+    focusOutline: Color = Color(0x660080FF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -617,6 +649,10 @@ fun lightColorScheme(
     sliderThumbShadow,
     textFieldError,
     disabledTextFieldBorder,
+    quarternaryNeutral,
+    container8,
+    disabledChipText,
+    focusOutline,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
@@ -678,7 +714,7 @@ fun darkColorScheme(
     dragHandle: Color = Color(0x40FFFFFF),
     secondaryButton: Color = Color(0xFF353535),
     disabledSecondaryButton: Color = Color(0x1AFFFFFF),
-    disabledOnSecondaryButton: Color = Color(0x28FFFFFF),
+    disabledOnSecondaryButton: Color = Color(0x29FFFFFF),
     transparentButton: Color = Color(0x33FFFFFF),
     onTransparentButton: Color = Color(0xFFFFFFFF),
     disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
@@ -694,6 +730,10 @@ fun darkColorScheme(
     sliderThumbShadow: Color = Color(0x40000000),
     textFieldError: Color = Color(0xFFEA3939),
     disabledTextFieldBorder: Color = Color(0x19FFFFFF),
+    quarternaryNeutral: Color = Color(0x26FFFFFF),
+    container8: Color = Color(0x1AFFFFFF),
+    disabledChipText: Color = Color(0x29FFFFFF),
+    focusOutline: Color = Color(0x665C9DFF),
 ): Colors = Colors(
     primary,
     onPrimary,
@@ -768,6 +808,10 @@ fun darkColorScheme(
     sliderThumbShadow,
     textFieldError,
     disabledTextFieldBorder,
+    quarternaryNeutral,
+    container8,
+    disabledChipText,
+    focusOutline,
 )
 
 @Stable
@@ -845,6 +889,10 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     sliderThumbShadow = other.sliderThumbShadow
     textFieldError = other.textFieldError
     disabledTextFieldBorder = other.disabledTextFieldBorder
+    quarternaryNeutral = other.quarternaryNeutral
+    container8 = other.container8
+    disabledChipText = other.disabledChipText
+    focusOutline = other.focusOutline
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

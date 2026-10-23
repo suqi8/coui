@@ -238,6 +238,10 @@ fun ColorsPreview(colors: Colors) {
             "sliderThumbShadow" to colors.sliderThumbShadow,
             "textFieldError" to colors.textFieldError,
             "disabledTextFieldBorder" to colors.disabledTextFieldBorder,
+            "quarternaryNeutral" to colors.quarternaryNeutral,
+            "container8" to colors.container8,
+            "disabledChipText" to colors.disabledChipText,
+            "focusOutline" to colors.focusOutline,
         )
         val colorMap = colorList.toMap()
         colorList.map { (name, color) ->

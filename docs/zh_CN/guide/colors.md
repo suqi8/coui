@@ -22,7 +22,7 @@
 | `disabledPrimary` | 禁用主色（开关/按钮/滑块） | `#4D0080FF` | `#4D1A8CFF` |
 | `disabledOnPrimary` | 禁用主色上的文本 | `#FFFFFFFF` | `#FF404040` |
 | `disabledPrimaryButton` | 按钮禁用主色 | `#4D0080FF` | `#4D1A8CFF` |
-| `disabledOnPrimaryButton` | 按钮禁用主色上的文本 | `#8AFFFFFF` | `#28FFFFFF` |
+| `disabledOnPrimaryButton` | 按钮禁用主色上的文本（COUI `coui_button_main_disable_text`） | `#8AFFFFFF` | `#29FFFFFF` |
 | `disabledPrimarySlider` | 滑块禁用主色 | `#4D0080FF` | `#4D1A8CFF` |
 | `primaryContainer` | 主色容器 | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimaryContainer` | 主色容器上的文本 | `#FFFFFFFF` | `#FFFFFFFF` |
@@ -68,7 +68,7 @@
 | `dragHandle` | 底部抽屉拖拽指示器（COUI `couiColorControls`） | `#29000000` | `#40FFFFFF` |
 | `secondaryButton` | 次级按钮填充（COUI `couiColorContainer8` 合成在 `couiColorBackgroundElevated` 上） | `#FFEBEBEB` | `#FF353535` |
 | `disabledSecondaryButton` | 禁用次级按钮填充（COUI `couiColorContainer8`） | `#14000000` | `#1AFFFFFF` |
-| `disabledOnSecondaryButton` | 禁用次级按钮文字 | `#42000000` | `#28FFFFFF` |
+| `disabledOnSecondaryButton` | 禁用次级按钮文字（COUI `coui_button_second_disable_text`） | `#42000000` | `#29FFFFFF` |
 | `transparentButton` | 透明按钮填充（COUI `coui_button_translate_color`） | `#33FFFFFF` | `#33FFFFFF` |
 | `onTransparentButton` | 透明按钮文字 | `#FFFFFFFF` | `#FFFFFFFF` |
 | `disabledOnTransparentButton` | 禁用透明按钮文字 | `#4DFFFFFF` | `#4DFFFFFF` |
@@ -79,3 +79,7 @@
 | `focus` | 列表行焦点/选中蒙层（COUI `couiColorFocus`），由 `COUIIndication` 绘制 | `#1F0080FF` | `#331A8CFF` |
 | `disabledProgress` | 禁用线性进度条的进度色（COUI `coui_progressbar_color_disabled`） | `#FFE6E6E6` | `#FF262626` |
 | `disabledProgressBackground` | 禁用线性进度条的轨道色（COUI `coui_progressbar_background_color_disabled`） | `#08000000` | `#33FFFFFF` |
+| `quarternaryNeutral` | 最浅的中性色，如禁用的 Checkbox / RadioButton 外框（COUI `couiColorQuarternaryNeutral`） | `#14000000` | `#26FFFFFF` |
+| `container8` | 半透明容器填充，如未选中的 Chip（COUI `couiColorContainer8`） | `#14000000` | `#1AFFFFFF` |
+| `disabledChipText` | 禁用且未选中的 Chip 标签（COUI `chip_unchecked_text_disable_color`） | `#42000000` | `#29FFFFFF` |
+| `focusOutline` | 键盘焦点描边，如 Chip 焦点描边（COUI `couiColorFocusOutline`） | `#660080FF` | `#665C9DFF` |

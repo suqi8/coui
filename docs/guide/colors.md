@@ -22,7 +22,7 @@ This page lists all colors in the COUI color scheme with their default light and
 | `disabledPrimary` | Disabled primary (switch/btn/slider) | `#4D0080FF` | `#4D1A8CFF` |
 | `disabledOnPrimary` | Text on disabled primary | `#FFFFFFFF` | `#FF404040` |
 | `disabledPrimaryButton` | Disabled primary for button | `#4D0080FF` | `#4D1A8CFF` |
-| `disabledOnPrimaryButton` | Text on disabled primary button | `#8AFFFFFF` | `#28FFFFFF` |
+| `disabledOnPrimaryButton` | Text on disabled primary button (COUI `coui_button_main_disable_text`) | `#8AFFFFFF` | `#29FFFFFF` |
 | `disabledPrimarySlider` | Disabled primary for slider | `#4D0080FF` | `#4D1A8CFF` |
 | `primaryContainer` | Primary container | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimaryContainer` | Text on primary container | `#FFFFFFFF` | `#FFFFFFFF` |
@@ -68,7 +68,7 @@ This page lists all colors in the COUI color scheme with their default light and
 | `dragHandle` | Bottom sheet drag handle (COUI `couiColorControls`) | `#29000000` | `#40FFFFFF` |
 | `secondaryButton` | Secondary button fill (COUI `couiColorContainer8` over `couiColorBackgroundElevated`) | `#FFEBEBEB` | `#FF353535` |
 | `disabledSecondaryButton` | Disabled secondary button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
-| `disabledOnSecondaryButton` | Disabled secondary button label | `#42000000` | `#28FFFFFF` |
+| `disabledOnSecondaryButton` | Disabled secondary button label (COUI `coui_button_second_disable_text`) | `#42000000` | `#29FFFFFF` |
 | `transparentButton` | Transparent button fill (COUI `coui_button_translate_color`) | `#33FFFFFF` | `#33FFFFFF` |
 | `onTransparentButton` | Transparent button label | `#FFFFFFFF` | `#FFFFFFFF` |
 | `disabledOnTransparentButton` | Disabled transparent button label | `#4DFFFFFF` | `#4DFFFFFF` |
@@ -79,3 +79,7 @@ This page lists all colors in the COUI color scheme with their default light and
 | `focus` | Focused / selected list row layer (COUI `couiColorFocus`), drawn by `COUIIndication` | `#1F0080FF` | `#331A8CFF` |
 | `disabledProgress` | Disabled linear progress bar fill (COUI `coui_progressbar_color_disabled`) | `#FFE6E6E6` | `#FF262626` |
 | `disabledProgressBackground` | Disabled linear progress bar track (COUI `coui_progressbar_background_color_disabled`) | `#08000000` | `#33FFFFFF` |
+| `quarternaryNeutral` | Faintest neutral, e.g. disabled Checkbox / RadioButton rings (COUI `couiColorQuarternaryNeutral`) | `#14000000` | `#26FFFFFF` |
+| `container8` | Translucent container fill, e.g. the unselected Chip (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
+| `disabledChipText` | Label of a disabled unselected Chip (COUI `chip_unchecked_text_disable_color`) | `#42000000` | `#29FFFFFF` |
+| `focusOutline` | Keyboard focus outline, e.g. the Chip focus stroke (COUI `couiColorFocusOutline`) | `#660080FF` | `#665C9DFF` |

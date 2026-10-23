@@ -181,5 +181,12 @@ internal fun mapMd3RolesToCOUIColorsCommon(roles: MonetRoles, dark: Boolean): Co
         // (black 10% / white 10%).
         textFieldError = roles.error.copy(alpha = if (dark) 1f else 0.3f),
         disabledTextFieldBorder = roles.onSurface.copy(alpha = 0.1f),
+        // COUI couiColorQuarternaryNeutral (black 8% / white 15%), couiColorContainer8 (black 8% /
+        // white 10%), chip_unchecked_text_disable_color (black 26% / white 16%) and
+        // couiColorFocusOutline (the theme color at 40%).
+        quarternaryNeutral = roles.onSurface.copy(alpha = if (dark) 0.15f else 0.08f),
+        container8 = roles.onSurface.copy(alpha = if (dark) 0.1f else 0.08f),
+        disabledChipText = roles.onSurface.copy(alpha = if (dark) 0.16f else 0.26f),
+        focusOutline = roles.primary.copy(alpha = 0.4f),
     )
 }
