@@ -75,6 +75,9 @@ import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
+import io.github.suqi8.coui.kmp.utils.layerOverflow
+import io.github.suqi8.coui.kmp.utils.layerOverflowInner
+import io.github.suqi8.coui.kmp.utils.layerOverflowOuter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -367,14 +370,19 @@ fun SnackbarHost(
                             IntOffset(offset.roundToInt(), 0)
                         }
                         .zIndex((state.currentSnackbars.size - index).toFloat())
-                        .then(if (entry.visible) Modifier.animateItem() else Modifier),
+                        .then(if (entry.visible) Modifier.animateItem() else Modifier)
+                        // The fade renders offscreen at the layer bounds: grow them so the shadow
+                        // is not cut off while the snack bar shows or dismisses.
+                        .layerOverflowOuter(SnackbarShadowOverflow),
                     visibleState = visibleState,
                     // COUISnackBar.setSnackBarProgress: show scales 0.8 -> 1 and fades 0 -> 1,
                     // dismiss scales 1 -> 0.8 and fades 1 -> 0; there is no translation animation.
                     enter = fadeIn(SnackbarShowAnimationSpec) + scaleIn(SnackbarShowAnimationSpec, initialScale = 0.8f),
                     exit = fadeOut(SnackbarDismissAnimationSpec) + scaleOut(SnackbarDismissAnimationSpec, targetScale = 0.8f),
                 ) {
-                    content(entry.data)
+                    Box(modifier = Modifier.layerOverflowInner(SnackbarShadowOverflow)) {
+                        content(entry.data)
+                    }
                 }
             }
         }
@@ -743,6 +751,9 @@ private val SnackbarShadowDark = Shadow(
     alpha = 0.4f,
     offset = DpOffset(x = 0.dp, y = SnackbarShadowOffsetY),
 )
+
+/** How far the snack bar shadow reaches past the outline, kept inside the show / dismiss layer. */
+private val SnackbarShadowOverflow = SnackbarShadowLight.layerOverflow()
 
 /** The vertical clearance of the leading icon (COUI coui_snack_bar_icon_margin_top_horizontal). */
 private val SnackbarIconVerticalMargin = 16.dp

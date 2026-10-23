@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.layerOverflow
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.min
@@ -425,6 +426,14 @@ object COUIMaterialEffect {
         offset = DpOffset(0.dp, 3.2.dp),
         alpha = 30f / 255f,
     )
+
+    /**
+     * How far a [materialPanel] shadow reaches past the panel. A layer that fades, scales or blurs
+     * a material panel grows its bounds by this much (`graphicsLayerWithOverflow`), or the shadow
+     * is cut off while the layer renders offscreen.
+     */
+    internal val ShadowOverflow: Dp
+        get() = MaterialShadow.layerOverflow()
 
     // TYPE_FRAMEWORK_TOP_BAR colour filters (COUIMaterialBlurEffect).
     private val FilterLight1 = Color(0x66333333)

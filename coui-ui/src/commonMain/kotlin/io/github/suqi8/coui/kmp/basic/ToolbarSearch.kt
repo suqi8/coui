@@ -22,13 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.TouchMotion
+import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
@@ -187,7 +188,9 @@ fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
             }
         }
     }
-    .graphicsLayer {
+    // The fade renders the icon offscreen: the layer reaches past a material icon button so its
+    // shadow is not cut off.
+    .graphicsLayerWithOverflow(COUIMaterialEffect.ShadowOverflow) {
         val scale = state.toolbarScale()
         scaleX = scale
         scaleY = scale
@@ -200,7 +203,7 @@ fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
  *
  * @param state the [ToolbarSearchState] driving the search bar.
  */
-fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graphicsLayer {
+fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graphicsLayerWithOverflow(COUIMaterialEffect.ShadowOverflow) {
     val scale = state.toolbarScale()
     scaleX = scale
     scaleY = scale

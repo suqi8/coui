@@ -101,7 +101,9 @@ import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
+import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import io.github.suqi8.coui.kmp.utils.hasFocusReassignBug
+import io.github.suqi8.coui.kmp.utils.layerOverflowInner
 import kotlinx.coroutines.delay
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -193,7 +195,9 @@ fun SearchBar(
                         if (iconExpand == null) {
                             Modifier
                         } else {
-                            Modifier.graphicsLayer {
+                            // The blur renders the capsule offscreen: the layer reaches past it so
+                            // the material shadow is not cut off.
+                            Modifier.graphicsLayerWithOverflow(if (capsuleInfo.material) COUIMaterialEffect.ShadowOverflow else 0.dp) {
                                 // showInToolBar: the background view starts centred on the toolbar
                                 // icon (mIconExpandStartX, measured glyph centre to icon centre) and
                                 // slides home, blurring most half way.
@@ -219,6 +223,8 @@ fun SearchBar(
             if (outsideEndAction != null) {
                 val actionInMotion by remember { derivedStateOf { progress.value != 0f } }
                 if (expanded || actionInMotion) {
+                    // Room for the shadow of a material action (CancelButton) around its layer.
+                    val actionOverflow = COUIMaterialEffect.ShadowOverflow
                     val actionTextAlpha = remember(iconExpand) {
                         if (iconExpand == null) {
                             { searchBarActionFrame(progress.value, blurred = capsuleInfo.material).textAlpha }
@@ -230,24 +236,32 @@ fun SearchBar(
                         modifier = Modifier
                             .onPlaced { geometry.actionSlotOrigin = it.positionInParent() }
                             .layout { measurable, constraints ->
+                                // The scale, fade and blur below render the button offscreen: its
+                                // layer reaches the overflow past it (layerOverflowInner), so the
+                                // material shadow is not cut off.
+                                val overflow = actionOverflow.roundToPx()
                                 // The slot claims (gap + button) * progress, so the capsule beside
                                 // it narrows with the spring, overshoot included. The button itself
                                 // sits at its edit-state position against the end edge.
-                                val placeable = measurable.measure(constraints.copy(minWidth = 0))
+                                val placeable = measurable.measure(
+                                    constraints.copy(minWidth = 0).offset(horizontal = 2 * overflow, vertical = 2 * overflow),
+                                )
+                                val buttonWidth = placeable.width - 2 * overflow
+                                val buttonHeight = placeable.height - 2 * overflow
                                 val fraction = max(progress.value, 0f)
-                                val width = ((placeable.width + ActionStartGap.roundToPx()) * fraction).roundToInt()
+                                val width = ((buttonWidth + ActionStartGap.roundToPx()) * fraction).roundToInt()
                                 val rtl = layoutDirection == LayoutDirection.Rtl
                                 val direction = if (rtl) -1f else 1f
                                 // Slot-local bounds; the slot origin shifts them into the row.
-                                val buttonX = if (rtl) 0 else width - placeable.width
+                                val buttonX = if (rtl) 0 else width - buttonWidth
                                 geometry.actionLocalRect = Rect(
                                     left = buttonX.toFloat(),
                                     top = 0f,
-                                    right = (buttonX + placeable.width).toFloat(),
-                                    bottom = placeable.height.toFloat(),
+                                    right = (buttonX + buttonWidth).toFloat(),
+                                    bottom = buttonHeight.toFloat(),
                                 )
-                                layout(width, placeable.height) {
-                                    placeable.placeRelativeWithLayer(width - placeable.width, 0) {
+                                layout(width, buttonHeight) {
+                                    placeable.placeRelativeWithLayer(width - buttonWidth - overflow, -overflow) {
                                         if (iconExpand == null) {
                                             // COUISearchBar fun-button listener, the same frame
                                             // function both ways: scale, offset, alpha and blur.
@@ -273,7 +287,8 @@ fun SearchBar(
                                         }
                                     }
                                 }
-                            },
+                            }
+                            .layerOverflowInner(actionOverflow),
                     ) {
                         CompositionLocalProvider(LocalSearchBarActionTextAlpha provides actionTextAlpha) {
                             outsideEndAction()

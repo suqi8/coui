@@ -83,6 +83,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
@@ -99,6 +100,8 @@ import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
+import io.github.suqi8.coui.kmp.utils.layerOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
@@ -307,7 +310,9 @@ fun FloatingNavigationBar(
                     Box(
                         modifier = Modifier
                             .layoutId(EXPANSION_LAYOUT_ID)
-                            .graphicsLayer {
+                            // Room for the shadow of a material button (IconButton) while the
+                            // fade renders the view offscreen.
+                            .graphicsLayerWithOverflow(COUIMaterialEffect.ShadowOverflow) {
                                 val scale = state.expansionScale.value
                                 scaleX = scale
                                 scaleY = scale
@@ -429,6 +434,7 @@ private fun FloatingNavigationBarCapsule(
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     val dividerColor = COUITheme.colorScheme.dividerLine
+    val shadowOverflow = if (shadowElevation > 0.dp) floatingNavigationBarShadow(shadowElevation).layerOverflow() else 0.dp
 
     // doMenuViewShowOrHideAnim, melt-ball (COUI 17) springs.
     val alpha = remember { Animatable(if (visible) 1f else 0f) }
@@ -525,7 +531,9 @@ private fun FloatingNavigationBarCapsule(
             }
         },
         modifier = Modifier
-            .graphicsLayer {
+            // The show / hide fade and blur render the capsule offscreen: the layer reaches past
+            // it so the drop shadow is not cut off.
+            .graphicsLayerWithOverflow(shadowOverflow) {
                 this.alpha = alpha.value
                 scaleX = scale.value
                 scaleY = scale.value
