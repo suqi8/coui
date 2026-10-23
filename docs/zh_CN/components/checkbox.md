@@ -95,11 +95,13 @@ CheckboxDefaults 对象提供了 Checkbox 组件的默认颜色配置。
 
 > 半选中状态与选中状态共用同一套颜色。
 
-默认颜色对齐 COUI 17（`coui_btn_check_*.xml`）：未选中外框为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `hover`（#14000000 / #26FFFFFF）；选中填充为 `primary`，禁用时为 `disabledPrimary`；对勾为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
+默认颜色对齐 COUI 17（`coui_btn_check_*.xml`）：未选中外框为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；选中填充为 `primary`，禁用时为 `disabledPrimary`；对勾为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
 
 ### 按压反馈
 
-与 `COUICheckBox` 一致，按压时方框不缩小。可交互的复选框（`onClick != null`）会在 24dp 方框背后绘制直径 40dp 的圆形 `press` 高亮（#1F000000 / #33FFFFFF），节奏与平台水波纹一致。若外层行负责点击（如 `CheckboxPreference`），请传入 `onClick = null`，只由行显示按压态。
+与 `COUICheckBox` 一致，按压时方框不缩小。可交互的复选框（`onClick != null`）会在 24dp 方框背后绘制直径 40dp 的圆形 `press` 高亮（#1F000000 / #33FFFFFF），节奏与平台水波纹一致。若外层行负责点击（如 `CheckboxPreference`），请传入 `onClick = null`，只由行显示按压态。与 `COUICheckBox` 一致，独立复选框不播放振动。
+
+只有启用时状态切换才播放 COUI 动画；禁用时直接跳到新状态，半选与选中之间除外（COUI 禁用时也为其播放动画）。静止的半选状态按 COUI 静态资源绘制：方框比其他状态低 0.666dp，横线 1.6dp 粗（禁用时 1.5dp）。
 
 ## 进阶用法
 

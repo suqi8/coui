@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.Box
@@ -33,8 +34,6 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
@@ -50,7 +49,11 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * Like `COUICheckBox`, the box itself never scales on press: an interactive checkbox shows a 40dp
  * circular press highlight (`checkbox_ripple_bg_radius` 20dp, couiColorPress) behind the 24dp
  * drawable. Pass `onClick = null` when a surrounding row handles the click, as the COUI checkbox
- * preference does, so only the row shows its press state.
+ * preference does, so only the row shows its press state. COUICheckBox plays no haptic feedback.
+ *
+ * State changes replay the COUI AVDs while enabled. A disabled checkbox jumps to its new state,
+ * except between indeterminate and checked (`coui_checkbox_part_to_selected_for_disabled` and
+ * `coui_checkbox_selected_to_part_for_disabled`).
  *
  * @param state The current [ToggleableState] of the [Checkbox].
  * @param onClick The callback to be called when the [Checkbox] is clicked. The caller is
@@ -68,15 +71,15 @@ fun Checkbox(
     enabled: Boolean = true,
 ) {
     val currentOnClickState = rememberUpdatedState(onClick)
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
 
     val transition = updateTransition(state, label = "CheckboxTransition")
 
     // Fill alpha timeline from the COUI AVDs.
     val fillFractionState = transition.animateFloat(
         transitionSpec = {
-            if (targetState != ToggleableState.Off) {
+            if (!checkboxAnimates(enabled, initialState, targetState)) {
+                snap()
+            } else if (targetState != ToggleableState.Off) {
                 tween(durationMillis = 150, easing = CouiCheckboxEasing)
             } else {
                 keyframes {
@@ -90,7 +93,13 @@ fun Checkbox(
 
     // Checkmark trim: trimPathEnd runs 0 <-> 1 over the full 300ms.
     val checkFractionState = transition.animateFloat(
-        transitionSpec = { tween(durationMillis = 300, easing = CouiCheckboxEasing) },
+        transitionSpec = {
+            if (checkboxAnimates(enabled, initialState, targetState)) {
+                tween(durationMillis = 300, easing = CouiCheckboxEasing)
+            } else {
+                snap()
+            }
+        },
         label = "CheckFraction",
     ) { if (it == ToggleableState.On) 1f else 0f }
 
@@ -98,6 +107,8 @@ fun Checkbox(
     val barFractionState = transition.animateFloat(
         transitionSpec = {
             when {
+                !checkboxAnimates(enabled, initialState, targetState) -> snap()
+
                 targetState == ToggleableState.Indeterminate && initialState == ToggleableState.On ->
                     keyframes {
                         durationMillis = 300
@@ -115,12 +126,17 @@ fun Checkbox(
     // Center pop played by every COUI checkbox AVD on each state change.
     val popScale = remember { Animatable(1f) }
     var skipInitialPop by remember { mutableStateOf(true) }
+    // The state the last pop effect saw; only written from the effect.
+    val previousState = remember { arrayOf(state) }
     LaunchedEffect(state) {
+        val from = previousState[0]
+        previousState[0] = state
         if (skipInitialPop) {
             skipInitialPop = false
             return@LaunchedEffect
         }
         popScale.snapTo(1f)
+        if (!checkboxAnimates(enabled, from, state)) return@LaunchedEffect
         popScale.animateTo(PopPeakScale, tween(PopHalfDurationMillis, easing = CouiCheckboxEasing))
         popScale.animateTo(1f, tween(PopHalfDurationMillis, easing = CouiCheckboxEasing))
     }
@@ -129,6 +145,9 @@ fun Checkbox(
     val ringColor = colors.uncheckedBackgroundColor(enabled)
     val fillColor = colors.checkedBackgroundColor(enabled)
     val markColor = colors.checkedForegroundColor(enabled)
+    // Once no AVD runs, the indeterminate state shows its static drawable
+    // (coui_btn_part_check_on_normal / _disabled), whose box sits 0.666dp lower than the AVD frames.
+    val restingIndeterminate = state == ToggleableState.Indeterminate && !transition.isRunning
 
     val checkPath = remember { Path() }
     val pressColor = COUITheme.colorScheme.press
@@ -137,16 +156,7 @@ fun Checkbox(
     val finalModifier = if (onClick != null) {
         Modifier.triStateToggleable(
             state = state,
-            onClick = {
-                currentOnClickState.value?.invoke()
-                currentHapticFeedback.performHapticFeedback(
-                    when (state) {
-                        ToggleableState.Off -> HapticFeedbackType.ToggleOn
-                        ToggleableState.On -> HapticFeedbackType.ToggleOff
-                        ToggleableState.Indeterminate -> HapticFeedbackType.SegmentTick
-                    },
-                )
-            },
+            onClick = { currentOnClickState.value?.invoke() },
             enabled = enabled,
             role = Role.Checkbox,
             interactionSource = null,
@@ -189,9 +199,20 @@ fun Checkbox(
                     join = StrokeJoin.Round,
                 )
 
-                val barTopLeft = Offset(BarStartFraction * d, (d - BarThicknessFraction * d) / 2f)
                 val barFullLength = BarLengthFraction * d
-                val barThickness = BarThicknessFraction * d
+                val restOffset = if (restingIndeterminate) RestIndeterminateOffsetFraction * d else 0f
+                val barTop = when {
+                    !restingIndeterminate -> (d - AvdBarThicknessFraction * d) / 2f
+                    enabled -> RestBarTopFraction * d
+                    else -> RestDisabledBarTopFraction * d
+                }
+                val barThickness = when {
+                    !restingIndeterminate -> AvdBarThicknessFraction * d
+                    enabled -> RestBarThicknessFraction * d
+                    else -> RestDisabledBarThicknessFraction * d
+                }
+                val barTopLeft = Offset(BarStartFraction * d, barTop)
+                val restFillTopLeft = fillTopLeft.copy(y = fillTopLeft.y + restOffset)
 
                 onDrawBehind {
                     scale(scale = popScale.value) {
@@ -208,7 +229,7 @@ fun Checkbox(
                         if (fillFraction > 0f) {
                             drawRoundRect(
                                 color = fillColor,
-                                topLeft = fillTopLeft,
+                                topLeft = restFillTopLeft,
                                 size = fillSize,
                                 cornerRadius = fillCornerRadius,
                                 alpha = fillFraction,
@@ -286,8 +307,7 @@ object CheckboxDefaults {
      * - The checkmark / indeterminate bar is white, and `coui_btn_check_inner_color_on_disabled`
      *   #8AFFFFFF / #29FFFFFF when disabled.
      * - The unchecked ring is couiColorLabelTertiary #42000000 / #4DFFFFFF, and
-     *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled (the same values as
-     *   couiColorHover, hence the `hover` slot).
+     *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled.
      * - The checked fill is couiColorPrimary, at 30% (`fillAlpha` 0.3) when disabled.
      */
     @Composable
@@ -295,11 +315,11 @@ object CheckboxDefaults {
         checkedForegroundColor: Color = COUITheme.colorScheme.onPrimary,
         uncheckedForegroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
         disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
-        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.hover,
+        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.quarternaryNeutral,
         checkedBackgroundColor: Color = COUITheme.colorScheme.primary,
         uncheckedBackgroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
         disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disabledPrimary,
-        disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.hover,
+        disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.quarternaryNeutral,
     ): CheckboxColors = remember(
         checkedForegroundColor,
         uncheckedForegroundColor,
@@ -364,10 +384,26 @@ private val CheckStartPoint = Offset(7.2933f / ViewportSize, 11.9213f / Viewport
 private val CheckMiddlePoint = Offset(10.8533f / ViewportSize, 15.4847f / ViewportSize)
 private val CheckEndPoint = Offset(17.6567f / ViewportSize, 8.618f / ViewportSize)
 
-// Indeterminate state (coui_btn_part_check_on_normal.xml): 10x1.6 centered bar revealed from the left.
+// Indeterminate bar, 10dp long and revealed from the left. The AVD frames draw it 2dp thick around
+// the centre ($coui_checkbox_unselected_to_part__0.xml, 30x6 in a 72 viewport); the static
+// drawables move the whole box 0.666dp down and draw a 1.6dp bar at 11.866
+// (coui_btn_part_check_on_normal.xml) or a 1.5dp bar at 11.5 (coui_btn_part_check_on_disabled.xml).
 private val BarStartFraction = 7f / ViewportSize
 private val BarLengthFraction = 10f / ViewportSize
-private val BarThicknessFraction = 1.6f / ViewportSize
+private val AvdBarThicknessFraction = 2f / ViewportSize
+private val RestIndeterminateOffsetFraction = 0.666f / ViewportSize
+private val RestBarTopFraction = 11.866f / ViewportSize
+private val RestBarThicknessFraction = 1.6f / ViewportSize
+private val RestDisabledBarTopFraction = 11.5f / ViewportSize
+private val RestDisabledBarThicknessFraction = 1.5f / ViewportSize
+
+/**
+ * Whether a [from] -> [to] change replays its AVD: always while enabled, and while disabled only
+ * between indeterminate and checked (coui_checkbox_state.xml has no other disabled transitions).
+ */
+private fun checkboxAnimates(enabled: Boolean, from: ToggleableState, to: ToggleableState): Boolean = enabled ||
+    (from == ToggleableState.Indeterminate && to == ToggleableState.On) ||
+    (from == ToggleableState.On && to == ToggleableState.Indeterminate)
 
 // Shared easing of the COUI checkbox AVDs: cubic-bezier(0.3, 0, 0.1, 1).
 private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
