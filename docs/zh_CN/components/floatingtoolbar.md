@@ -46,6 +46,7 @@ Scaffold(
 | 属性名                     | 类型                   | 说明                       | 默认值                                 | 是否必须 |
 | -------------------------- | ---------------------- | -------------------------- | -------------------------------------- | -------- |
 | modifier                   | Modifier               | 应用于工具栏的修饰符       | Modifier                               | 否       |
+| visible                    | Boolean                | 是否显示工具栏；切换时运行 COUI 17 的缩放显示 / 隐藏弹簧 | true | 否       |
 | color                      | Color                  | 工具栏背景颜色             | FloatingToolbarDefaults.defaultColor() | 否       |
 | cornerRadius               | Dp                     | 工具栏圆角半径             | FloatingToolbarDefaults.CornerRadius   | 否       |
 | outSidePadding             | PaddingValues          | 工具栏外部的内边距         | FloatingToolbarDefaults.OutSidePadding | 否       |
@@ -142,4 +143,16 @@ Scaffold(
     },
     floatingToolbarPosition = ToolbarPosition.CenterEnd // 放置在右侧居中
 )
+```
+
+### 显示与隐藏
+
+请切换 `visible`，不要用 `AnimatedVisibility` 包裹工具栏。工具栏会以中心为轴缩放出现（COUI 17 `COUIBottomFloatingToolbar` 弹簧，response 0.5 / bounce 0.4），并缩放到消失（response 0.25 / bounce 0），过程中阴影保持完整；`AnimatedVisibility` 的淡入淡出会在动画期间裁掉阴影。隐藏的工具栏仍占据布局位置，但不再响应触摸。
+
+```kotlin
+var showToolbar by remember { mutableStateOf(true) }
+
+FloatingToolbar(visible = showToolbar) {
+    // 工具栏内容
+}
 ```

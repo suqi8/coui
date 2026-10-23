@@ -46,6 +46,7 @@ Scaffold(
 | Property Name              | Type                   | Description                            | Default Value                          | Required |
 | -------------------------- | ---------------------- | -------------------------------------- | -------------------------------------- | -------- |
 | modifier                   | Modifier               | Modifier applied to the toolbar        | Modifier                               | No       |
+| visible                    | Boolean                | Whether the toolbar is shown; changes run the COUI 17 scale-in / scale-out springs | true | No       |
 | color                      | Color                  | Background color of the toolbar        | FloatingToolbarDefaults.defaultColor() | No       |
 | cornerRadius               | Dp                     | Corner radius of the toolbar           | FloatingToolbarDefaults.CornerRadius   | No       |
 | outSidePadding             | PaddingValues          | Padding outside the toolbar            | FloatingToolbarDefaults.OutSidePadding | No       |
@@ -142,4 +143,16 @@ Scaffold(
     },
     floatingToolbarPosition = ToolbarPosition.CenterEnd // Place centered on the right edge
 )
+```
+
+### Showing and Hiding
+
+Toggle `visible` instead of wrapping the toolbar in `AnimatedVisibility`. The toolbar scales in about its centre (COUI 17 `COUIBottomFloatingToolbar` spring, response 0.5 / bounce 0.4) and scales out to nothing (response 0.25 / bounce 0) with its shadow intact; a fade from `AnimatedVisibility` would cut the shadow off while it runs. A hidden toolbar keeps its place in the layout but takes no touches.
+
+```kotlin
+var showToolbar by remember { mutableStateOf(true) }
+
+FloatingToolbar(visible = showToolbar) {
+    // toolbar content
+}
 ```
