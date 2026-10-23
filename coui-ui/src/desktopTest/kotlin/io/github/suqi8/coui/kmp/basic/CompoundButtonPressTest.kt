@@ -68,4 +68,21 @@ class CompoundButtonPressTest {
         }
         assertEquals(rest, held)
     }
+
+    @Test
+    fun radioButtonPressDrawsTheBorderlessRippleCircle() = runComposeUiTest {
+        // 15dp from the centre: outside the 24dp box, inside the 17dp-radius highlight.
+        val (rest, held) = pressSample(15) {
+            RadioButton(selected = false, onClick = {}, modifier = Modifier.testTag("control"))
+        }
+        assertTrue(rest != held, "a held radio button must show its circular highlight: $rest vs $held")
+    }
+
+    @Test
+    fun radioButtonHighlightStopsAtItsRadius() = runComposeUiTest {
+        val (rest, held) = pressSample(19) {
+            RadioButton(selected = false, onClick = {}, modifier = Modifier.testTag("control"))
+        }
+        assertEquals(rest, held)
+    }
 }

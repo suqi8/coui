@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +25,9 @@ import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
 
 /**
  * A radio button with a title and a summary.
+ *
+ * As in the COUI radio and mark preferences, the whole row is the touch target: the radio button
+ * is not clickable itself and shows no press highlight of its own.
  *
  * @param title The title of the [RadioButtonPreference].
  * @param selected The selected state of the [RadioButtonPreference].
@@ -80,7 +82,6 @@ fun RadioButtonPreference(
                     if (radioButtonLocation == RadioButtonLocation.Start) {
                         RadioButtonPreferenceStartAction(
                             selected = selected,
-                            onClick = currentOnClick,
                             enabled = enabled,
                             radioButtonColors = radioButtonColors,
                         )
@@ -115,7 +116,6 @@ fun RadioButtonPreference(
             if (radioButtonLocation == RadioButtonLocation.End) {
                 RadioButtonPreferenceEndAction(
                     selected = selected,
-                    onClick = currentOnClick,
                     enabled = enabled,
                     radioButtonColors = radioButtonColors,
                 )
@@ -131,26 +131,18 @@ fun RadioButtonPreference(
     )
 }
 
+// COUI coui_preference_widget_mark.xml: the radio is not clickable; the row handles the press.
 @Composable
 private fun RadioButtonPreferenceStartAction(
     selected: Boolean,
-    onClick: (() -> Unit)?,
     enabled: Boolean,
     radioButtonColors: RadioButtonColors,
 ) {
-    val currentOnClick by rememberUpdatedState(onClick)
-    val wrappedOnClick = remember(onClick != null) {
-        if (onClick != null) {
-            { currentOnClick?.invoke() ?: Unit }
-        } else {
-            null
-        }
-    }
     RadioButton(
         modifier = Modifier
             .padding(end = 5.dp),
         selected = selected,
-        onClick = wrappedOnClick,
+        onClick = null,
         enabled = enabled,
         colors = radioButtonColors,
     )
@@ -159,21 +151,12 @@ private fun RadioButtonPreferenceStartAction(
 @Composable
 private fun RadioButtonPreferenceEndAction(
     selected: Boolean,
-    onClick: (() -> Unit)?,
     enabled: Boolean,
     radioButtonColors: RadioButtonColors,
 ) {
-    val currentOnClick by rememberUpdatedState(onClick)
-    val wrappedOnClick = remember(onClick != null) {
-        if (onClick != null) {
-            { currentOnClick?.invoke() ?: Unit }
-        } else {
-            null
-        }
-    }
     RadioButton(
         selected = selected,
-        onClick = wrappedOnClick,
+        onClick = null,
         enabled = enabled,
         colors = radioButtonColors,
     )
