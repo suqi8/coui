@@ -81,7 +81,7 @@ Scaffold(
 
 ### Item Changes and Labels
 
-When the items stop fitting or their count changes, the capsule width and position follow on springs (response 0.55, bounce 0.35) and the items spread with the capsule. Each label cross-fades between its layout at the old and the new item width (shrinking: old out at response 0.2, new in at 0.3; growing the other way round). Labels sit where an Android `TextView` with `includeFontPadding` puts them: 30dp below the item top plus Roboto's font padding (0.128em).
+When the items stop fitting or their count changes, the capsule width and position follow on springs (response 0.55, bounce 0.35) and the items spread with the capsule. On a count change every existing item starts from where it was drawn and eases onto the new spread on the same spring (COUI rebuilds its item views, which makes them jump), and a new item appears in its slot. Each label cross-fades between its layout at the old and the new item width (shrinking: old out at response 0.2, new in at 0.3; growing the other way round). Labels sit where an Android `TextView` with `includeFontPadding` puts them: 30dp below the item top plus Roboto's font padding (0.128em).
 
 ### Expansion View
 
