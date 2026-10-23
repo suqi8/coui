@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.focusGroup
@@ -52,6 +51,7 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
@@ -71,6 +71,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -231,11 +232,19 @@ internal class PopupHorizontalRowParentData(val cells: () -> List<PopupListItemH
  */
 @Stable
 internal class PopupSharedMask {
-    /** Press (touch-enter) progress, 0 → 1. */
-    val press: Animatable<Float, AnimationVector1D> = Animatable(0f)
+    /**
+     * Press (touch-enter) progress, 0 → 1. Held as plain snapshot state rather than an `Animatable`
+     * so a snap lands in the same frame as the bounds change that goes with it: an
+     * `Animatable.snapTo` only runs once its coroutine is dispatched and the mutex of a cancelled
+     * animation is released, which let one frame draw the new bounds with the old progress.
+     */
+    var press: Float by mutableFloatStateOf(0f)
+        private set
+    private var pressVelocity = 0f
 
-    /** Travel progress from [from] to [to], 0 → 1. */
-    val travel: Animatable<Float, AnimationVector1D> = Animatable(1f)
+    /** Travel progress from [from] to [to], 0 → 1; written together with [from] and [to]. */
+    var travel: Float by mutableFloatStateOf(1f)
+        private set
 
     /** The row the mask rests on, or the one it is travelling to. */
     var target: PopupListItemHandle? by mutableStateOf(null)
@@ -253,34 +262,44 @@ internal class PopupSharedMask {
     /** The travel spring; COUI uses response 0.2 instead of 0.15 when the list has horizontal items. */
     var travelSpec: SpringSpec<Float> = PopupMaskTravelSpring
 
+    /** Whether the travel spring is running (COUITouchRecyclerView mSharedMaskSpringAnim.isRunning). */
+    val isTravelling: Boolean
+        get() = travelJob?.isActive == true
+
     /** The mask geometry for the current frame, or `null` when nothing is drawn. */
     fun current(): MaskGeometry? {
         val end = to ?: return null
         val start = from ?: return end
-        return start.lerp(end, travel.value.coerceIn(0f, 1f))
+        return start.lerp(end, travel.coerceIn(0f, 1f))
     }
 
     /**
-     * Attaches the mask to [row] (COUITouchRecyclerView.attachSharedMaskToView): a fresh press
-     * snaps the mask to the row; a mask already resting on another row slides there.
+     * Attaches the mask to [row] (COUITouchRecyclerView.attachSharedMaskToView). A mask that is
+     * pressed on another row slides there on the travel spring, starting from the bounds drawn this
+     * very frame (`startSharedMaskAnim(mSharedMaskBounds, end)`). A fresh press, or one that follows
+     * a fade-out (`mSharedMaskIsExiting` empties the bounds), snaps to the row (`syncMaskRect`) and
+     * presses in from whatever is left of the fade.
      */
     fun attach(row: PopupListItemHandle, geometry: MaskGeometry, scope: CoroutineScope) {
         val previous = current()
         val wasExiting = exiting
         exiting = false
         target = row
-        if (previous == null || wasExiting || press.value <= 0f) {
+        if (previous == null || wasExiting || press <= 0f) {
             travelJob?.cancel()
             from = null
             to = geometry
-            scope.launch { travel.snapTo(1f) }
+            travel = 1f
         } else if (previous != geometry) {
             travelJob?.cancel()
             from = previous
             to = geometry
+            travel = 0f
+            val spec = travelSpec
             travelJob = scope.launch {
-                travel.snapTo(0f)
-                travel.animateTo(1f, travelSpec)
+                animate(initialValue = 0f, targetValue = 1f, animationSpec = spec) { value, _ ->
+                    travel = value
+                }
             }
         }
         enterPress(scope)
@@ -296,31 +315,55 @@ internal class PopupSharedMask {
         pressJob?.cancel()
         from = null
         to = geometry
+        travel = 1f
         target = row
         exiting = false
-        scope.launch {
-            travel.snapTo(1f)
-            press.snapTo(1f)
-            exit(scope)
-        }
+        press = 1f
+        pressVelocity = 0f
+        exit(scope)
     }
 
     /** Re-reads the geometry of the resting row after a layout pass, e.g. when the list scrolls. */
     fun refresh(geometry: MaskGeometry) {
-        if (travel.isRunning) return
+        if (isTravelling) return
         from = null
         to = geometry
+        travel = 1f
     }
 
     private fun enterPress(scope: CoroutineScope) {
         pressJob?.cancel()
-        pressJob = scope.launch { press.animateTo(1f, PopupMaskPressSpring) }
+        pressJob = scope.launch { animatePress(1f) }
+    }
+
+    /**
+     * Springs [press] to [target] from its current value and velocity (COUI StateEffectAnimator
+     * `animateToProgress(progress, true)` restarts from the current value). Returns early, without
+     * throwing, once [stopAt] is reached.
+     */
+    private suspend fun animatePress(target: Float, stopAt: Float = Float.NaN) {
+        try {
+            animate(
+                initialValue = press,
+                targetValue = target,
+                initialVelocity = pressVelocity,
+                animationSpec = PopupMaskPressSpring,
+            ) { value, velocity ->
+                press = value
+                pressVelocity = velocity
+                if (!stopAt.isNaN() && value >= stopAt) throw PressMaskThresholdReached()
+            }
+            pressVelocity = 0f
+        } catch (_: PressMaskThresholdReached) {
+            // Minimum visible progress reached; the caller continues from here.
+        }
     }
 
     /**
      * Fades the mask out where it stands (COUITouchRecyclerView.clearSharedMask(true) plus
      * COUIMaskEffectDrawable.setTouchExited), first letting a fresh press reach
-     * [POPUP_MASK_MIN_VISIBLE_PROGRESS] so a quick tap still flashes.
+     * [POPUP_MASK_MIN_VISIBLE_PROGRESS] so a quick tap still flashes. A running travel spring is
+     * left alone, as COUI keeps `mSharedMaskSpringAnim` running while the mask exits.
      */
     fun exit(scope: CoroutineScope) {
         if (target == null && !exiting) return
@@ -328,33 +371,31 @@ internal class PopupSharedMask {
         target = null
         pressJob?.cancel()
         pressJob = scope.launch {
-            if (press.value > 0f && press.value < POPUP_MASK_MIN_VISIBLE_PROGRESS) {
-                try {
-                    press.animateTo(1f, PopupMaskPressSpring) {
-                        if (value >= POPUP_MASK_MIN_VISIBLE_PROGRESS) throw PressMaskThresholdReached()
-                    }
-                } catch (_: PressMaskThresholdReached) {
-                    // Minimum visible progress reached; fall through to the fade-out.
-                }
+            if (press > 0f && press < POPUP_MASK_MIN_VISIBLE_PROGRESS) {
+                animatePress(1f, stopAt = POPUP_MASK_MIN_VISIBLE_PROGRESS)
             }
-            press.animateTo(0f, PopupMaskPressSpring)
+            animatePress(0f)
             if (exiting) {
                 exiting = false
+                travelJob?.cancel()
                 from = null
                 to = null
+                travel = 1f
             }
         }
     }
 
     /** Drops the mask immediately (COUITouchRecyclerView.clearSharedMask(false)). */
-    fun clear(scope: CoroutineScope) {
+    fun clear() {
         pressJob?.cancel()
         travelJob?.cancel()
         exiting = false
         target = null
         from = null
         to = null
-        scope.launch { press.snapTo(0f) }
+        travel = 1f
+        press = 0f
+        pressVelocity = 0f
     }
 }
 
@@ -516,7 +557,8 @@ internal class PopupListGestureHost {
 
     private fun geometryOf(row: PopupListItemHandle): MaskGeometry = popupMaskGeometry(row, width, maskHorizontalMargin, maskCornerRadius)
 
-    private fun rowAt(x: Float, y: Float): PopupListItemHandle? = ordered.firstOrNull { it.contains(x, y) }
+    /** The selectable row or cell under ([x], [y]) in list space (`findChildViewUnder`), if any. */
+    fun rowAt(x: Float, y: Float): PopupListItemHandle? = ordered.firstOrNull { it.contains(x, y) }
 
     private fun isNeutral(y: Float): Boolean = neutralBands.any { (top, bottom) -> y >= top && y < bottom }
 
@@ -567,13 +609,16 @@ internal class PopupListGestureHost {
 
     /**
      * A long press on [row] that opens a sub menu (`RegionBasedLongPressDetector`, 650ms): the
-     * selection is released and the row's long-press action runs instead of a click.
+     * selection is released and the row's long-press action runs instead of a click. Returns
+     * whether it fired.
      */
-    fun onLongPress(row: PopupListItemHandle, scope: CoroutineScope) {
-        if (activeItem !== row || !row.enabled) return
+    fun onLongPress(row: PopupListItemHandle, scope: CoroutineScope): Boolean {
+        val action = row.onLongClick
+        if (activeItem !== row || !row.enabled || action == null) return false
         activeItem = null
         mask.exit(scope)
-        row.onLongClick?.invoke()
+        action()
+        return true
     }
 
     /** The row the gesture tracks, used by the sub-menu long press. */
@@ -810,10 +855,24 @@ internal fun snapPopupListHeight(childHeights: List<Int>, verticalInsets: Int, m
 fun ListPopupColumn(
     content: @Composable () -> Unit,
 ) {
-    val scrollState = rememberScrollState()
     val host = remember { PopupListGestureHost() }
+    ListPopupColumn(host = host, content = content)
+}
+
+/** [ListPopupColumn] driven by a given [host], which tests use to observe the shared mask. */
+@OptIn(ExperimentalScrollBarApi::class)
+@Composable
+internal fun ListPopupColumn(
+    host: PopupListGestureHost,
+    content: @Composable () -> Unit,
+) {
+    val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
     val performHaptic = rememberCouiHaptic()
+    val hapticFeedback = LocalHapticFeedback.current
+    val performLongPressHaptic = remember(hapticFeedback) {
+        { hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress) }
+    }
     val touchSlop = LocalViewConfiguration.current.touchSlop
     val maskColor = COUITheme.colorScheme.hover
     val squircleEnabled = isSquircleEnabled()
@@ -962,6 +1021,7 @@ fun ListPopupColumn(
                     scope = coroutineScope,
                     touchSlop = touchSlop,
                     performHaptic = performHaptic,
+                    performLongPressHaptic = performLongPressHaptic,
                 )
                 .drawWithContent {
                     drawContent()
@@ -993,6 +1053,7 @@ private fun Modifier.popupListGestures(
     scope: CoroutineScope,
     touchSlop: Float,
     performHaptic: (CouiHapticEffect) -> Unit,
+    performLongPressHaptic: () -> Unit,
 ): Modifier = pointerInput(host, relay) {
     awaitPointerEventScope {
         while (true) {
@@ -1000,17 +1061,11 @@ private fun Modifier.popupListGestures(
             val downY = down.position.y
             val downRow = host.onDown(down.position.x, downY, scope)
             var tracking = downRow != null
-            // RegionBasedLongPressDetector: holding a sub-menu row for 650ms opens its sub menu.
-            var longPressed = false
-            val longPress = if (downRow?.onLongClick != null) {
-                scope.launch {
-                    delay(POPUP_SUBMENU_LONG_PRESS_TIMEOUT_MILLIS)
-                    longPressed = true
-                    host.onLongPress(downRow, scope)
-                }
-            } else {
-                null
-            }
+            // RegionBasedLongPressDetector (650ms) on a row that opens a sub menu. It watches the
+            // whole gesture: holding still is not required, only staying on the row, and a row the
+            // finger drags onto starts its own countdown.
+            val longPress = PopupLongPressTracker(host, scope, performLongPressHaptic)
+            longPress.update(down.position)
             // The sub list this gesture currently drives, once the long press has handed it over.
             var relayed: PopupListGestureHost? = null
 
@@ -1021,24 +1076,25 @@ private fun Modifier.popupListGestures(
                 if (event.changes.size > 1) {
                     // A second pointer cancels the selection, as COUI does on ACTION_POINTER_DOWN.
                     host.cancel(scope)
-                    relayed?.cancel(scope)
+                    relayed?.cancel(relayed.scope ?: scope)
                     tracking = false
                     break
                 }
 
                 if (change.changedToUpIgnoreConsumed()) {
                     when {
-                        relayed != null -> relayed.onUp(scope)
-                        !longPressed -> host.onUp(scope)
+                        relayed != null -> relayed.onUp(relayed.scope ?: scope)
+                        !longPress.triggered -> host.onUp(scope)
                     }
                     change.consume()
                     tracking = false
                     break
                 }
 
-                if (longPressed) {
-                    // After the long press the main list stops tracking; the finger now steers the
-                    // sub menu once it has entered (forwardTouchToSubMenuIfNeeded).
+                if (longPress.triggered) {
+                    // The sub menu the long press opened takes the touch from the main list
+                    // (onSubMenuStartToEnter: allowListViewDispatchTouchEvent(main, false)); the
+                    // finger steers the sub menu once it has entered (forwardTouchToSubMenuIfNeeded).
                     relayed = relaySubMenuMove(relay, host, relayed, change.position, scope, performHaptic)
                     continue
                 }
@@ -1046,17 +1102,63 @@ private fun Modifier.popupListGestures(
                 val y = change.position.y
                 if (host.isDynamicSelection) {
                     if (host.onMoveTo(change.position.x, y, scope)) {
-                        longPress?.cancel()
                         performHaptic(CouiHapticEffect.Switch)
                     }
                 } else if (abs(y - downY) > touchSlop) {
                     host.cancel(scope)
                     tracking = false
                 }
-                if (abs(y - downY) > touchSlop) longPress?.cancel()
+                if (tracking) longPress.update(change.position)
             }
-            longPress?.cancel()
+            longPress.stop()
         }
+    }
+}
+
+/**
+ * COUI RegionBasedLongPressDetector for one gesture of a popup list. Only a row that opens a sub
+ * menu is a target. The countdown runs while the finger stays anywhere on that row (moving inside it
+ * does not reset it, there is no touch slop); leaving the row stops it, and the row the finger
+ * moves onto starts a fresh one. Firing plays the long-press haptic
+ * (`performHapticFeedback(LONG_PRESS)`) and hands the row its long-press action.
+ */
+private class PopupLongPressTracker(
+    private val host: PopupListGestureHost,
+    private val scope: CoroutineScope,
+    private val performHaptic: () -> Unit,
+) {
+    /** Whether the long press fired during this gesture (`STATE_TRIGGERED`). */
+    var triggered: Boolean = false
+        private set
+
+    private var target: PopupListItemHandle? = null
+    private var job: Job? = null
+
+    /** Follows the finger at [position], in list space (`updatePosition` / `startDetection`). */
+    fun update(position: Offset) {
+        if (triggered) return
+        val current = target
+        if (current != null && current.contains(position.x, position.y)) return
+        stop()
+        val row = host.rowAt(position.x, position.y) ?: return
+        if (!row.enabled || row.onLongClick == null) return
+        target = row
+        job = scope.launch {
+            delay(POPUP_SUBMENU_LONG_PRESS_TIMEOUT_MILLIS)
+            job = null
+            target = null
+            if (host.onLongPress(row, scope)) {
+                triggered = true
+                performHaptic()
+            }
+        }
+    }
+
+    /** Ends the detection (`stopDetection`), e.g. on UP. */
+    fun stop() {
+        job?.cancel()
+        job = null
+        target = null
     }
 }
 
@@ -1078,24 +1180,22 @@ private fun relaySubMenuMove(
     val from = host.coordinates
     val to = sub?.coordinates
     if (sub == null || from == null || to == null || !from.isAttached || !to.isAttached) {
-        relayed?.cancel(scope)
+        relayed?.cancel(relayed.scope ?: scope)
         return null
     }
+    // The sub list's mask animates in the sub list's own scope, which outlives this gesture.
+    val subScope = sub.scope ?: scope
     val local = to.windowToLocal(from.localToWindow(position))
     if (!sub.isInsideList(local.x, local.y)) {
         // cancelSubMenuGestureOutsideBounds.
-        relayed?.cancel(scope)
+        relayed?.cancel(subScope)
         return null
     }
     if (relayed !== sub) {
-        return if (sub.onDown(local.x, local.y, scope) != null) {
-            performHaptic(CouiHapticEffect.Switch)
-            sub
-        } else {
-            null
-        }
+        // The synthetic ACTION_DOWN attaches the mask without a haptic, like a real DOWN.
+        return if (sub.onDown(local.x, local.y, subScope) != null) sub else null
     }
-    if (sub.onMoveTo(local.x, local.y, scope)) performHaptic(CouiHapticEffect.Switch)
+    if (sub.onMoveTo(local.x, local.y, subScope)) performHaptic(CouiHapticEffect.Switch)
     return sub
 }
 
@@ -1119,7 +1219,7 @@ private fun DrawScope.drawPopupSharedMask(
     color: Color,
     squircleEnabled: Boolean,
 ) {
-    val progress = mask.press.value.coerceIn(0f, 1f)
+    val progress = mask.press.coerceIn(0f, 1f)
     if (progress <= 0f) return
     val geometry = mask.current() ?: return
     val rect = Rect(geometry.left, geometry.top, geometry.right, geometry.bottom)
