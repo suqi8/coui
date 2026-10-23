@@ -67,7 +67,7 @@ COUI 17 **没有删改公开签名**，只新增了带默认值的参数，所�
 
 OShin 的两处：
 - `MainAbout` 的本地 `Button`：写死成 22/58/44dp 加左右 12dp 内边距。
-- `AppList` 包图标的 `Card`：显式传 `cornerRadius = 13.dp`，与图标的彩色阴影一致。
+- `AppList` 包图标的 `Card`：显式传 `cornerRadius = 12.dp`，保持 1.1.0 的外观。模块列表的分段卡片也保留原来的 16dp，没有改成 24dp。
 
 ---
 
