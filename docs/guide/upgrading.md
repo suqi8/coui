@@ -26,6 +26,45 @@ New: `enabled`, `pagerState` (the row follows a dragged pager) and a `TabRow(ite
 taking `TabRowItem`s with an icon, a red dot badge or a disabled state. If you need the old
 look, use `TabRowWithContour` with a transparent `backgroundColor`.
 
+### Tooltip is the COUI 17 tooltip
+
+The Miuix tooltip (a caret-less Material-style `PlainTooltip` / `RichTooltip`) is replaced by a
+port of `COUIToolTips`. The new entry point is `TooltipBox(state, tooltip)` with one of the three
+COUI bubble styles: `Tooltip` (the accent tooltips bubble with a close icon, or
+`mode = TooltipMode.Info` for the white bubble), `IconTooltip` and `ImageTooltip`. Every bubble draws
+an arrow at the anchor, grows from it on a spring, and places itself the COUI way (above by default,
+16dp from the window edges).
+
+The old API still compiles but is deprecated: `TooltipBox(positionProvider, …)`, `TooltipBox(text, …)`,
+`RichTooltipBox`, `PlainTooltip`, `RichTooltip`, `RichTooltipColors`,
+`TooltipDefaults.rememberTooltipPositionProvider`, `TooltipDefaults.caretShape()` / `caretSize` and
+the `PlainTooltip*` / `RichTooltip*` constants. Migrate like this:
+
+```kotlin
+// Before
+TooltipBox(text = "Edit") { anchor() }
+
+// After
+val state = rememberTooltipState()
+TooltipBox(
+    state = state,
+    tooltip = { Tooltip(text = "Edit", mode = TooltipMode.Info) },
+    enableUserInput = true, // keep the old long-press / hover trigger
+) { anchor() }
+```
+
+`RichTooltipBox(title, text, actionText)` maps to `IconTooltip(title = …, text = …, dismissText = …)`
+or `ImageTooltip`.
+
+Behaviour changes:
+
+- `rememberTooltipState()` now defaults to `isPersistent = true`: COUI tooltips have no timeout. Pass
+  `isPersistent = false` to keep the auto-dismiss.
+- The new `TooltipBox` defaults to `enableUserInput = false` (COUI shows tooltips programmatically)
+  and `dismissOnTouchOutside = false`; set them to keep the old long-press / outside-tap behaviour.
+- The new bubbles still render inside the deprecated `TooltipBox(positionProvider, …)`, without an
+  arrow.
+
 ## 1.0.0 → 1.1.0
 
 Update the version in every COUI coordinate you depend on:

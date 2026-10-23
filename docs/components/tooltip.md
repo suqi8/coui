@@ -1,6 +1,6 @@
 # Tooltip
 
-`Tooltip` is a component in COUI that briefly describes an anchor element. Following Material 3, a single `TooltipBox` anchors a tooltip to its content; you fill its `tooltip` slot with a `PlainTooltip` (a short inverse-surface label) or a `RichTooltip` (a surface-container card with an optional title and action). Tooltips are shown on hover (mouse) or long press (touch), or programmatically via `TooltipState`.
+`Tooltip` is a port of COUI 17's `COUIToolTips`: a bubble with an arrow pointing at an anchor element. A `TooltipBox` anchors it to its content and positions it; its `tooltip` slot takes one of the three COUI bubble styles — `Tooltip` (Default), `IconTooltip` (Icon) or `ImageTooltip` (Image). Like COUI, tooltips are shown programmatically through `TooltipState` and have no timeout.
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=tooltip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -10,278 +10,180 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.TooltipBox
-import io.github.suqi8.coui.kmp.basic.RichTooltipBox
-import io.github.suqi8.coui.kmp.basic.PlainTooltip
-import io.github.suqi8.coui.kmp.basic.RichTooltip
+import io.github.suqi8.coui.kmp.basic.Tooltip
+import io.github.suqi8.coui.kmp.basic.IconTooltip
+import io.github.suqi8.coui.kmp.basic.ImageTooltip
+import io.github.suqi8.coui.kmp.basic.TooltipBubble
+import io.github.suqi8.coui.kmp.basic.TooltipStyle
+import io.github.suqi8.coui.kmp.basic.TooltipMode
+import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 import io.github.suqi8.coui.kmp.basic.TooltipState
 import io.github.suqi8.coui.kmp.basic.rememberTooltipState
 import io.github.suqi8.coui.kmp.basic.TooltipDefaults
-import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 ```
 
 ## Basic Usage
 
-The quickest way to label an icon-only control is the `text` convenience overload of `TooltipBox`:
-
 ```kotlin
-TooltipBox(text = "Search") {
-    IconButton(onClick = { /* ... */ }) {
-        Icon(
-            imageVector = COUIIcons.Search,
-            contentDescription = "Search",
-        )
-    }
+val state = rememberTooltipState()
+val scope = rememberCoroutineScope()
+
+TooltipBox(
+    state = state,
+    tooltip = { Tooltip(text = "Tap the close icon to dismiss this tip.") },
+) {
+    TextButton(text = "Show tip", onClick = { scope.launch { state.show() } })
 }
 ```
 
-## TooltipBox
+## Styles
 
-`TooltipBox` anchors a tooltip to its `content`. Its `tooltip` slot is a `TooltipScope` lambda, filled with `PlainTooltip` or `RichTooltip`.
+| Style | Composable | Look |
+| ----- | ---------- | ---- |
+| `TooltipStyle.Default`, `TooltipMode.Tooltips` | `Tooltip(text)` | Accent bubble (`couiColorTips`, here `primary`), white 13sp text, 18dp close icon at the end |
+| `TooltipStyle.Default`, `TooltipMode.Info` | `Tooltip(text, mode = TooltipMode.Info)` | White "detail floating" bubble (`backgroundTop`), secondary 13sp text, no close icon, at least 48dp wide |
+| `TooltipStyle.Icon` | `IconTooltip(text, icon)` | White card: 40dp icon with 8dp corners, optional 16sp medium title, 13sp body, optional dismiss text button |
+| `TooltipStyle.Image` | `ImageTooltip(text, image)` | 260dp white card: cropped image (228 × 116dp inset with 8dp corners, or a full-bleed 132dp image), optional title, body, optional dismiss button |
+
+Every bubble is a 17dp smooth round rect at weight 3.0 (`coui_tooltips_os_16_1_radius_17_dp`, `OS_16_1_WEIGHT`), at most 328dp wide (Image: 260dp), with the COUI SHADOW_LV4 shadow. The arrow (20 × 10.1dp with a 2dp rounded tip and flared base, or the 16.27 × 10.29dp edge variant near a corner) is joined to the bubble into one outline.
+
+## TooltipBox
 
 ```kotlin
 @Composable
 fun TooltipBox(
-    positionProvider: PopupPositionProvider,
-    tooltip: @Composable TooltipScope.() -> Unit,
     state: TooltipState,
+    tooltip: @Composable TooltipScope.() -> Unit,
     modifier: Modifier = Modifier,
-    focusable: Boolean = false,
-    enableUserInput: Boolean = true,
+    placement: TooltipAnchorPosition = TooltipAnchorPosition.Above,
+    showArrow: Boolean = true,
+    dismissOnTouchOutside: Boolean = false,
+    enableUserInput: Boolean = false,
+    offset: DpOffset = DpOffset.Zero,
+    arrowFollowsOffset: Boolean = false,
     content: @Composable () -> Unit,
 )
 ```
 
-| Parameter Name  | Type                                | Description                                                        | Default Value | Required |
-| --------------- | ----------------------------------- | ----------------------------------------------------------------- | ------------- | -------- |
-| positionProvider | PopupPositionProvider               | Positions the tooltip; see `TooltipDefaults.rememberTooltipPositionProvider` | -    | Yes      |
-| tooltip         | @Composable TooltipScope.() -> Unit | The tooltip content (`PlainTooltip` / `RichTooltip`)              | -             | Yes      |
-| state           | TooltipState                        | State controlling visibility                                      | -             | Yes      |
-| modifier        | Modifier                            | Modifier applied to the anchor wrapper                            | Modifier      | No       |
-| focusable       | Boolean                             | Whether the tooltip is focusable (true for interactive rich tooltips) | false    | No       |
-| enableUserInput | Boolean                             | Whether hover / long press on the anchor shows the tooltip        | true          | No       |
-| content         | @Composable () -> Unit              | The anchor content                                                | -             | Yes      |
+| Parameter Name | Type | Description | Default Value | Required |
+| -------------- | ---- | ----------- | ------------- | -------- |
+| state | TooltipState | State controlling visibility | - | Yes |
+| tooltip | @Composable TooltipScope.() -> Unit | The bubble: `Tooltip`, `IconTooltip`, `ImageTooltip` or a `TooltipBubble` | - | Yes |
+| modifier | Modifier | Modifier applied to the anchor wrapper | Modifier | No |
+| placement | TooltipAnchorPosition | Preferred side: `Above`, `Below`, `Left`, `Right`, `Start`, `End` | Above | No |
+| showArrow | Boolean | Whether the arrow is drawn | true | No |
+| dismissOnTouchOutside | Boolean | Whether an outside tap or Back dismisses the tooltip (makes it focusable) | false | No |
+| enableUserInput | Boolean | Whether hover / long press on the anchor shows the tooltip | false | No |
+| offset | DpOffset | Extra offset of the tooltip window (x mirrored in RTL) | DpOffset.Zero | No |
+| arrowFollowsOffset | Boolean | Whether the arrow moves with `offset` instead of staying on the anchor | false | No |
+| content | @Composable () -> Unit | The anchor content | - | Yes |
 
-```kotlin
-TooltipBox(
-    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
-    tooltip = { PlainTooltip { Text("Add to favorites") } },
-    state = rememberTooltipState(),
-) {
-    IconButton(onClick = { /* ... */ }) {
-        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "Add to favorites")
-    }
-}
-```
+### Placement
 
-## PlainTooltip
+- **Above / Below**: centred on the anchor, kept 16dp from the window edges. When the preferred side has no room the tooltip moves to the other side; when neither side fits it takes the larger one and its content scrolls. The bubble sits about 5.4dp + its 13dp window inset from the anchor, which puts the arrow tip about 8.6dp from it.
+- **Left / Right / Start / End**: vertically centred on the anchor, 5.7dp away. They never flip sideways: the bubble narrows to the room on that side, and moves above the anchor when it would reach the bottom of the window.
+- The arrow follows the anchor centre along the bubble edge. Within 9dp + 2dp of a corner it switches to the edge arrow, whose straight flank continues the bubble side.
 
-`PlainTooltip` is a short, non-interactive label rendered on the COUI inverse surface. It is a `TooltipScope` extension, so it is used inside the `TooltipBox` `tooltip` slot.
+### Animation and dismissal
 
-```kotlin
-@Composable
-fun TooltipScope.PlainTooltip(
-    modifier: Modifier = Modifier,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.PlainTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.PlainTooltipCornerRadius,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    insideMargin: PaddingValues = TooltipDefaults.PlainTooltipInsideMargin,
-    content: @Composable () -> Unit,
-)
-```
+The tooltip grows from the arrow tip: scale and alpha spring from 0 to 1 (COUISpringForce bounce 0.2, response 0.4 for the scale and 0.3 for the alpha) and back to 0 on dismiss, when the shadow is dropped and touches are ignored. It is dismissed by `state.dismiss()`, by the close icon / dismiss button, or — with `dismissOnTouchOutside` — by an outside tap or Back.
 
-By default the plain tooltip uses an inverse surface tone (a dark bubble in light theme, a light bubble in dark theme). Pass `caretShape = TooltipDefaults.caretShape()` to draw a caret pointing at the anchor; the default is caret-less.
-
-## RichTooltip
-
-`RichTooltip` is a persistent, interactive card with an optional title and action, rendered on a normal `surfaceContainer`. It is a `TooltipScope` extension.
+## Tooltip
 
 ```kotlin
 @Composable
-fun TooltipScope.RichTooltip(
+fun TooltipScope.Tooltip(
+    text: String,
     modifier: Modifier = Modifier,
-    title: (@Composable () -> Unit)? = null,
-    action: (@Composable () -> Unit)? = null,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.RichTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.RichTooltipCornerRadius,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    insideMargin: PaddingValues = TooltipDefaults.RichTooltipInsideMargin,
-    text: @Composable () -> Unit,
+    mode: TooltipMode = TooltipMode.Tooltips,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(mode = mode),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onCloseClick: (() -> Unit)? = null,
 )
 ```
 
-A rich tooltip is interactive, so set `focusable = true` on the `TooltipBox` (the convenience `RichTooltipBox` does this for you) so an outside tap dismisses it and its action is reachable.
+The close icon (Tooltips mode only, content description "Close this tip", 58dp touch target) dismisses the tooltip and then calls `onCloseClick`. An overload takes a `content` lambda instead of `text` for custom content, framed by the same 12dp margins (42dp at the end in Tooltips mode).
+
+## IconTooltip
 
 ```kotlin
-val tooltipState = rememberTooltipState(isPersistent = true)
-val scope = rememberCoroutineScope()
+@Composable
+fun TooltipScope.IconTooltip(
+    text: String,
+    icon: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Icon),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+)
+```
 
+## ImageTooltip
+
+```kotlin
+@Composable
+fun TooltipScope.ImageTooltip(
+    text: String,
+    image: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    imageWithEdges: Boolean = true,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Image),
+    maxWidth: Dp = TooltipDefaults.ImageMaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+)
+```
+
+An overload takes a `media: @Composable BoxScope.() -> Unit` slot instead of `image`, e.g. for a looping animation. The Icon and Image scroll areas fade their top / bottom 24dp while scrolled.
+
+```kotlin
 TooltipBox(
-    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+    state = state,
+    placement = TooltipAnchorPosition.Below,
     tooltip = {
-        RichTooltip(
-            title = { Text("What's new") },
-            action = {
-                TextButton(text = "Got it", onClick = { tooltipState.dismiss() })
-            },
-        ) {
-            Text("Rich tooltips support a title, supporting text, and an action.")
-        }
+        ImageTooltip(
+            title = "What's new",
+            text = "Swipe down with three fingers to take a screenshot.",
+            image = painterResource(Res.drawable.screenshot_gesture),
+            dismissText = "Got it",
+        )
     },
-    state = tooltipState,
-    focusable = true,
-) {
-    IconButton(onClick = { scope.launch { tooltipState.show() } }) {
-        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "What's new")
-    }
-}
+) { /* anchor */ }
 ```
+
+## TooltipBubble
+
+`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` is the bubble the three styles are built on: window inset, arrow, shadow, sizing and clipping. Use it for fully custom content.
 
 ## TooltipState
 
-`TooltipState` controls the tooltip's visibility. A global `MutatorMutex` keeps only one tooltip visible at a time.
-
 ```kotlin
-@Stable
-interface TooltipState {
-    val transition: MutableTransitionState<Boolean>
-    val isVisible: Boolean
-    val isPersistent: Boolean
-    suspend fun show(mutatePriority: MutatePriority = MutatePriority.Default)
-    fun dismiss()
-    fun onDispose()
-}
-
 @Composable
 fun rememberTooltipState(
     initialIsVisible: Boolean = false,
-    isPersistent: Boolean = false,
+    isPersistent: Boolean = true,
     mutatorMutex: MutatorMutex = BasicTooltipDefaults.GlobalMutatorMutex,
 ): TooltipState
 ```
 
-| Parameter Name  | Type         | Description                                              | Default Value                      | Required |
-| --------------- | ------------ | ------------------------------------------------------- | ---------------------------------- | -------- |
-| initialIsVisible | Boolean     | Whether the tooltip is initially visible                | false                              | No       |
-| isPersistent    | Boolean      | Whether the tooltip stays visible until dismissed       | false                              | No       |
-| mutatorMutex    | MutatorMutex | Mutex ensuring only one tooltip shows at a time         | BasicTooltipDefaults.GlobalMutatorMutex | No  |
-
-When `isPersistent` is false (plain tooltips), the tooltip is dismissed automatically after a short timeout. When true (rich tooltips), it stays until `dismiss()`, an outside tap, or a back press. `show()` is a suspend function, so call it from a coroutine (e.g. `scope.launch { state.show() }`).
+`isPersistent` defaults to true: a COUI tooltip stays until it is dismissed. Pass false to dismiss it automatically after the platform tooltip timeout. `show()` is a suspend function; a global `MutatorMutex` keeps only one tooltip visible at a time.
 
 ## TooltipDefaults
 
-`TooltipDefaults` provides position providers, colors, the caret, and dimension constants.
+| Member | Description | Value |
+| ------ | ----------- | ----- |
+| CornerRadius | Bubble corner radius | 17.dp |
+| CornerWeight | Bubble corner weight | 3.0f |
+| MaxWidth | Default / Icon max width | 328.dp |
+| ImageMaxWidth | Image bubble width | 260.dp |
+| InfoMinWidth | Info window min width (inset included) | 80.dp |
+| windowInset(style, mode) | Transparent inset around the bubble for the arrow and shadow | 13 × 13dp; Info 16 × 13dp |
+| maxWidth(style) / minWidth(style, mode) | Per-style width limits | - |
+| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips: `primary` / `onPrimary`; others: `backgroundTop` / `onSurfaceSecondary`; title `onSurface`; action `primary` |
 
-### Position provider
+## Deprecated
 
-```kotlin
-@Composable
-fun TooltipDefaults.rememberTooltipPositionProvider(
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    spacingBetweenTooltipAndAnchor: Dp = TooltipDefaults.SpacingBetweenTooltipAndAnchor,
-): PopupPositionProvider
-```
-
-`TooltipAnchorPosition` selects the preferred side: `Above`, `Below`, `Left`, `Right`, `Start`, `End`. The tooltip is centered on the cross axis and flips to the opposite side when there is not enough room.
-
-### Colors
-
-```kotlin
-// Plain tooltip (inverse surface)
-val plainContainer = TooltipDefaults.plainTooltipContainerColor   // onSecondaryVariant
-val plainContent = TooltipDefaults.plainTooltipContentColor       // secondaryVariant
-
-// Rich tooltip (surface container)
-val richColors = TooltipDefaults.richTooltipColors(
-    containerColor = COUITheme.colorScheme.surfaceContainer,
-    contentColor = COUITheme.colorScheme.onSurfaceContainerVariant,
-    titleContentColor = COUITheme.colorScheme.onSurfaceContainer,
-    actionContentColor = COUITheme.colorScheme.primary,
-)
-```
-
-`RichTooltipColors` is a data class of `containerColor`, `contentColor`, `titleContentColor`, and `actionContentColor`.
-
-### Caret
-
-```kotlin
-fun TooltipDefaults.caretShape(): Shape
-val TooltipDefaults.caretSize: DpSize // 16 x 8 dp
-```
-
-Pass `caretShape = TooltipDefaults.caretShape()` to `PlainTooltip` / `RichTooltip` to draw a caret pointing at the anchor (for `Above` / `Below` positioning). The default is caret-less, matching the rest of COUI's floating surfaces.
-
-### Constants
-
-| Constant Name              | Type          | Description                              | Default Value                                      |
-| -------------------------- | ------------- | ---------------------------------------- | -------------------------------------------------- |
-| SpacingBetweenTooltipAndAnchor | Dp        | Spacing between a tooltip and its anchor | 8.dp                                               |
-| PlainTooltipMaxWidth       | Dp            | Maximum width of a plain tooltip         | 200.dp                                             |
-| PlainTooltipCornerRadius   | Dp            | Corner radius of a plain tooltip (COUI 17 `coui_tooltips_os_16_1_radius_17_dp`, drawn at weight 3.0) | 17.dp                                              |
-| PlainTooltipInsideMargin   | PaddingValues | Inner padding of a plain tooltip         | PaddingValues(horizontal = 12.dp, vertical = 8.dp) |
-| RichTooltipMaxWidth        | Dp            | Maximum width of a rich tooltip          | 320.dp                                             |
-| RichTooltipCornerRadius    | Dp            | Corner radius of a rich tooltip (same 17dp panel, weight 3.0) | 17.dp                                              |
-| RichTooltipInsideMargin    | PaddingValues | Inner padding of a rich tooltip          | PaddingValues(all = 16.dp)                         |
-| RichTooltipActionCornerRadius | Dp         | Corner radius of a rich tooltip action button | 8.dp                                          |
-| RichTooltipActionInsideMargin | PaddingValues | Inner padding of a rich tooltip action button | PaddingValues(horizontal = 12.dp, vertical = 6.dp) |
-| caretSize                  | DpSize        | Size of the caret                        | DpSize(16.dp, 8.dp)                                |
-
-## Convenience overloads
-
-For the common cases you can skip the position provider and content composables.
-
-### Plain tooltip
-
-```kotlin
-@Composable
-fun TooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = false),
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    content: @Composable () -> Unit,
-)
-```
-
-### Rich tooltip
-
-```kotlin
-@Composable
-fun RichTooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = true),
-    title: String? = null,
-    actionText: String? = null,
-    onActionClick: (() -> Unit)? = null,
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    content: @Composable () -> Unit,
-)
-```
-
-`RichTooltipBox` is persistent and focusable. Trigger it via long press / hover, or hoist `state` and call `state.show()` from the anchor's own click. The action invokes `onActionClick` then dismisses the tooltip.
-
-```kotlin
-val richState = rememberTooltipState(isPersistent = true)
-val scope = rememberCoroutineScope()
-
-RichTooltipBox(
-    title = "Rich tooltip",
-    text = "Rich tooltips support a title, supporting text, and an action.",
-    actionText = "Got it",
-    onActionClick = { /* ... */ },
-    state = richState,
-) {
-    TextButton(
-        text = "Show rich tooltip",
-        onClick = { scope.launch { richState.show() } },
-    )
-}
-```
+The Miuix tooltip API — `TooltipBox(positionProvider, …)`, `TooltipBox(text, …)`, `RichTooltipBox`, `PlainTooltip`, `RichTooltip`, `RichTooltipColors`, `TooltipDefaults.rememberTooltipPositionProvider`, `caretShape` and the `PlainTooltip*` / `RichTooltip*` constants — still works but is deprecated. See the [upgrading guide](../guide/upgrading.md).

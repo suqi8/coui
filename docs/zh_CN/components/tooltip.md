@@ -1,6 +1,6 @@
 # Tooltip
 
-`Tooltip` 是 COUI 中用于简短描述锚点元素的组件。参照 Material 3，统一由 `TooltipBox` 将 tooltip 锚定到内容上；你在它的 `tooltip` 槽里填入 `PlainTooltip`（反色表面短标签）或 `RichTooltip`（带可选标题与操作的 surfaceContainer 卡片）。tooltip 在悬停（光标）或长按（触摸）时显示，也可通过 `TooltipState` 以编程方式显示。
+`Tooltip` 移植自 COUI 17 的 `COUIToolTips`：一个带箭头、指向锚点元素的气泡。`TooltipBox` 把它锚定到内容上并负责定位；它的 `tooltip` 槽填入 COUI 的三种气泡样式之一 —— `Tooltip`（Default）、`IconTooltip`（Icon）或 `ImageTooltip`（Image）。与 COUI 一致，tooltip 通过 `TooltipState` 以编程方式显示，且没有超时。
 
 <div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=tooltip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -10,278 +10,180 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.TooltipBox
-import io.github.suqi8.coui.kmp.basic.RichTooltipBox
-import io.github.suqi8.coui.kmp.basic.PlainTooltip
-import io.github.suqi8.coui.kmp.basic.RichTooltip
+import io.github.suqi8.coui.kmp.basic.Tooltip
+import io.github.suqi8.coui.kmp.basic.IconTooltip
+import io.github.suqi8.coui.kmp.basic.ImageTooltip
+import io.github.suqi8.coui.kmp.basic.TooltipBubble
+import io.github.suqi8.coui.kmp.basic.TooltipStyle
+import io.github.suqi8.coui.kmp.basic.TooltipMode
+import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 import io.github.suqi8.coui.kmp.basic.TooltipState
 import io.github.suqi8.coui.kmp.basic.rememberTooltipState
 import io.github.suqi8.coui.kmp.basic.TooltipDefaults
-import io.github.suqi8.coui.kmp.basic.TooltipAnchorPosition
 ```
 
 ## 基本用法
 
-为纯图标控件加标签，最快的方式是 `TooltipBox` 的 `text` 便捷重载：
-
 ```kotlin
-TooltipBox(text = "搜索") {
-    IconButton(onClick = { /* ... */ }) {
-        Icon(
-            imageVector = COUIIcons.Search,
-            contentDescription = "搜索",
-        )
-    }
+val state = rememberTooltipState()
+val scope = rememberCoroutineScope()
+
+TooltipBox(
+    state = state,
+    tooltip = { Tooltip(text = "点击关闭图标即可关闭此提示。") },
+) {
+    TextButton(text = "显示提示", onClick = { scope.launch { state.show() } })
 }
 ```
 
-## TooltipBox
+## 样式
 
-`TooltipBox` 将 tooltip 锚定到 `content`。它的 `tooltip` 槽是一个 `TooltipScope` lambda，用 `PlainTooltip` 或 `RichTooltip` 填充。
+| 样式 | 组件 | 外观 |
+| ---- | ---- | ---- |
+| `TooltipStyle.Default`，`TooltipMode.Tooltips` | `Tooltip(text)` | 强调色气泡（`couiColorTips`，此处取 `primary`），13sp 白字，末端 18dp 关闭图标 |
+| `TooltipStyle.Default`，`TooltipMode.Info` | `Tooltip(text, mode = TooltipMode.Info)` | 白色「detail floating」气泡（`backgroundTop`），13sp 次要文字，无关闭图标，最窄 48dp |
+| `TooltipStyle.Icon` | `IconTooltip(text, icon)` | 白色卡片：8dp 圆角的 40dp 图标、可选 16sp medium 标题、13sp 正文、可选关闭文字按钮 |
+| `TooltipStyle.Image` | `ImageTooltip(text, image)` | 260dp 白色卡片：裁剪的图片（内缩 228 × 116dp、8dp 圆角，或通栏 132dp）、可选标题、正文、可选关闭按钮 |
+
+所有气泡都是 17dp、权重 3.0 的平滑圆角矩形（`coui_tooltips_os_16_1_radius_17_dp`、`OS_16_1_WEIGHT`），最宽 328dp（Image 为 260dp），带 COUI SHADOW_LV4 阴影。箭头（20 × 10.1dp，2dp 圆角尖端、底部外扩圆弧；靠近圆角时换成 16.27 × 10.29dp 的贴边箭头）与气泡合并为同一轮廓。
+
+## TooltipBox
 
 ```kotlin
 @Composable
 fun TooltipBox(
-    positionProvider: PopupPositionProvider,
-    tooltip: @Composable TooltipScope.() -> Unit,
     state: TooltipState,
+    tooltip: @Composable TooltipScope.() -> Unit,
     modifier: Modifier = Modifier,
-    focusable: Boolean = false,
-    enableUserInput: Boolean = true,
+    placement: TooltipAnchorPosition = TooltipAnchorPosition.Above,
+    showArrow: Boolean = true,
+    dismissOnTouchOutside: Boolean = false,
+    enableUserInput: Boolean = false,
+    offset: DpOffset = DpOffset.Zero,
+    arrowFollowsOffset: Boolean = false,
     content: @Composable () -> Unit,
 )
 ```
 
-| 参数名           | 类型                                | 说明                                                       | 默认值   | 是否必须 |
-| ---------------- | ----------------------------------- | ---------------------------------------------------------- | -------- | -------- |
-| positionProvider | PopupPositionProvider               | 定位 tooltip，见 `TooltipDefaults.rememberTooltipPositionProvider` | -  | 是       |
-| tooltip          | @Composable TooltipScope.() -> Unit | tooltip 内容（`PlainTooltip` / `RichTooltip`）            | -        | 是       |
-| state            | TooltipState                        | 控制显隐的状态                                            | -        | 是       |
-| modifier         | Modifier                            | 应用于锚点包裹层的修饰符                                  | Modifier | 否       |
-| focusable        | Boolean                             | tooltip 是否 focusable（可交互的 rich tooltip 需为 true） | false    | 否       |
-| enableUserInput  | Boolean                             | 悬停 / 长按锚点是否显示 tooltip                          | true     | 否       |
-| content          | @Composable () -> Unit              | 锚点内容                                                  | -        | 是       |
+| 参数名 | 类型 | 说明 | 默认值 | 是否必须 |
+| ------ | ---- | ---- | ------ | -------- |
+| state | TooltipState | 控制显隐的状态 | - | 是 |
+| tooltip | @Composable TooltipScope.() -> Unit | 气泡：`Tooltip`、`IconTooltip`、`ImageTooltip` 或 `TooltipBubble` | - | 是 |
+| modifier | Modifier | 应用于锚点外层的修饰符 | Modifier | 否 |
+| placement | TooltipAnchorPosition | 首选方向：`Above`、`Below`、`Left`、`Right`、`Start`、`End` | Above | 否 |
+| showArrow | Boolean | 是否绘制箭头 | true | 否 |
+| dismissOnTouchOutside | Boolean | 点击外部或返回键是否关闭（同时使窗口可获取焦点） | false | 否 |
+| enableUserInput | Boolean | 悬停 / 长按锚点时是否显示 | false | 否 |
+| offset | DpOffset | tooltip 窗口的额外偏移（RTL 下 x 取反） | DpOffset.Zero | 否 |
+| arrowFollowsOffset | Boolean | 箭头是否随 `offset` 移动，而非继续指向锚点 | false | 否 |
+| content | @Composable () -> Unit | 锚点内容 | - | 是 |
 
-```kotlin
-TooltipBox(
-    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
-    tooltip = { PlainTooltip { Text("添加到收藏") } },
-    state = rememberTooltipState(),
-) {
-    IconButton(onClick = { /* ... */ }) {
-        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "添加到收藏")
-    }
-}
-```
+### 定位
 
-## PlainTooltip
+- **Above / Below**：以锚点为中心，离窗口边缘保持 16dp。首选方向放不下时换到另一侧；两侧都放不下时取空间更大的一侧，内容可滚动。气泡距锚点约 5.4dp 再加 13dp 的窗口内边距，箭头尖端距锚点约 8.6dp。
+- **Left / Right / Start / End**：与锚点垂直居中，间距 5.7dp。不会左右翻转：气泡收窄到该侧的可用宽度；若会触及窗口底部，则改为显示在锚点上方。
+- 箭头沿气泡边缘跟随锚点中心；距圆角不足 9dp + 2dp 时换成贴边箭头，其直边延续气泡侧边。
 
-`PlainTooltip` 是渲染在 COUI 反色表面上的短标签、不可交互。它是 `TooltipScope` 扩展，用于 `TooltipBox` 的 `tooltip` 槽内。
+### 动画与关闭
 
-```kotlin
-@Composable
-fun TooltipScope.PlainTooltip(
-    modifier: Modifier = Modifier,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.PlainTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.PlainTooltipCornerRadius,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    insideMargin: PaddingValues = TooltipDefaults.PlainTooltipInsideMargin,
-    content: @Composable () -> Unit,
-)
-```
+tooltip 从箭头尖端长出：缩放与透明度从 0 弹到 1（COUISpringForce bounce 0.2，缩放 response 0.4、透明度 0.3），关闭时弹回 0，此时去掉阴影并忽略触摸。通过 `state.dismiss()`、关闭图标 / 关闭按钮，或在 `dismissOnTouchOutside` 时点击外部 / 返回键关闭。
 
-默认情况下 plain tooltip 采用反色表面（浅色主题为深色气泡，深色主题为浅色气泡）。传入 `caretShape = TooltipDefaults.caretShape()` 可绘制指向锚点的箭头；默认无箭头。
-
-## RichTooltip
-
-`RichTooltip` 是带可选标题与操作的持久、可交互卡片，渲染在普通 `surfaceContainer` 上。它是 `TooltipScope` 扩展。
+## Tooltip
 
 ```kotlin
 @Composable
-fun TooltipScope.RichTooltip(
+fun TooltipScope.Tooltip(
+    text: String,
     modifier: Modifier = Modifier,
-    title: (@Composable () -> Unit)? = null,
-    action: (@Composable () -> Unit)? = null,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.RichTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.RichTooltipCornerRadius,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    insideMargin: PaddingValues = TooltipDefaults.RichTooltipInsideMargin,
-    text: @Composable () -> Unit,
+    mode: TooltipMode = TooltipMode.Tooltips,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(mode = mode),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onCloseClick: (() -> Unit)? = null,
 )
 ```
 
-rich tooltip 可交互，因此需在 `TooltipBox` 上设 `focusable = true`（便捷的 `RichTooltipBox` 已替你设好），以便点外部关闭、操作可达。
+关闭图标（仅 Tooltips 模式，内容描述 "Close this tip"，触摸区 58dp）先关闭 tooltip 再调用 `onCloseClick`。另有一个以 `content` lambda 代替 `text` 的重载用于自定义内容，四周同样是 12dp 边距（Tooltips 模式末端 42dp）。
+
+## IconTooltip
 
 ```kotlin
-val tooltipState = rememberTooltipState(isPersistent = true)
-val scope = rememberCoroutineScope()
+@Composable
+fun TooltipScope.IconTooltip(
+    text: String,
+    icon: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Icon),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+)
+```
 
+## ImageTooltip
+
+```kotlin
+@Composable
+fun TooltipScope.ImageTooltip(
+    text: String,
+    image: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    imageWithEdges: Boolean = true,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Image),
+    maxWidth: Dp = TooltipDefaults.ImageMaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+)
+```
+
+另有一个以 `media: @Composable BoxScope.() -> Unit` 槽代替 `image` 的重载，例如放循环动画。Icon 与 Image 的滚动区在可滚动时上下各有 24dp 渐隐边。
+
+```kotlin
 TooltipBox(
-    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+    state = state,
+    placement = TooltipAnchorPosition.Below,
     tooltip = {
-        RichTooltip(
-            title = { Text("新功能") },
-            action = {
-                TextButton(text = "知道了", onClick = { tooltipState.dismiss() })
-            },
-        ) {
-            Text("Rich tooltip 支持标题、说明文字与一个操作。")
-        }
+        ImageTooltip(
+            title = "新功能",
+            text = "三指下滑即可截屏。",
+            image = painterResource(Res.drawable.screenshot_gesture),
+            dismissText = "知道了",
+        )
     },
-    state = tooltipState,
-    focusable = true,
-) {
-    IconButton(onClick = { scope.launch { tooltipState.show() } }) {
-        Icon(imageVector = COUIIcons.Basic.Check, contentDescription = "新功能")
-    }
-}
+) { /* 锚点 */ }
 ```
+
+## TooltipBubble
+
+`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` 是三种样式共用的气泡：窗口内边距、箭头、阴影、尺寸与裁剪。需要完全自定义内容时使用。
 
 ## TooltipState
 
-`TooltipState` 控制 tooltip 的显隐。全局 `MutatorMutex` 保证同一时刻只有一个 tooltip 可见。
-
 ```kotlin
-@Stable
-interface TooltipState {
-    val transition: MutableTransitionState<Boolean>
-    val isVisible: Boolean
-    val isPersistent: Boolean
-    suspend fun show(mutatePriority: MutatePriority = MutatePriority.Default)
-    fun dismiss()
-    fun onDispose()
-}
-
 @Composable
 fun rememberTooltipState(
     initialIsVisible: Boolean = false,
-    isPersistent: Boolean = false,
+    isPersistent: Boolean = true,
     mutatorMutex: MutatorMutex = BasicTooltipDefaults.GlobalMutatorMutex,
 ): TooltipState
 ```
 
-| 参数名           | 类型         | 说明                                  | 默认值                                  | 是否必须 |
-| ---------------- | ------------ | ------------------------------------- | --------------------------------------- | -------- |
-| initialIsVisible | Boolean      | tooltip 是否初始可见                  | false                                   | 否       |
-| isPersistent     | Boolean      | tooltip 是否一直显示直到被关闭        | false                                   | 否       |
-| mutatorMutex     | MutatorMutex | 保证同一时刻只显示一个 tooltip 的互斥锁 | BasicTooltipDefaults.GlobalMutatorMutex | 否     |
-
-当 `isPersistent` 为 false（plain tooltip）时，tooltip 在短暂超时后自动消失；为 true（rich tooltip）时，会一直显示直到 `dismiss()`、点外部或按返回键。`show()` 是 suspend 函数，需在协程中调用（例如 `scope.launch { state.show() }`）。
+`isPersistent` 默认为 true：COUI tooltip 会一直显示到被关闭。传 false 则在平台 tooltip 超时后自动关闭。`show()` 是挂起函数；全局 `MutatorMutex` 保证同时只显示一个 tooltip。
 
 ## TooltipDefaults
 
-`TooltipDefaults` 提供定位 provider、颜色、caret 与尺寸常量。
+| 成员 | 说明 | 值 |
+| ---- | ---- | -- |
+| CornerRadius | 气泡圆角 | 17.dp |
+| CornerWeight | 气泡圆角权重 | 3.0f |
+| MaxWidth | Default / Icon 最大宽度 | 328.dp |
+| ImageMaxWidth | Image 气泡宽度 | 260.dp |
+| InfoMinWidth | Info 窗口最小宽度（含内边距） | 80.dp |
+| windowInset(style, mode) | 气泡外容纳箭头与阴影的透明内边距 | 13 × 13dp；Info 为 16 × 13dp |
+| maxWidth(style) / minWidth(style, mode) | 各样式的宽度限制 | - |
+| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips：`primary` / `onPrimary`；其他：`backgroundTop` / `onSurfaceSecondary`；标题 `onSurface`；操作 `primary` |
 
-### 定位 provider
+## 已弃用
 
-```kotlin
-@Composable
-fun TooltipDefaults.rememberTooltipPositionProvider(
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    spacingBetweenTooltipAndAnchor: Dp = TooltipDefaults.SpacingBetweenTooltipAndAnchor,
-): PopupPositionProvider
-```
-
-`TooltipAnchorPosition` 选择优先方位：`Above`、`Below`、`Left`、`Right`、`Start`、`End`。tooltip 在交叉轴上居中，空间不足时翻转到对侧。
-
-### 颜色
-
-```kotlin
-// plain tooltip（反色表面）
-val plainContainer = TooltipDefaults.plainTooltipContainerColor   // onSecondaryVariant
-val plainContent = TooltipDefaults.plainTooltipContentColor       // secondaryVariant
-
-// rich tooltip（surface container）
-val richColors = TooltipDefaults.richTooltipColors(
-    containerColor = COUITheme.colorScheme.surfaceContainer,
-    contentColor = COUITheme.colorScheme.onSurfaceContainerVariant,
-    titleContentColor = COUITheme.colorScheme.onSurfaceContainer,
-    actionContentColor = COUITheme.colorScheme.primary,
-)
-```
-
-`RichTooltipColors` 是包含 `containerColor`、`contentColor`、`titleContentColor`、`actionContentColor` 的数据类。
-
-### Caret
-
-```kotlin
-fun TooltipDefaults.caretShape(): Shape
-val TooltipDefaults.caretSize: DpSize // 16 x 8 dp
-```
-
-向 `PlainTooltip` / `RichTooltip` 传入 `caretShape = TooltipDefaults.caretShape()` 即可绘制指向锚点的箭头（针对 `Above` / `Below` 方位）。默认无箭头，与 COUI 其余浮层保持一致。
-
-### 常量
-
-| 常量名                         | 类型          | 说明                     | 默认值                                             |
-| ------------------------------ | ------------- | ------------------------ | -------------------------------------------------- |
-| SpacingBetweenTooltipAndAnchor | Dp            | tooltip 与锚点之间的间距 | 8.dp                                               |
-| PlainTooltipMaxWidth           | Dp            | plain tooltip 的最大宽度 | 200.dp                                             |
-| PlainTooltipCornerRadius       | Dp            | plain tooltip 的圆角半径（COUI 17 `coui_tooltips_os_16_1_radius_17_dp`，权重 3.0） | 17.dp                                              |
-| PlainTooltipInsideMargin       | PaddingValues | plain tooltip 的内边距   | PaddingValues(horizontal = 12.dp, vertical = 8.dp) |
-| RichTooltipMaxWidth            | Dp            | rich tooltip 的最大宽度  | 320.dp                                             |
-| RichTooltipCornerRadius        | Dp            | rich tooltip 的圆角半径（同 17dp 面板，权重 3.0） | 17.dp                                              |
-| RichTooltipInsideMargin        | PaddingValues | rich tooltip 的内边距    | PaddingValues(all = 16.dp)                         |
-| RichTooltipActionCornerRadius  | Dp            | rich tooltip 操作按钮的圆角半径 | 8.dp                                          |
-| RichTooltipActionInsideMargin  | PaddingValues | rich tooltip 操作按钮的内边距   | PaddingValues(horizontal = 12.dp, vertical = 6.dp) |
-| caretSize                      | DpSize        | caret 的尺寸             | DpSize(16.dp, 8.dp)                                |
-
-## 便捷重载
-
-常见场景下可以省去定位 provider 与内容组合函数。
-
-### Plain tooltip
-
-```kotlin
-@Composable
-fun TooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = false),
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    content: @Composable () -> Unit,
-)
-```
-
-### Rich tooltip
-
-```kotlin
-@Composable
-fun RichTooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = true),
-    title: String? = null,
-    actionText: String? = null,
-    onActionClick: (() -> Unit)? = null,
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    content: @Composable () -> Unit,
-)
-```
-
-`RichTooltipBox` 是持久且 focusable 的。通过长按 / 悬停触发，或提升 `state` 并在锚点自身的点击里调用 `state.show()`。操作会先调用 `onActionClick` 再关闭 tooltip。
-
-```kotlin
-val richState = rememberTooltipState(isPersistent = true)
-val scope = rememberCoroutineScope()
-
-RichTooltipBox(
-    title = "Rich tooltip",
-    text = "Rich tooltip 支持标题、说明文字与一个操作。",
-    actionText = "知道了",
-    onActionClick = { /* ... */ },
-    state = richState,
-) {
-    TextButton(
-        text = "显示 rich tooltip",
-        onClick = { scope.launch { richState.show() } },
-    )
-}
-```
+Miuix 版 tooltip API —— `TooltipBox(positionProvider, …)`、`TooltipBox(text, …)`、`RichTooltipBox`、`PlainTooltip`、`RichTooltip`、`RichTooltipColors`、`TooltipDefaults.rememberTooltipPositionProvider`、`caretShape` 以及 `PlainTooltip*` / `RichTooltip*` 常量 —— 仍可使用但已弃用。参见[升级指南](../guide/upgrading.md)。

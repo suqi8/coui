@@ -17,6 +17,39 @@
 
 新增：`enabled`、`pagerState`（拖动 Pager 时标签行跟随），以及接收 `TabRowItem` 的 `TabRow(items = ...)` 重载，可设置图标、红点和禁用状态。需要旧外观时，请改用 `backgroundColor` 透明的 `TabRowWithContour`。
 
+### Tooltip 改为 COUI 17 tooltip
+
+Miuix 版 tooltip（无箭头、Material 风格的 `PlainTooltip` / `RichTooltip`）已替换为 `COUIToolTips` 的移植。
+新的入口是 `TooltipBox(state, tooltip)`，配合 COUI 的三种气泡样式之一：`Tooltip`（带关闭图标的强调色气泡，
+或 `mode = TooltipMode.Info` 的白色气泡）、`IconTooltip` 和 `ImageTooltip`。每个气泡都会画出指向锚点的箭头，
+从箭头处以弹簧动画长出，并按 COUI 规则定位（默认在上方，距窗口边缘 16dp）。
+
+旧 API 仍可编译但已弃用：`TooltipBox(positionProvider, …)`、`TooltipBox(text, …)`、`RichTooltipBox`、
+`PlainTooltip`、`RichTooltip`、`RichTooltipColors`、`TooltipDefaults.rememberTooltipPositionProvider`、
+`TooltipDefaults.caretShape()` / `caretSize`，以及 `PlainTooltip*` / `RichTooltip*` 常量。迁移方式：
+
+```kotlin
+// 之前
+TooltipBox(text = "Edit") { anchor() }
+
+// 之后
+val state = rememberTooltipState()
+TooltipBox(
+    state = state,
+    tooltip = { Tooltip(text = "Edit", mode = TooltipMode.Info) },
+    enableUserInput = true, // 保留原来的长按 / 悬停触发
+) { anchor() }
+```
+
+`RichTooltipBox(title, text, actionText)` 对应 `IconTooltip(title = …, text = …, dismissText = …)` 或 `ImageTooltip`。
+
+行为变化：
+
+- `rememberTooltipState()` 现在默认 `isPersistent = true`：COUI tooltip 没有超时。需要自动消失时传 `isPersistent = false`。
+- 新 `TooltipBox` 默认 `enableUserInput = false`（COUI 以编程方式显示 tooltip）且 `dismissOnTouchOutside = false`；
+  如需保留旧的长按 / 点击外部关闭，请显式设置。
+- 新气泡放进已弃用的 `TooltipBox(positionProvider, …)` 仍能渲染，但不画箭头。
+
 ## 1.0.0 → 1.1.0
 
 把你依赖的每个 COUI 坐标都改成新版本：
