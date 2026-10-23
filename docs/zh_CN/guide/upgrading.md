@@ -49,6 +49,7 @@ TooltipBox(
 - 新 `TooltipBox` 默认 `enableUserInput = false`（COUI 以编程方式显示 tooltip）且 `dismissOnTouchOutside = false`；
   如需保留旧的长按 / 点击外部关闭，请显式设置。
 - 新气泡放进已弃用的 `TooltipBox(positionProvider, …)` 仍能渲染，但不画箭头。
+- 锚定在 `TopAppBar`、`SmallTopAppBar` 或 `NavigationBar` 内的 tooltip 使用 COUI 工具栏 / 导航栏间距；锚点离开组合、滚出视野或尺寸变为 0 时，tooltip 直接消失，不播放退场动画。
 
 ## 1.0.0 → 1.1.0
 

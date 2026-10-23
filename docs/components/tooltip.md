@@ -86,7 +86,13 @@ fun TooltipBox(
 
 ### Animation and dismissal
 
-The tooltip grows from the arrow tip: scale and alpha spring from 0 to 1 (COUISpringForce bounce 0.2, response 0.4 for the scale and 0.3 for the alpha) and back to 0 on dismiss, when the shadow is dropped and touches are ignored. It is dismissed by `state.dismiss()`, by the close icon / dismiss button, or — with `dismissOnTouchOutside` — by an outside tap or Back.
+The tooltip grows from the arrow tip: scale and alpha spring from 0 to 1 (COUISpringForce bounce 0.2, response 0.4 for the scale and 0.3 for the alpha). Every dismiss restarts both springs from their start values and runs them back to 0 — an exit that interrupts an enter first jumps to full size, as in COUI — drops the shadow, ignores touches, and removes the window 320ms after it began; a second `dismiss()` during that exit removes it at once.
+
+It is dismissed by `state.dismiss()`, by the close icon / dismiss button, or — with `dismissOnTouchOutside` — by an outside tap or Back. It disappears immediately, without the exit animation, when its anchor leaves the composition, scrolls out of its visible area or collapses to zero size.
+
+### Toolbar and navigation anchors
+
+COUI pulls a tooltip into a toolbar or bottom navigation bar instead of keeping the 5.4dp gap: an anchor inside a toolbar uses a -10.1dp gap on every side, an anchor inside a bottom navigation bar -3.3dp plus the distance from the bar top to the anchor top; both also count toward the room below the anchor. `TopAppBar` / `SmallTopAppBar` (navigation icon and actions) and `NavigationBar` mark themselves for this. Wrap a custom bar with `ProvideTooltipAnchorContainer(TooltipAnchorType.Toolbar)` or `TooltipAnchorType.Navigation` to get the same spacing.
 
 ## Tooltip
 
@@ -102,7 +108,7 @@ fun TooltipScope.Tooltip(
 )
 ```
 
-The close icon (Tooltips mode only, content description "Close this tip", 58dp touch target) dismisses the tooltip and then calls `onCloseClick`. An overload takes a `content` lambda instead of `text` for custom content, framed by the same 12dp margins (42dp at the end in Tooltips mode).
+The close icon (Tooltips mode only, content description from COUI's `coui_tool_tips_delete_icon_description` in the current locale, e.g. "Close this tip" / "关闭提示", 58dp touch target) dismisses the tooltip and then calls `onCloseClick`. An overload takes a `content` lambda instead of `text` for custom content, framed by the same 12dp margins (42dp at the end in Tooltips mode).
 
 ## IconTooltip
 
@@ -156,7 +162,7 @@ TooltipBox(
 
 ## TooltipBubble
 
-`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` is the bubble the three styles are built on: window inset, arrow, shadow, sizing and clipping. Use it for fully custom content.
+`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` is the bubble the three styles are built on: window inset, arrow, shadow, sizing and clipping. Use it for fully custom content. It measures its content for real — a side tooltip that falls back above the anchor is re-measured at full width, and a tooltip that fits neither above nor below is re-measured at the height of the larger side — so lazy lists work inside it.
 
 ## TooltipState
 

@@ -64,6 +64,9 @@ Behaviour changes:
   and `dismissOnTouchOutside = false`; set them to keep the old long-press / outside-tap behaviour.
 - The new bubbles still render inside the deprecated `TooltipBox(positionProvider, …)`, without an
   arrow.
+- A tooltip anchored inside `TopAppBar`, `SmallTopAppBar` or `NavigationBar` uses the COUI toolbar /
+  navigation spacing, and one whose anchor leaves the composition, scrolls out of view or collapses to
+  zero size disappears without an exit animation.
 
 ## 1.0.0 → 1.1.0
 

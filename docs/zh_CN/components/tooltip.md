@@ -86,7 +86,13 @@ fun TooltipBox(
 
 ### 动画与关闭
 
-tooltip 从箭头尖端长出：缩放与透明度从 0 弹到 1（COUISpringForce bounce 0.2，缩放 response 0.4、透明度 0.3），关闭时弹回 0，此时去掉阴影并忽略触摸。通过 `state.dismiss()`、关闭图标 / 关闭按钮，或在 `dismissOnTouchOutside` 时点击外部 / 返回键关闭。
+tooltip 从箭头尖端长出：缩放与透明度从 0 弹到 1（COUISpringForce bounce 0.2，缩放 response 0.4、透明度 0.3）。每次关闭都会把两个弹簧从起始值重新启动并弹回 0 —— 与 COUI 一致，打断入场的退场会先跳回完整大小 —— 同时去掉阴影、忽略触摸，并在退场开始 320ms 后移除窗口；退场期间再次 `dismiss()` 会立即移除。
+
+通过 `state.dismiss()`、关闭图标 / 关闭按钮，或在 `dismissOnTouchOutside` 时点击外部 / 返回键关闭。锚点离开组合、滚出可见区域或尺寸变为 0 时，tooltip 会立即消失，不播放退场动画。
+
+### 工具栏与导航栏锚点
+
+COUI 会把 tooltip 拉进工具栏或底部导航栏，而不是保持 5.4dp 间距：工具栏内的锚点各方向间距为 -10.1dp，底部导航栏内的锚点为 -3.3dp 再加上导航栏顶部到锚点顶部的距离；两者也计入锚点下方的可用空间。`TopAppBar` / `SmallTopAppBar`（导航图标与操作按钮）和 `NavigationBar` 会自动标记。自定义栏可用 `ProvideTooltipAnchorContainer(TooltipAnchorType.Toolbar)` 或 `TooltipAnchorType.Navigation` 包裹以获得相同间距。
 
 ## Tooltip
 
@@ -102,7 +108,7 @@ fun TooltipScope.Tooltip(
 )
 ```
 
-关闭图标（仅 Tooltips 模式，内容描述 "Close this tip"，触摸区 58dp）先关闭 tooltip 再调用 `onCloseClick`。另有一个以 `content` lambda 代替 `text` 的重载用于自定义内容，四周同样是 12dp 边距（Tooltips 模式末端 42dp）。
+关闭图标（仅 Tooltips 模式，内容描述取 COUI `coui_tool_tips_delete_icon_description` 的当前语言版本，如 "关闭提示" / "Close this tip"，触摸区 58dp）先关闭 tooltip 再调用 `onCloseClick`。另有一个以 `content` lambda 代替 `text` 的重载用于自定义内容，四周同样是 12dp 边距（Tooltips 模式末端 42dp）。
 
 ## IconTooltip
 
@@ -156,7 +162,7 @@ TooltipBox(
 
 ## TooltipBubble
 
-`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` 是三种样式共用的气泡：窗口内边距、箭头、阴影、尺寸与裁剪。需要完全自定义内容时使用。
+`TooltipBubble(style, mode, containerColor, maxWidth, cornerRadius, content)` 是三种样式共用的气泡：窗口内边距、箭头、阴影、尺寸与裁剪。需要完全自定义内容时使用。它会真实测量内容 —— 侧边 tooltip 回落到锚点上方时以完整宽度重新测量，上下都放不下时以较大一侧的高度重新测量 —— 因此内部可以使用 Lazy 列表。
 
 ## TooltipState
 
