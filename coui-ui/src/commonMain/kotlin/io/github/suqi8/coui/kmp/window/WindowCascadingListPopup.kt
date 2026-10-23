@@ -46,9 +46,9 @@ fun WindowCascadingListPopup(
     onDismissFinished: (() -> Unit)? = null,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.End,
-    enableWindowDim: Boolean = true,
+    enableWindowDim: Boolean = false,
     maxHeight: Dp? = null,
-    minWidth: Dp = 200.dp,
+    minWidth: Dp = ListPopupDefaults.MinWidth,
     dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     collapseOnSelection: Boolean = true,
 ) {
