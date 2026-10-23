@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
 import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.IntrinsicMeasurable
@@ -87,6 +88,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.anim.folmeSpring
+import io.github.suqi8.coui.kmp.effect.couiTouchMotion
+import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
@@ -120,6 +123,9 @@ private fun PopupPositionProvider.Align.resolve(layoutDirection: LayoutDirection
 
 /** Vertical inset of the list inside the popup (COUI coui_popup_list_padding_vertical). */
 internal val PopupListVerticalPadding = 8.dp
+
+/** Top and bottom inset of the popup scroll bar (COUI coui_popup_list_window_scrollbar_vertical_padding_new). */
+private val PopupScrollBarVerticalPadding = 18.dp
 
 /** Horizontal inset of the shared press mask inside a row (COUI coui_popup_list_window_mask_margin_horizontal). */
 private val PopupMaskHorizontalMargin = 8.dp
@@ -728,6 +734,7 @@ internal fun snapPopupListHeight(childHeights: List<Int>, verticalInsets: Int, m
  *
  * @param content The items
  */
+@OptIn(ExperimentalScrollBarApi::class)
 @Composable
 fun ListPopupColumn(
     content: @Composable () -> Unit,
@@ -838,34 +845,45 @@ fun ListPopupColumn(
         }
     }
 
-    Layout(
-        content = {
-            CompositionLocalProvider(LocalPopupListGestureHost provides host) {
-                content()
-            }
-        },
-        modifier = Modifier
-            .focusGroup()
-            .layout { measurable, constraints ->
-                // Snap the viewport to whole rows, as COUI sizes the RecyclerView before showing it.
-                host.viewportMax = constraints.maxHeight
-                val snapped = host.snappedHeight
-                val viewport = if (snapped < constraints.maxHeight) {
-                    constraints.copy(maxHeight = snapped.coerceAtLeast(constraints.minHeight))
-                } else {
-                    constraints
+    Box(propagateMinConstraints = true) {
+        Layout(
+            content = {
+                CompositionLocalProvider(LocalPopupListGestureHost provides host) {
+                    content()
                 }
-                val placeable = measurable.measure(viewport)
-                layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-            }
-            .verticalScroll(state = scrollState)
-            .popupListGestures(host, coroutineScope, touchSlop, performHaptic)
-            .drawWithContent {
-                drawContent()
-                drawPopupSharedMask(host.mask, maskColor, squircleEnabled)
             },
-        measurePolicy = measurePolicy,
-    )
+            modifier = Modifier
+                .focusGroup()
+                .layout { measurable, constraints ->
+                    // Snap the viewport to whole rows, as COUI sizes the RecyclerView before showing it.
+                    host.viewportMax = constraints.maxHeight
+                    val snapped = host.snappedHeight
+                    val viewport = if (snapped < constraints.maxHeight) {
+                        constraints.copy(maxHeight = snapped.coerceAtLeast(constraints.minHeight))
+                    } else {
+                        constraints
+                    }
+                    val placeable = measurable.measure(viewport)
+                    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                }
+                .verticalScroll(state = scrollState)
+                .popupListGestures(host, coroutineScope, touchSlop, performHaptic)
+                .drawWithContent {
+                    drawContent()
+                    drawPopupSharedMask(host.mask, maskColor, squircleEnabled)
+                },
+            measurePolicy = measurePolicy,
+        )
+        if (scrollState.maxValue > 0) {
+            // COUITouchRecyclerView.applyPopupVerticalScrollBarDelegate: a COUIScrollBar inset 18dp
+            // from the top and the bottom (coui_popup_list_window_scrollbar_vertical_padding_new).
+            VerticalScrollBar(
+                adapter = rememberScrollBarAdapter(scrollState),
+                modifier = Modifier.matchParentSize(),
+                trackPadding = PaddingValues(vertical = PopupScrollBarVerticalPadding),
+            )
+        }
+    }
 }
 
 /**
@@ -934,14 +952,15 @@ private fun Modifier.popupListGestures(
 }
 
 /**
- * Swallows every touch that reaches a popup surface once its lists have seen it, so a tap on the
- * menu never also counts as a tap outside it (the PopupWindow content consumes its own touches).
+ * Claims every touch that lands on a popup surface once its lists have seen the DOWN, so a tap on
+ * the menu never also counts as a tap outside it (the PopupWindow content consumes its own
+ * touches). Only the DOWN is consumed: the menu's touch motion keeps following the moves.
  */
 internal fun Modifier.consumePopupTouches(): Modifier = pointerInput(Unit) {
     awaitPointerEventScope {
         while (true) {
             val event = awaitPointerEvent(PointerEventPass.Main)
-            event.changes.forEach { it.consume() }
+            event.changes.forEach { if (it.changedToDownIgnoreConsumed()) it.consume() }
         }
     }
 }
@@ -1697,6 +1716,9 @@ fun ListPopupContent(
                 translationY = offset.y
                 transformOrigin = localTransformOrigin
             }
+            // COUI BasePopupMenuAnimationController.makeAnimator: deformation and rubber band
+            // follow a finger on the menu, without the press scale.
+            .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
             .dropShadow(shape = shape, shadow = shadow)
             .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight)
             .then(backgroundModifier)

@@ -80,6 +80,7 @@ import io.github.suqi8.coui.kmp.basic.popupSpotLightInput
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupSpotLight
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
@@ -510,6 +511,13 @@ internal fun CascadingListPopupLayout(
                                     translationY = lerp(0f, geometry?.mainTranslationY ?: 0f, p)
                                     transformOrigin = geometry?.mainPivot ?: TransformOrigin.Center
                                 }
+                                // The main menu's touch motion pauses while a sub menu is open
+                                // (BasePopupMenuAnimationController.makeAnimator).
+                                .couiTouchMotion(
+                                    interactionSource = null,
+                                    enabled = displayedItem == null,
+                                    pressScaleEnabled = false,
+                                )
                                 .dropShadow(shape = shape, shadow = shadow)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
                                 .then(backgroundModifier)
@@ -585,6 +593,7 @@ internal fun CascadingListPopupLayout(
                                                 transformOrigin = geometry.subPivot
                                             }
                                         }
+                                        .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
                                         .popupSpotLightInput(subSpotLight, enabled = materialEffect)
                                         .consumePopupTouches(),
                                 ) {
