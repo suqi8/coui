@@ -27,6 +27,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -194,7 +195,8 @@ internal fun ListPopupLayout(
     // COUI PopupMenuDomain.computeMainMenuPopupPathAnchorOffset: the menu centre starts on the
     // anchor's edge and travels the gravity Bezier to its resting place.
     val layoutDirection = LocalLayoutDirection.current
-    val gravityPath = remember(anchorBounds, popupContentSize, layoutInfo, popupPositionProvider, alignment, layoutDirection) {
+    val density = LocalDensity.current
+    val gravityPath = remember(anchorBounds, popupContentSize, layoutInfo, popupPositionProvider, alignment, layoutDirection, density) {
         if (popupContentSize == IntSize.Zero) {
             PopupGravityPath.None
         } else {
@@ -206,7 +208,7 @@ internal fun ListPopupLayout(
                 layoutInfo.popupMargin,
                 alignment,
             )
-            popupGravityPathFor(anchorBounds, menuOffset, popupContentSize)
+            popupGravityPathFor(anchorBounds, menuOffset, popupContentSize, density.density)
         }
     }
 

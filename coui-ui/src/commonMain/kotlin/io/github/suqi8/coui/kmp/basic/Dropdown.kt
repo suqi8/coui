@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
@@ -43,12 +44,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.ArrowUpDown
@@ -973,7 +979,11 @@ typealias SpinnerEntry = DropdownItem
  * two-line 12sp label, 8dp from the edges and 4dp apart. The grid has three columns, or as many as
  * there are icon-only cells up to five.
  *
- * Unlike the vertical rows these cells do not join the list's shared mask or its drag selection.
+ * Inside a [ListPopupColumn] the cells join the list's shared mask and drag selection like the
+ * vertical rows (`COUITouchRecyclerView` treats item view type 0 as selectable): the mask covers the
+ * whole cell — an icon-only one capped at 40dp — with a 17dp / 23dp weight-3 corner and slides on
+ * the 0.2 response spring COUI uses for mixed lists. Outside a popup list each cell keeps its own
+ * press mask.
  *
  * @param items The items; [DropdownItem.icon] draws each icon, [DropdownItem.text] the label (a
  *   blank text makes the row icon-only).
@@ -999,9 +1009,26 @@ fun DropdownHorizontalItems(
     val edge = if (hasText) DropdownDefaults.HorizontalTextEdgeMargin else DropdownDefaults.HorizontalIconEdgeMargin
     val spacing = if (hasText) DropdownDefaults.HorizontalTextSpacing else DropdownDefaults.HorizontalIconSpacing
     val currentOnItemClick by rememberUpdatedState(onItemClick)
+    val host = LocalPopupListGestureHost.current
+    val handles = remember(shown.size) { List(shown.size) { PopupListItemHandle() } }
+    shown.forEachIndexed { index, item ->
+        val handle = handles[index]
+        handle.horizontal = true
+        handle.enabled = enabled && item.enabled
+        handle.onClick = { currentOnItemClick(index) }
+    }
+    if (host != null) {
+        DisposableEffect(host, handles) {
+            handles.forEach(host::register)
+            onDispose { handles.forEach(host::unregister) }
+        }
+    }
+    val rowParentData = remember(handles) { PopupHorizontalRowParentData { handles } }
 
     Layout(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (host != null) rowParentData else Modifier),
         content = {
             shown.forEachIndexed { index, item ->
                 DropdownHorizontalCell(
@@ -1009,6 +1036,7 @@ fun DropdownHorizontalItems(
                     hasText = hasText,
                     enabled = enabled && item.enabled,
                     dropdownColors = dropdownColors,
+                    sharedMask = host != null,
                     onClick = { currentOnItemClick(index) },
                 )
             }
@@ -1029,7 +1057,23 @@ fun DropdownHorizontalItems(
         val cellWidth = ((width - 2 * edgePx - (columns - 1) * spacingPx) / columns).coerceAtLeast(0)
         val placeables = measurables.map { it.measure(Constraints.fixedWidth(cellWidth)) }
         val height = placeables.maxOfOrNull { it.height } ?: 0
-        layout(width.coerceAtLeast(constraints.minWidth), height) {
+        val rowWidth = width.coerceAtLeast(constraints.minWidth)
+        val maskRadius = (if (hasText) DropdownDefaults.HorizontalTextMaskRadius else DropdownDefaults.HorizontalIconMaskRadius).toPx()
+        val maskCap = if (hasText) 0f else DropdownDefaults.HorizontalIconCellSize.toPx()
+        placeables.forEachIndexed { index, placeable ->
+            val start = edgePx + index * (cellWidth + spacingPx)
+            // Physical bounds for the list's hit test; placeRelative mirrors under RTL.
+            val left = if (layoutDirection == LayoutDirection.Rtl) rowWidth - start - cellWidth else start
+            handles.getOrNull(index)?.apply {
+                this.left = left.toFloat()
+                right = (left + cellWidth).toFloat()
+                localTop = 0f
+                localBottom = placeable.height.toFloat()
+                this.maskRadius = maskRadius
+                maskHeightCap = maskCap
+            }
+        }
+        layout(rowWidth, height) {
             placeables.forEachIndexed { index, placeable ->
                 placeable.placeRelative(edgePx + index * (cellWidth + spacingPx), 0)
             }
@@ -1043,8 +1087,10 @@ private fun DropdownHorizontalCell(
     hasText: Boolean,
     enabled: Boolean,
     dropdownColors: DropdownColors,
+    sharedMask: Boolean,
     onClick: () -> Unit,
 ) {
+    val clickAction = onClick
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val press = remember { Animatable(0f) }
@@ -1080,13 +1126,30 @@ private fun DropdownHorizontalCell(
                     squircleEnabled = squircleEnabled,
                 )
             }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                enabled = enabled,
-                role = Role.Button,
-                onClickLabel = null,
-                onClick = onClick,
+            .then(
+                if (sharedMask) {
+                    // The list owns the press and the click; keep the accessibility action.
+                    Modifier.semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        if (enabled) {
+                            onClick {
+                                clickAction()
+                                true
+                            }
+                        } else {
+                            disabled()
+                        }
+                    }
+                } else {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClickLabel = null,
+                        onClick = onClick,
+                    )
+                },
             )
             .padding(if (hasText) DropdownDefaults.HorizontalTextPadding else 0.dp),
     ) {

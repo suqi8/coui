@@ -131,4 +131,40 @@ class ListPopupGeometryTest {
         assertEquals(24.dp, ListPopupDefaults.horizontalBarrier(widthDp = 700f, heightDp = 900f))
         assertEquals(40.dp, ListPopupDefaults.horizontalBarrier(widthDp = 1280f, heightDp = 800f))
     }
+
+    @Test
+    fun gravityConstantsScaleWithDensityOffAndroid() {
+        // At the 3.5x reference density the arc matches raw COUI pixels; at 1x it shrinks.
+        val raw = PopupGravityPath.from(ax = -300f, ay = -300f, pxScale = 1f).pointAt(0.5f)
+        val small = PopupGravityPath.from(ax = -300f / 3.5f, ay = -300f / 3.5f, pxScale = 1f / 3.5f).pointAt(0.5f)
+        assertEquals(raw.y / 3.5f, small.y, 0.01f)
+    }
+
+    @Test
+    fun horizontalCellsUseTheirOwnMask() {
+        val cell = PopupListItemHandle().apply {
+            horizontal = true
+            left = 12f
+            right = 52f
+            top = 8f
+            bottom = 60f
+            maskRadius = 17f
+            maskHeightCap = 40f
+        }
+        val geometry = popupMaskGeometry(cell, width = 300f, horizontalMargin = 8f, cornerRadius = 28f)
+        assertEquals(MaskGeometry(12f, 8f, 52f, 48f, 17f, 3f), geometry)
+        assertTrue(cell.contains(20f, 20f))
+        assertTrue(!cell.contains(60f, 20f))
+    }
+
+    @Test
+    fun shadowFollowsTheLightSourceModel() {
+        val light = PopupShadowSpec.Light
+        // Penumbra 2000 * 180 / 9820 = 36.7dp, as a Compose blur radius 24.4dp.
+        assertEquals(24.44f, light.spotRadius.value, 0.05f)
+        assertEquals(48f / 255f * 0.19f, light.spotAlpha, 0.0001f)
+        assertEquals(90f, light.ambientRadius.value, 0.01f)
+        // A surface centred 400dp down: 180 * 600 / 9820 = 11dp.
+        assertEquals(11f, light.spotOffsetY(400.dp).value, 0.05f)
+    }
 }

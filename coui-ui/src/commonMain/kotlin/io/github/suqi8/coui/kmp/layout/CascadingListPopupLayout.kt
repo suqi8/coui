@@ -67,16 +67,20 @@ import io.github.suqi8.coui.kmp.basic.DropdownHorizontalItems
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
+import io.github.suqi8.coui.kmp.basic.LocalPopupGestureRelay
+import io.github.suqi8.coui.kmp.basic.LocalPopupListRole
 import io.github.suqi8.coui.kmp.basic.PopupCornerRadius
 import io.github.suqi8.coui.kmp.basic.PopupCornerWeight
 import io.github.suqi8.coui.kmp.basic.PopupDropdownRow
+import io.github.suqi8.coui.kmp.basic.PopupGestureRelay
 import io.github.suqi8.coui.kmp.basic.PopupGravityPath
+import io.github.suqi8.coui.kmp.basic.PopupListRole
 import io.github.suqi8.coui.kmp.basic.PopupListVerticalPadding
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.consumePopupTouches
+import io.github.suqi8.coui.kmp.basic.popupDropShadow
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.popupMaterialEffect
-import io.github.suqi8.coui.kmp.basic.popupShadow
 import io.github.suqi8.coui.kmp.basic.popupSpotLightInput
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupSpotLight
@@ -354,13 +358,20 @@ internal fun CascadingListPopupLayout(
         }
     }
 
+    // Carries a long press that opened the sub menu on into it (forwardTouchToSubMenuIfNeeded).
+    val gestureRelay = remember { PopupGestureRelay() }
+
     LaunchedEffect(expandedItem) {
         val item = expandedItem
         if (item != null) {
             displayedItem = item
             backExpandProgress.snapTo(0f)
+            gestureRelay.subEntered = false
             subProgress.animateTo(1f, SubMenuSpring)
+            // onSubMenuEntered: from now on the main menu's finger may steer the sub menu.
+            gestureRelay.subEntered = true
         } else if (displayedItem != null) {
+            gestureRelay.subEntered = false
             subProgress.animateTo(0f, SubMenuSpring)
             displayedItem = null
             backExpandProgress.snapTo(0f)
@@ -441,10 +452,10 @@ internal fun CascadingListPopupLayout(
         CompositionLocalProvider(
             LocalDismissState provides { currentOnDismiss() },
             LocalMaterialBackdrop provides null,
+            LocalPopupGestureRelay provides gestureRelay,
         ) {
             val dimColor = COUITheme.colorScheme.windowDimming
             val surfaceColor = backgroundColor
-            val shadow = popupShadow()
             val shape = remember { RoundedCornerShape(CascadingPopupCornerRadius) }
             val squircleEnabled = isSquircleEnabled()
             val touchSlop = LocalViewConfiguration.current.touchSlop
@@ -519,7 +530,7 @@ internal fun CascadingListPopupLayout(
                                     enabled = displayedItem == null,
                                     pressScaleEnabled = false,
                                 )
-                                .dropShadow(shape = shape, shadow = shadow)
+                                .popupDropShadow(shape)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
                                 .then(backgroundModifier)
                                 // COUI turns the main menu spotlight off while a sub menu is open.
@@ -601,11 +612,23 @@ internal fun CascadingListPopupLayout(
                                     // The surface follows the RoundFrameLayout override outline: on
                                     // a compact window it grows from the anchor row band, carrying
                                     // its shadow, fill and blur with it.
+                                    // The shadow fades in with the band, like the override outline
+                                    // alpha (setOverrideOutline(..., progress)).
                                     Box(
                                         modifier = Modifier
                                             .matchParentSize()
                                             .cascadeBand(geometryHolder, sub)
-                                            .dropShadow(shape = shape, shadow = shadow)
+                                            .popupDropShadow(
+                                                shape = shape,
+                                                alpha = {
+                                                    if (geometryHolder.submenu?.compact == true) sub().coerceIn(0f, 1f) else 1f
+                                                },
+                                            ),
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .cascadeBand(geometryHolder, sub)
                                             .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
                                             .then(backgroundModifier)
                                             .popupMaterialEffect(enabled = materialEffect, spotLight = subSpotLight, trackTouches = false),
@@ -660,7 +683,7 @@ internal fun CascadingListPopupLayout(
                         (mainRect.right - host.x).toFloat(),
                         (mainRect.bottom - host.y).toFloat(),
                     )
-                    geometryHolder.gravityPath = popupGravityPathFor(parentBounds, mainOffset, measuredMain)
+                    geometryHolder.gravityPath = popupGravityPathFor(parentBounds, mainOffset, measuredMain, density.density)
 
                     // COUI caps the sub menu so the main menu keeps a 12dp strip on view.
                     val subMeasurable = measurables.firstOrNull { it.layoutId == SLOT_SUB }
@@ -795,6 +818,29 @@ private fun CascadingMainList(
     onLeafSelected: (DropdownItem) -> Unit,
     onAnchorRow: (DropdownItem, LayoutCoordinates) -> Unit,
 ) {
+    CompositionLocalProvider(LocalPopupListRole provides PopupListRole.Main) {
+        CascadingMainColumn(
+            entries = entries,
+            expandedItem = expandedItem,
+            holdExpandedRow = holdExpandedRow,
+            dropdownColors = dropdownColors,
+            onExpand = onExpand,
+            onLeafSelected = onLeafSelected,
+            onAnchorRow = onAnchorRow,
+        )
+    }
+}
+
+@Composable
+private fun CascadingMainColumn(
+    entries: List<DropdownEntry>,
+    expandedItem: DropdownItem?,
+    holdExpandedRow: Boolean,
+    dropdownColors: DropdownColors,
+    onExpand: (DropdownItem) -> Unit,
+    onLeafSelected: (DropdownItem) -> Unit,
+    onAnchorRow: (DropdownItem, LayoutCoordinates) -> Unit,
+) {
     val showGroupDividers = entries.sumOf { it.items.size } >= GROUP_MIN_ITEMS
     ListPopupColumn {
         val lastEntryIdx = entries.lastIndex
@@ -850,6 +896,19 @@ private fun CascadingMainList(
  */
 @Composable
 private fun CascadingSubList(
+    parent: DropdownItem,
+    showHeader: Boolean,
+    dropdownColors: DropdownColors,
+    onHeaderClick: () -> Unit,
+    onLeafSelected: (DropdownItem) -> Unit,
+) {
+    CompositionLocalProvider(LocalPopupListRole provides PopupListRole.Sub) {
+        CascadingSubColumn(parent, showHeader, dropdownColors, onHeaderClick, onLeafSelected)
+    }
+}
+
+@Composable
+private fun CascadingSubColumn(
     parent: DropdownItem,
     showHeader: Boolean,
     dropdownColors: DropdownColors,

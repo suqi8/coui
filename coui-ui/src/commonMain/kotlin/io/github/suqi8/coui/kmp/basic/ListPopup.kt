@@ -28,6 +28,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -67,6 +69,7 @@ import androidx.compose.ui.layout.ParentDataModifier
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -154,6 +157,9 @@ private val PopupMaskPressSpring = spring<Float>(dampingRatio = 1f, stiffness = 
  */
 private val PopupMaskTravelSpring = spring<Float>(dampingRatio = 1f, stiffness = 1754.6f, visibilityThreshold = 0.001f)
 
+/** Mask travel when the list has horizontal items (`MASK_SPRING_RESPONSE_MIXED`, response 0.2). */
+private val PopupMaskTravelSpringMixed = spring<Float>(dampingRatio = 1f, stiffness = 986.96f, visibilityThreshold = 0.001f)
+
 /**
  * Minimum press progress the mask reaches before a release may fade it out, so quick taps still
  * flash (COUI COUIMaskEffectDrawable DEFAULT_MIN_PROGRESS_FOR_TOUCH_ENTER_ANIMATION).
@@ -188,7 +194,34 @@ internal class PopupListItemHandle {
     /** Long-press action of a row that opens a sub menu (`RegionBasedLongPressDetector`), or `null`. */
     var onLongClick: (() -> Unit)? = null
 
-    fun contains(y: Float): Boolean = y >= top && y < bottom
+    /**
+     * Whether this is a cell of the horizontal item row (`MixedPopupListAdapter` item view type 0):
+     * it then only covers [left]..[right] of the list and carries its own mask radius.
+     */
+    var horizontal: Boolean = false
+    var left: Float = 0f
+    var right: Float = 0f
+
+    /** Cell bounds inside the horizontal row, written by its layout before the list places the row. */
+    var localTop: Float = 0f
+    var localBottom: Float = 0f
+
+    /** Mask corner radius of a horizontal cell (17dp icon-only / 23dp labelled on COUI 17). */
+    var maskRadius: Float = 0f
+
+    /** Mask height cap of an icon-only cell (`mHorizontalIconOnlyMaskHeight`, 40dp); 0 for none. */
+    var maskHeightCap: Float = 0f
+
+    fun contains(x: Float, y: Float): Boolean = y >= top && y < bottom && (!horizontal || (x >= left && x < right))
+}
+
+/**
+ * Parent data of the horizontal item row: its cells, whose [PopupListItemHandle.localTop] /
+ * [PopupListItemHandle.left] the row's layout fills in, so [ListPopupColumn] can register them as
+ * selectable targets of the shared mask once it knows where the row sits.
+ */
+internal class PopupHorizontalRowParentData(val cells: () -> List<PopupListItemHandle>) : ParentDataModifier {
+    override fun Density.modifyParentData(parentData: Any?): Any = this@PopupHorizontalRowParentData
 }
 
 /**
@@ -217,6 +250,9 @@ internal class PopupSharedMask {
     private var pressJob: Job? = null
     private var travelJob: Job? = null
 
+    /** The travel spring; COUI uses response 0.2 instead of 0.15 when the list has horizontal items. */
+    var travelSpec: SpringSpec<Float> = PopupMaskTravelSpring
+
     /** The mask geometry for the current frame, or `null` when nothing is drawn. */
     fun current(): MaskGeometry? {
         val end = to ?: return null
@@ -244,7 +280,7 @@ internal class PopupSharedMask {
             to = geometry
             travelJob = scope.launch {
                 travel.snapTo(0f)
-                travel.animateTo(1f, PopupMaskTravelSpring)
+                travel.animateTo(1f, travelSpec)
             }
         }
         enterPress(scope)
@@ -360,6 +396,11 @@ internal fun popupMaskGeometry(
     horizontalMargin: Float,
     cornerRadius: Float,
 ): MaskGeometry {
+    if (row.horizontal) {
+        // computeSharedMaskEndForItem, type 0: the whole cell, an icon-only cell capped at 40dp.
+        val bottom = if (row.maskHeightCap > 0f) minOf(row.bottom, row.top + row.maskHeightCap) else row.bottom
+        return MaskGeometry(row.left, row.top, row.right, bottom, row.maskRadius, POPUP_MASK_CORNER_WEIGHT)
+    }
     val height = row.bottom - row.top
     return if (row.singleLine) {
         MaskGeometry(horizontalMargin, row.top, width - horizontalMargin, row.bottom, height / 2f, POPUP_MASK_CAPSULE_WEIGHT)
@@ -399,6 +440,9 @@ internal class PopupListGestureHost {
     /** The scope the mask animations run in, set by [ListPopupColumn]. */
     var scope: CoroutineScope? = null
 
+    /** The list content's coordinates (scroll applied), for gestures relayed from another list. */
+    var coordinates: LayoutCoordinates? = null
+
     /** The row whose mask is locked on (`setHoverStateLocked`), e.g. the anchor of an open sub menu. */
     private var heldItem: PopupListItemHandle? = null
 
@@ -427,6 +471,7 @@ internal class PopupListGestureHost {
     fun onPlaced(rows: List<PopupListItemHandle>, neutral: List<Pair<Float, Float>>) {
         ordered = rows
         neutralBands = neutral
+        mask.travelSpec = if (rows.any { it.horizontal }) PopupMaskTravelSpringMixed else PopupMaskTravelSpring
         val target = mask.target
         if (target != null && !mask.exiting) mask.refresh(geometryOf(target))
         val handoff = pendingHandoff
@@ -471,13 +516,13 @@ internal class PopupListGestureHost {
 
     private fun geometryOf(row: PopupListItemHandle): MaskGeometry = popupMaskGeometry(row, width, maskHorizontalMargin, maskCornerRadius)
 
-    private fun rowAt(y: Float): PopupListItemHandle? = ordered.firstOrNull { it.contains(y) }
+    private fun rowAt(x: Float, y: Float): PopupListItemHandle? = ordered.firstOrNull { it.contains(x, y) }
 
     private fun isNeutral(y: Float): Boolean = neutralBands.any { (top, bottom) -> y >= top && y < bottom }
 
-    /** DOWN: tracks the row under [y] and attaches the mask to it when enabled. */
-    fun onDown(y: Float, scope: CoroutineScope): PopupListItemHandle? {
-        val target = rowAt(y) ?: return null
+    /** DOWN: tracks the row under ([x], [y]) and attaches the mask to it when enabled. */
+    fun onDown(x: Float, y: Float, scope: CoroutineScope): PopupListItemHandle? {
+        val target = rowAt(x, y) ?: return null
         activeItem = target
         if (target.enabled) mask.attach(target, geometryOf(target), scope)
         return target
@@ -487,8 +532,8 @@ internal class PopupListGestureHost {
      * MOVE in dynamic selection mode. Returns `true` when the mask moved onto a new enabled row,
      * which is when COUI plays its haptic.
      */
-    fun onMoveTo(y: Float, scope: CoroutineScope): Boolean {
-        val target = rowAt(y)
+    fun onMoveTo(x: Float, y: Float, scope: CoroutineScope): Boolean {
+        val target = rowAt(x, y)
         if (target == null) {
             // Headers and group dividers keep the current state; empty space (the list insets)
             // releases the selection.
@@ -533,9 +578,35 @@ internal class PopupListGestureHost {
 
     /** The row the gesture tracks, used by the sub-menu long press. */
     fun active(): PopupListItemHandle? = activeItem
+
+    /** Whether ([x], [y]) lands on a row, a header or a divider of this list. */
+    fun isInsideList(x: Float, y: Float): Boolean = x >= 0f && x < width && (rowAt(x, y) != null || isNeutral(y))
 }
 
 internal val LocalPopupListGestureHost = staticCompositionLocalOf<PopupListGestureHost?> { null }
+
+/** Which list of a cascading popup a [ListPopupColumn] is, for [PopupGestureRelay]. */
+internal enum class PopupListRole { Standalone, Main, Sub }
+
+internal val LocalPopupListRole = staticCompositionLocalOf { PopupListRole.Standalone }
+
+/**
+ * Lets one gesture run across the main and the sub menu of a cascading popup
+ * (`COUIPopupMenuRootView.forwardTouchToSubMenuIfNeeded`): once a long press on the main menu has
+ * opened the sub menu and it has entered, the moves of that same finger are re-targeted at the sub
+ * list — a synthetic DOWN when it enters the sub menu, a CANCEL when it leaves — and lifting the
+ * finger over a sub-menu row selects it.
+ */
+@Stable
+internal class PopupGestureRelay {
+    /** The sub list's host, set while a sub menu is composed. */
+    var subHost: PopupListGestureHost? = null
+
+    /** Whether the sub menu has finished entering (`mSubMenuEntered`). */
+    var subEntered: Boolean = false
+}
+
+internal val LocalPopupGestureRelay = staticCompositionLocalOf<PopupGestureRelay?> { null }
 
 /**
  * Records where an anchor was last touched, so a popup can open at the finger rather than centred on
@@ -749,6 +820,14 @@ fun ListPopupColumn(
 
     host.isDynamicSelection = !scrollState.canScrollForward && !scrollState.canScrollBackward
     host.scope = coroutineScope
+    val relay = LocalPopupGestureRelay.current
+    val role = LocalPopupListRole.current
+    if (relay != null && role == PopupListRole.Sub) {
+        DisposableEffect(relay, host) {
+            relay.subHost = host
+            onDispose { if (relay.subHost === host) relay.subHost = null }
+        }
+    }
 
     val measurePolicy = remember(host) {
         object : MeasurePolicy {
@@ -789,7 +868,16 @@ fun ListPopupColumn(
                 for (measurable in measurables) {
                     val placeable = measurable.measure(childConstraints)
                     val handle = measurable.popupListItemHandle
-                    if (handle != null) {
+                    val cells = (measurable.parentData as? PopupHorizontalRowParentData)?.cells?.invoke()
+                    if (cells != null) {
+                        for (cell in cells) {
+                            cell.top = y + cell.localTop
+                            cell.bottom = y + cell.localBottom
+                            rows.add(cell)
+                        }
+                        // Gaps between the cells keep the current target, as COUI does over the row.
+                        neutral.add(y.toFloat() to (y + placeable.height).toFloat())
+                    } else if (handle != null) {
                         handle.top = y.toFloat()
                         handle.bottom = (y + placeable.height).toFloat()
                         rows.add(handle)
@@ -867,7 +955,14 @@ fun ListPopupColumn(
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }
                 .verticalScroll(state = scrollState)
-                .popupListGestures(host, coroutineScope, touchSlop, performHaptic)
+                .onGloballyPositioned { host.coordinates = it }
+                .popupListGestures(
+                    host = host,
+                    relay = if (role == PopupListRole.Main) relay else null,
+                    scope = coroutineScope,
+                    touchSlop = touchSlop,
+                    performHaptic = performHaptic,
+                )
                 .drawWithContent {
                     drawContent()
                     drawPopupSharedMask(host.mask, maskColor, squircleEnabled)
@@ -894,15 +989,16 @@ fun ListPopupColumn(
  */
 private fun Modifier.popupListGestures(
     host: PopupListGestureHost,
+    relay: PopupGestureRelay?,
     scope: CoroutineScope,
     touchSlop: Float,
     performHaptic: (CouiHapticEffect) -> Unit,
-): Modifier = pointerInput(host) {
+): Modifier = pointerInput(host, relay) {
     awaitPointerEventScope {
         while (true) {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
             val downY = down.position.y
-            val downRow = host.onDown(downY, scope)
+            val downRow = host.onDown(down.position.x, downY, scope)
             var tracking = downRow != null
             // RegionBasedLongPressDetector: holding a sub-menu row for 650ms opens its sub menu.
             var longPressed = false
@@ -915,6 +1011,8 @@ private fun Modifier.popupListGestures(
             } else {
                 null
             }
+            // The sub list this gesture currently drives, once the long press has handed it over.
+            var relayed: PopupListGestureHost? = null
 
             while (tracking) {
                 val event = awaitPointerEvent(PointerEventPass.Initial)
@@ -923,20 +1021,31 @@ private fun Modifier.popupListGestures(
                 if (event.changes.size > 1) {
                     // A second pointer cancels the selection, as COUI does on ACTION_POINTER_DOWN.
                     host.cancel(scope)
+                    relayed?.cancel(scope)
                     tracking = false
                     break
                 }
 
                 if (change.changedToUpIgnoreConsumed()) {
-                    if (!longPressed) host.onUp(scope)
+                    when {
+                        relayed != null -> relayed.onUp(scope)
+                        !longPressed -> host.onUp(scope)
+                    }
                     change.consume()
                     tracking = false
                     break
                 }
 
+                if (longPressed) {
+                    // After the long press the main list stops tracking; the finger now steers the
+                    // sub menu once it has entered (forwardTouchToSubMenuIfNeeded).
+                    relayed = relaySubMenuMove(relay, host, relayed, change.position, scope, performHaptic)
+                    continue
+                }
+
                 val y = change.position.y
                 if (host.isDynamicSelection) {
-                    if (host.onMoveTo(y, scope)) {
+                    if (host.onMoveTo(change.position.x, y, scope)) {
                         longPress?.cancel()
                         performHaptic(CouiHapticEffect.Switch)
                     }
@@ -949,6 +1058,45 @@ private fun Modifier.popupListGestures(
             longPress?.cancel()
         }
     }
+}
+
+/**
+ * Re-targets one move of a relayed gesture at the sub list: the point is carried from the main
+ * list's content space through the window into the sub list's. Entering the sub list starts a
+ * press there (synthetic DOWN), moving drags its mask, leaving cancels it. Returns the sub host the
+ * gesture is now pressing, or `null`.
+ */
+private fun relaySubMenuMove(
+    relay: PopupGestureRelay?,
+    host: PopupListGestureHost,
+    relayed: PopupListGestureHost?,
+    position: Offset,
+    scope: CoroutineScope,
+    performHaptic: (CouiHapticEffect) -> Unit,
+): PopupListGestureHost? {
+    val sub = relay?.subHost?.takeIf { relay.subEntered }
+    val from = host.coordinates
+    val to = sub?.coordinates
+    if (sub == null || from == null || to == null || !from.isAttached || !to.isAttached) {
+        relayed?.cancel(scope)
+        return null
+    }
+    val local = to.windowToLocal(from.localToWindow(position))
+    if (!sub.isInsideList(local.x, local.y)) {
+        // cancelSubMenuGestureOutsideBounds.
+        relayed?.cancel(scope)
+        return null
+    }
+    if (relayed !== sub) {
+        return if (sub.onDown(local.x, local.y, scope) != null) {
+            performHaptic(CouiHapticEffect.Switch)
+            sub
+        } else {
+            null
+        }
+    }
+    if (sub.onMoveTo(local.x, local.y, scope)) performHaptic(CouiHapticEffect.Switch)
+    return sub
 }
 
 /**
@@ -1349,16 +1497,17 @@ internal data class PopupGravityPath(
          * Builds the path from the anchor point offset ([ax], [ay]) relative to the menu centre to
          * the centre (`BezierGravityPathMath.controlPoints` + `adaptiveGravityPx`).
          */
-        fun from(ax: Float, ay: Float): PopupGravityPath {
+        fun from(ax: Float, ay: Float, pxScale: Float = 1f): PopupGravityPath {
             val dx = -ax
             val dy = -ay
             val length = sqrt(dx * dx + dy * dy)
             if (length < 1f) return PopupGravityPath(ax, ay, ax, ay, 0f, 0f)
-            val span = GRAVITY_DISTANCE_MAX - GRAVITY_DISTANCE_MIN
-            val distanceFactor = ((length - GRAVITY_DISTANCE_MIN) / span).coerceIn(0f, 1f)
+            val distanceMin = GRAVITY_DISTANCE_MIN * pxScale
+            val span = (GRAVITY_DISTANCE_MAX - GRAVITY_DISTANCE_MIN) * pxScale
+            val distanceFactor = ((length - distanceMin) / span).coerceIn(0f, 1f)
             val absX = abs(dx)
             val absY = abs(dy)
-            val gravity = GRAVITY_ARC_MAX * distanceFactor * (min(absX, absY) / (max(absX, absY) + 1.0E-4f))
+            val gravity = GRAVITY_ARC_MAX * pxScale * distanceFactor * (min(absX, absY) / (max(absX, absY) + 1.0E-4f))
             // The chord normal, flipped to point down the screen.
             var nx = -dy / length
             var ny = dx / length
@@ -1383,6 +1532,13 @@ internal data class PopupGravityPath(
 }
 
 /**
+ * Scale of the gravity path's raw-pixel constants: COUI tuned 30 / 400 / 130 px on its 3.5x
+ * phones. Android keeps raw pixels exactly like COUI; other platforms read them as pixels at that
+ * reference density and scale by the actual one, as the number picker does with its velocities.
+ */
+internal fun popupGravityPxScale(density: Float): Float = numberPickerVelocityScale(density)
+
+/**
  * Corner radius of the popup container: COUI 17 `RoundFrameLayout.getSmoothRadiusAndWeight` takes
  * coui_popup_round_frame_layout_corner_radius (28dp) for main and sub menus alike.
  */
@@ -1399,36 +1555,85 @@ internal val PopupCornerWeight = COUIRoundCorner.Normal.Weight
 internal fun popupSurfaceColor(): Color = COUITheme.colorScheme.backgroundTop
 
 /**
- * Drop shadow of the popup container in light schemes. COUI lights it with the Oplus light-source
- * shadow `SHADOW_LV4` (`RoundFrameLayout.setClipMode` → `ShadowUtils.setElevationToView(this, 3)`):
- * elevation 180dp, light 200dp above the window top at z 10000dp with a 2000dp radius, alpha 48/255.
- * A view centred about 400dp down then casts a ~37dp penumbra offset ~11dp down; a Compose blur
- * radius fades over about 2.3× itself, hence 16dp.
+ * The OPlus light-source shadow a COUI 17 popup casts (`RoundFrameLayout.setClipMode` →
+ * `ShadowUtils.setElevationToView(this, 3)`, `SHADOW_LV4`): the elevation, the light position and
+ * radius from `coui_shadow_*_level4` (light: 180dp, y -200dp, z 10000dp, r 2000dp; `values-night`:
+ * 36dp, y -1500dp, r 12000dp) and the shadow color alpha `coui_shadow_color_lv4` (48 / 150).
+ *
+ * The renderer (Skia `SkShadowUtils`, which HWUI draws shadows with) turns that into two layers:
+ * - **Spot**: the outline offset away from the light by `e * (y - lightY) / (lightZ - e)` and blurred
+ *   over the penumbra `lightR * e / (lightZ - e)`, at `colorAlpha * spotShadowAlpha`.
+ * - **Ambient**: the outline blurred by `e / 2` (`kAmbientHeightFactor * kAmbientGeomFactor`) without
+ *   offset, at `colorAlpha * ambientShadowAlpha / (1 + e / 128)`.
+ *
+ * COUI's themes leave `spotShadowAlpha` / `ambientShadowAlpha` alone, so the framework defaults
+ * (0.19 / 0.039) apply. A Compose blur radius `r` fades over about `1.5 r`, so the penumbra is
+ * divided by 1.5.
  */
-internal val PopupShadowLight: Shadow = Shadow(
-    radius = 16.dp,
-    color = Color.Black,
-    alpha = 48f / 255f,
-    offset = DpOffset(0.dp, 11.dp),
-)
+@Immutable
+internal data class PopupShadowSpec(
+    val elevation: Dp,
+    val lightY: Dp,
+    val lightZ: Dp,
+    val lightRadius: Dp,
+    val colorAlpha: Float,
+) {
+    /** The spot blur radius: the penumbra as a Compose blur radius. */
+    val spotRadius: Dp
+        get() = lightRadius * (elevation / (lightZ - elevation)) / PENUMBRA_PER_BLUR_RADIUS
+
+    /** The spot alpha (`colorAlpha * spotShadowAlpha`). */
+    val spotAlpha: Float
+        get() = colorAlpha * SPOT_SHADOW_ALPHA
+
+    /** The ambient blur radius (`SkShadowUtils` ambient blur, `e / 2`). */
+    val ambientRadius: Dp
+        get() = elevation / 2f
+
+    /** The ambient alpha (`colorAlpha * ambientShadowAlpha / (1 + e / 128)`). */
+    val ambientAlpha: Float
+        get() = colorAlpha * AMBIENT_SHADOW_ALPHA / (1f + elevation.value / 128f)
+
+    /** The spot offset of an outline centred [centerY] dp down the window. */
+    fun spotOffsetY(centerY: Dp): Dp {
+        if (elevation <= 0.dp || lightZ <= elevation) return 0.dp
+        return elevation * ((centerY - lightY) / (lightZ - elevation))
+    }
+
+    companion object {
+        private const val SPOT_SHADOW_ALPHA = 0.19f
+        private const val AMBIENT_SHADOW_ALPHA = 0.039f
+        private const val PENUMBRA_PER_BLUR_RADIUS = 1.5f
+
+        val Light = PopupShadowSpec(180.dp, (-200).dp, 10000.dp, 2000.dp, 48f / 255f)
+        val Dark = PopupShadowSpec(36.dp, (-1500).dp, 10000.dp, 12000.dp, 150f / 255f)
+    }
+}
 
 /**
- * The dark twin of [PopupShadowLight] (`values-night`: elevation 36dp, light at y -1500dp with a
- * 12000dp radius, alpha 150/255): a ~43dp penumbra offset ~7dp.
+ * Casts the popup's [PopupShadowSpec] shadow under [shape]: the ambient layer, then the spot layer
+ * whose offset follows where the surface sits below the light. [alpha] scales both, as the
+ * `RoundFrameLayout` override outline alpha does while a compact sub menu grows.
  */
-internal val PopupShadowDark: Shadow = Shadow(
-    radius = 19.dp,
-    color = Color.Black,
-    alpha = 150f / 255f,
-    offset = DpOffset(0.dp, 7.dp),
-)
-
-/** The popup shadow for the current scheme. */
 @Composable
-internal fun popupShadow(): Shadow = if (COUITheme.colorScheme.background.luminance() < 0.5f) PopupShadowDark else PopupShadowLight
-
-/** Kept for the cascading surfaces that share the light-scheme shadow. */
-internal val PopupShadow: Shadow get() = PopupShadowLight
+internal fun Modifier.popupDropShadow(shape: Shape, alpha: () -> Float = { 1f }): Modifier {
+    val spec = if (COUITheme.colorScheme.background.luminance() < 0.5f) PopupShadowSpec.Dark else PopupShadowSpec.Light
+    val centerY = remember { mutableFloatStateOf(Float.NaN) }
+    return this
+        .onGloballyPositioned { coordinates ->
+            centerY.floatValue = coordinates.positionInWindow().y + coordinates.size.height / 2f
+        }
+        .dropShadow(shape) {
+            radius = spec.ambientRadius.toPx()
+            color = Color.Black.copy(alpha = spec.ambientAlpha * alpha().coerceIn(0f, 1f))
+        }
+        .dropShadow(shape) {
+            val y = centerY.floatValue.takeUnless { it.isNaN() } ?: 0f
+            radius = spec.spotRadius.toPx()
+            offset = Offset(0f, spec.spotOffsetY((y / density).dp).toPx())
+            color = Color.Black.copy(alpha = spec.spotAlpha * alpha().coerceIn(0f, 1f))
+        }
+}
 
 internal fun safeTransformOrigin(x: Float, y: Float): TransformOrigin {
     val safeX = if (x.isNaN() || x < 0f) 0f else x
@@ -1649,14 +1854,19 @@ fun rememberListPopupLayoutInfo(
  * anchor's horizontal centre, at its bottom edge when the menu opens below and its top edge when
  * it opens above, expressed relative to the menu centre.
  */
-internal fun popupGravityPathFor(anchor: IntRect, menuOffset: IntOffset, menuSize: IntSize): PopupGravityPath {
+internal fun popupGravityPathFor(
+    anchor: IntRect,
+    menuOffset: IntOffset,
+    menuSize: IntSize,
+    density: Float,
+): PopupGravityPath {
     if (menuSize == IntSize.Zero) return PopupGravityPath.None
     val centerX = menuOffset.x + menuSize.width / 2f
     val centerY = menuOffset.y + menuSize.height / 2f
     val below = centerY > anchor.top + anchor.height / 2f
     val anchorX = anchor.left + anchor.width / 2f
     val anchorY = if (below) anchor.bottom.toFloat() else anchor.top.toFloat()
-    return PopupGravityPath.from(anchorX - centerX, anchorY - centerY)
+    return PopupGravityPath.from(anchorX - centerX, anchorY - centerY, popupGravityPxScale(density))
 }
 
 /**
@@ -1698,7 +1908,6 @@ fun ListPopupContent(
     content: @Composable () -> Unit,
 ) {
     val shape = remember { RoundedCornerShape(PopupCornerRadius) }
-    val shadow = popupShadow()
 
     Box(
         modifier = modifier
@@ -1719,7 +1928,7 @@ fun ListPopupContent(
             // COUI BasePopupMenuAnimationController.makeAnimator: deformation and rubber band
             // follow a finger on the menu, without the press scale.
             .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
-            .dropShadow(shape = shape, shadow = shadow)
+            .popupDropShadow(shape)
             .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight)
             .then(backgroundModifier)
             .popupMaterialEffect(enabled = materialEffect)
