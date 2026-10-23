@@ -2,29 +2,37 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BasicTooltipDefaults
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -37,32 +45,53 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.toPath
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -72,8 +101,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
-import io.github.suqi8.coui.kmp.squircle.squircleBackground
-import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
+import io.github.suqi8.coui.kmp.squircle.addSquircleRect
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlinx.coroutines.CancellableContinuation
@@ -84,12 +114,17 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.jvm.JvmInline
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * The preferred position of a tooltip relative to its anchor. The tooltip flips to the opposite
- * side when there is not enough room on the preferred side. [Start] / [End] resolve to [Left] /
- * [Right] following the layout direction.
+ * The preferred position of a tooltip relative to its anchor. [Start] / [End] resolve to [Left] /
+ * [Right] following the layout direction (COUI `ALIGN_START` / `ALIGN_END`).
+ *
+ * A COUI tooltip above / below its anchor moves to the other side when it does not fit and, when
+ * neither side fits, takes the side with more room and scrolls its content. A tooltip to the left /
+ * right never flips sideways: it narrows to the room on that side, and moves above the anchor when it
+ * would reach the bottom of the window.
  */
 @JvmInline
 value class TooltipAnchorPosition private constructor(private val value: Int) {
@@ -114,19 +149,46 @@ value class TooltipAnchorPosition private constructor(private val value: Int) {
 }
 
 /**
- * Receiver scope for the [TooltipBox] tooltip content ([PlainTooltip] / [RichTooltip]). It exposes
- * the resolved anchor position and the anchor bounds so a caret can be drawn pointing at the anchor.
+ * The three COUI 17 tooltip bubble styles, the three `COUIIBubbleStyle` implementations.
+ */
+enum class TooltipStyle {
+    /**
+     * `COUIDefaultBubbleStyleImpl`: a text bubble. Its look depends on the [TooltipMode]: an accent
+     * bubble with white text and a close icon, or a white "detail floating" info bubble.
+     */
+    Default,
+
+    /** `COUIIconBubbleStyleImpl`: a white card with a 40dp icon, a title, a body and a dismiss button. */
+    Icon,
+
+    /** `COUIImageBubbleStyleImpl`: a 260dp white card with an image, a title, a body and a dismiss button. */
+    Image,
+}
+
+/** The two modes of the [TooltipStyle.Default] bubble (COUI `MODE_TOOLTIPS` / `MODE_INFO`). */
+enum class TooltipMode {
+    /** `MODE_TOOLTIPS`: the accent (`couiColorTips`) bubble with white text and a close icon. */
+    Tooltips,
+
+    /** `MODE_INFO`: the "detail floating" bubble, secondary text on `couiColorBackgroundTop`. */
+    Info,
+}
+
+/**
+ * Receiver scope for the [TooltipBox] tooltip content. It exposes the requested anchor position and
+ * the anchor bounds.
  */
 @Stable
 sealed interface TooltipScope {
     /** The preferred [TooltipAnchorPosition] of the tooltip relative to its anchor. */
     val positioning: TooltipAnchorPosition
 
-    /** The anchor bounds in window coordinates, or null before the anchor is placed. */
+    /** The anchor layout coordinates, or null before the anchor is placed. */
     fun obtainAnchorBounds(): LayoutCoordinates?
 }
 
-private class TooltipScopeImpl(
+/** The scope of the legacy Miuix tooltip, which carries no COUI placement. */
+internal class TooltipScopeImpl(
     override val positioning: TooltipAnchorPosition,
     private val anchorBounds: () -> LayoutCoordinates?,
 ) : TooltipScope {
@@ -134,11 +196,67 @@ private class TooltipScopeImpl(
 }
 
 /**
+ * The shared placement state of one COUI tooltip. The position provider writes the anchor bounds,
+ * the viewport and the resolved [placement]; the bubble reads them to size itself and to draw its
+ * arrow, and writes its metrics and the effective side back for the provider.
+ */
+@Stable
+internal class TooltipLayoutState(density: Float) {
+    var anchorBounds by mutableStateOf<IntRect?>(null)
+    var viewport by mutableStateOf(IntSize.Zero)
+    var placement by mutableStateOf<TooltipPlacement?>(null)
+
+    // Written during composition / measure and read by the position provider in the same frame.
+    var position: TooltipAnchorPosition = TooltipAnchorPosition.Above
+    var showArrow: Boolean = true
+    var offset: IntOffset = IntOffset.Zero
+    var arrowFollowsOffset: Boolean = false
+    var metrics: TooltipMetrics = TooltipMetrics.of(density, 13f, 13f, 13f, 13f)
+    var fallbackSide: TooltipSide? = null
+}
+
+private class CouiTooltipScopeImpl(
+    override val positioning: TooltipAnchorPosition,
+    val layoutState: TooltipLayoutState,
+    val state: TooltipState,
+    private val anchorBounds: () -> LayoutCoordinates?,
+) : TooltipScope {
+    override fun obtainAnchorBounds(): LayoutCoordinates? = anchorBounds()
+}
+
+private class CouiTooltipPositionProvider(private val layoutState: TooltipLayoutState) : PopupPositionProvider {
+    override fun calculatePosition(
+        anchorBounds: IntRect,
+        windowSize: IntSize,
+        layoutDirection: LayoutDirection,
+        popupContentSize: IntSize,
+    ): IntOffset {
+        if (layoutState.anchorBounds != anchorBounds) layoutState.anchorBounds = anchorBounds
+        if (layoutState.viewport != windowSize) layoutState.viewport = windowSize
+        val requested = layoutState.fallbackSide ?: layoutState.position.toTooltipSide(layoutDirection)
+        val placement = calculateTooltipPlacement(
+            anchor = anchorBounds,
+            viewport = windowSize,
+            windowSize = popupContentSize,
+            requested = requested,
+            metrics = layoutState.metrics,
+            showArrow = layoutState.showArrow,
+            offset = layoutState.offset,
+            arrowFollowsOffset = layoutState.arrowFollowsOffset,
+            layoutDirection = layoutDirection,
+        )
+        if (layoutState.placement != placement) layoutState.placement = placement
+        return placement.position
+    }
+}
+
+/**
  * The state that controls the visibility of a [TooltipBox].
  *
- * Created via [rememberTooltipState]. When [isPersistent] is false the tooltip is dismissed
- * automatically after a short timeout; when true it stays visible until [dismiss] is called or the
- * user taps outside. A global [MutatorMutex] keeps only one tooltip visible at a time.
+ * Created via [rememberTooltipState]. When [isPersistent] is true (the default, as COUI tooltips have
+ * no timeout) the tooltip stays visible until [dismiss] is called, its close / dismiss button is
+ * tapped or, when enabled, the user taps outside. When false it is dismissed after a short timeout.
+ * A global [MutatorMutex] keeps only one tooltip visible at a time.
  */
 @Stable
 interface TooltipState {
@@ -181,12 +299,6 @@ private class TooltipStateImpl(
     /** continuation used to clean up */
     private var job: (CancellableContinuation<Unit>)? = null
 
-    /**
-     * Show the tooltip associated with the current [TooltipState]. When this method is called, all
-     * of the other tooltips associated with [mutatorMutex] will be dismissed.
-     *
-     * @param mutatePriority [MutatePriority] to be used with [mutatorMutex].
-     */
     override suspend fun show(mutatePriority: MutatePriority) {
         val cancellableShow: suspend () -> Unit = {
             suspendCancellableCoroutine { continuation ->
@@ -195,8 +307,6 @@ private class TooltipStateImpl(
             }
         }
 
-        // Show associated tooltip for [TooltipDuration] amount of time
-        // or until tooltip is explicitly dismissed depending on [isPersistent].
         mutatorMutex.mutate(mutatePriority) {
             try {
                 if (isPersistent || mutatePriority == MutatePriority.UserInput) {
@@ -206,14 +316,12 @@ private class TooltipStateImpl(
                 }
             } finally {
                 if (mutatePriority != MutatePriority.PreventUserInput) {
-                    // timeout or cancellation has occurred and we close out the current tooltip.
                     dismiss()
                 }
             }
         }
     }
 
-    /** Dismiss the tooltip associated with this [TooltipState] if it's currently being shown. */
     override fun dismiss() {
         transition.targetState = false
         if (isPersistent) {
@@ -221,7 +329,6 @@ private class TooltipStateImpl(
         }
     }
 
-    /** Cleans up [mutatorMutex] when the tooltip associated with this state leaves Composition. */
     override fun onDispose() {
         job?.cancel()
     }
@@ -231,95 +338,152 @@ private class TooltipStateImpl(
  * Creates and remembers a [TooltipState].
  *
  * @param initialIsVisible whether the tooltip is initially visible.
- * @param isPersistent whether the tooltip stays visible until explicitly dismissed.
+ * @param isPersistent whether the tooltip stays visible until explicitly dismissed. True by default:
+ *   a COUI tooltip has no timeout (`COUIToolTips.setDelay` is a no-op).
  * @param mutatorMutex the [MutatorMutex] used to ensure only one tooltip is shown at a time.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun rememberTooltipState(
     initialIsVisible: Boolean = false,
-    isPersistent: Boolean = false,
+    isPersistent: Boolean = true,
     mutatorMutex: MutatorMutex = BasicTooltipDefaults.GlobalMutatorMutex,
 ): TooltipState = remember(isPersistent, mutatorMutex) {
     TooltipStateImpl(initialIsVisible, isPersistent, mutatorMutex)
 }
 
-/**
- * Spring driving the tooltip's exit scale. A spring (not a tween) honors the inbound velocity left
- * by the enter spring when a dismiss interrupts an unsettled enter, so the reversal stays smooth; a
- * tween would discard that velocity and produce a stall-and-reverse hitch.
- */
-private val TooltipExitScaleSpec: FiniteAnimationSpec<Float> =
-    spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium, visibilityThreshold = 0.0001f)
+/** `COUIToolTips.animateSpring` scale spring: COUISpringForce bounce 0.2 / response 0.4. */
+private val TooltipScaleSpring = spring(dampingRatio = 0.8f, stiffness = 246.74f, visibilityThreshold = 0.01f)
+
+/** `COUIToolTips.animateSpring` alpha spring: COUISpringForce bounce 0.2 / response 0.3. */
+private val TooltipAlphaSpring = spring(dampingRatio = 0.8f, stiffness = 438.65f, visibilityThreshold = 0.01f)
 
 /**
- * A tooltip box that anchors a [tooltip] (a [PlainTooltip] or [RichTooltip]) to its [content].
+ * A COUI 17 tooltip (`COUIToolTips`) anchored to [content]: a [Tooltip], [IconTooltip] or
+ * [ImageTooltip] bubble with an arrow pointing at the anchor.
  *
- * The tooltip is shown on hover (desktop / web) or long press (touch), or programmatically via
- * [TooltipState.show]. It is built on the foundation tooltip primitives, so triggering, the global
- * single-tooltip behavior, and the auto-dismiss timeout match the platform behavior.
+ * The bubble sits [placement] of the anchor (above by default, COUI `DEFAULT_ALIGN_DIRECTION`), keeps
+ * a 16dp margin from the window edges and moves the arrow along its edge to keep pointing at the
+ * anchor centre. It grows from the arrow tip on a spring (scale and alpha from 0) and shrinks back
+ * into it on dismiss. Like COUI it is shown programmatically ([TooltipState.show]) and has no
+ * timeout; it is dismissed by its close / dismiss button, [TooltipState.dismiss] or, when
+ * [dismissOnTouchOutside], an outside tap or a back press.
  *
- * @param positionProvider the [PopupPositionProvider] positioning the tooltip, usually from
- *   [TooltipDefaults.rememberTooltipPositionProvider].
- * @param tooltip the tooltip content.
  * @param state the [TooltipState] controlling visibility.
+ * @param tooltip the tooltip bubble: [Tooltip], [IconTooltip], [ImageTooltip] or a [TooltipBubble].
  * @param modifier the modifier applied to the anchor wrapper.
- * @param focusable whether the tooltip is focusable; true for interactive rich tooltips so an
- *   outside tap dismisses them and their actions are reachable.
- * @param enableUserInput whether hover / long press on the anchor shows the tooltip.
+ * @param placement the preferred [TooltipAnchorPosition] (COUI `showWithDirection`).
+ * @param showArrow whether the arrow is drawn (COUI `hasIndicator`).
+ * @param dismissOnTouchOutside whether an outside tap or a back press dismisses the tooltip (COUI
+ *   `setDismissOnTouchOutside`, off by default). It also makes the tooltip window focusable.
+ * @param enableUserInput whether hover / long press on the anchor shows the tooltip. COUI tooltips
+ *   are shown programmatically, so this is off by default.
+ * @param offset an extra offset of the tooltip from its computed position (COUI `offsetX` /
+ *   `offsetY`); x is mirrored in RTL.
+ * @param arrowFollowsOffset whether the arrow moves with [offset] (COUI `indicatorFollowContent`);
+ *   by default it stays pointing at the anchor.
  * @param content the anchor content.
  */
 @Composable
 fun TooltipBox(
-    positionProvider: PopupPositionProvider,
-    tooltip: @Composable TooltipScope.() -> Unit,
     state: TooltipState,
+    tooltip: @Composable TooltipScope.() -> Unit,
     modifier: Modifier = Modifier,
-    focusable: Boolean = false,
-    enableUserInput: Boolean = true,
+    placement: TooltipAnchorPosition = TooltipAnchorPosition.Above,
+    showArrow: Boolean = true,
+    dismissOnTouchOutside: Boolean = false,
+    enableUserInput: Boolean = false,
+    offset: DpOffset = DpOffset.Zero,
+    arrowFollowsOffset: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    var anchorBounds by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    val positioning = (positionProvider as? TooltipPopupPositionProvider)?.positioning ?: TooltipAnchorPosition.Below
-    val scope = remember(positioning) { TooltipScopeImpl(positioning) { anchorBounds } }
+    val density = LocalDensity.current
+    val layoutState = remember { TooltipLayoutState(density.density) }
+    layoutState.position = placement
+    layoutState.showArrow = showArrow
+    layoutState.arrowFollowsOffset = arrowFollowsOffset
+    layoutState.offset = with(density) { IntOffset(offset.x.roundToPx(), offset.y.roundToPx()) }
+
+    var anchorCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val scope = remember(placement, layoutState, state) {
+        CouiTooltipScopeImpl(placement, layoutState, state) { anchorCoordinates }
+    }
+    val positionProvider = remember(layoutState) { CouiTooltipPositionProvider(layoutState) }
 
     TooltipBoxImpl(
         positionProvider = positionProvider,
-        tooltip = {
-            AnimatedVisibility(
-                visibleState = state.transition,
-                enter = fadeIn(ListPopupDefaults.AlphaEnterAnimationSpec) +
-                    scaleIn(initialScale = 0.9f, animationSpec = ListPopupDefaults.FractionAnimationSpec),
-                exit = fadeOut(ListPopupDefaults.AlphaExitAnimationSpec) +
-                    scaleOut(targetScale = 0.9f, animationSpec = TooltipExitScaleSpec),
-            ) {
-                scope.tooltip()
-            }
-        },
+        tooltip = { TooltipAnimatedContent(state = state, layoutState = layoutState) { scope.tooltip() } },
         state = state,
-        modifier = modifier.onGloballyPositioned { anchorBounds = it },
-        focusable = focusable,
+        modifier = modifier.onGloballyPositioned { anchorCoordinates = it },
+        properties = PopupProperties(
+            focusable = dismissOnTouchOutside,
+            dismissOnBackPress = dismissOnTouchOutside,
+            dismissOnClickOutside = dismissOnTouchOutside,
+        ),
         enableUserInput = enableUserInput,
         content = content,
     )
 }
 
-private const val TOOLTIP_LONG_PRESS_LABEL = "Show tooltip"
-private const val TOOLTIP_PANE_TITLE = "Tooltip"
-
 /**
- * Miuix's tooltip primitive. Forked from the experimental foundation `BasicTooltipBox` so the mouse
- * hover gesture keeps a persistent tooltip open: when the cursor leaves the anchor the tooltip is
- * dismissed only if it is not persistent. This lets the cursor travel onto a persistent [RichTooltip]
- * to reach its action, matching the Material 3 tooltip behavior.
+ * `COUIToolTips.animateSpring`: scale and alpha springs from 0 to 1 on enter and back to 0 on exit,
+ * pivoted at the arrow tip. The shadow is dropped and touches are blocked while the tooltip exits.
  */
 @Composable
-private fun TooltipBoxImpl(
+private fun TooltipAnimatedContent(
+    state: TooltipState,
+    layoutState: TooltipLayoutState,
+    content: @Composable () -> Unit,
+) {
+    val transition = rememberTransition(state.transition, label = "Tooltip")
+    val scale by transition.animateFloat(transitionSpec = { TooltipScaleSpring }, label = "TooltipScale") {
+        if (it) 1f else 0f
+    }
+    val alpha by transition.animateFloat(transitionSpec = { TooltipAlphaSpring }, label = "TooltipAlpha") {
+        if (it) 1f else 0f
+    }
+    val exiting = !state.transition.targetState
+    Box(
+        modifier = Modifier
+            .graphicsLayer {
+                val s = scale.coerceAtLeast(0f)
+                scaleX = s
+                scaleY = s
+                this.alpha = alpha.coerceIn(0f, 1f)
+                transformOrigin = layoutState.placement?.pivot ?: TransformOrigin.Center
+            }
+            .then(if (exiting) Modifier.blockPointerInput() else Modifier),
+    ) {
+        content()
+    }
+}
+
+/** Consumes every pointer event on the initial pass, so nothing inside reacts (COUI `setTouchable(false)`). */
+private fun Modifier.blockPointerInput(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            event.changes.forEach { it.consume() }
+        }
+    }
+}
+
+private const val TOOLTIP_LONG_PRESS_LABEL = "Show tooltip"
+private const val TOOLTIP_PANE_TITLE = "Tooltip"
+private const val TOOLTIP_CLOSE_DESCRIPTION = "Close this tip"
+
+/**
+ * The tooltip host. Forked from the experimental foundation `BasicTooltipBox` so the mouse hover
+ * gesture keeps a persistent tooltip open: when the cursor leaves the anchor the tooltip is dismissed
+ * only if it is not persistent.
+ */
+@Composable
+internal fun TooltipBoxImpl(
     positionProvider: PopupPositionProvider,
     tooltip: @Composable () -> Unit,
     state: TooltipState,
     modifier: Modifier = Modifier,
-    focusable: Boolean = false,
+    properties: PopupProperties = PopupProperties(),
     enableUserInput: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -330,12 +494,20 @@ private fun TooltipBoxImpl(
             .tooltipAnchorSemantics(enableUserInput, state, scope),
     ) {
         if (state.isVisible) {
-            TooltipPopup(
-                positionProvider = positionProvider,
-                state = state,
-                focusable = focusable,
-                content = tooltip,
-            )
+            Popup(
+                popupPositionProvider = positionProvider,
+                onDismissRequest = { if (state.isVisible) state.dismiss() },
+                properties = properties,
+            ) {
+                Box(
+                    modifier = Modifier.semantics {
+                        liveRegion = LiveRegionMode.Assertive
+                        paneTitle = TOOLTIP_PANE_TITLE
+                    },
+                ) {
+                    tooltip()
+                }
+            }
         }
         content()
     }
@@ -343,33 +515,10 @@ private fun TooltipBoxImpl(
     DisposableEffect(state) { onDispose { state.onDispose() } }
 }
 
-@Composable
-private fun TooltipPopup(
-    positionProvider: PopupPositionProvider,
-    state: TooltipState,
-    focusable: Boolean,
-    content: @Composable () -> Unit,
-) {
-    Popup(
-        popupPositionProvider = positionProvider,
-        onDismissRequest = { if (state.isVisible) state.dismiss() },
-        properties = PopupProperties(focusable = focusable),
-    ) {
-        Box(
-            modifier = Modifier.semantics {
-                liveRegion = LiveRegionMode.Assertive
-                paneTitle = TOOLTIP_PANE_TITLE
-            },
-        ) {
-            content()
-        }
-    }
-}
-
 /**
  * Shows the tooltip on long press (touch / stylus) and on mouse hover. The mouse
  * [PointerEventType.Exit] branch dismisses only non-persistent tooltips, so a persistent tooltip
- * stays open while the cursor moves from the anchor onto the tooltip to reach its action.
+ * stays open while the cursor moves from the anchor onto the tooltip.
  */
 private fun Modifier.tooltipGestures(enabled: Boolean, state: TooltipState): Modifier = if (enabled) {
     this
@@ -438,167 +587,80 @@ private fun Modifier.tooltipAnchorSemantics(
 }
 
 /**
- * A plain tooltip that briefly describes an anchor with a short text label, using the Miuix inverse
- * surface style.
+ * The COUI 17 tooltip bubble the three styles are built on: the `COUIToolTips` panel, a smooth round
+ * rect (17dp at weight 3.0) inside a transparent window inset that holds the arrow and the LV4
+ * shadow, with the arrow joined to it as one outline. Use it for fully custom tooltip content; the
+ * content is clipped to the bubble and receives the max width / max height the placement allows.
  *
- * @param modifier the modifier applied to the tooltip.
- * @param caretShape when non-null, draws a caret pointing at the anchor; null (default) keeps the
- *   Miuix caret-less style.
- * @param maxWidth the maximum width of the tooltip.
- * @param cornerRadius the corner radius of the tooltip, drawn at the COUI 17 tooltip weight 3.0.
- * @param containerColor the container color of the tooltip.
- * @param contentColor the content color of the tooltip.
- * @param insideMargin the margin inside the tooltip.
- * @param content the tooltip content, usually a short [Text].
+ * Inside a [TooltipBox] the bubble sizes itself the COUI way (narrowing next to the anchor, shrinking
+ * and scrolling when neither side fits) and draws the arrow; inside the deprecated Miuix tooltip box
+ * it draws no arrow.
+ *
+ * @param modifier the modifier applied to the bubble window.
+ * @param style the [TooltipStyle] whose window inset, width and colours apply.
+ * @param mode the [TooltipMode] of a [TooltipStyle.Default] bubble.
+ * @param containerColor the colour of the bubble and the arrow.
+ * @param maxWidth the maximum width of the visible bubble.
+ * @param cornerRadius the corner radius of the bubble, drawn at [TooltipDefaults.CornerWeight].
+ * @param content the bubble content.
  */
 @Composable
-fun TooltipScope.PlainTooltip(
+fun TooltipScope.TooltipBubble(
     modifier: Modifier = Modifier,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.PlainTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.PlainTooltipCornerRadius,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    insideMargin: PaddingValues = TooltipDefaults.PlainTooltipInsideMargin,
+    style: TooltipStyle = TooltipStyle.Default,
+    mode: TooltipMode = TooltipMode.Tooltips,
+    containerColor: Color = TooltipDefaults.tooltipColors(style = style, mode = mode).containerColor,
+    maxWidth: Dp = TooltipDefaults.maxWidth(style),
+    cornerRadius: Dp = TooltipDefaults.CornerRadius,
     content: @Composable () -> Unit,
 ) {
-    TooltipSurface(
-        caretShape = caretShape,
-        maxWidth = maxWidth,
-        cornerRadius = cornerRadius,
-        containerColor = containerColor,
-        insideMargin = insideMargin,
-        modifier = modifier.semantics(mergeDescendants = false) {
-            isTraversalGroup = true
-            liveRegion = LiveRegionMode.Polite
-        },
-    ) {
-        CompositionLocalProvider(LocalContentColor provides contentColor) {
-            content()
-        }
+    val couiScope = this as? CouiTooltipScopeImpl
+    val layoutState = couiScope?.layoutState
+    val density = LocalDensity.current
+    val insets = TooltipDefaults.windowInset(style, mode)
+    val insetLeft = insets.width
+    val insetTop = insets.height
+    val metrics = remember(density, insetLeft, insetTop) {
+        TooltipMetrics.of(density.density, insetLeft.value, insetTop.value, insetLeft.value, insetTop.value)
     }
-}
+    layoutState?.metrics = metrics
+    val maxWidthPx = with(density) { maxWidth.roundToPx() }
+    val minWidthPx = with(density) { TooltipDefaults.minWidth(style, mode).roundToPx() }
+    val fixedWidth = style == TooltipStyle.Image
 
-/**
- * A rich tooltip that explains an anchor with an optional [title], body [text], and an optional
- * [action], using the Miuix surface-container card style.
- *
- * @param modifier the modifier applied to the tooltip.
- * @param title the optional title shown above the body.
- * @param action the optional action shown below the body.
- * @param caretShape when non-null, draws a caret pointing at the anchor; null (default) keeps the
- *   Miuix caret-less style.
- * @param maxWidth the maximum width of the tooltip.
- * @param cornerRadius the corner radius of the tooltip, drawn at the COUI 17 tooltip weight 3.0.
- * @param colors the [RichTooltipColors] of the tooltip.
- * @param insideMargin the margin inside the tooltip.
- * @param text the body content of the tooltip.
- */
-@Composable
-fun TooltipScope.RichTooltip(
-    modifier: Modifier = Modifier,
-    title: (@Composable () -> Unit)? = null,
-    action: (@Composable () -> Unit)? = null,
-    caretShape: Shape? = null,
-    maxWidth: Dp = TooltipDefaults.RichTooltipMaxWidth,
-    cornerRadius: Dp = TooltipDefaults.RichTooltipCornerRadius,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    insideMargin: PaddingValues = TooltipDefaults.RichTooltipInsideMargin,
-    text: @Composable () -> Unit,
-) {
-    TooltipSurface(
-        caretShape = caretShape,
-        maxWidth = maxWidth,
-        cornerRadius = cornerRadius,
-        containerColor = colors.containerColor,
-        insideMargin = insideMargin,
-        modifier = modifier.semantics(mergeDescendants = false) {
-            isTraversalGroup = true
-        },
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (title != null) {
-                CompositionLocalProvider(LocalContentColor provides colors.titleContentColor) {
-                    title()
-                }
-            }
-            CompositionLocalProvider(LocalContentColor provides colors.contentColor) {
-                text()
-            }
-            if (action != null) {
-                Box(modifier = Modifier.align(Alignment.End)) {
-                    CompositionLocalProvider(LocalContentColor provides colors.actionContentColor) {
-                        action()
-                    }
-                }
-            }
-        }
+    val placement = layoutState?.placement
+    val squircleEnabled = isSquircleEnabled()
+    val shape = remember(insetLeft, insetTop, cornerRadius, placement?.arrow, placement?.arrowTopLeft, squircleEnabled) {
+        TooltipBubbleShape(
+            insetHorizontal = insetLeft,
+            insetVertical = insetTop,
+            cornerRadius = cornerRadius,
+            arrow = placement?.arrow,
+            arrowTopLeft = placement?.arrowTopLeft ?: Offset.Zero,
+            squircleEnabled = squircleEnabled,
+        )
     }
-}
-
-@Composable
-private fun TooltipScope.TooltipSurface(
-    caretShape: Shape?,
-    maxWidth: Dp,
-    cornerRadius: Dp,
-    containerColor: Color,
-    insideMargin: PaddingValues,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    val drawCaret = caretShape != null &&
-        (positioning == TooltipAnchorPosition.Above || positioning == TooltipAnchorPosition.Below)
-    val caretOnTop = positioning == TooltipAnchorPosition.Below
-    val caretSize = TooltipDefaults.caretSize
-    var selfBounds by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    val showing = couiScope?.state?.transition?.targetState ?: true
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
 
     Box(
         modifier = modifier
-            .widthIn(max = maxWidth)
-            .onGloballyPositioned { selfBounds = it }
+            .tooltipBubbleSize(layoutState, metrics, maxWidthPx, minWidthPx, fixedWidth)
             .then(
-                if (drawCaret) {
-                    Modifier.drawBehind {
-                        val anchor = obtainAnchorBounds() ?: return@drawBehind
-                        val self = selfBounds ?: return@drawBehind
-                        if (!anchor.isAttached || !self.isAttached) return@drawBehind
-                        val anchorCenterX = anchor.positionInWindow().x + anchor.size.width / 2f
-                        val selfX = self.positionInWindow().x
-                        val caretHalf = caretSize.width.toPx() / 2f
-                        val cr = cornerRadius.toPx()
-                        val centerX = (anchorCenterX - selfX)
-                            .coerceIn(cr + caretHalf, size.width - cr - caretHalf)
-                        val caretHeight = caretSize.height.toPx()
-                        val path = Path()
-                        if (caretOnTop) {
-                            path.moveTo(centerX, 0f)
-                            path.lineTo(centerX - caretHalf, caretHeight)
-                            path.lineTo(centerX + caretHalf, caretHeight)
-                        } else {
-                            path.moveTo(centerX, size.height)
-                            path.lineTo(centerX - caretHalf, size.height - caretHeight)
-                            path.lineTo(centerX + caretHalf, size.height - caretHeight)
-                        }
-                        path.close()
-                        drawPath(path, color = containerColor)
-                    }
+                if (showing) {
+                    Modifier.dropShadow(shape = shape, shadow = if (isDark) TooltipShadowDark else TooltipShadowLight)
                 } else {
                     Modifier
                 },
-            ),
+            )
+            .background(color = containerColor, shape = shape)
+            .padding(horizontal = insetLeft, vertical = insetTop),
+        propagateMinConstraints = true,
     ) {
         Box(
             modifier = Modifier
-                .padding(
-                    top = if (drawCaret && caretOnTop) caretSize.height else 0.dp,
-                    bottom = if (drawCaret && !caretOnTop) caretSize.height else 0.dp,
-                )
-                .dropShadow(
-                    shape = RoundedCornerShape(cornerRadius),
-                    shadow = Shadow(radius = 10.dp, color = Color.Black, alpha = 0.1f),
-                )
-                .squircleBackground(color = containerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
-                .padding(insideMargin),
+                .clip(SquircleShape(cornerRadius, TooltipDefaults.CornerWeight))
+                .semantics(mergeDescendants = false) { isTraversalGroup = true },
         ) {
             content()
         }
@@ -606,262 +668,680 @@ private fun TooltipScope.TooltipSurface(
 }
 
 /**
- * A plain tooltip convenience that wraps [TooltipBox] + [PlainTooltip] for a short text label.
- *
- * @param text the text label of the tooltip.
- * @param modifier the modifier applied to the anchor wrapper.
- * @param state the [TooltipState] controlling visibility.
- * @param enabled whether hover / long press on the anchor shows the tooltip.
- * @param positioning the preferred [TooltipAnchorPosition] of the tooltip.
- * @param containerColor the container color of the tooltip.
- * @param contentColor the content color of the tooltip.
- * @param content the anchor content.
+ * `COUIToolTips.sizePopupWindow` + the height half of `refreshCoordinated`: caps the window width at
+ * the style max (and the room beside the anchor for a left / right tooltip, which falls back to above
+ * when it would reach the window bottom), and caps the height at the larger side when the tooltip fits
+ * neither above nor below.
  */
-@Composable
-fun TooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = false),
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    containerColor: Color = TooltipDefaults.plainTooltipContainerColor,
-    contentColor: Color = TooltipDefaults.plainTooltipContentColor,
-    content: @Composable () -> Unit,
-) {
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(positioning),
-        tooltip = {
-            PlainTooltip(containerColor = containerColor, contentColor = contentColor) {
-                Text(
-                    text = text,
-                    color = contentColor,
-                    style = COUITheme.textStyles.body2,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        },
-        state = state,
-        modifier = modifier,
-        focusable = false,
-        enableUserInput = enabled,
-        content = content,
-    )
-}
-
-/**
- * A rich tooltip convenience that wraps [TooltipBox] + [RichTooltip] with an optional title and a
- * single text action. The action invokes [onActionClick] then dismisses the tooltip.
- *
- * The tooltip is persistent: trigger it via long press / hover, or hoist [state] and call
- * [TooltipState.show] from the anchor's own click. It is dismissed by an outside tap, a back press,
- * or the action.
- *
- * @param text the body text of the tooltip.
- * @param modifier the modifier applied to the anchor wrapper.
- * @param state the [TooltipState] controlling visibility.
- * @param title the optional title shown above the body.
- * @param actionText the optional action label.
- * @param onActionClick called when the action is clicked, before the tooltip is dismissed.
- * @param enabled whether hover / long press on the anchor shows the tooltip.
- * @param positioning the preferred [TooltipAnchorPosition] of the tooltip.
- * @param colors the [RichTooltipColors] of the tooltip.
- * @param content the anchor content.
- */
-@Composable
-fun RichTooltipBox(
-    text: String,
-    modifier: Modifier = Modifier,
-    state: TooltipState = rememberTooltipState(isPersistent = true),
-    title: String? = null,
-    actionText: String? = null,
-    onActionClick: (() -> Unit)? = null,
-    enabled: Boolean = true,
-    positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-    colors: RichTooltipColors = TooltipDefaults.richTooltipColors(),
-    content: @Composable () -> Unit,
-) {
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(positioning),
-        tooltip = {
-            RichTooltip(
-                title = title?.let {
-                    {
-                        Text(
-                            text = it,
-                            color = colors.titleContentColor,
-                            style = COUITheme.textStyles.subtitle,
-                        )
-                    }
-                },
-                action = actionText?.let {
-                    {
-                        TextButton(
-                            text = it,
-                            onClick = {
-                                onActionClick?.invoke()
-                                state.dismiss()
-                            },
-                            minWidth = 0.dp,
-                            minHeight = 0.dp,
-                            cornerRadius = TooltipDefaults.RichTooltipActionCornerRadius,
-                            colors = ButtonDefaults.textButtonColors(
-                                color = Color.Transparent,
-                                textColor = colors.actionContentColor,
-                            ),
-                            insideMargin = TooltipDefaults.RichTooltipActionInsideMargin,
-                        )
-                    }
-                },
-                colors = colors,
-            ) {
-                Text(
-                    text = text,
-                    color = colors.contentColor,
-                    style = COUITheme.textStyles.body2,
-                )
-            }
-        },
-        state = state,
-        modifier = modifier,
-        focusable = true,
-        enableUserInput = enabled,
-        content = content,
-    )
-}
-
-/**
- * Colors for [RichTooltip].
- *
- * @param containerColor container color of the rich tooltip.
- * @param contentColor color of the rich tooltip body text.
- * @param titleContentColor color of the rich tooltip title.
- * @param actionContentColor color of the rich tooltip action label.
- */
-@Immutable
-data class RichTooltipColors(
-    val containerColor: Color,
-    val contentColor: Color,
-    val titleContentColor: Color,
-    val actionContentColor: Color,
-)
-
-/**
- * Positions a tooltip on the preferred side of its anchor, centered on the cross axis, flipping to
- * the opposite side when there is no room and clamped to the window bounds.
- */
-@Immutable
-private class TooltipPopupPositionProvider(
-    val positioning: TooltipAnchorPosition,
-    private val spacing: Int,
-) : PopupPositionProvider {
-    override fun calculatePosition(
-        anchorBounds: IntRect,
-        windowSize: IntSize,
-        layoutDirection: LayoutDirection,
-        popupContentSize: IntSize,
-    ): IntOffset {
-        val resolved = positioning.resolve(layoutDirection)
-        val centerX = anchorBounds.left + (anchorBounds.width - popupContentSize.width) / 2
-        val centerY = anchorBounds.top + (anchorBounds.height - popupContentSize.height) / 2
-
-        var x = centerX
-        var y = centerY
-        when (resolved) {
-            TooltipAnchorPosition.Below -> {
-                val below = anchorBounds.bottom + spacing
-                val above = anchorBounds.top - popupContentSize.height - spacing
-                y = if (below + popupContentSize.height <= windowSize.height || above < 0) below else above
-            }
-
-            TooltipAnchorPosition.Above -> {
-                val above = anchorBounds.top - popupContentSize.height - spacing
-                val below = anchorBounds.bottom + spacing
-                y = if (above >= 0 || below + popupContentSize.height > windowSize.height) above else below
-            }
-
-            TooltipAnchorPosition.Left -> {
-                val left = anchorBounds.left - popupContentSize.width - spacing
-                val right = anchorBounds.right + spacing
-                x = if (left >= 0 || right + popupContentSize.width > windowSize.width) left else right
-            }
-
-            TooltipAnchorPosition.Right -> {
-                val right = anchorBounds.right + spacing
-                val left = anchorBounds.left - popupContentSize.width - spacing
-                x = if (right + popupContentSize.width <= windowSize.width || left < 0) right else left
-            }
-
-            else -> {
-                y = anchorBounds.bottom + spacing
+private fun Modifier.tooltipBubbleSize(
+    layoutState: TooltipLayoutState?,
+    metrics: TooltipMetrics,
+    styleMaxWidth: Int,
+    minWidth: Int,
+    fixedWidth: Boolean,
+): Modifier = layout { measurable, constraints ->
+    var maxWidth = min(styleMaxWidth + metrics.insetLeft + metrics.insetRight, constraints.maxWidth)
+    var maxHeight = constraints.maxHeight
+    val anchor = layoutState?.anchorBounds
+    val viewport = layoutState?.viewport ?: IntSize.Zero
+    if (layoutState != null && anchor != null && viewport != IntSize.Zero) {
+        var side = layoutState.position.toTooltipSide(layoutDirection)
+        var fallback: TooltipSide? = null
+        if (side == TooltipSide.Left || side == TooltipSide.Right) {
+            val sideWidth = min(tooltipMaxWindowWidth(side, anchor, viewport, metrics, styleMaxWidth), constraints.maxWidth)
+            val height = measurable.maxIntrinsicHeight(sideWidth)
+            if (tooltipSideFallsBackToVertical(anchor, viewport, metrics, height)) {
+                side = TooltipSide.Above
+                fallback = TooltipSide.Above
+            } else {
+                maxWidth = sideWidth
             }
         }
+        if (side == TooltipSide.Above || side == TooltipSide.Below) {
+            maxWidth = min(tooltipMaxWindowWidth(side, anchor, viewport, metrics, styleMaxWidth), constraints.maxWidth)
+            val height = measurable.maxIntrinsicHeight(maxWidth)
+            val cap = tooltipVerticalSide(side, anchor, viewport, height).second
+            if (cap != null) maxHeight = min(maxHeight, max(cap, 0))
+        }
+        layoutState.fallbackSide = fallback
+    }
+    val minW = if (fixedWidth) maxWidth else min(minWidth, maxWidth)
+    val placeable = measurable.measure(
+        Constraints(minWidth = max(minW, 0), maxWidth = max(maxWidth, 0), minHeight = 0, maxHeight = maxHeight),
+    )
+    layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+}
 
-        x = x.coerceIn(0, max(0, windowSize.width - popupContentSize.width))
-        y = y.coerceIn(0, max(0, windowSize.height - popupContentSize.height))
-        return IntOffset(x, y)
+/**
+ * The bubble outline: the smooth round rect inside the window inset, joined with the arrow into one
+ * path, so the fill and the shadow have no seam.
+ */
+@Immutable
+private class TooltipBubbleShape(
+    private val insetHorizontal: Dp,
+    private val insetVertical: Dp,
+    private val cornerRadius: Dp,
+    private val arrow: TooltipArrowDirection?,
+    private val arrowTopLeft: Offset,
+    private val squircleEnabled: Boolean,
+) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val h = with(density) { insetHorizontal.toPx() }
+        val v = with(density) { insetVertical.toPx() }
+        val body = Path()
+        val rect = Rect(h, v, size.width - h, size.height - v)
+        if (rect.width > 0f && rect.height > 0f) {
+            body.addSquircleRect(rect, with(density) { cornerRadius.toPx() }, TooltipDefaults.CornerWeight, squircleEnabled)
+        }
+        if (arrow == null) return Outline.Generic(body)
+        val arrowPath = arrow.path(density.density, arrowTopLeft)
+        return Outline.Generic(Path.combine(PathOperation.Union, body, arrowPath))
+    }
+
+    override fun equals(other: Any?): Boolean = other is TooltipBubbleShape &&
+        other.insetHorizontal == insetHorizontal &&
+        other.insetVertical == insetVertical &&
+        other.cornerRadius == cornerRadius &&
+        other.arrow == arrow &&
+        other.arrowTopLeft == arrowTopLeft &&
+        other.squircleEnabled == squircleEnabled
+
+    override fun hashCode(): Int {
+        var result = insetHorizontal.hashCode()
+        result = 31 * result + insetVertical.hashCode()
+        result = 31 * result + cornerRadius.hashCode()
+        result = 31 * result + (arrow?.hashCode() ?: 0)
+        result = 31 * result + arrowTopLeft.hashCode()
+        result = 31 * result + squircleEnabled.hashCode()
+        return result
     }
 }
 
-private fun TooltipAnchorPosition.resolve(layoutDirection: LayoutDirection): TooltipAnchorPosition = when (this) {
-    TooltipAnchorPosition.Start ->
-        if (layoutDirection == LayoutDirection.Ltr) TooltipAnchorPosition.Left else TooltipAnchorPosition.Right
+/**
+ * COUI SHADOW_LV4 (`ShadowUtils.setElevationToView(view, 3, …)` on the panel and the arrow), the
+ * same calibration as the popup menu: 26.66dp blur at 13.7% black (`coui_shadow_color_lv4` 48/255),
+ * 3.33dp down.
+ */
+private val TooltipShadowLight = Shadow(radius = 26.66.dp, color = Color.Black, alpha = 0.137f, offset = DpOffset(0.dp, 3.33.dp))
 
-    TooltipAnchorPosition.End ->
-        if (layoutDirection == LayoutDirection.Ltr) TooltipAnchorPosition.Right else TooltipAnchorPosition.Left
+/** The dark SHADOW_LV4: `coui_shadow_color_lv4` rises to 150/255 at a 36dp elevation. */
+private val TooltipShadowDark = Shadow(radius = 26.66.dp, color = Color.Black, alpha = 0.43f, offset = DpOffset(0.dp, 3.33.dp))
 
-    else -> this
+/**
+ * A [TooltipStyle.Default] tooltip with a text body (`COUIDefaultBubbleStyleImpl`).
+ *
+ * In [TooltipMode.Tooltips] it is the accent bubble with white 13sp text and a close icon at its end;
+ * the icon dismisses the tooltip and then calls [onCloseClick]. In [TooltipMode.Info] it is the
+ * white "detail floating" bubble with secondary text and no close icon.
+ *
+ * @param text the tooltip text.
+ * @param modifier the modifier applied to the bubble window.
+ * @param mode the [TooltipMode].
+ * @param colors the [TooltipColors]; `containerColor` and `contentColor` apply.
+ * @param maxWidth the maximum width of the visible bubble.
+ * @param onCloseClick called after the close icon dismissed the tooltip (COUI
+ *   `OnCloseIconClickListener`).
+ */
+@Composable
+fun TooltipScope.Tooltip(
+    text: String,
+    modifier: Modifier = Modifier,
+    mode: TooltipMode = TooltipMode.Tooltips,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(mode = mode),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onCloseClick: (() -> Unit)? = null,
+) {
+    Tooltip(
+        modifier = modifier,
+        mode = mode,
+        colors = colors,
+        maxWidth = maxWidth,
+        onCloseClick = onCloseClick,
+    ) {
+        Text(
+            text = text,
+            color = colors.contentColor,
+            style = COUITheme.textStyles.footnote1,
+        )
+    }
 }
 
 /**
- * Defaults for [TooltipBox], [PlainTooltip] and [RichTooltip].
+ * A [TooltipStyle.Default] tooltip with custom content (COUI `setContent(View)`), framed by the
+ * Default bubble's margins (12dp, with 42dp at the end for the close icon in [TooltipMode.Tooltips]).
+ * The content scrolls when the tooltip has to shrink.
+ *
+ * @param modifier the modifier applied to the bubble window.
+ * @param mode the [TooltipMode].
+ * @param colors the [TooltipColors]; `containerColor` and `contentColor` apply.
+ * @param maxWidth the maximum width of the visible bubble.
+ * @param onCloseClick called after the close icon dismissed the tooltip.
+ * @param content the tooltip content; [LocalContentColor] is `colors.contentColor`.
+ */
+@Composable
+fun TooltipScope.Tooltip(
+    modifier: Modifier = Modifier,
+    mode: TooltipMode = TooltipMode.Tooltips,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(mode = mode),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onCloseClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    val tooltips = mode == TooltipMode.Tooltips
+    val state = (this as? CouiTooltipScopeImpl)?.state
+    TooltipBubble(
+        modifier = modifier,
+        style = TooltipStyle.Default,
+        mode = mode,
+        containerColor = colors.containerColor,
+        maxWidth = maxWidth,
+    ) {
+        Box(contentAlignment = if (tooltips) Alignment.CenterStart else Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .padding(
+                        start = TooltipDefaults.ContentMargin,
+                        top = TooltipDefaults.ContentMargin,
+                        end = if (tooltips) TooltipDefaults.CloseIconContentMarginEnd else TooltipDefaults.ContentMargin,
+                        bottom = TooltipDefaults.ContentMargin,
+                    )
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                CompositionLocalProvider(LocalContentColor provides colors.contentColor) {
+                    content()
+                }
+            }
+            if (tooltips) {
+                TooltipCloseIcon(
+                    color = colors.contentColor,
+                    onClick = {
+                        state?.dismiss()
+                        onCloseClick?.invoke()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = TooltipDefaults.ContentMargin),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A [TooltipStyle.Icon] tooltip (`COUIIconBubbleStyleImpl`): a white card with a 40dp icon (8dp
+ * corners), an optional title, the body and an optional dismiss text button.
+ *
+ * @param text the body text.
+ * @param icon the icon, drawn 40dp with `ContentScale.Fit`.
+ * @param modifier the modifier applied to the bubble window.
+ * @param title the optional title.
+ * @param dismissText the optional dismiss button label; it dismisses the tooltip and then calls
+ *   [onDismissClick].
+ * @param colors the [TooltipColors] of the tooltip.
+ * @param maxWidth the maximum width of the visible bubble.
+ * @param onDismissClick called after the dismiss button dismissed the tooltip.
+ */
+@Composable
+fun TooltipScope.IconTooltip(
+    text: String,
+    icon: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Icon),
+    maxWidth: Dp = TooltipDefaults.MaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+) {
+    val state = (this as? CouiTooltipScopeImpl)?.state
+    TooltipBubble(
+        modifier = modifier,
+        style = TooltipStyle.Icon,
+        containerColor = colors.containerColor,
+        maxWidth = maxWidth,
+    ) {
+        Column {
+            val scrollState = rememberScrollState()
+            Box(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .padding(top = 12.dp)
+                    .tooltipFadingEdges(scrollState)
+                    .verticalScroll(scrollState),
+            ) {
+                Box {
+                    Image(
+                        painter = icon,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .padding(start = 12.dp, top = 2.dp)
+                            .size(TooltipDefaults.IconSize)
+                            .clip(RoundedCornerShape(TooltipDefaults.MediaCornerRadius)),
+                    )
+                    Column(modifier = Modifier.padding(start = 62.dp, end = 16.dp)) {
+                        TooltipTitleAndBody(title = title, text = text, colors = colors)
+                    }
+                }
+            }
+            TooltipDismissButton(
+                text = dismissText,
+                color = colors.actionColor,
+                startMargin = 50.dp,
+                onClick = {
+                    state?.dismiss()
+                    onDismissClick?.invoke()
+                },
+            )
+        }
+    }
+}
+
+/**
+ * A [TooltipStyle.Image] tooltip (`COUIImageBubbleStyleImpl`) showing [image] cropped to the media
+ * area, with an optional title, the body and an optional dismiss text button.
+ *
+ * @param text the body text.
+ * @param image the image, drawn with `ContentScale.Crop`.
+ * @param modifier the modifier applied to the bubble window.
+ * @param title the optional title.
+ * @param dismissText the optional dismiss button label.
+ * @param imageWithEdges true (the COUI default) for a 228 x 116dp image with 8dp corners inset 16dp
+ *   from the bubble; false for a full-bleed 132dp image clipped by the bubble corners.
+ * @param colors the [TooltipColors] of the tooltip.
+ * @param maxWidth the width of the visible bubble (an image tooltip always takes its max width).
+ * @param onDismissClick called after the dismiss button dismissed the tooltip.
+ */
+@Composable
+fun TooltipScope.ImageTooltip(
+    text: String,
+    image: Painter,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    imageWithEdges: Boolean = true,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Image),
+    maxWidth: Dp = TooltipDefaults.ImageMaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+) {
+    ImageTooltip(
+        text = text,
+        modifier = modifier,
+        title = title,
+        dismissText = dismissText,
+        imageWithEdges = imageWithEdges,
+        colors = colors,
+        maxWidth = maxWidth,
+        onDismissClick = onDismissClick,
+    ) {
+        Image(
+            painter = image,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+/**
+ * A [TooltipStyle.Image] tooltip with custom media, e.g. a looping animation (COUI `loadAnim`).
+ *
+ * @param text the body text.
+ * @param modifier the modifier applied to the bubble window.
+ * @param title the optional title.
+ * @param dismissText the optional dismiss button label.
+ * @param imageWithEdges true for a 228 x 116dp media area with 8dp corners; false for a full-bleed
+ *   132dp area.
+ * @param colors the [TooltipColors] of the tooltip.
+ * @param maxWidth the width of the visible bubble.
+ * @param onDismissClick called after the dismiss button dismissed the tooltip.
+ * @param media the media content, laid out in the media area.
+ */
+@Composable
+fun TooltipScope.ImageTooltip(
+    text: String,
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    dismissText: String? = null,
+    imageWithEdges: Boolean = true,
+    colors: TooltipColors = TooltipDefaults.tooltipColors(style = TooltipStyle.Image),
+    maxWidth: Dp = TooltipDefaults.ImageMaxWidth,
+    onDismissClick: (() -> Unit)? = null,
+    media: @Composable BoxScope.() -> Unit,
+) {
+    val state = (this as? CouiTooltipScopeImpl)?.state
+    TooltipBubble(
+        modifier = modifier,
+        style = TooltipStyle.Image,
+        containerColor = colors.containerColor,
+        maxWidth = maxWidth,
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            val scrollState = rememberScrollState()
+            Box(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .padding(top = if (imageWithEdges) 16.dp else 0.dp)
+                    .tooltipFadingEdges(scrollState)
+                    .verticalScroll(scrollState),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(if (imageWithEdges) TooltipDefaults.ImageWithEdgesSize.height else TooltipDefaults.ImageNoEdgesHeight),
+                        contentAlignment = Alignment.TopCenter,
+                    ) {
+                        Box(
+                            modifier = if (imageWithEdges) {
+                                Modifier
+                                    .size(TooltipDefaults.ImageWithEdgesSize)
+                                    .clip(RoundedCornerShape(TooltipDefaults.MediaCornerRadius))
+                            } else {
+                                Modifier.fillMaxSize()
+                            },
+                            content = media,
+                        )
+                    }
+                    Column(modifier = Modifier.padding(horizontal = 16.dp).padding(top = 12.dp)) {
+                        TooltipTitleAndBody(title = title, text = text, colors = colors)
+                    }
+                }
+            }
+            TooltipDismissButton(
+                text = dismissText,
+                color = colors.actionColor,
+                startMargin = 4.dp,
+                onClick = {
+                    state?.dismiss()
+                    onDismissClick?.invoke()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.TooltipTitleAndBody(title: String?, text: String, colors: TooltipColors) {
+    if (title != null) {
+        Text(text = title, color = colors.titleColor, style = COUITheme.textStyles.headline1)
+    }
+    Text(text = text, color = colors.contentColor, style = COUITheme.textStyles.footnote1)
+}
+
+/**
+ * The Icon / Image dismiss text button: `couiTextButtonM` in `couiColorLabelTheme`, at most two lines,
+ * end aligned with 2dp above and 10dp below, padded 12 x 4dp by `setPressRippleDrawable` with a
+ * capsule press mask.
+ */
+@Composable
+private fun ColumnScope.TooltipDismissButton(
+    text: String?,
+    color: Color,
+    startMargin: Dp,
+    onClick: () -> Unit,
+) {
+    if (text == null) {
+        Spacer(modifier = Modifier.height(TooltipDefaults.ContentMargin))
+        return
+    }
+    Text(
+        text = text,
+        color = color,
+        style = COUITheme.textStyles.subtitle,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier
+            .align(Alignment.End)
+            .padding(start = startMargin, top = 2.dp, end = 4.dp, bottom = 10.dp)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(TooltipDefaults.DismissButtonPadding),
+    )
+}
+
+/**
+ * The 18dp close icon (`coui_tool_tips_delete_icon`): a 30% circle with a rounded cross, both in the
+ * content colour. Its touch target is grown by 20dp on each side (`couiToolTipsCancelButtonInsects`).
+ */
+@Composable
+private fun TooltipCloseIcon(
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val base = LocalViewConfiguration.current
+    val configuration = remember(base) { ExpandedTouchTargetConfiguration(base, TooltipDefaults.CloseIconTouchTarget) }
+    CompositionLocalProvider(LocalViewConfiguration provides configuration) {
+        Canvas(
+            modifier = modifier
+                .size(TooltipDefaults.CloseIconSize)
+                .semantics { contentDescription = TOOLTIP_CLOSE_DESCRIPTION }
+                .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick),
+        ) {
+            val unit = size.width / 18f
+            drawCircle(color = color, alpha = 0.3f)
+            val cross = addPathNodes(TOOLTIP_CLOSE_CROSS_PATH).toPath()
+            val matrix = Matrix()
+            matrix.values[Matrix.ScaleX] = unit
+            matrix.values[Matrix.ScaleY] = unit
+            cross.transform(matrix)
+            drawPath(cross, color = color)
+        }
+    }
+}
+
+private const val TOOLTIP_CLOSE_CROSS_PATH =
+    "M9,7.87 L6.6,5.46a0.81,0.81 0,0 0,-1.14 0h0a0.81,0.81 0,0 0,0 1.14L7.87,9 5.46,11.4a0.81,0.81 0,0 0,0 1.14h0" +
+        "a0.81,0.81 0,0 0,1.14 0L9,10.13l2.4,2.41a0.81,0.81 0,0 0,1.14 0h0a0.81,0.81 0,0 0,0 -1.14L10.13,9l2.41,-2.4" +
+        "a0.81,0.81 0,0 0,0 -1.14h0a0.81,0.81 0,0 0,-1.14 0Z"
+
+private class ExpandedTouchTargetConfiguration(
+    private val base: ViewConfiguration,
+    private val touchTarget: DpSize,
+) : ViewConfiguration by base {
+    override val minimumTouchTargetSize: DpSize
+        get() = touchTarget
+}
+
+/**
+ * The vertical fading edges of the Icon / Image scroll area (`requiresFadingEdge="vertical"`, 24dp
+ * `coui_tooltips_scroll_fading_length`), each one as strong as the remaining scroll allows, like
+ * `View.getTopFadingEdgeStrength`.
+ */
+private fun Modifier.tooltipFadingEdges(scrollState: ScrollState): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val length = TooltipDefaults.FadingEdgeLength.toPx()
+        if (length <= 0f) return@drawWithContent
+        val top = min(scrollState.value / length, 1f) * length
+        val bottom = min((scrollState.maxValue - scrollState.value) / length, 1f) * length
+        if (top > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(listOf(Color.Transparent, Color.Black), startY = 0f, endY = top),
+                size = Size(size.width, top),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+        if (bottom > 0f) {
+            drawRect(
+                brush = Brush.verticalGradient(listOf(Color.Black, Color.Transparent), startY = size.height - bottom, endY = size.height),
+                topLeft = Offset(0f, size.height - bottom),
+                size = Size(size.width, bottom),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }
+
+/**
+ * Colours of a COUI tooltip.
+ *
+ * @param containerColor the bubble and arrow colour.
+ * @param contentColor the body text (and Default close icon) colour.
+ * @param titleColor the Icon / Image title colour.
+ * @param actionColor the Icon / Image dismiss button colour.
+ */
+@Immutable
+data class TooltipColors(
+    val containerColor: Color,
+    val contentColor: Color,
+    val titleColor: Color,
+    val actionColor: Color,
+)
+
+/**
+ * Defaults for [TooltipBox] and the COUI tooltip bubbles.
  */
 object TooltipDefaults {
-    /** The default spacing between a tooltip and its anchor. */
-    val SpacingBetweenTooltipAndAnchor = 8.dp
+    /**
+     * The bubble corner radius: COUI 17 outlines the `COUIToolTips` panel with
+     * `coui_tooltips_os_16_1_radius_17_dp` at weight [CornerWeight].
+     */
+    val CornerRadius = 17.dp
 
-    /** The default size of the caret. */
-    val caretSize = DpSize(16.dp, 8.dp)
+    /** The bubble corner weight (superellipse exponent): `COUIToolTips.OS_16_1_WEIGHT` 3.0. */
+    val CornerWeight: Float = 3.0f
 
-    /** The default maximum width of a plain tooltip. */
-    val PlainTooltipMaxWidth = 200.dp
+    /** The max width of a Default / Icon bubble (`tool_tips_max_width`). */
+    val MaxWidth = 328.dp
+
+    /** The width of an Image bubble (`tool_tips_image_style_max_width`). */
+    val ImageMaxWidth = 260.dp
+
+    /** The min width of the Info window, inset included (`detail_floating_min_width`). */
+    val InfoMinWidth = 80.dp
+
+    /** The content margin of the Default bubble and the close icon end margin. */
+    internal val ContentMargin = 12.dp
+
+    /** The content end margin of the Default tooltips bubble, which leaves room for the close icon. */
+    internal val CloseIconContentMarginEnd = 42.dp
+
+    /** The close icon size (`coui_tool_tips_delete_background_size`). */
+    internal val CloseIconSize = 18.dp
+
+    /** The close icon touch target: 18dp plus 20dp on each side (`couiToolTipsCancelButtonInsects`). */
+    internal val CloseIconTouchTarget = DpSize(58.dp, 58.dp)
+
+    /** The Icon bubble icon size. */
+    internal val IconSize = 40.dp
+
+    /** The icon / image corner radius (`coui_tooltips_imageview_radius`). */
+    internal val MediaCornerRadius = 8.dp
+
+    /** The media area of an Image bubble with edges. */
+    internal val ImageWithEdgesSize = DpSize(228.dp, 116.dp)
+
+    /** The media height of an Image bubble without edges. */
+    internal val ImageNoEdgesHeight = 132.dp
+
+    /** The fading edge length of the Icon / Image scroll area (`coui_tooltips_scroll_fading_length`). */
+    internal val FadingEdgeLength = 24.dp
+
+    /** The dismiss button press padding (`text_ripple_bg_padding_horizontal` / `_vertical`). */
+    internal val DismissButtonPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
 
     /**
-     * The default corner radius of a plain tooltip: COUI 17 `COUIToolTips` outlines its panel with
-     * `coui_tooltips_os_16_1_radius_17_dp` (17dp) at weight 3.0 ([COUIRoundCorner.Large.Weight]),
-     * the weight every tooltip is drawn with.
+     * The transparent window inset around the bubble (`couiToolTipsPadding*`), which holds the arrow
+     * and the shadow: 13dp all round, 16dp horizontally for the Info bubble.
      */
+    fun windowInset(style: TooltipStyle, mode: TooltipMode = TooltipMode.Tooltips): DpSize = if (style == TooltipStyle.Default && mode == TooltipMode.Info) DpSize(16.dp, 13.dp) else DpSize(13.dp, 13.dp)
+
+    /** The max width of a bubble of [style]. */
+    fun maxWidth(style: TooltipStyle): Dp = if (style == TooltipStyle.Image) ImageMaxWidth else MaxWidth
+
+    /** The min width of the window (inset included) of a bubble of [style] and [mode]. */
+    fun minWidth(style: TooltipStyle, mode: TooltipMode = TooltipMode.Tooltips): Dp = if (style == TooltipStyle.Default && mode == TooltipMode.Info) InfoMinWidth else 0.dp
+
+    /**
+     * The colours of a tooltip of [style] and [mode]: the accent (`couiColorTips` = primary) bubble
+     * with white text for the Default tooltips mode, `couiColorBackgroundTop` with secondary text
+     * otherwise; titles in `couiColorLabelPrimary`, dismiss buttons in `couiColorLabelTheme`.
+     */
+    @Composable
+    fun tooltipColors(
+        style: TooltipStyle = TooltipStyle.Default,
+        mode: TooltipMode = TooltipMode.Tooltips,
+        containerColor: Color = if (style == TooltipStyle.Default && mode == TooltipMode.Tooltips) {
+            COUITheme.colorScheme.primary
+        } else {
+            COUITheme.colorScheme.backgroundTop
+        },
+        contentColor: Color = if (style == TooltipStyle.Default && mode == TooltipMode.Tooltips) {
+            COUITheme.colorScheme.onPrimary
+        } else {
+            COUITheme.colorScheme.onSurfaceSecondary
+        },
+        titleColor: Color = COUITheme.colorScheme.onSurface,
+        actionColor: Color = COUITheme.colorScheme.primary,
+    ): TooltipColors = remember(containerColor, contentColor, titleColor, actionColor) {
+        TooltipColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+            titleColor = titleColor,
+            actionColor = actionColor,
+        )
+    }
+
+    // region Deprecated Miuix tooltip defaults
+
+    /** The spacing between a legacy tooltip and its anchor. */
+    @Deprecated("Used by the deprecated Miuix tooltip only.")
+    val SpacingBetweenTooltipAndAnchor = 8.dp
+
+    /** The size of the legacy caret. */
+    @Deprecated("COUI tooltips draw an arrow; see TooltipBox(showArrow).")
+    val caretSize = DpSize(16.dp, 8.dp)
+
+    /** The maximum width of a legacy plain tooltip. */
+    @Deprecated("Use MaxWidth.", ReplaceWith("TooltipDefaults.MaxWidth"))
+    val PlainTooltipMaxWidth = 200.dp
+
+    /** The corner radius of a legacy plain tooltip. */
+    @Deprecated("Use CornerRadius.", ReplaceWith("TooltipDefaults.CornerRadius"))
     val PlainTooltipCornerRadius = 17.dp
 
-    /** The default margin inside a plain tooltip. */
+    /** The margin inside a legacy plain tooltip. */
+    @Deprecated("Used by the deprecated Miuix tooltip only.")
     val PlainTooltipInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
 
-    /** The default container color of a plain tooltip (inverse surface). */
+    /** The container color of a legacy plain tooltip (inverse surface). */
+    @Deprecated("Use tooltipColors().")
     val plainTooltipContainerColor: Color
         @Composable get() = COUITheme.colorScheme.onSecondaryVariant
 
-    /** The default content color of a plain tooltip. */
+    /** The content color of a legacy plain tooltip. */
+    @Deprecated("Use tooltipColors().")
     val plainTooltipContentColor: Color
         @Composable get() = COUITheme.colorScheme.secondaryVariant
 
-    /** The default maximum width of a rich tooltip. */
+    /** The maximum width of a legacy rich tooltip. */
+    @Deprecated("Use MaxWidth.", ReplaceWith("TooltipDefaults.MaxWidth"))
     val RichTooltipMaxWidth = 320.dp
 
-    /** The default corner radius of a rich tooltip: the same 17dp `COUIToolTips` panel radius. */
+    /** The corner radius of a legacy rich tooltip. */
+    @Deprecated("Use CornerRadius.", ReplaceWith("TooltipDefaults.CornerRadius"))
     val RichTooltipCornerRadius = 17.dp
 
-    /** The default margin inside a rich tooltip. */
+    /** The margin inside a legacy rich tooltip. */
+    @Deprecated("Used by the deprecated Miuix tooltip only.")
     val RichTooltipInsideMargin = PaddingValues(all = 16.dp)
 
-    /** The default corner radius of a rich tooltip action button. */
+    /** The corner radius of a legacy rich tooltip action button. */
+    @Deprecated("Used by the deprecated Miuix tooltip only.")
     val RichTooltipActionCornerRadius = 8.dp
 
-    /** The default margin inside a rich tooltip action button. */
+    /** The margin inside a legacy rich tooltip action button. */
+    @Deprecated("Used by the deprecated Miuix tooltip only.")
     val RichTooltipActionInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
 
-    /** Returns a [Shape] that, when passed as `caretShape`, enables the Miuix tooltip caret. */
-    fun caretShape(): Shape = TooltipCaretShape
+    /** Returns the legacy caret shape. */
+    @Deprecated("COUI tooltips draw an arrow; see TooltipBox(showArrow).")
+    fun caretShape(): Shape = LegacyTooltipCaretShape
 
+    /** The colours of a legacy rich tooltip. */
+    @Suppress("DEPRECATION")
+    @Deprecated("Use tooltipColors(style = TooltipStyle.Icon).")
     @Composable
     fun richTooltipColors(
         containerColor: Color = COUITheme.colorScheme.surfaceContainer,
@@ -878,12 +1358,13 @@ object TooltipDefaults {
     }
 
     /**
-     * Returns a [PopupPositionProvider] that positions a tooltip on the [positioning] side of its
-     * anchor.
+     * Returns the legacy position provider for the deprecated Miuix [TooltipBox].
      *
      * @param positioning the preferred [TooltipAnchorPosition].
      * @param spacingBetweenTooltipAndAnchor the spacing between the tooltip and the anchor.
      */
+    @Suppress("DEPRECATION")
+    @Deprecated("The COUI TooltipBox(state, tooltip, placement = …) positions the tooltip itself.")
     @Composable
     fun rememberTooltipPositionProvider(
         positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
@@ -891,23 +1372,9 @@ object TooltipDefaults {
     ): PopupPositionProvider {
         val spacingPx = with(LocalDensity.current) { spacingBetweenTooltipAndAnchor.roundToPx() }
         return remember(positioning, spacingPx) {
-            TooltipPopupPositionProvider(positioning, spacingPx)
+            LegacyTooltipPositionProvider(positioning, spacingPx)
         }
     }
-}
 
-private object TooltipCaretShape : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density,
-    ): Outline {
-        val path = Path().apply {
-            moveTo(size.width / 2f, 0f)
-            lineTo(0f, size.height)
-            lineTo(size.width, size.height)
-            close()
-        }
-        return Outline.Generic(path)
-    }
+    // endregion
 }
