@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -9,6 +12,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -521,16 +527,21 @@ private fun NavigationBar(
                     }
                 }
             }
-            if (appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle == 1) {
-                Box(modifier = modifier) {
-                    IosLiquidGlassNavigationBar(
-                        items = navigationItems,
-                        selectedIndex = page,
-                        onItemClick = { mainPagerState.animateToPage(it) },
-                        backdrop = backdrop,
-                        isBlurActive = blurActive,
-                    )
-                }
+        }
+        // No fade and no clip: either would cut the glass bar's shadow off while it moves.
+        AnimatedVisibility(
+            visible = appState.showNavigationBar && appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle == 1,
+            enter = expandVertically(clip = false) + slideInVertically(initialOffsetY = { it }),
+            exit = shrinkVertically(clip = false) + slideOutVertically(targetOffsetY = { it }),
+        ) {
+            Box(modifier = modifier) {
+                IosLiquidGlassNavigationBar(
+                    items = navigationItems,
+                    selectedIndex = page,
+                    onItemClick = { mainPagerState.animateToPage(it) },
+                    backdrop = backdrop,
+                    isBlurActive = blurActive,
+                )
             }
         }
         if (appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle != 1) {
@@ -589,53 +600,51 @@ private fun FloatingToolbar(
     showFloatingToolbar: Boolean,
     floatingToolbarOrientation: Int,
 ) {
-    AnimatedVisibility(
+    // The toolbar runs its own COUI 17 show / hide springs, which keep its shadow whole.
+    FloatingToolbar(
         visible = showFloatingToolbar,
-        enter = fadeIn(),
-        exit = fadeOut(),
+        color = COUITheme.colorScheme.primary,
+        cornerRadius = 20.dp,
     ) {
-        FloatingToolbar(
-            color = COUITheme.colorScheme.primary,
-            cornerRadius = 20.dp,
-        ) {
-            AnimatedContent(
-                targetState = floatingToolbarOrientation,
-            ) { orientation ->
-                val iconTint = COUITheme.colorScheme.onPrimary
-                val content = @Composable {
-                    IconButton(onClick = { /* Action 1 */ }) {
-                        Icon(
-                            COUIIcons.Edit,
-                            contentDescription = "Edit",
-                            tint = iconTint,
-                        )
-                    }
-                    IconButton(onClick = { /* Action 2 */ }) {
-                        Icon(
-                            COUIIcons.Delete,
-                            contentDescription = "Delete",
-                            tint = iconTint,
-                        )
-                    }
-                    IconButton(onClick = { /* Action 3 */ }) {
-                        Icon(
-                            COUIIcons.More,
-                            contentDescription = "More",
-                            tint = iconTint,
-                        )
-                    }
+        // A size change without a clip or a fade: both would cut the icon buttons' shadows off.
+        AnimatedContent(
+            targetState = floatingToolbarOrientation,
+            transitionSpec = { (EnterTransition.None togetherWith ExitTransition.None).using(SizeTransform(clip = false)) },
+        ) { orientation ->
+            val iconTint = COUITheme.colorScheme.onPrimary
+            val content = @Composable {
+                IconButton(onClick = { /* Action 1 */ }) {
+                    Icon(
+                        COUIIcons.Edit,
+                        contentDescription = "Edit",
+                        tint = iconTint,
+                    )
                 }
-                when (orientation) {
-                    0 -> Row(
-                        modifier = Modifier.padding(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) { content() }
+                IconButton(onClick = { /* Action 2 */ }) {
+                    Icon(
+                        COUIIcons.Delete,
+                        contentDescription = "Delete",
+                        tint = iconTint,
+                    )
+                }
+                IconButton(onClick = { /* Action 3 */ }) {
+                    Icon(
+                        COUIIcons.More,
+                        contentDescription = "More",
+                        tint = iconTint,
+                    )
+                }
+            }
+            when (orientation) {
+                0 -> Row(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) { content() }
 
-                    else -> Column(
-                        modifier = Modifier.padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) { content() }
-                }
+                else -> Column(
+                    modifier = Modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) { content() }
             }
         }
     }

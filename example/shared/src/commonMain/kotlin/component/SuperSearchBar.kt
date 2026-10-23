@@ -152,8 +152,9 @@ fun SearchStatus.SearchPager(
             }
             AnimatedVisibility(
                 visible = searchStatus.isExpand() || searchStatus.isAnimatingExpand(),
-                enter = expandHorizontally() + slideInHorizontally(initialOffsetX = { it }),
-                exit = shrinkHorizontally() + slideOutHorizontally(targetOffsetX = { it }),
+                // Unclipped, so the material cancel button keeps its shadow while it slides.
+                enter = expandHorizontally(clip = false) + slideInHorizontally(initialOffsetX = { it }),
+                exit = shrinkHorizontally(clip = false) + slideOutHorizontally(targetOffsetX = { it }),
             ) {
                 CancelButton(
                     onClick = onCancelSearch,
