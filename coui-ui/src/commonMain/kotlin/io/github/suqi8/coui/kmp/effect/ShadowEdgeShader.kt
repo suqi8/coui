@@ -3,6 +3,8 @@
 package io.github.suqi8.coui.kmp.effect
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.BlendMode
+import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import kotlin.math.max
 
 /**
@@ -529,6 +531,28 @@ internal class StrokeEffectParams(
     val shadowFadeOut: Float,
     val shadowFadeScale: Float,
 )
+
+/**
+ * The blend mode of the edge light of a framework stroke effect: the strokes COUI hands the
+ * renderer through `COUIMaterialEffect.setViewStrokeEffect` (`OplusMaterialUtil.setEdgeParams`),
+ * drawn by libhwui's `OplusMaterialEffectShader` rather than the AGSL `COUIShadowEdgeDrawable`.
+ * Its `blendEdge` overlays the line colour on the content already rendered,
+ * `mix(2 * c * L, 1 - 2 * (1 - c) * (1 - L), step(L, 0.5))`, mixed in by the line alpha; for the
+ * white line that is [BlendMode.Overlay]. A light fill saturates to white, but a dark fill is
+ * only brightened, so the edge does not glare in the dark scheme. (Its small `edgeImprove` lift of
+ * very dark content is not reproduced.) The AGSL drawable strokes keep SRC_OVER.
+ */
+internal val FrameworkEdgeBlendMode = BlendMode.Overlay
+
+/**
+ * Splits a framework stroke effect into the two passes it is drawn in: [shadowPass] keeps only the
+ * inner shadow (drawn source-over) and [edgePass] only the edge light (drawn with
+ * [FrameworkEdgeBlendMode]). Both shaders must already carry the same uniforms.
+ */
+internal fun splitFrameworkStroke(shadowPass: RuntimeShader, edgePass: RuntimeShader) {
+    shadowPass.setFloatUniform("u_edge", 0f)
+    edgePass.setFloatUniform("u_shadow", 0f)
+}
 
 /**
  * The presets a top-bar button resolves to. Capsules take style 0 and circles style 1

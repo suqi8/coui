@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
+import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
@@ -93,6 +94,7 @@ import io.github.suqi8.coui.kmp.effect.SpotLightType
 import io.github.suqi8.coui.kmp.effect.StrokeEffectParams
 import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
+import io.github.suqi8.coui.kmp.effect.splitFrameworkStroke
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
@@ -473,6 +475,8 @@ private fun FloatingNavigationBarCapsule(
             null
         }
     }
+    // The edge-light pass of the framework stroke (see FrameworkEdgeBlendMode).
+    val edgePass = remember(shaders) { shaders?.let { RuntimeShader(ShadowEdgeShader.Source) } }
     val spotlight = remember { SpotLightState() }
     val stroke = if (isDark) FloatingNavigationBarStrokeDark else FloatingNavigationBarStrokeLight
     val spotType = SpotLightType.OpaqueMedium2
@@ -495,11 +499,14 @@ private fun FloatingNavigationBarCapsule(
                     .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                     .then(backgroundModifier)
                     .then(
-                        if (shaders != null) {
+                        if (shaders != null && edgePass != null) {
                             Modifier.drawWithCache {
                                 val radius = min(cornerRadius.toPx(), min(size.width, size.height) / 2f)
                                 configureFloatingNavigationBarEdge(shaders.first, size.width, size.height, radius, stroke)
-                                val edgeBrush = shaders.first.asBrush()
+                                configureFloatingNavigationBarEdge(edgePass, size.width, size.height, radius, stroke)
+                                splitFrameworkStroke(shadowPass = shaders.first, edgePass = edgePass)
+                                val shadowBrush = shaders.first.asBrush()
+                                val edgeBrush = edgePass.asBrush()
                                 onDrawWithContent {
                                     // BaseBottomFloatingMenuView.onDraw: the spotlight, clipped to the
                                     // capsule, and the stroke are drawn above the background and below
@@ -517,7 +524,8 @@ private fun FloatingNavigationBarCapsule(
                                         drawRect(brush = shaders.second.asBrush(), blendMode = spotType.blendMode(isDark))
                                     }
                                     // The edge shader carries its own SDF mask.
-                                    drawRect(edgeBrush)
+                                    drawRect(shadowBrush)
+                                    drawRect(edgeBrush, blendMode = FrameworkEdgeBlendMode)
                                     drawContent()
                                 }
                             }

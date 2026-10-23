@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -123,6 +124,8 @@ object COUIMaterialEffect {
                 null
             }
         }
+        // The edge-light pass of the framework stroke (see FrameworkEdgeBlendMode).
+        val edgePass = remember { if (isRuntimeShaderSupported()) RuntimeShader(ShadowEdgeShader.Source) else null }
         val spotlight = remember { SpotLightState() }
         val scope = rememberCoroutineScope()
 
@@ -162,9 +165,15 @@ object COUIMaterialEffect {
             .drawWithCache {
                 val radius = min(cornerRadius.toPx(), min(size.width, size.height) / 2f)
                 val outline = Path().apply { addRoundRect(RoundRect(size.toRect(), CornerRadius(radius))) }
-                val edgeBrush = shaders?.first?.let { shader ->
-                    configureShadowEdge(shader, size.width, size.height, radius, isDark)
-                    shader.asBrush()
+                val shadowPass = shaders?.first
+                var shadowBrush: Brush? = null
+                var edgeBrush: Brush? = null
+                if (shadowPass != null && edgePass != null) {
+                    configureShadowEdge(shadowPass, size.width, size.height, radius, isDark)
+                    configureShadowEdge(edgePass, size.width, size.height, radius, isDark)
+                    splitFrameworkStroke(shadowPass = shadowPass, edgePass = edgePass)
+                    shadowBrush = shadowPass.asBrush()
+                    edgeBrush = edgePass.asBrush()
                 }
 
                 onDrawWithContent {
@@ -203,8 +212,10 @@ object COUIMaterialEffect {
                         val mask = maskProgress.value
                         if (mask > 0f) drawRect(pressMaskColor, alpha = mask.coerceIn(0f, 1f))
                     }
-                    // The edge shader carries its own SDF mask.
-                    if (edgeBrush != null) drawRect(edgeBrush)
+                    // The edge shader carries its own SDF mask. The inner shadow is drawn
+                    // source-over, the edge light overlaid on what lies beneath it.
+                    if (shadowBrush != null) drawRect(shadowBrush)
+                    if (edgeBrush != null) drawRect(edgeBrush, blendMode = FrameworkEdgeBlendMode)
                     drawContent()
                 }
             }
@@ -352,6 +363,8 @@ object COUIMaterialEffect {
                 null
             }
         } ?: return this
+        // The edge-light pass of a framework stroke (non-drawable types, see FrameworkEdgeBlendMode).
+        val edgePass = remember { RuntimeShader(ShadowEdgeShader.Source) }
         val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
         val spotlight = remember { SpotLightState() }
         val scope = rememberCoroutineScope()
@@ -397,7 +410,15 @@ object COUIMaterialEffect {
                     weight = 3f
                 }
                 configureShadowEdge(shaders.first, size.width, size.height, radius, weight, isCapsule, stroke)
-                val edgeBrush = shaders.first.asBrush()
+                // The drawable material (CONTENT_CAPSULE_4..6) is the AGSL COUIShadowEdgeDrawable,
+                // drawn source-over in one pass; the others are framework strokes.
+                val framework = !type.drawable
+                if (framework) {
+                    configureShadowEdge(edgePass, size.width, size.height, radius, weight, isCapsule, stroke)
+                    splitFrameworkStroke(shadowPass = shaders.first, edgePass = edgePass)
+                }
+                val shadowBrush = shaders.first.asBrush()
+                val edgeBrush = if (framework) edgePass.asBrush() else null
 
                 onDrawWithContent {
                     val glow = spotlight.progress.value
@@ -413,7 +434,8 @@ object COUIMaterialEffect {
                         drawRect(brush = shaders.second.asBrush(), blendMode = spotBlend)
                     }
                     // The edge shader carries its own SDF mask.
-                    drawRect(edgeBrush)
+                    drawRect(shadowBrush)
+                    if (edgeBrush != null) drawRect(edgeBrush, blendMode = FrameworkEdgeBlendMode)
                     drawContent()
                 }
             }

@@ -34,12 +34,14 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
 import io.github.suqi8.coui.kmp.effect.StrokeEffectParams
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
+import io.github.suqi8.coui.kmp.effect.splitFrameworkStroke
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
@@ -207,43 +209,50 @@ fun FloatingActionButton(
 @Composable
 private fun Modifier.fabMaterialStroke(isDark: Boolean, enabled: Boolean): Modifier {
     val shader = remember { RuntimeShader(ShadowEdgeShader.Source) }
+    // The edge-light pass of the framework stroke (see FrameworkEdgeBlendMode).
+    val edgePass = remember { RuntimeShader(ShadowEdgeShader.Source) }
     val params = fabStrokeParams(isDark, enabled)
     return this.drawWithCache {
         val radius = min(size.width, size.height) / 2f
-        shader.setFloatUniform(
-            "u_commonArray",
-            ShadowEdgeShader.commonArray(size.width, size.height, radius, weight = FabCornerWeight),
-        )
-        shader.setFloatUniform("u_shadow", 1f)
-        shader.setFloatUniform(
-            "u_shadowArray",
-            ShadowEdgeShader.shadowArray(
-                spec = ShadowEdgePresets.CircleShadow,
-                width = size.width,
-                height = size.height,
-                fadeWidthScale = params.shadowFadeScale,
-                fadeAlphaInScale = params.shadowFadeIn,
-                fadeAlphaOutScale = params.shadowFadeOut,
-                density = density,
-            ),
-        )
-        shader.setFloatUniform("u_edge", 1f)
-        shader.setFloatUniform(
-            "u_edgeArray",
-            ShadowEdgeShader.edgeArray(
-                spec = ShadowEdgePresets.CircleEdge,
-                width = size.width,
-                height = size.height,
-                lineWidth = params.edgeWidth.dp.toPx(),
-                lineAlpha = params.edgeAlpha,
-                lineAngle = params.edgeAngle,
-                density = density,
-            ),
-        )
-        val brush = shader.asBrush()
+        for (pass in listOf(shader, edgePass)) {
+            pass.setFloatUniform(
+                "u_commonArray",
+                ShadowEdgeShader.commonArray(size.width, size.height, radius, weight = FabCornerWeight),
+            )
+            pass.setFloatUniform("u_shadow", 1f)
+            pass.setFloatUniform(
+                "u_shadowArray",
+                ShadowEdgeShader.shadowArray(
+                    spec = ShadowEdgePresets.CircleShadow,
+                    width = size.width,
+                    height = size.height,
+                    fadeWidthScale = params.shadowFadeScale,
+                    fadeAlphaInScale = params.shadowFadeIn,
+                    fadeAlphaOutScale = params.shadowFadeOut,
+                    density = density,
+                ),
+            )
+            pass.setFloatUniform("u_edge", 1f)
+            pass.setFloatUniform(
+                "u_edgeArray",
+                ShadowEdgeShader.edgeArray(
+                    spec = ShadowEdgePresets.CircleEdge,
+                    width = size.width,
+                    height = size.height,
+                    lineWidth = params.edgeWidth.dp.toPx(),
+                    lineAlpha = params.edgeAlpha,
+                    lineAngle = params.edgeAngle,
+                    density = density,
+                ),
+            )
+        }
+        splitFrameworkStroke(shadowPass = shader, edgePass = edgePass)
+        val shadowBrush = shader.asBrush()
+        val edgeBrush = edgePass.asBrush()
         onDrawWithContent {
             // The edge shader carries its own SDF mask.
-            drawRect(brush)
+            drawRect(shadowBrush)
+            drawRect(edgeBrush, blendMode = FrameworkEdgeBlendMode)
             drawContent()
         }
     }
