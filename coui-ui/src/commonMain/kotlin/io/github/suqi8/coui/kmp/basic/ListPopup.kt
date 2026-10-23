@@ -1053,6 +1053,10 @@ object ListPopupDefaults {
      */
     val BottomBarrier = 32.dp
 
+    /** The popup surface fill (`coui_popup_window_background`: `?couiColorBackgroundTop`). */
+    @Composable
+    fun backgroundColor(): Color = COUITheme.colorScheme.backgroundTop
+
     /** Default animation spec driving the background dim while entering. */
     val DimEnterAnimationSpec = tween<Float>(durationMillis = 300, easing = SinOutEasing)
 
@@ -1650,6 +1654,13 @@ internal fun popupGravityPathFor(anchor: IntRect, menuOffset: IntOffset, menuSiz
  * @param modifier The modifier to be applied to the popup container.
  * @param translation Provides the current offset of the popup from its resting place, i.e. the
  *   point of its gravity path.
+ * @param backgroundColor The surface fill, couiColorBackgroundTop by default. Pass a transparent
+ *   color alongside a blurring [backgroundModifier].
+ * @param backgroundModifier A [Modifier] applied inside the surface clip, under the content and over
+ *   [backgroundColor]. Use it to paint the COUI 17 blurred background, e.g. with coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`.
+ * @param materialEffect Whether to draw the material effects COUI adds to a blurred popup
+ *   (`RoundFrameLayout.initMaterialEffects`): the shadow-edge stroke and the touch spotlight.
  * @param content The content of the popup.
  */
 @Composable
@@ -1661,10 +1672,12 @@ fun ListPopupContent(
     popupLayoutPosition: PopupLayoutPosition,
     localTransformOrigin: TransformOrigin,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     translation: () -> Offset = { Offset.Zero },
+    backgroundColor: Color = popupSurfaceColor(),
+    materialEffect: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val backgroundColor = popupSurfaceColor()
     val shape = remember { RoundedCornerShape(PopupCornerRadius) }
     val shadow = popupShadow()
 
@@ -1686,65 +1699,10 @@ fun ListPopupContent(
             }
             .dropShadow(shape = shape, shadow = shadow)
             .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight)
+            .then(backgroundModifier)
+            .popupMaterialEffect(enabled = materialEffect)
             .consumePopupTouches(),
     ) {
         content()
-    }
-}
-
-/**
- * Directional clip-reveal used during popup enter/exit. The visible band grows along the popup's
- * spawn direction encoded by [popupLayoutPosition] as [fractionProgress] moves 0 → 1: from the top
- * when shown below the anchor, from the bottom when shown above, and outwards from the center
- * otherwise. The band itself is shaped as a squircle (via [addSquircleRect]) so the four corners
- * stay aligned with the surrounding [squircleSurface] / [squircleClip] during reveal — when
- * [squircleEnabled] is `false`, [addSquircleRect] falls back to a plain rounded rectangle to
- * match the squircle modifiers' fallback rendering.
- */
-internal fun Modifier.popupClipReveal(
-    fractionProgress: () -> Float,
-    popupLayoutPosition: PopupLayoutPosition,
-    cornerRadius: Dp,
-    squircleEnabled: Boolean,
-): Modifier = drawWithCache {
-    val path = Path()
-    val showBelow = popupLayoutPosition.showBelow
-    val showAbove = popupLayoutPosition.showAbove
-    onDrawWithContent {
-        // Clamp — source spring overshoots; an oversized reveal path would cut downstream content.
-        val progress = fractionProgress().coerceIn(0f, 1f)
-        if (progress <= 0f) return@onDrawWithContent
-
-        val height = size.height
-        val visibleHeight = height * progress
-        if (visibleHeight <= 0f) return@onDrawWithContent
-
-        val clipStart = when {
-            showBelow -> 0f
-            showAbove -> height * (1f - progress)
-            else -> height * (0.5f - 0.5f * progress)
-        }
-
-        path.rewind()
-        path.addSquircleRect(
-            width = size.width,
-            height = visibleHeight,
-            cornerRadius = cornerRadius.toPx(),
-            weight = PopupCornerWeight,
-            squircleEnabled = squircleEnabled,
-        )
-        if (clipStart == 0f) {
-            clipPath(path) {
-                this@onDrawWithContent.drawContent()
-            }
-        } else {
-            translate(top = clipStart) {
-                clipPath(path) {
-                    translate(top = -clipStart) {
-                        this@onDrawWithContent.drawContent()
-                    }
-                }
-            }
-        }
     }
 }

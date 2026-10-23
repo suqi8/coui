@@ -29,6 +29,17 @@ class SpotLightTypeTest {
     }
 
     @Test
+    fun translucentLarge1MatchesThePopupPreset() {
+        // TYPE_TRANSLUCENT_LARGE_1_{LIGHT,DARK}: OVERLAY, 0.6 light / 0.1 dark, radius 100 -> 800px.
+        assertEquals(0.6f, SpotLightType.TranslucentLarge1.endIntensity(isDark = false))
+        assertEquals(0.1f, SpotLightType.TranslucentLarge1.endIntensity(isDark = true))
+        assertEquals(BlendMode.Overlay, SpotLightType.TranslucentLarge1.blendMode(isDark = true))
+        assertEquals(800f, SpotLightType.TranslucentLarge1.endRadius)
+        assertEquals(800f, SpotLightShader.radius(1f, extinguishing = false, endRadius = 800f))
+        assertEquals(500f, SpotLightType.OpaqueMedium1.endRadius)
+    }
+
+    @Test
     fun theButtonTypesUseTheirPresets() {
         assertEquals(SpotLightType.OpaqueMedium1, ContentButtonMaterialType.Primary.spotLight)
         assertEquals(SpotLightType.OpaqueMedium2, ContentButtonMaterialType.Secondary.spotLight)

@@ -18,6 +18,16 @@ enum class MaterialBlendMode {
 
     /** `OplusBlurParam.BLUR_BLEND_MODE_COLORDODGE` (3), the light-scheme mode. */
     ColorDodge,
+
+    /**
+     * `OplusBlurParam.BLUR_BLEND_MODE_GLOW_OVERLAY` (4): the mix color is lerped in as a
+     * luminosity blend (libhwui `luminosity(uMixColor.rgb, inColor.rgb)`) before the overlay blend.
+     * The COUI 17 popup menu uses it in both schemes.
+     */
+    GlowOverlay,
+
+    /** `OplusBlurParam.BLUR_BLEND_MODE_GLOW_COLORDODGE` (5): the luminosity mix, then color dodge. */
+    GlowColorDodge,
 }
 
 /**
@@ -69,6 +79,34 @@ object MaterialBlurDefaults {
      * @param isDark Whether the dark scheme is active.
      */
     fun bottomSheet(isDark: Boolean): MaterialBlurStyle = if (isDark) BottomSheetDark else BottomSheetLight
+
+    /** `RoundFrameLayout.DEFAULT_BLUR_RADIUS_PX` (160), the popup menu blur radius in raw pixels. */
+    val PopupBlurRadiusPx: Float = 160f
+
+    /**
+     * The popup menu blur (`RoundFrameLayout.applyBlurColorParams`, SDR branch): radius
+     * [PopupBlurRadiusPx], mode 4 ([MaterialBlendMode.GlowOverlay]) in both schemes, mix colors
+     * `coui_popup_list_mix_blur_light` `#99CDCDCD` / `_dark` `#99262626` and blend colors
+     * `coui_popup_list_blend_blur_light` `#BFEEEEEE` / `_dark` `#99262626`. The HDR branch
+     * (`getHdrSdrRatio() > 1`) is not reproduced.
+     *
+     * @param isDark Whether the dark scheme is active.
+     */
+    fun popup(isDark: Boolean): MaterialBlurStyle = if (isDark) PopupDark else PopupLight
+
+    private val PopupLight = MaterialBlurStyle(
+        blurRadiusPx = PopupBlurRadiusPx,
+        mixColor = Color(0x99CDCDCD),
+        blendColor = Color(0xBFEEEEEE),
+        blendMode = MaterialBlendMode.GlowOverlay,
+    )
+
+    private val PopupDark = MaterialBlurStyle(
+        blurRadiusPx = PopupBlurRadiusPx,
+        mixColor = Color(0x99262626),
+        blendColor = Color(0x99262626),
+        blendMode = MaterialBlendMode.GlowOverlay,
+    )
 
     private val DialogLight = MaterialBlurStyle(
         blurRadiusPx = DialogBlurRadiusPx,
@@ -142,7 +180,10 @@ fun Modifier.couiMaterialBlur(
             val blend = style.blendColor
             setFloatUniform("uMixColor", mix.red, mix.green, mix.blue, mix.alpha * strength)
             setFloatUniform("uBlendColor", blend.red, blend.green, blend.blue, blend.alpha * strength)
-            setFloatUniform("uColorDodge", if (style.blendMode == MaterialBlendMode.ColorDodge) 1f else 0f)
+            val dodge = style.blendMode == MaterialBlendMode.ColorDodge || style.blendMode == MaterialBlendMode.GlowColorDodge
+            val glow = style.blendMode == MaterialBlendMode.GlowOverlay || style.blendMode == MaterialBlendMode.GlowColorDodge
+            setFloatUniform("uColorDodge", if (dodge) 1f else 0f)
+            setFloatUniform("uLuminosity", if (glow) 1f else 0f)
         }
     },
     enabled = enabled,
@@ -153,6 +194,7 @@ uniform shader child;
 uniform float4 uMixColor;
 uniform float4 uBlendColor;
 uniform float uColorDodge;
+uniform float uLuminosity;
 
 float overlay(float s, float d) {
     return (d < 0.5) ? 2.0 * s * d : 1.0 - 2.0 * (1.0 - s) * (1.0 - d);
@@ -170,6 +212,21 @@ float3 colorDodge(float3 s, float3 d) {
     return float3(colorDodge(s.x, d.x), colorDodge(s.y, d.y), colorDodge(s.z, d.z));
 }
 
+// libhwui `luminosity(s, d)`: d moved to the luminance of s, clipped around that luminance.
+float3 luminosity(float3 s, float3 d) {
+    float dLum = dot(d, float3(0.3, 0.59, 0.11));
+    float sLum = dot(s, float3(0.3, 0.59, 0.11));
+    float3 c = d + (sLum - dLum);
+    float minC = min(min(c.x, c.y), c.z);
+    float maxC = max(max(c.x, c.y), c.z);
+    if (minC < 0.0) {
+        return sLum + ((c - sLum) * sLum) / (sLum - minC);
+    } else if (maxC > 1.0) {
+        return sLum + ((c - sLum) * (1.0 - sLum)) / (maxC - sLum);
+    }
+    return c;
+}
+
 half4 main(float2 coord) {
     half4 src = child.eval(coord);
     float a = float(src.a);
@@ -177,7 +234,8 @@ half4 main(float2 coord) {
         return src;
     }
     float3 inColor = float3(src.rgb) / a;
-    inColor = mix(inColor, uMixColor.rgb, uMixColor.a);
+    float3 mixed = uLuminosity > 0.5 ? luminosity(uMixColor.rgb, inColor) : uMixColor.rgb;
+    inColor = mix(inColor, mixed, uMixColor.a);
     float3 blendColor = uColorDodge > 0.5
         ? colorDodge(uBlendColor.rgb, inColor)
         : overlay(uBlendColor.rgb, inColor);

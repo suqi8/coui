@@ -114,9 +114,9 @@ internal object SpotLightShader {
      * Light radius at glow [progress]. While extinguishing, `COUISpotLightEffect` adds
      * `2 * endRadius * (1 - progress)` so the light spreads out as it fades.
      */
-    fun radius(progress: Float, extinguishing: Boolean): Float {
-        val base = StartRadius + (EndRadius - StartRadius) * progress
-        return if (extinguishing) base + 2f * EndRadius * (1f - progress) else base
+    fun radius(progress: Float, extinguishing: Boolean, endRadius: Float = EndRadius): Float {
+        val base = StartRadius + (endRadius - StartRadius) * progress
+        return if (extinguishing) base + 2f * endRadius * (1f - progress) else base
     }
 
     fun setUniforms(
@@ -143,6 +143,8 @@ internal enum class SpotLightType(
     private val lightBlendMode: BlendMode,
     private val darkIntensity: Float,
     private val darkBlendMode: BlendMode,
+    /** The radius the light grows to, in pixels. */
+    val endRadius: Float = 500f,
 ) {
     /** `TYPE_OPAQUE_SMALL_2`: the top-bar buttons. 1.0 OVERLAY light, 0.15 PLUS dark. */
     OpaqueSmall2(1f, BlendMode.Overlay, 0.15f, BlendMode.Plus),
@@ -155,6 +157,9 @@ internal enum class SpotLightType(
 
     /** `TYPE_TRANSPARENT_MEDIUM_1`: transparent buttons. 0.5 light, 0.3 dark, both OVERLAY. */
     TransparentMedium1(0.5f, BlendMode.Overlay, 0.3f, BlendMode.Overlay),
+
+    /** `TYPE_TRANSLUCENT_LARGE_1`: the blurred popup menu. 0.6 light, 0.1 dark, both OVERLAY, 800px reach. */
+    TranslucentLarge1(0.6f, BlendMode.Overlay, 0.1f, BlendMode.Overlay, endRadius = 800f),
     ;
 
     /** The intensity the light glows up to. */

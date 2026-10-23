@@ -39,6 +39,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -73,9 +74,11 @@ import io.github.suqi8.coui.kmp.basic.PopupListVerticalPadding
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.consumePopupTouches
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
+import io.github.suqi8.coui.kmp.basic.popupMaterialEffect
 import io.github.suqi8.coui.kmp.basic.popupShadow
-import io.github.suqi8.coui.kmp.basic.popupSurfaceColor
+import io.github.suqi8.coui.kmp.basic.popupSpotLightInput
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
+import io.github.suqi8.coui.kmp.basic.rememberPopupSpotLight
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
@@ -273,6 +276,8 @@ internal fun computeSubmenuGeometry(
  * menu (`COUIPopupMenuRootView` + `SmallScreenAnimationController` /
  * `DefaultScreenAnimationController`). Cascading depth is limited to 2.
  */
+// backgroundModifier paints both the main and the sub menu surface.
+@Suppress("ktlint:compose:modifier-reused-check")
 @Composable
 internal fun CascadingListPopupLayout(
     show: Boolean,
@@ -281,6 +286,7 @@ internal fun CascadingListPopupLayout(
     onDismissRequest: () -> Unit,
     dropdownColors: DropdownColors,
     popupModifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     onDismissFinished: (() -> Unit)? = null,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.End,
@@ -288,6 +294,8 @@ internal fun CascadingListPopupLayout(
     maxHeight: Dp? = null,
     minWidth: Dp = ListPopupDefaults.MinWidth,
     collapseOnSelection: Boolean = true,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
     val internalVisible = remember { mutableStateOf(false) }
     val pathProgress = remember { Animatable(0f) }
@@ -433,11 +441,12 @@ internal fun CascadingListPopupLayout(
             LocalMaterialBackdrop provides null,
         ) {
             val dimColor = COUITheme.colorScheme.windowDimming
-            val surfaceColor = popupSurfaceColor()
+            val surfaceColor = backgroundColor
             val shadow = popupShadow()
             val shape = remember { RoundedCornerShape(CascadingPopupCornerRadius) }
             val squircleEnabled = isSquircleEnabled()
             val touchSlop = LocalViewConfiguration.current.touchSlop
+            val subSpotLight = rememberPopupSpotLight()
 
             val enterScale = { scaleProgress.value * (1f - backEnterProgress.value) }
             val enterAlpha = { alphaProgress.value * (1f - backEnterProgress.value) }
@@ -503,6 +512,12 @@ internal fun CascadingListPopupLayout(
                                 }
                                 .dropShadow(shape = shape, shadow = shadow)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
+                                .then(backgroundModifier)
+                                // COUI turns the main menu spotlight off while a sub menu is open.
+                                .popupMaterialEffect(
+                                    enabled = materialEffect,
+                                    spotLightSuppressed = { displayedItem != null },
+                                )
                                 .consumePopupTouches()
                                 .onGloballyPositioned { geometryHolder.mainCoordinates = it },
                         ) {
@@ -570,25 +585,33 @@ internal fun CascadingListPopupLayout(
                                                 transformOrigin = geometry.subPivot
                                             }
                                         }
-                                        .cascadeSubSurface(
-                                            geometryHolder = geometryHolder,
-                                            progress = sub,
-                                            surfaceColor = surfaceColor,
-                                            shadow = shadow,
-                                            squircleEnabled = squircleEnabled,
-                                        )
+                                        .popupSpotLightInput(subSpotLight, enabled = materialEffect)
                                         .consumePopupTouches(),
                                 ) {
-                                    CascadingSubList(
-                                        parent = shown,
-                                        showHeader = compact,
-                                        dropdownColors = dropdownColors,
-                                        onHeaderClick = requestCollapse,
-                                        onLeafSelected = { item ->
-                                            item.onClick?.invoke()
-                                            if (collapseOnSelection) currentOnDismiss()
-                                        },
+                                    // The surface follows the RoundFrameLayout override outline: on
+                                    // a compact window it grows from the anchor row band, carrying
+                                    // its shadow, fill and blur with it.
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .cascadeBand(geometryHolder, sub)
+                                            .dropShadow(shape = shape, shadow = shadow)
+                                            .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
+                                            .then(backgroundModifier)
+                                            .popupMaterialEffect(enabled = materialEffect, spotLight = subSpotLight, trackTouches = false),
                                     )
+                                    Box(modifier = Modifier.cascadeContentClip(geometryHolder, sub, squircleEnabled)) {
+                                        CascadingSubList(
+                                            parent = shown,
+                                            showHeader = compact,
+                                            dropdownColors = dropdownColors,
+                                            onHeaderClick = requestCollapse,
+                                            onLeafSelected = { item ->
+                                                item.onClick?.invoke()
+                                                if (collapseOnSelection) currentOnDismiss()
+                                            },
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -682,69 +705,36 @@ private class CascadeGeometryHolder {
     var availableTopOffset: Float = Float.NEGATIVE_INFINITY
 }
 
-/**
- * Paints the sub menu surface. On a compact window it is the `RoundFrameLayout` override outline
- * that grows from the anchor row ([SubmenuGeometry.clipTopStart] / [SubmenuGeometry.clipHeightStart])
- * to the whole menu while the shadow fades in with it; on larger windows it is the plain surface.
- */
-private fun Modifier.cascadeSubSurface(
+/** The visible band of a compact sub menu at [progress], as (top, height) in its own pixels. */
+private fun subMenuBand(geometry: SubmenuGeometry?, progress: Float, height: Float): Pair<Float, Float> {
+    if (geometry == null || !geometry.compact) return 0f to height
+    val p = progress.coerceIn(0f, 1f)
+    val top = lerp(geometry.clipTopStart, 0f, p)
+    val bandHeight = lerp(geometry.clipHeightStart, height, p).coerceAtMost(height - top)
+    return top to bandHeight.coerceAtLeast(0f)
+}
+
+/** Sizes and places the sub menu surface on its band (`RoundFrameLayout.setOverrideOutline`). */
+private fun Modifier.cascadeBand(geometryHolder: CascadeGeometryHolder, progress: () -> Float): Modifier = layout { measurable, constraints ->
+    val (top, height) = subMenuBand(geometryHolder.submenu, progress(), constraints.maxHeight.toFloat())
+    val placeable = measurable.measure(Constraints.fixed(constraints.maxWidth, height.toInt()))
+    layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(0, top.toInt()) }
+}
+
+/** Clips the sub menu rows to the same band. */
+private fun Modifier.cascadeContentClip(
     geometryHolder: CascadeGeometryHolder,
     progress: () -> Float,
-    surfaceColor: Color,
-    shadow: androidx.compose.ui.graphics.shadow.Shadow,
     squircleEnabled: Boolean,
-): Modifier = this
-    .drawWithCache {
-        val path = Path()
-        val cornerRadius = CascadingPopupCornerRadius.toPx()
-        onDrawWithContent {
-            val geometry = geometryHolder.submenu
-            val p = progress().coerceIn(0f, 1f)
-            val top = if (geometry?.compact == true) lerp(geometry.clipTopStart, 0f, p) else 0f
-            val height = if (geometry?.compact == true) lerp(geometry.clipHeightStart, size.height, p) else size.height
-            val band = Rect(0f, top, size.width, (top + height).coerceAtMost(size.height))
-            if (band.isEmpty) return@onDrawWithContent
-            path.rewind()
-            path.addSquircleRect(band, cornerRadius, PopupCornerWeight, squircleEnabled)
-            clipPath(path) {
-                drawRect(surfaceColor)
-                this@onDrawWithContent.drawContent()
-            }
-        }
-    }
-    .dropShadowBand(geometryHolder, progress, shadow)
-
-/** The sub menu shadow, following the growing band and fading with it like the outline alpha. */
-private fun Modifier.dropShadowBand(
-    geometryHolder: CascadeGeometryHolder,
-    progress: () -> Float,
-    shadow: androidx.compose.ui.graphics.shadow.Shadow,
-): Modifier = this.dropShadow(
-    shape = CascadeBandShape(geometryHolder, progress),
-    shadow = shadow,
-)
-
-/** The growing sub menu band as a [androidx.compose.ui.graphics.Shape] for the shadow. */
-private class CascadeBandShape(
-    private val geometryHolder: CascadeGeometryHolder,
-    private val progress: () -> Float,
-) : androidx.compose.ui.graphics.Shape {
-    override fun createOutline(
-        size: androidx.compose.ui.geometry.Size,
-        layoutDirection: LayoutDirection,
-        density: androidx.compose.ui.unit.Density,
-    ): androidx.compose.ui.graphics.Outline {
-        val geometry = geometryHolder.submenu
-        val p = progress().coerceIn(0f, 1f)
-        val top = if (geometry?.compact == true) lerp(geometry.clipTopStart, 0f, p) else 0f
-        val height = if (geometry?.compact == true) lerp(geometry.clipHeightStart, size.height, p) else size.height
-        val radius = with(density) { CascadingPopupCornerRadius.toPx() }
-        return androidx.compose.ui.graphics.Outline.Rounded(
-            androidx.compose.ui.geometry.RoundRect(
-                rect = Rect(0f, top, size.width, (top + height).coerceAtMost(size.height)),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius),
-            ),
-        )
+): Modifier = drawWithCache {
+    val path = Path()
+    val cornerRadius = CascadingPopupCornerRadius.toPx()
+    onDrawWithContent {
+        val (top, height) = subMenuBand(geometryHolder.submenu, progress(), size.height)
+        if (height <= 0f) return@onDrawWithContent
+        path.rewind()
+        path.addSquircleRect(Rect(0f, top, size.width, top + height), cornerRadius, PopupCornerWeight, squircleEnabled)
+        clipPath(path) { this@onDrawWithContent.drawContent() }
     }
 }
 

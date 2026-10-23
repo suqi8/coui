@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
@@ -36,12 +37,21 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  * @param preciseClickState Opens the popup at the last point recorded by
  *   [io.github.suqi8.coui.kmp.basic.preciseClickAnchor] on the anchor instead of centring it on the
  *   anchor, matching COUI `PreciseClickHelper`. Null (default) keeps anchor-centred placement.
+ * @param backgroundColor The popup surface fill (couiColorBackgroundTop). Pass a transparent color
+ *   alongside a blurring [backgroundModifier].
+ * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows: the
+ *   slot for the COUI 17 blurred background, e.g. coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
+ *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
+ * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
  * @param content The [Composable] content of the [OverlayListPopup]. You should use the [ListPopupColumn] in general.
  */
 @Composable
 fun OverlayListPopup(
     show: Boolean,
     popupModifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.Start,
     enableWindowDim: Boolean = false,
@@ -51,6 +61,8 @@ fun OverlayListPopup(
     minWidth: Dp = ListPopupDefaults.MinWidth,
     renderInRootScaffold: Boolean = true,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     ListPopupLayout(
@@ -78,6 +90,9 @@ fun OverlayListPopup(
         maxHeight = maxHeight,
         minWidth = minWidth,
         preciseClickState = preciseClickState,
+        backgroundColor = backgroundColor,
+        backgroundModifier = backgroundModifier,
+        materialEffect = materialEffect,
         content = content,
     )
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.DropdownColors
@@ -36,6 +37,14 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  * @param renderInRootScaffold Whether to render in the outermost Scaffold.
  * @param dropdownColors Colors used by every row.
  * @param collapseOnSelection When true, selecting any leaf dismisses the popup.
+ * @param backgroundColor The surfaces of both menus fill (couiColorBackgroundTop). Pass a transparent color
+ *   alongside a blurring [backgroundModifier].
+ * @param backgroundModifier A [Modifier] applied inside the surfaces of both menus clip, under the rows: the
+ *   slot for the COUI 17 blurred background, e.g. coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
+ *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
+ * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
  */
 @Composable
 fun OverlayCascadingListPopup(
@@ -43,6 +52,7 @@ fun OverlayCascadingListPopup(
     entries: List<DropdownEntry>,
     onDismissRequest: () -> Unit,
     popupModifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     onDismissFinished: (() -> Unit)? = null,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.End,
@@ -52,6 +62,8 @@ fun OverlayCascadingListPopup(
     renderInRootScaffold: Boolean = true,
     dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     collapseOnSelection: Boolean = true,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
 ) {
     CascadingListPopupLayout(
         show = show,
@@ -80,5 +92,8 @@ fun OverlayCascadingListPopup(
         minWidth = minWidth,
         dropdownColors = dropdownColors,
         collapseOnSelection = collapseOnSelection,
+        backgroundColor = backgroundColor,
+        backgroundModifier = backgroundModifier,
+        materialEffect = materialEffect,
     )
 }

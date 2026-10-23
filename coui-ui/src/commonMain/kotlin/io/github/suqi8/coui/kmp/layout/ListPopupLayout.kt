@@ -21,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
@@ -74,6 +75,14 @@ import kotlinx.coroutines.launch
  *   collapsed to that point so the popup opens at the finger (COUI `PreciseClickHelper` plus
  *   `PopupMenuLocateHelper.setAnchor`). A null state, or one with no point recorded, keeps the
  *   anchor-centred placement.
+ * @param backgroundColor The popup surface fill (couiColorBackgroundTop). Pass a transparent color
+ *   alongside a blurring [backgroundModifier].
+ * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows: the
+ *   slot for the COUI 17 blurred background, e.g. coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
+ *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
+ * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
  * @param content The content of the popup.
  */
 @Composable
@@ -81,6 +90,7 @@ internal fun ListPopupLayout(
     show: Boolean,
     popupHost: @Composable (visible: Boolean, content: @Composable () -> Unit) -> Unit,
     popupModifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.Start,
     enableWindowDim: Boolean = true,
@@ -89,6 +99,8 @@ internal fun ListPopupLayout(
     maxHeight: Dp? = null,
     minWidth: Dp = ListPopupDefaults.MinWidth,
     preciseClickState: PreciseClickState? = null,
+    backgroundColor: Color = ListPopupDefaults.backgroundColor(),
+    materialEffect: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     // COUI 17 PopupMotionAnimateKitController drives three waves: the path progress along the
@@ -302,6 +314,9 @@ internal fun ListPopupLayout(
                     popupLayoutPosition = layoutInfo.popupLayoutPosition,
                     localTransformOrigin = layoutInfo.localTransformOrigin,
                     translation = { gravityPath.pointAt(pathProgress.value * (1f - backProgress.value)) },
+                    backgroundColor = backgroundColor,
+                    backgroundModifier = backgroundModifier,
+                    materialEffect = materialEffect,
                     content = {
                         CompositionLocalProvider(
                             LocalDismissState provides requestDismiss,

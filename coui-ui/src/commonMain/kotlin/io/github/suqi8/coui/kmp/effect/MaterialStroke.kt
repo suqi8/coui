@@ -94,6 +94,34 @@ internal object MaterialStrokePresets {
         fadeAlphaOut = 0f,
     )
 
+    /**
+     * `RoundFrameLayout.initMaterialEffects` (light): `EDGE_STYLE_2`, `SHADOW_STYLE_2`, lineWidth
+     * 4dp, lineAlpha 0.9, lineAngle 0, fadeWidthScale 1, fadeAlpha (0.9, 0); drawn with the popup's
+     * `weight_16_1_normal` (2.5) corners.
+     */
+    val PopupLight = MaterialStrokeParams(
+        edge = ShadowEdgePresets.PanelEdge,
+        shadow = ShadowEdgePresets.PanelShadow,
+        lineWidth = 4.dp,
+        lineAlpha = 0.9f,
+        lineAngle = 0f,
+        fadeWidthScale = 1f,
+        fadeAlphaIn = 0.9f,
+        fadeAlphaOut = 0f,
+    )
+
+    /** The dark twin of [PopupLight]: lineWidth 2dp, lineAlpha 0.4, fadeAlpha (0.1, 0). */
+    val PopupDark = MaterialStrokeParams(
+        edge = ShadowEdgePresets.PanelEdge,
+        shadow = ShadowEdgePresets.PanelShadow,
+        lineWidth = 2.dp,
+        lineAlpha = 0.4f,
+        lineAngle = 0f,
+        fadeWidthScale = 1f,
+        fadeAlphaIn = 0.1f,
+        fadeAlphaOut = 0f,
+    )
+
     /** `weight_16_1_large`, the corner weight both surfaces hand the drawable on COUI 17. */
     val CornerWeight = 3f
 }
@@ -110,6 +138,7 @@ internal object MaterialStrokePresets {
  * @param topCornerRadius The radius of the two top corners.
  * @param bottomCornerRadius The radius of the two bottom corners.
  * @param enabled Whether the stroke is drawn.
+ * @param weight The smooth-corner weight of the surface.
  */
 @Composable
 internal fun Modifier.materialStroke(
@@ -118,6 +147,7 @@ internal fun Modifier.materialStroke(
     topCornerRadius: Dp,
     bottomCornerRadius: Dp,
     enabled: Boolean = true,
+    weight: Float = MaterialStrokePresets.CornerWeight,
 ): Modifier {
     if (!enabled) return this
     val shader = remember { if (isRuntimeShaderSupported()) RuntimeShader(ShadowEdgeShader.Source) else null }
@@ -133,7 +163,7 @@ internal fun Modifier.materialStroke(
                 height = size.height,
                 topCornerRadius = topCornerRadius.toPx().coerceAtMost(maxRadius),
                 bottomCornerRadius = bottomCornerRadius.toPx().coerceAtMost(maxRadius),
-                weight = MaterialStrokePresets.CornerWeight,
+                weight = weight,
             ),
         )
         shader.setFloatUniform("u_shadow", 1f)
