@@ -50,6 +50,7 @@ import io.github.suqi8.coui.kmp.anim.DecelerateEasing
 import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -414,7 +415,7 @@ class COUIPopupUtils {
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         // Overlay content sits outside any page backdrop recording.
-                        CompositionLocalProvider(LocalMaterialBackdrop provides null) {
+                        CompositionLocalProvider(LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null) {
                             dialogState.content()
                         }
                     }
@@ -519,7 +520,7 @@ class COUIPopupUtils {
                     exit = popupState.exitTransition ?: rememberDefaultPopupExitTransition(),
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        CompositionLocalProvider(LocalMaterialBackdrop provides null) {
+                        CompositionLocalProvider(LocalMaterialBackdrop provides null, LocalPopupMaterialBlur provides null) {
                             popupState.content()
                         }
                     }

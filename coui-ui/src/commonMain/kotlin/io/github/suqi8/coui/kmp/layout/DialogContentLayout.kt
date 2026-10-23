@@ -62,6 +62,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.effect.MaterialStrokePresets
 import io.github.suqi8.coui.kmp.effect.materialStroke
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
@@ -290,6 +291,8 @@ internal fun DialogContentLayout(
                     LocalDialogMaterial provides materialStroke,
                     // The page backdrop lies behind the panel; buttons on it keep their fill.
                     LocalMaterialBackdrop provides null,
+                    // A menu opened on the panel would blur the page beneath it, not the panel.
+                    LocalPopupMaterialBlur provides null,
                 ) {
                     content()
                 }

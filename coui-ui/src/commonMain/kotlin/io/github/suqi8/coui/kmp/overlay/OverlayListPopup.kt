@@ -37,14 +37,20 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  * @param preciseClickState Opens the popup at the last point recorded by
  *   [io.github.suqi8.coui.kmp.basic.preciseClickAnchor] on the anchor instead of centring it on the
  *   anchor, matching COUI `PreciseClickHelper`. Null (default) keeps anchor-centred placement.
- * @param backgroundColor The popup surface fill (couiColorBackgroundTop). Pass a transparent color
- *   alongside a blurring [backgroundModifier].
- * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows: the
- *   slot for the COUI 17 blurred background, e.g. coui-blur's
- *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
- *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
- * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
- *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
+ * @param backgroundColor The popup surface fill when it is not blurred (couiColorBackgroundTop, COUI's
+ *   non-blur popup background). A translucent color alongside a blurring [backgroundModifier] paints
+ *   a custom blur instead.
+ * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows, on top of
+ *   the default material blur.
+ * @param materialBlur Whether the popup surface blurs what lies behind it with the COUI 17 popup material
+ *   ([ListPopupDefaults.materialBlurSpec]: 160px, glow overlay), the ColorOS 17 look and the default.
+ *   The blur is drawn by the [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] provider in
+ *   scope where the popup is called; without one, or without runtime-shader support, the popup keeps
+ *   [backgroundColor]. Pass false to opt out. (COUI itself leaves popup blur off unless an app calls
+ *   `COUIPopupListWindow.setUseBackgroundBlur`.)
+ * @param materialEffect Whether a blurred popup surface draws the COUI 17 material effects: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). An opaque
+ *   surface never draws them.
  * @param content The [Composable] content of the [OverlayListPopup]. You should use the [ListPopupColumn] in general.
  */
 @Composable
@@ -62,7 +68,8 @@ fun OverlayListPopup(
     renderInRootScaffold: Boolean = true,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     ListPopupLayout(
@@ -92,6 +99,7 @@ fun OverlayListPopup(
         preciseClickState = preciseClickState,
         backgroundColor = backgroundColor,
         backgroundModifier = backgroundModifier,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
         content = content,
     )

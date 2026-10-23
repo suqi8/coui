@@ -92,6 +92,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.anim.folmeSpring
+import io.github.suqi8.coui.kmp.effect.MaterialBlurBlendMode
+import io.github.suqi8.coui.kmp.effect.MaterialBlurSpec
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
@@ -1323,6 +1325,30 @@ object ListPopupDefaults {
     /** The popup surface fill (`coui_popup_window_background`: `?couiColorBackgroundTop`). */
     @Composable
     fun backgroundColor(): Color = COUITheme.colorScheme.backgroundTop
+
+    /**
+     * The COUI 17 popup material the popups blur with by default (`RoundFrameLayout`
+     * `DEFAULT_BLUR_RADIUS_PX` 160 and `applyBlurColorParams`, SDR branch): blend mode 4
+     * (glow overlay) in both schemes, mix `coui_popup_list_mix_blur_light` `#99CDCDCD` / `_dark`
+     * `#99262626`, blend `coui_popup_list_blend_blur_light` `#BFEEEEEE` / `_dark` `#99262626`.
+     *
+     * @param isDark Whether the dark scheme is active.
+     */
+    fun materialBlurSpec(isDark: Boolean): MaterialBlurSpec = if (isDark) PopupMaterialBlurDark else PopupMaterialBlurLight
+
+    private val PopupMaterialBlurLight = MaterialBlurSpec(
+        blurRadiusPx = 160f,
+        mixColor = Color(0x99CDCDCD),
+        blendColor = Color(0xBFEEEEEE),
+        blendMode = MaterialBlurBlendMode.GlowOverlay,
+    )
+
+    private val PopupMaterialBlurDark = MaterialBlurSpec(
+        blurRadiusPx = 160f,
+        mixColor = Color(0x99262626),
+        blendColor = Color(0x99262626),
+        blendMode = MaterialBlurBlendMode.GlowOverlay,
+    )
 
     /** Default animation spec driving the background dim while entering. */
     val DimEnterAnimationSpec = tween<Float>(durationMillis = 300, easing = SinOutEasing)

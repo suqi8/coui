@@ -37,14 +37,20 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param minWidth Minimum width of the popup.
  * @param dropdownColors Colors used by every row.
  * @param collapseOnSelection When true, selecting any leaf dismisses the popup.
- * @param backgroundColor The surfaces of both menus fill (couiColorBackgroundTop). Pass a transparent color
- *   alongside a blurring [backgroundModifier].
- * @param backgroundModifier A [Modifier] applied inside the surfaces of both menus clip, under the rows: the
- *   slot for the COUI 17 blurred background, e.g. coui-blur's
- *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
- *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
- * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
- *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
+ * @param backgroundColor The surface of both menus fill when it is not blurred (couiColorBackgroundTop, COUI's
+ *   non-blur popup background). A translucent color alongside a blurring [backgroundModifier] paints
+ *   a custom blur instead.
+ * @param backgroundModifier A [Modifier] applied inside the menu surfaces clip, under the rows, on top of
+ *   the default material blur.
+ * @param materialBlur Whether the surface of both menus blurs what lies behind it with the COUI 17 popup material
+ *   ([ListPopupDefaults.materialBlurSpec]: 160px, glow overlay), the ColorOS 17 look and the default.
+ *   The blur is drawn by the [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] provider in
+ *   scope where the popup is called; without one, or without runtime-shader support, the popup keeps
+ *   [backgroundColor]. Pass false to opt out. (COUI itself leaves popup blur off unless an app calls
+ *   `COUIPopupListWindow.setUseBackgroundBlur`.)
+ * @param materialEffect Whether a blurred surface of both menus draws the COUI 17 material effects: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). An opaque
+ *   surface never draws them.
  */
 @Composable
 fun WindowCascadingListPopup(
@@ -62,7 +68,8 @@ fun WindowCascadingListPopup(
     dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     collapseOnSelection: Boolean = true,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
     val currentOnDismissRequest = rememberUpdatedState(onDismissRequest)
 
@@ -94,6 +101,7 @@ fun WindowCascadingListPopup(
         collapseOnSelection = collapseOnSelection,
         backgroundColor = backgroundColor,
         backgroundModifier = backgroundModifier,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
     )
 }

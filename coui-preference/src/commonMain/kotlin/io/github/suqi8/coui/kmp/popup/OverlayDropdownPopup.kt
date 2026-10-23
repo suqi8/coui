@@ -46,7 +46,8 @@ fun OverlayDropdownPopup(
     collapseOnSelection: Boolean = true,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
     val entries = remember(entry) { listOf(entry) }
     OverlayDropdownPopup(
@@ -61,6 +62,7 @@ fun OverlayDropdownPopup(
         preciseClickState = preciseClickState,
         backgroundModifier = backgroundModifier,
         backgroundColor = backgroundColor,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
     )
 }
@@ -70,9 +72,10 @@ fun OverlayDropdownPopup(
  *
  * Groups are separated by dividers. Entries without selection state can be used as action menus.
  *
- * [backgroundModifier], [backgroundColor] and [materialEffect] reach the popup surface: pass
- * coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` with a
- * transparent color and `materialEffect = true` for the COUI 17 blurred popup.
+ * [backgroundModifier], [backgroundColor], [materialBlur] and [materialEffect] reach the popup
+ * surface. The popup is blurred with the COUI 17 popup material by default when a
+ * [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] provider is in scope; `materialBlur =
+ * false` keeps the opaque [backgroundColor].
  */
 @Composable
 fun OverlayDropdownPopup(
@@ -87,7 +90,8 @@ fun OverlayDropdownPopup(
     collapseOnSelection: Boolean = entries.size <= 1,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
@@ -112,6 +116,7 @@ fun OverlayDropdownPopup(
         preciseClickState = preciseClickState,
         backgroundModifier = backgroundModifier,
         backgroundColor = backgroundColor,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
     ) {
         ListPopupColumn {

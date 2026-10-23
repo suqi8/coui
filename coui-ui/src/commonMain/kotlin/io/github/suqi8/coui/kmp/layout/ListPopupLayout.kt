@@ -44,7 +44,9 @@ import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
+import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
@@ -76,12 +78,10 @@ import kotlinx.coroutines.launch
  *   collapsed to that point so the popup opens at the finger (COUI `PreciseClickHelper` plus
  *   `PopupMenuLocateHelper.setAnchor`). A null state, or one with no point recorded, keeps the
  *   anchor-centred placement.
- * @param backgroundColor The popup surface fill (couiColorBackgroundTop). Pass a transparent color
- *   alongside a blurring [backgroundModifier].
- * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows: the
- *   slot for the COUI 17 blurred background, e.g. coui-blur's
- *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`. COUI leaves popup blur
- *   off unless an app asks for it (`COUIPopupListWindow.setUseBackgroundBlur`).
+ * @param backgroundColor The popup surface fill when it is not blurred (couiColorBackgroundTop).
+ * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows.
+ * @param materialBlur Whether to blur with the COUI 17 popup material from
+ *   [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] (see [rememberPopupSurface]).
  * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
  *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
  * @param content The content of the popup.
@@ -101,9 +101,17 @@ internal fun ListPopupLayout(
     minWidth: Dp = ListPopupDefaults.MinWidth,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    // Resolved at the call site, where dialogs and sheets can switch the popup blur off.
+    val surface = rememberPopupSurface(
+        materialBlur = materialBlur,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
+        backgroundModifier = backgroundModifier,
+    )
     // COUI 17 PopupMotionAnimateKitController drives three waves: the path progress along the
     // gravity Bezier, the scale and the opacity, each on its own spring.
     val pathProgress = remember { Animatable(0f) }
@@ -316,13 +324,14 @@ internal fun ListPopupLayout(
                     popupLayoutPosition = layoutInfo.popupLayoutPosition,
                     localTransformOrigin = layoutInfo.localTransformOrigin,
                     translation = { gravityPath.pointAt(pathProgress.value * (1f - backProgress.value)) },
-                    backgroundColor = backgroundColor,
-                    backgroundModifier = backgroundModifier,
-                    materialEffect = materialEffect,
+                    backgroundColor = surface.color,
+                    backgroundModifier = surface.backgroundModifier,
+                    materialEffect = surface.materialEffect,
                     content = {
                         CompositionLocalProvider(
                             LocalDismissState provides requestDismiss,
                             LocalMaterialBackdrop provides null,
+                            LocalPopupMaterialBlur provides null,
                         ) {
                             content()
                         }

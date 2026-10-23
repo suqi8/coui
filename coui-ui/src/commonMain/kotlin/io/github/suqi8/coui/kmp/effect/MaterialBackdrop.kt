@@ -66,3 +66,70 @@ fun interface MaterialBackdropProvider {
  * use the backdrop either (`drawableMaterialEffect`).
  */
 val LocalMaterialBackdrop = staticCompositionLocalOf<MaterialBackdropProvider?> { null }
+
+/**
+ * How [MaterialBlurSpec.blendColor] is blended over the blurred backdrop: the `OplusBlurParam`
+ * material blend modes a COUI 17 window background blur hands the renderer. Mirrors coui-blur's
+ * `MaterialBlendMode`.
+ */
+enum class MaterialBlurBlendMode {
+    /** `BLUR_BLEND_MODE_OVERLAY` (2). */
+    Overlay,
+
+    /** `BLUR_BLEND_MODE_COLORDODGE` (3). */
+    ColorDodge,
+
+    /** `BLUR_BLEND_MODE_GLOW_OVERLAY` (4): a luminosity mix, then the overlay blend. */
+    GlowOverlay,
+
+    /** `BLUR_BLEND_MODE_GLOW_COLORDODGE` (5): a luminosity mix, then the color dodge blend. */
+    GlowColorDodge,
+}
+
+/**
+ * A COUI 17 material (window background) blur: `OplusBlurParam.setMaterialParams(mode, blendColor,
+ * mixColor)` plus a blur radius. Mirrors coui-blur's `MaterialBlurStyle`, which an app maps it to.
+ *
+ * @param blurRadiusPx The blur radius in raw pixels, as COUI passes it.
+ * @param mixColor The color mixed over the blurred backdrop first, weighted by its alpha.
+ * @param blendColor The color then blended with [blendMode], weighted by its alpha.
+ * @param blendMode How [blendColor] is blended.
+ */
+@Immutable
+data class MaterialBlurSpec(
+    val blurRadiusPx: Float,
+    val mixColor: Color,
+    val blendColor: Color,
+    val blendMode: MaterialBlurBlendMode,
+)
+
+/**
+ * Paints a [MaterialBlurSpec] behind a surface, the COUI 17 material blur of the popup menus.
+ * coui-ui has no backdrop capture of its own; an app that records its content (for example with
+ * coui-blur `layerBackdrop` + `couiMaterialBlur`) provides one through [LocalPopupMaterialBlur].
+ */
+@Stable
+fun interface MaterialBlurProvider {
+    /**
+     * Returns a modifier that paints [spec] behind the modified element, clipped to [shape], or
+     * `null` when the blur cannot be drawn (no runtime shaders, blur turned off): the surface then
+     * keeps its opaque fill, COUI's non-blur fallback.
+     *
+     * @param spec The blur radius and colour layers.
+     * @param shape The outline the blur is clipped to.
+     */
+    fun materialBlur(spec: MaterialBlurSpec, shape: Shape): Modifier?
+}
+
+/**
+ * The [MaterialBlurProvider] the list popups, cascading menus and dropdown popups blur by default,
+ * as ColorOS 17 shows its menus. Null (the default) leaves every popup on its opaque surface.
+ *
+ * The popups read it where they are called, so provide it once around the app's `Scaffold` (or
+ * higher), recording the page content the menus open over. The backdrop must not contain the
+ * popups themselves: the overlay popups render in the `Scaffold` popup host and the window popups
+ * in their own window, both outside a page recording. Dialogs, bottom sheets and popups reset it to
+ * null for their content, so a menu opened inside one of them keeps the opaque surface rather than
+ * showing the page beneath the panel.
+ */
+val LocalPopupMaterialBlur = staticCompositionLocalOf<MaterialBlurProvider?> { null }

@@ -84,7 +84,9 @@ import io.github.suqi8.coui.kmp.basic.popupMaterialEffect
 import io.github.suqi8.coui.kmp.basic.popupSpotLightInput
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupSpotLight
+import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
@@ -301,8 +303,16 @@ internal fun CascadingListPopupLayout(
     minWidth: Dp = ListPopupDefaults.MinWidth,
     collapseOnSelection: Boolean = true,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
+    // Resolved at the call site, where dialogs and sheets can switch the popup blur off.
+    val surface = rememberPopupSurface(
+        materialBlur = materialBlur,
+        backgroundColor = backgroundColor,
+        materialEffect = materialEffect,
+        backgroundModifier = backgroundModifier,
+    )
     val internalVisible = remember { mutableStateOf(false) }
     val pathProgress = remember { Animatable(0f) }
     val scaleProgress = remember { Animatable(0f) }
@@ -452,10 +462,11 @@ internal fun CascadingListPopupLayout(
         CompositionLocalProvider(
             LocalDismissState provides { currentOnDismiss() },
             LocalMaterialBackdrop provides null,
+            LocalPopupMaterialBlur provides null,
             LocalPopupGestureRelay provides gestureRelay,
         ) {
             val dimColor = COUITheme.colorScheme.windowDimming
-            val surfaceColor = backgroundColor
+            val surfaceColor = surface.color
             val shape = remember { RoundedCornerShape(CascadingPopupCornerRadius) }
             val squircleEnabled = isSquircleEnabled()
             val touchSlop = LocalViewConfiguration.current.touchSlop
@@ -532,10 +543,10 @@ internal fun CascadingListPopupLayout(
                                 )
                                 .popupDropShadow(shape)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
-                                .then(backgroundModifier)
+                                .then(surface.backgroundModifier)
                                 // COUI turns the main menu spotlight off while a sub menu is open.
                                 .popupMaterialEffect(
-                                    enabled = materialEffect,
+                                    enabled = surface.materialEffect,
                                     spotLightSuppressed = { displayedItem != null },
                                 )
                                 .consumePopupTouches()
@@ -606,7 +617,7 @@ internal fun CascadingListPopupLayout(
                                             }
                                         }
                                         .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
-                                        .popupSpotLightInput(subSpotLight, enabled = materialEffect)
+                                        .popupSpotLightInput(subSpotLight, enabled = surface.materialEffect)
                                         .consumePopupTouches(),
                                 ) {
                                     // The surface follows the RoundFrameLayout override outline: on
@@ -630,8 +641,8 @@ internal fun CascadingListPopupLayout(
                                             .matchParentSize()
                                             .cascadeBand(geometryHolder, sub)
                                             .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
-                                            .then(backgroundModifier)
-                                            .popupMaterialEffect(enabled = materialEffect, spotLight = subSpotLight, trackTouches = false),
+                                            .then(surface.backgroundModifier)
+                                            .popupMaterialEffect(enabled = surface.materialEffect, spotLight = subSpotLight, trackTouches = false),
                                     )
                                     Box(modifier = Modifier.cascadeContentClip(geometryHolder, sub, squircleEnabled)) {
                                         CascadingSubList(

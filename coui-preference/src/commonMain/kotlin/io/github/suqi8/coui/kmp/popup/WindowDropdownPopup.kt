@@ -46,7 +46,8 @@ fun WindowDropdownPopup(
     collapseOnSelection: Boolean = true,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
     val entries = remember(entry) { listOf(entry) }
     WindowDropdownPopup(
@@ -60,6 +61,7 @@ fun WindowDropdownPopup(
         preciseClickState = preciseClickState,
         backgroundModifier = backgroundModifier,
         backgroundColor = backgroundColor,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
     )
 }
@@ -69,9 +71,10 @@ fun WindowDropdownPopup(
  *
  * Groups are separated by dividers. Entries without selection state can be used as action menus.
  *
- * [backgroundModifier], [backgroundColor] and [materialEffect] reach the popup surface: pass
- * coui-blur's `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))` with a
- * transparent color and `materialEffect = true` for the COUI 17 blurred popup.
+ * [backgroundModifier], [backgroundColor], [materialBlur] and [materialEffect] reach the popup
+ * surface. The popup is blurred with the COUI 17 popup material by default when a
+ * [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] provider is in scope; `materialBlur =
+ * false` keeps the opaque [backgroundColor].
  */
 @Composable
 fun WindowDropdownPopup(
@@ -85,7 +88,8 @@ fun WindowDropdownPopup(
     collapseOnSelection: Boolean = entries.size <= 1,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialEffect: Boolean = false,
+    materialBlur: Boolean = true,
+    materialEffect: Boolean = true,
 ) {
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
@@ -98,6 +102,7 @@ fun WindowDropdownPopup(
         preciseClickState = preciseClickState,
         backgroundModifier = backgroundModifier,
         backgroundColor = backgroundColor,
+        materialBlur = materialBlur,
         materialEffect = materialEffect,
     ) {
         val dismiss = LocalDismissState.current
