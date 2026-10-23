@@ -1,6 +1,6 @@
 # Chip
 
-A capsule shaped, checkable filter tag mirroring ColorOS's COUIChip in its selection style (Widget.COUI.Chip.Choice). The unselected chip is a translucent gray capsule with a primary label; selecting it fills the capsule with the accent color and flips the label to white. The two states cross-fade on the COUI check spring, and pressing shrinks the chip while tinting the fill like COUIPressFeedbackHelper.
+A capsule shaped, checkable filter tag mirroring ColorOS's COUIChip in its selection style (Widget.COUI.Chip.Choice). The unselected chip is a translucent gray capsule with a primary label; selecting it fills the capsule with the accent color and flips the label to white. The two states cross-fade on the COUI check spring, and pressing scales the chip with the COUI 17 press feedback while tinting the fill.
 
 ## Import
 
@@ -118,17 +118,19 @@ Chip(
 
 | Parameter                      | Type  | Default                                            | COUI Attribute                    |
 | ------------------------------ | ----- | -------------------------------------------------- | --------------------------------- |
-| containerColor                 | Color | COUITheme.colorScheme.secondaryVariant            | uncheckedBackgroundColor          |
+| containerColor                 | Color | COUITheme.colorScheme.dialogButton                | uncheckedBackgroundColor          |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor            |
-| disabledContainerColor         | Color | COUITheme.colorScheme.disabledSecondaryVariant    | uncheckedDisabledBackgroundColor  |
+| disabledContainerColor         | Color | COUITheme.colorScheme.dialogButton                | uncheckedDisabledBackgroundColor  |
 | selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor    |
 | contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor                |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                  |
-| disabledContentColor           | Color | COUITheme.colorScheme.disabledOnSecondaryVariant  | uncheckedDisabledTextColor        |
+| disabledContentColor           | Color | COUITheme.colorScheme.disabledSliderKeyPoint      | uncheckedDisabledTextColor        |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor          |
 
 ## Behavior
 
 - Selecting/deselecting cross-fades the capsule, label and icon colors on a critically damped spring (COUIChipDrawable.TintAnimation, response 0.3s / bounce 0).
-- Pressing shrinks the chip towards 0.92 of its size and overlays the press tint (COUIPressFeedbackHelper + COUIMaskEffectDrawable); a quick tap still flashes the tint visibly.
+- Enabling or disabling the chip switches its colors at once, without the spring (COUIChipDrawable cancels the tint animation).
+- Pressing scales the chip like COUI 17's COUIPressFeedbackHelper: the size-dependent COUIPressAnimatorUnit press (about 0.89 for a 52 x 32dp chip, 0.91 for a 100 x 32dp one) released on an under-damped spring, with no rubber or deformation. The fill takes the `press` tint (COUIMaskEffectDrawable); a quick tap still flashes the tint visibly. Hovering overlays the `hover` tint.
+- Default colors follow COUI 17: the unselected capsule is couiColorContainer8 (#14000000 / #1AFFFFFF) whether enabled or not; the disabled labels are #42000000 / #29FFFFFF (unselected) and #8AFFFFFF / #29FFFFFF (selected).
 - The label is single line and ellipsized beyond `TextMaxWidth`; the whole chip is clamped between `MinWidth` and `MaxWidth`.

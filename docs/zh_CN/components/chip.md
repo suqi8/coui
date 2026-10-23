@@ -1,6 +1,6 @@
 # Chip
 
-胶囊形可选中筛选标签,对应 ColorOS 的 COUIChip 选择样式(Widget.COUI.Chip.Choice)。未选中时是半透明灰色胶囊配主文本色标签;选中后胶囊填充强调色、标签变为白色。两种状态间用 COUI 选中弹簧交叉渐变,按压时缩小并叠加按压色(COUIPressFeedbackHelper)。
+胶囊形可选中筛选标签,对应 ColorOS 的 COUIChip 选择样式(Widget.COUI.Chip.Choice)。未选中时是半透明灰色胶囊配主文本色标签;选中后胶囊填充强调色、标签变为白色。两种状态间用 COUI 选中弹簧交叉渐变,按压时按 COUI 17 按压反馈缩放并叠加按压色。
 
 ## 引入
 
@@ -118,17 +118,19 @@ Chip(
 
 | 参数                           | 类型  | 默认值                                             | COUI 属性                        |
 | ------------------------------ | ----- | -------------------------------------------------- | -------------------------------- |
-| containerColor                 | Color | COUITheme.colorScheme.secondaryVariant            | uncheckedBackgroundColor         |
+| containerColor                 | Color | COUITheme.colorScheme.dialogButton                | uncheckedBackgroundColor         |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor           |
-| disabledContainerColor         | Color | COUITheme.colorScheme.disabledSecondaryVariant    | uncheckedDisabledBackgroundColor |
+| disabledContainerColor         | Color | COUITheme.colorScheme.dialogButton                | uncheckedDisabledBackgroundColor |
 | selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor   |
 | contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor               |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                 |
-| disabledContentColor           | Color | COUITheme.colorScheme.disabledOnSecondaryVariant  | uncheckedDisabledTextColor       |
+| disabledContentColor           | Color | COUITheme.colorScheme.disabledSliderKeyPoint      | uncheckedDisabledTextColor       |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor         |
 
 ## 行为
 
 - 选中/取消选中时,胶囊、标签与图标颜色在临界阻尼弹簧上交叉渐变(COUIChipDrawable.TintAnimation,response 0.3s / bounce 0)。
-- 按压时 Chip 向 0.92 倍缩小并叠加按压色(COUIPressFeedbackHelper + COUIMaskEffectDrawable);快速点按也会明显闪现按压色。
+- 启用/禁用切换时颜色立即变化,不走弹簧(COUIChipDrawable 会取消着色动画)。
+- 按压缩放对齐 COUI 17 的 COUIPressFeedbackHelper:按尺寸计算的 COUIPressAnimatorUnit 按压(52 x 32dp 约 0.89,100 x 32dp 约 0.91),松手时走欠阻尼弹簧回弹,无橡皮筋与形变。填充叠加 `press` 按压色(COUIMaskEffectDrawable);快速点按也会明显闪现按压色。悬停时叠加 `hover` 色。
+- 默认颜色对齐 COUI 17:未选中胶囊无论是否启用均为 couiColorContainer8(#14000000 / #1AFFFFFF);禁用标签色为 #42000000 / #29FFFFFF(未选中)与 #8AFFFFFF / #29FFFFFF(选中)。
 - 标签单行显示,超过 `TextMaxWidth` 省略;整个 Chip 宽度被钳制在 `MinWidth` 与 `MaxWidth` 之间。

@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,26 +22,25 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.coroutines.cancellation.CancellationException
+import androidx.compose.animation.Animatable as ColorAnimatable
 
 /**
  * A [Chip] component with COUI style.
@@ -52,8 +49,11 @@ import kotlin.coroutines.cancellation.CancellationException
  * (Widget.COUI.Chip.Choice): the unselected chip is a translucent gray capsule with a primary
  * label; selecting it fills the capsule with the accent color and flips the label to white.
  * The selected/unselected colors cross-fade with the same critically damped spring
- * COUIChipDrawable.TintAnimation uses, and pressing shrinks the chip while tinting the fill
- * (COUIPressFeedbackHelper + COUIMaskEffectDrawable).
+ * COUIChipDrawable.TintAnimation uses, while enabling or disabling the chip switches its colors
+ * at once. Pressing scales the chip like COUI 17's COUIPressFeedbackHelper (the size-dependent
+ * COUIPressAnimatorUnit press, about 0.89 for a 52 x 32dp chip, released on an under-damped
+ * spring) while COUIMaskEffectDrawable tints the fill with couiColorPress; hovering tints it with
+ * couiColorHover.
  *
  * @param selected Whether the [Chip] is selected.
  * @param onClick The callback when the [Chip] is clicked.
@@ -98,27 +98,20 @@ fun Chip(
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
 
     // COUIChipDrawable.TintAnimation: the checked/unchecked background, label and icon colors are
-    // evaluated by an ArgbEvaluator driven by COUISpringForce(response 0.3, bounce 0).
-    val containerColor by animateColorAsState(
-        targetValue = colors.containerColor(enabled, selected),
-        animationSpec = CheckTintColorSpring,
-        label = "chipContainerColor",
-    )
-    val contentColor by animateColorAsState(
-        targetValue = colors.contentColor(enabled, selected),
-        animationSpec = CheckTintColorSpring,
-        label = "chipContentColor",
-    )
+    // evaluated by an ArgbEvaluator driven by COUISpringForce(response 0.3, bounce 0). Enabling or
+    // disabling cancels it and assigns the new colors directly (COUIChipDrawable.onStateChange).
+    val containerColor by animateChipColor(colors.containerColor(enabled, selected), enabled)
+    val contentColor by animateChipColor(colors.contentColor(enabled, selected), enabled)
 
-    // COUI press feedback, identical to COUIButton: COUIPressFeedbackHelper scales the chip
-    // towards a size dependent end ratio and COUIMaskEffectDrawable tints the fill with
-    // couiColorPress, both on a critically damped response-0.3 spring.
+    // COUI 17 press feedback: COUIPressFeedbackHelper is a COUIPressFeedbackAnimator with only the
+    // press scale on (no rubber, no deformation), and COUIMaskEffectDrawable tints the fill with
+    // couiColorPress on a critically damped response-0.3 spring.
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scaleProgress by animateFloatAsState(
-        targetValue = if (enabled && isPressed) 1f else 0f,
-        animationSpec = ChipPressFeedbackSpring,
-        label = "chipPressScale",
-    )
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val hoverProgress = remember { Animatable(0f) }
+    LaunchedEffect(enabled, isHovered) {
+        if (!enabled) hoverProgress.snapTo(0f) else hoverProgress.animateTo(if (isHovered) 1f else 0f, ChipPressFeedbackSpring)
+    }
     val tintProgress = remember { Animatable(0f) }
     LaunchedEffect(enabled, isPressed) {
         if (enabled && isPressed) {
@@ -141,22 +134,17 @@ fun Chip(
             tintProgress.animateTo(0f, ChipPressFeedbackSpring)
         }
     }
-    // couiColorPress: #1F000000 in light themes, #33FFFFFF in dark themes.
-    val pressTint = if (COUITheme.colorScheme.background.luminance() < 0.5f) ChipPressedTintDark else ChipPressedTintLight
-    val fillColor = if (tintProgress.value > 0f) {
-        pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(containerColor)
-    } else {
-        containerColor
-    }
+    // couiColorPress #1F000000 / #33FFFFFF over couiColorHover #14000000 / #26FFFFFF.
+    val pressTint = COUITheme.colorScheme.press
+    val hoverTint = COUITheme.colorScheme.hover
+    var fillColor = containerColor
+    if (hoverProgress.value > 0f) fillColor = hoverTint.copy(alpha = hoverTint.alpha * hoverProgress.value).compositeOver(fillColor)
+    if (tintProgress.value > 0f) fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
             modifier = modifier
-                .graphicsLayer {
-                    val scale = 1f - (1f - chipPressedScaleEndRatio(size)) * scaleProgress
-                    scaleX = scale
-                    scaleY = scale
-                }
+                .couiPressScale(pressed = isPressed, enabled = enabled)
                 .widthIn(max = maxWidth)
                 .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                 .selectable(
@@ -235,20 +223,24 @@ object ChipDefaults {
 
     /**
      * The default [ChipColors], mapping the Widget.COUI.Chip color attributes:
-     * uncheckedBackgroundColor/uncheckedDisabledBackgroundColor = couiColorContainer8,
-     * checkedBackgroundColor = couiColorPrimary, checkedDisabledBackgroundColor = couiColorDisable,
-     * uncheckedTextColor = couiColorLabelPrimary, checkedTextColor = couiColorLabelOnColor and the
-     * chip_checked/unchecked_text_disable_color selectors.
+     * - uncheckedBackgroundColor / uncheckedDisabledBackgroundColor = couiColorContainer8
+     *   #14000000 / #1AFFFFFF (the `dialogButton` slot);
+     * - checkedBackgroundColor = couiColorPrimary, checkedDisabledBackgroundColor = couiColorDisable
+     *   #4D0080FF / #4D1A8CFF;
+     * - uncheckedTextColor = couiColorLabelPrimary #E6000000 / #E6FFFFFF, checkedTextColor =
+     *   couiColorLabelOnColor #FFFFFF;
+     * - chip_unchecked_text_disable_color #42000000 / #29FFFFFF (the same values as the
+     *   `disabledSliderKeyPoint` slot) and chip_checked_text_disable_color #8AFFFFFF / #29FFFFFF.
      */
     @Composable
     fun chipColors(
-        containerColor: Color = COUITheme.colorScheme.secondaryVariant,
+        containerColor: Color = COUITheme.colorScheme.dialogButton,
         selectedContainerColor: Color = COUITheme.colorScheme.primary,
-        disabledContainerColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
+        disabledContainerColor: Color = COUITheme.colorScheme.dialogButton,
         selectedDisabledContainerColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
         contentColor: Color = COUITheme.colorScheme.onSurface,
         selectedContentColor: Color = COUITheme.colorScheme.onPrimary,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledSliderKeyPoint,
         selectedDisabledContentColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): ChipColors = remember(
         containerColor,
@@ -314,6 +306,27 @@ data class ChipColors(
 }
 
 /**
+ * A chip color that follows [target] on the check tint spring while the chip stays enabled, and
+ * jumps to it when the chip is disabled or re-enabled (COUIChipDrawable cancels the TintAnimation
+ * and assigns the enabled or disabled colors directly).
+ */
+@Composable
+private fun animateChipColor(target: Color, enabled: Boolean): State<Color> {
+    val color = remember { ColorAnimatable(target) }
+    // The enabled flag the last effect saw; only written from the effect.
+    val lastEnabled = remember { booleanArrayOf(enabled) }
+    LaunchedEffect(target, enabled) {
+        if (enabled && lastEnabled[0]) {
+            color.animateTo(target, CheckTintColorSpring)
+        } else {
+            color.snapTo(target)
+        }
+        lastEnabled[0] = enabled
+    }
+    return color.asState()
+}
+
+/**
  * The COUI check tint spring for colors: COUIChipDrawable.TintAnimation uses
  * COUISpringForce(response = 0.3f, bounce = 0f), i.e. a critically damped spring with stiffness
  * (2 * PI / 0.3)^2 ~= 438.65.
@@ -321,16 +334,10 @@ data class ChipColors(
 private val CheckTintColorSpring = spring<Color>(dampingRatio = 1f, stiffness = 438.65f)
 
 /**
- * The COUI press feedback spring: COUISpringForce(response = 0.3f, bounce = 0f). Shared by the
- * press scale (COUIPressFeedbackHelper) and the press tint (COUIMaskEffectDrawable) animations.
+ * The COUI mask spring: COUISpringForce(response = 0.3f, bounce = 0f), shared by the press and
+ * hover tints (COUIMaskEffectDrawable).
  */
 private val ChipPressFeedbackSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
-
-/** couiColorPress in light themes (coui_color_press #1F000000). */
-private val ChipPressedTintLight = Color(0x1F000000)
-
-/** couiColorPress in dark themes (coui_color_press_dark #33FFFFFF). */
-private val ChipPressedTintDark = Color(0x33FFFFFF)
 
 /**
  * A release before the press tint reaches this progress defers the fade-out until it does, so
@@ -340,34 +347,3 @@ private val ChipPressedTintMinVisibleProgress = 0.7f
 
 /** Thrown to stop the deferred press-in tint animation once [ChipPressedTintMinVisibleProgress] is reached. */
 private class ChipPressTintThresholdReached : CancellationException("Press tint reached the minimum visible progress")
-
-/** COUIInEaseInterpolator, used to map the chip area to the pressed end scale. */
-private val ChipPressedScaleEasing = CubicBezierEasing(0f, 0f, 0.1f, 1f)
-
-/** COUIPressFeedbackHelper area bounds: coui_min_end_value_size (48dp) squared. */
-private val ChipPressedScaleMinAreaDp2 = 48f * 48f
-
-/** COUIPressFeedbackHelper area bounds: coui_max_end_value_width x height (328dp x 220dp). */
-private val ChipPressedScaleMaxAreaDp2 = 328f * 220f
-
-/** The pressed end scale of the smallest surfaces (COUIPressFeedbackHelper MIN_SCALE_END_RATIO). */
-private val ChipPressedScaleMin = 0.92f
-
-/** The pressed end scale of the largest surfaces (COUIPressFeedbackHelper MAX_SCALE_END_RATIO). */
-private val ChipPressedScaleMax = 0.98f
-
-/**
- * The scale a surface of [size] shrinks to when fully pressed: 0.92 for areas up to 48 x 48dp,
- * easing towards [ChipPressedScaleMax] at 328 x 220dp (COUIPressFeedbackHelper.getCardScaleRatio).
- */
-private fun Density.chipPressedScaleEndRatio(size: Size): Float {
-    val area = size.width.toDp().value * size.height.toDp().value
-    return when {
-        area <= ChipPressedScaleMinAreaDp2 -> ChipPressedScaleMin
-
-        area >= ChipPressedScaleMaxAreaDp2 -> ChipPressedScaleMax
-
-        else -> ChipPressedScaleMin + (ChipPressedScaleMax - ChipPressedScaleMin) *
-            ChipPressedScaleEasing.transform((area - ChipPressedScaleMinAreaDp2) / (ChipPressedScaleMaxAreaDp2 - ChipPressedScaleMinAreaDp2))
-    }
-}
