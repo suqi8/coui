@@ -24,6 +24,8 @@ import io.github.suqi8.coui.kmp.basic.Switch
 import io.github.suqi8.coui.kmp.basic.SwitchColors
 import io.github.suqi8.coui.kmp.basic.SwitchDefaults
 import io.github.suqi8.coui.kmp.preference.internal.forwardPressTo
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 
 /**
  * A switch with a title and a summary.
@@ -65,6 +67,7 @@ fun SwitchPreference(
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
     val rowInteractionSource = remember { MutableInteractionSource() }
+    val couiHaptic = rememberCouiHaptic()
     BasicComponent(
         modifier = modifier,
         interactionSource = rowInteractionSource,
@@ -94,7 +97,12 @@ fun SwitchPreference(
         },
         bottomAction = bottomAction,
         onClick = {
-            currentOnCheckedChange.takeIf { enabled }?.invoke(!checked)
+            if (enabled) {
+                currentOnCheckedChange(!checked)
+                // COUISwitchPreference.onClick -> setPerformFeedBack(true): a row click toggles the
+                // switch with the same haptic as tapping the switch itself.
+                couiHaptic(CouiHapticEffect.Switch)
+            }
         },
         role = Role.Switch,
         holdDownState = holdDownState,
