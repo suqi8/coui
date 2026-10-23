@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.Orientation
@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
@@ -50,6 +51,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -126,7 +128,8 @@ data class ScrollBarColors(
  * @param colors The colors of the scrollbar.
  * @param thumbWidth The width of the thumb.
  * @param cornerRadius The corner radius. [Dp.Unspecified] defaults to half of [thumbWidth].
- * @param thumbMinLength The minimum length of the thumb.
+ * @param thumbMinLength The minimum length of the thumb rect; the visible thumb is drawn inside it,
+ *   [ScrollBarDefaults.ThumbMarginStart] from its start and [ScrollBarDefaults.ThumbMarginEnd] from its end.
  * @param endPadding The padding from the end edge.
  */
 @ExperimentalScrollBarApi
@@ -166,7 +169,8 @@ fun VerticalScrollBar(
  * @param colors The colors of the scrollbar.
  * @param thumbWidth The width of the thumb.
  * @param cornerRadius The corner radius. [Dp.Unspecified] defaults to half of [thumbWidth].
- * @param thumbMinLength The minimum length of the thumb.
+ * @param thumbMinLength The minimum length of the thumb rect; the visible thumb is drawn inside it,
+ *   [ScrollBarDefaults.ThumbMarginStart] from its start and [ScrollBarDefaults.ThumbMarginEnd] from its end.
  * @param endPadding The padding from the end edge.
  */
 @ExperimentalScrollBarApi
@@ -196,25 +200,63 @@ fun HorizontalScrollBar(
     )
 }
 
+/**
+ * Default values of the COUI 17 scrollbar (`COUIScrollBar`).
+ *
+ * The thumb is a `ThumbMinLength`-or-longer rect riding the full track; it is drawn inset by
+ * [ThumbMarginStart] / [ThumbMarginEnd] along the track (COUI `coui_scrollbar_margin_top` /
+ * `_bottom`) and by [EndPadding] (pressed: [DragEndPadding]) across it, so the visible thumb is
+ * [ThumbWidth] (pressed: [DragThumbWidth]) wide and at least 24dp long. It appears at once when
+ * the content scrolls, stays for [FadeDelayMillis] after the last scroll and then fades out
+ * linearly over [FadeDurationMillis].
+ */
 @ExperimentalScrollBarApi
 object ScrollBarDefaults {
+    /** The visible thumb width: the 14dp `coui_scrollbar_wight` rect minus two 5.5dp insets. */
     val ThumbWidth: Dp = 3.dp
+
+    /** The padding from the end edge (COUI coui_scrollbar_drawable_default_inset). */
     val EndPadding: Dp = 5.5.dp
+
+    /** The minimum length of the thumb rect, margins included (COUI coui_scrollbar_min_height). */
     val ThumbMinLength: Dp = 48.dp
+
+    /** The inset of the visible thumb from the start of its rect (COUI coui_scrollbar_margin_top). */
+    val ThumbMarginStart: Dp = 8.dp
+
+    /** The inset of the visible thumb from the end of its rect (COUI coui_scrollbar_margin_bottom). */
+    val ThumbMarginEnd: Dp = 16.dp
+
     val CornerRadius: Dp = Dp.Unspecified
-    val FadeDelayMillis = 1000
-    val FadeDurationMillis = 500
-    val TouchTargetWidth: Dp = 48.dp
+
+    /** How long the thumb stays after the last scroll or drag (COUIScrollBar.SCROLLER_FADE_TIMEOUT). */
+    val FadeDelayMillis = 2000
+
+    /**
+     * How long the thumb stays when the scrollbar first appears: `initialAwakenScrollBars` waits
+     * four times the platform scroll default delay (4 x 300ms).
+     */
+    val InitialFadeDelayMillis = 1200
+
+    /** The linear fade-out (ViewConfiguration.getScrollBarFadeDuration, 250ms on AOSP). */
+    val FadeDurationMillis = 250
+
+    /** The width of the strip that can start a thumb drag (COUI coui_scrollbar_wight). */
+    val TouchTargetWidth: Dp = 14.dp
+
+    /** The visible thumb width while dragged: the 14dp rect minus two 4dp pressed insets. */
     val DragThumbWidth: Dp = 6.dp
 
     /**
      * The padding from the end edge while dragging (COUI coui_scrollbar_drawable_pressed_inset).
      */
     val DragEndPadding: Dp = 4.dp
-    val ThumbAlpha = 0.1f
-    val DragThumbAlpha = 0.3f
-    val DragAnimationDurationMillis = 150
 
+    /**
+     * Creates [ScrollBarColors]. A [Color.Unspecified] thumb resolves to `COUITheme.colorScheme.dragHandle`
+     * (#29000000 / #40FFFFFF, the same values as COUI `coui_scrollbar_color`), used both at rest and
+     * while dragged.
+     */
     fun scrollBarColors(
         thumbColor: Color = Color.Unspecified,
         trackColor: Color = Color.Unspecified,
@@ -239,7 +281,8 @@ private fun ScrollBar(
     endPadding: Dp = ScrollBarDefaults.EndPadding,
 ) {
     val density = LocalDensity.current
-    val baseThumbColor = if (colors.thumbColor != Color.Unspecified) colors.thumbColor else COUITheme.colorScheme.onSurface
+    // COUI draws the normal and the pressed thumb in the same coui_scrollbar_color.
+    val thumbColor = colors.thumbColor.takeOrElse { COUITheme.colorScheme.dragHandle }
 
     val minThumbPx = with(density) { thumbMinLength.toPx() }
     val coroutineScope = rememberCoroutineScope()
@@ -275,48 +318,34 @@ private fun ScrollBar(
     val isHovered by interactionSource.collectIsHoveredAsState()
     var opacity by remember { mutableFloatStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
-    var hideJob by remember { mutableStateOf<Job?>(null) }
     val isHighlighted = isHovered || isDragging
+    val fadeOut = remember { ScrollBarFadeOut(coroutineScope) { opacity = it } }
 
-    val highlightAnimSpec = tween<Float>(ScrollBarDefaults.DragAnimationDurationMillis)
-    val animatedThumbWidthPx by animateFloatAsState(
-        targetValue = with(density) { if (isHighlighted) ScrollBarDefaults.DragThumbWidth.toPx() else thumbWidth.toPx() },
-        animationSpec = highlightAnimSpec,
-    )
-    // COUI expands the pressed thumb symmetrically: the end inset shrinks from
-    // coui_scrollbar_drawable_default_inset (5.5dp) to coui_scrollbar_drawable_pressed_inset (4dp).
+    // COUI swaps the StateListDrawable state, so the pressed thumb widens (and its end inset
+    // shrinks from 5.5dp to 4dp) at once, without an enter or exit animation.
     val dragEndPaddingRaw = endPadding - (ScrollBarDefaults.EndPadding - ScrollBarDefaults.DragEndPadding)
     val dragEndPadding = if (dragEndPaddingRaw < 0.dp) 0.dp else dragEndPaddingRaw
-    val animatedEndPaddingPx by animateFloatAsState(
-        targetValue = with(density) { if (isHighlighted) dragEndPadding.toPx() else endPadding.toPx() },
-        animationSpec = highlightAnimSpec,
-    )
-    val defaultAlpha = if (colors.thumbColor != Color.Unspecified) colors.thumbColor.alpha else ScrollBarDefaults.ThumbAlpha
-    val highlightAlpha = if (colors.thumbColor != Color.Unspecified) colors.thumbColor.alpha else ScrollBarDefaults.DragThumbAlpha
-    val animatedThumbAlpha by animateFloatAsState(
-        targetValue = if (isHighlighted) highlightAlpha else defaultAlpha,
-        animationSpec = highlightAnimSpec,
-    )
+    val currentThumbWidth = if (isHighlighted) ScrollBarDefaults.DragThumbWidth else thumbWidth
+    val currentEndPadding = if (isHighlighted) dragEndPadding else endPadding
 
-    var displayedThumbLength by remember { mutableFloatStateOf(0f) }
-    var thumbLengthAnimJob by remember { mutableStateOf<Job?>(null) }
+    // COUIScrollBar.onAttachedToWindow: the scrollbar flashes once when it appears.
+    LaunchedEffect(sliderAdapter) {
+        snapshotFlow { sliderAdapter.trackSize > 0 && sliderAdapter.thumbSize < sliderAdapter.trackSize }
+            .first { it }
+        if (!isHighlighted) {
+            opacity = 1f
+            fadeOut.schedule(ScrollBarDefaults.InitialFadeDelayMillis)
+        }
+    }
 
     LaunchedEffect(isHighlighted) {
         if (isHighlighted) {
-            hideJob?.cancel()
+            // Dragging keeps the thumb fully opaque and cancels the pending fade.
+            fadeOut.cancel()
             opacity = 1f
         } else if (opacity > 0f) {
-            hideJob?.cancel()
-            hideJob = coroutineScope.launch {
-                delay(ScrollBarDefaults.FadeDelayMillis.toLong())
-                animate(
-                    initialValue = 1f,
-                    targetValue = 0f,
-                    animationSpec = tween(ScrollBarDefaults.FadeDurationMillis),
-                ) { value, _ ->
-                    opacity = value
-                }
-            }
+            // On release COUI calls awakenScrollBars(), restarting the 2000ms timeout.
+            fadeOut.schedule(ScrollBarDefaults.FadeDelayMillis)
         }
     }
 
@@ -324,20 +353,9 @@ private fun ScrollBar(
         snapshotFlow { adapter.scrollOffset }
             .drop(1)
             .collect {
+                // Showing is instant: the scroll cache goes straight to ON with alpha 255.
                 opacity = 1f
-                if (!isHighlighted) {
-                    hideJob?.cancel()
-                    hideJob = coroutineScope.launch {
-                        delay(ScrollBarDefaults.FadeDelayMillis.toLong())
-                        animate(
-                            initialValue = 1f,
-                            targetValue = 0f,
-                            animationSpec = tween(ScrollBarDefaults.FadeDurationMillis),
-                        ) { value, _ ->
-                            opacity = value
-                        }
-                    }
-                }
+                if (!isHighlighted) fadeOut.schedule(ScrollBarDefaults.FadeDelayMillis)
             }
     }
 
@@ -367,6 +385,9 @@ private fun ScrollBar(
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
 
+                    // COUIScrollBar only grabs the thumb while it is shown (scroll cache not OFF).
+                    if (opacity <= 0f) return@awaitEachGesture
+
                     val inStrip = if (isVertical) {
                         down.position.x >= size.width - touchTargetPx
                     } else {
@@ -374,6 +395,7 @@ private fun ScrollBar(
                     }
                     if (!inStrip) return@awaitEachGesture
 
+                    // The hit area is the whole thumb rect, its 8dp / 16dp margins included.
                     val thumbRange = sliderAdapter.thumbPixelRange
                     val touchPos = if (isVertical) down.position.y else down.position.x
                     val adjustedTouchPos = touchPos - beforeTrackPaddingPx
@@ -383,7 +405,7 @@ private fun ScrollBar(
 
                     isDragging = true
                     opacity = 1f
-                    hideJob?.cancel()
+                    fadeOut.cancel()
                     down.consume()
 
                     sliderAdapter.onDragStarted()
@@ -400,8 +422,8 @@ private fun ScrollBar(
                 if (containerSize == 0 || opacity <= 0f) return@drawBehind
                 if (sliderAdapter.thumbSize >= sliderAdapter.trackSize) return@drawBehind
 
-                val thumbWidthPx = animatedThumbWidthPx
-                val endPaddingPx = animatedEndPaddingPx
+                val thumbWidthPx = currentThumbWidth.toPx()
+                val endPaddingPx = currentEndPadding.toPx()
                 val cornerRadiusPx = if (cornerRadius == Dp.Unspecified) thumbWidthPx / 2 else cornerRadius.toPx()
                 val cr = CornerRadius(cornerRadiusPx)
 
@@ -424,29 +446,15 @@ private fun ScrollBar(
                     }
                 }
 
-                val targetThumbLength = sliderAdapter.thumbSize.toFloat()
-                if (displayedThumbLength == 0f) {
-                    displayedThumbLength = targetThumbLength
-                } else if (abs(targetThumbLength - displayedThumbLength) >= 1f) {
-                    if (thumbLengthAnimJob?.isActive != true) {
-                        val startValue = displayedThumbLength
-                        thumbLengthAnimJob = coroutineScope.launch {
-                            animate(
-                                initialValue = startValue,
-                                targetValue = targetThumbLength,
-                                animationSpec = tween(durationMillis = 150),
-                            ) { value, _ ->
-                                displayedThumbLength = value
-                            }
-                        }
-                    }
-                } else {
-                    displayedThumbLength = targetThumbLength
-                }
-
-                val color = baseThumbColor.copy(alpha = animatedThumbAlpha * opacity)
-                val thumbLength = displayedThumbLength
-                val thumbOffset = beforeTrackPaddingPx + sliderAdapter.position.toFloat()
+                // COUI has no length animation: the rect follows the extent directly, and the
+                // visible thumb sits inside it, 8dp from its start and 16dp from its end.
+                val marginStartPx = ScrollBarDefaults.ThumbMarginStart.toPx()
+                val marginEndPx = ScrollBarDefaults.ThumbMarginEnd.toPx()
+                val rectLength = sliderAdapter.thumbSize.toFloat()
+                val thumbLength = (rectLength - marginStartPx - marginEndPx).coerceAtLeast(0f)
+                if (thumbLength <= 0f) return@drawBehind
+                val thumbOffset = beforeTrackPaddingPx + sliderAdapter.position.toFloat() + marginStartPx
+                val color = thumbColor.copy(alpha = thumbColor.alpha * opacity)
 
                 if (isVertical) {
                     drawRoundRect(
@@ -466,6 +474,37 @@ private fun ScrollBar(
             },
         measurePolicy = measurePolicy,
     )
+}
+
+/**
+ * The COUIScrollBar fade: after a delay the thumb alpha runs linearly from opaque to transparent
+ * over [ScrollBarDefaults.FadeDurationMillis] (the scroll cache keyframe interpolator).
+ */
+@OptIn(ExperimentalScrollBarApi::class)
+private class ScrollBarFadeOut(
+    private val scope: CoroutineScope,
+    private val setOpacity: (Float) -> Unit,
+) {
+    private var job: Job? = null
+
+    fun schedule(delayMillis: Int) {
+        job?.cancel()
+        job = scope.launch {
+            delay(delayMillis.toLong())
+            animate(
+                initialValue = 1f,
+                targetValue = 0f,
+                animationSpec = tween(ScrollBarDefaults.FadeDurationMillis, easing = LinearEasing),
+            ) { value, _ ->
+                setOpacity(value)
+            }
+        }
+    }
+
+    fun cancel() {
+        job?.cancel()
+        job = null
+    }
 }
 
 private fun verticalMeasurePolicy(
@@ -498,12 +537,14 @@ private fun horizontalMeasurePolicy(
 @Stable
 private class SliderAdapter(
     val adapter: ScrollBarAdapter,
-    var trackSize: Int,
+    trackSize: Int,
     private val minThumbSize: Float,
     private val reverseLayout: Boolean,
     private val isVertical: Boolean,
     private val coroutineScope: CoroutineScope,
 ) {
+    // State-backed so a draw that ran before the track was measured is redone once it is.
+    var trackSize by mutableIntStateOf(trackSize)
 
     private val contentSize get() = adapter.contentSize
 
