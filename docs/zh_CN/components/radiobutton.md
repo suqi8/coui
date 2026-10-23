@@ -85,7 +85,7 @@ RadioButtonDefaults 对象提供了 RadioButton 组件的默认颜色配置。
 
 按压时单选按钮不缩小。COUI 中独立的单选按钮使用框架 `Widget.Material.CompoundButton.RadioButton` 样式，其背景为无边界的平台水波纹，因此可交互的 `RadioButton` 会在中心绘制该水波纹半径（17dp，即 24dp 方框对角线的一半）的圆形 `press` 高亮。该框架样式不在 COUI APK 中，此半径与颜色为最接近的近似值而非实测值。若外层行负责点击（如 `RadioButtonPreference`），请传入 `onClick = null`。
 
-只有启用时切换才播放 COUI 动画；禁用的单选按钮直接跳到新状态。
+只有启用时切换才播放 COUI 动画；禁用的单选按钮直接跳到新状态。与 COUI 使用的框架单选按钮一致，不播放振动；COUI 的单选/标记偏好行同样没有振动。
 
 ## 进阶用法
 

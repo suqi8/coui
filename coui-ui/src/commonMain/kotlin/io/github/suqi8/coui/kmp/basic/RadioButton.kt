@@ -27,8 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
@@ -66,8 +64,6 @@ fun RadioButton(
     enabled: Boolean = true,
 ) {
     val currentOnClickState = rememberUpdatedState(onClick)
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
 
     val transition = updateTransition(selected, label = "RadioButtonTransition")
 
@@ -161,12 +157,8 @@ fun RadioButton(
     val finalModifier = if (onClick != null) {
         Modifier.selectable(
             selected = selected,
-            onClick = {
-                currentOnClickState.value?.invoke()
-                currentHapticFeedback.performHapticFeedback(
-                    if (selected) HapticFeedbackType.ToggleOff else HapticFeedbackType.ToggleOn,
-                )
-            },
+            // The framework / AppCompat RadioButton COUI themes plays no haptic feedback.
+            onClick = { currentOnClickState.value?.invoke() },
             enabled = enabled,
             role = Role.RadioButton,
             interactionSource = null,

@@ -85,7 +85,7 @@ Default colors follow COUI 17 (`coui_btn_radio_*.xml`): the ring is `onSurfaceVa
 
 The radio button never shrinks on press. COUI themes a standalone radio button through the framework `Widget.Material.CompoundButton.RadioButton` style, whose background is the borderless platform ripple, so an interactive `RadioButton` shows a centered circular `press` highlight with that ripple's radius (17dp, half the 24dp box diagonal). The framework style is not shipped in the COUI APK, so this radius and color are the closest approximation rather than a measured value. Pass `onClick = null` when a surrounding row handles the click, as `RadioButtonPreference` does.
 
-Toggling replays the COUI animation only while enabled; a disabled radio button jumps to its new state.
+Toggling replays the COUI animation only while enabled; a disabled radio button jumps to its new state. Like the framework radio button COUI themes, it plays no haptic feedback, and neither do the COUI radio / mark preference rows.
 
 ## Advanced Usage
 
