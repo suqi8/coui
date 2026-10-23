@@ -89,8 +89,7 @@ class FloatingNavigationBarTest {
         val before = onNodeWithTag("item0").getBoundsInRoot().left
         mainClock.autoAdvance = false
         count = 3
-        mainClock.advanceTimeByFrame()
-        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeBy(120)
         val during = onNodeWithTag("item0").getBoundsInRoot().left
         mainClock.advanceTimeBy(3000)
         val after = onNodeWithTag("item0").getBoundsInRoot().left
@@ -266,6 +265,33 @@ class FloatingNavigationBarTest {
         val hidden = onNodeWithTag("classic").getBoundsInRoot()
         assertTrue(half.bottom - half.top in 1.dp..(shown.bottom - shown.top), "hiding shrinks the layout gradually: ${half.bottom - half.top}")
         assertClose(0.dp, hidden.bottom - hidden.top, "hidden height")
+    }
+
+    @Test
+    fun addingItemsKeepsTheExistingItemsInPlaceAndEasesThemOver() = runComposeUiTest {
+        var count by mutableIntStateOf(3)
+        setBar(selected = { 0 }, onClick = {}, count = { count }, largeIcon = 2)
+        mainClock.advanceTimeBy(1000)
+        mainClock.autoAdvance = false
+        // 3 -> 4 grows the capsule; 4 -> 5 no longer fits and shrinks every item instead.
+        for (target in listOf(4, 5, 4, 3)) {
+            val before = (0 until minOf(count, target)).map { onNodeWithTag("item$it").getBoundsInRoot() }
+            count = target
+            mainClock.advanceTimeByFrame()
+            mainClock.advanceTimeByFrame()
+            before.forEachIndexed { index, old ->
+                val now = onNodeWithTag("item$index").getBoundsInRoot()
+                val oldCenter = (old.left + old.right) / 2
+                val newCenter = (now.left + now.right) / 2
+                assertTrue(
+                    abs((newCenter - oldCenter).value) < 6f,
+                    "item $index must not jump when the count goes to $target: $oldCenter -> $newCenter",
+                )
+            }
+            mainClock.advanceTimeBy(3000)
+        }
+        // Back at 3 items: the 250dp capsule centred in 368dp.
+        assertClose(87.dp, onNodeWithTag("item0").getBoundsInRoot().left, "settled item 0")
     }
 
     private fun ComposeUiTest.setBar(

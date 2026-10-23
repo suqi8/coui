@@ -419,6 +419,13 @@ private fun FloatingNavigationBarCapsule(
     content: @Composable () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val reorderToken = state.reorderToken
+    LaunchedEffect(reorderToken) {
+        if (!state.reorderPending) return@LaunchedEffect
+        state.reorderProgress.snapTo(0f)
+        state.reorderPending = false
+        state.reorderProgress.animateTo(1f, ReorderSpring)
+    }
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     val dividerColor = COUITheme.colorScheme.dividerLine
@@ -592,6 +599,21 @@ private fun FloatingNavigationBarCapsule(
         handles.forEach { handle -> if (handle != null && handle.itemWidth != geometry.itemWidth) handle.itemWidth = geometry.itemWidth }
         val placeables = itemMeasurables.map { it.measure(Constraints.fixed(geometry.itemWidth, itemHeight)) }
         state.items = handles
+        // An item count change: COUI rebuilds every item view and lets them jump to the spread of
+        // the new count inside the old width. Items here keep their identity, so each one starts
+        // from where it was drawn and eases onto that spread with the bounds spring instead.
+        if (state.lastItemCount >= 0 && handles.size != state.lastItemCount) {
+            handles.forEachIndexed { index, handle ->
+                if (handle != null) {
+                    val newCenter = geometry.itemCenter(index, width.toFloat())
+                    handle.reorderOffset = if (handle.lastCenter.isNaN()) 0f else handle.lastCenter - newCenter
+                }
+            }
+            state.reorderPending = true
+            state.reorderToken++
+        }
+        state.lastItemCount = handles.size
+        val reorderRemaining = if (state.reorderPending) 1f else 1f - state.reorderProgress.value
         val rtl = layoutDirection == LayoutDirection.Rtl
         val largeIconSize = FloatingNavigationBarDefaults.LargeIconSize.roundToPx()
         val largeIconOverflow = FloatingNavigationBarDefaults.LargeIconOverflow.roundToPx()
@@ -602,7 +624,9 @@ private fun FloatingNavigationBarCapsule(
             val largeBounds = ArrayList<Rect?>(placeables.size)
             placeables.forEachIndexed { index, placeable ->
                 // doWidthChangeAnim: items keep their final width, their centres follow the drawn width.
-                val center = geometry.itemCenter(index, width.toFloat())
+                val handle = handles[index]
+                val center = geometry.itemCenter(index, width.toFloat()) + (handle?.reorderOffset ?: 0f) * reorderRemaining
+                handle?.lastCenter = center
                 val x = (center - geometry.itemWidth / 2f).roundToInt()
                 placeable.placeRelative(x, top)
                 val left = if (rtl) width - x - geometry.itemWidth else x
@@ -1020,6 +1044,9 @@ private const val FONT_PADDING_TOP_EM = (2163f - 1900f) / 2048f
 /** The melt-ball bounds springs (`HIGH_END_HORIZONTAL_MOVE` / `WIDTH_CHANGE` / `EXPANSION_VIEW_TRANSLATION_X`). */
 private val BoundsSpring = TouchMotion.spring(response = 0.55f, bounce = 0.35f, visibilityThreshold = 0.5f)
 
+/** [BoundsSpring] on a 0..1 progress, carrying the items from their old places on a count change. */
+private val ReorderSpring = TouchMotion.spring(response = 0.55f, bounce = 0.35f, visibilityThreshold = 0.001f)
+
 private const val CAPSULE_LAYOUT_ID = "floatingNavigationBarCapsule"
 private const val EXPANSION_LAYOUT_ID = "floatingNavigationBarExpansion"
 private const val LARGE_ICON_LAYOUT_ID = "floatingNavigationBarLargeIcon"
@@ -1192,6 +1219,12 @@ internal class FloatingNavigationItemHandle {
 
     /** The item width the capsule measures it at, written by the measure pass. */
     var itemWidth by mutableIntStateOf(0)
+
+    /** The centre the item was last drawn at, from the capsule start; NaN before its first placement. */
+    var lastCenter = Float.NaN
+
+    /** How far the item was drawn from its new spread when the item count changed. */
+    var reorderOffset = 0f
 }
 
 /** The label cross-fade widths of a [FloatingNavigationBarItem] (`mMaxTitleWidth` / `mMinTitleWidth`). */
@@ -1235,6 +1268,18 @@ internal class FloatingNavigationBarState {
 
     /** Whether the bounds springs hold a value yet. */
     var initialized by mutableStateOf(false)
+
+    /** The item count of the previous measure pass; -1 before the first. */
+    var lastItemCount = -1
+
+    /** Bumped on every item count change; the capsule restarts [reorderProgress] on it. */
+    var reorderToken by mutableIntStateOf(0)
+
+    /** Whether a count change waits for [reorderProgress] to restart (the items hold their offsets). */
+    var reorderPending = false
+
+    /** How far the items have eased from their old places onto the new spread, 0 to 1. */
+    val reorderProgress = Animatable(1f, visibilityThreshold = 0.001f)
 
     val menuLeft = Animatable(0f, visibilityThreshold = 0.5f)
     val menuWidth = Animatable(0f, visibilityThreshold = 0.5f)
