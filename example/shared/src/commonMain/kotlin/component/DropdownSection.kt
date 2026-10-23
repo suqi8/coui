@@ -13,20 +13,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Badge
+import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Edit
 import io.github.suqi8.coui.kmp.icon.extended.Sort
 import io.github.suqi8.coui.kmp.menu.OverlayDropdownMenu
 import io.github.suqi8.coui.kmp.menu.WindowDropdownMenu
+import io.github.suqi8.coui.kmp.overlay.OverlayCascadingListPopup
+import io.github.suqi8.coui.kmp.popup.OverlayDropdownPopup
 import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import io.github.suqi8.coui.kmp.preference.WindowDropdownPreference
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import utils.panelBlur
 
 fun LazyListScope.dropdownSection() {
     item(key = "dropdown") {
@@ -202,6 +209,7 @@ fun LazyListScope.dropdownSection() {
         }
 
         DropdownItemVariants()
+        PopupMotionAndMaterial()
     }
 }
 
@@ -336,15 +344,100 @@ private fun DropdownItemVariants() {
         OverlayDropdownMenu(
             entries = headerEntries,
             title = "Group headers (O)",
-            summary = "Non-clickable 32dp header rows",
+            summary = "Non-clickable header rows",
             collapseOnSelection = false,
         )
         HorizontalDivider(Modifier.padding(horizontal = 16.dp))
         WindowDropdownMenu(
             entries = headerEntries,
             title = "Group headers (W)",
-            summary = "Headers plus group dividers",
+            summary = "Headers plus 12dp group dividers",
             collapseOnSelection = false,
+        )
+    }
+}
+
+/**
+ * The COUI 17 popup behaviours worth trying by hand: a sub menu (covering the main menu on a
+ * compact window, beside it on a wide one), a long-press on a sub-menu row, and the opt-in blurred
+ * popup with its shadow-edge stroke and touch spotlight.
+ */
+@Composable
+private fun PopupMotionAndMaterial() {
+    var cascadeShown by remember { mutableStateOf(false) }
+    var blurShown by remember { mutableStateOf(false) }
+    var sortIndex by remember { mutableIntStateOf(0) }
+    var blurIndex by remember { mutableIntStateOf(0) }
+
+    val cascadeEntries = remember(sortIndex) {
+        listOf(
+            DropdownEntry(
+                items = listOf(
+                    DropdownItem(text = "New folder"),
+                    DropdownItem(
+                        text = "Sort by",
+                        summary = listOf("Name", "Date", "Size")[sortIndex],
+                        children = listOf("Name", "Date", "Size").mapIndexed { index, text ->
+                            DropdownItem(text = text, selected = sortIndex == index, onClick = { sortIndex = index })
+                        },
+                    ),
+                    DropdownItem(
+                        text = "View",
+                        children = listOf(DropdownItem(text = "List"), DropdownItem(text = "Grid")),
+                    ),
+                ),
+            ),
+            DropdownEntry(items = listOf(DropdownItem(text = "Delete", alert = true))),
+        )
+    }
+    val blurEntry = remember(blurIndex) {
+        DropdownEntry(
+            items = listOf("Follow system", "Light", "Dark").mapIndexed { index, text ->
+                DropdownItem(text = text, selected = blurIndex == index, onClick = { blurIndex = index })
+            },
+        )
+    }
+    val blur = panelBlur(MaterialBlurDefaults::popup)
+
+    SmallTitle(text = "Popup Motion and Material")
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
+    ) {
+        BasicComponent(
+            title = "Sub menus",
+            summary = "Tap or hold \"Sort by\"; drag across rows",
+            onClick = { cascadeShown = true },
+            holdDownState = cascadeShown,
+            endActions = {
+                OverlayCascadingListPopup(
+                    show = cascadeShown,
+                    entries = cascadeEntries,
+                    onDismissRequest = { cascadeShown = false },
+                )
+            },
+        )
+        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+        BasicComponent(
+            title = "Blurred popup",
+            summary = if (blur != null) "160px glow-overlay blur, stroke and spotlight" else "Turn on blur to see the material",
+            onClick = { blurShown = true },
+            holdDownState = blurShown,
+            endActions = {
+                OverlayDropdownPopup(
+                    entry = blurEntry,
+                    show = blurShown,
+                    onDismiss = { blurShown = false },
+                    onDismissFinished = {},
+                    maxHeight = null,
+                    dropdownColors = DropdownDefaults.dropdownColors(),
+                    renderInRootScaffold = true,
+                    backgroundModifier = blur?.backgroundModifier ?: Modifier,
+                    backgroundColor = blur?.backgroundColor ?: ListPopupDefaults.backgroundColor(),
+                    materialEffect = blur != null,
+                )
+            },
         )
     }
 }
