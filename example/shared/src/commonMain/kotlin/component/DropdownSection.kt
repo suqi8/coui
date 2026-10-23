@@ -417,7 +417,7 @@ private fun PopupMotionAndMaterial() {
     ) {
         BasicComponent(
             title = "Sub menus",
-            summary = "Tap or hold \"Sort by\"; drag across rows",
+            summary = "Hold \"Sort by\", then slide into the sub menu; drag across the icons",
             onClick = { cascadeShown = true },
             holdDownState = cascadeShown,
             endActions = {
