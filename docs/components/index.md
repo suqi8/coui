@@ -21,6 +21,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [NavigationBar](../components/navigationbar)               | Bottom navigation component                | Main page switching                   |
 | [NavigationRail](../components/navigationrail)             | Side navigation component                  | Main page switching (Large screen)    |
 | [TabRow](../components/tabrow)                             | Horizontal tab bar                         | Content category browsing             |
+| [SegmentButton](../components/segmentbutton)               | Segmented control with a sliding indicator | Switching between a few views, filters |
 | [BreadcrumbBar](../components/breadcrumbbar)               | Horizontal breadcrumb navigation bar         | File path navigation, location trail   |
 | [Card](../components/card)                                 | Container with related information         | Information display, content grouping |
 | [BasicComponent](../components/basiccomponent)             | Universal base component                   | Custom component development          |
@@ -28,6 +29,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [LoadingButton](../components/loadingbutton)               | Text button with a built-in loading state  | Asynchronous action submission        |
 | [IconButton](../components/iconbutton)                     | Icon button component                      | Auxiliary actions, toolbars           |
 | [Chip](../components/chip)                                 | Checkable capsule filter tag               | Content filtering, tag selection      |
+| [ChipTab](../components/chiptab)                           | Chip-style single-selection tabs           | Page filtering, category switching    |
 | [Text](../components/text)                                 | Display text content with various styles   | Titles, body text, descriptive text   |
 | [SmallTitle](../components/smalltitle)                     | Small title component                      | Auxiliary titles, category labels     |
 | [TextField](../components/textfield)                       | Receives user text input                   | Form filling, search boxes            |
@@ -37,6 +39,7 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [Checkbox](../components/checkbox)                         | Multiple selection control                 | Multiple choices, terms agreement     |
 | [RadioButton](../components/radiobutton)                   | Single selection control                   | Exclusive choices, option selection   |
 | [Slider](../components/slider)                             | Sliding control for value adjustment       | Volume control, range selection       |
+| [IntentSlider](../components/intentslider)                 | Slim media progress bar with buffering     | Video/music playback progress         |
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |
 | [TimePicker](../components/timepicker)                     | Time wheel picker (hour / minute)          | Time selection, alarms                |

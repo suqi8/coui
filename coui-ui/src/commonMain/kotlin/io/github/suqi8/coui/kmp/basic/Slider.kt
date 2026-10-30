@@ -1340,7 +1340,7 @@ private fun RangeSliderTrack(
  * cross-axis move hands the gesture to a scrolling parent. [onRelease] receives the lift position
  * when the pointer never left the touch slop (a tap), or null otherwise.
  */
-private suspend fun PointerInputScope.detectSliderPress(
+internal suspend fun PointerInputScope.detectSliderPress(
     orientation: Orientation,
     onPress: (position: Offset, uptimeMillis: Long) -> Unit,
     onMove: (position: Offset, uptimeMillis: Long) -> Unit,
@@ -1381,7 +1381,7 @@ private suspend fun PointerInputScope.detectSliderPress(
  * end of the [trackLength] pixel track. [onStep] receives the visual fraction and velocity of
  * every frame.
  */
-private suspend fun flingSliderTrack(
+internal suspend fun flingSliderTrack(
     startFraction: Float,
     velocity: Float,
     trackLength: Float,
@@ -1919,7 +1919,7 @@ private fun gaussianCdf(x: Float): Float {
  * Draws the slider thumb as a circle with a soft drop shadow (COUISeekBar.drawThumb);
  * the shadow is skipped when the slider is disabled.
  */
-private fun DrawScope.drawThumbWithShadow(
+internal fun DrawScope.drawThumbWithShadow(
     center: Offset,
     radius: Float,
     thumbColor: Color,

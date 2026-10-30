@@ -21,6 +21,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [NavigationBar](../components/navigationbar)               | 底部导航组件           | 主要页面切换         |
 | [NavigationRail](../components/navigationrail)             | 侧边导航组件           | 主要页面切换（大屏）  |
 | [TabRow](../components/tabrow)                             | 水平标签页切换栏       | 内容分类浏览         |
+| [SegmentButton](../components/segmentbutton)               | 带滑动指示器的分段控件 | 少量视图或筛选切换   |
 | [BreadcrumbBar](../components/breadcrumbbar)               | 水平面包屑导航栏       | 文件路径导航、位置轨迹 |
 | [Card](../components/card)                                 | 包含相关信息的容器     | 信息展示、内容分组   |
 | [BasicComponent](../components/basiccomponent)             | 通用基础组件           | 自定义组件开发       |
@@ -28,6 +29,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [LoadingButton](../components/loadingbutton)               | 内置加载状态的文本按钮 | 异步操作提交         |
 | [IconButton](../components/iconbutton)                     | 图标按钮组件           | 辅助操作、工具栏     |
 | [Chip](../components/chip)                                 | 可选中的胶囊筛选标签   | 内容筛选、标签选择   |
+| [ChipTab](../components/chiptab)                           | 胶囊式单选标签         | 页面筛选、分类切换   |
 | [Text](../components/text)                                 | 展示各种样式的文字内容 | 标题、正文、描述文本 |
 | [SmallTitle](../components/smalltitle)                     | 小型标题组件           | 辅助标题、分类标识   |
 | [TextField](../components/textfield)                       | 接收用户文本输入       | 表单填写、搜索框     |
@@ -37,6 +39,7 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [Checkbox](../components/checkbox)                         | 多选控件               | 多项选择、条款同意   |
 | [RadioButton](../components/radiobutton)                   | 单选控件               | 单项选择、选项切换   |
 | [Slider](../components/slider)                             | 调节值的滑动控件       | 音量调节、范围选择   |
+| [IntentSlider](../components/intentslider)                 | 带缓冲进度的细长媒体进度条 | 视频/音乐播放进度    |
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [DatePicker](../components/datepicker)                     | 日期滚轮选择器（年/月/日） | 日期选择、表单       |
 | [TimePicker](../components/timepicker)                     | 时间滚轮选择器（时/分） | 时间选择、闹钟       |

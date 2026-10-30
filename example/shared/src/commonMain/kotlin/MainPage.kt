@@ -36,6 +36,7 @@ import component.buttonSection
 import component.cardSection
 import component.checkboxSection
 import component.chipSection
+import component.chipTabSection
 import component.colorPickerSection
 import component.dateTimePickerSection
 import component.dialogSection
@@ -43,6 +44,7 @@ import component.dropdownSection
 import component.fullPageStatementSection
 import component.inputViewSection
 import component.installLoadProgressSection
+import component.intentSliderSection
 import component.listPreferenceSection
 import component.navigationBarSection
 import component.numberPickerSection
@@ -50,6 +52,7 @@ import component.otherPageSection
 import component.preferenceExtrasSection
 import component.progressIndicatorSection
 import component.radioButtonSection
+import component.segmentButtonSection
 import component.sliderSection
 import component.snackbarSection
 import component.spinnerSection
@@ -358,7 +361,9 @@ fun MainPage(
                     textFieldSection()
                     inputViewSection()
                     sliderSection()
+                    intentSliderSection()
                     tabRowSection()
+                    segmentButtonSection()
                     navigationBarSection()
                     breadcrumbBarSection()
                     tooltipSection()
@@ -367,6 +372,7 @@ fun MainPage(
                     colorPickerSection()
                     cardSection()
                     chipSection()
+                    chipTabSection()
                     badgeSection()
                     preferenceExtrasSection()
                     listPreferenceSection()
