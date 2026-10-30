@@ -122,13 +122,13 @@ In a `FloatingNavigationBar`, sliding a finger across the capsule selects the it
 | Property Name              | Type                     | Description                             | Default Value                           | Required |
 | -------------------------- | ------------------------ | --------------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                 | Modifier applied to the bar's full-width container | Modifier                     | No       |
-| backgroundModifier         | Modifier                 | Applied inside the capsule clip, above `color` and below the items: the slot for the bottom-bar backdrop blur | Modifier | No |
+| backgroundModifier         | Modifier                 | Applied inside the capsule clip, above `color` and below the items: the slot for a custom background | Modifier | No |
 | visible                    | Boolean                  | Whether the capsule is shown; changes run the COUI 17 show / hide springs, a hidden bar keeps its space but takes no touches | true | No |
 | expansionVisible           | Boolean                  | Whether `expansion` is shown beside the capsule | true                           | No       |
-| materialEffect             | Boolean                  | Draw the COUI 17 edge lighting, inner shadow, touch spotlight, hide blur and the metaball merge with `expansion` | true   | No       |
+| materialEffect             | Boolean                  | Draw the COUI 17 edge lighting, inner shadow, touch spotlight, hide blur, the metaball merge with `expansion` and, with a `LocalMaterialBackdrop` provider, the backdrop blur | true   | No       |
 | showDivider                | Boolean                  | Show a thin divider ring around the capsule (not part of COUI 17) | false        | No       |
 | defaultWindowInsetsPadding | Boolean                  | Keep the capsule above the navigation and caption bars | true                    | No       |
-| color                      | Color                    | Capsule fill; pass `Color.Transparent` when `backgroundModifier` paints a blur | FloatingNavigationBarDefaults.color() | No |
+| color                      | Color                    | Capsule fill; replaced by the backdrop blur when a `LocalMaterialBackdrop` provider is present | FloatingNavigationBarDefaults.color() | No |
 | cornerRadius               | Dp                       | Corner radius of the capsule; the default rounds it fully into the COUI 17 soft capsule, a smaller radius is drawn at `default_g2_weight` 2.45 | FloatingNavigationBarDefaults.CornerRadius | No       |
 | horizontalAlignment        | Alignment.Horizontal     | Horizontal alignment of the capsule while no `expansion` is shown; with it, COUI's placement applies (compact: capsule at the start, expansion at the end; wide: the pair centred) | CenterHorizontally | No |
 | horizontalOutSidePadding   | Dp                       | Minimum distance between the capsule and the bar's sides | FloatingNavigationBarDefaults.HorizontalOutSidePadding | No       |
@@ -329,18 +329,13 @@ FloatingNavigationBar(
 
 #### Bottom-Bar Material Blur
 
-COUI 17 fills the capsule with the framework bottom-bar material, a 25px backdrop blur with two blended color layers. coui-ui has no backdrop capture of its own, so hand the blur in through `backgroundModifier` (for example from a `MaterialBackdropProvider` built on coui-blur `couiViewBlur`) and make the fill transparent:
+COUI 17 fills the capsule with the framework bottom-bar material, a 25px backdrop blur with two blended color layers. coui-ui has no backdrop capture of its own: provide a `MaterialBackdropProvider` (for example one built on coui-blur `couiViewBlur`) through `LocalMaterialBackdrop`, and with `materialEffect` on the capsule draws `FloatingNavigationBarDefaults.backdropSpec` in place of `color`:
 
 ```kotlin
-val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-FloatingNavigationBar(
-    color = Color.Transparent,
-    backgroundModifier = backdropProvider.materialBackdrop(
-        spec = FloatingNavigationBarDefaults.backdropSpec(isDark),
-        shape = RoundedCornerShape(FloatingNavigationBarDefaults.CornerRadius),
-    ),
-) {
-    // ... items ...
+CompositionLocalProvider(LocalMaterialBackdrop provides backdropProvider) {
+    FloatingNavigationBar {
+        // ... items ...
+    }
 }
 ```
 

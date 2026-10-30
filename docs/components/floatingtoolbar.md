@@ -47,6 +47,7 @@ Scaffold(
 | -------------------------- | ---------------------- | -------------------------------------- | -------------------------------------- | -------- |
 | modifier                   | Modifier               | Modifier applied to the toolbar        | Modifier                               | No       |
 | visible                    | Boolean                | Whether the toolbar is shown; changes run the COUI 17 scale-in / scale-out springs | true | No       |
+| materialEffect             | Boolean                | Use the COUI 17 bottom-bar material: with a `LocalMaterialBackdrop` provider the backdrop blur replaces `color` | true | No       |
 | color                      | Color                  | Background color of the toolbar        | FloatingToolbarDefaults.defaultColor() | No       |
 | cornerRadius               | Dp                     | Corner radius of the toolbar           | FloatingToolbarDefaults.CornerRadius   | No       |
 | outSidePadding             | PaddingValues          | Padding outside the toolbar            | FloatingToolbarDefaults.OutSidePadding | No       |
@@ -60,6 +61,7 @@ Scaffold(
 | -------------- | ----------------------- | ------------------------ | --------------------------------------- |
 | CornerRadius   | Dp                      | Default corner radius (half the 44dp height, drawn as the weight-1.0 soft capsule; a radius below half the height takes `default_g2_weight` 2.45) | 22.dp                                   |
 | defaultColor() | @Composable () -> Color | Default background color | COUITheme.colorScheme.surfaceContainer |
+| backdropSpec(isDark) | MaterialBackdropSpec | The COUI 17 bottom-bar material `TYPE_FRAMEWORK_BOTTOM_BAR`, the same as `FloatingNavigationBarDefaults.backdropSpec` | 25px blur + two blended layers |
 | OutSidePadding | PaddingValues           | Default outside padding  | PaddingValues(12.dp, 8.dp)              |
 
 ### ToolbarPosition (for Scaffold)
@@ -154,5 +156,17 @@ var showToolbar by remember { mutableStateOf(true) }
 
 FloatingToolbar(visible = showToolbar) {
     // toolbar content
+}
+```
+
+### Bottom-Bar Material Blur
+
+COUI 17 draws the toolbar with the framework bottom-bar material, a 25px backdrop blur with two blended color layers, over a transparent background. coui-ui has no backdrop capture of its own: provide a `MaterialBackdropProvider` through `LocalMaterialBackdrop`, and with `materialEffect` on the toolbar draws `FloatingToolbarDefaults.backdropSpec` in place of `color`. Without a provider it keeps `color`, COUI's non-blur fallback. The backdrop must record the page content, not the toolbar: keep the toolbar outside the recorded layer (for example in the `Scaffold` `floatingToolbar`).
+
+```kotlin
+CompositionLocalProvider(LocalMaterialBackdrop provides backdropProvider) {
+    FloatingToolbar {
+        // toolbar content
+    }
 }
 ```

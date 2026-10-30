@@ -122,13 +122,13 @@ Scaffold(
 | 属性名                     | 类型                      | 说明                               | 默认值                                  | 是否必须 |
 | -------------------------- | ------------------------- | ---------------------------------- | --------------------------------------- | -------- |
 | modifier                   | Modifier                  | 应用于导航栏整宽容器的修饰符       | Modifier                                | 否       |
-| backgroundModifier         | Modifier                  | 作用于胶囊裁剪内、`color` 之上、导航项之下：底栏背景模糊的位置 | Modifier | 否 |
+| backgroundModifier         | Modifier                  | 作用于胶囊裁剪内、`color` 之上、导航项之下：自定义背景的位置 | Modifier | 否 |
 | visible                    | Boolean                   | 是否显示胶囊；切换时运行 COUI 17 显示 / 隐藏弹簧，隐藏后保留占位但不响应触摸 | true | 否 |
 | expansionVisible           | Boolean                   | 是否在胶囊旁显示 `expansion`       | true                                    | 否       |
-| materialEffect             | Boolean                   | 是否绘制 COUI 17 描边光、内阴影、触摸聚光、隐藏模糊以及与 `expansion` 的融球效果 | true | 否       |
+| materialEffect             | Boolean                   | 是否绘制 COUI 17 描边光、内阴影、触摸聚光、隐藏模糊、与 `expansion` 的融球效果，以及有 `LocalMaterialBackdrop` 时的背景模糊 | true | 否       |
 | showDivider                | Boolean                   | 是否在胶囊周围绘制细分割线（非 COUI 17 样式） | false                   | 否       |
 | defaultWindowInsetsPadding | Boolean                   | 是否让胶囊避开导航栏与标题栏嵌入   | true                                    | 否       |
-| color                      | Color                     | 胶囊填充色；`backgroundModifier` 绘制模糊时传 `Color.Transparent` | FloatingNavigationBarDefaults.color() | 否 |
+| color                      | Color                     | 胶囊填充色；有 `LocalMaterialBackdrop` 时由背景模糊取代 | FloatingNavigationBarDefaults.color() | 否 |
 | cornerRadius               | Dp                        | 胶囊圆角半径；默认值使其全圆，按 COUI 17 软胶囊绘制，更小的半径按 `default_g2_weight` 2.45 绘制 | FloatingNavigationBarDefaults.CornerRadius | 否       |
 | horizontalAlignment        | Alignment.Horizontal      | 未显示 `expansion` 时胶囊的水平对齐方式；显示时按 COUI 布局（窄屏胶囊靠起始边、扩展视图靠末端，宽屏两者整体居中） | CenterHorizontally | 否 |
 | horizontalOutSidePadding   | Dp                        | 胶囊与导航栏两侧的最小距离         | FloatingNavigationBarDefaults.HorizontalOutSidePadding | 否       |
@@ -329,18 +329,13 @@ FloatingNavigationBar(
 
 #### 底栏材质模糊
 
-COUI 17 用框架底栏材质填充胶囊：25px 背景模糊叠加两层混合色。coui-ui 自身不采集背景，因此通过 `backgroundModifier` 传入模糊（例如基于 coui-blur `couiViewBlur` 的 `MaterialBackdropProvider`），并把填充色设为透明：
+COUI 17 用框架底栏材质填充胶囊：25px 背景模糊叠加两层混合色。coui-ui 自身不采集背景：通过 `LocalMaterialBackdrop` 提供一个 `MaterialBackdropProvider`（例如基于 coui-blur `couiViewBlur`），开启 `materialEffect` 时胶囊会用 `FloatingNavigationBarDefaults.backdropSpec` 取代 `color`：
 
 ```kotlin
-val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-FloatingNavigationBar(
-    color = Color.Transparent,
-    backgroundModifier = backdropProvider.materialBackdrop(
-        spec = FloatingNavigationBarDefaults.backdropSpec(isDark),
-        shape = RoundedCornerShape(FloatingNavigationBarDefaults.CornerRadius),
-    ),
-) {
-    // ... items ...
+CompositionLocalProvider(LocalMaterialBackdrop provides backdropProvider) {
+    FloatingNavigationBar {
+        // ... items ...
+    }
 }
 ```
 

@@ -14,13 +14,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.TouchMotion
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -36,6 +40,12 @@ import io.github.suqi8.coui.kmp.utils.layerOverflow
  *   `COUIBottomFloatingToolbar` menu view springs: it scales in about its centre (response 0.5,
  *   bounce 0.4) and scales out to nothing (response 0.25, bounce 0), shadow included. A hidden
  *   toolbar keeps its place in the layout but takes no touches and has no semantics.
+ * @param materialEffect Whether the COUI 17 bottom-bar material is used. ColorOS 17 draws the
+ *   toolbar with `TYPE_FRAMEWORK_BOTTOM_BAR` (a 25px backdrop blur, see
+ *   [FloatingToolbarDefaults.backdropSpec]) over a transparent background
+ *   (`COUIBottomFloatingToolbarMenuView.updateBlurEffect`). coui-ui has no backdrop capture of its
+ *   own: the blur is drawn only when a [LocalMaterialBackdrop] provider is present, and then it
+ *   replaces [color]. Without one the toolbar keeps [color], COUI's non-blur fallback.
  * @param color Background color of the [FloatingToolbar].
  * @param cornerRadius Corner radius of the [FloatingToolbar].
  * @param outSidePadding Padding outside the [FloatingToolbar].
@@ -47,6 +57,7 @@ import io.github.suqi8.coui.kmp.utils.layerOverflow
 fun FloatingToolbar(
     modifier: Modifier = Modifier,
     visible: Boolean = true,
+    materialEffect: Boolean = true,
     color: Color = FloatingToolbarDefaults.defaultColor(),
     cornerRadius: Dp = FloatingToolbarDefaults.CornerRadius,
     outSidePadding: PaddingValues = FloatingToolbarDefaults.OutSidePadding,
@@ -81,6 +92,18 @@ fun FloatingToolbar(
     val hasShadow = shadowElevation > 0.dp
     val shadowMod = if (hasShadow) Modifier.dropShadow(shape = shape, shadow = FloatingToolbarShadow) else Modifier
 
+    // updateBlurEffect: with the material the backdrop blur is the fill and the background turns
+    // transparent; without a backdrop the opaque fill stays.
+    val backdropProvider = if (materialEffect) LocalMaterialBackdrop.current else null
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val backdropModifier = if (backdropProvider != null) {
+        val spec = FloatingToolbarDefaults.backdropSpec(isDark)
+        val backdropShape = remember(cornerRadius) { SquircleShape(cornerRadius, COUIRoundCorner.UnspecifiedWeight) }
+        remember(backdropProvider, spec, backdropShape) { backdropProvider.materialBackdrop(spec, backdropShape) }
+    } else {
+        null
+    }
+
     Box(
         modifier = modifier
             .padding(outSidePadding)
@@ -111,7 +134,12 @@ fun FloatingToolbar(
             )
             .then(dividerMod)
             .then(shadowMod)
-            .squircleBackground(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight),
+            .then(backdropModifier ?: Modifier)
+            .squircleBackground(
+                color = if (backdropModifier != null) Color.Transparent else color,
+                cornerRadius = cornerRadius,
+                weight = COUIRoundCorner.UnspecifiedWeight,
+            ),
     ) {
         content()
     }
@@ -140,6 +168,14 @@ object FloatingToolbarDefaults {
      */
     @Composable
     fun defaultColor() = COUITheme.colorScheme.surfaceContainer
+
+    /**
+     * The COUI 17 material of the toolbar, `COUIMaterialBlurEffect.TYPE_FRAMEWORK_BOTTOM_BAR`, the
+     * same bottom-bar material as [FloatingNavigationBarDefaults.backdropSpec].
+     *
+     * @param isDark Whether the dark-scheme layers are used.
+     */
+    fun backdropSpec(isDark: Boolean): MaterialBackdropSpec = FloatingNavigationBarDefaults.backdropSpec(isDark)
 
     /**
      * Default padding outside the [FloatingToolbar].

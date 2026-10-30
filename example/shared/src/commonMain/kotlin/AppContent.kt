@@ -41,7 +41,6 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -78,7 +77,6 @@ import component.liquid.IosLiquidGlassNavigationBar
 import io.github.suqi8.coui.kmp.basic.FabPosition
 import io.github.suqi8.coui.kmp.basic.FloatingActionButton
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBar
-import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarDefaults
 import io.github.suqi8.coui.kmp.basic.FloatingNavigationBarItem
 import io.github.suqi8.coui.kmp.basic.FloatingToolbar
 import io.github.suqi8.coui.kmp.basic.Icon
@@ -101,6 +99,7 @@ import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.layerBackdrop
 import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import io.github.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Create
@@ -121,7 +120,6 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import navigation3.Navigator
 import navigation3.Route
-import ui.isInDarkTheme
 import utils.BlurredBar
 import utils.FPSMonitor
 import utils.LocalPageBackdrop
@@ -338,6 +336,7 @@ private fun WideScreenContent(
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
     val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val materialBackdrop = rememberMaterialBackdropProvider(backdrop)
     val page = mainPagerState.selectedPage
     Row {
         if (appState.showNavigationBar) {
@@ -367,15 +366,20 @@ private fun WideScreenContent(
                     WindowInsets.displayCutout.only(WindowInsetsSides.Start),
                 ),
             ),
+            // The FAB and the toolbar sit outside the page recording, so they can blur it.
             floatingActionButton = {
-                FloatingActionButton(show = appState.showFloatingActionButton)
+                CompositionLocalProvider(LocalMaterialBackdrop provides materialBackdrop) {
+                    FloatingActionButton(show = appState.showFloatingActionButton)
+                }
             },
             floatingActionButtonPosition = appState.floatingActionButtonPosition.toFabPosition(),
             floatingToolbar = {
-                FloatingToolbar(
-                    showFloatingToolbar = appState.showFloatingToolbar,
-                    floatingToolbarOrientation = appState.floatingToolbarOrientation,
-                )
+                CompositionLocalProvider(LocalMaterialBackdrop provides materialBackdrop) {
+                    FloatingToolbar(
+                        showFloatingToolbar = appState.showFloatingToolbar,
+                        floatingToolbarOrientation = appState.floatingToolbarOrientation,
+                    )
+                }
             },
             floatingToolbarPosition = appState.floatingToolbarPosition.toToolbarPosition(),
         ) { padding ->
@@ -411,6 +415,7 @@ private fun CompactScreenLayout(
         drawRect(surfaceColor)
         drawContent()
     }
+    val materialBackdrop = rememberMaterialBackdropProvider(backdrop)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -421,15 +426,20 @@ private fun CompactScreenLayout(
                 modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
             )
         },
+        // The FAB and the toolbar sit outside the page recording, so they can blur it.
         floatingActionButton = {
-            FloatingActionButton(show = appState.showFloatingActionButton)
+            CompositionLocalProvider(LocalMaterialBackdrop provides materialBackdrop) {
+                FloatingActionButton(show = appState.showFloatingActionButton)
+            }
         },
         floatingActionButtonPosition = appState.floatingActionButtonPosition.toFabPosition(),
         floatingToolbar = {
-            FloatingToolbar(
-                showFloatingToolbar = appState.showFloatingToolbar,
-                floatingToolbarOrientation = appState.floatingToolbarOrientation,
-            )
+            CompositionLocalProvider(LocalMaterialBackdrop provides materialBackdrop) {
+                FloatingToolbar(
+                    showFloatingToolbar = appState.showFloatingToolbar,
+                    floatingToolbarOrientation = appState.floatingToolbarOrientation,
+                )
+            }
         },
         floatingToolbarPosition = appState.floatingToolbarPosition.toToolbarPosition(),
         snackbarHost = {
@@ -547,28 +557,22 @@ private fun NavigationBar(
         if (appState.useFloatingNavigationBar && appState.floatingNavigationBarStyle != 1) {
             // COUI 17 bottom-bar material (TYPE_FRAMEWORK_BOTTOM_BAR, 25px): the page backdrop blurred
             // behind the capsule, or COUI's opaque ?couiColorBar when the blur is off.
-            val backdropProvider = rememberMaterialBackdropProvider(backdrop)
-            val isDark = isInDarkTheme()
-            val capsuleShape = remember { RoundedCornerShape(FloatingNavigationBarDefaults.CornerRadius) }
-            FloatingNavigationBar(
-                modifier = modifier,
-                // The COUI 17 show / hide springs replace the AnimatedVisibility of the classic bar.
-                visible = appState.showNavigationBar,
-                color = if (backdropProvider != null) Color.Transparent else FloatingNavigationBarDefaults.color(),
-                backgroundModifier = backdropProvider?.materialBackdrop(
-                    spec = FloatingNavigationBarDefaults.backdropSpec(isDark),
-                    shape = capsuleShape,
-                ) ?: Modifier,
-                horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
-                    .toAlignment(),
-            ) {
-                navigationItems.forEachIndexed { index, item ->
-                    FloatingNavigationBarItem(
-                        selected = page == index,
-                        onClick = { mainPagerState.animateToPage(index) },
-                        icon = item.icon,
-                        label = item.label,
-                    )
+            CompositionLocalProvider(LocalMaterialBackdrop provides rememberMaterialBackdropProvider(backdrop)) {
+                FloatingNavigationBar(
+                    modifier = modifier,
+                    // The COUI 17 show / hide springs replace the AnimatedVisibility of the classic bar.
+                    visible = appState.showNavigationBar,
+                    horizontalAlignment = FloatingNavigationBarAlignment.fromInt(appState.floatingNavigationBarPosition)
+                        .toAlignment(),
+                ) {
+                    navigationItems.forEachIndexed { index, item ->
+                        FloatingNavigationBarItem(
+                            selected = page == index,
+                            onClick = { mainPagerState.animateToPage(index) },
+                            icon = item.icon,
+                            label = item.label,
+                        )
+                    }
                 }
             }
         }
@@ -601,9 +605,10 @@ private fun FloatingToolbar(
     floatingToolbarOrientation: Int,
 ) {
     // The toolbar runs its own COUI 17 show / hide springs, which keep its shadow whole.
+    // The default fill is COUI's opaque fallback; the bottom-bar material replaces it when the page
+    // blur is on.
     FloatingToolbar(
         visible = showFloatingToolbar,
-        color = COUITheme.colorScheme.primary,
         cornerRadius = 20.dp,
     ) {
         // A size change without a clip or a fade: both would cut the icon buttons' shadows off.
@@ -611,7 +616,7 @@ private fun FloatingToolbar(
             targetState = floatingToolbarOrientation,
             transitionSpec = { (EnterTransition.None togetherWith ExitTransition.None).using(SizeTransform(clip = false)) },
         ) { orientation ->
-            val iconTint = COUITheme.colorScheme.onPrimary
+            val iconTint = COUITheme.colorScheme.onSurface
             val content = @Composable {
                 IconButton(onClick = { /* Action 1 */ }) {
                     Icon(

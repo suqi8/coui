@@ -85,6 +85,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
+import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.MaterialBackdropProvider
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
@@ -98,6 +100,7 @@ import io.github.suqi8.coui.kmp.effect.splitFrameworkStroke
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
@@ -127,9 +130,9 @@ import kotlin.math.roundToInt
  * - **Material**: COUI 17 draws the capsule with the framework bottom-bar material
  *   (`TYPE_FRAMEWORK_BOTTOM_BAR`, a 25px backdrop blur, see [FloatingNavigationBarDefaults.backdropSpec]),
  *   the `TYPE_FRAMEWORK_CAPSULE_3` edge lighting and inner shadow, and a `TYPE_OPAQUE_MEDIUM_2` touch
- *   spotlight. coui-ui has no backdrop capture of its own: pass the blur through [backgroundModifier]
- *   together with a transparent [color]. Without it the capsule keeps COUI's opaque `?couiColorBar`
- *   fallback. The edge lighting and spotlight need runtime shaders (Android 13+ and every Skia
+ *   spotlight. coui-ui has no backdrop capture of its own: the blur is drawn when a
+ *   [LocalMaterialBackdrop] provider is present, and then it replaces [color]. Without one the
+ *   capsule keeps COUI's opaque `?couiColorBar` fallback. The edge lighting and spotlight need runtime shaders (Android 13+ and every Skia
  *   target) and are skipped elsewhere.
  * - **Item changes**: when the items no longer fit or their count changes, the capsule width and
  *   position follow on springs (response 0.55, bounce 0.35) while the items spread with it, and each
@@ -145,16 +148,16 @@ import kotlin.math.roundToInt
  *
  * @param modifier The modifier applied to the bar's container (the full-width area holding the capsule).
  * @param backgroundModifier Applied inside the capsule clip, above [color] and below the items: the
- *   place for a backdrop blur such as [FloatingNavigationBarDefaults.backdropSpec].
+ *   place for a custom background. The COUI 17 backdrop blur comes from [LocalMaterialBackdrop].
  * @param visible Whether the capsule is shown. Changes animate with the COUI 17 show / hide springs.
  * @param expansionVisible Whether [expansion] is shown beside the capsule.
  * @param materialEffect Whether the COUI 17 material is drawn on the capsule: the edge lighting and
- *   inner shadow, the touch spotlight, the hide blur and the metaball merge with [expansion]. The
- *   fill itself is [color] + [backgroundModifier].
+ *   inner shadow, the touch spotlight, the hide blur, the metaball merge with [expansion] and, with
+ *   a [LocalMaterialBackdrop] provider, the backdrop blur.
  * @param showDivider Whether to draw a thin divider ring around the capsule (not part of COUI 17).
  * @param defaultWindowInsetsPadding Whether to keep the capsule above the navigation and caption bars.
- * @param color The capsule fill. Defaults to COUI's opaque `?couiColorBar`; pass [Color.Transparent]
- *   when [backgroundModifier] paints a backdrop blur.
+ * @param color The capsule fill. Defaults to COUI's opaque `?couiColorBar`; replaced by the backdrop
+ *   blur when a [LocalMaterialBackdrop] provider is present and [materialEffect] is on.
  * @param cornerRadius The corner radius. The default [FloatingNavigationBarDefaults.CornerRadius]
  *   rounds the bar fully into the COUI 17 soft capsule; a smaller radius is drawn at the ColorOS
  *   default smoothing weight.
@@ -190,6 +193,10 @@ fun FloatingNavigationBar(
     val state = remember { FloatingNavigationBarState() }
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val expansionActive = expansion != null && expansionVisible
+    // BaseBottomFloatingMenuView: with the material the backdrop blur is the fill and the
+    // background turns transparent; without a backdrop the opaque fill stays.
+    val backdropProvider = if (materialEffect) LocalMaterialBackdrop.current else null
+    val fill = if (backdropProvider != null) Color.Transparent else color
 
     // initNaviMenuAnim: the capsule bounds and the expansion slot follow their layout targets on
     // the melt-ball springs (doHorizontalMoveAnim / doWidthChangeAnim /
@@ -230,7 +237,7 @@ fun FloatingNavigationBar(
     val neckShaders = remember(materialEffect) {
         if (materialEffect && isRuntimeShaderSupported()) List(2) { RuntimeShader(SearchBarMetaballShader.Source) } else null
     }
-    val neckFilters = if (color.alpha < 1f) {
+    val neckFilters = if (fill.alpha < 1f) {
         val spec = FloatingNavigationBarDefaults.backdropSpec(isDark)
         listOf(spec.layer1 to spec.mode1, spec.layer2 to spec.mode2)
     } else {
@@ -284,9 +291,10 @@ fun FloatingNavigationBar(
                         visible = visible,
                         materialEffect = materialEffect,
                         showDivider = showDivider,
-                        color = color,
+                        color = fill,
                         cornerRadius = cornerRadius,
                         shadowElevation = shadowElevation,
+                        backdropProvider = backdropProvider,
                         backgroundModifier = backgroundModifier,
                         content = content,
                     )
@@ -422,6 +430,7 @@ private fun FloatingNavigationBarCapsule(
     color: Color,
     cornerRadius: Dp,
     shadowElevation: Dp,
+    backdropProvider: MaterialBackdropProvider?,
     backgroundModifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
@@ -480,6 +489,13 @@ private fun FloatingNavigationBarCapsule(
     val spotlight = remember { SpotLightState() }
     val stroke = if (isDark) FloatingNavigationBarStrokeDark else FloatingNavigationBarStrokeLight
     val spotType = SpotLightType.OpaqueMedium2
+    val backdropModifier = if (backdropProvider != null) {
+        val spec = FloatingNavigationBarDefaults.backdropSpec(isDark)
+        val backdropShape = remember(cornerRadius) { SquircleShape(cornerRadius, COUIRoundCorner.UnspecifiedWeight) }
+        remember(backdropProvider, spec, backdropShape) { backdropProvider.materialBackdrop(spec, backdropShape) }
+    } else {
+        Modifier
+    }
 
     Layout(
         content = {
@@ -496,6 +512,7 @@ private fun FloatingNavigationBarCapsule(
                             Modifier
                         },
                     )
+                    .then(backdropModifier)
                     .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
                     .then(backgroundModifier)
                     .then(
@@ -996,9 +1013,8 @@ object FloatingNavigationBarDefaults {
     /**
      * The COUI 17 bottom-bar material, `COUIMaterialBlurEffect.TYPE_FRAMEWORK_BOTTOM_BAR`: a 25px
      * backdrop blur, then `#B3666666` COLOR_DODGE + `#99F5F5F5` LUMINOSITY in the light scheme and
-     * `#80666666` OVERLAY + `#B3262626` LUMINOSITY in the dark one. Draw it through
-     * [FloatingNavigationBar]'s `backgroundModifier` (for example with a
-     * [io.github.suqi8.coui.kmp.effect.MaterialBackdropProvider]) and pass a transparent `color`.
+     * `#80666666` OVERLAY + `#B3262626` LUMINOSITY in the dark one. [FloatingNavigationBar] draws it
+     * through the [io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop] provider.
      *
      * @param isDark Whether the dark scheme is active.
      */

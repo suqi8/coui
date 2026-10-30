@@ -47,6 +47,7 @@ Scaffold(
 | -------------------------- | ---------------------- | -------------------------- | -------------------------------------- | -------- |
 | modifier                   | Modifier               | 应用于工具栏的修饰符       | Modifier                               | 否       |
 | visible                    | Boolean                | 是否显示工具栏；切换时运行 COUI 17 的缩放显示 / 隐藏弹簧 | true | 否       |
+| materialEffect             | Boolean                | 是否使用 COUI 17 底栏材质：有 `LocalMaterialBackdrop` 时由背景模糊取代 `color` | true | 否       |
 | color                      | Color                  | 工具栏背景颜色             | FloatingToolbarDefaults.defaultColor() | 否       |
 | cornerRadius               | Dp                     | 工具栏圆角半径             | FloatingToolbarDefaults.CornerRadius   | 否       |
 | outSidePadding             | PaddingValues          | 工具栏外部的内边距         | FloatingToolbarDefaults.OutSidePadding | 否       |
@@ -60,6 +61,7 @@ Scaffold(
 | -------------- | ----------------------- | -------------- | --------------------------------------- |
 | CornerRadius   | Dp                      | 默认圆角半径（44dp 高度的一半，按权重 1.0 软胶囊绘制；小于高度一半时按 `default_g2_weight` 2.45 绘制） | 22.dp                                   |
 | defaultColor() | @Composable () -> Color | 默认背景颜色   | COUITheme.colorScheme.surfaceContainer |
+| backdropSpec(isDark) | MaterialBackdropSpec | COUI 17 底栏材质 `TYPE_FRAMEWORK_BOTTOM_BAR`，与 `FloatingNavigationBarDefaults.backdropSpec` 相同 | 25px 模糊 + 两层混合色 |
 | OutSidePadding | PaddingValues           | 默认外部内边距 | PaddingValues(12.dp, 8.dp)              |
 
 ### ToolbarPosition (用于 Scaffold)
@@ -154,5 +156,17 @@ var showToolbar by remember { mutableStateOf(true) }
 
 FloatingToolbar(visible = showToolbar) {
     // 工具栏内容
+}
+```
+
+### 底栏材质模糊
+
+COUI 17 用框架底栏材质绘制工具栏：透明背景上叠 25px 背景模糊和两层混合色。coui-ui 自身不采集背景：通过 `LocalMaterialBackdrop` 提供 `MaterialBackdropProvider`，开启 `materialEffect` 时工具栏用 `FloatingToolbarDefaults.backdropSpec` 取代 `color`；没有提供时保留 `color`，即 COUI 的无模糊回退。背景采集层只能记录页面内容，不能包含工具栏本身：把工具栏放在采集层之外（例如 `Scaffold` 的 `floatingToolbar`）。
+
+```kotlin
+CompositionLocalProvider(LocalMaterialBackdrop provides backdropProvider) {
+    FloatingToolbar {
+        // 工具栏内容
+    }
 }
 ```
