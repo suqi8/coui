@@ -422,7 +422,7 @@ fun FloatingNavigationBar(
 }
 
 @Composable
-private fun FloatingNavigationBarCapsule(
+internal fun FloatingNavigationBarCapsule(
     state: FloatingNavigationBarState,
     visible: Boolean,
     materialEffect: Boolean,
@@ -512,8 +512,10 @@ private fun FloatingNavigationBarCapsule(
                             Modifier
                         },
                     )
-                    .then(backdropModifier)
                     .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
+                    // Inside the surface's offscreen layer: the edge light below is overlaid on what
+                    // lies beneath it in this layer, so the blurred backdrop has to be drawn here.
+                    .then(backdropModifier)
                     .then(backgroundModifier)
                     .then(
                         if (shaders != null && edgePass != null) {
@@ -1064,8 +1066,8 @@ object FloatingNavigationBarDefaults {
 }
 
 // COUIMaterialStrokeEffect FRAMEWORK_CAPSULE_PARAMS_3_LIGHT / _DARK (TYPE_FRAMEWORK_CAPSULE_3).
-private val FloatingNavigationBarStrokeLight = StrokeEffectParams(0.25f, 2.5f, 0f, 0.1f, 1f, 1f)
-private val FloatingNavigationBarStrokeDark = StrokeEffectParams(0.8f, 2.5f, 0f, 0.03f, 1f, 1f)
+internal val FloatingNavigationBarStrokeLight = StrokeEffectParams(0.25f, 2.5f, 0f, 0.1f, 1f, 1f)
+internal val FloatingNavigationBarStrokeDark = StrokeEffectParams(0.8f, 2.5f, 0f, 0.03f, 1f, 1f)
 
 /**
  * The Roboto font padding Android's `includeFontPadding` adds above the ascent, in em:
@@ -1087,7 +1089,7 @@ private const val LARGE_ICON_LAYOUT_ID = "floatingNavigationBarLargeIcon"
  * The caustic shadow approximated as a drop shadow of [radius] at alpha 45/255, offset down by
  * `radius x 320 / 1600` (the light sits 320dp above the capsule at a 1600dp radius).
  */
-private fun floatingNavigationBarShadow(radius: Dp): Shadow = Shadow(
+internal fun floatingNavigationBarShadow(radius: Dp): Shadow = Shadow(
     radius = radius,
     color = Color.Black,
     offset = DpOffset(0.dp, radius * 0.2f),
@@ -1098,7 +1100,7 @@ private fun floatingNavigationBarShadow(radius: Dp): Shadow = Shadow(
  * Feeds [ShadowEdgeShader] the `TYPE_FRAMEWORK_CAPSULE_3` stroke of the capsule: edge and inner
  * shadow on, capsule style, weight 1.0 (`setCornerType(2).setWeight(1.0f)`).
  */
-private fun Density.configureFloatingNavigationBarEdge(
+internal fun Density.configureFloatingNavigationBarEdge(
     shader: RuntimeShader,
     width: Float,
     height: Float,

@@ -737,9 +737,11 @@ private fun ChipTabSurface(
                         )
                     }
                 }
-                .then(backdropModifier ?: Modifier)
                 // COUIChipTab clips to its outline, the Oplus smooth round rect of weight 1.0.
                 .squircleClip(cornerRadius = cornerRadius, weight = ChipTabCornerWeight)
+                // Inside the clip's offscreen layer: the edge light is overlaid on what lies
+                // beneath it in this layer, so the blurred backdrop has to be drawn here.
+                .then(backdropModifier ?: Modifier)
                 .drawWithCache {
                     val radius = min(cornerRadius.toPx(), size.minDimension / 2f)
                     val strokeWidth = ChipTabCheckedStrokeWidth.toPx()
