@@ -61,6 +61,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChangedIgnoreConsumed
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
@@ -580,9 +581,16 @@ internal fun FloatingNavigationBarCapsule(
                             val downItem = state.itemAt(down.position)
                             var slideItem: FloatingNavigationItemHandle? = null
                             var upPosition: Offset? = null
+                            var cancelled = false
                             while (true) {
                                 val event = awaitPointerEvent()
                                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                // A scrolling parent took the gesture (ACTION_CANCEL): neither the
+                                // slide nor the tap is committed.
+                                if (change.isConsumed && change.positionChangedIgnoreConsumed()) {
+                                    cancelled = true
+                                    break
+                                }
                                 if (!change.pressed) {
                                     upPosition = change.position
                                     break
@@ -602,10 +610,15 @@ internal fun FloatingNavigationBarCapsule(
                                 }
                             }
                             if (spot) scope.launch { spotlight.extinguish() }
-                            // A slide commits the item it ended on, wherever the finger lifts (and on
-                            // cancel); a plain tap clicks the item under the finger.
-                            val target = slideItem ?: upPosition?.let { position ->
-                                state.itemAt(position)?.takeIf { it === downItem && it.enabled }
+                            // A slide commits the item it ended on, wherever the finger lifts; a plain
+                            // tap clicks the item under the finger. A gesture a scrolling parent took
+                            // over commits nothing.
+                            val target = if (cancelled) {
+                                null
+                            } else {
+                                slideItem ?: upPosition?.let { position ->
+                                    state.itemAt(position)?.takeIf { it === downItem && it.enabled }
+                                }
                             }
                             target?.onClick?.invoke()
                             state.slideTarget = null

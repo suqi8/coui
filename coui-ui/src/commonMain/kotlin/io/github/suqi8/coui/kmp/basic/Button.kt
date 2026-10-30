@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
@@ -218,12 +219,15 @@ internal fun CouiButton(
     if (tintProgress.value > 0f) {
         fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
     }
+    // With the backdrop the fill is only the hover tint, drawn over the backdrop below.
+    val surfaceColor = if (backdropSpec != null) Color.Transparent else fillColor
     val surfaceModifier = if (cornerRadius == Dp.Unspecified) {
         // COUIButton.updateRoundRectPath: a height-derived capsule takes the 1.0 soft capsule weight.
-        Modifier.squircleSurface(color = fillColor, cornerRadius = COUIRoundCorner.Full, weight = COUIRoundCorner.CapsuleWeight)
+        Modifier.squircleSurface(color = surfaceColor, cornerRadius = COUIRoundCorner.Full, weight = COUIRoundCorner.CapsuleWeight)
     } else {
-        Modifier.squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
+        Modifier.squircleSurface(color = surfaceColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
     }
+    val backdropTint = if (backdropSpec != null && fillColor.alpha > 0f) fillColor else null
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
@@ -235,9 +239,11 @@ internal fun CouiButton(
                     pressScaleEnabled = pressScaleEnabled,
                 )
                 // Inside the touch-motion layer so the blurred backdrop scales and deforms with
-                // the button; the hover tint is drawn over it by the surface.
-                .then(backdropModifier)
+                // the button, and inside the surface's offscreen layer: the framework edge light
+                // is overlaid on what lies beneath it in this layer, so it needs the backdrop there.
                 .then(surfaceModifier)
+                .then(backdropModifier)
+                .then(if (backdropTint != null) Modifier.drawBehind { drawRect(backdropTint) } else Modifier)
                 .then(
                     if (materialType != null) {
                         Modifier.contentButtonMaterial(materialType, enabled, cornerRadius)
