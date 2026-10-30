@@ -19,11 +19,18 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [Surface](../components/surface)                           | 基础容器组件           | 内容展示、背景容器   |
 | [TopAppBar](../components/topappbar)                       | 应用顶部的导航栏       | 页面标题、主要操作   |
 | [NavigationBar](../components/navigationbar)               | 底部导航组件           | 主要页面切换         |
+ZH after NavigationBar: | [FloatingAccessoryNavigationBar](../components/floatingaccessorynavigationbar) | 带两侧附件的悬浮导航胶囊 | 主要页面切换 + 新建 / 搜索 |
 | [NavigationRail](../components/navigationrail)             | 侧边导航组件           | 主要页面切换（大屏）  |
+| [SideNavigationBar](../components/sidenavigationbar) | 响应式侧边导航抽屉（停靠 / 覆盖） | 平板与桌面的主页面切换 |
+| [SidePaneLayout](../components/sidepanelayout) | 可收起的侧栏与内容分栏 | 大屏的文件夹 / 分类侧栏 |
+| [ListDetailLayout](../components/listdetaillayout) | 列表-详情双栏容器 | 设置类主从页面 |
 | [TabRow](../components/tabrow)                             | 水平标签页切换栏       | 内容分类浏览         |
 | [SegmentButton](../components/segmentbutton)               | 带滑动指示器的分段控件 | 少量视图或筛选切换   |
 | [BreadcrumbBar](../components/breadcrumbbar)               | 水平面包屑导航栏       | 文件路径导航、位置轨迹 |
 | [Card](../components/card)                                 | 包含相关信息的容器     | 信息展示、内容分组   |
+ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画的圆点页面指示器 | 轮播、引导页 |
+| [Banner](../components/banner) | 自动轮播的圆角卡片横幅 | 推广位、精选内容 |
+| [ResponsiveGrid](../components/responsivegrid) | 响应式栅格与百分比宽度 | 宫格布局、宽屏居中内容 |
 | [BasicComponent](../components/basiccomponent)             | 通用基础组件           | 自定义组件开发       |
 | [Button](../components/button)                             | 触发操作的交互元素     | 表单提交、操作确认   |
 | [LoadingButton](../components/loadingbutton)               | 内置加载状态的文本按钮 | 异步操作提交         |
@@ -35,6 +42,10 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [TextField](../components/textfield)                       | 接收用户文本输入       | 表单填写、搜索框     |
 | [InputView](../components/inputview)                       | 卡片式输入框           | 表单填写、对话框输入 |
 | [CodeTextField](../components/codetextfield)               | 分格验证码输入框       | 验证码 / OTP 输入    |
+| [LockScreenPasswordInput](../components/lockscreenpasswordinput) | 锁屏密码输入框与圆形确认钮 | 锁屏 / 密码确认 |
+| [NumericKeyboard](../components/numerickeyboard) | 圆形按键安全数字键盘 | PIN 输入、锁屏 |
+| [SimpleLock](../components/simplelock) | 带填充 / 抖动动画的 PIN 圆点 | PIN 输入进度 |
+| [LockPatternView](../components/lockpatternview) | 带错误态的九宫格图案解锁 | 图案解锁 / 设置 |
 | [Switch](../components/switch)                             | 双态切换控件           | 设置项开关、功能启用 |
 | [Checkbox](../components/checkbox)                         | 多选控件               | 多项选择、条款同意   |
 | [RadioButton](../components/radiobutton)                   | 单选控件               | 单项选择、选项切换   |
@@ -44,6 +55,8 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [DatePicker](../components/datepicker)                     | 日期滚轮选择器（年/月/日） | 日期选择、表单       |
 | [TimePicker](../components/timepicker)                     | 时间滚轮选择器（时/分） | 时间选择、闹钟       |
 | [DateTimePicker](../components/datetimepicker)             | 日期 + 时间滚轮选择器   | 提醒、日程           |
+| [CalendarPicker](../components/calendarpicker)             | 可翻页的月历网格与日期滚轮 | 日期选择、日程       |
+| [LunarDatePicker](../components/lunardatepicker)           | 农历日期滚轮选择器     | 生日、农历日期       |
 | [Stepper](../components/stepper)                           | 加减调节整数值的控件   | 数量调整、数值微调   |
 | [ProgressIndicator](../components/progressindicator)       | 展示操作进度状态       | 加载中、进度展示     |
 | [InstallLoadProgress](../components/installloadprogress)   | 带进度的下载/安装按钮  | 应用下载、安装操作   |
@@ -51,13 +64,21 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [TopTips](../components/toptips)                           | 页面顶部提示条         | 页面提示、公告       |
 | [Tooltip](../components/tooltip)                           | 悬停或长按显示的简短标签 | 图标按钮标签、元素提示 |
 | [Badge](../components/badge)                               | 锚点上的小型状态叠加     | 未读数、状态圆点       |
+| [TagView](../components/tagview)                           | 「新」「BETA」等小型文字标签     | 功能标签、状态标签       |
+| [MarqueeText](../components/marqueetext)                   | 两端渐隐的自动滚动单行文本     | 提示条、单行长提示       |
 | [Icon](../components/icon)                                 | 图标展示组件           | 图标按钮、状态指示   |
 | [FloatingActionButton](../components/floatingactionbutton) | 悬浮操作按钮           | 主要操作、快捷功能   |
 | [FloatingToolbar](../components/floatingtoolbar)           | 悬浮工具栏             | 快捷操作、信息展示   |
 | [Divider](../components/divider)                           | 内容分隔线             | 区块分隔、层次划分   |
 | [PullToRefresh](../components/pulltorefresh)               | 下拉触发刷新操作       | 数据更新、页面刷新   |
 | [SearchBar](../components/searchbar)                       | 执行搜索的输入框       | 内容搜索、快速查找   |
+| [SearchHistory](../components/searchhistory)               | 可折叠、可清空的搜索历史标签 | 搜索页、最近搜索     |
+| [AlphabetIndexBar](../components/alphabetindexbar)         | 带弹出气泡的侧边字母索引条   | 联系人、应用列表     |
+| [SwipeActionItem](../components/swipeactionitem)           | 侧滑露出操作的列表项         | 侧滑删除、快捷操作   |
+| [ExpandableGroup](../components/expandablegroup)           | 带旋转箭头的可展开分组       | 可折叠的设置分组     |
 | [FullPageStatement](../components/fullpagestatement)       | 全屏用户协议声明页     | 首次启动协议、隐私声明 |
+| [EmptyState](../components/emptystate)                     | 插画、文案与操作的空页面 | 空列表、无搜索结果 |
+| [CompleteState](../components/completestate)               | 成功/失败/等待结果动画 | 操作结果页           |
 | [ColorPalette](../components/colorpalette)                 | 网格调色盘（含透明度） | 主题设置、颜色选择   |
 | [ColorPicker](../components/colorpicker)                   | 选择颜色的控件         | 主题设置、颜色选择   |
 | [ColorSwatchPicker](../components/colorswatchpicker)       | 圆点色板选择器（选中描边环） | 主题设置、颜色选择   |
@@ -75,6 +96,12 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [ButtonPreference](../components/buttonpreference)             | 尾部带小型按钮的设置项                                                             | 设置列表内联操作       |
 | [ListPreference](../components/listpreference)                 | 打开底部选择面板的设置项（需在 `Scaffold` 中使用）                                 | 单选 / 多选设置项      |
 | [RecommendedPreference](../components/recommendedpreference)   | 推荐相关设置的圆角卡片                                                             | 相关设置推荐           |
+| [InputPreference](../components/inputpreference)               | 内嵌输入框的卡片列表行                                                             | 设备名称、行内文本设置 |
+| [EditTextPreference](../components/edittextpreference)         | 点击弹出输入对话框编辑值的设置项（需在 `Scaffold` 中使用）                         | 昵称、短文本设置       |
+| [StepperPreference](../components/stepperpreference)           | 带步进器的设置项                                                                   | 数量、小范围数值设置   |
+| [CardInstructionPreference](../components/cardinstructionpreference) | 带插图轮播与描述的页首说明卡片                                               | 功能介绍、手势引导     |
+| [CardEntrancePreference](../components/cardentrancepreference) | 大 / 小入口卡片宫格                                                                | 设置首页入口           |
+| [AppInfoPreference](../components/appinfopreference)           | 关于页应用信息头（图标、名称、版本）                                               | 关于页                 |
 | [SliderPreference](../components/sliderpreference)             | 基于 BasicComponent 的滑块组件                                                     | 数值调节、音量/亮度    |
 | [RangeSliderPreference](../components/rangesliderpreference)   | 基于 BasicComponent 的范围滑块组件                                                 | 范围选择、价格筛选     |
 | [OverlayListPopup](../components/overlaylistpopup)             | 基于 BasicComponent 的列表弹窗组件（使用 COUIPopupUtils，需在 `Scaffold` 中使用） | 选项选择、功能列表     |
@@ -96,5 +123,6 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 | [WindowDropdownMenu](../components/windowdropdownmenu) | 窗口级动作菜单组件                                                                 | 动作菜单、多选场景     |
 | [WindowIconDropdownMenu](../components/windowicondropdownmenu) | 基于 IconButton 的窗口级动作菜单组件                                               | 工具栏动作、更多菜单   |
 | [WindowIconCascadingDropdownMenu](../components/windowiconcascadingdropdownmenu) | 基于 IconButton 的窗口级二级级联动作菜单组件                                       | 含子菜单的工具栏动作   |
+| [ContextMenu](../components/contextmenu) | 在长按或右键位置弹出的浮层 / 窗口菜单 | 文件、列表项操作   |
 | [WindowBottomSheet](../components/windowbottomsheet) | 窗口级底部抽屉组件                                                                 | 底部抽屉、附加选项     |
 | [WindowDialog](../components/windowdialog)           | 窗口级对话框组件                                                                   | 提示、确认操作         |

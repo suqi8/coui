@@ -19,11 +19,18 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [Surface](../components/surface)                           | Basic container component                  | Content display, background container |
 | [TopAppBar](../components/topappbar)                       | Application top navigation bar             | Page title, primary actions           |
 | [NavigationBar](../components/navigationbar)               | Bottom navigation component                | Main page switching                   |
+EN after NavigationBar: | [FloatingAccessoryNavigationBar](../components/floatingaccessorynavigationbar) | Floating navigation capsule with side accessories | Main page switching with create / search actions |
 | [NavigationRail](../components/navigationrail)             | Side navigation component                  | Main page switching (Large screen)    |
+| [SideNavigationBar](../components/sidenavigationbar) | Responsive side navigation drawer (docked / overlay) | Main page switching on tablets and desktop |
+| [SidePaneLayout](../components/sidepanelayout) | Collapsible side pane + content split | Folder / category pane on large screens |
+| [ListDetailLayout](../components/listdetaillayout) | Two-pane list-detail container | Settings-style master-detail pages |
 | [TabRow](../components/tabrow)                             | Horizontal tab bar                         | Content category browsing             |
 | [SegmentButton](../components/segmentbutton)               | Segmented control with a sliding indicator | Switching between a few views, filters |
 | [BreadcrumbBar](../components/breadcrumbbar)               | Horizontal breadcrumb navigation bar         | File path navigation, location trail   |
 | [Card](../components/card)                                 | Container with related information         | Information display, content grouping |
+EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicator with trace animation | Carousels, onboarding pages |
+| [Banner](../components/banner) | Auto-scrolling rounded card carousel | Promotions, featured content |
+| [ResponsiveGrid](../components/responsivegrid) | Responsive column grid and percent-width sizing | Tile grids, centred content on wide screens |
 | [BasicComponent](../components/basiccomponent)             | Universal base component                   | Custom component development          |
 | [Button](../components/button)                             | Interactive element for triggering actions | Form submission, action confirmation  |
 | [LoadingButton](../components/loadingbutton)               | Text button with a built-in loading state  | Asynchronous action submission        |
@@ -35,6 +42,10 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [TextField](../components/textfield)                       | Receives user text input                   | Form filling, search boxes            |
 | [InputView](../components/inputview)                       | Card-style input field                     | Form filling, dialog input            |
 | [CodeTextField](../components/codetextfield)               | Verification code input with cells         | OTP / verification code entry         |
+| [LockScreenPasswordInput](../components/lockscreenpasswordinput) | Lock-screen password field with a round next button | Lock screen / password confirmation |
+| [NumericKeyboard](../components/numerickeyboard) | Secure numeric keyboard with round keys | PIN entry, lock screen |
+| [SimpleLock](../components/simplelock) | PIN dot row with fill / shake animations | PIN progress display |
+| [LockPatternView](../components/lockpatternview) | 3x3 pattern lock with error state | Pattern unlock / setup |
 | [Switch](../components/switch)                             | Binary state toggle control                | Setting switches, feature enabling    |
 | [Checkbox](../components/checkbox)                         | Multiple selection control                 | Multiple choices, terms agreement     |
 | [RadioButton](../components/radiobutton)                   | Single selection control                   | Exclusive choices, option selection   |
@@ -44,6 +55,8 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |
 | [TimePicker](../components/timepicker)                     | Time wheel picker (hour / minute)          | Time selection, alarms                |
 | [DateTimePicker](../components/datetimepicker)             | Date + time wheel picker                   | Reminders, scheduling                 |
+| [CalendarPicker](../components/calendarpicker)             | Month grid calendar with paging and a date wheel | Date selection, scheduling        |
+| [LunarDatePicker](../components/lunardatepicker)           | Chinese lunar calendar wheel picker        | Birthdays, lunar dates                |
 | [Stepper](../components/stepper)                           | Increment / decrement integer control      | Quantity adjustment, value tuning     |
 | [ProgressIndicator](../components/progressindicator)       | Displays operation progress status         | Loading, progress display             |
 | [InstallLoadProgress](../components/installloadprogress)   | Download / install button with progress    | App store download, install actions   |
@@ -51,13 +64,21 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [TopTips](../components/toptips)                           | Tip banner at the top of a page            | Page hints, announcements             |
 | [Tooltip](../components/tooltip)                           | Brief label shown on hover or long press   | Icon button labels, element hints     |
 | [Badge](../components/badge)                               | Small status overlay on an anchor          | Unread counts, status dots            |
+| [TagView](../components/tagview)                           | Small text tag such as NEW / BETA          | Feature labels, status tags           |
+| [MarqueeText](../components/marqueetext)                   | Auto-scrolling single-line text with fading edges | Tip banners, long one-line hints |
 | [Icon](../components/icon)                                 | Icon display component                     | Icon buttons, status indicators       |
 | [FloatingActionButton](../components/floatingactionbutton) | Floating action button                     | Primary actions, quick functions      |
 | [FloatingToolbar](../components/floatingtoolbar)           | Floating toolbar                           | Quick actions, information display    |
 | [Divider](../components/divider)                           | Content separator                          | Block separation, hierarchy division  |
 | [PullToRefresh](../components/pulltorefresh)               | Pull-down refresh operation                | Data update, page refresh             |
 | [SearchBar](../components/searchbar)                       | Search input field                         | Content search, quick find            |
+| [SearchHistory](../components/searchhistory)               | Search history chips with fold and clear   | Search pages, recent queries          |
+| [AlphabetIndexBar](../components/alphabetindexbar)         | Side letter index with popup bubble        | Contact lists, app lists              |
+| [SwipeActionItem](../components/swipeactionitem)           | List row that slides to reveal actions     | Swipe to delete, quick actions        |
+| [ExpandableGroup](../components/expandablegroup)           | Expandable list group with rotating arrow  | Collapsible settings groups           |
 | [FullPageStatement](../components/fullpagestatement)       | Full-page user agreement statement         | First-launch agreement, privacy statement |
+| [EmptyState](../components/emptystate)                     | Empty page with illustration, text and action | Empty lists, no search results     |
+| [CompleteState](../components/completestate)               | Animated success / failure / waiting result | Operation result pages              |
 | [ColorPalette](../components/colorpalette)                 | Grid palette with alpha slider             | Theme settings, color selection       |
 | [ColorPicker](../components/colorpicker)                   | Color selection control                    | Theme settings, color selection       |
 | [ColorSwatchPicker](../components/colorswatchpicker)       | Circular color swatch row with selection ring | Theme settings, color selection    |
@@ -75,6 +96,12 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [ButtonPreference](../components/buttonpreference)             | Preference row with a small inline button                                                | Inline actions in settings lists       |
 | [ListPreference](../components/listpreference)                 | Preference row opening a bottom-sheet choice panel (requires `Scaffold`)                 | Single / multiple choice settings      |
 | [RecommendedPreference](../components/recommendedpreference)   | Rounded card recommending related settings                                               | Related settings recommendations       |
+| [InputPreference](../components/inputpreference)               | Card list row with an inline input field                                                 | Device names, inline text settings     |
+| [EditTextPreference](../components/edittextpreference)         | Preference row that edits its value in an input dialog (requires `Scaffold`)             | Nicknames, short text settings         |
+| [StepperPreference](../components/stepperpreference)           | Preference row with a stepper                                                            | Counts, small numeric settings         |
+| [CardInstructionPreference](../components/cardinstructionpreference) | Page-top card with an illustration pager and description                           | Feature introductions, gesture guides  |
+| [CardEntrancePreference](../components/cardentrancepreference) | Grid of small / large entrance cards                                                     | Settings home entrances                |
+| [AppInfoPreference](../components/appinfopreference)           | About-page header with app icon, name and version                                        | About pages                            |
 | [SliderPreference](../components/sliderpreference)             | Slider component based on BasicComponent                                                 | Value adjustment, volume/brightness    |
 | [RangeSliderPreference](../components/rangesliderpreference)   | Range slider component based on BasicComponent                                           | Range selection, price filter          |
 | [OverlayListPopup](../components/overlaylistpopup)             | List popup component based on BasicComponent (uses COUIPopupUtils; requires `Scaffold`) | Option selection, feature list         |
@@ -96,5 +123,6 @@ The Scaffold component provides a suitable container for cross-platform popup wi
 | [WindowDropdownMenu](../components/windowdropdownmenu) | Window-level action menu component                                                       | Action menus, multi-select choices     |
 | [WindowIconDropdownMenu](../components/windowicondropdownmenu) | Window-level icon-button action menu component                                           | Toolbar actions, overflow menu         |
 | [WindowIconCascadingDropdownMenu](../components/windowiconcascadingdropdownmenu) | Window-level icon-button cascading two-level menu                                        | Toolbar actions with submenus          |
+| [ContextMenu](../components/contextmenu) | Overlay / window menu opened at the long-press or right-click point | File and list item actions |
 | [WindowBottomSheet](../components/windowbottomsheet) | Window-level bottom sheet component                                                      | Bottom drawer, additional options      |
 | [WindowDialog](../components/windowdialog)           | Window-level dialog component                                                            | Prompts, action confirmation           |

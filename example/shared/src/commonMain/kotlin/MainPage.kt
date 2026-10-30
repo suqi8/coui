@@ -26,38 +26,61 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import component.alphabetIndexBarSection
 import component.arrowSection
 import component.badgeSection
+import component.bannerSection
 import component.basicComponentSection
 import component.blurSection
 import component.bottomSheetSection
 import component.breadcrumbBarSection
 import component.buttonSection
+import component.calendarPickerSection
 import component.cardSection
 import component.checkboxSection
 import component.chipSection
 import component.chipTabSection
 import component.colorPickerSection
+import component.completeStateSection
+import component.contextMenuSection
 import component.dateTimePickerSection
 import component.dialogSection
 import component.dropdownSection
+import component.emptyStateSection
+import component.expandableGroupSection
+import component.floatingAccessoryNavigationBarSection
 import component.fullPageStatementSection
 import component.inputViewSection
 import component.installLoadProgressSection
 import component.intentSliderSection
+import component.listDetailLayoutSection
 import component.listPreferenceSection
+import component.lockPatternViewSection
+import component.lockScreenPasswordInputSection
+import component.lunarDatePickerSection
+import component.marqueeTextSection
+import component.morePreferenceSection
 import component.navigationBarSection
 import component.numberPickerSection
+import component.numericKeyboardSection
 import component.otherPageSection
+import component.pageIndicatorSection
 import component.preferenceExtrasSection
 import component.progressIndicatorSection
 import component.radioButtonSection
+import component.responsiveGridSection
+import component.searchHistorySection
 import component.segmentButtonSection
+import component.sideNavigationBarSection
+import component.sidePaneLayoutSection
+import component.simpleLockSection
 import component.sliderSection
 import component.snackbarSection
 import component.spinnerSection
+import component.swipeActionItemSection
 import component.switchSection
 import component.tabRowSection
+import component.tagViewSection
 import component.textFieldSection
 import component.tooltipSection
 import io.github.suqi8.coui.kmp.basic.BasicComponent
@@ -353,6 +376,7 @@ fun MainPage(
                     dialogSection()
                     bottomSheetSection()
                     dropdownSection()
+                    contextMenuSection()
                     spinnerSection()
                     buttonSection()
                     snackbarSection(snackbarHostState)
@@ -360,23 +384,45 @@ fun MainPage(
                     installLoadProgressSection()
                     textFieldSection()
                     inputViewSection()
+                    lockScreenPasswordInputSection()
+                    numericKeyboardSection()
+                    simpleLockSection()
+                    lockPatternViewSection()
                     sliderSection()
                     intentSliderSection()
                     tabRowSection()
                     segmentButtonSection()
                     navigationBarSection()
+                    floatingAccessoryNavigationBarSection()
+                    sideNavigationBarSection()
+                    sidePaneLayoutSection()
+                    listDetailLayoutSection()
                     breadcrumbBarSection()
                     tooltipSection()
                     numberPickerSection()
                     dateTimePickerSection()
+                    lunarDatePickerSection()
+                    calendarPickerSection()
                     colorPickerSection()
                     cardSection()
+                    pageIndicatorSection()
+                    bannerSection()
+                    responsiveGridSection()
                     chipSection()
                     chipTabSection()
                     badgeSection()
+                    tagViewSection()
+                    marqueeTextSection()
+                    alphabetIndexBarSection()
+                    searchHistorySection()
                     preferenceExtrasSection()
                     listPreferenceSection()
+                    morePreferenceSection()
+                    swipeActionItemSection()
+                    expandableGroupSection()
                     fullPageStatementSection()
+                    emptyStateSection()
+                    completeStateSection()
                     blurSection()
                     otherPageSection()
                     item { Spacer(modifier = Modifier.height(32.dp)) }
