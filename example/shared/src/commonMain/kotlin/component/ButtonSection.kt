@@ -263,10 +263,12 @@ private fun ExpandableFloatingActionButtonDemo() {
             ),
         )
     }
+    // The button measures as the main button alone and opens upwards out of its bounds: the box
+    // keeps room above it for the three items (232dp) so they stay inside the card.
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .height(330.dp)
             .padding(horizontal = 24.dp)
             .padding(bottom = 24.dp),
     ) {

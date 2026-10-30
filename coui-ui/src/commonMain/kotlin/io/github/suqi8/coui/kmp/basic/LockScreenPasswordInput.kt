@@ -44,9 +44,11 @@ import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.shadow.ShadowContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -55,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -105,6 +108,9 @@ enum class LockScreenPasswordInputMode {
  * @param keyboardActions The keyboard actions.
  * @param nextContentDescription The accessibility description of the next button
  *   (`coui_lock_screen_next_button_description`).
+ * @param nextButtonInteractionSource The [MutableInteractionSource] of the next button. Its press
+ *   interactions drive the [LockScreenPasswordInputMode.Desktop] press feedback (light effect and
+ *   scale), so emitting a press here plays it as a touch would.
  */
 @Composable
 fun LockScreenPasswordInput(
@@ -124,6 +130,7 @@ fun LockScreenPasswordInput(
     keyboardOptions: KeyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     nextContentDescription: String = "Next",
+    nextButtonInteractionSource: MutableInteractionSource? = null,
 ) {
     // initInputCountSetting: an invalid pair falls back to 16 / 6.
     val (resolvedMin, resolvedMax) = if (maxCount <= 0 || minCount <= 0 || maxCount <= minCount) {
@@ -141,10 +148,11 @@ fun LockScreenPasswordInput(
     if (isError && displayedError != errorMessage) displayedError = errorMessage
 
     val desktop = mode == LockScreenPasswordInputMode.Desktop
+    val shadowContext = LocalGraphicsContext.current.shadowContext
     val scope = rememberCoroutineScope()
     val press = remember { Animatable(0f) }
     val light = remember { LockLightEffectState() }
-    val interactionSource = remember { MutableInteractionSource() }
+    val interactionSource = nextButtonInteractionSource ?: remember { MutableInteractionSource() }
     val currentAllow by rememberUpdatedState(allowNext)
     LaunchedEffect(interactionSource, desktop) {
         if (!desktop) return@LaunchedEffect
@@ -174,6 +182,7 @@ fun LockScreenPasswordInput(
                     isError = isError,
                     showPasswordToggle = showPasswordToggle,
                     colors = colors,
+                    shadowContext = shadowContext,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                 )
@@ -193,12 +202,15 @@ fun LockScreenPasswordInput(
                     if (desktop) {
                         Modifier.drawWithCache {
                             val buttonPx = LockScreenPasswordInputDefaults.Height.toPx()
-                            val shadows = recordLockInnerShadow(Size(buttonPx, buttonPx)) { Path().apply { addOval(Rect(Offset.Zero, it)) } }
+                            val shadows = recordLockInnerShadow(Size(buttonPx, buttonPx), shadowContext) { Path().apply { addOval(Rect(Offset.Zero, it)) } }
                             val fieldWidth = size.width - buttonPx - LockScreenPasswordInputDefaults.ButtonMargin.toPx()
-                            val buttonCenter = Offset(size.width - buttonPx / 2f, size.height / 2f)
+                            // The button sits at the end: on the left in RTL, like the COUI LinearLayout.
+                            val rtl = layoutDirection == LayoutDirection.Rtl
+                            val buttonCenter = Offset(if (rtl) buttonPx / 2f else size.width - buttonPx / 2f, size.height / 2f)
+                            val fieldLeft = if (rtl) size.width - fieldWidth else 0f
                             val lightRadius = size.width - fieldWidth / 2f - buttonPx / 2f
                             val field = Path().apply {
-                                addRoundRect(RoundRect(Rect(0f, 0f, fieldWidth, size.height), CornerRadius(size.height / 2f)))
+                                addRoundRect(RoundRect(Rect(fieldLeft, 0f, fieldLeft + fieldWidth, size.height), CornerRadius(size.height / 2f)))
                             }
                             val reach = Path().apply { addOval(Rect(buttonCenter, lightRadius)) }
                             val lightPath = Path().apply { op(reach, field, PathOperation.Intersect) }
@@ -240,8 +252,8 @@ fun LockScreenPasswordInput(
             val field = measurables[0].measure(Constraints.fixed(fieldWidth, height))
             val next = measurables[1].measure(Constraints.fixed(button, button))
             layout(width, height) {
-                field.place(0, 0)
-                next.place(width - button, 0)
+                field.placeRelative(0, 0)
+                next.placeRelative(width - button, 0)
             }
         }
         AnimatedVisibility(
@@ -280,6 +292,7 @@ private fun PasswordField(
     isError: Boolean,
     showPasswordToggle: Boolean,
     colors: LockScreenPasswordInputColors,
+    shadowContext: ShadowContext,
     keyboardOptions: KeyboardOptions,
     keyboardActions: KeyboardActions,
 ) {
@@ -293,7 +306,7 @@ private fun PasswordField(
                         val outline: (Size) -> Path = { s ->
                             Path().apply { addRoundRect(RoundRect(Rect(Offset.Zero, s), CornerRadius(s.height / 2f))) }
                         }
-                        val shadows = recordLockInnerShadow(size, outline)
+                        val shadows = recordLockInnerShadow(size, shadowContext, outline)
                         val path = outline(size)
                         onDrawWithContent {
                             // COUILockScreenPwdInputView.onDraw: border, then the inner shadow.
@@ -422,7 +435,9 @@ object LockScreenPasswordInputDefaults {
      *
      * - [LockScreenPasswordInputMode.Setting]: field `?couiColorCard` and button
      *   `?couiColorCardBackground` (`surfaceContainer`), arrow `?couiColorLabelTertiary`
-     *   (`onSurfaceVariantActions`), active arrow `?couiColorPrimaryNeutral` (`onSurface`).
+     *   (`onSurfaceVariantActions`), active arrow `?couiColorPrimaryNeutral` (`onSurface`). The
+     *   field and the button are card-colored: place them on the page surface
+     *   (`COUITheme.colorScheme.surface`), not on a card.
      * - [LockScreenPasswordInputMode.Desktop]: transparent field and button, white text and eye
      *   (`coui_input_lock_screen_pwd_view_edittext_text_color_desktop`, `coui_btn_eye_*_desktop`),
      *   arrow `coui_color_label_tertiary_dark` #4DFFFFFF, active arrow #FFFFFF.

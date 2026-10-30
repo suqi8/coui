@@ -28,8 +28,8 @@ fun LazyListScope.lunarDatePickerSection() {
         SmallTitle(text = "LunarDatePicker")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // 2025-07-25 is the first day of the leap sixth lunar month.
             var date by remember { mutableStateOf(DateValue(year = 2025, month = 7, day = 25)) }
@@ -55,8 +55,8 @@ fun LazyListScope.lunarDatePickerSection() {
         SmallTitle(text = "LunarDatePicker (disabled)")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             LunarDatePicker(
                 value = DateValue(year = 2026, month = 2, day = 17),

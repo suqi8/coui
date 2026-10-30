@@ -53,7 +53,7 @@ scope.launch { state.animateEnter() }
 | modifier              | Modifier                          | 应用于视图的修饰符（默认 312x280dp）   | Modifier                            | 否   |
 | state                 | LockPatternState                  | 图案、显示模式与圆点动画               | rememberLockPatternState()          | 否   |
 | enabled               | Boolean                           | 是否接受触摸                           | true                                | 否   |
-| inStealthMode         | Boolean                           | 绘制时隐藏路径与圆点动画               | false                               | 否   |
+| inStealthMode         | Boolean                           | 隐藏路径与选中圆点（错误状态仍显示）   | false                               | 否   |
 | hapticFeedbackEnabled | Boolean                           | 每个圆点轻振，错误图案拒绝振动         | true                                | 否   |
 | colors                | LockPatternViewColors             | 圆点、成功与错误颜色                   | LockPatternViewDefaults.colors()    | 否   |
 | onPatternStart        | () -> Unit                        | 开始绘制                               | {}                                  | 否   |

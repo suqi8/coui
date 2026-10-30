@@ -16,6 +16,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
@@ -26,7 +27,7 @@ import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
  * A list-detail container ported from `COUIListDetailView`.
  *
  * On a compact layout (narrower than 600dp, `WindowTotalSizeClass.Compact`) it is a single pane:
- * the [detail] when there is one, otherwise the [list]. Wider, the list is
+ * the [detail] when there is one, otherwise the [list]. The hidden list keeps its state. Wider, the list is
  * `clamp(width * listWidthFraction, minListWidth, maxListWidth)` wide on the start side, a
  * hairline divider follows, and the rest shows the [detail], or [emptyDetail] while [detail] is
  * null (`COUIListDetailView`'s empty-page container).
@@ -65,7 +66,11 @@ fun ListDetailLayout(
         val height = if (constraints.hasBoundedHeight) maxHeight else windowHeight
         if (!ListDetailLayoutDefaults.isSplitMode(maxWidth, height)) {
             Box(Modifier.fillMaxSize()) {
-                if (detail != null) detailPane() else listPane()
+                // The list stays composed under the detail, as COUI keeps the list fragment, so
+                // going back finds it where it was (scroll position, remembered state); it is
+                // only left unplaced, which hides it from drawing and touches.
+                Box(Modifier.fillMaxSize().placedIf(detail == null)) { listPane() }
+                if (detail != null) detailPane()
             }
         } else {
             val listWidth = (maxWidth * listWidthFraction)
@@ -84,6 +89,14 @@ fun ListDetailLayout(
                 }
             }
         }
+    }
+}
+
+/** Measures the content but places it only while [placed]: an unplaced child neither draws nor takes input. */
+private fun Modifier.placedIf(placed: Boolean): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, placeable.height) {
+        if (placed) placeable.place(0, 0)
     }
 }
 

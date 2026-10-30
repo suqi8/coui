@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
@@ -210,7 +211,8 @@ private fun SearchHistoryFlow(
     ) { measurables, constraints ->
         val maxWidth = constraints.maxWidth
         val chipConstraints = Constraints(maxWidth = maxWidth)
-        val count = items.size
+        // Count from the measurables, so a list mutated after composition cannot misindex them.
+        val count = measurables.size - 2
         val chips = List(count) { measurables[it].measure(chipConstraints) }
         val expandButton = measurables[count].measure(chipConstraints)
         val foldButton = measurables[count + 1].measure(chipConstraints)
@@ -301,7 +303,9 @@ private fun SearchHistoryFlow(
         }
         val height = if (isExpand) linesHeight(lines.size) else linesHeight(maxLinesFolded)
 
-        layout(maxWidth, constraints.constrainHeight(height)) {
+        // Unbounded width (e.g. a horizontally scrolling parent) keeps every record on one line.
+        val width = if (constraints.hasBoundedWidth) maxWidth else lines.maxOf { usedWidth(it) }
+        layout(constraints.constrainWidth(width), constraints.constrainHeight(height)) {
             val hidden = hiddenAlpha.value
             val expandButtonAlpha = expandAlpha.value
             var y = 0

@@ -89,6 +89,6 @@ Banner(
 ## Behavior
 
 - With `infiniteLoop` and two or more pages, a copy of the last page sits before the first and a copy of the first after the last; when the pager settles on a copy it jumps to the real page without animation.
-- The auto scroll waits `loopDurationMillis + scrollDurationMillis`, then scrolls to the next page in `scrollDurationMillis` on `PathInterpolator(0.2, 0, 0.1, 1)`. Any touch stops it; lifting the finger restarts the wait.
+- The auto scroll waits `loopDurationMillis + scrollDurationMillis`, then scrolls to the next page in `scrollDurationMillis` on `PathInterpolator(0.2, 0, 0.1, 1)`. A touch cancels the pending scroll (one already running finishes unless the finger drags the pager); lifting the finger restarts the wait.
 - The cards are inset by `startItemWidth + pageMargin` and `endItemWidth + pageMargin` and placed `pageMargin` apart.
 - The indicator is centred 10dp above the bottom; its dots are not clickable. While the pager wraps around through a copy, the indicator holds the last dot and then jumps.

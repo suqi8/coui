@@ -41,8 +41,8 @@ fun LazyListScope.searchHistorySection() {
         SmallTitle(text = "SearchHistory")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             SearchHistoryDemo()
         }

@@ -129,7 +129,7 @@ object TagViewDefaults {
     /**
      * The default corner radius. COUI `couiTagCornerRadius` defaults to 0 and the shipped theme
      * sets no tag style, so every host picks its own radius; 4dp is the library default for a
-     * 12dp-high tag.
+     * 14dp-high tag.
      */
     val CornerRadius = 4.dp
 

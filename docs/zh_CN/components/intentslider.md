@@ -25,6 +25,8 @@ IntentSlider(
 )
 ```
 
+与 `match_parent` 的 `COUIIntentSeekBar` 一致，进度条占满可用宽度，高度至少为 `IntentSliderDefaults.MinHeight`。
+
 ### 滑块与播放状态
 
 开启 `showThumb` 后，按住进度条时滑块会弹出。`paused` 为 true 时滑块以静止半径常驻；恢复播放后滑块消失。

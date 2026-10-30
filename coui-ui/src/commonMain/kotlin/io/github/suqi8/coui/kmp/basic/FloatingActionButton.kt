@@ -14,7 +14,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,12 +47,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -72,6 +73,7 @@ import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -450,7 +452,12 @@ class FloatingActionButtonItem(
  *   button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke) through
  *   [Button].
  *
- * The column grows upwards: anchor the button by its bottom end corner.
+ * The component measures as the main button alone and places the items above it, outside its own
+ * bounds, the way the collapsed COUI menu keeps its labels hidden behind the main button: in a
+ * [Scaffold] `floatingActionButton` slot the main button keeps its place (with any [FabPosition])
+ * and the snack bar does not jump when the menu opens. Leave room above the button and do not clip
+ * its parent there. Like COUI, the menu has no scrim and does not close on an outside touch; an
+ * item click is ignored while the menu is collapsing.
  *
  * @param expanded Whether the items are shown.
  * @param onExpandedChange Called with the new expanded state when the main button is clicked.
@@ -498,37 +505,61 @@ fun ExpandableFloatingActionButton(
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val currentExpanded by rememberUpdatedState(expanded)
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.End,
-    ) {
-        if (expanded || itemsComposed) {
-            for (index in items.indices.reversed()) {
-                ExpandableFabItem(
-                    item = items[index],
-                    index = index,
-                    count = items.size,
-                    expanded = expanded,
-                    material = material,
-                    hapticFeedbackEnabled = hapticFeedbackEnabled,
-                )
+    Layout(
+        content = {
+            // Composed first so they draw below the main button they slide out of.
+            if (expanded || itemsComposed) {
+                for (index in items.indices) {
+                    ExpandableFabItem(
+                        item = items[index],
+                        index = index,
+                        count = items.size,
+                        expanded = expanded,
+                        material = material,
+                        hapticFeedbackEnabled = hapticFeedbackEnabled,
+                    )
+                }
             }
-        }
-        FloatingActionButton(
-            onClick = { currentOnExpandedChange(!currentExpanded) },
-            enabled = enabled,
-            material = material,
-            hapticFeedbackEnabled = hapticFeedbackEnabled,
-            containerColor = containerColor,
-            disabledContainerColor = disabledContainerColor,
-            contentColor = contentColor,
-        ) {
-            Box(
-                modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
-                contentAlignment = Alignment.Center,
+            FloatingActionButton(
+                onClick = { currentOnExpandedChange(!currentExpanded) },
+                enabled = enabled,
+                material = material,
+                hapticFeedbackEnabled = hapticFeedbackEnabled,
+                containerColor = containerColor,
+                disabledContainerColor = disabledContainerColor,
+                contentColor = contentColor,
             ) {
-                content()
+                Box(
+                    modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    content()
+                }
             }
+        },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        // The main button is measured on its own with loose constraints so it keeps its 56dp
+        // circle whatever the items take: the items never share its height and a stretching
+        // parent (fillMaxSize, a tight slot) cannot flatten or widen it.
+        val main = measurables.last().measure(constraints.copy(minWidth = 0, minHeight = 0))
+        // The items may be wider than the main button: only the available width bounds them.
+        val itemConstraints = Constraints(maxWidth = constraints.maxWidth)
+        val itemPlaceables = List(measurables.size - 1) { measurables[it].measure(itemConstraints) }
+        val width = main.width.coerceIn(constraints.minWidth, constraints.maxWidth)
+        val height = main.height.coerceIn(constraints.minHeight, constraints.maxHeight)
+        layout(width, height) {
+            // The main button sits in the bottom end corner of a larger forced size.
+            val mainX = width - main.width
+            val mainY = height - main.height
+            // Item 0 right above the main button, each next one above the previous; all end
+            // aligned with the main button (placeRelative mirrors this in RTL).
+            var bottom = mainY
+            itemPlaceables.forEach { placeable ->
+                bottom -= placeable.height
+                placeable.placeRelative(mainX + main.width - placeable.width, bottom)
+            }
+            main.placeRelative(mainX, mainY)
         }
     }
 }
@@ -571,9 +602,15 @@ private fun ExpandableFabItem(
 
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val primary = COUITheme.colorScheme.primary
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val buttonColor = item.containerColor.takeOrElse { primary }
     val labelFill = item.labelContainerColor.takeOrElse { primary }
     val labelText = item.labelColor.takeOrElse { Color.White }
+    // COUIFloatingButton drops the action listener while the menu closes: a click on an item that
+    // is sliding back into the main button does nothing.
+    val currentExpanded by rememberUpdatedState(expanded)
+    val currentItem by rememberUpdatedState(item)
+    val onItemClick = remember { { if (currentExpanded) currentItem.onClick() } }
 
     Row(
         modifier = Modifier
@@ -583,9 +620,11 @@ private fun ExpandableFabItem(
     ) {
         if (!item.label.isNullOrEmpty()) {
             Button(
-                onClick = item.onClick,
+                onClick = onItemClick,
                 modifier = Modifier
-                    .graphicsLayer {
+                    // The fade renders offscreen at the layer bounds: the overflow keeps the
+                    // shadow from being cut off while the label fades.
+                    .graphicsLayerWithOverflow(FabLabelLayerOverflow) {
                         scaleX = scale.value
                         scaleY = scale.value
                         alpha = labelAlpha.value
@@ -604,7 +643,7 @@ private fun ExpandableFabItem(
                     color = labelFill,
                     disabledColor = labelFill.copy(alpha = labelFill.alpha * FAB_LABEL_DISABLED_ALPHA),
                     contentColor = labelText,
-                    disabledContentColor = FabLabelDisabledTextColor,
+                    disabledContentColor = if (isDark) FabLabelDisabledTextColorDark else FabLabelDisabledTextColorLight,
                 ),
                 insideMargin = FabLabelInsideMargin,
                 material = if (material) ButtonMaterial.Primary else ButtonMaterial.None,
@@ -620,8 +659,8 @@ private fun ExpandableFabItem(
             Spacer(modifier = Modifier.width(FabLabelSpacing))
         }
         FloatingActionButton(
-            onClick = item.onClick,
-            modifier = Modifier.graphicsLayer {
+            onClick = onItemClick,
+            modifier = Modifier.graphicsLayerWithOverflow(FabItemLayerOverflow) {
                 scaleX = scale.value
                 scaleY = scale.value
                 alpha = buttonAlpha.value
@@ -688,10 +727,22 @@ private val FabLabelTextSize = 12.sp
 private val FabLabelMaxWidth = 220.dp
 
 /** COUI coui_floating_button_label_text_color_disable. */
-private val FabLabelDisabledTextColor = Color(0x26000000)
+private val FabLabelDisabledTextColorLight = Color(0x26000000)
+
+/** COUI coui_floating_button_label_text_color_disable (values-night). */
+private val FabLabelDisabledTextColorDark = Color(0x26FFFFFF)
 
 /** The label elevation: `setElevationToFloatingActionButton(label, support_shadow_size_level_three)`. */
 private val FabLabelShadowElevation = 12.dp
 
 /** The downward offset of the label shadow. */
 private val FabLabelShadowOffsetY = 2.dp
+
+/**
+ * How far the child button shadow reaches past the button: the ~12dp penumbra of the 60dp
+ * elevation over its Gaussian reach, plus the light-source offset (about 10dp at the screen bottom).
+ */
+private val FabItemLayerOverflow = 32.dp
+
+/** How far the label shadow reaches past the label: the ~2.4dp penumbra plus the 2dp offset. */
+private val FabLabelLayerOverflow = 8.dp

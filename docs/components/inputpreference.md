@@ -50,6 +50,8 @@ InputPreference(
 )
 ```
 
+COUI draws no list divider below a row in error state (`COUIInputPreference.drawDivider`); when you place `HorizontalDivider`s between rows, skip the one below an erroring row.
+
 ### Disabled State
 
 ```kotlin

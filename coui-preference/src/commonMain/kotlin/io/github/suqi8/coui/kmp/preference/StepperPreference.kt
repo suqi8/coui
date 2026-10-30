@@ -5,7 +5,9 @@ package io.github.suqi8.coui.kmp.preference
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
@@ -23,6 +25,11 @@ import io.github.suqi8.coui.kmp.basic.StepperDefaults
  * preference forwards couiMinimum (default -999), couiMaximum (default 9999), couiDefStep and
  * couiUnit (the step, default 1) to it. The stepper fires the change listener only when the value
  * really changes, which [Stepper] already guarantees.
+ *
+ * In coui_preference.xml only the text block is padded vertically (PreferenceContent); the
+ * `widget_frame` is not, so the 32dp stepper fits a 48dp row without growing it. The stepper may
+ * therefore extend into the vertical [insideMargin], keeping the row as tall as a plain
+ * [ArrowPreference] or [SwitchPreference].
  *
  * @param value The current value of the stepper.
  * @param onValueChange The callback with the new value when the user steps up or down.
@@ -75,6 +82,7 @@ fun StepperPreference(
             Stepper(
                 value = value,
                 onValueChange = onValueChange,
+                modifier = remember(insideMargin) { Modifier.overlapVerticalPadding(insideMargin) },
                 minValue = minValue,
                 maxValue = maxValue,
                 step = step,
@@ -85,4 +93,18 @@ fun StepperPreference(
         bottomAction = bottomAction,
         enabled = enabled,
     )
+}
+
+/**
+ * Lets the widget reach into the row's vertical [padding] like an unpadded COUI `widget_frame`: it
+ * reports its height minus that padding (never below zero) and is drawn centered on the reported
+ * box, so the row is as tall as its text block and padding, or as the widget when that is taller.
+ */
+private fun Modifier.overlapVerticalPadding(padding: PaddingValues): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minHeight = 0))
+    val overlap = (padding.calculateTopPadding() + padding.calculateBottomPadding()).roundToPx()
+    val height = (placeable.height - overlap).coerceAtLeast(0)
+    layout(placeable.width, height) {
+        placeable.place(0, (height - placeable.height) / 2)
+    }
 }

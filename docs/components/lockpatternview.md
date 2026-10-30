@@ -53,7 +53,7 @@ scope.launch { state.animateEnter() }
 | modifier              | Modifier                          | Modifier applied to the view (default 312x280dp) | Modifier                            | No       |
 | state                 | LockPatternState                  | Pattern, display mode and dot animations         | rememberLockPatternState()          | No       |
 | enabled               | Boolean                           | Whether touches are accepted                     | true                                | No       |
-| inStealthMode         | Boolean                           | Hide the path and dot animations while drawing   | false                               | No       |
+| inStealthMode         | Boolean                           | Hide the path and selected dots (wrong still shows) | false                               | No       |
 | hapticFeedbackEnabled | Boolean                           | Tick per added dot, reject on a wrong pattern    | true                                | No       |
 | colors                | LockPatternViewColors             | Dot, success and error colors                    | LockPatternViewDefaults.colors()    | No       |
 | onPatternStart        | () -> Unit                        | A pattern starts                                 | {}                                  | No       |

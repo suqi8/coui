@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,7 +75,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param showClearButton Whether to show the clear button while the field is focused and not
  *   empty. COUI turns it off for the preference field (`setShowDeleteIcon(false)`).
  * @param showPasswordToggle Whether to show the password eye toggle.
- * @param errorMessage The error text below the field. Empty hides the error line.
+ * @param errorMessage The error text below the field. Empty hides the error line. COUI draws no list
+ *   divider below a row in error state (`COUIInputPreference.drawDivider`), so skip that divider too.
  * @param colors The [InputPreferenceColors] of the title and the error line.
  * @param textFieldColors The [TextFieldColors] of the field.
  * @param textStyle The text style of the input text.
@@ -125,9 +127,11 @@ fun InputPreference(
     val extraPaddingBottom = if (isLastRow) CardListPosition.HeadOrTailPadding else 0.dp
 
     // Keep the last message so the fade-out still shows it (COUIInputView hides the error view
-    // only after its disappear animation).
-    var displayedError by remember { mutableStateOf(errorMessage) }
-    if (isError && displayedError != errorMessage) displayedError = errorMessage
+    // only after its disappear animation). Recorded after composition, so no state is written
+    // during it.
+    var lastError by remember { mutableStateOf(errorMessage) }
+    if (isError) SideEffect { lastError = errorMessage }
+    val displayedError = if (isError) errorMessage else lastError
 
     Column(
         modifier = modifier

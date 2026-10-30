@@ -3,6 +3,7 @@
 package component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,9 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.SideNavigationBar
+import io.github.suqi8.coui.kmp.basic.SideNavigationBarDefaults
 import io.github.suqi8.coui.kmp.basic.SideNavigationBarMode
+import io.github.suqi8.coui.kmp.basic.SideNavigationBarState
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.rememberSideNavigationBarState
@@ -45,15 +48,15 @@ fun LazyListScope.sideNavigationBarSection() {
         var editMode by remember { mutableStateOf(false) }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             SideNavigationBarDemo(parentChildHierarchy = parentChildHierarchy, editMode = editMode)
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             SwitchPreference(
                 title = "Parent-child hierarchy",
@@ -73,13 +76,28 @@ fun LazyListScope.sideNavigationBarSection() {
 
 @Composable
 private fun SideNavigationBarDemo(parentChildHierarchy: Boolean, editMode: Boolean) {
-    val state = rememberSideNavigationBarState(initialOpen = true)
-    val scope = rememberCoroutineScope()
-    var selected by remember { mutableIntStateOf(0) }
-    SideNavigationBar(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .height(420.dp),
+    ) {
+        // Start open only where the drawer docks; as an overlay it would cover the whole card.
+        val docked = SideNavigationBarDefaults.drawerMode(maxWidth, maxHeight, parentChildHierarchy) == SideNavigationBarMode.Docked
+        val state = rememberSideNavigationBarState(initialOpen = docked)
+        SideNavigationBarDemoContent(state = state, parentChildHierarchy = parentChildHierarchy, editMode = editMode)
+    }
+}
+
+@Composable
+private fun SideNavigationBarDemoContent(
+    state: SideNavigationBarState,
+    parentChildHierarchy: Boolean,
+    editMode: Boolean,
+) {
+    val scope = rememberCoroutineScope()
+    var selected by remember { mutableIntStateOf(0) }
+    SideNavigationBar(
+        modifier = Modifier.fillMaxSize(),
         state = state,
         parentChildHierarchy = parentChildHierarchy,
         editMode = editMode,

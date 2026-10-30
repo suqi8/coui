@@ -66,6 +66,7 @@ Without a blurred wallpaper behind it, give the desktop field a fill: `colors = 
 | keyboardOptions        | KeyboardOptions               | Keyboard options                                     | NumberPassword                                    | No       |
 | keyboardActions        | KeyboardActions               | Keyboard actions                                     | KeyboardActions.Default                           | No       |
 | nextContentDescription | String                        | Accessibility description of the button              | "Next"                                            | No       |
+| nextButtonInteractionSource | MutableInteractionSource? | Interactions of the next button; emitting a press plays the Desktop press feedback | null | No |
 
 ### LockScreenPasswordInputDefaults
 
@@ -105,3 +106,4 @@ Without a blurred wallpaper behind it, give the desktop field a fill: `colors = 
 - The error line fades in over 217ms and out over 283ms (`COUIEaseInterpolator`) and the field shows its error state.
 - Desktop press: the button springs to the COUI press scale; its rim glows and a radial light reaches into the field, on response 0.3 springs (0.6 for the outer light on release). The press effect only runs while the button is active.
 - An invalid `minCount` / `maxCount` pair falls back to 6 / 16.
+- The next button sits at the end of the row: on the left in right-to-left layouts.

@@ -39,8 +39,8 @@ fun LazyListScope.floatingAccessoryNavigationBarSection() {
         var searching by remember { mutableStateOf(false) }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             FloatingAccessoryNavigationBar(
                 startAccessoryVisible = startShown,

@@ -223,7 +223,9 @@ ExpandableFloatingActionButton(
 }
 ```
 
-子项从主按钮向上排列，请按右下角锚定（例如作为 `Scaffold` 的悬浮按钮）。
+组件只按主按钮测量尺寸，子项放在主按钮上方、自身边界之外：作为 `Scaffold` 的悬浮按钮时，无论 `FabPosition`
+如何主按钮位置都不变，展开时 Snackbar 也不会跟着移动。请在按钮上方留出空间，且父布局不要在那里裁剪。与 COUI
+一致，菜单没有遮罩，点击外部不会收起；正在收回主按钮的子项点击会被忽略。
 
 ### ExpandableFloatingActionButton 属性
 
@@ -232,7 +234,7 @@ ExpandableFloatingActionButton(
 | expanded               | Boolean                        | 是否展开子项               | -                                                     | 是    |
 | onExpandedChange       | (Boolean) -> Unit              | 点击主按钮时以新状态回调         | -                                                     | 是    |
 | items                  | List<FloatingActionButtonItem> | 子操作，下标 0 离主按钮最近       | -                                                     | 是    |
-| modifier               | Modifier                       | 应用于整列的修饰符            | Modifier                                              | 否    |
+| modifier               | Modifier                       | 应用于主按钮位置的修饰符      | Modifier                                              | 否    |
 | enabled                | Boolean                        | 主按钮是否启用              | true                                                  | 否    |
 | material               | Boolean                        | 按钮与标签是否绘制 COUI 17 材质 | true                                                  | 否    |
 | hapticFeedbackEnabled  | Boolean                        | 按下时是否触发按压振动          | true                                                  | 否    |
@@ -260,4 +262,5 @@ ExpandableFloatingActionButton(
 - **展开**：离主按钮最远的子项先动，之后每项晚 50ms。子项以弹簧（刚度 500、阻尼比 0.8）从主按钮升起，子按钮与标签从 0.6 放大；子按钮在 300ms、标签在 350ms 内淡入，曲线为 `PathInterpolator(0.25, 0.1, 0.25, 1)`，标签以右上角为缩放中心。
 - **收起**：离主按钮最近的子项先动，之后每项晚 50ms；在 300ms 内沿 COUI move-ease 曲线滑回主按钮，同时缩小到 0.6 并淡出（标签 200ms，以右下角为缩放中心）。
 - **主按钮**：内容在 300ms 内旋转 45 度。
+- **淡入淡出的阴影**：子按钮和标签淡入淡出时阴影不会被裁掉（图层边界扩展到阴影范围之外）。
 - **材质**：主按钮与子按钮绘制 `FloatingActionButton` 材质；标签绘制主色按钮材质（`TYPE_CONTENT_PRIMARY_BUTTON` 模糊、`TYPE_CONTENT_CAPSULE_1` 描边）。

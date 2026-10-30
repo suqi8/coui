@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.menu.OverlayContextMenu
@@ -60,29 +62,39 @@ fun ContextMenuDemo() {
                     item {
                         Spacer(Modifier.height(8.dp))
                         Card(modifier = Modifier.padding(horizontal = 16.dp)) {
-                            OverlayContextMenu(
-                                entries = entries,
-                                onExpandedChange = { menuOpen = it },
-                            ) {
-                                BasicComponent(
-                                    title = "Report.pdf",
-                                    summary = "Long press or right click · last action: $lastAction",
-                                    onClick = {},
-                                )
-                            }
-                            WindowContextMenu(entries = entries) {
-                                BasicComponent(
-                                    title = "Photo.jpg",
-                                    summary = "Window-layer menu at the pointer",
-                                    onClick = {},
-                                )
-                            }
-                            OverlayContextMenu(entries = entries, enabled = false) {
-                                BasicComponent(
-                                    title = "Locked.txt",
-                                    summary = if (menuOpen) "Menu open" else "Menu disabled",
-                                    enabled = false,
-                                )
+                            CardListGroup {
+                                item {
+                                    OverlayContextMenu(
+                                        entries = entries,
+                                        onExpandedChange = { menuOpen = it },
+                                    ) {
+                                        BasicComponent(
+                                            title = "Report.pdf",
+                                            summary = "Long press or right click · last action: $lastAction",
+                                            onClick = {},
+                                        )
+                                    }
+                                }
+                                item {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    WindowContextMenu(entries = entries) {
+                                        BasicComponent(
+                                            title = "Photo.jpg",
+                                            summary = "Window-layer menu at the pointer",
+                                            onClick = {},
+                                        )
+                                    }
+                                }
+                                item {
+                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                                    OverlayContextMenu(entries = entries, enabled = false) {
+                                        BasicComponent(
+                                            title = "Locked.txt",
+                                            summary = if (menuOpen) "Menu open" else "Menu disabled",
+                                            enabled = false,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

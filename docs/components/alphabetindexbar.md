@@ -15,7 +15,7 @@ import io.github.suqi8.coui.kmp.basic.AlphabetIndexBarDefaults
 
 ## Basic Usage
 
-Place the bar above the list it indexes (the bubble is drawn outside its bounds) and scroll the list in `onKeySelected`:
+Place the bar above the list it indexes (the bubble is drawn outside its bounds, where COUI uses a popup window, so a clipping parent such as a `Card` must leave room for the bubble and its shadow) and scroll the list in `onKeySelected`:
 
 ```kotlin
 Box(Modifier.fillMaxSize()) {
@@ -79,5 +79,5 @@ Keys outside `availableKeys` stay visible but cannot be selected: touching one s
 
 - Keys are 12dp medium text centered in 16dp rows below a 16dp top padding; the star is a 12dp outline icon. The bar wraps to the height all keys need and compresses into dots when given less.
 - The selected key, star or dot turns `selectedKeyColor` and keeps it after the finger lifts, like COUI.
-- The 48dp bubble shows the key in 20sp medium (or a 24dp star), centered on the key row and 8.5dp beside the bar. It grows from 0.8 and fades in over 350ms on COUIMoveEaseInterpolator, and one second after the finger lifts it shrinks back to 0.8 and fades out over 300ms.
+- The 48dp bubble shows the key in 20sp medium with the font scale capped at 1.35 (`COUIChangeTextUtil.getSuitableFontSize` level 4) (or a 24dp star), centered on the key row and 8.5dp beside the bar. It grows from 0.8 and fades in over 350ms on COUIMoveEaseInterpolator, and one second after the finger lifts it shrinks back to 0.8 and fades out over 300ms.
 - Moving to another key ticks a `TextHandleMove` haptic. Every selectable key is also exposed as an accessibility custom action.

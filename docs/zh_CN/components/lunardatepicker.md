@@ -85,7 +85,8 @@ LunarDatePicker(
 | 函数 / 属性                                | 说明                                                   |
 | ------------------------------------------ | ------------------------------------------------------ |
 | SupportedYears                             | 数据表覆盖的农历年份（1900..2100）                     |
-| fromSolar(date: DateValue): LunarDate      | 公历转农历                                             |
+| MinSolarDate / MaxSolarDate                | `fromSolar` 接受的公历范围：1900-01-31 .. 2100-12-31   |
+| fromSolar(date: DateValue): LunarDate      | 公历转农历；超出 MinSolarDate .. MaxSolarDate 时抛异常 |
 | toSolar(lunar: LunarDate): DateValue?      | 农历转公历，农历日期不存在时返回 null                  |
 | changeYear(lunar, newYear): DateValue?     | 把农历日期移到另一农历年，同时修正闰月标记与日         |
 | leapMonth(year): Int                       | 某农历年的闰月，无闰月为 0                             |

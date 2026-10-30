@@ -63,16 +63,17 @@ fun OverlayContextMenu(
     val preciseClickState = rememberPreciseClickState()
     var expanded by remember { mutableStateOf(false) }
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
-    val haptic = LocalHapticFeedback.current
+    // The gesture handler outlives recompositions, so it reads these through State.
+    val currentHaptic by rememberUpdatedState(LocalHapticFeedback.current)
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
-    val nonEmptyEntries = entries.filter { it.items.isNotEmpty() }
+    val nonEmptyEntries = remember(entries) { entries.filter { it.items.isNotEmpty() } }
     val hasEntries = nonEmptyEntries.isNotEmpty()
 
     Box(
         modifier = modifier
             .preciseClickAnchor(preciseClickState)
             .contextMenuGesture(enabled = enabled && hasEntries) { longPress ->
-                if (longPress && currentHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                if (longPress && currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 if (!expanded) {
                     expanded = true
                     currentOnExpandedChange?.invoke(true)

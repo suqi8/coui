@@ -31,8 +31,8 @@ fun LazyListScope.alphabetIndexBarSection() {
         SmallTitle(text = "AlphabetIndexBar")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             Row(Modifier.fillMaxWidth()) {
                 AlphabetIndexBarDemo(
@@ -60,7 +60,13 @@ private fun AlphabetIndexBarDemo(
     modifier: Modifier = Modifier,
 ) {
     var selected by remember { mutableStateOf("-") }
-    Box(modifier.height(barHeight)) {
+    // The bubble and its shadow reach past the bar's top and bottom rows; the vertical padding
+    // keeps them inside the clipping Card.
+    Box(
+        modifier
+            .padding(vertical = 32.dp)
+            .height(barHeight),
+    ) {
         Text(
             text = "$label\nSelected: $selected",
             color = COUITheme.colorScheme.onSurfaceSecondary,

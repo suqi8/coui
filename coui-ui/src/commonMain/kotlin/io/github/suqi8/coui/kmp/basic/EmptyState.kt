@@ -27,6 +27,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.roundToInt
@@ -125,9 +127,9 @@ fun EmptyState(
             },
         ) { measurables, constraints ->
             val group = measurables.first().measure(constraints.copy(minWidth = 0, minHeight = 0))
-            val width = if (constraints.hasBoundedWidth) constraints.maxWidth else group.width
-            val height = if (constraints.hasBoundedHeight) constraints.maxHeight else group.height
-            layout(width, height.coerceAtLeast(constraints.minHeight)) {
+            val width = if (constraints.hasBoundedWidth) constraints.maxWidth else constraints.constrainWidth(group.width)
+            val height = if (constraints.hasBoundedHeight) constraints.maxHeight else constraints.constrainHeight(group.height)
+            layout(width, height) {
                 val top = ((height - group.height) * offsetRatio).roundToInt().coerceAtLeast(0)
                 group.place((width - group.width) / 2, top)
             }

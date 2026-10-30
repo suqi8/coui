@@ -69,6 +69,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
@@ -79,6 +80,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidatePlacement
@@ -485,9 +487,11 @@ private val SearchIconCenterInset = 22.dp
  *   hides them; clearing the query brings the current hint back and restarts the rotation. An empty
  *   list keeps the static [label].
  * @param hintRepeatCount how many hint changes to play before the rotation stops on the current hint
- *   (COUI `setRepeatCount`); [Int.MAX_VALUE] (the default) rotates forever.
+ *   (COUI `setRepeatCount`), counted across the pauses while a query is typed and reset with new
+ *   [hints]; [Int.MAX_VALUE] (the default) rotates forever.
  * @param onHintChange called with the index of each newly shown hint (COUI
- *   `COUIHintAnimationChangeListener`), e.g. to search for the shown hint on an empty submit.
+ *   `COUIHintAnimationChangeListener`), e.g. to search for the shown hint on an empty submit. The
+ *   first hint (index 0) shows without a call.
  */
 @Composable
 fun InputField(
@@ -857,6 +861,8 @@ private fun SearchBarHintCarousel(
 ) {
     var index by remember(hints) { mutableIntStateOf(0) }
     var previous by remember(hints) { mutableIntStateOf(-1) }
+    // COUI mCurrentPlayTime: counted across pauses (typing), reset only with new hints.
+    val plays = remember(hints) { intArrayOf(0) }
     val outProgress = remember { Animatable(1f) }
     val inProgress = remember { Animatable(1f) }
     var containerHeight by remember { mutableIntStateOf(0) }
@@ -869,11 +875,11 @@ private fun SearchBarHintCarousel(
             inProgress.snapTo(1f)
             return@LaunchedEffect
         }
-        var plays = 0
         while (true) {
             delay(HINT_INTERVAL_MILLIS)
             // applyHintChangeAnimation: past the repeat count the rotation pauses on the current hint.
-            if (++plays > repeatCount) break
+            if (plays[0] >= repeatCount) break
+            plays[0]++
             previous = index
             index = (index + 1) % hints.size
             currentOnHintChange?.invoke(index)
@@ -985,8 +991,12 @@ private class SearchBarLiftNode(
     private var expanded: Boolean,
     private var targetTop: Dp,
 ) : Modifier.Node(),
-    LayoutModifierNode {
+    LayoutModifierNode,
+    GlobalPositionAwareModifierNode {
     private val progress = Animatable(if (expanded) 1f else 0f)
+
+    /** The window y of the bar's resting top the current placement translates from. */
+    private var restingTop = Float.NaN
 
     fun update(expanded: Boolean, targetTop: Dp) {
         if (this.targetTop != targetTop) {
@@ -996,6 +1006,8 @@ private class SearchBarLiftNode(
         if (this.expanded != expanded) {
             this.expanded = expanded
             if (isAttached) {
+                // The resting top may have gone stale while the bar rested (see onGloballyPositioned).
+                invalidatePlacement()
                 coroutineScope.launch {
                     progress.animateTo(if (expanded) 1f else 0f, SearchBarDefaults.LiftAnimationSpec)
                 }
@@ -1012,11 +1024,19 @@ private class SearchBarLiftNode(
         val targetTopPx = targetTop.toPx()
         return layout(placeable.width, placeable.height) {
             // The resting position of the bar, before the lift translation of its own layer.
-            val restingTop = coordinates?.positionInWindow()?.y ?: targetTopPx
+            val top = coordinates?.positionInWindow()?.y ?: targetTopPx
+            restingTop = top
             placeable.placeWithLayer(0, 0) {
-                translationY = (targetTopPx - restingTop) * progress.value
+                translationY = (targetTopPx - top) * progress.value
             }
         }
+    }
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+        // An ancestor that moves (a scrolling page, a collapsing header) does not run this placement
+        // again: catch the new resting top here so the lifted bar stays at targetTop. A resting bar
+        // has no translation to correct.
+        if (progress.value != 0f && coordinates.positionInWindow().y != restingTop) invalidatePlacement()
     }
 }
 

@@ -1,6 +1,6 @@
 # StepperPreference
 
-`StepperPreference` is a preference row with a [Stepper](./stepper.md) at the end, mirroring ColorOS's `COUIStepperPreference`. COUI keeps the plain preference layout and only swaps in the stepper widget, forwarding the minimum (default -999), maximum (default 9999) and step (couiUnit, default 1).
+`StepperPreference` is a preference row with a [Stepper](./stepper.md) at the end, mirroring ColorOS's `COUIStepperPreference`. COUI keeps the plain preference layout and only swaps in the stepper widget, forwarding the minimum (default -999), maximum (default 9999) and step (couiUnit, default 1). Like COUI's unpadded widget frame, the 32dp stepper may reach into the row's vertical padding, so the row stays as tall as a plain preference (48dp).
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=stepperPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChangedIgnoreConsumed
 import androidx.compose.ui.layout.Layout
@@ -55,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
@@ -161,7 +163,9 @@ fun SegmentButton(
     val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
     val squircleEnabled = isSquircleEnabled()
 
-    // selectSegmentAt from outside: the indicator follows the hoisted selection.
+    // selectSegmentAt from outside: the indicator follows the hoisted selection. A touch moves
+    // the indicator at once, as COUI does, so an owner that follows later (a pager's
+    // currentPage) does not pull it back in between.
     SideEffect {
         if (selectedIndex != state.paramIndex) {
             state.paramIndex = selectedIndex
@@ -263,8 +267,13 @@ fun SegmentButton(
                             state.pressIndicator(true, scope)
                         }
                     }
+                    // The slop the foundation drag detectors use for this pointer type, so a
+                    // dragged indicator claims the gesture no later than a pager would take it.
+                    val touchSlop = viewConfiguration.touchSlop *
+                        (if (down.type == PointerType.Mouse) MOUSE_TO_TOUCH_SLOP_RATIO else 1f)
+                    var claimed = false
                     while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Final)
+                        val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == down.id }
                         if (change == null) {
                             state.cancelTouch(scope)
@@ -283,10 +292,23 @@ fun SegmentButton(
                             }
                             break
                         }
-                        if (change.isConsumed && change.positionChangedIgnoreConsumed()) {
-                            // A scrolling parent took the gesture: ACTION_CANCEL.
-                            state.cancelTouch(scope)
-                            break
+                        if (!claimed && state.dragging && abs(change.position.x - down.position.x) >= touchSlop) {
+                            // attemptClaimDrag: past the touch slop a dragged indicator keeps the
+                            // gesture, so a horizontal pager or scroller can no longer take it.
+                            claimed = true
+                        }
+                        if (claimed) {
+                            change.consume()
+                        } else {
+                            // Parents see the event after this node: check on the final pass
+                            // whether one of them consumed it.
+                            val final = awaitPointerEvent(PointerEventPass.Final)
+                            val finalChange = final.changes.firstOrNull { it.id == down.id }
+                            if (finalChange != null && finalChange.isConsumed && finalChange.positionChangedIgnoreConsumed()) {
+                                // A scrolling parent took the gesture: ACTION_CANCEL.
+                                state.cancelTouch(scope)
+                                break
+                            }
                         }
                         if (!change.positionChangedIgnoreConsumed()) continue
                         // ACTION_MOVE
@@ -427,14 +449,18 @@ fun SegmentButton(
             measurable.measure(Constraints.fixed(widths[index].coerceAtLeast(0), innerHeight))
         }
         val measureDensity: Density = this
+        val rtl = layoutDirection == LayoutDirection.Rtl
         layout(width, heightPx) {
+            // A horizontal LinearLayout: the first segment sits at the start edge. The indicator
+            // and the hit tests work in absolute coordinates.
             var x = paddingPx
             val lefts = FloatArray(placeables.size)
             val rights = FloatArray(placeables.size)
             placeables.forEachIndexed { index, placeable ->
-                placeable.place(x, paddingPx)
-                lefts[index] = x.toFloat()
-                rights[index] = (x + widths[index]).toFloat()
+                val left = if (rtl) width - x - widths[index] else x
+                placeable.place(left, paddingPx)
+                lefts[index] = left.toFloat()
+                rights[index] = (left + widths[index]).toFloat()
                 x += widths[index]
             }
             state.onLayout(
@@ -1008,6 +1034,9 @@ private val RubberStiffness = 0.12f
 
 /** 0.75 x the 1px `DynamicAnimation` minimum visible change. */
 private val SpringThresholdPx = 0.75f
+
+/** The foundation mouse slop over its touch slop (0.125dp / 18dp). */
+private const val MOUSE_TO_TOUCH_SLOP_RATIO = 0.125f / 18f
 
 /** `isTouchInIndicator` slop, raw pixels. */
 private val IndicatorTouchSlopPx = 10f

@@ -224,8 +224,11 @@ ExpandableFloatingActionButton(
 }
 ```
 
-The column grows upwards from the main button, so anchor it by its bottom end corner (for example
-as the `Scaffold` floating action button).
+The component measures as the main button alone and places the items above it, outside its own
+bounds: as the `Scaffold` floating action button the main button keeps its place with any
+`FabPosition` and the snack bar does not move when the menu opens. Leave room above the button and
+do not clip its parent there. As in COUI there is no scrim and an outside touch does not close the
+menu; clicks on items that are sliding back into the main button are ignored.
 
 ### ExpandableFloatingActionButton Properties
 
@@ -234,7 +237,7 @@ as the `Scaffold` floating action button).
 | expanded               | Boolean                        | Whether the items are shown                                  | -                                                     | Yes      |
 | onExpandedChange       | (Boolean) -> Unit              | Called with the new state when the main button is clicked    | -                                                     | Yes      |
 | items                  | List<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
-| modifier               | Modifier                       | Modifier applied to the column                               | Modifier                                              | No       |
+| modifier               | Modifier                       | Modifier applied to the main button slot                     | Modifier                                              | No       |
 | enabled                | Boolean                        | Whether the main button is enabled                           | true                                                  | No       |
 | material               | Boolean                        | Whether the buttons and labels draw the COUI 17 material     | true                                                  | No       |
 | hapticFeedbackEnabled  | Boolean                        | Whether a touch down plays the press haptic                  | true                                                  | No       |
@@ -262,4 +265,5 @@ as the `Scaffold` floating action button).
 - **Expand**: the farthest item starts first, each next one 50ms later. An item springs up from the main button (stiffness 500, damping ratio 0.8) while the child button and label scale from 0.6; the child fades in over 300ms and the label over 350ms on `PathInterpolator(0.25, 0.1, 0.25, 1)`, the label growing from its top end corner.
 - **Collapse**: the nearest item starts first, each next one 50ms later; it slides back into the main button over 300ms on the COUI move-ease curve while scaling to 0.6 and fading out (the label over 200ms, from its bottom end corner).
 - **Main button**: its content rotates by 45 degrees over 300ms.
+- **Fading shadows**: the fading child buttons and labels keep their shadows (their layers are grown past the shadow reach).
 - **Material**: the main and child buttons draw the `FloatingActionButton` material; the labels draw the primary button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke).

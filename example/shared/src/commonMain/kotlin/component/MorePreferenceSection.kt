@@ -65,6 +65,7 @@ fun LazyListScope.morePreferenceSection() {
         var deviceName by remember { mutableStateOf("My Phone") }
         var hotspotName by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
+        val hotspotError = if (hotspotName.contains(' ')) "Spaces are not allowed" else ""
 
         SmallTitle(text = "InputPreference")
         Card(
@@ -88,11 +89,12 @@ fun LazyListScope.morePreferenceSection() {
                         onValueChange = { hotspotName = it },
                         hint = "Hotspot name (no title)",
                         maxCount = 20,
-                        errorMessage = if (hotspotName.contains(' ')) "Spaces are not allowed" else "",
+                        errorMessage = hotspotError,
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
+                    // COUIInputPreference.drawDivider: no divider below a row in error state.
+                    if (hotspotError.isEmpty()) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     InputPreference(
                         value = password,
                         onValueChange = { password = it },

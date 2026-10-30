@@ -25,6 +25,8 @@ IntentSlider(
 )
 ```
 
+Like a `match_parent` `COUIIntentSeekBar`, the bar fills the available width; it is at least `IntentSliderDefaults.MinHeight` high.
+
 ### Thumb and Playback State
 
 With `showThumb` the thumb pops out while the bar is touched. While `paused` it stays out at its rest radius; when playback resumes it disappears.

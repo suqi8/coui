@@ -27,8 +27,8 @@ fun LazyListScope.completeStateSection() {
         SmallTitle(text = "CompleteState")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var type by remember { mutableStateOf(CompleteStateType.Success) }
             var replay by remember { mutableIntStateOf(0) }

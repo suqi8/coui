@@ -35,6 +35,12 @@ object LunarCalendar {
     /** The lunar years covered by the conversion tables (COUILunarUtil MIN_YEAR / MAX_YEAR). */
     val SupportedYears: IntRange = 1900..2100
 
+    /** The earliest Gregorian date [fromSolar] accepts: 1900-01-31, the lunar epoch 正月初一 1900. */
+    val MinSolarDate: DateValue = DateValue(1900, 1, 31)
+
+    /** The latest Gregorian date [fromSolar] accepts (inside lunar year 2100, the last table entry). */
+    val MaxSolarDate: DateValue = DateValue(2100, 12, 31)
+
     /**
      * The leap month of a lunar [year], or 0 when the year has none (COUILunarUtil.leapMonth).
      * Years outside [SupportedYears] report 0.
@@ -79,9 +85,16 @@ object LunarCalendar {
     /**
      * Converts a Gregorian [date] to its lunar date (COUILunarUtil.calculateLunarByGregorian),
      * walking whole lunar years and then months from the 1900-01-31 epoch (正月初一 1900).
+     *
+     * @throws IllegalArgumentException when [date] is outside [MinSolarDate] .. [MaxSolarDate],
+     *   where COUILunarUtil's walk produces month 0 or runs past its tables.
      */
     fun fromSolar(date: DateValue): LunarDate {
-        var offset = (civilToEpochDay(date.year, date.month, date.day) - EpochDayOf19000131).toInt()
+        val epochDay = civilToEpochDay(date.year, date.month, date.day)
+        require(epochDay in EpochDayOf19000131..EpochDayOfMaxSolarDate) {
+            "$date is outside the supported range $MinSolarDate .. $MaxSolarDate"
+        }
+        var offset = (epochDay - EpochDayOf19000131).toInt()
         var year = 1900
         var yearDays = 0
         while (year < 10000 && offset > 0) {
@@ -239,6 +252,9 @@ object LunarCalendar {
 
     /** Epoch day of 1900-01-31, the lunar epoch calculateLunarByGregorian counts from. */
     private val EpochDayOf19000131: Long = civilToEpochDay(1900, 1, 31)
+
+    /** Epoch day of [MaxSolarDate]. */
+    private val EpochDayOfMaxSolarDate: Long = civilToEpochDay(MaxSolarDate.year, MaxSolarDate.month, MaxSolarDate.day)
 
     /** Epoch day of 1900-01-30, the START_DATE lunarToSolar adds its day offset to. */
     private val EpochDayOf19000130: Long = civilToEpochDay(1900, 1, 30)

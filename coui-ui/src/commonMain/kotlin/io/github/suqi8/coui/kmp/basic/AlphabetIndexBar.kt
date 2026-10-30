@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -61,6 +62,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 /**
@@ -80,8 +82,9 @@ import kotlin.math.roundToInt
  * levels; dragging over a dot walks through the keys it hides. Below the smallest level the bar
  * draws nothing.
  *
- * The bubble is placed outside the bar's bounds, so put the bar above the list it indexes (for
- * example as the last child of a `Box`) and do not clip it.
+ * The bubble is placed outside the bar's bounds (COUI uses a PopupWindow), so put the bar above
+ * the list it indexes (for example as the last child of a `Box`) and keep any clipping ancestor,
+ * such as a `Card`, large enough for the bubble and its shadow.
  *
  * @param onKeySelected Called with the newly selected key while touching the bar, including
  *   [AlphabetIndexBarDefaults.CollectKey] for the star.
@@ -127,8 +130,7 @@ fun AlphabetIndexBar(
                 }
             }
             .pointerInput(allKeys, hasValue, showCollectKey) {
-                fun handle(y: Float, isMove: Boolean) {
-                    val rows = buildIndexRows(allKeys.size, showCollectKey, size.height.toFloat(), this)
+                fun handle(rows: IndexRows, y: Float, isMove: Boolean) {
                     val hit = rows.select(y, hasValue) ?: return
                     val key = allKeys[hit.originalIndex]
                     if (key == state.displayKey) return
@@ -147,8 +149,10 @@ fun AlphabetIndexBar(
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     down.consume()
+                    // The rows only depend on the height, so build them once per gesture.
+                    val rows = buildIndexRows(allKeys.size, showCollectKey, size.height.toFloat(), this)
                     state.resetForTouch(scope)
-                    handle(down.position.y, isMove = false)
+                    handle(rows, down.position.y, isMove = false)
                     while (true) {
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull { it.id == down.id } ?: break
@@ -157,7 +161,7 @@ fun AlphabetIndexBar(
                             break
                         }
                         change.consume()
-                        handle(change.position.y, isMove = true)
+                        handle(rows, change.position.y, isMove = true)
                     }
                     state.displayKey = ""
                     state.hideBubbleLater(scope)
@@ -175,6 +179,8 @@ fun AlphabetIndexBar(
                     }
                 }
                 val starSize = AlphabetIndexBarDefaults.CollectIconSize.toPx()
+                val starFilter = ColorFilter.tint(colors.keyColor)
+                val selectedStarFilter = ColorFilter.tint(colors.selectedKeyColor)
                 onDrawBehind {
                     val selected = state.selectedRow
                     rows.rows.forEachIndexed { index, row ->
@@ -185,9 +191,7 @@ fun AlphabetIndexBar(
                                 with(starPainter) {
                                     draw(
                                         size = Size(starSize, starSize),
-                                        colorFilter = ColorFilter.tint(
-                                            if (isSelected) colors.selectedKeyColor else colors.keyColor,
-                                        ),
+                                        colorFilter = if (isSelected) selectedStarFilter else starFilter,
                                     )
                                 }
                             }
@@ -238,6 +242,13 @@ private fun IndexBubble(
     isCollect: Boolean,
     colors: AlphabetIndexBarColors,
 ) {
+    // COUITouchSearchView sizes the bubble key with COUIChangeTextUtil.getSuitableFontSize level 4:
+    // the font scale is capped at 1.35 so large fonts stay inside the 48dp bubble.
+    val fontScale = LocalDensity.current.fontScale
+    val baseStyle = COUITheme.textStyles.title3
+    val textStyle = remember(baseStyle, fontScale) {
+        baseStyle.copy(fontSize = baseStyle.fontSize * (min(fontScale, BUBBLE_MAX_FONT_SCALE) / fontScale))
+    }
     Box(
         modifier = Modifier
             .dropShadow(CircleShape, BubbleShadow)
@@ -254,7 +265,7 @@ private fun IndexBubble(
             Text(
                 text = text,
                 color = colors.bubbleContentColor,
-                style = COUITheme.textStyles.title3,
+                style = textStyle,
                 maxLines = 1,
             )
         }
@@ -618,6 +629,9 @@ private const val DOT_TEXT = "·"
 
 /** COUITouchSearchView FIXED_MIN_LETTER_LENGTH_FOR_DISPLAY. */
 private const val MIN_LETTERS_FOR_DOTS = 8
+
+/** COUIChangeTextUtil.SCALE_LEVEL[3], the font scale cap of getSuitableFontSize level 4. */
+private const val BUBBLE_MAX_FONT_SCALE = 1.35f
 
 /** COUITouchSearchView SCALE_MIN. */
 private const val BUBBLE_MIN_SCALE = 0.8f

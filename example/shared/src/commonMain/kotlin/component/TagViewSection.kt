@@ -30,8 +30,8 @@ fun LazyListScope.tagViewSection() {
         SmallTitle(text = "TagView")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             Column(
                 modifier = Modifier

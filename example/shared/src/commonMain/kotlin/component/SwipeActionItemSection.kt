@@ -28,8 +28,8 @@ fun LazyListScope.swipeActionItemSection() {
         SmallTitle(text = "SwipeActionItem")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             SwipeActionItemDemo()
         }

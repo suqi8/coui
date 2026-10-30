@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
@@ -68,8 +70,8 @@ class SimpleLockState internal constructor() {
     /**
      * Plays the failure (`createFailedAnimator`, 800ms, linear): the dots shake sideways through
      * 30, -28, 14, -8, 4, -3, 0px while the filled ones fall 250px one after another, fading out
-     * over their first 150px, with a reject haptic. Returns when it ends; the dots then show the
-     * current `filledCount`, so reset it to 0.
+     * over their first 150px, with a reject haptic. Returns when it ends with every dot empty
+     * (COUI `fail_lastDraw`); reset `filledCount` to 0, and the next digit fills the first dot.
      */
     suspend fun playFailure() {
         failCount = shownCount
@@ -86,6 +88,9 @@ class SimpleLockState internal constructor() {
             fallY = 0f
             failing = false
             dots.forEach { it.snap(filled = false) }
+            // The row is empty now: count from zero so the next change of filledCount animates
+            // from what is shown instead of from the count before the failure.
+            shownCount = 0
         }
     }
 }
@@ -150,8 +155,12 @@ fun SimpleLock(
     val haptic = LocalHapticFeedback.current
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
 
-    LaunchedEffect(state, state.hapticRequest) {
-        if (state.hapticRequest > 0 && currentHapticEnabled) haptic.performHapticFeedback(HapticFeedbackType.Reject)
+    val currentHaptic by rememberUpdatedState(haptic)
+    LaunchedEffect(state) {
+        // Only requests made while composed: re-entering the composition must not vibrate again.
+        snapshotFlow { state.hapticRequest }.drop(1).collect {
+            if (currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.Reject)
+        }
     }
 
     LaunchedEffect(state, target, glowEffect) {

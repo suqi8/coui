@@ -30,8 +30,8 @@ fun LazyListScope.pageIndicatorSection() {
         SmallTitle(text = "PageIndicator")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // Following a pager: swipe to see the trace, tap a dot to jump.
             val pagerState = rememberPagerState { 4 }
@@ -61,8 +61,8 @@ fun LazyListScope.pageIndicatorSection() {
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // A plain position with more than five pages: the window of full dots follows it.
             val count = 12

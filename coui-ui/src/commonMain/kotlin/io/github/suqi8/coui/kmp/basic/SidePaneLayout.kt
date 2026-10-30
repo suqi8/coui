@@ -21,17 +21,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Sidebar
@@ -143,7 +139,6 @@ fun SidePaneLayout(
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val windowHeight = with(density) { LocalWindowInfo.current.containerSize.height.toDp() }
-    val layoutDirection = LocalLayoutDirection.current
     val maskActive = state.isOpen && (alwaysShowMask || (coverStyle && touchContentEnabled))
     val maskModifier = if (maskActive) {
         Modifier.pointerInput(alwaysShowMask, state) {
@@ -163,21 +158,15 @@ fun SidePaneLayout(
         contents = listOf(
             content,
             {
+                // drawChild / onInterceptTouchEvent: the mask covers what lies beyond the pane's
+                // end edge (the layout places it there), so touches on the pane never reach it.
                 Box(
                     Modifier
                         .then(maskModifier)
                         .drawBehind {
                             val fraction = state.progress
                             if (drawMask && fraction > 0f) {
-                                // drawChild: the mask starts at the pane's right edge times the
-                                // slide offset and fades with it.
-                                val start = paneWidth.toPx() * fraction
-                                val left = if (layoutDirection == LayoutDirection.Rtl) 0f else start
-                                drawRect(
-                                    color = maskColor.copy(alpha = maskColor.alpha * fraction),
-                                    topLeft = Offset(left, 0f),
-                                    size = Size((size.width - start).coerceAtLeast(0f), size.height),
-                                )
+                                drawRect(maskColor.copy(alpha = maskColor.alpha * fraction))
                             }
                         },
                 )
@@ -227,12 +216,12 @@ fun SidePaneLayout(
         val height = childHeight(
             maxOf(contentPlaceables.maxOfOrNull { it.height } ?: 0, panePlaceables.maxOfOrNull { it.height } ?: 0),
         )
-        val maskPlaceables = maskMeasurables.map { it.measure(Constraints.fixed(width, height)) }
+        val maskPlaceables = maskMeasurables.map { it.measure(Constraints.fixed(width - paneOffset, height)) }
         val iconPlaceables = iconMeasurables.map { it.measure(Constraints()) }
 
         layout(width, height) {
             contentPlaceables.forEach { it.placeRelative(contentX, 0) }
-            maskPlaceables.forEach { it.placeRelative(0, 0) }
+            maskPlaceables.forEach { it.placeRelative(paneOffset, 0) }
             // The pane slides out by its width as it closes (translationX = -width * (1 - offset)).
             panePlaceables.forEach { it.placeRelative(paneOffset - paneWidthPx, 0) }
             iconPlaceables.forEach {

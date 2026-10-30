@@ -85,7 +85,8 @@ LunarDatePicker(
 | Function / Property                        | Description                                                                 |
 | ------------------------------------------ | --------------------------------------------------------------------------- |
 | SupportedYears                             | Lunar years covered by the tables (1900..2100)                              |
-| fromSolar(date: DateValue): LunarDate      | Gregorian -> lunar                                                          |
+| MinSolarDate / MaxSolarDate                | Gregorian range `fromSolar` accepts: 1900-01-31 .. 2100-12-31               |
+| fromSolar(date: DateValue): LunarDate      | Gregorian -> lunar; throws outside MinSolarDate .. MaxSolarDate             |
 | toSolar(lunar: LunarDate): DateValue?      | Lunar -> Gregorian, null when the lunar date does not exist                 |
 | changeYear(lunar, newYear): DateValue?     | Moves a lunar date to another lunar year, clamping month leap flag and day  |
 | leapMonth(year): Int                       | The leap month of a lunar year, 0 when none                                 |

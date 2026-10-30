@@ -28,7 +28,7 @@ ListDetailLayout(
 
 尺寸档位取自布局自身尺寸（`COUIListDetailView.onMeasure`）：
 
-- **紧凑**（宽度不足 600dp，`WindowTotalSizeClass.Compact`）：单栏，有 `detail` 时显示详情，否则显示 `list`。把 `detail` 置回 null 即返回列表。
+- **紧凑**（宽度不足 600dp，`WindowTotalSizeClass.Compact`）：单栏，有 `detail` 时显示详情，否则显示 `list`。把 `detail` 置回 null 即返回列表；期间列表保持组合，滚动位置不会丢失。
 - **分栏**：列表宽 `clamp(width × 0.4, 280dp, 412dp)`（`DEFAULT_MAIN_WIDTH_PERCENT`、`coui_main_fragment_min_width` / `coui_main_fragment_max_width`），其后是 0.33dp 的 `couiColorDivider` 分割线（`coui_fragment_gap_width`），剩余宽度显示 `detail`，未选中时显示 `emptyDetail`（COUI 的空页面容器）。
 
 布局在单栏和分栏之间切换时，两栏都会保留各自的状态。

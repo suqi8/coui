@@ -1,5 +1,6 @@
 // Copyright 2025, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,15 +19,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbar
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SnackbarDuration
 import io.github.suqi8.coui.kmp.basic.SnackbarHost
 import io.github.suqi8.coui.kmp.basic.SnackbarHostState
 import io.github.suqi8.coui.kmp.basic.SnackbarResult
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Image
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 
 @Composable
@@ -174,6 +183,36 @@ fun SnackbarDemo() {
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
+                            )
+                        }
+                        // The notification snack bar shown in place: swipe it sideways or down, or
+                        // tap its close button.
+                        var notificationVisible by remember { mutableStateOf(true) }
+                        AnimatedVisibility(visible = notificationVisible) {
+                            NotificationSnackbar(
+                                title = "Screenshot saved",
+                                subtitle = "Tap Share to send it to a contact",
+                                actionLabel = "Share",
+                                onActionClick = {},
+                                onDismiss = { notificationVisible = false },
+                                icon = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(COUITheme.colorScheme.primary),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(imageVector = COUIIcons.Image, contentDescription = null, tint = Color.White)
+                                    }
+                                },
+                            )
+                        }
+                        if (!notificationVisible) {
+                            TextButton(
+                                text = "Show notification again",
+                                onClick = { notificationVisible = true },
+                                modifier = Modifier.fillMaxWidth(),
                             )
                         }
                     }

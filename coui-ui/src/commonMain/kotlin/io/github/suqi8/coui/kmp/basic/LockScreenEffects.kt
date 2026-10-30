@@ -6,13 +6,19 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.draw.CacheDrawScope
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -21,12 +27,20 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.shadow.ShadowContext
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.shader.isRenderEffectSupported
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.min
 
 /*
  * The lock-screen "glass" effects shared by NumericKeyboard (press effect `pressLight`) and
@@ -85,16 +99,33 @@ private val InnerGradientStops = arrayOf(
 )
 
 /**
- * A recorded [LockInnerShadowLayer]: the stroke drawn into a blurred [GraphicsLayer] padded by
- * [pad] pixels on every side, so the blur of the outer half of the stroke still reaches inside.
+ * A recorded [LockInnerShadowLayer], drawn at its outline's top left minus [pad] pixels:
+ * - [layer]: the stroke recorded into a blurred [GraphicsLayer] padded by [pad] on every side, so
+ *   the blur of the outer half of the stroke still reaches inside;
+ * - [painter] (where render effects are unavailable, Android before 12, on which a
+ *   [BlurEffect] is silently dropped and the bare stroke would show as a hard ring): a drop shadow
+ *   of the stroke band, drawn at [painterSize] with [pad] the half stroke width.
  */
-internal class RecordedInnerShadow(val layer: GraphicsLayer, val pad: Float)
+internal class RecordedInnerShadow(
+    val layer: GraphicsLayer?,
+    val painter: Painter?,
+    val painterSize: Size,
+    val pad: Float,
+)
 
 /**
  * Records [LockInnerShadowLayers] for an outline of [size] built by [outline] (at the origin).
  * Call from `drawWithCache` so the blur is only recorded again when the size changes.
+ *
+ * [outline] must be a capsule (a circle included): the blur-mask fallback builds the stroke band
+ * of a capsule itself.
  */
-internal fun CacheDrawScope.recordLockInnerShadow(size: Size, outline: (Size) -> Path): List<RecordedInnerShadow> {
+internal fun CacheDrawScope.recordLockInnerShadow(
+    size: Size,
+    shadowContext: ShadowContext,
+    outline: (Size) -> Path,
+): List<RecordedInnerShadow> {
+    if (!isRenderEffectSupported()) return LockInnerShadowLayers.map { recordFallbackInnerShadow(size, shadowContext, it) }
     val path = outline(size)
     return LockInnerShadowLayers.map { spec ->
         val pad = ceil(spec.blurRadius * 2f + spec.strokeWidth + abs(spec.dy))
@@ -105,9 +136,52 @@ internal fun CacheDrawScope.recordLockInnerShadow(size: Size, outline: (Size) ->
                 drawPath(path = path, color = spec.color, style = Stroke(width = spec.strokeWidth))
             }
         }
-        RecordedInnerShadow(layer, pad)
+        RecordedInnerShadow(layer = layer, painter = null, painterSize = Size.Zero, pad = pad)
     }
 }
+
+/**
+ * The blur-mask fallback of one [LockInnerShadowLayer]: COUI's `setShadowLayer` on a transparent
+ * stroke is exactly the blurred, offset stroke band, which is what a drop shadow of the band shape
+ * draws (Compose renders it with a blur mask filter on every API level, and converts the radius to
+ * a sigma the same way `setShadowLayer` does).
+ */
+private fun CacheDrawScope.recordFallbackInnerShadow(
+    size: Size,
+    shadowContext: ShadowContext,
+    spec: LockInnerShadowLayer,
+): RecordedInnerShadow {
+    val shadow = Shadow(
+        radius = spec.blurRadius.toDp(),
+        color = spec.color,
+        offset = DpOffset(0.dp, spec.dy.toDp()),
+    )
+    return RecordedInnerShadow(
+        layer = null,
+        painter = shadowContext.createDropShadowPainter(CapsuleStrokeBand(spec.strokeWidth), shadow),
+        painterSize = Size(size.width + spec.strokeWidth, size.height + spec.strokeWidth),
+        pad = spec.strokeWidth / 2f,
+    )
+}
+
+/**
+ * The band a [strokeWidth] stroke along a capsule covers, in a frame grown by half the stroke on
+ * every side: the frame capsule minus the capsule inset by the whole stroke.
+ */
+private data class CapsuleStrokeBand(val strokeWidth: Float) : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline {
+        val path = Path().apply {
+            fillType = PathFillType.EvenOdd
+            addRoundRect(capsule(Rect(Offset.Zero, size)))
+            if (size.width > strokeWidth * 2f && size.height > strokeWidth * 2f) {
+                addRoundRect(capsule(Rect(strokeWidth, strokeWidth, size.width - strokeWidth, size.height - strokeWidth)))
+            }
+        }
+        return Outline.Generic(path)
+    }
+}
+
+private fun capsule(rect: Rect): RoundRect = RoundRect(rect, CornerRadius(min(rect.width, rect.height) / 2f))
 
 /**
  * Draws recorded inner shadows inside [clip] (the outline at its final position and scale),
@@ -126,8 +200,12 @@ internal fun DrawScope.drawLockInnerShadow(
         shadows.forEach { shadow ->
             translate(topLeft.x - shadow.pad * scale, topLeft.y - shadow.pad * scale) {
                 scale(scale, scale, pivot = Offset.Zero) {
-                    shadow.layer.alpha = alpha
-                    drawLayer(shadow.layer)
+                    if (shadow.layer != null) {
+                        shadow.layer.alpha = alpha
+                        drawLayer(shadow.layer)
+                    } else if (shadow.painter != null) {
+                        with(shadow.painter) { draw(shadow.painterSize, alpha = alpha) }
+                    }
                 }
             }
         }

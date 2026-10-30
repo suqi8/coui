@@ -28,7 +28,7 @@ ListDetailLayout(
 
 The size class comes from the layout's own size (`COUIListDetailView.onMeasure`):
 
-- **Compact** (narrower than 600dp, `WindowTotalSizeClass.Compact`): a single pane, the `detail` when there is one, otherwise the `list`. Set `detail` back to null to return to the list.
+- **Compact** (narrower than 600dp, `WindowTotalSizeClass.Compact`): a single pane, the `detail` when there is one, otherwise the `list`. Set `detail` back to null to return to the list; the list stays composed meanwhile, so it keeps its scroll position.
 - **Split**: the list is `clamp(width × 0.4, 280dp, 412dp)` wide (`DEFAULT_MAIN_WIDTH_PERCENT`, `coui_main_fragment_min_width` / `coui_main_fragment_max_width`), a 0.33dp `couiColorDivider` line follows (`coui_fragment_gap_width`), and the remaining width shows the `detail`, or `emptyDetail` while nothing is selected (COUI's empty-page container).
 
 Both panes keep their state when the layout switches between the single-pane and the split arrangement.

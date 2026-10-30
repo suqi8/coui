@@ -1,6 +1,6 @@
 # StepperPreference
 
-`StepperPreference` 是行尾带 [Stepper](./stepper.md) 的设置项，对应 ColorOS 的 `COUIStepperPreference`。COUI 沿用普通设置项布局，只把右侧控件换成步进器，并透传最小值（默认 -999）、最大值（默认 9999）和步长（couiUnit，默认 1）。
+`StepperPreference` 是行尾带 [Stepper](./stepper.md) 的设置项，对应 ColorOS 的 `COUIStepperPreference`。COUI 沿用普通设置项布局，只把右侧控件换成步进器，并透传最小值（默认 -999）、最大值（默认 9999）和步长（couiUnit，默认 1）。与 COUI 不带垂直内边距的 widget_frame 一致，32dp 的步进器可以伸入行的垂直内边距，因此行高与普通设置项相同（48dp）。
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=stepperPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

@@ -1,6 +1,6 @@
 # CardInstructionPreference
 
-`CardInstructionPreference` 是页面顶部带插图轮播的说明卡片，对应 ColorOS 的 `COUICardInstructionPreference`（默认的描述类型）。每页并排展示一张或多张插图（间距 24dp，每张可带说明文字），下方是居中的标题（16sp 中粗，最多两行）和描述。文字区超过 102dp（无标题时 64dp）后可滚动，上下边缘渐隐。多于一页时，轮播下方 24dp 处显示圆点指示器。
+`CardInstructionPreference` 是页面顶部带插图轮播的说明卡片，对应 ColorOS 的 `COUICardInstructionPreference`（默认的描述类型）。每页并排展示一张或多张插图（间距 24dp，每张可带说明文字），下方是居中的标题（16sp 中粗，最多两行）和描述。文字区超过 102dp（无标题时 64dp）后可滚动，上下边缘渐隐。多于一页时，轮播下方 24dp 处显示 [PageIndicator](./pageindicator) 圆点指示器，点击圆点可跳转到对应页。
 
 <div style="position: relative; height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=cardInstructionPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -89,8 +89,6 @@ CardInstructionPreference(
 | SummaryTopMarginWithTitle    | Dp            | 12.dp                                               | …_summary_margin_top_small                              |
 | SummaryTopMarginWithoutTitle | Dp            | 24.dp                                               | …_summary_margin_top_large                              |
 | IndicatorTopMargin           | Dp            | 24.dp                                               | 指示器上边距                                            |
-| DotSize                      | Dp            | 6.dp                                                | coui_page_indicator_dot_size                            |
-| DotSpacing                   | Dp            | 6.dp                                                | 2 x coui_page_indicator_dot_spacing                     |
 
 #### `cardInstructionPreferenceColors()` 工厂方法
 

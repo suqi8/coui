@@ -41,10 +41,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -162,8 +164,9 @@ fun rememberNumericKeyboardState(): NumericKeyboardState = remember { NumericKey
  * 3 x 4 grid, with an optional side key in each bottom corner (by default a delete key on the
  * right).
  *
- * A key fires on release when the finger is still on it; sliding off cancels it. Each touch down
- * plays a keyboard haptic. Several fingers can press keys at once. The press effect is either
+ * A key fires on release when the finger is still on it; sliding off cancels it, and so does a
+ * scrolling parent taking the drag over (COUI's `ACTION_CANCEL`), so the keyboard can sit in a
+ * scrolling list. Each touch down plays a keyboard haptic. Several fingers can press keys at once. The press effect is either
  * the [NumericKeyboardPressEffect.Ripple] of the Settings keyboard or the
  * [NumericKeyboardPressEffect.Light] glass keys of the lock screen (use
  * [NumericKeyboardDefaults.lockScreenColors] with it, over a wallpaper or a dark surface).
@@ -229,6 +232,7 @@ fun NumericKeyboard(
     val sidePainters = remember(leftPainter, rightPainter) { arrayOf(leftPainter, rightPainter) }
 
     val geometry = remember { KeyboardGeometry() }
+    val shadowContext = LocalGraphicsContext.current.shadowContext
 
     Layout(
         content = {
@@ -274,33 +278,42 @@ fun NumericKeyboard(
                                         val key = state.keys[index]
                                         key.pointer = id
                                         pressKey(key, scope, currentEffect, currentCircleMaxAlpha)
+                                        change.consume()
                                     }
-                                    change.consume()
                                 }
 
                                 !change.pressed && change.previousPressed -> {
-                                    val index = geometry.hit(change.position, left.visible, right.visible)
-                                    if (index >= 0 && state.keys[index].pointer == id) {
-                                        dispatchKey(index, currentOnNumber, currentOnLeft, currentOnRight)
+                                    val owned = state.keys.firstOrNull { it.pointer == id }
+                                    if (owned != null) {
+                                        val index = geometry.hit(change.position, left.visible, right.visible)
+                                        if (index >= 0 && state.keys[index] === owned) {
+                                            dispatchKey(index, currentOnNumber, currentOnLeft, currentOnRight)
+                                        }
+                                        owned.pointer = null
+                                        releaseKey(owned, scope, currentEffect, currentCircleMaxAlpha)
+                                        change.consume()
                                     }
-                                    state.keys.firstOrNull { it.pointer == id }?.let {
-                                        it.pointer = null
-                                        releaseKey(it, scope, currentEffect, currentCircleMaxAlpha)
-                                    }
-                                    change.consume()
                                 }
 
                                 change.pressed -> {
+                                    // Moves stay unconsumed so a scrolling parent can take them.
                                     val owned = state.keys.indexOfFirst { it.pointer == id }
-                                    if (owned >= 0) {
-                                        val index = geometry.hit(change.position, left.visible, right.visible)
-                                        if (index != owned || change.isConsumed) {
-                                            val key = state.keys[owned]
-                                            key.pointer = null
-                                            releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
-                                        }
+                                    if (owned >= 0 && geometry.hit(change.position, left.visible, right.visible) != owned) {
+                                        val key = state.keys[owned]
+                                        key.pointer = null
+                                        releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
                                     }
-                                    change.consume()
+                                }
+                            }
+                        }
+                        // A parent that consumed a move in its Main pass took the gesture over:
+                        // cancel the keys that pointer holds.
+                        val finalEvent = awaitPointerEvent(PointerEventPass.Final)
+                        finalEvent.changes.forEach { change ->
+                            if (change.pressed && change.previousPressed && change.isConsumed) {
+                                state.keys.firstOrNull { it.pointer == change.id }?.let { key ->
+                                    key.pointer = null
+                                    releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
                                 }
                             }
                         }
@@ -319,7 +332,7 @@ fun NumericKeyboard(
                 val keyPx = keySize.toPx()
                 geometry.update(size, keyPx, NumericKeyboardDefaults.AdditionalPressableArea.toPx())
                 val shadows = if (pressEffect == NumericKeyboardPressEffect.Light) {
-                    recordLockInnerShadow(Size(keyPx, keyPx)) { Path().apply { addOval(Rect(Offset.Zero, it)) } }
+                    recordLockInnerShadow(Size(keyPx, keyPx), shadowContext) { Path().apply { addOval(Rect(Offset.Zero, it)) } }
                 } else {
                     emptyList()
                 }
@@ -623,11 +636,14 @@ private fun DrawScope.drawSideKey(
         }
     } else if (!key.text.isNullOrEmpty()) {
         val color = if (key.textColor != Color.Unspecified) key.textColor else colors.wordTextColor
+        // Measured at its rest size (cached by the measurer) and scaled with the key.
         val layout = textMeasurer.measure(
             key.text,
-            TextStyle(color = color, fontSize = (key.textSize.toPx() * scale).toSp(), fontWeight = FontWeight.Bold),
+            TextStyle(color = color, fontSize = key.textSize.toPx().toSp(), fontWeight = FontWeight.Bold),
         )
-        drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f), alpha = sideAlpha)
+        scale(scale, scale, pivot = center) {
+            drawText(layout, topLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f), alpha = sideAlpha)
+        }
     }
 }
 
@@ -686,13 +702,17 @@ object NumericKeyboardDefaults {
      * The Settings keyboard colors (`SettingsNumericKeyboardStyle` on
      * `Widget.COUI.COUINumericKeyboard.Dark`, and `SettingsNumericKeyboardDarkStyle` on
      * `.Dark.Dark`): digits #000000 / `coui_color_label_primary_dark` #E6FFFFFF on
-     * `coui_color_surface` keys, side keys without a fill / #4DD9D9D9, ripple #000000 / #FFFFFF at
+     * `numberic_keyboard_setting_background_color` keys (`coui_color_surface` #FFFFFF, #8C3D3D3D
+     * in `values-night`), side keys without a fill / #4DD9D9D9, ripple #000000 / #FFFFFF at
      * 6% / 12% (`coui_numeric_keyboard_dark_circle_max_alpha`), finish label #2AD181.
+     *
+     * The keys are card-colored discs: place the keyboard on the page surface
+     * (`COUITheme.colorScheme.surface`), not on a card, or they do not show.
      */
     @Composable
     fun colors(
         numberColor: Color = if (isDark()) Color(0xE6FFFFFF) else Color.Black,
-        numberBackgroundColor: Color = COUITheme.colorScheme.surfaceContainer,
+        numberBackgroundColor: Color = if (isDark()) Color(0x8C3D3D3D) else COUITheme.colorScheme.surfaceContainer,
         sideBackgroundColor: Color = if (isDark()) Color(0x4DD9D9D9) else Color.Transparent,
         pressedColor: Color = if (isDark()) Color.White else Color.Black,
         circleMaxAlpha: Float = if (isDark()) 0.12f else 0.06f,

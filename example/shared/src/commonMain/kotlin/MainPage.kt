@@ -345,6 +345,8 @@ fun MainPage(
                                 expanded = expanded,
                                 onExpandedChange = { expanded = it },
                                 label = "Search",
+                                // COUIHintAnimationLayout: the hint carousel while the field is empty.
+                                hints = remember { listOf("Search components", "Try \"Slider\"", "Try \"Dialog\"") },
                             )
                         },
                         outsideEndAction = {

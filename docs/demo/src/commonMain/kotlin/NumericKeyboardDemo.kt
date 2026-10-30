@@ -19,11 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.NumericKeyboard
 import io.github.suqi8.coui.kmp.basic.NumericKeyboardDefaults
 import io.github.suqi8.coui.kmp.basic.NumericKeyboardPressEffect
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.theme.COUITheme
 
 @Composable
 fun NumericKeyboardDemo() {
@@ -41,18 +41,19 @@ fun NumericKeyboardDemo() {
             horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
         ) {
             var input by remember { mutableStateOf("") }
-            Card {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(text = input.ifEmpty { "Ripple" })
-                    NumericKeyboard(
-                        onNumberClick = { if (input.length < 12) input += it },
-                        onRightKeyClick = { input = input.dropLast(1) },
-                    )
-                }
+            // The Settings keys are card-colored discs: they sit on the page surface, not on a card.
+            Column(
+                modifier = Modifier
+                    .background(COUITheme.colorScheme.surface)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(text = input.ifEmpty { "Ripple" })
+                NumericKeyboard(
+                    onNumberClick = { if (input.length < 12) input += it },
+                    onRightKeyClick = { input = input.dropLast(1) },
+                )
             }
             var pin by remember { mutableStateOf("") }
             Column(

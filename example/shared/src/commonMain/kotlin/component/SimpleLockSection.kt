@@ -36,8 +36,8 @@ fun LazyListScope.simpleLockSection() {
 private fun SimpleLockDemoCard(type: SimpleLockType) {
     Card(
         modifier = Modifier
-            .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp),
     ) {
         var count by remember { mutableIntStateOf(0) }
         val state = rememberSimpleLockState()

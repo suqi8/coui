@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -25,8 +24,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -34,16 +32,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.suqi8.coui.kmp.basic.PageIndicator
+import io.github.suqi8.coui.kmp.basic.PageIndicatorDefaults
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -125,11 +121,15 @@ fun CardInstructionPreference(
             CardInstructionPageContent(page = pages[index], colors = colors)
         }
         if (pages.size > 1) {
-            CardInstructionPageIndicator(
+            // COUICardInstructionPreference drives a stock COUIPageIndicator from the ViewPager2 callback.
+            PageIndicator(
                 pagerState = pagerState,
-                pageCount = pages.size,
-                colors = colors,
                 modifier = Modifier.padding(top = CardInstructionPreferenceDefaults.IndicatorTopMargin),
+                pageCount = pages.size,
+                colors = PageIndicatorDefaults.colors(
+                    dotColor = colors.dotColor,
+                    traceColor = colors.selectedDotColor,
+                ),
             )
         }
     }
@@ -185,8 +185,7 @@ private fun CardInstructionPageContent(
                     },
                 )
                 .verticalFadingEdge(
-                    canScrollBackward = scrollState.canScrollBackward,
-                    canScrollForward = scrollState.canScrollForward,
+                    scrollState = scrollState,
                     length = CardInstructionPreferenceDefaults.ContentFadingEdgeLength,
                 )
                 .verticalScroll(scrollState),
@@ -225,94 +224,37 @@ private fun CardInstructionPageContent(
 }
 
 /**
- * Fades the top / bottom [length] of the content while it can scroll that way, like
- * `android:requiresFadingEdge="vertical"` on the COUI COUIMutableSizeScrollView.
+ * Fades the top / bottom [length] of the content while [scrollState] can scroll that way, like
+ * `android:requiresFadingEdge="vertical"` on the COUI COUIMutableSizeScrollView. The scroll state is
+ * read in the draw phase, so scrolling only redraws, and the gradients are cached per size.
  */
 private fun Modifier.verticalFadingEdge(
-    canScrollBackward: Boolean,
-    canScrollForward: Boolean,
+    scrollState: ScrollState,
     length: Dp,
 ): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-    .drawWithContent {
-        drawContent()
+    .drawWithCache {
         val edge = min(length.toPx(), size.height / 2f)
-        if (canScrollBackward && edge > 0f) {
-            drawRect(
-                brush = Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, startY = 0f, endY = edge),
-                size = Size(size.width, edge),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-        if (canScrollForward && edge > 0f) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    0f to Color.Black,
-                    1f to Color.Transparent,
-                    startY = size.height - edge,
-                    endY = size.height,
-                ),
-                topLeft = Offset(0f, size.height - edge),
-                size = Size(size.width, edge),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-    }
-
-/**
- * The COUIPageIndicator dot row: [CardInstructionPreferenceDefaults.DotSize] dots
- * (coui_page_indicator_dot_size) [CardInstructionPreferenceDefaults.DotSpacing] apart
- * (2 x coui_page_indicator_dot_spacing) in couiColorHintNeutral, with the couiColorLabelPrimary
- * trace dot stretching between two dots while the pager scrolls.
- */
-@Composable
-private fun CardInstructionPageIndicator(
-    pagerState: PagerState,
-    pageCount: Int,
-    colors: CardInstructionPreferenceColors,
-    modifier: Modifier = Modifier,
-) {
-    val dotSize = CardInstructionPreferenceDefaults.DotSize
-    val spacing = CardInstructionPreferenceDefaults.DotSpacing
-    val width = dotSize * pageCount + spacing * (pageCount - 1)
-    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    Canvas(modifier = modifier.size(width = width, height = dotSize)) {
-        val dot = dotSize.toPx()
-        val step = dot + spacing.toPx()
-        val radius = CornerRadius(dot / 2f, dot / 2f)
-        fun dotLeft(index: Float): Float {
-            val left = index * step
-            return if (isRtl) size.width - dot - left else left
-        }
-        repeat(pageCount) { index ->
-            drawRoundRect(
-                color = colors.dotColor,
-                topLeft = Offset(dotLeft(index.toFloat()), 0f),
-                size = Size(dot, dot),
-                cornerRadius = radius,
-            )
-        }
-        // Trace: over the first half of a swipe the leading edge runs to the next dot, over the
-        // second half the trailing edge follows it, so the selected dot stretches into a capsule
-        // mid-swipe. currentPage flips at the midpoint, where both halves meet.
-        val last = (pageCount - 1).toFloat()
-        val from = pagerState.currentPage.toFloat()
-        val offset = pagerState.currentPageOffsetFraction
-        val direction = if (offset < 0f) -1f else 1f
-        val lead = (from + (offset * 2f).coerceIn(-1f, 1f)).coerceIn(0f, last)
-        val trail = (from + ((abs(offset) - 0.5f).coerceAtLeast(0f) * 2f) * direction).coerceIn(0f, last)
-        val traceStart = min(lead, trail)
-        val traceEnd = max(lead, trail)
-        val left = min(dotLeft(traceStart), dotLeft(traceEnd))
-        val right = max(dotLeft(traceStart), dotLeft(traceEnd)) + dot
-        drawRoundRect(
-            color = colors.selectedDotColor,
-            topLeft = Offset(left, 0f),
-            size = Size(right - left, dot),
-            cornerRadius = radius,
+        val edgeSize = Size(size.width, edge)
+        val bottomEdgeOffset = Offset(0f, size.height - edge)
+        val topFade = Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, startY = 0f, endY = edge)
+        val bottomFade = Brush.verticalGradient(
+            0f to Color.Black,
+            1f to Color.Transparent,
+            startY = size.height - edge,
+            endY = size.height,
         )
+        onDrawWithContent {
+            drawContent()
+            if (edge <= 0f) return@onDrawWithContent
+            if (scrollState.canScrollBackward) {
+                drawRect(brush = topFade, size = edgeSize, blendMode = BlendMode.DstIn)
+            }
+            if (scrollState.canScrollForward) {
+                drawRect(brush = bottomFade, topLeft = bottomEdgeOffset, size = edgeSize, blendMode = BlendMode.DstIn)
+            }
+        }
     }
-}
 
 object CardInstructionPreferenceDefaults {
 
@@ -348,12 +290,6 @@ object CardInstructionPreferenceDefaults {
 
     /** The gap between the pager and the page indicator (COUI indicator marginTop). */
     val IndicatorTopMargin = 24.dp
-
-    /** The size of a page indicator dot (COUI coui_page_indicator_dot_size). */
-    val DotSize = 6.dp
-
-    /** The gap between two indicator dots (COUIPageIndicator: 2 x coui_page_indicator_dot_spacing). */
-    val DotSpacing = 6.dp
 
     /**
      * The default [CardInstructionPreferenceColors].

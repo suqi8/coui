@@ -12,6 +12,7 @@ import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.invalidateMeasurement
 import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
@@ -21,9 +22,9 @@ import androidx.compose.ui.unit.dp
 /**
  * The horizontal geometry a percent-width container resolves on the COUI layout grid.
  *
- * @property contentWidth The width of the content area.
- * @property startPadding The inset of the content area from the start edge.
- * @property endPadding The inset of the content area from the end edge.
+ * @property contentWidth The grid width: the width a [PercentWidthMode.Remeasure] layout takes.
+ * @property startPadding The start inset a [PercentWidthMode.Padding] layout gives its content.
+ * @property endPadding The end inset a [PercentWidthMode.Padding] layout gives its content.
  */
 @Immutable
 data class PercentWidthResult(
@@ -59,7 +60,10 @@ enum class GridMarginType {
 
 /** How a percent-width container applies the grid width (`percentMode`). */
 enum class PercentWidthMode {
-    /** `PADDING_MODE`: the container keeps the incoming width and insets its content. */
+    /**
+     * `PADDING_MODE`: the container keeps the incoming width and insets its content by the start
+     * and end paddings (`setPadding`); the content fills what is left between them.
+     */
     Padding,
 
     /** `REMEASURE_MODE`: the container itself is measured at the grid width. */
@@ -166,9 +170,9 @@ object PercentWidthDefaults {
  * (`COUIPercentWidthLinearLayout`, `COUIPercentWidthFrameLayout`, `COUIPercentWidthRecyclerView`, …)
  * do in `onMeasure` through `COUIResponsiveUtils.measureLayout`.
  *
- * In [PercentWidthMode.Padding] the layout keeps the incoming width and its content is measured
- * at the grid width and placed after the grid start padding; in [PercentWidthMode.Remeasure] the
- * layout itself is the grid width. Without a bounded incoming width it is a no-op.
+ * In [PercentWidthMode.Padding] the layout keeps the incoming width and its content fills the
+ * width between the grid start and end paddings; in [PercentWidthMode.Remeasure] the layout itself
+ * is the grid width. Without a bounded incoming width it is a no-op.
  *
  * @param gridNumber The number of grid columns the content spans, or
  *   [PercentWidthDefaults.AUTO_GRID_NUMBER] for 4 / 6 / 8 by the grid size.
@@ -207,6 +211,8 @@ private data class PercentWidthElement(
         node.marginType = marginType
         node.mode = mode
         node.parentChildHierarchy = parentChildHierarchy
+        // The node is reused: a new configuration has to measure again.
+        node.invalidateMeasurement()
     }
 
     override fun InspectorInfo.inspectableProperties() {
@@ -247,19 +253,23 @@ private class PercentWidthNode(
             marginType = marginType,
             parentChildHierarchy = parentChildHierarchy,
         )
-        val contentWidth = result.contentWidth.roundToPx().coerceIn(0, constraints.maxWidth)
         return when (mode) {
             PercentWidthMode.Remeasure -> {
+                val contentWidth = result.contentWidth.roundToPx().coerceIn(0, constraints.maxWidth)
                 val placeable = measurable.measure(constraints.copy(minWidth = contentWidth, maxWidth = contentWidth))
                 layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
             }
 
             PercentWidthMode.Padding -> {
-                val start = result.startPadding.roundToPx().coerceIn(0, constraints.maxWidth - contentWidth)
-                val placeable = measurable.measure(
-                    constraints.copy(minWidth = constraints.minWidth.coerceAtMost(contentWidth), maxWidth = contentWidth),
-                )
+                // measureLayout's PADDING_MODE only sets the view's padding: the content fills the
+                // width between the two insets, which can be wider than the grid width.
                 val width = constraints.maxWidth
+                val start = result.startPadding.roundToPx().coerceIn(0, width)
+                val end = result.endPadding.roundToPx().coerceIn(0, width - start)
+                val innerWidth = width - start - end
+                val placeable = measurable.measure(
+                    constraints.copy(minWidth = constraints.minWidth.coerceAtMost(innerWidth), maxWidth = innerWidth),
+                )
                 layout(width, placeable.height) {
                     placeable.placeRelative(start, 0)
                 }

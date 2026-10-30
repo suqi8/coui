@@ -55,7 +55,8 @@ SegmentButton(
 
 - Tapping a segment selects it on release; the touched segment shrinks with the COUI press scale.
 - The indicator moves on three springs: position (response 0.4, bounce 0.1), width (response 0.6 → 0.4 and bounce 0.5 → 0.1 by how different the two widths are, started at 1000 px/s; a growing indicator overshoots by at most 7dp, 5dp with the small inset) and height (dips towards 90% and springs back).
-- Pressing the selected segment grabs the indicator: it presses in and can be dragged. Sliding onto another segment selects it with a haptic tick; dragging within the selected segment pulls the indicator on a rubber band.
+- Pressing the selected segment grabs the indicator: it presses in and can be dragged. Sliding onto another segment selects it with a haptic tick; dragging within the selected segment pulls the indicator on a rubber band. Once a drag passes the touch slop the control keeps the gesture (`attemptClaimDrag`), so a horizontal pager or scroller around it does not take over; a vertical scroll that starts first still wins.
+- In a right-to-left layout the first segment sits at the right edge.
 - The whole control follows the COUI 17 touch motion (press scale, rubber band, drag deformation); `dragAnimationEnabled = false` turns it off.
 - A disabled control looks the same, as in COUI; it only ignores touches.
 

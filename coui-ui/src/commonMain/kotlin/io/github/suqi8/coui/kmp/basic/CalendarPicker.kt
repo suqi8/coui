@@ -113,6 +113,7 @@ fun CalendarPicker(
     val minEpoch = civilToEpochDay(minDate.year, minDate.month, minDate.day)
     val maxEpoch = civilToEpochDay(maxDate.year, maxDate.month, maxDate.day)
     require(minEpoch <= maxEpoch) { "maxDate must be >= minDate" }
+    require(firstDayOfWeek in 1..7) { "firstDayOfWeek must be in 1..7 (1 = Sunday)" }
     val safeMonth = value.month.coerceIn(1, 12)
     val selectedEpoch = civilToEpochDay(value.year, safeMonth, value.day.coerceIn(1, daysInMonth(value.year, safeMonth)))
         .coerceIn(minEpoch, maxEpoch)
@@ -126,8 +127,10 @@ fun CalendarPicker(
     val scope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(selectedPage) {
-        if (pagerState.currentPage != selectedPage) {
+    // Follow the selection to its month, but only while the grid is shown: the pager is not
+    // composed behind the wheel, and collapsing jumps it to the selected month instead.
+    LaunchedEffect(selectedPage, expanded) {
+        if (!expanded && pagerState.currentPage != selectedPage) {
             pagerState.animateScrollToPage(selectedPage, animationSpec = tween(PAGE_SCROLL_DURATION_MILLIS, easing = CalendarPageEasing))
         }
     }
@@ -142,17 +145,19 @@ fun CalendarPicker(
         }
     }
 
-    val displayedMonth = firstMonthIndex + pagerState.currentPage
+    // While the wheel is shown the header follows the wheel, not the hidden pager.
+    val displayedMonth = if (expanded) monthIndex(selected.year, selected.month) else firstMonthIndex + pagerState.currentPage
     Column(modifier = modifier.padding(insideMargin)) {
         CalendarPickerHeader(
             label = monthYearLabel(displayedMonth / 12, displayedMonth % 12 + 1),
             expanded = expanded,
             canGoBack = !expanded && pagerState.currentPage > 0,
             canGoForward = !expanded && pagerState.currentPage < pageCount - 1,
+            // From the target page, so repeated taps during the scroll keep stepping.
             onBack = {
                 scope.launch {
                     pagerState.animateScrollToPage(
-                        (pagerState.currentPage - 1).coerceAtLeast(0),
+                        (pagerState.targetPage - 1).coerceAtLeast(0),
                         animationSpec = tween(PAGE_SCROLL_DURATION_MILLIS, easing = CalendarPageEasing),
                     )
                 }
@@ -160,12 +165,15 @@ fun CalendarPicker(
             onForward = {
                 scope.launch {
                     pagerState.animateScrollToPage(
-                        (pagerState.currentPage + 1).coerceAtMost(pageCount - 1),
+                        (pagerState.targetPage + 1).coerceAtMost(pageCount - 1),
                         animationSpec = tween(PAGE_SCROLL_DURATION_MILLIS, easing = CalendarPageEasing),
                     )
                 }
             },
-            onToggleExpanded = { expanded = !expanded },
+            onToggleExpanded = {
+                if (expanded) pagerState.requestScrollToPage(selectedPage)
+                expanded = !expanded
+            },
             colors = colors,
             textStyle = headerTextStyle,
         )

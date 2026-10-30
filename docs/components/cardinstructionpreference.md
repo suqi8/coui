@@ -1,6 +1,6 @@
 # CardInstructionPreference
 
-`CardInstructionPreference` is a page-top description card with an illustration pager, mirroring ColorOS's `COUICardInstructionPreference` in its default description form. Each page shows one or more illustrations side by side (24dp apart, each with an optional caption), then a centered title (16sp medium, at most two lines) and a description. The text block scrolls with faded edges once it exceeds 102dp (64dp without a title). With more than one page a dot indicator appears 24dp below the pager.
+`CardInstructionPreference` is a page-top description card with an illustration pager, mirroring ColorOS's `COUICardInstructionPreference` in its default description form. Each page shows one or more illustrations side by side (24dp apart, each with an optional caption), then a centered title (16sp medium, at most two lines) and a description. The text block scrolls with faded edges once it exceeds 102dp (64dp without a title). With more than one page a [PageIndicator](./pageindicator) appears 24dp below the pager; tapping a dot jumps to that page.
 
 <div style="position: relative; height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=cardInstructionPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -89,8 +89,6 @@ Pass your own `pagerState` (`rememberPagerState { pages.size }`) to read or driv
 | SummaryTopMarginWithTitle    | Dp            | 12.dp                                             | …_summary_margin_top_small                              |
 | SummaryTopMarginWithoutTitle | Dp            | 24.dp                                             | …_summary_margin_top_large                              |
 | IndicatorTopMargin           | Dp            | 24.dp                                             | Gap above the page indicator                            |
-| DotSize                      | Dp            | 6.dp                                              | coui_page_indicator_dot_size                            |
-| DotSpacing                   | Dp            | 6.dp                                              | 2 x coui_page_indicator_dot_spacing                     |
 
 #### `cardInstructionPreferenceColors()` factory
 

@@ -10,7 +10,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.horizontalDrag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,8 +43,13 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
@@ -55,12 +63,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sign
 
 /**
  * One action revealed behind a [SwipeActionItem], the counterpart of a `COUISlideMenuItem`.
@@ -94,8 +104,11 @@ class SwipeActionItemState {
     var revealOffset by mutableFloatStateOf(0f)
         private set
 
-    /** Whether the menu is (partly) revealed. */
-    val isOpen: Boolean get() = revealOffset > 0f
+    /**
+     * Whether the menu is (partly) revealed. Derived, so reading it in composition does not
+     * recompose on every frame of a drag.
+     */
+    val isOpen: Boolean by derivedStateOf { revealOffset > 0f }
 
     /** Whether the delete animation is running; dragging is ignored meanwhile. */
     var isDeleting by mutableStateOf(false)
@@ -147,7 +160,10 @@ class SwipeActionItemState {
 
     internal suspend fun animateRevealTo(target: Float, spec: AnimationSpec<Float>, initialVelocity: Float = 0f) {
         mutex.mutate {
-            animate(revealOffset, target, initialVelocity, spec) { value, _ -> revealOffset = value }
+            animate(revealOffset, target, initialVelocity, spec) { value, _ ->
+                // A fling towards the closed state must not push the content past its rest edge.
+                revealOffset = value.coerceAtLeast(0f)
+            }
         }
     }
 
@@ -261,7 +277,7 @@ fun SwipeActionItem(
     val hasOwnColors = menuActions.any { it.color.isSpecified }
     val actionCount = menuActions.size
     // The slot widths, written by the measure pass and read by the draw pass of the same frame.
-    val slotWidths = remember { FloatArray(MAX_ACTIONS) }
+    val slotWidths = remember(actionCount) { FloatArray(actionCount) }
 
     val startDelete: (Boolean) -> Unit = { isFast ->
         if (!state.isDeleting) {
@@ -275,24 +291,17 @@ fun SwipeActionItem(
 
     val dragModifier = if (enabled && actionCount > 0) {
         Modifier.pointerInput(state, isRtl, fastDelete) {
-            val velocityTracker = VelocityTracker()
-            detectHorizontalDragGestures(
+            // Positive values point in the reveal direction (towards the start edge).
+            val toReveal = if (isRtl) 1f else -1f
+            detectSwipeGestures(
+                canStart = { dx -> !state.isDeleting && (state.revealOffset > 0f || dx * toReveal > 0f) },
                 onDragStart = {
-                    velocityTracker.resetTracking()
-                    scope.launch { state.stopAnimation() }
+                    // Undispatched, so a running settle animation stops before the first delta.
+                    scope.launch(start = CoroutineStart.UNDISPATCHED) { state.stopAnimation() }
                 },
-                onDragEnd = {
-                    val velocity = velocityTracker.calculateVelocity().x.let { if (isRtl) it else -it }
-                    settle(state, velocity, fastDelete, scope, startDelete, density)
-                },
-                onDragCancel = {
-                    settle(state, 0f, fastDelete, scope, startDelete, density)
-                },
-                onHorizontalDrag = { change, dragAmount ->
-                    velocityTracker.addPosition(change.uptimeMillis, change.position)
-                    change.consume()
-                    state.dragBy(if (isRtl) dragAmount else -dragAmount)
-                },
+                onDrag = { dx -> state.dragBy(dx * toReveal) },
+                onDragEnd = { velocityX -> settle(state, velocityX * toReveal, fastDelete, scope, startDelete, density) },
+                onDragCancel = { settle(state, 0f, fastDelete, scope, startDelete, density) },
             )
         }
     } else {
@@ -359,7 +368,7 @@ fun SwipeActionItem(
         val actionPlaceables = List(actionCount) { measurables[it].measure(actionConstraints) }
         var menu = 0f
         actionPlaceables.forEachIndexed { v, placeable ->
-            if (v < MAX_ACTIONS) slotWidths[v] = placeable.width.toFloat()
+            slotWidths[v] = placeable.width.toFloat()
             menu += placeable.width
         }
         state.menuWidth = menu
@@ -417,6 +426,56 @@ private fun DrawScope.drawRectMirrored(color: Color, left: Float, right: Float, 
     val r = if (isRtl) size.width - left else right
     if (r <= l) return
     drawRect(color = color, topLeft = Offset(l, 0f), size = Size(r - l, size.height))
+}
+
+/**
+ * COUISlideView's drag pickup (onInterceptTouchEvent): the row takes the gesture once the
+ * horizontal travel passes the touch slop while being more than twice the vertical travel, and
+ * gives it up for good once the vertical travel passes the slop first, so a mostly vertical drag
+ * keeps scrolling the parent list. Unlike the View, a closed row also leaves drags towards the
+ * end edge to its parent ([canStart] returns false), so it does not block a horizontal pager.
+ * The first delta excludes the slop, like COUISlideView offsetting mLastMotionX by mTouchSlop.
+ */
+private suspend fun PointerInputScope.detectSwipeGestures(
+    canStart: (dx: Float) -> Boolean,
+    onDragStart: () -> Unit,
+    onDrag: (dx: Float) -> Unit,
+    onDragEnd: (velocityX: Float) -> Unit,
+    onDragCancel: () -> Unit,
+) = awaitEachGesture {
+    val down = awaitFirstDown(requireUnconsumed = false)
+    val slop = viewConfiguration.touchSlop
+    var total = Offset.Zero
+    var slopChange: PointerInputChange? = null
+    while (slopChange == null) {
+        val event = awaitPointerEvent()
+        val change = event.changes.firstOrNull { it.id == down.id } ?: return@awaitEachGesture
+        if (!change.pressed || change.isConsumed) return@awaitEachGesture
+        total += change.positionChange()
+        val dx = abs(total.x)
+        val dy = abs(total.y)
+        if (dx > slop && dx * PICKUP_RATIO > dy) {
+            if (!canStart(total.x)) return@awaitEachGesture
+            slopChange = change
+        } else if (dy > slop) {
+            return@awaitEachGesture
+        } else {
+            // A parent that consumed the move (e.g. a list that started scrolling) owns it.
+            awaitPointerEvent(PointerEventPass.Final)
+            if (change.isConsumed) return@awaitEachGesture
+        }
+    }
+    val velocityTracker = VelocityTracker()
+    velocityTracker.addPointerInputChange(slopChange)
+    slopChange.consume()
+    onDragStart()
+    onDrag(total.x - sign(total.x) * slop)
+    val lifted = horizontalDrag(slopChange.id) { change ->
+        velocityTracker.addPointerInputChange(change)
+        onDrag(change.positionChange().x)
+        change.consume()
+    }
+    if (lifted) onDragEnd(velocityTracker.calculateVelocity().x) else onDragCancel()
 }
 
 /** COUISlideView's ACTION_UP decision. */
@@ -571,6 +630,9 @@ private val SlideEase = CubicBezierEasing(0.133f, 0f, 0.3f, 1f)
 /** COUISlideView.animationScrollTo: SpringForce dampingRatio 1, stiffness 200. */
 private val SettleSpring = spring<Float>(dampingRatio = 1f, stiffness = 200f)
 
+/** COUISlideView.onInterceptTouchEvent starts a drag only when `|dx| * 0.5 > |dy|`. */
+private const val PICKUP_RATIO = 0.5f
+
 /** COUISlideView's fling threshold on VelocityTracker units of 1000 (px/s). */
 private const val FLING_VELOCITY = 1000f
 
@@ -588,6 +650,3 @@ private const val COLLAPSE_DURATION_MILLIS = 400
 
 /** COUISlideDeleteAnimation ANIMATION_DELAY. */
 private const val COLLAPSE_DELAY_MILLIS = 10L
-
-/** The most actions whose slot widths are tracked for drawing. */
-private const val MAX_ACTIONS = 16

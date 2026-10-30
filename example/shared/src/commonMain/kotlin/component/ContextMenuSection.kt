@@ -15,6 +15,7 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
+import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.menu.OverlayContextMenu
 import io.github.suqi8.coui.kmp.menu.WindowContextMenu
@@ -37,8 +38,8 @@ fun LazyListScope.contextMenuSection() {
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             CardListGroup {
                 item {
@@ -51,6 +52,7 @@ fun LazyListScope.contextMenuSection() {
                     }
                 }
                 item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowContextMenu(entries = entries) {
                         BasicComponent(
                             title = "Long press or right click (window)",
@@ -60,6 +62,7 @@ fun LazyListScope.contextMenuSection() {
                     }
                 }
                 item {
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlayContextMenu(entries = entries, enabled = false) {
                         BasicComponent(
                             title = "Disabled",

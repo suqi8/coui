@@ -47,6 +47,8 @@ fun SearchBarDemo() {
         ) {
             var searchValue by remember { mutableStateOf("") }
             var expanded by remember { mutableStateOf(false) }
+            // Rotating hints in place of the static label while the query is empty.
+            val hints = remember { listOf("Wi-Fi", "Bluetooth", "Battery saver") }
             SearchBar(
                 inputField = {
                     InputField(
@@ -56,6 +58,7 @@ fun SearchBarDemo() {
                         expanded = expanded,
                         onExpandedChange = { expanded = it },
                         label = "Search",
+                        hints = hints,
                     )
                 },
                 outsideEndAction = {

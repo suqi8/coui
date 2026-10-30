@@ -821,11 +821,13 @@ enum class NotificationSnackbarIconType {
  *   close button sits 6dp from the top and end edges.
  * - **Surface**: `couiColorBackgroundTop`, rounded at `couiRoundCornerL` and lifted with the same
  *   shadow as [Snackbar].
- * - **Swipe** (`COUINotificationSnackBar.onTouchEvent`): the first move picks an axis. Sideways the
- *   card follows the finger; past an eighth of its width it slides off screen at 1.75px per ms
- *   (`SLIDING_SPEED`, COUIMoveEaseInterpolator) and [onDismiss] runs, otherwise it springs back
- *   (response 0.35, bounce 0). Downwards it follows the finger and dismisses the same way past an
- *   eighth of its width; upwards it is held to an eighth of its width.
+ * - **Swipe** (`COUINotificationSnackBar.onTouchEvent`): a drag past the touch slop picks an axis
+ *   (COUI picks it on the first pixel, which would cancel every slightly moving tap on the buttons
+ *   and steal a scrolling parent's gestures). Sideways the card follows the finger; past an eighth
+ *   of its width it slides off screen at 1.75px per ms (`SLIDING_SPEED`, COUIMoveEaseInterpolator)
+ *   and [onDismiss] runs, otherwise it springs back (response 0.35, bounce 0). Downwards it follows
+ *   the finger and dismisses the same way past an eighth of its width; once dragged it is held to an
+ *   eighth of its width above its place. A drag that starts upwards is left to the parent.
  *
  * Show it through the `content` lambda of [SnackbarHost] to get the host's show / dismiss animation
  * and timeout (COUI clamps the duration to 4s..10s, [SnackbarDuration.Short] /
@@ -877,29 +879,47 @@ fun NotificationSnackbar(
         Modifier.pointerInput(Unit) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
+                val touchSlop = viewConfiguration.touchSlop
                 var axis = SwipeAxis.None
+                var pendingDrag = Offset.Zero
+                // The drag position is tracked here: the launched snaps run later, so reading the
+                // Animatable value back per event would drop the moves of the same frame.
+                var dragX = offsetX.value
+                var dragY = offsetY.value
                 while (true) {
                     val event = awaitPointerEvent()
                     val change = event.changes.firstOrNull { it.id == down.id } ?: break
                     if (!change.pressed) break
-                    val delta = change.positionChange()
-                    if (axis == SwipeAxis.None && delta != Offset.Zero) {
-                        axis = if (abs(delta.x) > abs(delta.y)) SwipeAxis.Horizontal else SwipeAxis.Vertical
+                    if (axis == SwipeAxis.None) {
+                        // COUI intercepts on the first pixel; past the touch slop instead, so a tap
+                        // on the action or close button still clicks and a scrolling parent keeps
+                        // the gestures that are not a swipe.
+                        if (change.isConsumed) break
+                        pendingDrag += change.positionChange()
+                        if (pendingDrag.getDistance() < touchSlop) continue
+                        axis = when {
+                            abs(pendingDrag.x) > abs(pendingDrag.y) -> SwipeAxis.Horizontal
+
+                            // A swipe up from rest is left to a scrolling parent: only a drag down
+                            // can dismiss the card.
+                            pendingDrag.y > 0f || dragY != 0f -> SwipeAxis.Vertical
+
+                            else -> break
+                        }
+                        change.consume()
+                        continue
                     }
-                    when (axis) {
-                        SwipeAxis.Horizontal -> {
-                            change.consume()
-                            scope.launch { offsetX.snapTo(offsetX.value + delta.x) }
-                        }
-
-                        SwipeAxis.Vertical -> {
-                            change.consume()
-                            // Upwards the card is held to an eighth of its width.
-                            val y = (offsetY.value + delta.y).let { if (it < 0f) maxOf(-size.width / 8f, it) else it }
-                            scope.launch { offsetY.snapTo(y) }
-                        }
-
-                        SwipeAxis.None -> Unit
+                    val delta = change.positionChange()
+                    change.consume()
+                    if (axis == SwipeAxis.Horizontal) {
+                        dragX += delta.x
+                        val x = dragX
+                        scope.launch { offsetX.snapTo(x) }
+                    } else {
+                        // Upwards the card is held to an eighth of its width.
+                        dragY = (dragY + delta.y).let { if (it < 0f) maxOf(-size.width / 8f, it) else it }
+                        val y = dragY
+                        scope.launch { offsetY.snapTo(y) }
                     }
                 }
                 val threshold = size.width / 8f

@@ -33,8 +33,8 @@ fun LazyListScope.lockPatternViewSection() {
         SmallTitle(text = "LockPatternView")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // The correct pattern is an "L": 1-4-7-8-9. Anything else flashes red and clears.
             val state = rememberLockPatternState()
@@ -95,8 +95,8 @@ fun LazyListScope.lockPatternViewSection() {
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // Disabled: touches are ignored.
             LockPatternView(

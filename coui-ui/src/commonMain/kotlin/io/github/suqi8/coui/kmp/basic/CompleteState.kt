@@ -7,8 +7,8 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -154,26 +155,33 @@ private fun CompleteStateAnimation(
             frame.snapTo(lastFrame)
         }
     }
-    Canvas(modifier = modifier) {
-        val f = frame.value
-        scale(size.width / COMPOSITION_SIZE, size.height / COMPOSITION_SIZE, pivot = Offset.Zero) {
-            when (type) {
-                CompleteStateType.Success -> drawSuccess(f, colors.successColor)
-                CompleteStateType.Failed -> drawFailed(f, colors.failedColor)
-                CompleteStateType.Waiting -> drawWaiting(f, colors.waitingColor)
+    Spacer(
+        modifier = modifier.drawWithCache {
+            // The check mark measure and its trimmed segment are reused by every frame.
+            val checkMeasure = PathMeasure().apply { setPath(SuccessCheckPath, false) }
+            val checkSegment = Path()
+            onDrawBehind {
+                val f = frame.value
+                scale(size.width / COMPOSITION_SIZE, size.height / COMPOSITION_SIZE, pivot = Offset.Zero) {
+                    when (type) {
+                        CompleteStateType.Success -> drawSuccess(f, colors.successColor, checkMeasure, checkSegment)
+                        CompleteStateType.Failed -> drawFailed(f, colors.failedColor)
+                        CompleteStateType.Waiting -> drawWaiting(f, colors.waitingColor)
+                    }
+                }
             }
-        }
-    }
+        },
+    )
 }
 
 /** complete_page_success_anim.json: ring fade-in (frames 0..25) and a trimmed check mark sweep (9..39). */
-private fun DrawScope.drawSuccess(frame: Float, color: Color) {
+private fun DrawScope.drawSuccess(frame: Float, color: Color, checkMeasure: PathMeasure, checkSegment: Path) {
     val ringAlpha = keyframe(frame, 0f, 25f, 0f, 1f, LottieEaseOut)
     drawCircle(
         color = color.copy(alpha = color.alpha * ringAlpha),
         radius = RING_RADIUS,
         center = CompositionCenter,
-        style = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Round),
+        style = RoundStroke,
     )
     // Trim path: start 100 -> 20 over frames 9..39, end 100 -> 80 over frames 9..27.96.
     val trimStart = keyframe(frame, 9f, 39f, 1f, 0.2f, LottieEaseOut)
@@ -181,15 +189,9 @@ private fun DrawScope.drawSuccess(frame: Float, color: Color) {
     val from = minOf(trimStart, trimEnd)
     val to = maxOf(trimStart, trimEnd)
     if (to - from <= 0f) return
-    val measure = PathMeasure()
-    measure.setPath(SuccessCheckPath, false)
-    val segment = Path()
-    measure.getSegment(from * measure.length, to * measure.length, segment, true)
-    drawPath(
-        path = segment,
-        color = color,
-        style = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Round, join = StrokeJoin.Round),
-    )
+    checkSegment.reset()
+    checkMeasure.getSegment(from * checkMeasure.length, to * checkMeasure.length, checkSegment, true)
+    drawPath(path = checkSegment, color = color, style = CheckStroke)
 }
 
 /** complete_page_fail_anim.json: ring and exclamation mark fade in (0..25) while the mark shakes (-3..27). */
@@ -199,7 +201,7 @@ private fun DrawScope.drawFailed(frame: Float, color: Color) {
         color = color.copy(alpha = color.alpha * alpha),
         radius = RING_RADIUS,
         center = CompositionCenter,
-        style = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Butt),
+        style = ButtStroke,
     )
     val shake = keyframes(frame, FailShakeFrames, FailShakeValues, LottieStandardEasing)
     val x = CompositionCenter.x + shake
@@ -226,7 +228,7 @@ private fun DrawScope.drawFailed(frame: Float, color: Color) {
  * (2..12) that turns twice around the pivot (12..179).
  */
 private fun DrawScope.drawWaiting(frame: Float, color: Color) {
-    val ringStroke = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Round)
+    val ringStroke = RoundStroke
     val ringTopLeft = Offset(CompositionCenter.x - RING_RADIUS, CompositionCenter.y - RING_RADIUS)
     val ringSize = Size(RING_RADIUS * 2f, RING_RADIUS * 2f)
     val fadeIn = keyframe(frame, 0f, 12f, 0f, 1f, LottieStandardEasing)
@@ -410,6 +412,15 @@ private const val RING_RADIUS = 102f
 
 /** Every stroke is 5 wide scaled by 300%. */
 private const val STROKE_WIDTH = 15f
+
+/** The round-capped stroke of the rings and the clock. */
+private val RoundStroke = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Round)
+
+/** The fail ring: its Lottie stroke has butt caps. */
+private val ButtStroke = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Butt)
+
+/** The check mark: round caps and joins (lc 2, lj 2). */
+private val CheckStroke = Stroke(width = STROKE_WIDTH, cap = StrokeCap.Round, join = StrokeJoin.Round)
 
 /** The clock pivot: the hand layers' anchor at (150, 156.031). */
 private val HandPivot = Offset(150f, 156.031f)

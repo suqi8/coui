@@ -66,6 +66,7 @@ LockScreenPasswordInput(
 | keyboardOptions        | KeyboardOptions               | 键盘选项                     | NumberPassword                                | 否   |
 | keyboardActions        | KeyboardActions               | 键盘动作                     | KeyboardActions.Default                       | 否   |
 | nextContentDescription | String                        | 按钮的无障碍描述             | "Next"                                        | 否   |
+| nextButtonInteractionSource | MutableInteractionSource? | 确认按钮的交互源；发送按压即可播放 Desktop 样式的按压光效 | null | 否 |
 
 ### LockScreenPasswordInputDefaults
 
@@ -105,3 +106,4 @@ LockScreenPasswordInput(
 - 错误文字在 217ms 内淡入、283ms 内淡出（`COUIEaseInterpolator`），输入框进入错误态。
 - 桌面模式按压：按钮回弹到 COUI 按压缩放；边缘发光，径向光延伸进输入框，均为 response 0.3 的弹簧（外光松开时为 0.6）。仅在按钮激活时有按压效果。
 - `minCount` / `maxCount` 组合无效时回退为 6 / 16。
+- 下一步按钮位于行尾：从右到左布局中在左侧。

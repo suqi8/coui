@@ -18,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
@@ -192,9 +191,11 @@ fun ExpandableGroupContent(
     val hasHeight by remember { derivedStateOf { fraction.value > 0f } }
     val visible = expanded || hasHeight
     Layout(
-        modifier = modifier
-            .clipToBounds()
-            .graphicsLayer { alpha = fraction.value },
+        // One layer clips the growing placeholder and applies its alpha.
+        modifier = modifier.graphicsLayer {
+            clip = true
+            alpha = fraction.value
+        },
         content = {
             if (visible) {
                 Column(content = content)

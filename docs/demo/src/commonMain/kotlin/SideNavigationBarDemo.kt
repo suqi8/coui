@@ -1,6 +1,7 @@
 // Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,9 @@ import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.SideNavigationBar
+import io.github.suqi8.coui.kmp.basic.SideNavigationBarDefaults
 import io.github.suqi8.coui.kmp.basic.SideNavigationBarMode
+import io.github.suqi8.coui.kmp.basic.SideNavigationBarState
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.rememberSideNavigationBarState
 import io.github.suqi8.coui.kmp.icon.COUIIcons
@@ -31,7 +34,15 @@ private val SideNavigationPages = listOf("Home", "Themes", "Wallpapers", "Fonts"
 
 @Composable
 fun SideNavigationBarDemo() {
-    val state = rememberSideNavigationBarState(initialOpen = true)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // Start open only where the drawer docks; as an overlay it would cover the content.
+        val docked = SideNavigationBarDefaults.drawerMode(maxWidth, maxHeight) == SideNavigationBarMode.Docked
+        SideNavigationBarDemoContent(rememberSideNavigationBarState(initialOpen = docked))
+    }
+}
+
+@Composable
+private fun SideNavigationBarDemoContent(state: SideNavigationBarState) {
     val scope = rememberCoroutineScope()
     var selected by remember { mutableIntStateOf(0) }
     SideNavigationBar(

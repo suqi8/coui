@@ -269,17 +269,20 @@ fun SideNavigationBar(
         val contentX = if (mode == SideNavigationBarMode.Docked) drawerOffset else 0
         val contentWidth = width - contentX
         val contentPlaceables = contentMeasurables.map { it.measure(Constraints.fixed(contentWidth, height)) }
-        val scrimPlaceables = scrimMeasurables.map { it.measure(Constraints.fixed(contentWidth, height)) }
+        // DrawerLayout clips the scrim to the area beside the drawer, and only a touch there
+        // closes it: the scrim starts at the drawer's end edge in both modes.
+        val scrimPlaceables = scrimMeasurables.map { it.measure(Constraints.fixed(width - drawerOffset, height)) }
         val drawerPlaceables = drawerMeasurables.map { it.measure(Constraints.fixed(drawerWidth, height)) }
         val dividerWidth = max(1, SideNavigationBarDefaults.DividerThickness.roundToPx())
         val dividerPlaceables = dividerMeasurables.map { it.measure(Constraints.fixed(dividerWidth, height)) }
 
         layout(width, height) {
             contentPlaceables.forEach { it.placeRelative(contentX, 0) }
-            scrimPlaceables.forEach { it.placeRelative(contentX, 0) }
+            scrimPlaceables.forEach { it.placeRelative(drawerOffset, 0) }
             drawerPlaceables.forEach { it.placeRelative(drawerOffset - drawerWidth, 0) }
-            // drawChild: the divider is translated to the drawer's end edge.
-            dividerPlaceables.forEach { it.placeRelative(drawerOffset, 0) }
+            // drawChild: the divider is translated to the drawer's end edge; a closed drawer
+            // leaves no line at the start edge.
+            if (drawerOffset > 0) dividerPlaceables.forEach { it.placeRelative(drawerOffset, 0) }
         }
     }
 }

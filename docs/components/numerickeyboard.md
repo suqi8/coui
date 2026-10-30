@@ -94,7 +94,7 @@ NumericKeyboard(
 
 | Method             | Description                                                                                                  |
 | ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| colors()           | Settings keyboard: black / #E6FFFFFF digits on `surfaceContainer` keys, ripple 6% / 12%, label #2AD181        |
+| colors()           | Settings keyboard: black / #E6FFFFFF digits on `surfaceContainer` / #8C3D3D3D keys (place it on the page `surface`, not on a card), ripple 6% / 12%, label #2AD181        |
 | lockScreenColors() | Lock screen: white digits, no key fill, white ripple 12%                                                      |
 | deleteKey()        | The delete side key                                                                                           |
 | finishKey()        | The "Done" side key                                                                                           |
@@ -112,7 +112,7 @@ NumericKeyboard(
 
 ## Behavior
 
-- A key fires on release when the finger is still on it; sliding off cancels it. Several fingers can press keys at once. The hit area extends up to 32dp around each key, capped at half the spacing.
+- A key fires on release when the finger is still on it; sliding off cancels it, and so does a scrolling parent (a list or a pager) taking the drag over, so the keyboard can sit in a scrolling page. Several fingers can press keys at once. The hit area extends up to 32dp around each key, capped at half the spacing.
 - Ripple: on press a disc grows from 47% to 100% of the key over 100ms; on release it grows to 117% and fades over 160ms while a soft halo spreads to twice the key and fades over 400ms.
-- Light: the pressed key springs to the COUI press scale; its rim glows (inner light) and the keys within 124dp catch a radial light, both on response 0.3 springs (0.6 for the outer light on release). Every digit has a two-layer inner shadow and a 0.6dp border.
+- Light: the pressed key springs to the COUI press scale; its rim glows (inner light) and the keys within 124dp catch a radial light, both on response 0.3 springs (0.6 for the outer light on release). Every digit has a two-layer inner shadow and a 0.6dp border; on Android before 12, where layer blur is unavailable, the inner shadow is drawn with a blur mask instead (same radius and offsets).
 - The digits are 32dp medium, not scaled by the font size setting.

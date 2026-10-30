@@ -41,8 +41,10 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param onValueChange The callback invoked with the new Gregorian date when a wheel moves.
  * @param modifier The modifier to be applied to the [LunarDatePicker].
  * @param enabled Whether the [LunarDatePicker] is enabled for user interaction.
- * @param minDate The earliest selectable Gregorian date (COUI 1910-01-01).
- * @param maxDate The latest selectable Gregorian date (COUI 2099-12-31).
+ * @param minDate The earliest selectable Gregorian date (COUI 1910-01-01). Kept at or after
+ *   [LunarCalendar.MinSolarDate].
+ * @param maxDate The latest selectable Gregorian date (COUI 2099-12-31). Kept at or before
+ *   [LunarCalendar.MaxSolarDate].
  * @param yearLabel Converts a lunar year to its display string.
  * @param monthLabel Converts a lunar month (1..12) and its leap flag to its display string.
  * @param dayLabel Converts a lunar day (1..30) to its display string.
@@ -73,8 +75,11 @@ fun LunarDatePicker(
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = LunarDatePickerDefaults.InsideMargin,
 ) {
-    val minEpoch = civilToEpochDay(minDate.year, minDate.month, minDate.day)
-    val maxEpoch = civilToEpochDay(maxDate.year, maxDate.month, maxDate.day)
+    // The bounds are also kept inside the dates the lunar tables cover.
+    val supportedMin = civilToEpochDay(LunarCalendar.MinSolarDate.year, LunarCalendar.MinSolarDate.month, LunarCalendar.MinSolarDate.day)
+    val supportedMax = civilToEpochDay(LunarCalendar.MaxSolarDate.year, LunarCalendar.MaxSolarDate.month, LunarCalendar.MaxSolarDate.day)
+    val minEpoch = civilToEpochDay(minDate.year, minDate.month, minDate.day).coerceIn(supportedMin, supportedMax)
+    val maxEpoch = civilToEpochDay(maxDate.year, maxDate.month, maxDate.day).coerceIn(supportedMin, supportedMax)
     require(minEpoch <= maxEpoch) { "minDate must not be after maxDate" }
 
     val safeMonth = value.month.coerceIn(1, 12)

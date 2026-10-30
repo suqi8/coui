@@ -112,6 +112,7 @@ scope.launch { state.close() }
 
 ## Behavior
 
+- The row takes a drag once it moves past the touch slop horizontally while moving more than twice as far horizontally as vertically (`COUISlideView.onInterceptTouchEvent`); a mostly vertical drag keeps scrolling the parent list. A closed row leaves drags towards the end edge to its parent, so it works inside a horizontal pager.
 - Within the menu the content follows the finger 1:1. Past it the drag is damped by `delta x (1 - min(over / (width - menu), 1)) x 2 / 5` and the actions spread apart, action `k` (counted from the start) moving by `k x over / (count + 1)`.
 - On release, a fling faster than 1000 px/s opens or closes the menu; otherwise it opens when more than half of the menu shows. It settles on a damping 1 / stiffness 200 spring. With fast delete only the half-menu rule applies.
 - A label wider than 80dp widens its action to `text + 2 x 12dp`.

@@ -4,6 +4,7 @@ package component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.basic.rememberNumericKeyboardState
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 
 fun LazyListScope.numericKeyboardSection() {
@@ -35,16 +37,18 @@ fun LazyListScope.numericKeyboardSection() {
         SmallTitle(text = "NumericKeyboard")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
-            // The Settings keyboard: ripple press, delete on the right, "Done" on the left.
+            // The Settings keyboard: ripple press, delete on the right, "Done" on the left. Its
+            // keys are card-colored discs, so it sits on the page surface instead of the card.
             var input by remember { mutableStateOf("") }
             val state = rememberNumericKeyboardState()
             val scope = rememberCoroutineScope()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(COUITheme.colorScheme.surface)
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -66,8 +70,8 @@ fun LazyListScope.numericKeyboardSection() {
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // The lock-screen glass keys over a wallpaper, driving a PIN dot row.
             var pin by remember { mutableStateOf("") }
@@ -94,17 +98,22 @@ fun LazyListScope.numericKeyboardSection() {
         }
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             // Disabled: keys ignore touches.
-            NumericKeyboard(
-                onNumberClick = {},
-                enabled = false,
+            Box(
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
+                    .fillMaxWidth()
+                    .background(COUITheme.colorScheme.surface)
                     .padding(vertical = 16.dp),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                NumericKeyboard(
+                    onNumberClick = {},
+                    enabled = false,
+                )
+            }
         }
     }
 }

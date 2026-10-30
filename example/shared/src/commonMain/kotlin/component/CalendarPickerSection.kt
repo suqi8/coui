@@ -20,8 +20,8 @@ fun LazyListScope.calendarPickerSection() {
         SmallTitle(text = "CalendarPicker")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var date by remember { mutableStateOf(DateValue(year = 2026, month = 10, day = 30)) }
             CalendarPicker(
@@ -34,8 +34,8 @@ fun LazyListScope.calendarPickerSection() {
         SmallTitle(text = "CalendarPicker (Monday first, limited range)")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var date by remember { mutableStateOf(DateValue(year = 2026, month = 10, day = 12)) }
             CalendarPicker(

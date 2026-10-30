@@ -50,6 +50,8 @@ InputPreference(
 )
 ```
 
+COUI 不会在处于错误状态的行下方绘制列表分割线（`COUIInputPreference.drawDivider`）；如果在行之间放置了 `HorizontalDivider`，请跳过错误行下方的那条。
+
 ### 禁用状态
 
 ```kotlin

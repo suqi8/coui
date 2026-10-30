@@ -105,12 +105,18 @@ class LockPatternState internal constructor() {
     internal var pathAlpha by mutableFloatStateOf(1f)
     internal var animateElapsed by mutableLongStateOf(0L)
     internal var wrongToken by mutableIntStateOf(0)
+
+    /** The last [wrongToken] whose flash was started, so re-entering composition does not replay it. */
+    internal var handledWrongToken = 0
     internal var wrongHaptic = false
     internal var wrongJob: Job? = null
     internal var pendingClear = false
     internal var scope: CoroutineScope? = null
 
     internal val dots = Array(9) { LockPatternDotState() }
+
+    /** The cells drawn so far in [LockPatternDisplayMode.Animate], reused by every frame. */
+    internal val animateLookup = Array(3) { BooleanArray(3) }
 
     internal fun dot(cell: LockPatternCell) = dots[cell.row * 3 + cell.column]
 
@@ -131,12 +137,22 @@ class LockPatternState internal constructor() {
         }
     }
 
-    /** Replaces the pattern and sets [mode] (`setPattern`). */
+    /**
+     * Replaces the pattern and sets [mode] (`setPattern`). A running error flash stops, and the
+     * path and the selected dots show at full alpha (they never ran the add animation).
+     */
     fun setPattern(mode: LockPatternDisplayMode, pattern: List<LockPatternCell>) {
+        pendingClear = false
+        wrongJob?.cancel()
+        dots.forEach { it.innerOverride = -1f }
         cells.clear()
         cells.addAll(pattern)
         clearLookup()
-        pattern.forEach { selected[it.row][it.column] = true }
+        pattern.forEach {
+            selected[it.row][it.column] = true
+            dot(it).innerOverride = 1f
+        }
+        pathAlpha = 1f
         selectionVersion++
         setDisplayMode(mode)
     }
@@ -181,6 +197,8 @@ class LockPatternState internal constructor() {
     }
 
     internal fun reset() {
+        // The error flash ends at alpha 0: a cleared view starts over at full alpha.
+        pathAlpha = 1f
         dots.forEach { it.innerOverride = -1f }
         cells.clear()
         clearLookup()
@@ -226,7 +244,8 @@ fun rememberLockPatternState(): LockPatternState = remember { LockPatternState()
  * @param modifier The modifier applied to the view.
  * @param state The [LockPatternState] holding the pattern.
  * @param enabled Whether touches are accepted (`enableInput` / `disableInput`).
- * @param inStealthMode Whether the path and the dot animations are hidden while drawing.
+ * @param inStealthMode Whether the path and the selected dots are hidden (a
+ *   [LockPatternDisplayMode.Wrong] pattern still shows).
  * @param hapticFeedbackEnabled Whether each added dot and a wrong pattern vibrate.
  * @param colors The [LockPatternViewColors].
  * @param onPatternStart Called when a pattern starts.
@@ -260,7 +279,8 @@ fun LockPatternView(
     // The error flash (startWrongAnimator): keyframes over 1s on the default
     // AccelerateDecelerateInterpolator, driving the path and the selected inner circles.
     LaunchedEffect(state, state.wrongToken) {
-        if (state.wrongToken == 0) return@LaunchedEffect
+        if (state.wrongToken == state.handledWrongToken) return@LaunchedEffect
+        state.handledWrongToken = state.wrongToken
         if (state.wrongHaptic && currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.Reject)
         state.wrongJob = currentCoroutineContext()[Job]
         val progress = Animatable(0f)
@@ -294,6 +314,7 @@ fun LockPatternView(
     }
 
     val innerBrush = remember { Brush.radialGradient(colorStops = InnerCircleStops, center = Offset.Zero, radius = 1f) }
+    val path = remember { Path() }
 
     Canvas(
         modifier = modifier
@@ -367,7 +388,8 @@ fun LockPatternView(
             val period = (cells.size + 1) * MILLIS_PER_CIRCLE
             val elapsed = (state.animateElapsed % period).toInt()
             val spot = elapsed / MILLIS_PER_CIRCLE
-            lookup = Array(3) { BooleanArray(3) }
+            lookup = state.animateLookup
+            for (r in 0..2) lookup[r].fill(false)
             for (i in 0 until spot.coerceAtMost(cells.size)) lookup[cells[i].row][cells[i].column] = true
             if (spot in 1 until cells.size) {
                 val fraction = (elapsed % MILLIS_PER_CIRCLE) / MILLIS_PER_CIRCLE.toFloat()
@@ -382,8 +404,10 @@ fun LockPatternView(
             }
         }
 
-        if (!inStealthMode) {
-            val path = Path()
+        // Stealth mode hides the path and the selected-dot circles, except to show a wrong pattern.
+        val showPattern = !inStealthMode || mode == LockPatternDisplayMode.Wrong
+        if (showPattern) {
+            path.rewind()
             var lastX = 0f
             var lastY = 0f
             var anyCircles = false
@@ -426,7 +450,7 @@ fun LockPatternView(
                 val dot = state.dots[row * 3 + column]
                 val cx = grid.centerX(column)
                 val cy = grid.centerY(row) + dot.enterTranslate.value * maxTranslate
-                if (lookup[row][column]) {
+                if (showPattern && lookup[row][column]) {
                     val inner = if (dot.innerOverride >= 0f) dot.innerOverride else dot.innerAlpha.value
                     val innerAlpha = inner.coerceIn(0f, 1f) * currentColor.alpha
                     if (innerAlpha > 0f) {

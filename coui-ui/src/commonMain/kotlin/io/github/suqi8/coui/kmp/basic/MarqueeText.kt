@@ -11,7 +11,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -101,30 +101,28 @@ fun MarqueeText(
 
 /**
  * Fades both horizontal edges of the content to transparent over [length], the Android
- * `TextView` horizontal fading edge at strength 1.
+ * `TextView` horizontal fading edge at strength 1. The gradients are cached per size, since the
+ * marquee redraws every frame.
  */
 private fun Modifier.marqueeFadingEdges(length: Dp): Modifier = this
     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-    .drawWithContent {
-        drawContent()
+    .drawWithCache {
         val fade = length.toPx().coerceAtMost(size.width / 2f)
-        if (fade <= 0f) return@drawWithContent
-        drawRect(
-            brush = Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = fade),
-            size = Size(fade, size.height),
-            blendMode = BlendMode.DstIn,
+        val fadeSize = Size(fade, size.height)
+        val endFadeOffset = Offset(size.width - fade, 0f)
+        val startFade = Brush.horizontalGradient(0f to Color.Transparent, 1f to Color.Black, startX = 0f, endX = fade)
+        val endFade = Brush.horizontalGradient(
+            0f to Color.Black,
+            1f to Color.Transparent,
+            startX = size.width - fade,
+            endX = size.width,
         )
-        drawRect(
-            brush = Brush.horizontalGradient(
-                0f to Color.Black,
-                1f to Color.Transparent,
-                startX = size.width - fade,
-                endX = size.width,
-            ),
-            topLeft = Offset(size.width - fade, 0f),
-            size = Size(fade, size.height),
-            blendMode = BlendMode.DstIn,
-        )
+        onDrawWithContent {
+            drawContent()
+            if (fade <= 0f) return@onDrawWithContent
+            drawRect(brush = startFade, size = fadeSize, blendMode = BlendMode.DstIn)
+            drawRect(brush = endFade, topLeft = endFadeOffset, size = fadeSize, blendMode = BlendMode.DstIn)
+        }
     }
 
 /** Contains default values used by [MarqueeText]. */

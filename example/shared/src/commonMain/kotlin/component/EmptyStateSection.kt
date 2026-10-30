@@ -29,8 +29,8 @@ fun LazyListScope.emptyStateSection() {
         SmallTitle(text = "EmptyState")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             var refreshes by remember { mutableIntStateOf(0) }
             EmptyState(
@@ -49,8 +49,8 @@ fun LazyListScope.emptyStateSection() {
         SmallTitle(text = "EmptyState (small, text only)")
         Card(
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 12.dp),
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
         ) {
             EmptyState(
                 title = "No search results",

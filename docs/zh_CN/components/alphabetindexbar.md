@@ -15,7 +15,7 @@ import io.github.suqi8.coui.kmp.basic.AlphabetIndexBarDefaults
 
 ## 基本用法
 
-把索引条放在它所索引的列表之上（气泡绘制在其边界之外），并在 `onKeySelected` 中滚动列表：
+把索引条放在它所索引的列表之上（气泡绘制在其边界之外，COUI 用的是弹窗，因此 `Card` 等会裁剪的父布局需为气泡及其阴影留出空间），并在 `onKeySelected` 中滚动列表：
 
 ```kotlin
 Box(Modifier.fillMaxSize()) {
@@ -79,5 +79,5 @@ Box(Modifier.fillMaxSize()) {
 
 - 字母为 12dp 中粗文字，在 16dp 顶部留白之下逐行居中于 16dp 行高；星标为 12dp 描边图标。空间充足时索引条按全部字母所需高度包裹，空间不足时折叠出圆点。
 - 选中的字母、星标或圆点变为 `selectedKeyColor`，松手后保持高亮，与 COUI 一致。
-- 48dp 气泡以 20sp 中粗显示字母（星标为 24dp 图标），与字母行垂直居中，距索引条 8.5dp。气泡在 350ms 内按 COUIMoveEaseInterpolator 从 0.8 放大并淡入，松手一秒后在 300ms 内缩回 0.8 并淡出。
+- 48dp 气泡以 20sp 中粗显示字母，字体缩放上限 1.35（`COUIChangeTextUtil.getSuitableFontSize` 第 4 级）（星标为 24dp 图标），与字母行垂直居中，距索引条 8.5dp。气泡在 350ms 内按 COUIMoveEaseInterpolator 从 0.8 放大并淡入，松手一秒后在 300ms 内缩回 0.8 并淡出。
 - 切换到另一个字母时触发 `TextHandleMove` 触感。每个可选字母也作为无障碍自定义操作提供。

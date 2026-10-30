@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -338,23 +339,19 @@ fun FloatingAccessoryNavigationBar(
             state.rtl = rtl
             state.slotTop = top + (barHeight - slot) / 2f
             state.slotSize = slot.toFloat()
-            listOf(
-                Triple(startPlaceable, state.start, if (initialized) state.startLeft.value else startTarget.toFloat()) to startActive,
-                Triple(endPlaceable, state.end, if (initialized) state.endLeft.value else endTarget.toFloat()) to endActive,
-            ).forEach { (entry, active) ->
-                val (placeable, side, slotLeft) = entry
-                if (placeable != null) {
-                    side.size = Size(placeable.width.toFloat(), placeable.height.toFloat())
-                    // A hidden accessory that has settled is INVISIBLE: not placed, no touches.
-                    if (!side.settledHidden(active)) {
-                        val centerX = slotLeft + slot / 2f
-                        placeable.placeRelative(
-                            (centerX - placeable.width / 2f).roundToInt(),
-                            top + (barHeight - placeable.height) / 2,
-                        )
-                    }
-                }
+            fun placeAccessory(placeable: Placeable?, side: FloatingAccessorySide, slotLeft: Float, active: Boolean) {
+                if (placeable == null) return
+                side.size = Size(placeable.width.toFloat(), placeable.height.toFloat())
+                // A hidden accessory that has settled is INVISIBLE: not placed, no touches.
+                if (side.settledHidden(active)) return
+                val centerX = slotLeft + slot / 2f
+                placeable.placeRelative(
+                    (centerX - placeable.width / 2f).roundToInt(),
+                    top + (barHeight - placeable.height) / 2,
+                )
             }
+            placeAccessory(startPlaceable, state.start, if (initialized) state.startLeft.value else startTarget.toFloat(), startActive)
+            placeAccessory(endPlaceable, state.end, if (initialized) state.endLeft.value else endTarget.toFloat(), endActive)
         }
     }
 }

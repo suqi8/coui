@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.squircleClip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -95,6 +97,8 @@ fun Banner(
     ) { virtualCount }
     var touching by remember { mutableStateOf(false) }
     val currentOnPageChange by rememberUpdatedState(onPageChange)
+    // The auto scroll runs outside the loop task so a touch only cancels the pending wait.
+    val scrollScope = rememberCoroutineScope()
 
     // onPageScrollStateChanged(IDLE): settled on a copy, jump to the page it copies.
     LaunchedEffect(pagerState, loop, pageCount) {
@@ -112,16 +116,20 @@ fun Banner(
             .distinctUntilChanged()
             .collect { currentOnPageChange?.invoke(it) }
     }
-    // startLoopTask: post the next scroll after loopDuration + duration; touches cancel it.
+    // startLoopTask: post the next scroll after loopDuration + duration. A touch removes the
+    // pending task (dispatchTouchEvent ACTION_DOWN) but not a scroll already running: a tap
+    // must not leave the pager stopped between two pages. A drag takes over the scroll anyway.
     if (autoLoop && loop && !touching) {
         LaunchedEffect(pagerState, pageCount, loopDurationMillis, scrollDurationMillis) {
             while (true) {
                 delay(loopDurationMillis + scrollDurationMillis)
-                if (pagerState.currentPage >= pageCount + 1) pagerState.scrollToPage(1)
-                pagerState.animateScrollToPage(
-                    page = pagerState.currentPage + 1,
-                    animationSpec = tween(durationMillis = scrollDurationMillis, easing = BannerScrollEasing),
-                )
+                scrollScope.launch {
+                    if (pagerState.currentPage >= pageCount + 1) pagerState.scrollToPage(1)
+                    pagerState.animateScrollToPage(
+                        page = pagerState.currentPage + 1,
+                        animationSpec = tween(durationMillis = scrollDurationMillis, easing = BannerScrollEasing),
+                    )
+                }.join()
             }
         }
     }

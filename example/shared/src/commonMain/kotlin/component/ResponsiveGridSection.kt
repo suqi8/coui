@@ -40,7 +40,7 @@ fun LazyListScope.responsiveGridSection() {
         // Specific-gap mode: tiles at least 120dp wide, 8dp apart, stretched to fill the row.
         ResponsiveGrid(
             spec = ResponsiveGridSpec.SpecificGap(childMinWidth = 120.dp, horizontalGap = 8.dp, childMinHeight = 60.dp),
-            modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
             verticalGap = 8.dp,
         ) {
             repeat(7) { GridDemoTile("Gap ${it + 1}") }
@@ -48,7 +48,7 @@ fun LazyListScope.responsiveGridSection() {
         // Specific-size mode: fixed 96dp tiles, the leftover width spread between them.
         ResponsiveGrid(
             spec = ResponsiveGridSpec.SpecificSize(childWidth = 96.dp, minHorizontalGap = 8.dp),
-            modifier = Modifier.padding(horizontal = 12.dp).padding(bottom = 12.dp),
+            modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
             verticalGap = 8.dp,
             childHeight = 56.dp,
         ) {

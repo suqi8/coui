@@ -89,6 +89,6 @@ Banner(
 ## 行为
 
 - 开启 `infiniteLoop` 且页数不少于两页时，第一页之前放一份最后一页的副本、最后一页之后放一份第一页的副本；pager 停在副本上时无动画跳到对应的真实页。
-- 自动滚动先等待 `loopDurationMillis + scrollDurationMillis`，再用 `scrollDurationMillis` 按 `PathInterpolator(0.2, 0, 0.1, 1)` 滚到下一页。任何触摸都会停止它，抬起手指后重新计时。
+- 自动滚动先等待 `loopDurationMillis + scrollDurationMillis`，再用 `scrollDurationMillis` 按 `PathInterpolator(0.2, 0, 0.1, 1)` 滚到下一页。触摸会取消待执行的滚动（已在进行的滚动会完成，除非手指拖动了页面），抬起手指后重新计时。
 - 卡片两侧分别内缩 `startItemWidth + pageMargin` 与 `endItemWidth + pageMargin`，彼此相距 `pageMargin`。
 - 指示器居中，距底部 10dp；其圆点不可点击。pager 经由副本回绕时，指示器先停在最后一个圆点再跳转。

@@ -11,6 +11,7 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
@@ -85,6 +86,8 @@ import kotlin.math.abs
  * With [followSystemTheme] off the bar takes the fixed white palette COUI uses over video and
  * artwork, and, when a [LocalMaterialBackdrop] provider is present, the COUI 17 blur-blend
  * background in place of its translucent fill (`BlurBlendEffectRenderer`).
+ *
+ * The bar fills the available width and is at least [IntentSliderDefaults.MinHeight] high.
  *
  * @param value The current value. Values outside [valueRange] are coerced into it.
  * @param onValueChange Called with the new value while the user drags, taps or flings the bar.
@@ -189,6 +192,7 @@ fun IntentSlider(
     val currentRtl by rememberUpdatedState(isRtl)
     val currentFollowThumb by rememberUpdatedState(followThumb)
     val currentPadding by rememberUpdatedState(paddingPx)
+    val currentHapticEffect by rememberUpdatedState(hapticEffect)
 
     fun fractionToValue(fraction: Float): Float {
         val range = currentValueRange
@@ -203,9 +207,10 @@ fun IntentSlider(
     }
 
     fun report(newValue: Float, spec: AnimationSpec<Float>?) {
-        state.pendingSpec = spec
+        // An unchanged value draws nothing, so its spring must not linger for the next update.
+        state.pendingSpec = if (newValue != currentValue) spec else null
         onValueChangeState(newValue)
-        hapticState.handleHapticFeedback(newValue, currentValueRange, hapticEffect, hapticFeedback)
+        hapticState.handleHapticFeedback(newValue, currentValueRange, currentHapticEffect, hapticFeedback)
     }
 
     val minHeight = max(
@@ -339,7 +344,10 @@ fun IntentSlider(
             trackHeightPx = trackHeightPx,
             maxTrackHeightPx = maxTrackHeightPx,
             paddingPx = paddingPx,
-            modifier = Modifier.matchParentSize(),
+            // Like a match_parent COUIIntentSeekBar, the bar takes the whole available width.
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(minHeight),
         )
     }
 }
