@@ -3,8 +3,11 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -15,12 +18,17 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,19 +52,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -65,10 +79,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.basic.Close
 import io.github.suqi8.coui.kmp.icon.basic.SearchCleanup
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
@@ -83,6 +99,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -776,3 +793,362 @@ private val SnackbarShowAnimationSpec = spring<Float>(dampingRatio = 1f, stiffne
 
 /** COUISnackBar.animateSpring dismiss spring: COUISpringForce(response = 0.25f, bounce = 0f). */
 private val SnackbarDismissAnimationSpec = spring<Float>(dampingRatio = 1f, stiffness = 631.65f)
+
+/**
+ * The shape of the leading image of a [NotificationSnackbar] (COUINotificationSnackBar `ImageType`).
+ */
+enum class NotificationSnackbarIconType {
+    /** A 44dp square (`coui_notification_snack_bar_icon_width`). */
+    Square,
+
+    /** A 36dp x 48dp portrait image (`coui_notification_snack_bar_vertical_icon_width/height`). */
+    Vertical,
+
+    /** A 58dp x 44dp landscape image (`coui_notification_snack_bar_horizontal_icon_width/height`). */
+    Horizontal,
+}
+
+/**
+ * A notification-style snack bar with COUI style, after COUI 17 `COUINotificationSnackBar`: a
+ * floating card with a leading image, a title and an optional subtitle, a small action button and a
+ * close button in the top end corner.
+ *
+ * - **Layout** (`coui_notification_snack_bar_item`): the image sits 16dp from the start, top and
+ *   bottom edges and 8dp before the text; the title (`couiTextAppearanceButton`, 14sp medium,
+ *   `couiColorPrimaryNeutral`) and the subtitle (`couiTextAppearanceDescription`, 12sp,
+ *   `couiColorSecondNeutral`, 2dp below) take two lines each; the small button
+ *   (`Widget.COUI.Button.Small`, at most 120dp wide and two lines) is vertically centred; the 20dp
+ *   close button sits 6dp from the top and end edges.
+ * - **Surface**: `couiColorBackgroundTop`, rounded at `couiRoundCornerL` and lifted with the same
+ *   shadow as [Snackbar].
+ * - **Swipe** (`COUINotificationSnackBar.onTouchEvent`): the first move picks an axis. Sideways the
+ *   card follows the finger; past an eighth of its width it slides off screen at 1.75px per ms
+ *   (`SLIDING_SPEED`, COUIMoveEaseInterpolator) and [onDismiss] runs, otherwise it springs back
+ *   (response 0.35, bounce 0). Downwards it follows the finger and dismisses the same way past an
+ *   eighth of its width; upwards it is held to an eighth of its width.
+ *
+ * Show it through the `content` lambda of [SnackbarHost] to get the host's show / dismiss animation
+ * and timeout (COUI clamps the duration to 4s..10s, [SnackbarDuration.Short] /
+ * [SnackbarDuration.Long]); see the [SnackbarData] overload.
+ *
+ * @param title The title (COUI content text).
+ * @param actionLabel The label of the action button, or null for no button.
+ * @param onActionClick Called when the action button is clicked.
+ * @param onDismiss Called when the close button is clicked or the card is swiped away.
+ * @param modifier The modifier to be applied to the [NotificationSnackbar].
+ * @param subtitle The optional subtitle (COUI `setSubContent`).
+ * @param icon The optional leading image, laid out in the box [iconType] gives.
+ * @param iconType The size of the leading image box.
+ * @param swipeToDismiss Whether the card can be swiped away.
+ * @param maxWidth The maximum width, excluding the 16dp outer margins; see [SnackbarDefaults.maxWidth].
+ * @param cornerRadius The corner radius of the card (COUI `couiRoundCornerL`).
+ * @param colors The [NotificationSnackbarColors] of the card.
+ */
+@Composable
+fun NotificationSnackbar(
+    title: String,
+    actionLabel: String?,
+    onActionClick: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: (@Composable () -> Unit)? = null,
+    iconType: NotificationSnackbarIconType = NotificationSnackbarIconType.Square,
+    swipeToDismiss: Boolean = true,
+    maxWidth: Dp = SnackbarDefaults.maxWidth(),
+    cornerRadius: Dp = SnackbarDefaults.CornerRadius,
+    colors: NotificationSnackbarColors = SnackbarDefaults.notificationSnackbarColors(),
+) {
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
+    val scope = rememberCoroutineScope()
+    val offsetX = remember { Animatable(0f) }
+    val offsetY = remember { Animatable(0f) }
+    val cardTopInWindow = remember { floatArrayOf(0f) }
+    val windowSize = LocalWindowInfo.current.containerSize
+    val currentWindowSize by rememberUpdatedState(windowSize)
+
+    val squircleEnabled = isSquircleEnabled()
+    val shape = remember(cornerRadius, squircleEnabled) {
+        if (squircleEnabled) SquircleShape(cornerRadius, COUIRoundCorner.UnspecifiedWeight) else RoundedCornerShape(cornerRadius)
+    }
+    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+
+    val swipeModifier = if (swipeToDismiss) {
+        Modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                var axis = SwipeAxis.None
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    if (!change.pressed) break
+                    val delta = change.positionChange()
+                    if (axis == SwipeAxis.None && delta != Offset.Zero) {
+                        axis = if (abs(delta.x) > abs(delta.y)) SwipeAxis.Horizontal else SwipeAxis.Vertical
+                    }
+                    when (axis) {
+                        SwipeAxis.Horizontal -> {
+                            change.consume()
+                            scope.launch { offsetX.snapTo(offsetX.value + delta.x) }
+                        }
+
+                        SwipeAxis.Vertical -> {
+                            change.consume()
+                            // Upwards the card is held to an eighth of its width.
+                            val y = (offsetY.value + delta.y).let { if (it < 0f) maxOf(-size.width / 8f, it) else it }
+                            scope.launch { offsetY.snapTo(y) }
+                        }
+
+                        SwipeAxis.None -> Unit
+                    }
+                }
+                val threshold = size.width / 8f
+                val cardWidth = size.width.toFloat()
+                val cardHeight = size.height.toFloat()
+                when (axis) {
+                    SwipeAxis.Horizontal -> scope.launch {
+                        val x = offsetX.value
+                        if (abs(x) > threshold) {
+                            // startDismissAnimationX: off screen, (distance - |x|) / 1.75 ms.
+                            val distance = (currentWindowSize.width - cardWidth) / 2f + cardWidth
+                            val duration = ((distance - abs(x)) / NOTIFICATION_SLIDING_SPEED).toInt().coerceAtLeast(0)
+                            offsetX.animateTo(
+                                targetValue = if (x < 0f) -distance else distance,
+                                animationSpec = tween(durationMillis = duration, easing = NotificationMoveEase),
+                            )
+                            currentOnDismiss()
+                        } else {
+                            offsetX.animateTo(0f, NotificationSpringBack)
+                        }
+                    }
+
+                    SwipeAxis.Vertical -> scope.launch {
+                        val y = offsetY.value
+                        if (y > threshold) {
+                            // startDismissAnimationY: past the window bottom, distance / 1.75 ms.
+                            val distance = (currentWindowSize.height - cardTopInWindow[0]).coerceAtLeast(cardHeight) + cardHeight
+                            offsetY.animateTo(
+                                targetValue = distance,
+                                animationSpec = tween(
+                                    durationMillis = (distance / NOTIFICATION_SLIDING_SPEED).toInt(),
+                                    easing = NotificationMoveEase,
+                                ),
+                            )
+                            currentOnDismiss()
+                        } else {
+                            offsetY.animateTo(0f, NotificationSpringBack)
+                        }
+                    }
+
+                    SwipeAxis.None -> Unit
+                }
+            }
+        }
+    } else {
+        Modifier
+    }
+
+    Surface(
+        modifier = modifier
+            .semantics { liveRegion = LiveRegionMode.Polite }
+            .padding(horizontal = 16.dp, vertical = SnackbarItemVerticalMargin)
+            .widthIn(max = maxWidth)
+            .fillMaxWidth()
+            .onGloballyPositioned { cardTopInWindow[0] = it.positionInWindow().y }
+            .graphicsLayer {
+                translationX = offsetX.value
+                translationY = offsetY.value
+            }
+            .then(swipeModifier)
+            .dropShadow(shape = shape, shadow = if (isDark) SnackbarShadowDark else SnackbarShadowLight),
+        shape = shape,
+        color = colors.containerColor,
+        contentColor = colors.titleColor,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                val iconSize = when (iconType) {
+                    NotificationSnackbarIconType.Square -> DpSize(44.dp, 44.dp)
+                    NotificationSnackbarIconType.Vertical -> DpSize(36.dp, 48.dp)
+                    NotificationSnackbarIconType.Horizontal -> DpSize(58.dp, 44.dp)
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = NotificationContentEndMargin)
+                        .size(iconSize),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    icon()
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    // Without an image the COUI text layout has no start margin and would touch the
+                    // edge; the 16dp image margin is kept instead.
+                    .padding(
+                        start = if (icon == null) 16.dp else 0.dp,
+                        top = 16.dp,
+                        bottom = 16.dp,
+                        end = NotificationContentEndMargin,
+                    ),
+            ) {
+                Text(
+                    text = title,
+                    color = colors.titleColor,
+                    style = COUITheme.textStyles.subtitle,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (!subtitle.isNullOrEmpty()) {
+                    Text(
+                        text = subtitle,
+                        color = colors.subtitleColor,
+                        style = COUITheme.textStyles.footnote2,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+            if (!actionLabel.isNullOrEmpty()) {
+                TextButton(
+                    text = actionLabel,
+                    onClick = onActionClick,
+                    modifier = Modifier.widthIn(max = NotificationButtonMaxWidth),
+                    minWidth = 0.dp,
+                    minHeight = 0.dp,
+                    colors = colors.actionColors,
+                    insideMargin = ButtonDefaults.InsideMarginSmall,
+                    textStyle = ButtonDefaults.textStyleSmall(),
+                    maxLines = 2,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Top)
+                    .padding(top = 6.dp, start = 2.dp, end = 6.dp)
+                    .size(20.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onDismiss)
+                    .padding(2.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = COUIIcons.Basic.Close,
+                    contentDescription = "Close",
+                    tint = colors.closeIconColor,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A [NotificationSnackbar] bound to a [SnackbarData] shown by a [SnackbarHost]: the message is the
+ * title, the action label the button, the button performs the action, and the close button and the
+ * swipe dismiss it.
+ *
+ * ```kotlin
+ * SnackbarHost(state, canSwipeToDismiss = false) { data ->
+ *     NotificationSnackbar(data, subtitle = "...", icon = { ... })
+ * }
+ * ```
+ *
+ * @param data The [SnackbarData] of the snack bar.
+ * @param modifier The modifier to be applied to the [NotificationSnackbar].
+ * @param subtitle The optional subtitle.
+ * @param icon The optional leading image.
+ * @param iconType The size of the leading image box.
+ * @param swipeToDismiss Whether the card can be swiped away. Pass `canSwipeToDismiss = false` to
+ *   the [SnackbarHost] so its own horizontal swipe does not compete.
+ * @param maxWidth The maximum width, excluding the 16dp outer margins.
+ * @param cornerRadius The corner radius of the card.
+ * @param colors The [NotificationSnackbarColors] of the card.
+ */
+@Composable
+fun NotificationSnackbar(
+    data: SnackbarData,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    icon: (@Composable () -> Unit)? = null,
+    iconType: NotificationSnackbarIconType = NotificationSnackbarIconType.Square,
+    swipeToDismiss: Boolean = true,
+    maxWidth: Dp = SnackbarDefaults.maxWidth(),
+    cornerRadius: Dp = SnackbarDefaults.CornerRadius,
+    colors: NotificationSnackbarColors = SnackbarDefaults.notificationSnackbarColors(),
+) {
+    val scope = rememberCoroutineScope()
+    val currentData by rememberUpdatedState(data)
+    NotificationSnackbar(
+        title = data.visuals.message,
+        actionLabel = data.visuals.actionLabel,
+        onActionClick = { scope.launch { currentData.performAction() } },
+        onDismiss = { scope.launch { currentData.dismiss() } },
+        modifier = modifier,
+        subtitle = subtitle,
+        icon = icon,
+        iconType = iconType,
+        swipeToDismiss = swipeToDismiss,
+        maxWidth = maxWidth,
+        cornerRadius = cornerRadius,
+        colors = colors,
+    )
+}
+
+/**
+ * Colors of a [NotificationSnackbar].
+ *
+ * @param containerColor The card fill (COUI `couiColorBackgroundTop`).
+ * @param titleColor The title color (COUI `couiColorPrimaryNeutral`).
+ * @param subtitleColor The subtitle color (COUI `couiColorSecondNeutral`).
+ * @param closeIconColor The close glyph tint (COUI `couiColorLabelTertiary`).
+ * @param actionColors The colors of the action button.
+ */
+@Immutable
+data class NotificationSnackbarColors(
+    val containerColor: Color,
+    val titleColor: Color,
+    val subtitleColor: Color,
+    val closeIconColor: Color,
+    val actionColors: TextButtonColors,
+)
+
+/**
+ * The default [NotificationSnackbarColors]: COUI couiColorBackgroundTop card,
+ * couiColorPrimaryNeutral title, couiColorSecondNeutral subtitle, couiColorLabelTertiary close
+ * glyph and the default (secondary) small button.
+ */
+@Composable
+fun SnackbarDefaults.notificationSnackbarColors(
+    containerColor: Color = COUITheme.colorScheme.backgroundTop,
+    titleColor: Color = COUITheme.colorScheme.onSurfaceContainer,
+    subtitleColor: Color = COUITheme.colorScheme.onSurfaceVariantSummary,
+    closeIconColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+    actionColors: TextButtonColors = ButtonDefaults.textButtonColors(),
+): NotificationSnackbarColors = remember(containerColor, titleColor, subtitleColor, closeIconColor, actionColors) {
+    NotificationSnackbarColors(
+        containerColor = containerColor,
+        titleColor = titleColor,
+        subtitleColor = subtitleColor,
+        closeIconColor = closeIconColor,
+        actionColors = actionColors,
+    )
+}
+
+private enum class SwipeAxis { None, Horizontal, Vertical }
+
+/** The gap after the image and after the text (COUI coui_notification_snack_bar_icon_end). */
+private val NotificationContentEndMargin = 8.dp
+
+/** The maximum width of the action button (COUI coui_snack_bar_button_width, compact windows). */
+private val NotificationButtonMaxWidth = 120.dp
+
+/** COUINotificationSnackBar `SLIDING_SPEED`, pixels per millisecond. */
+private const val NOTIFICATION_SLIDING_SPEED = 1.75f
+
+/** COUIMoveEaseInterpolator. */
+private val NotificationMoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+/** `getViewSpringTranslationAnimator`: COUISpringForce(response = 0.35f, bounce = 0f). */
+private val NotificationSpringBack = spring<Float>(dampingRatio = 1f, stiffness = 322.27f)

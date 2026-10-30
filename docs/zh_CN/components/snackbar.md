@@ -287,3 +287,66 @@ TextButton(
 )
 ```
 
+## NotificationSnackbar
+
+`NotificationSnackbar` 是 COUI 17 的通知样式 Snackbar（`COUINotificationSnackBar`）：浮起的卡片，
+包含前置图片、标题、可选的副文本、小号操作按钮和右上角的关闭按钮。可以原地显示，也可以通过
+`SnackbarHost` 显示以获得宿主的出现 / 消失动画与超时。
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbar
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbarIconType
+```
+
+```kotlin
+NotificationSnackbar(
+    title = "截图已保存",
+    subtitle = "点击分享发送给联系人",
+    actionLabel = "分享",
+    onActionClick = { /* 分享 */ },
+    onDismiss = { visible = false },
+    icon = { Image(painter = thumbnail, contentDescription = null) },
+)
+```
+
+通过宿主显示时，消息作为标题、操作标签作为按钮；按钮执行操作，关闭按钮或滑动将其关闭：
+
+```kotlin
+SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
+    NotificationSnackbar(data, subtitle = "点击分享发送给联系人", icon = { /* ... */ })
+}
+```
+
+### NotificationSnackbar 属性
+
+| 属性名            | 类型                           | 说明                                        | 默认值                                           | 是否必须 |
+| -------------- | ---------------------------- | ----------------------------------------- | --------------------------------------------- | ---- |
+| title          | String                       | 标题（COUI content text），最多两行                | -                                             | 是    |
+| actionLabel    | String?                      | 小号操作按钮的文字；为 null 时隐藏                      | -                                             | 是    |
+| onActionClick  | () -> Unit                   | 点击操作按钮时回调                                 | -                                             | 是    |
+| onDismiss      | () -> Unit                   | 点击关闭按钮或滑走卡片时回调                            | -                                             | 是    |
+| modifier       | Modifier                     | 应用于卡片的修饰符                                 | Modifier                                      | 否    |
+| subtitle       | String?                      | 副文本，最多两行                                  | null                                          | 否    |
+| icon           | (@Composable () -> Unit)?    | 前置图片，放在 `iconType` 给出的区域内                  | null                                          | 否    |
+| iconType       | NotificationSnackbarIconType | `Square` 44dp、`Vertical` 36 x 48dp 或 `Horizontal` 58 x 44dp | NotificationSnackbarIconType.Square | 否    |
+| swipeToDismiss | Boolean                      | 是否可滑动关闭                                   | true                                          | 否    |
+| maxWidth       | Dp                           | 最大宽度，不含两侧 16dp 外边距                        | SnackbarDefaults.maxWidth()                   | 否    |
+| cornerRadius   | Dp                           | 卡片圆角（couiRoundCornerL）                     | SnackbarDefaults.CornerRadius                 | 否    |
+| colors         | NotificationSnackbarColors   | 卡片颜色                                      | SnackbarDefaults.notificationSnackbarColors() | 否    |
+
+`SnackbarData` 重载以 `data` 取代 `title`、`actionLabel`、`onActionClick` 与 `onDismiss`。
+
+### NotificationSnackbarColors
+
+| 属性名            | 类型               | 说明                              | 默认值                                           |
+| -------------- | ---------------- | ------------------------------- | --------------------------------------------- |
+| containerColor | Color            | 卡片填充（couiColorBackgroundTop）     | COUITheme.colorScheme.backgroundTop           |
+| titleColor     | Color            | 标题颜色（couiColorPrimaryNeutral）    | COUITheme.colorScheme.onSurfaceContainer      |
+| subtitleColor  | Color            | 副文本颜色（couiColorSecondNeutral）    | COUITheme.colorScheme.onSurfaceVariantSummary |
+| closeIconColor | Color            | 关闭图标着色（couiColorLabelTertiary）   | COUITheme.colorScheme.onSurfaceVariantActions |
+| actionColors   | TextButtonColors | 操作按钮颜色                          | ButtonDefaults.textButtonColors()             |
+
+### 布局与滑动
+
+- **布局**：图片距起始、顶部与底部各 16dp，与文字间隔 8dp；标题 14sp 中粗，副文本 12sp、位于标题下方 2dp；小号按钮（内边距 12dp x 4dp，最宽 120dp、最多两行）垂直居中；20dp 关闭按钮距顶部与末端各 6dp。
+- **滑动**：首次移动决定方向。横向时卡片跟手，超过自身宽度的八分之一后以每毫秒 1.75px 的速度沿 COUI move-ease 曲线滑出屏幕并回调 `onDismiss`，否则弹回（response 0.35、bounce 0）。向下滑动超过宽度八分之一同样关闭；向上最多被拖动宽度的八分之一。

@@ -2,26 +2,41 @@
 // SPDX-License-Identifier: Apache-2.0
 package component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbar
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.SnackbarDuration
 import io.github.suqi8.coui.kmp.basic.SnackbarHostState
 import io.github.suqi8.coui.kmp.basic.SnackbarResult
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.icon.COUIIcons
+import io.github.suqi8.coui.kmp.icon.extended.Image
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 
 fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
@@ -171,5 +186,47 @@ fun LazyListScope.snackbarSection(snackbarHostState: SnackbarHostState) {
                 )
             }
         }
+        NotificationSnackbarDemo()
+    }
+}
+
+/**
+ * The COUI 17 notification snack bar, shown in place: swipe it sideways or down, or tap its close
+ * button, to dismiss it.
+ */
+@Composable
+private fun NotificationSnackbarDemo() {
+    var visible by remember { mutableStateOf(true) }
+    var actionCount by remember { mutableIntStateOf(0) }
+    SmallTitle(text = "Notification Snackbar")
+    AnimatedVisibility(visible = visible) {
+        NotificationSnackbar(
+            title = "Screenshot saved",
+            subtitle = if (actionCount == 0) "Tap Share to send it to a contact" else "Shared $actionCount time(s)",
+            actionLabel = "Share",
+            onActionClick = { actionCount++ },
+            onDismiss = { visible = false },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(COUITheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(imageVector = COUIIcons.Image, contentDescription = null, tint = Color.White)
+                }
+            },
+        )
+    }
+    if (!visible) {
+        TextButton(
+            text = "Show again",
+            onClick = { visible = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        )
     }
 }

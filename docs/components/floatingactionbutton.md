@@ -83,6 +83,7 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 | ShadowLightZ      | Dp    | Height of the shadow light                                | 10000.dp      |
 | ShadowLightRadius | Dp    | Radius of the shadow light                                | 2000.dp       |
 | PressedScale      | Float | Deprecated, no longer read                                | 0.92f         |
+| ExpandedRotation  | Float | Main button content rotation of the expanded ExpandableFloatingActionButton | 45f |
 
 #### Functions
 
@@ -187,3 +188,78 @@ FloatingActionButton(
     )
 }
 ```
+
+## ExpandableFloatingActionButton
+
+`ExpandableFloatingActionButton` is the COUI 17 speed dial (`COUIFloatingButton` with
+`COUIFloatingButtonItem` children): clicking the main button expands it into a column of child
+buttons, each with an optional label capsule before it.
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.ExpandableFloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButtonItem
+```
+
+```kotlin
+var expanded by remember { mutableStateOf(false) }
+val items = listOf(
+    FloatingActionButtonItem(
+        icon = { Icon(imageVector = COUIIcons.Edit, contentDescription = "Edit") },
+        onClick = { expanded = false },
+        label = "Edit",
+    ),
+    FloatingActionButtonItem(
+        icon = { Icon(imageVector = COUIIcons.Share, contentDescription = "Share") },
+        onClick = { expanded = false },
+        label = "Share",
+    ),
+)
+
+ExpandableFloatingActionButton(
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    items = items,
+) {
+    Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+}
+```
+
+The column grows upwards from the main button, so anchor it by its bottom end corner (for example
+as the `Scaffold` floating action button).
+
+### ExpandableFloatingActionButton Properties
+
+| Property Name          | Type                           | Description                                                  | Default Value                                         | Required |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------- | -------- |
+| expanded               | Boolean                        | Whether the items are shown                                  | -                                                     | Yes      |
+| onExpandedChange       | (Boolean) -> Unit              | Called with the new state when the main button is clicked    | -                                                     | Yes      |
+| items                  | List<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
+| modifier               | Modifier                       | Modifier applied to the column                               | Modifier                                              | No       |
+| enabled                | Boolean                        | Whether the main button is enabled                           | true                                                  | No       |
+| material               | Boolean                        | Whether the buttons and labels draw the COUI 17 material     | true                                                  | No       |
+| hapticFeedbackEnabled  | Boolean                        | Whether a touch down plays the press haptic                  | true                                                  | No       |
+| containerColor         | Color                          | Fill of the main button                                      | COUITheme.colorScheme.primary                         | No       |
+| disabledContainerColor | Color                          | Fill of the disabled main button                             | FloatingActionButtonDefaults.disabledContainerColor() | No       |
+| contentColor           | Color                          | Content color of the main button                             | COUITheme.colorScheme.onPrimary                       | No       |
+| rotation               | Float                          | Rotation of the main button content while expanded (degrees) | FloatingActionButtonDefaults.ExpandedRotation (45f)   | No       |
+| content                | @Composable () -> Unit         | Content of the main button                                   | -                                                     | Yes      |
+
+### FloatingActionButtonItem
+
+| Property Name       | Type                   | Description                                                               | Default Value     |
+| ------------------- | ---------------------- | ------------------------------------------------------------------------- | ----------------- |
+| icon                | @Composable () -> Unit | Icon of the child button                                                  | -                 |
+| onClick             | () -> Unit             | Called when the child button or its label is clicked; the menu stays open | -                 |
+| label               | String?                | Text of the label capsule; null shows a bare child button                 | null              |
+| enabled             | Boolean                | Whether the child button and label are enabled                            | true              |
+| containerColor      | Color                  | Fill of the child button; Unspecified takes the theme primary             | Color.Unspecified |
+| labelContainerColor | Color                  | Fill of the label capsule; Unspecified takes the theme primary            | Color.Unspecified |
+| labelColor          | Color                  | Label text color; Unspecified takes white                                 | Color.Unspecified |
+
+### Expand and Collapse Behavior
+
+- **Layout**: index 0 sits 32dp above the main button, the next ones 16dp apart; every child button is 56dp with its label 12dp before it. Labels are 12sp, at most two lines and 220dp wide, padded 8dp x 4dp.
+- **Expand**: the farthest item starts first, each next one 50ms later. An item springs up from the main button (stiffness 500, damping ratio 0.8) while the child button and label scale from 0.6; the child fades in over 300ms and the label over 350ms on `PathInterpolator(0.25, 0.1, 0.25, 1)`, the label growing from its top end corner.
+- **Collapse**: the nearest item starts first, each next one 50ms later; it slides back into the main button over 300ms on the COUI move-ease curve while scaling to 0.6 and fading out (the label over 200ms, from its bottom end corner).
+- **Main button**: its content rotates by 45 degrees over 300ms.
+- **Material**: the main and child buttons draw the `FloatingActionButton` material; the labels draw the primary button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke).

@@ -4,6 +4,10 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
@@ -37,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -64,11 +69,21 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.invalidatePlacement
+import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
@@ -79,7 +94,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -104,7 +121,9 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import io.github.suqi8.coui.kmp.utils.hasFocusReassignBug
 import io.github.suqi8.coui.kmp.utils.layerOverflowInner
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -458,6 +477,17 @@ private val SearchIconCenterInset = 22.dp
  *   emitting [Interaction]s for this input field. You can use this to change the search bar's
  *   appearance or preview the search bar in different states. Note that if `null` is provided,
  *   interactions will still happen internally.
+ * @param hints rotating hints shown in place of [label] while the query is empty, after COUI
+ *   `COUIHintAnimationLayout.setHintsAnimation`: the first hint shows at once and every 3s the
+ *   current one slides up and fades out over 250ms while the next one rises from below 150ms
+ *   later (translation on `PathInterpolator(0.3, 0, 0.2, 1)`, alpha on COUIEaseInterpolator,
+ *   travel half the free height plus 5dp, `coui_search_bar_animation_translate_extra`). Typing
+ *   hides them; clearing the query brings the current hint back and restarts the rotation. An empty
+ *   list keeps the static [label].
+ * @param hintRepeatCount how many hint changes to play before the rotation stops on the current hint
+ *   (COUI `setRepeatCount`); [Int.MAX_VALUE] (the default) rotates forever.
+ * @param onHintChange called with the index of each newly shown hint (COUI
+ *   `COUIHintAnimationChangeListener`), e.g. to search for the shown hint on an empty submit.
  */
 @Composable
 fun InputField(
@@ -476,6 +506,9 @@ fun InputField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
+    hints: List<String> = emptyList(),
+    hintRepeatCount: Int = Int.MAX_VALUE,
+    onHintChange: ((Int) -> Unit)? = null,
 ) {
     val currentOnQueryChange by rememberUpdatedState(onQueryChange)
     val currentOnSearch by rememberUpdatedState(onSearch)
@@ -763,11 +796,23 @@ fun InputField(
                             TextStyle(fontSize = SearchBarDefaults.InputFieldFontSize).merge(textStyle)
                         }
                         // Hint text: couiColorLabelSecondary (Widget.COUI.EditText textColorHint).
-                        Text(
-                            text = labelText,
-                            style = mergedLabelStyle,
-                            color = colors.labelColor,
-                        )
+                        if (hints.isEmpty()) {
+                            Text(
+                                text = labelText,
+                                style = mergedLabelStyle,
+                                color = colors.labelColor,
+                            )
+                        } else {
+                            SearchBarHintCarousel(
+                                hints = hints,
+                                active = query.isEmpty(),
+                                repeatCount = hintRepeatCount,
+                                style = mergedLabelStyle,
+                                color = colors.labelColor,
+                                onHintChange = onHintChange,
+                                modifier = Modifier.matchParentSize(),
+                            )
+                        }
                         Box(modifier = Modifier.graphicsLayer { alpha = textAlpha.value }) {
                             innerTextField()
                         }
@@ -796,8 +841,193 @@ fun InputField(
     }
 }
 
+/**
+ * The rotating hints of an [InputField] (COUI `COUIHintAnimationLayout`): two text slots, the
+ * current hint and the incoming one, swapped every [HINT_INTERVAL_MILLIS].
+ */
+@Composable
+private fun SearchBarHintCarousel(
+    hints: List<String>,
+    active: Boolean,
+    repeatCount: Int,
+    style: TextStyle,
+    color: Color,
+    onHintChange: ((Int) -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    var index by remember(hints) { mutableIntStateOf(0) }
+    var previous by remember(hints) { mutableIntStateOf(-1) }
+    val outProgress = remember { Animatable(1f) }
+    val inProgress = remember { Animatable(1f) }
+    var containerHeight by remember { mutableIntStateOf(0) }
+    val currentOnHintChange by rememberUpdatedState(onHintChange)
+    val extraPx = with(LocalDensity.current) { HintTranslateExtra.toPx() }
+
+    LaunchedEffect(hints, active, repeatCount) {
+        if (!active || hints.size < 2) {
+            previous = -1
+            inProgress.snapTo(1f)
+            return@LaunchedEffect
+        }
+        var plays = 0
+        while (true) {
+            delay(HINT_INTERVAL_MILLIS)
+            // applyHintChangeAnimation: past the repeat count the rotation pauses on the current hint.
+            if (++plays > repeatCount) break
+            previous = index
+            index = (index + 1) % hints.size
+            currentOnHintChange?.invoke(index)
+            outProgress.snapTo(0f)
+            inProgress.snapTo(0f)
+            coroutineScope {
+                launch { outProgress.animateTo(1f, tween(HINT_ANIMATION_MILLIS, easing = LinearEasing)) }
+                launch {
+                    delay(HINT_IN_DELAY_MILLIS)
+                    inProgress.animateTo(1f, tween(HINT_ANIMATION_MILLIS, easing = LinearEasing))
+                }
+            }
+            previous = -1
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clipToBounds()
+            .onSizeChanged { containerHeight = it.height },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        if (!active) return@Box
+        val outgoing = previous
+        if (outgoing in hints.indices) {
+            Text(
+                text = hints[outgoing],
+                style = style,
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.graphicsLayer {
+                    val travel = (containerHeight - size.height) / 2f + extraPx
+                    val p = outProgress.value
+                    translationY = -travel * HintTranslateEasing.transform(p)
+                    alpha = 1f - HintFadeEasing.transform(p)
+                },
+            )
+        }
+        Text(
+            text = hints[index.coerceIn(hints.indices)],
+            style = style,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.graphicsLayer {
+                val travel = (containerHeight - size.height) / 2f + extraPx
+                val p = inProgress.value
+                translationY = travel * (1f - HintTranslateEasing.transform(p))
+                alpha = HintFadeEasing.transform(p)
+            },
+        )
+    }
+}
+
+/** COUIHintAnimationLayout `INTERVAL_TIME`. */
+private const val HINT_INTERVAL_MILLIS = 3000L
+
+/** COUIHintAnimationLayout `DURATION_TIME`. */
+private const val HINT_ANIMATION_MILLIS = 250
+
+/** COUIHintAnimationLayout `IN_DELAY_TIME`. */
+private const val HINT_IN_DELAY_MILLIS = 150L
+
+/** COUI coui_search_bar_animation_translate_extra. */
+private val HintTranslateExtra = 5.dp
+
+/** COUIHintAnimationLayout `TRANSLATEINTERPOLATOR`. */
+private val HintTranslateEasing = CubicBezierEasing(0.3f, 0f, 0.2f, 1f)
+
+/** COUIEaseInterpolator, the hint fade. */
+private val HintFadeEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
+
+/**
+ * Lifts a search bar into the title bar area while [expanded], after the COUI
+ * `COUISearchViewAnimate` standard-type enter / exit (`mSearchViewOffsetEnterAnimator` /
+ * `ExitAnimator`): the bar's top moves from where it is laid out to [targetTop] (window
+ * coordinates) over 450ms on COUIMoveEaseInterpolator, and back when [expanded] turns false.
+ *
+ * Apply it to the [SearchBar] (or its row) under a title it replaces, and hide or fade that title
+ * yourself; the keyboard opens through the [InputField] focus request as before. Only the bar is
+ * translated (drawn and hit-tested at the lifted position); the layout of the page below it does not
+ * move, so content that should follow the bar can read the same progress with
+ * [SearchBarDefaults.LiftAnimationSpec].
+ *
+ * @param expanded Whether the bar is lifted.
+ * @param targetTop The window y the top of the bar moves to, for example the status bar height.
+ */
+fun Modifier.searchBarLift(expanded: Boolean, targetTop: Dp = 0.dp): Modifier = this then SearchBarLiftElement(expanded, targetTop)
+
+private data class SearchBarLiftElement(
+    val expanded: Boolean,
+    val targetTop: Dp,
+) : ModifierNodeElement<SearchBarLiftNode>() {
+    override fun create(): SearchBarLiftNode = SearchBarLiftNode(expanded, targetTop)
+
+    override fun update(node: SearchBarLiftNode) {
+        node.update(expanded, targetTop)
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "searchBarLift"
+        properties["expanded"] = expanded
+        properties["targetTop"] = targetTop
+    }
+}
+
+private class SearchBarLiftNode(
+    private var expanded: Boolean,
+    private var targetTop: Dp,
+) : Modifier.Node(),
+    LayoutModifierNode {
+    private val progress = Animatable(if (expanded) 1f else 0f)
+
+    fun update(expanded: Boolean, targetTop: Dp) {
+        if (this.targetTop != targetTop) {
+            this.targetTop = targetTop
+            invalidatePlacement()
+        }
+        if (this.expanded != expanded) {
+            this.expanded = expanded
+            if (isAttached) {
+                coroutineScope.launch {
+                    progress.animateTo(if (expanded) 1f else 0f, SearchBarDefaults.LiftAnimationSpec)
+                }
+            }
+        }
+    }
+
+    override fun onAttach() {
+        coroutineScope.launch { progress.snapTo(if (expanded) 1f else 0f) }
+    }
+
+    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+        val placeable = measurable.measure(constraints)
+        val targetTopPx = targetTop.toPx()
+        return layout(placeable.width, placeable.height) {
+            // The resting position of the bar, before the lift translation of its own layer.
+            val restingTop = coordinates?.positionInWindow()?.y ?: targetTopPx
+            placeable.placeWithLayer(0, 0) {
+                translationY = (targetTopPx - restingTop) * progress.value
+            }
+        }
+    }
+}
+
 /** Contains default values used by [SearchBar] and [InputField]. */
 object SearchBarDefaults {
+    /**
+     * The animation of [searchBarLift]: 450ms on COUIMoveEaseInterpolator (COUISearchViewAnimate
+     * `DEFAULT_SEARCH_VIEW_OFFSET_CHANGE_DURATION` / `_INTERPOLATOR`).
+     */
+    val LiftAnimationSpec: AnimationSpec<Float> = tween(durationMillis = 450, easing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f))
+
     /**
      * The default inside margin of the [SearchBar].
      * COUI `coui_search_bar_responsive_horizontal_padding_compat` (16dp) x (52dp - 40dp) / 2.

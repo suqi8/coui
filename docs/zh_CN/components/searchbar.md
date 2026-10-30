@@ -77,6 +77,9 @@ SearchBar(
 | leadingIcon       | @Composable (() -> Unit)? | 前置图标          | 默认放大镜    | 否    |
 | trailingIcon      | @Composable (() -> Unit)? | 后置图标          | 默认清除按钮   | 否    |
 | interactionSource | MutableInteractionSource? | 交互源           | null     | 否    |
+| hints             | List<String>              | 查询为空时代替 `label` 轮播的提示文本；为空列表时保留 `label` | emptyList() | 否    |
+| hintRepeatCount   | Int                       | 轮播停止前播放的切换次数 | Int.MAX_VALUE | 否    |
+| onHintChange      | ((Int) -> Unit)?          | 每次切换到新提示时回调其下标 | null     | 否    |
 
 ### SearchBarDefaults 对象
 
@@ -97,6 +100,7 @@ SearchBarDefaults 对象提供了 SearchBar 和 InputField 组件的默认值。
 | TrailingIconVisualSize      | Dp       | 默认清除按钮的可见圆形尺寸       | 18.dp               |
 | CancelHeight                | Dp       | CancelButton 胶囊高度            | 40.dp               |
 | CancelPaddingHorizontal     | Dp       | CancelButton 文字水平内边距      | 16.dp               |
+| LiftAnimationSpec           | AnimationSpec<Float> | `Modifier.searchBarLift` 的动画（450ms，COUI move-ease） | tween(450) |
 | CancelMaxWidth              | Dp       | CancelButton 最大宽度            | 152.dp              |
 | CancelFontSize              | TextUnit | CancelButton 文字字号            | 14.sp               |
 
@@ -292,3 +296,46 @@ Box {
 | `Modifier.toolbarSearchEntry(state)` | 标记搜索栏从中展开的工具栏搜索图标；展开期间隐藏该图标 |
 | `Modifier.toolbarSearchItem(state)` | 让其他工具栏图标随展开一起淡出并缩小 |
 | `ToolbarFloatingSearchBar` | 在工具栏行上方承载 `SearchBar`；收起后不显示内容 |
+
+### 轮播提示
+
+`hints` 把占位提示换成 COUI 的提示轮播（`COUIHintAnimationLayout`）：第一条提示立即显示，此后每 3 秒
+当前提示在 250ms 内上移并淡出，下一条在 150ms 后从下方升起。位移距离为胶囊剩余高度的一半再加 5dp；
+位移曲线为 `PathInterpolator(0.3, 0, 0.2, 1)`，透明度曲线为 COUI ease 曲线。输入文字时提示隐藏；
+清空查询后重新显示当前提示并重新开始轮播。可用 `onHintChange` 记住当前显示的提示，例如在空查询提交时
+直接搜索它。
+
+```kotlin
+val hints = remember { listOf("Wi-Fi", "Bluetooth", "Battery saver") }
+var shownHint by remember { mutableIntStateOf(0) }
+
+InputField(
+    query = query,
+    onQueryChange = { query = it },
+    onSearch = { onSearch(it.ifEmpty { hints[shownHint] }) },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    hints = hints,
+    onHintChange = { shownHint = it },
+)
+```
+
+### 上浮进标题栏
+
+`Modifier.searchBarLift(expanded, targetTop)` 复刻 `COUISearchViewAnimate` 标准形态的进入 / 退出：
+`expanded` 时搜索栏从其布局位置在 450ms 内沿 COUI move-ease 曲线（`SearchBarDefaults.LiftAnimationSpec`）
+上移到 `targetTop`（窗口坐标，例如状态栏高度），收起时移回。只平移搜索栏本身；被替换的标题需自行隐藏或
+淡出。键盘仍由 `InputField` 的焦点请求弹出。
+
+```kotlin
+val statusBarTop = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+
+SearchBar(
+    modifier = Modifier.searchBarLift(expanded = expanded, targetTop = statusBarTop),
+    inputField = { /* InputField(...) */ },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+) {
+    // 搜索结果
+}
+```

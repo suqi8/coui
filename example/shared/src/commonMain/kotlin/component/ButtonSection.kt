@@ -29,7 +29,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonMaterial
+import io.github.suqi8.coui.kmp.basic.ExpandableFloatingActionButton
 import io.github.suqi8.coui.kmp.basic.FloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButtonItem
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Stepper
@@ -40,6 +42,9 @@ import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Add
+import io.github.suqi8.coui.kmp.icon.extended.Edit
+import io.github.suqi8.coui.kmp.icon.extended.Scan
+import io.github.suqi8.coui.kmp.icon.extended.Share
 import io.github.suqi8.coui.kmp.shared.generated.resources.Res
 import io.github.suqi8.coui.kmp.shared.generated.resources.blur_test_bg
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -222,6 +227,61 @@ fun LazyListScope.buttonSection() {
             )
         }
         FloatingActionButtons()
+        ExpandableFloatingActionButtonDemo()
+    }
+}
+
+/** The COUI 17 speed dial: the main button expands into labelled child buttons. */
+@Composable
+private fun ExpandableFloatingActionButtonDemo() {
+    var expanded by remember { mutableStateOf(false) }
+    var lastAction by remember { mutableStateOf("None") }
+    val items = remember {
+        listOf(
+            FloatingActionButtonItem(
+                icon = { Icon(imageVector = COUIIcons.Edit, contentDescription = "Edit") },
+                onClick = {
+                    lastAction = "Edit"
+                    expanded = false
+                },
+                label = "Edit",
+            ),
+            FloatingActionButtonItem(
+                icon = { Icon(imageVector = COUIIcons.Share, contentDescription = "Share") },
+                onClick = {
+                    lastAction = "Share"
+                    expanded = false
+                },
+                label = "Share",
+            ),
+            FloatingActionButtonItem(
+                icon = { Icon(imageVector = COUIIcons.Scan, contentDescription = "Scan") },
+                onClick = {
+                    lastAction = "Scan"
+                    expanded = false
+                },
+            ),
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .padding(horizontal = 24.dp)
+            .padding(bottom = 24.dp),
+    ) {
+        Text(
+            text = "Last action: $lastAction",
+            modifier = Modifier.align(Alignment.BottomStart),
+        )
+        ExpandableFloatingActionButton(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            items = items,
+            modifier = Modifier.align(Alignment.BottomEnd),
+        ) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
     }
 }
 

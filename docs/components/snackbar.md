@@ -286,3 +286,69 @@ TextButton(
     },
 )
 ```
+
+## NotificationSnackbar
+
+`NotificationSnackbar` is the COUI 17 notification snack bar (`COUINotificationSnackBar`): a
+floating card with a leading image, a title, an optional subtitle, a small action button and a close
+button in the top end corner. It can be shown in place, or through `SnackbarHost` to get the host's
+show / dismiss animation and timeout.
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbar
+import io.github.suqi8.coui.kmp.basic.NotificationSnackbarIconType
+```
+
+```kotlin
+NotificationSnackbar(
+    title = "Screenshot saved",
+    subtitle = "Tap Share to send it to a contact",
+    actionLabel = "Share",
+    onActionClick = { /* share */ },
+    onDismiss = { visible = false },
+    icon = { Image(painter = thumbnail, contentDescription = null) },
+)
+```
+
+Through a host, the message is the title, the action label the button; the button performs the
+action and the close button or a swipe dismisses it:
+
+```kotlin
+SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
+    NotificationSnackbar(data, subtitle = "Tap Share to send it to a contact", icon = { /* ... */ })
+}
+```
+
+### NotificationSnackbar Properties
+
+| Property Name  | Type                         | Description                                                    | Default Value                                    | Required |
+| -------------- | ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------ | -------- |
+| title          | String                       | Title (COUI content text), at most two lines                   | -                                                | Yes      |
+| actionLabel    | String?                      | Label of the small action button; null hides it                | -                                                | Yes      |
+| onActionClick  | () -> Unit                   | Called when the action button is clicked                       | -                                                | Yes      |
+| onDismiss      | () -> Unit                   | Called when the close button is clicked or the card is swiped away | -                                            | Yes      |
+| modifier       | Modifier                     | Modifier applied to the card                                   | Modifier                                         | No       |
+| subtitle       | String?                      | Subtitle, at most two lines                                    | null                                             | No       |
+| icon           | (@Composable () -> Unit)?    | Leading image, laid out in the box `iconType` gives            | null                                             | No       |
+| iconType       | NotificationSnackbarIconType | `Square` 44dp, `Vertical` 36 x 48dp or `Horizontal` 58 x 44dp  | NotificationSnackbarIconType.Square              | No       |
+| swipeToDismiss | Boolean                      | Whether the card can be swiped away                            | true                                             | No       |
+| maxWidth       | Dp                           | Maximum width, excluding the 16dp outer margins                | SnackbarDefaults.maxWidth()                      | No       |
+| cornerRadius   | Dp                           | Corner radius of the card (couiRoundCornerL)                   | SnackbarDefaults.CornerRadius                    | No       |
+| colors         | NotificationSnackbarColors   | Colors of the card                                             | SnackbarDefaults.notificationSnackbarColors()    | No       |
+
+The `SnackbarData` overload takes `data` instead of `title`, `actionLabel`, `onActionClick` and `onDismiss`.
+
+### NotificationSnackbarColors
+
+| Property Name  | Type             | Description                                | Default Value                                 |
+| -------------- | ---------------- | ------------------------------------------ | --------------------------------------------- |
+| containerColor | Color            | Card fill (couiColorBackgroundTop)         | COUITheme.colorScheme.backgroundTop           |
+| titleColor     | Color            | Title color (couiColorPrimaryNeutral)      | COUITheme.colorScheme.onSurfaceContainer      |
+| subtitleColor  | Color            | Subtitle color (couiColorSecondNeutral)    | COUITheme.colorScheme.onSurfaceVariantSummary |
+| closeIconColor | Color            | Close glyph tint (couiColorLabelTertiary)  | COUITheme.colorScheme.onSurfaceVariantActions |
+| actionColors   | TextButtonColors | Colors of the action button                | ButtonDefaults.textButtonColors()             |
+
+### Layout and Swipe
+
+- **Layout**: the image sits 16dp from the start, top and bottom edges and 8dp before the text; the title is 14sp medium and the subtitle 12sp, 2dp below it; the small button (12dp x 4dp padding, at most 120dp wide and two lines) is vertically centred; the 20dp close button sits 6dp from the top and end edges.
+- **Swipe**: the first move picks an axis. Sideways the card follows the finger; past an eighth of its width it slides off screen at 1.75px per ms on the COUI move-ease curve and `onDismiss` runs, otherwise it springs back (response 0.35, bounce 0). Downwards it dismisses the same way past an eighth of its width; upwards it is held to an eighth of its width.

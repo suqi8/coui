@@ -83,6 +83,9 @@ SearchBar(
 | leadingIcon       | @Composable (() -> Unit)? | Leading icon                         | default search icon  | No       |
 | trailingIcon      | @Composable (() -> Unit)? | Trailing icon                        | default clear button | No       |
 | interactionSource | MutableInteractionSource? | Interaction source                   | null                 | No       |
+| hints             | List<String>              | Rotating hints shown instead of `label` while the query is empty; empty keeps `label` | emptyList() | No       |
+| hintRepeatCount   | Int                       | Hint changes played before the rotation stops | Int.MAX_VALUE | No       |
+| onHintChange      | ((Int) -> Unit)?          | Called with the index of each newly shown hint | null          | No       |
 
 ### SearchBarDefaults Object
 
@@ -103,6 +106,7 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 | TrailingIconVisualSize     | Dp       | Visual circle size of default clear button         | 18.dp              |
 | CancelHeight               | Dp       | Height of the CancelButton capsule                 | 40.dp              |
 | CancelPaddingHorizontal    | Dp       | Horizontal label padding inside the CancelButton   | 16.dp              |
+| LiftAnimationSpec          | AnimationSpec<Float> | Animation of `Modifier.searchBarLift` (450ms, COUI move-ease) | tween(450) |
 | CancelMaxWidth             | Dp       | Maximum width of the CancelButton                  | 152.dp             |
 | CancelFontSize             | TextUnit | Font size of the CancelButton label                | 14.sp              |
 
@@ -304,3 +308,49 @@ Box {
 | `Modifier.toolbarSearchEntry(state)` | Marks the toolbar search icon the bar grows out of; hides it while the bar is out |
 | `Modifier.toolbarSearchItem(state)` | Fades and shrinks another toolbar icon along with the expansion |
 | `ToolbarFloatingSearchBar` | Hosts the `SearchBar` over the toolbar row; empty while the bar is folded away |
+
+### Rotating Hints
+
+`hints` turns the placeholder into the COUI hint carousel (`COUIHintAnimationLayout`): the first
+hint shows at once, and every 3 seconds the current hint slides up and fades out over 250ms while
+the next one rises from below 150ms later. The travel is half the free height of the capsule plus
+5dp; the slide runs on `PathInterpolator(0.3, 0, 0.2, 1)` and the fade on the COUI ease curve.
+Typing hides the hints; clearing the query shows the current hint again and restarts the rotation.
+Use `onHintChange` to remember the shown hint, for example to search for it on an empty submit.
+
+```kotlin
+val hints = remember { listOf("Wi-Fi", "Bluetooth", "Battery saver") }
+var shownHint by remember { mutableIntStateOf(0) }
+
+InputField(
+    query = query,
+    onQueryChange = { query = it },
+    onSearch = { onSearch(it.ifEmpty { hints[shownHint] }) },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    hints = hints,
+    onHintChange = { shownHint = it },
+)
+```
+
+### Lifting into the Title Bar
+
+`Modifier.searchBarLift(expanded, targetTop)` reproduces the standard `COUISearchViewAnimate`
+enter / exit: while `expanded` the bar moves from where it is laid out up to `targetTop` (window
+coordinates, for example the status bar height) over 450ms on the COUI move-ease curve
+(`SearchBarDefaults.LiftAnimationSpec`), and back when it collapses. Only the bar is translated;
+hide or fade the title it replaces yourself. The keyboard opens through the `InputField` focus
+request as before.
+
+```kotlin
+val statusBarTop = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+
+SearchBar(
+    modifier = Modifier.searchBarLift(expanded = expanded, targetTop = statusBarTop),
+    inputField = { /* InputField(...) */ },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+) {
+    // Search results
+}
+```

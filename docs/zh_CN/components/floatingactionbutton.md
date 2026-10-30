@@ -83,6 +83,7 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 | ShadowLightZ      | Dp    | 阴影光源的高度                                     | 10000.dp   |
 | ShadowLightRadius | Dp    | 阴影光源的半径                                     | 2000.dp    |
 | PressedScale      | Float | 已弃用,不再读取                                   | 0.92f      |
+| ExpandedRotation  | Float | ExpandableFloatingActionButton 展开时主按钮内容的旋转角度 | 45f |
 
 #### 函数
 
@@ -187,3 +188,76 @@ FloatingActionButton(
     )
 }
 ```
+
+## ExpandableFloatingActionButton
+
+`ExpandableFloatingActionButton` 是 COUI 17 的可展开悬浮按钮（`COUIFloatingButton` 与
+`COUIFloatingButtonItem` 子项）：点击主按钮后向上展开一列子按钮，每个子按钮前可带一个标签胶囊。
+
+```kotlin
+import io.github.suqi8.coui.kmp.basic.ExpandableFloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButtonItem
+```
+
+```kotlin
+var expanded by remember { mutableStateOf(false) }
+val items = listOf(
+    FloatingActionButtonItem(
+        icon = { Icon(imageVector = COUIIcons.Edit, contentDescription = "Edit") },
+        onClick = { expanded = false },
+        label = "编辑",
+    ),
+    FloatingActionButtonItem(
+        icon = { Icon(imageVector = COUIIcons.Share, contentDescription = "Share") },
+        onClick = { expanded = false },
+        label = "分享",
+    ),
+)
+
+ExpandableFloatingActionButton(
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    items = items,
+) {
+    Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+}
+```
+
+子项从主按钮向上排列，请按右下角锚定（例如作为 `Scaffold` 的悬浮按钮）。
+
+### ExpandableFloatingActionButton 属性
+
+| 属性名                    | 类型                             | 说明                   | 默认值                                                   | 是否必须 |
+| ---------------------- | ------------------------------ | -------------------- | ----------------------------------------------------- | ---- |
+| expanded               | Boolean                        | 是否展开子项               | -                                                     | 是    |
+| onExpandedChange       | (Boolean) -> Unit              | 点击主按钮时以新状态回调         | -                                                     | 是    |
+| items                  | List<FloatingActionButtonItem> | 子操作，下标 0 离主按钮最近       | -                                                     | 是    |
+| modifier               | Modifier                       | 应用于整列的修饰符            | Modifier                                              | 否    |
+| enabled                | Boolean                        | 主按钮是否启用              | true                                                  | 否    |
+| material               | Boolean                        | 按钮与标签是否绘制 COUI 17 材质 | true                                                  | 否    |
+| hapticFeedbackEnabled  | Boolean                        | 按下时是否触发按压振动          | true                                                  | 否    |
+| containerColor         | Color                          | 主按钮填充色               | COUITheme.colorScheme.primary                         | 否    |
+| disabledContainerColor | Color                          | 主按钮禁用时的填充色           | FloatingActionButtonDefaults.disabledContainerColor() | 否    |
+| contentColor           | Color                          | 主按钮内容色               | COUITheme.colorScheme.onPrimary                       | 否    |
+| rotation               | Float                          | 展开时主按钮内容的旋转角度（度）     | FloatingActionButtonDefaults.ExpandedRotation (45f)   | 否    |
+| content                | @Composable () -> Unit         | 主按钮内容                | -                                                     | 是    |
+
+### FloatingActionButtonItem
+
+| 属性名                 | 类型                     | 说明                      | 默认值               |
+| ------------------- | ---------------------- | ----------------------- | ----------------- |
+| icon                | @Composable () -> Unit | 子按钮图标                   | -                 |
+| onClick             | () -> Unit             | 点击子按钮或其标签时回调；菜单不会自动收起   | -                 |
+| label               | String?                | 标签胶囊文字；为 null 时只显示子按钮    | null              |
+| enabled             | Boolean                | 子按钮与标签是否启用              | true              |
+| containerColor      | Color                  | 子按钮填充色；Unspecified 取主题主色 | Color.Unspecified |
+| labelContainerColor | Color                  | 标签胶囊填充色；Unspecified 取主题主色 | Color.Unspecified |
+| labelColor          | Color                  | 标签文字颜色；Unspecified 取白色   | Color.Unspecified |
+
+### 展开与收起行为
+
+- **布局**：下标 0 位于主按钮上方 32dp，其余依次间隔 16dp；子按钮均为 56dp，标签在其前方 12dp。标签文字 12sp，最多两行、最宽 220dp，内边距 8dp x 4dp。
+- **展开**：离主按钮最远的子项先动，之后每项晚 50ms。子项以弹簧（刚度 500、阻尼比 0.8）从主按钮升起，子按钮与标签从 0.6 放大；子按钮在 300ms、标签在 350ms 内淡入，曲线为 `PathInterpolator(0.25, 0.1, 0.25, 1)`，标签以右上角为缩放中心。
+- **收起**：离主按钮最近的子项先动，之后每项晚 50ms；在 300ms 内沿 COUI move-ease 曲线滑回主按钮，同时缩小到 0.6 并淡出（标签 200ms，以右下角为缩放中心）。
+- **主按钮**：内容在 300ms 内旋转 45 度。
+- **材质**：主按钮与子按钮绘制 `FloatingActionButton` 材质；标签绘制主色按钮材质（`TYPE_CONTENT_PRIMARY_BUTTON` 模糊、`TYPE_CONTENT_CAPSULE_1` 描边）。
