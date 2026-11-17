@@ -335,7 +335,7 @@ private fun WideScreenContent(
     val appState = LocalAppState.current
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
     val materialBackdrop = rememberMaterialBackdropProvider(backdrop)
     val page = mainPagerState.selectedPage
     Row {
@@ -409,7 +409,7 @@ private fun CompactScreenLayout(
     padding: PaddingValues,
     mainPagerState: MainPagerState,
 ) {
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     val appState = LocalAppState.current
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
@@ -505,7 +505,7 @@ private fun NavigationBar(
                                     blurRadius = 25f,
                                     colors = BlurDefaults.blurColors(
                                         blendColors = listOf(
-                                            BlendColorEntry(color = COUITheme.colorScheme.surface.copy(0.8f)),
+                                            BlendColorEntry(color = COUITheme.colorScheme.backgroundWithCard.copy(0.8f)),
                                         ),
                                     ),
                                 )
@@ -616,7 +616,7 @@ private fun FloatingToolbar(
             targetState = floatingToolbarOrientation,
             transitionSpec = { (EnterTransition.None togetherWith ExitTransition.None).using(SizeTransform(clip = false)) },
         ) { orientation ->
-            val iconTint = COUITheme.colorScheme.onSurface
+            val iconTint = COUITheme.colorScheme.labelPrimary
             val content = @Composable {
                 IconButton(onClick = { /* Action 1 */ }) {
                     Icon(

@@ -42,7 +42,7 @@ fun MultiScaffoldTestPage(
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
             drawRect(surfaceColor)
@@ -52,7 +52,7 @@ fun MultiScaffoldTestPage(
         null
     }
     val blurActive = appState.enableBlur && blurSupported
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
     val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
 
@@ -108,7 +108,7 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(COUITheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.card),
                 ) {
                     Column {
                         SmallTitle(text = "Top Left")
@@ -132,7 +132,7 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(COUITheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.card),
                 ) {
                     Column {
                         SmallTitle(text = "Top Right")
@@ -161,7 +161,7 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(COUITheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.card),
                 ) {
                     Column {
                         SmallTitle(text = "Bottom Left")
@@ -185,7 +185,7 @@ fun MultiScaffoldTestPage(
                 Scaffold(
                     modifier = Modifier
                         .weight(1f)
-                        .background(COUITheme.colorScheme.surfaceVariant),
+                        .background(COUITheme.colorScheme.card),
                 ) {
                     Column {
                         SmallTitle(text = "Bottom Right")

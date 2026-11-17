@@ -91,7 +91,7 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
                     }
                 }
                 .background(
-                    color = COUITheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f),
+                    color = COUITheme.colorScheme.cardPressed.copy(alpha = 0.5f),
                     shape = RoundedCornerShape(PillCorner),
                 )
                 .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -101,21 +101,21 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
             if (stats.avg == 0) {
                 Text(
                     text = "--",
-                    style = COUITheme.textStyles.body2,
-                    color = COUITheme.colorScheme.onSurfaceSecondary,
+                    style = COUITheme.textStyles.bodyM,
+                    color = COUITheme.colorScheme.labelSecondary,
                 )
             } else {
-                val secondary = COUITheme.colorScheme.onSurfaceSecondary
+                val secondary = COUITheme.colorScheme.labelSecondary
                 Text(
                     text = buildAnnotatedString {
                         withStyle(SpanStyle(color = secondary)) { append("AVG ") }
                         withStyle(SpanStyle(color = avgColor)) { append(stats.avg.toString()) }
                     },
-                    style = COUITheme.textStyles.body2,
+                    style = COUITheme.textStyles.bodyM,
                 )
                 Text(
                     text = "·",
-                    style = COUITheme.textStyles.body2,
+                    style = COUITheme.textStyles.bodyM,
                     color = secondary,
                 )
                 Text(
@@ -123,7 +123,7 @@ fun FPSMonitor(modifier: Modifier = Modifier) {
                         withStyle(SpanStyle(color = secondary)) { append("LOW ") }
                         withStyle(SpanStyle(color = lowColor)) { append(stats.low1.toString()) }
                     },
-                    style = COUITheme.textStyles.body2,
+                    style = COUITheme.textStyles.bodyM,
                 )
             }
         }

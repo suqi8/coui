@@ -64,11 +64,11 @@ fun LazyListScope.breadcrumbBarSection() {
                 )
                 Text(
                     text = "Full path: ${items.joinToPath()}",
-                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                    color = COUITheme.colorScheme.labelSecondaryVariant,
                 )
                 Text(
                     text = "Current: ${items.subList(0, highlightIndex + 1).joinToPath()}",
-                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                    color = COUITheme.colorScheme.labelSecondaryVariant,
                 )
                 BreadcrumbBar(
                     items = items,

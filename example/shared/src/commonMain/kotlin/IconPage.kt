@@ -128,7 +128,7 @@ fun IconsPage(
     // Blur state
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) colorScheme.surface.copy(alpha = 0f) else colorScheme.surface
+    val barColor = if (blurActive) colorScheme.backgroundWithCard.copy(alpha = 0f) else colorScheme.backgroundWithCard
 
     // Scroll state
     val lazyListState = rememberLazyListState()
@@ -201,7 +201,7 @@ fun IconsPage(
                                         Icon(
                                             imageVector = regularIcons[index],
                                             contentDescription = iconNames[index],
-                                            tint = colorScheme.onBackground,
+                                            tint = colorScheme.labelPrimary,
                                             modifier = Modifier.size(24.dp),
                                         )
                                     },
@@ -249,7 +249,7 @@ fun IconsPage(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                             .clip(IconListTopShape)
-                            .background(colorScheme.surfaceContainer)
+                            .background(colorScheme.cardBackground)
                             .padding(horizontal = 16.dp)
                             .padding(top = 12.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -257,13 +257,13 @@ fun IconsPage(
                         Text(
                             text = "Name",
                             modifier = Modifier.weight(1f),
-                            style = COUITheme.textStyles.footnote1,
-                            color = colorScheme.onSurfaceVariantActions,
+                            style = COUITheme.textStyles.bodyS,
+                            color = colorScheme.labelTertiary,
                         )
                         Text(
                             text = "Tap to compare weights",
-                            style = COUITheme.textStyles.footnote2,
-                            color = colorScheme.onSurfaceVariantActions,
+                            style = COUITheme.textStyles.bodyXS,
+                            color = colorScheme.labelTertiary,
                         )
                     }
                 }
@@ -280,7 +280,7 @@ fun IconsPage(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                             .clip(shape)
-                            .background(colorScheme.surfaceContainer)
+                            .background(colorScheme.cardBackground)
                             .clickable { expandedIndex = if (expanded) -1 else index }
                             .padding(horizontal = 16.dp)
                             .padding(vertical = 6.dp)
@@ -290,20 +290,20 @@ fun IconsPage(
                             Text(
                                 text = iconNames[index],
                                 modifier = Modifier.weight(1f),
-                                style = COUITheme.textStyles.body2,
-                                color = colorScheme.onSurface,
+                                style = COUITheme.textStyles.bodyM,
+                                color = colorScheme.labelPrimary,
                             )
                             Icon(
                                 imageVector = regularIcons[index],
                                 contentDescription = iconNames[index],
-                                tint = colorScheme.onBackground,
+                                tint = colorScheme.labelPrimary,
                                 modifier = Modifier.size(24.dp),
                             )
                             Spacer(modifier = Modifier.size(8.dp))
                             Icon(
                                 imageVector = if (expanded) COUIIcons.ExpandLess else COUIIcons.ExpandMore,
                                 contentDescription = if (expanded) "Collapse" else "Expand",
-                                tint = colorScheme.onSurfaceVariantActions,
+                                tint = colorScheme.labelTertiary,
                                 modifier = Modifier.size(18.dp),
                             )
                         }
@@ -322,14 +322,14 @@ fun IconsPage(
                                         Icon(
                                             imageVector = icons[index],
                                             contentDescription = "${iconNames[index]} ($label)",
-                                            tint = colorScheme.onBackground,
+                                            tint = colorScheme.labelPrimary,
                                             modifier = Modifier.size(28.dp),
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = label,
-                                            style = COUITheme.textStyles.footnote2,
-                                            color = colorScheme.onSurfaceVariantActions,
+                                            style = COUITheme.textStyles.bodyXS,
+                                            color = colorScheme.labelTertiary,
                                             textAlign = TextAlign.Center,
                                             maxLines = 1,
                                         )

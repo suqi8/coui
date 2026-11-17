@@ -19,7 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
@@ -61,12 +60,12 @@ fun SettingsHomeTopBarPage(
     var query by rememberSaveable { mutableStateOf("") }
 
     val navigator = LocalNavigator.current
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
         drawContent()
     }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val glowEnabled = isRuntimeShaderSupported() && appState.enableBlur
 
     Scaffold(
@@ -83,19 +82,22 @@ fun SettingsHomeTopBarPage(
                 largeTitleBottomMargin = 18.dp,
                 // SettingsCollapsingToolbarLayout fades the large title away instead of pinning one.
                 fadeLargeTitleOnCollapse = true,
-                // COUI 17 suppresses the bar divider while the material blur is on
-                // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
-                showDivider = !glowEnabled,
                 // The condensed-light glow is the bar's own backing layer: it spans the collapsed
-                // toolbar band and blurs the content scrolled beneath the transparent bar.
-                glow = {
-                    TopAppBarGlow(
-                        backdrop = backdrop,
-                        scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
-                        isDark = isDark,
-                        baseColor = surfaceColor,
-                        enabled = glowEnabled,
-                    )
+                // toolbar band and blurs the content scrolled beneath the transparent bar. While
+                // it is set the bar suppresses its divider (COUI 17
+                // AppBarBlurHelper.syncAppBarDividerWithMaterialBlur); null keeps a solid bar.
+                glow = if (glowEnabled) {
+                    {
+                        TopAppBarGlow(
+                            backdrop = backdrop,
+                            scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
+                            isDark = isDark,
+                            baseColor = surfaceColor,
+                            enabled = true,
+                        )
+                    }
+                } else {
+                    null
                 },
                 navigationIcon = {
                     // COUI 17 top-bar icon buttons float on a material panel (filled +
@@ -106,7 +108,7 @@ fun SettingsHomeTopBarPage(
                         Icon(
                             imageVector = COUIIcons.Back,
                             contentDescription = null,
-                            tint = COUITheme.colorScheme.onSurface,
+                            tint = COUITheme.colorScheme.labelPrimary,
                         )
                     }
                 },

@@ -44,8 +44,8 @@ fun LazyListScope.lunarDatePickerSection() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
-                    color = COUITheme.colorScheme.onSurfaceSecondary,
-                    style = COUITheme.textStyles.footnote1,
+                    color = COUITheme.colorScheme.labelSecondary,
+                    style = COUITheme.textStyles.bodyS,
                     textAlign = TextAlign.Center,
                 )
             }

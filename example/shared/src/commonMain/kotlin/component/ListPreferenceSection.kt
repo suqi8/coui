@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.preference.ListPreference
 import io.github.suqi8.coui.kmp.preference.ListPreferenceEntry
@@ -33,11 +32,9 @@ fun LazyListScope.listPreferenceSection() {
                     ListPreferenceDemo()
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     MultiSelectListPreferenceDemo()
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ListPreference(
                         entries = remember { listOf(ListPreferenceEntry("Unavailable")) },
                         selectedIndex = 0,

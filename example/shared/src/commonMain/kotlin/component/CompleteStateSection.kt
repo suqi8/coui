@@ -41,6 +41,7 @@ fun LazyListScope.completeStateSection() {
             ) {
                 CompleteState(
                     title = when (type) {
+                        CompleteStateType.None -> "Done"
                         CompleteStateType.Success -> "Payment successful"
                         CompleteStateType.Failed -> "Payment failed"
                         CompleteStateType.Waiting -> "Waiting for confirmation"

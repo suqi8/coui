@@ -6,8 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -120,6 +120,34 @@ fun LazyListScope.sliderSection() {
                         material = true,
                     )
                 }
+                item {
+                    var sectionValue by remember { mutableFloatStateOf(2f) }
+                    Text(
+                        text = "Sections (COUISectionSeekBar): ${sectionValue.toInt()}/5",
+                        modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
+                    )
+                    Slider(
+                        value = sectionValue,
+                        onValueChange = { sectionValue = it },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                        valueRange = 0f..5f,
+                        steps = 4,
+                    )
+                }
+                item {
+                    var middleValue by remember { mutableFloatStateOf(0f) }
+                    Text(
+                        text = "Start from middle: ${middleValue.toInt()}",
+                        modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
+                    )
+                    Slider(
+                        value = middleValue,
+                        onValueChange = { middleValue = it },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                        valueRange = -50f..50f,
+                        startFromMiddle = true,
+                    )
+                }
             }
         }
 
@@ -201,7 +229,8 @@ fun LazyListScope.sliderSection() {
                     VerticalSlider(
                         value = verticalValue1,
                         onValueChange = { verticalValue1 = it },
-                        modifier = Modifier.size(25.dp, 160.dp),
+                        modifier = Modifier.height(160.dp),
+                        text = "${(verticalValue1 * 100).toInt()}",
                     )
                     Text(
                         text = "Normal\n${(verticalValue1 * 100).toInt()}%",
@@ -221,7 +250,7 @@ fun LazyListScope.sliderSection() {
                         valueRange = 0f..6f,
                         steps = 5,
                         hapticEffect = SliderDefaults.SliderHapticEffect.Step,
-                        modifier = Modifier.size(25.dp, 160.dp),
+                        modifier = Modifier.height(160.dp),
                     )
                     Text(
                         text = "Steps\n${verticalValue2.toInt()}/6",
@@ -242,7 +271,7 @@ fun LazyListScope.sliderSection() {
                         steps = 5,
                         hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                         showKeyPoints = true,
-                        modifier = Modifier.size(25.dp, 160.dp),
+                        modifier = Modifier.height(160.dp),
                     )
                     Text(
                         text = "Points\n${verticalValue3.toInt()}/6",
@@ -263,7 +292,7 @@ fun LazyListScope.sliderSection() {
                         showKeyPoints = true,
                         hapticEffect = SliderDefaults.SliderHapticEffect.Step,
                         keyPoints = listOf(0f, 25f, 50f, 75f, 100f),
-                        modifier = Modifier.size(25.dp, 160.dp),
+                        modifier = Modifier.height(160.dp),
                     )
                     Text(
                         text = "Custom\n${verticalValue4.toInt()}%",
@@ -281,7 +310,7 @@ fun LazyListScope.sliderSection() {
                         value = disabledVerticalValue,
                         onValueChange = {},
                         enabled = false,
-                        modifier = Modifier.size(25.dp, 160.dp),
+                        modifier = Modifier.height(160.dp),
                     )
                     Text(
                         text = "Disabled\n${(disabledVerticalValue * 100).toInt()}%",

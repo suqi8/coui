@@ -34,7 +34,6 @@ import component.highlight.HighlightConfig
 import component.highlight.rememberContainerHighlight
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.blur.BlendColorEntry
@@ -78,7 +77,7 @@ private fun BlurDemo() {
     val isInDark = isInDarkTheme()
 
     val backdrop = rememberLayerBackdrop()
-    val surface = COUITheme.colorScheme.surface.copy(alpha = 0.6f)
+    val surface = COUITheme.colorScheme.backgroundWithCard.copy(alpha = 0.6f)
 
     var tiltDriven by remember { mutableStateOf(true) }
     val containers = HighlightConfig.Container.entries
@@ -158,13 +157,13 @@ private fun BlurDemo() {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "Texture Blur | R=${blurRadiusX.toInt()}",
-                                    style = COUITheme.textStyles.headline2,
+                                    style = COUITheme.textStyles.headlineXS,
                                 )
                                 Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = "${currentBlend.first} | ${containerItems[containerIndex]}",
-                                    style = COUITheme.textStyles.body2,
-                                    color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                    style = COUITheme.textStyles.bodyM,
+                                    color = COUITheme.colorScheme.labelTertiary,
                                 )
                             }
                         }
@@ -179,8 +178,6 @@ private fun BlurDemo() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
                     OverlayDropdownPreference(
                         title = "Highlight",
                         items = containerItems,
@@ -189,8 +186,6 @@ private fun BlurDemo() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-
                     SliderPreference(
                         title = "Blur Radius",
                         valueText = "${blurRadiusX.toInt()}",
@@ -255,7 +250,7 @@ private fun ForegroundBlurDemo() {
     val dynamicBackground = remember { mutableStateOf(true) }
 
     val backdrop = rememberLayerBackdrop()
-    val onBackground = COUITheme.colorScheme.onBackground
+    val onBackground = COUITheme.colorScheme.labelPrimary
     val logoBlend = remember(isInDark) {
         if (isInDark) {
             listOf(
@@ -341,8 +336,6 @@ private fun ForegroundBlurDemo() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
                     OverlayDropdownPreference(
                         title = "Blend Mode",
                         items = blendModeItems,
@@ -351,8 +344,6 @@ private fun ForegroundBlurDemo() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-
                     SwitchPreference(
                         title = "Dynamic Background",
                         checked = dynamicBackground.value,
@@ -360,8 +351,6 @@ private fun ForegroundBlurDemo() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-
                     SliderPreference(
                         title = "Blur Radius",
                         valueText = "${blurRadiusX.toInt()}",

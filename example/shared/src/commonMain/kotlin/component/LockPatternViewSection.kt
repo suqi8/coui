@@ -91,6 +91,27 @@ fun LazyListScope.lockPatternViewSection() {
                         modifier = Modifier.weight(1f),
                     )
                 }
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TextButton(
+                        text = "Fingerprint OK",
+                        onClick = {
+                            message = "Fingerprint match"
+                            state.setDisplayMode(LockPatternDisplayMode.FingerprintMatch)
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(
+                        text = "Fingerprint fail",
+                        onClick = {
+                            message = "Fingerprint no match"
+                            state.setDisplayMode(LockPatternDisplayMode.FingerprintNoMatch)
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
         Card(

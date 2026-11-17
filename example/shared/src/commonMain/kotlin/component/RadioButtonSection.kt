@@ -45,7 +45,6 @@ fun LazyListScope.radioButtonSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     RadioButtonPreference(
                         title = "Option B",
                         summary = "Selected: ${selectedIndex == 1}",
@@ -54,7 +53,6 @@ fun LazyListScope.radioButtonSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     RadioButtonPreference(
                         title = "Option C",
                         summary = "Selected: ${selectedIndex == 2}",
@@ -63,7 +61,6 @@ fun LazyListScope.radioButtonSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     RadioButtonPreference(
                         title = "Disabled RadioButton",
                         selected = true,

@@ -94,16 +94,14 @@ fun LazyListScope.switchSection() {
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically(),
                     ) {
-                        // Divider lives inside the animated block so it only shows when expanded.
                         Column {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Switch",
                                 checked = superSwitchState.value,
                                 endActions = {
                                     Text(
                                         text = superSwitch.value,
-                                        color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                        color = COUITheme.colorScheme.labelTertiary,
                                     )
                                 },
                                 onCheckedChange = {
@@ -115,7 +113,6 @@ fun LazyListScope.switchSection() {
                     }
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchPreference(
                         title = "Disabled Switch",
                         checked = true,

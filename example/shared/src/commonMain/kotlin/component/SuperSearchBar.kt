@@ -11,13 +11,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,10 +57,10 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.basic.CancelButton
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.InputField
+import io.github.suqi8.coui.kmp.basic.SearchBarDefaults
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
-import io.github.suqi8.coui.kmp.icon.basic.SearchCleanup
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.overScrollVertical
 import utils.SearchStatus
@@ -110,7 +107,7 @@ fun SearchStatus.SearchPager(
         label = "SearchPagerSurfaceAlpha",
     )
 
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +130,7 @@ fun SearchStatus.SearchPager(
                 }
                 .then(
                     if (!searchStatus.isCollapsed()) {
-                        Modifier.background(COUITheme.colorScheme.surface)
+                        Modifier.background(COUITheme.colorScheme.backgroundWithCard)
                     } else {
                         Modifier
                     },
@@ -145,7 +142,7 @@ fun SearchStatus.SearchPager(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .background(COUITheme.colorScheme.surface),
+                        .background(COUITheme.colorScheme.backgroundWithCard),
                 ) {
                     expandBar(searchStatus, onSearchStatusChange)
                 }
@@ -210,11 +207,6 @@ fun SearchBar(
 ) {
     val focusRequester = remember { FocusRequester() }
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val onSearchStatusChangeUpdated = rememberUpdatedState(onSearchStatusChange)
-    val searchStatusUpdated = rememberUpdatedState(searchStatus)
-    val onClearSearch = remember {
-        { onSearchStatusChangeUpdated.value(searchStatusUpdated.value.copy(searchText = "")) }
-    }
 
     InputField(
         query = searchStatus.searchText,
@@ -227,29 +219,8 @@ fun SearchBar(
                 modifier = Modifier
                     .size(44.dp)
                     .padding(start = 16.dp, end = 8.dp),
-                tint = COUITheme.colorScheme.onSurfaceContainerHigh,
+                tint = COUITheme.colorScheme.labelTertiary,
             )
-        },
-        trailingIcon = {
-            AnimatedVisibility(
-                searchStatus.searchText.isNotEmpty(),
-                enter = fadeIn() + scaleIn(),
-                exit = fadeOut() + scaleOut(),
-            ) {
-                Icon(
-                    imageVector = COUIIcons.Basic.SearchCleanup,
-                    tint = COUITheme.colorScheme.onSurface,
-                    contentDescription = "Clean",
-                    modifier = Modifier
-                        .size(44.dp)
-                        .padding(start = 8.dp, end = 16.dp)
-                        .clickable(
-                            interactionSource = null,
-                            indication = null,
-                            onClick = onClearSearch,
-                        ),
-                )
-            }
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -292,7 +263,7 @@ fun SearchBarFake(
                 modifier = Modifier
                     .size(44.dp)
                     .padding(start = 16.dp, end = 8.dp),
-                tint = COUITheme.colorScheme.onSurfaceContainerHigh,
+                tint = COUITheme.colorScheme.labelTertiary,
             )
         },
         modifier = Modifier
@@ -301,6 +272,8 @@ fun SearchBarFake(
             .padding(top = searchBarTopPadding, bottom = 6.dp),
         onSearch = { },
         enabled = false,
+        // A stand-in for the real bar: it only blocks input, so it keeps the enabled hint colour.
+        colors = SearchBarDefaults.searchBarColors(disabledLabelColor = COUITheme.colorScheme.labelSecondary),
         expanded = false,
         onExpandedChange = { },
     )

@@ -13,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.CardListPosition
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.preference.ButtonPreference
 import io.github.suqi8.coui.kmp.preference.MarkPreference
@@ -56,7 +55,6 @@ fun LazyListScope.preferenceExtrasSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SwitchLoadingPreference(
                         checked = true,
                         onCheckedChange = {},
@@ -83,7 +81,6 @@ fun LazyListScope.preferenceExtrasSection() {
             CardListGroup {
                 markOptions.forEachIndexed { index, option ->
                     item(key = option) {
-                        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         MarkPreference(
                             title = option,
                             checked = selectedMark.intValue == index,
@@ -134,7 +131,6 @@ fun LazyListScope.preferenceExtrasSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ButtonPreference(
                         title = "Disabled Row",
                         summary = "Button and row are disabled",

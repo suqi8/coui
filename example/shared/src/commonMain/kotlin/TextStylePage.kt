@@ -62,26 +62,32 @@ fun TextStylePage(
 
     val styleEntries = remember(textStyles) {
         listOf(
-            TextStyleEntry("title1", textStyles.title1, "32sp"),
-            TextStyleEntry("title2", textStyles.title2, "24sp"),
-            TextStyleEntry("title3", textStyles.title3, "20sp"),
-            TextStyleEntry("title4", textStyles.title4, "18sp"),
-            TextStyleEntry("headline1", textStyles.headline1, "17sp"),
-            TextStyleEntry("headline2", textStyles.headline2, "16sp"),
-            TextStyleEntry("subtitle", textStyles.subtitle, "14sp / Bold"),
-            TextStyleEntry("main", textStyles.main, "17sp"),
-            TextStyleEntry("paragraph", textStyles.paragraph, "17sp / lineHeight 1.2em"),
-            TextStyleEntry("body1", textStyles.body1, "16sp"),
-            TextStyleEntry("body2", textStyles.body2, "14sp"),
-            TextStyleEntry("button", textStyles.button, "16sp / Medium"),
-            TextStyleEntry("footnote1", textStyles.footnote1, "13sp"),
-            TextStyleEntry("footnote2", textStyles.footnote2, "11sp"),
+            TextStyleEntry("displayL", textStyles.displayL, "72sp / Medium"),
+            TextStyleEntry("display", textStyles.display, "48sp / Medium"),
+            TextStyleEntry("displayM", textStyles.displayM, "36sp / SemiBold"),
+            TextStyleEntry("displayS", textStyles.displayS, "32sp / SemiBold"),
+            TextStyleEntry("displayXS", textStyles.displayXS, "24sp / SemiBold"),
+            TextStyleEntry("headlineL", textStyles.headlineL, "28sp / Medium"),
+            TextStyleEntry("headlineM", textStyles.headlineM, "20sp / Medium"),
+            TextStyleEntry("headlineS", textStyles.headlineS, "18sp / 550"),
+            TextStyleEntry("headlineXS", textStyles.headlineXS, "16sp / Medium"),
+            TextStyleEntry("bodyXL", textStyles.bodyXL, "16sp"),
+            TextStyleEntry("bodyL", textStyles.bodyL, "15sp"),
+            TextStyleEntry("bodyM", textStyles.bodyM, "14sp"),
+            TextStyleEntry("bodyS", textStyles.bodyS, "13sp"),
+            TextStyleEntry("bodyXS", textStyles.bodyXS, "12sp"),
+            TextStyleEntry("buttonL", textStyles.buttonL, "16sp / Medium"),
+            TextStyleEntry("buttonM", textStyles.buttonM, "14sp / Medium"),
+            TextStyleEntry("buttonS", textStyles.buttonS, "12sp / Medium"),
+            TextStyleEntry("description", textStyles.description, "12sp / Medium"),
+            TextStyleEntry("caption", textStyles.caption, "10sp"),
+            TextStyleEntry("tag", textStyles.tag, "10sp / Medium"),
         )
     }
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
 
     Scaffold(
         topBar = {
@@ -116,7 +122,7 @@ fun TextStylePage(
                 item(key = "title_card") {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.cardBackground),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -134,7 +140,7 @@ fun TextStylePage(
                 item(key = "headline_card") {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.cardBackground),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -152,7 +158,7 @@ fun TextStylePage(
                 item(key = "body_card") {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.cardBackground),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -170,7 +176,7 @@ fun TextStylePage(
                 item(key = "footnote_card") {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.cardBackground),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -188,7 +194,7 @@ fun TextStylePage(
                 item(key = "all_card") {
                     Card(
                         modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
-                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.surfaceContainer),
+                        colors = CardDefaults.defaultColors(color = COUITheme.colorScheme.cardBackground),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 16.dp),
                     ) {
@@ -223,33 +229,33 @@ private fun TextStyleItem(entry: TextStyleEntry) {
         ) {
             LazyText(
                 text = entry.name,
-                style = COUITheme.textStyles.footnote1,
-                color = COUITheme.colorScheme.onSurface,
+                style = COUITheme.textStyles.bodyS,
+                color = COUITheme.colorScheme.labelPrimary,
                 modifier = Modifier.weight(1f),
             )
             LazyText(
                 text = entry.description,
-                style = COUITheme.textStyles.footnote2,
-                color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                style = COUITheme.textStyles.bodyXS,
+                color = COUITheme.colorScheme.labelSecondaryVariant,
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         LazyText(
             text = SAMPLE_TEXT_CN,
             style = entry.style,
-            color = COUITheme.colorScheme.onSurface,
+            color = COUITheme.colorScheme.labelPrimary,
         )
         Spacer(modifier = Modifier.height(2.dp))
         LazyText(
             text = SAMPLE_TEXT_EN,
             style = entry.style,
-            color = COUITheme.colorScheme.onSurface,
+            color = COUITheme.colorScheme.labelPrimary,
         )
         Spacer(modifier = Modifier.height(2.dp))
         LazyText(
             text = SAMPLE_TEXT_NUM,
             style = entry.style,
-            color = COUITheme.colorScheme.onSurfaceVariantSummary,
+            color = COUITheme.colorScheme.labelSecondaryVariant,
         )
     }
 }

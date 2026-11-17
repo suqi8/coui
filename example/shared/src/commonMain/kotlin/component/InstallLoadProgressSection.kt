@@ -42,6 +42,7 @@ fun LazyListScope.installLoadProgressSection() {
             ) {
                 InteractiveInstallLoadProgress(style = InstallLoadStyle.Small)
                 InteractiveInstallLoadProgress(style = InstallLoadStyle.Large)
+                InteractiveInstallLoadProgress(style = InstallLoadStyle.Circle)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,

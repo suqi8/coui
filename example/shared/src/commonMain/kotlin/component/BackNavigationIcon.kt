@@ -29,7 +29,7 @@ fun BackNavigationIcon(
             },
             imageVector = COUIIcons.Back,
             contentDescription = null,
-            tint = colorScheme.onBackground,
+            tint = colorScheme.labelPrimary,
         )
     }
 }

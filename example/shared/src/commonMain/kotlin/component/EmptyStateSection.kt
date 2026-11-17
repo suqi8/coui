@@ -69,7 +69,7 @@ fun LazyListScope.emptyStateSection() {
 @Composable
 private fun EmptyIllustration() {
     val tray = COUITheme.colorScheme.secondaryContainer
-    val line = COUITheme.colorScheme.onSurfaceContainerHigh
+    val line = COUITheme.colorScheme.labelTertiary
     Canvas(modifier = Modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height

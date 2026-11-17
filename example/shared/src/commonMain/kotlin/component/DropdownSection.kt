@@ -19,7 +19,6 @@ import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.icon.COUIIcons
@@ -165,7 +164,6 @@ fun LazyListScope.dropdownSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowDropdownPreference(
                         title = "DropdownPref (W)",
                         summary = if (windowExpanded) "Expanded" else "Collapsed",
@@ -178,7 +176,6 @@ fun LazyListScope.dropdownSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlayDropdownPreference(
                         title = "Grouped DropdownPref (O)",
                         summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
@@ -188,7 +185,6 @@ fun LazyListScope.dropdownSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowDropdownPreference(
                         title = "Grouped DropdownPref (W)",
                         summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
@@ -198,7 +194,6 @@ fun LazyListScope.dropdownSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlayDropdownPreference(
                         title = "Disabled DropdownPref (O)",
                         items = listOf("Option 1"),
@@ -208,7 +203,6 @@ fun LazyListScope.dropdownSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowDropdownPreference(
                         title = "Disabled DropdownPref (W)",
                         items = listOf("Option 1"),
@@ -226,14 +220,15 @@ fun LazyListScope.dropdownSection() {
 }
 
 /**
- * Shows every COUI popup item variant in one popup each: leading icon, description, hint slot
- * (dot and count badge), group header, alert item, and a disabled row whose hint is suppressed.
+ * Shows every COUI popup item variant in one popup each: leading icon (rows without one keep the
+ * icon slot so the titles line up), description, hint slot (dot and count badge), custom state
+ * icon, group header, alert item, and a disabled row whose hint is suppressed.
  */
 @Composable
 private fun DropdownItemVariants() {
     var variantsSelected by remember { mutableIntStateOf(0) }
     var headersSelected by remember { mutableIntStateOf(0) }
-    val iconTint = COUITheme.colorScheme.onSurfaceContainer
+    val iconTint = COUITheme.colorScheme.labelPrimary
 
     val variantEntries = remember(variantsSelected, iconTint) {
         listOf(
@@ -284,6 +279,12 @@ private fun DropdownItemVariants() {
                         hint = { Badge(count = 3) },
                         selected = variantsSelected == 4,
                         onClick = { variantsSelected = 4 },
+                    ),
+                    DropdownItem(
+                        text = "Custom state icon",
+                        stateIcon = COUIIcons.Sort,
+                        selected = variantsSelected == 8,
+                        onClick = { variantsSelected = 8 },
                     ),
                     DropdownItem(
                         text = "Disabled row (hint hidden)",
@@ -349,7 +350,6 @@ private fun DropdownItemVariants() {
                 )
             }
             item {
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 WindowDropdownMenu(
                     entries = variantEntries,
                     title = "Item variants (W)",
@@ -358,7 +358,6 @@ private fun DropdownItemVariants() {
                 )
             }
             item {
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 OverlayDropdownMenu(
                     entries = headerEntries,
                     title = "Group headers (O)",
@@ -367,7 +366,6 @@ private fun DropdownItemVariants() {
                 )
             }
             item {
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 WindowDropdownMenu(
                     entries = headerEntries,
                     title = "Group headers (W)",
@@ -381,8 +379,8 @@ private fun DropdownItemVariants() {
 
 /**
  * The COUI 17 popup behaviours worth trying by hand: a sub menu (covering the main menu on a
- * compact window, beside it on a wide one), a long-press on a sub-menu row, and the opt-in blurred
- * popup with its shadow-edge stroke and touch spotlight.
+ * compact window, beside it on a wide one), a long-press on a sub-menu row, and the opaque popup,
+ * which keeps the shadow-edge stroke and touch spotlight of the blurred ones.
  */
 @Composable
 private fun PopupMotionAndMaterial() {
@@ -391,7 +389,7 @@ private fun PopupMotionAndMaterial() {
     var sortIndex by remember { mutableIntStateOf(0) }
     var blurIndex by remember { mutableIntStateOf(0) }
 
-    val iconTint = COUITheme.colorScheme.onSurfaceContainer
+    val iconTint = COUITheme.colorScheme.labelPrimary
     val cascadeEntries = remember(sortIndex, iconTint) {
         listOf(
             DropdownEntry(
@@ -452,10 +450,9 @@ private fun PopupMotionAndMaterial() {
                 )
             }
             item {
-                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 BasicComponent(
                     title = "Opaque popup",
-                    summary = "materialBlur = false: COUI's non-blur surface, next to the blurred default menus",
+                    summary = "materialBlur = false: COUI's non-blur surface, still drawing the edge light and spotlight",
                     onClick = { blurShown = true },
                     holdDownState = blurShown,
                     endActions = {

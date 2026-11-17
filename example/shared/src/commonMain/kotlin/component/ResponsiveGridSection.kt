@@ -74,9 +74,9 @@ private fun GridDemoTile(label: String) {
         modifier = Modifier
             .height(60.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(COUITheme.colorScheme.surfaceContainer),
+            .background(COUITheme.colorScheme.cardBackground),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = label, style = COUITheme.textStyles.body2)
+        Text(text = label, style = COUITheme.textStyles.bodyM)
     }
 }

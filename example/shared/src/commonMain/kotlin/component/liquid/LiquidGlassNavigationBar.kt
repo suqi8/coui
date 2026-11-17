@@ -170,8 +170,8 @@ internal fun IosLiquidGlassNavigationBar(
     val isDark = isInDarkTheme()
     val pillShape = remember { CircleShape }
     val accentColor = COUITheme.colorScheme.primary
-    val tabContentColor = COUITheme.colorScheme.onSurface
-    val surfaceContainer = COUITheme.colorScheme.surfaceContainer
+    val tabContentColor = COUITheme.colorScheme.labelPrimary
+    val surfaceContainer = COUITheme.colorScheme.cardBackground
     val containerColor = if (isBlurActive) surfaceContainer.copy(alpha = 0.4f) else surfaceContainer
 
     val tabsBackdrop = rememberLayerBackdrop()

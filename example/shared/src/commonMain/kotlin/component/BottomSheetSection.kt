@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardDefaults
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -77,7 +76,6 @@ fun LazyListScope.bottomSheetSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "BottomSheet (W)",
                         summary = "Click to show a WindowBottomSheet",
@@ -124,6 +122,9 @@ private fun SuperBottomSheetDemo(
 ) {
     var allowDismiss by remember { mutableStateOf(true) }
     var enableNestedScroll by remember { mutableStateOf(true) }
+    var showDragHandle by remember { mutableStateOf(false) }
+    var handlePanel by remember { mutableStateOf(false) }
+    var draggable by remember { mutableStateOf(true) }
     // COUI 17 blurs the window behind the panel when the material blur is on; the page backdrop
     // stands in for that window here.
     val blur = panelBlur(MaterialBlurDefaults::bottomSheet)
@@ -132,6 +133,9 @@ private fun SuperBottomSheetDemo(
         title = "BottomSheet (O)",
         show = show,
         backgroundColor = blur?.backgroundColor ?: BottomSheetDefaults.backgroundColor(),
+        showDragHandle = showDragHandle,
+        handlePanel = handlePanel,
+        draggable = draggable,
         allowDismiss = allowDismiss,
         enableNestedScroll = enableNestedScroll,
         onDismissRequest = onDismissRequest,
@@ -145,7 +149,7 @@ private fun SuperBottomSheetDemo(
                 Icon(
                     imageVector = COUIIcons.Close,
                     contentDescription = "Cancel",
-                    tint = COUITheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.labelPrimary,
                 )
             }
         },
@@ -156,7 +160,7 @@ private fun SuperBottomSheetDemo(
                 Icon(
                     imageVector = COUIIcons.Ok,
                     contentDescription = "Confirm",
-                    tint = COUITheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.labelPrimary,
                 )
             }
         },
@@ -165,6 +169,8 @@ private fun SuperBottomSheetDemo(
             modifier = Modifier.fillMaxWidth()
                 .scrollEndHaptic()
                 .overScrollVertical(),
+            // COUI panels add no padding of their own; the content sets its margins.
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             item {
                 SmallTitle(
@@ -187,12 +193,34 @@ private fun SuperBottomSheetDemo(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Enable NestedScroll",
                                 summary = "Scroll content vs Drag sheet",
                                 checked = enableNestedScroll,
                                 onCheckedChange = { enableNestedScroll = it },
+                            )
+                        }
+                        item {
+                            SwitchPreference(
+                                title = "Draggable",
+                                summary = "Drag anywhere on the panel",
+                                checked = draggable,
+                                onCheckedChange = { draggable = it },
+                            )
+                        }
+                        item {
+                            SwitchPreference(
+                                title = "Show Drag Handle",
+                                checked = showDragHandle,
+                                onCheckedChange = { showDragHandle = it },
+                            )
+                        }
+                        item {
+                            SwitchPreference(
+                                title = "Handle Panel",
+                                summary = "Collapsed / half-expanded / expanded (applies on next show)",
+                                checked = handlePanel,
+                                onCheckedChange = { handlePanel = it },
                             )
                         }
                     }
@@ -229,7 +257,6 @@ private fun SuperBottomSheetDemo(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "SwitchPref",
                                 checked = switchChecked,
@@ -277,7 +304,7 @@ private fun WindowBottomSheetDemo(
                 Icon(
                     imageVector = COUIIcons.Close,
                     contentDescription = "Cancel",
-                    tint = COUITheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.labelPrimary,
                 )
             }
         },
@@ -289,7 +316,7 @@ private fun WindowBottomSheetDemo(
                 Icon(
                     imageVector = COUIIcons.Ok,
                     contentDescription = "Confirm",
-                    tint = COUITheme.colorScheme.onBackground,
+                    tint = COUITheme.colorScheme.labelPrimary,
                 )
             }
         },
@@ -298,6 +325,7 @@ private fun WindowBottomSheetDemo(
             modifier = Modifier.fillMaxWidth()
                 .scrollEndHaptic()
                 .overScrollVertical(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             item {
                 SmallTitle(
@@ -320,7 +348,6 @@ private fun WindowBottomSheetDemo(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Enable NestedScroll",
                                 summary = "Scroll content vs Drag sheet",
@@ -362,7 +389,6 @@ private fun WindowBottomSheetDemo(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "SwitchPref",
                                 checked = switchChecked,

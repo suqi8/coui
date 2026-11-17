@@ -29,8 +29,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.ButtonMaterial
+import io.github.suqi8.coui.kmp.basic.DescTextButton
 import io.github.suqi8.coui.kmp.basic.ExpandableFloatingActionButton
 import io.github.suqi8.coui.kmp.basic.FloatingActionButton
+import io.github.suqi8.coui.kmp.basic.FloatingActionButtonDefaults
 import io.github.suqi8.coui.kmp.basic.FloatingActionButtonItem
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -178,6 +180,28 @@ fun LazyListScope.buttonSection() {
                 material = ButtonMaterial.Transparent,
             )
         }
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // The desc-type button at the medium single-button width.
+            DescTextButton(
+                text = "Upgrade",
+                descText = "Free for the first month",
+                onClick = {},
+                modifier = Modifier.width(ButtonDefaults.MediumWidth),
+                colors = ButtonDefaults.textButtonColorsPrimary(),
+            )
+            Spacer(Modifier.width(12.dp))
+            DescTextButton(
+                text = "Later",
+                descText = "Remind me tomorrow",
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+        }
         MaterialBackdropButtons()
         var stepperValue by remember { mutableIntStateOf(2) }
         Row(
@@ -304,6 +328,18 @@ private fun FloatingActionButtons() {
             Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
         }
         FloatingActionButton(onClick = {}, enabled = false) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
+        // The secondary preset at the tiny size; the preset styles draw no shadow.
+        FloatingActionButton(
+            onClick = {},
+            containerColor = FloatingActionButtonDefaults.secondaryContainerColor(),
+            disabledContainerColor = FloatingActionButtonDefaults.secondaryDisabledContainerColor(),
+            contentColor = COUITheme.colorScheme.labelPrimary,
+            shadowElevation = 0.dp,
+            minWidth = FloatingActionButtonDefaults.TinySize,
+            minHeight = FloatingActionButtonDefaults.TinySize,
+        ) {
             Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
         }
     }

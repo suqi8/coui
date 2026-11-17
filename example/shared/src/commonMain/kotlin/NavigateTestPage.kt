@@ -33,7 +33,6 @@ import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
@@ -70,7 +69,7 @@ fun NavTestPage(
     val appState = LocalAppState.current
     val isWideScreen = LocalIsWideScreen.current
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
             drawRect(surfaceColor)
@@ -80,7 +79,7 @@ fun NavTestPage(
         null
     }
     val blurActive = appState.enableBlur && blurSupported
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
     val topAppBarScrollBehavior = COUIScrollBehavior()
     val navigator = LocalNavigator.current
 
@@ -165,7 +164,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Title",
                                     summary = "Long Long Long Long Long Summary",
@@ -181,7 +179,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Title",
                                     summary = "Summary",
@@ -198,7 +195,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Long Long Long Long Long Title",
                                     summary = "Summary",
@@ -215,7 +211,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Title",
                                     summary = "Long Long Long Long Long Summary",
@@ -229,7 +224,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Long Long Long Long Long Title",
                                     summary = "Summary",
@@ -240,7 +234,6 @@ fun NavTestPage(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Title",
                                     summary = "Long Long Long Long Long Summary",
@@ -279,7 +272,7 @@ fun TopBarActions() {
         Icon(
             imageVector = COUIIcons.Edit,
             contentDescription = "WindowListPopup",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
         )
     }
     WindowListPopup(

@@ -9,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
 import navigation3.Route
@@ -34,7 +33,6 @@ fun LazyListScope.otherPageSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Navigation test",
                         summary = "Navigate to a Navigation Page",
@@ -42,7 +40,6 @@ fun LazyListScope.otherPageSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "MultiScaffold Test",
                         summary = "Navigate to a MultiScaffold Page",
@@ -50,7 +47,6 @@ fun LazyListScope.otherPageSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Toolbar Search Test",
                         summary = "A search bar that expands out of the toolbar search icon",
@@ -58,7 +54,6 @@ fun LazyListScope.otherPageSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "COUI 17 Settings Top Bar",
                         summary = "116dp large title at 40sp, capsule search, condensed-light glow",

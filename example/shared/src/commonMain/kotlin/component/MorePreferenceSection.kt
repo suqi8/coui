@@ -176,7 +176,6 @@ fun LazyListScope.morePreferenceSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     StepperPreference(
                         value = fontScale,
                         onValueChange = { fontScale = it },
@@ -188,7 +187,6 @@ fun LazyListScope.morePreferenceSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     StepperPreference(
                         value = 3,
                         onValueChange = {},

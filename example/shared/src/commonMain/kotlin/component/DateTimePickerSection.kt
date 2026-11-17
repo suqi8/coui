@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.DatePicker
+import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
 import io.github.suqi8.coui.kmp.basic.DateTimePicker
 import io.github.suqi8.coui.kmp.basic.DateTimeValue
 import io.github.suqi8.coui.kmp.basic.DateValue
@@ -31,6 +32,37 @@ fun LazyListScope.dateTimePickerSection() {
             DatePicker(
                 value = date,
                 onValueChange = { date = it },
+            )
+        }
+    }
+    item(key = "datePickerBounded") {
+        SmallTitle(text = "DatePicker (2026-03-15 .. 2027-08-20)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            var date by remember { mutableStateOf(DateValue(year = 2026, month = 3, day = 20)) }
+            DatePicker(
+                value = date,
+                onValueChange = { date = it },
+                minDate = DateValue(year = 2026, month = 3, day = 15),
+                maxDate = DateValue(year = 2027, month = 8, day = 20),
+            )
+        }
+    }
+    item(key = "datePickerYearIgnorable") {
+        SmallTitle(text = "DatePicker (year optional)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            var date by remember { mutableStateOf(DateValue(year = DatePickerDefaults.IgnoredYear, month = 2, day = 29)) }
+            DatePicker(
+                value = date,
+                onValueChange = { date = it },
+                yearIgnorable = true,
             )
         }
     }

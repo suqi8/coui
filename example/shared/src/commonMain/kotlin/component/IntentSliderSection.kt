@@ -23,6 +23,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.IntentSlider
+import io.github.suqi8.coui.kmp.basic.IntentSliderPlaybackState
 import io.github.suqi8.coui.kmp.basic.IntentSliderSize
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
@@ -62,6 +63,7 @@ fun LazyListScope.intentSliderSection() {
                     IntentSlider(value = value, onValueChange = { value = it }, followThumb = true)
                 }
                 PausableIntentSlider()
+                LoadingIntentSlider()
                 IntentSliderRow(label = "Disabled") {
                     IntentSlider(value = 0.5f, onValueChange = {}, enabled = false, secondaryValue = 0.8f)
                 }
@@ -80,8 +82,8 @@ private fun IntentSliderRow(
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = 16.dp),
-            style = COUITheme.textStyles.footnote1,
-            color = COUITheme.colorScheme.onSurfaceSecondary,
+            style = COUITheme.textStyles.bodyS,
+            color = COUITheme.colorScheme.labelSecondary,
         )
         content()
     }
@@ -96,7 +98,7 @@ private fun PausableIntentSlider() {
             value = value,
             onValueChange = { value = it },
             showThumb = true,
-            paused = paused,
+            playbackState = if (paused) IntentSliderPlaybackState.Paused else IntentSliderPlaybackState.Playing,
             secondaryValue = 0.5f,
         )
         TextButton(
@@ -107,16 +109,36 @@ private fun PausableIntentSlider() {
     }
 }
 
+@Composable
+private fun LoadingIntentSlider() {
+    var value by remember { mutableFloatStateOf(0f) }
+    var buffering by remember { mutableStateOf(false) }
+    IntentSliderRow(label = if (buffering) "Buffering" else "Loading (drag returns)") {
+        IntentSlider(
+            value = value,
+            onValueChange = { value = it },
+            loadingDragReturn = true,
+            playbackState = if (buffering) IntentSliderPlaybackState.LoadingBuffering else IntentSliderPlaybackState.LoadingInitial,
+        )
+        TextButton(
+            text = if (buffering) "Initial loading" else "Buffering",
+            onClick = { buffering = !buffering },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+    }
+}
+
 /**
  * The fixed palette over media content: with a backdrop provider the COUI 17 blur-blend replaces
- * the translucent background fill.
+ * the translucent background fill, and the conic light style trails the progress while playing or
+ * dragging.
  */
 @Composable
 private fun MediaIntentSlider() {
     val backdrop = rememberLayerBackdrop()
     val provider = rememberMaterialBackdropProvider(backdrop)
     var value by remember { mutableFloatStateOf(0.35f) }
-    var paused by remember { mutableStateOf(false) }
+    var playback by remember { mutableStateOf(IntentSliderPlaybackState.Playing) }
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -135,23 +157,28 @@ private fun MediaIntentSlider() {
         CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 Text(
-                    text = "Over media (fixed colors)",
+                    text = "Over media (fixed colors, conic light)",
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    style = COUITheme.textStyles.footnote1,
+                    style = COUITheme.textStyles.bodyS,
                     color = Color.White,
                 )
                 IntentSlider(
                     value = value,
                     onValueChange = { value = it },
                     showThumb = true,
-                    paused = paused,
                     followSystemTheme = false,
+                    conicLight = true,
+                    loadingDragReturn = true,
+                    playbackState = playback,
                     secondaryValue = 0.7f,
                     size = IntentSliderSize.Large,
                 )
                 TextButton(
-                    text = if (paused) "Play" else "Pause",
-                    onClick = { paused = !paused },
+                    text = "State: ${playback.name}",
+                    onClick = {
+                        val states = IntentSliderPlaybackState.entries
+                        playback = states[(playback.ordinal + 1) % states.size]
+                    },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }

@@ -7,23 +7,33 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
+import io.github.suqi8.coui.kmp.basic.CardListGroupScope
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.layout.DialogButtonBar
 import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.layout.DialogDefaults
+import io.github.suqi8.coui.kmp.layout.ListDialogItem
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayInputDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayListDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayLoadingDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayMultiChoiceDialog
+import io.github.suqi8.coui.kmp.overlay.OverlayProgressDialog
 import io.github.suqi8.coui.kmp.overlay.OverlaySecurityDialog
+import io.github.suqi8.coui.kmp.overlay.OverlaySingleChoiceDialog
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
+import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
 import kotlinx.coroutines.delay
@@ -43,6 +53,20 @@ fun LazyListScope.dialogSection() {
         var stackedDialogHoldDown by remember { mutableStateOf(false) }
         var showRecommendDialog by remember { mutableStateOf(false) }
         var recommendDialogHoldDown by remember { mutableStateOf(false) }
+        var showCancelableLoading by remember { mutableStateOf(false) }
+        var cancelableLoadingHoldDown by remember { mutableStateOf(false) }
+        var showListDialog by remember { mutableStateOf(false) }
+        var listDialogHoldDown by remember { mutableStateOf(false) }
+        var showSingleChoiceDialog by remember { mutableStateOf(false) }
+        var singleChoiceDialogHoldDown by remember { mutableStateOf(false) }
+        var showMultiChoiceDialog by remember { mutableStateOf(false) }
+        var multiChoiceDialogHoldDown by remember { mutableStateOf(false) }
+        var showProgressDialog by remember { mutableStateOf(false) }
+        var progressDialogHoldDown by remember { mutableStateOf(false) }
+        var showInputDialog by remember { mutableStateOf(false) }
+        var inputDialogHoldDown by remember { mutableStateOf(false) }
+        var showLongDialog by remember { mutableStateOf(false) }
+        var longDialogHoldDown by remember { mutableStateOf(false) }
 
         SmallTitle(text = "Dialog")
         Card(
@@ -63,7 +87,6 @@ fun LazyListScope.dialogSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Dialog (W)",
                         summary = "Click to show a WindowDialog",
@@ -75,7 +98,6 @@ fun LazyListScope.dialogSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Loading Dialog (O)",
                         summary = "Click to show an OverlayLoadingDialog",
@@ -87,7 +109,6 @@ fun LazyListScope.dialogSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Stacked Button Bar (O)",
                         summary = "Long labels flip the bar to a vertical stack",
@@ -99,7 +120,6 @@ fun LazyListScope.dialogSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Recommended Button (O)",
                         summary = "The recommended action becomes a primary capsule",
@@ -111,7 +131,6 @@ fun LazyListScope.dialogSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Security Dialog (O)",
                         summary = "Click to show an OverlaySecurityDialog",
@@ -122,6 +141,69 @@ fun LazyListScope.dialogSection() {
                         holdDownState = securityDialogHoldDown,
                     )
                 }
+                dialogDemoEntry(
+                    title = "Cancelable Loading Dialog (O)",
+                    summary = "Title, spinner, message and a cancel button",
+                    holdDown = cancelableLoadingHoldDown,
+                    onClick = {
+                        showCancelableLoading = true
+                        cancelableLoadingHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "List Dialog (O)",
+                    summary = "Items drawn as capsule buttons",
+                    holdDown = listDialogHoldDown,
+                    onClick = {
+                        showListDialog = true
+                        listDialogHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "Single-Choice Dialog (O)",
+                    summary = "Rows ending in a radio button",
+                    holdDown = singleChoiceDialogHoldDown,
+                    onClick = {
+                        showSingleChoiceDialog = true
+                        singleChoiceDialogHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "Multi-Choice Dialog (O)",
+                    summary = "Rows ending in a checkbox, at most two checked",
+                    holdDown = multiChoiceDialogHoldDown,
+                    onClick = {
+                        showMultiChoiceDialog = true
+                        multiChoiceDialogHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "Progress Dialog (O)",
+                    summary = "A 200dp horizontal progress bar",
+                    holdDown = progressDialogHoldDown,
+                    onClick = {
+                        showProgressDialog = true
+                        progressDialogHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "Input Dialog (O)",
+                    summary = "A single line-style edit text",
+                    holdDown = inputDialogHoldDown,
+                    onClick = {
+                        showInputDialog = true
+                        inputDialogHoldDown = true
+                    },
+                )
+                dialogDemoEntry(
+                    title = "Long Message Dialog (O)",
+                    summary = "The message scrolls, the button bar stays in view",
+                    holdDown = longDialogHoldDown,
+                    onClick = {
+                        showLongDialog = true
+                        longDialogHoldDown = true
+                    },
+                )
             }
         }
 
@@ -153,11 +235,17 @@ fun LazyListScope.dialogSection() {
                 showLoadingDialog = false
             }
         }
+        // Both builders sit on COUIAlertDialogBuilder, so they take the same blurred window and
+        // material stroke as the alert dialogs above.
+        val dialogBlur = panelBlur(MaterialBlurDefaults::dialog)
         OverlayLoadingDialog(
             show = showLoadingDialog,
+            backgroundModifier = dialogBlur?.backgroundModifier ?: Modifier,
             text = "Loading...",
+            backgroundColor = dialogBlur?.backgroundColor ?: DialogDefaults.backgroundColor(),
             onDismissRequest = { showLoadingDialog = false },
             onDismissFinished = { loadingDialogHoldDown = false },
+            materialStroke = dialogBlur != null,
         )
 
         OverlaySecurityDialog(
@@ -169,9 +257,227 @@ fun LazyListScope.dialogSection() {
             onLinkClick = { /* Open the privacy policy */ },
             onConfirm = { _ -> showSecurityDialog = false },
             onCancel = { showSecurityDialog = false },
+            backgroundModifier = dialogBlur?.backgroundModifier ?: Modifier,
+            backgroundColor = dialogBlur?.backgroundColor ?: DialogDefaults.backgroundColor(),
             onDismissFinished = { securityDialogHoldDown = false },
+            materialStroke = dialogBlur != null,
+        )
+
+        OverlayLoadingDialog(
+            show = showCancelableLoading,
+            title = "Downloading",
+            text = "Please wait...",
+            cancelAction = DialogButtonBarAction(text = "Cancel", onClick = { showCancelableLoading = false }),
+            backgroundModifier = dialogBlur?.backgroundModifier ?: Modifier,
+            backgroundColor = dialogBlur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+            onDismissFinished = { cancelableLoadingHoldDown = false },
+            materialStroke = dialogBlur != null,
+        )
+        ListDialogsDemo(
+            showList = showListDialog,
+            showSingle = showSingleChoiceDialog,
+            showMulti = showMultiChoiceDialog,
+            onListDismiss = { showListDialog = false },
+            onSingleDismiss = { showSingleChoiceDialog = false },
+            onMultiDismiss = { showMultiChoiceDialog = false },
+            onListFinished = { listDialogHoldDown = false },
+            onSingleFinished = { singleChoiceDialogHoldDown = false },
+            onMultiFinished = { multiChoiceDialogHoldDown = false },
+        )
+        ProgressDialogDemo(
+            show = showProgressDialog,
+            onDismissRequest = { showProgressDialog = false },
+            onDismissFinished = { progressDialogHoldDown = false },
+        )
+        InputDialogDemo(
+            show = showInputDialog,
+            onDismissRequest = { showInputDialog = false },
+            onDismissFinished = { inputDialogHoldDown = false },
+        )
+        LongMessageDialogDemo(
+            show = showLongDialog,
+            onDismissRequest = { showLongDialog = false },
+            onDismissFinished = { longDialogHoldDown = false },
         )
     }
+}
+
+/** One arrow row of the dialog card. */
+private fun CardListGroupScope.dialogDemoEntry(
+    title: String,
+    summary: String,
+    holdDown: Boolean,
+    onClick: () -> Unit,
+) {
+    item {
+        ArrowPreference(
+            title = title,
+            summary = summary,
+            onClick = onClick,
+            holdDownState = holdDown,
+        )
+    }
+}
+
+/** The list, single-choice and multi-choice dialogs (COUIAlertDialogBuilder.setItems / ChoiceListAdapter). */
+@Composable
+private fun ListDialogsDemo(
+    showList: Boolean,
+    showSingle: Boolean,
+    showMulti: Boolean,
+    onListDismiss: () -> Unit,
+    onSingleDismiss: () -> Unit,
+    onMultiDismiss: () -> Unit,
+    onListFinished: () -> Unit,
+    onSingleFinished: () -> Unit,
+    onMultiFinished: () -> Unit,
+) {
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
+    var selected by remember { mutableIntStateOf(0) }
+    var checked by remember { mutableStateOf(listOf(true, false, false, false)) }
+    OverlayListDialog(
+        show = showList,
+        title = "Share to",
+        items = listOf(
+            ListDialogItem(text = "Copy link"),
+            ListDialogItem(text = "Save image", summary = "Saved to the gallery"),
+            ListDialogItem(text = "Delete", textColor = COUITheme.colorScheme.error),
+        ),
+        onItemClick = { onListDismiss() },
+        negative = DialogButtonBarAction(text = "Cancel", onClick = onListDismiss),
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onListDismiss,
+        onDismissFinished = onListFinished,
+        materialStroke = blur != null,
+    )
+    OverlaySingleChoiceDialog(
+        show = showSingle,
+        title = "Screen timeout",
+        summary = "The screen turns off after this period of inactivity.",
+        items = listOf(
+            ListDialogItem(text = "30 seconds"),
+            ListDialogItem(text = "1 minute"),
+            ListDialogItem(text = "5 minutes"),
+            ListDialogItem(text = "Never", summary = "Uses more power"),
+        ),
+        selectedIndex = selected,
+        onSelectedIndexChange = { selected = it },
+        negative = DialogButtonBarAction(text = "Cancel", onClick = onSingleDismiss),
+        positive = DialogButtonBarAction(text = "OK", onClick = onSingleDismiss),
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onSingleDismiss,
+        onDismissFinished = onSingleFinished,
+        materialStroke = blur != null,
+    )
+    OverlayMultiChoiceDialog(
+        show = showMulti,
+        title = "Sync items",
+        items = listOf(
+            ListDialogItem(text = "Contacts"),
+            ListDialogItem(text = "Photos", summary = "Wi-Fi only"),
+            ListDialogItem(text = "Notes"),
+            ListDialogItem(text = "Calendar", enabled = false),
+        ),
+        checked = checked,
+        onCheckedChange = { index, value -> checked = checked.toMutableList().also { it[index] = value } },
+        maxCheckedCount = 2,
+        negative = DialogButtonBarAction(text = "Cancel", onClick = onMultiDismiss),
+        positive = DialogButtonBarAction(text = "OK", onClick = onMultiDismiss),
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onMultiDismiss,
+        onDismissFinished = onMultiFinished,
+        materialStroke = blur != null,
+    )
+}
+
+/** The horizontal progress dialog (COUIAlertDialog.Progress.Cancelable), filled by a fake task. */
+@Composable
+private fun ProgressDialogDemo(
+    show: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
+) {
+    var progress by remember { mutableFloatStateOf(0f) }
+    val currentOnDismissRequest by rememberUpdatedState(onDismissRequest)
+    LaunchedEffect(show) {
+        if (show) {
+            progress = 0f
+            while (progress < 1f) {
+                delay(60)
+                progress = (progress + 0.02f).coerceAtMost(1f)
+            }
+            currentOnDismissRequest()
+        }
+    }
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
+    OverlayProgressDialog(
+        show = show,
+        progress = progress,
+        title = "Downloading",
+        cancelAction = DialogButtonBarAction(text = "Cancel", onClick = onDismissRequest),
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        materialStroke = blur != null,
+    )
+}
+
+/** The single-edit input dialog (COUIAlertDialog.SingleEdit). */
+@Composable
+private fun InputDialogDemo(
+    show: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
+    OverlayInputDialog(
+        show = show,
+        value = name,
+        onValueChange = { name = it },
+        title = "Rename",
+        label = "Enter a name",
+        negative = DialogButtonBarAction(text = "Cancel", onClick = onDismissRequest),
+        positive = DialogButtonBarAction(text = "Save", enabled = name.isNotEmpty(), onClick = onDismissRequest),
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        materialStroke = blur != null,
+    )
+}
+
+/** A message taller than the panel: it scrolls while the button bar stays in view. */
+@Composable
+private fun LongMessageDialogDemo(
+    show: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
+) {
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
+    val message = remember {
+        (1..40).joinToString(separator = " ") { "Line $it of a long message that keeps going." }
+    }
+    OverlayDialog(
+        show = show,
+        title = "Terms of Service",
+        summary = message,
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
+        materialStroke = blur != null,
+        content = {
+            DialogButtonBar(
+                negative = DialogButtonBarAction(text = "Disagree", onClick = onDismissRequest),
+                positive = DialogButtonBarAction(text = "Agree", onClick = onDismissRequest),
+            )
+        },
+    )
 }
 
 /**

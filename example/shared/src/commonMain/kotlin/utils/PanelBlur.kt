@@ -9,7 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import io.github.suqi8.coui.kmp.blur.Backdrop
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.MaterialBlendMode
@@ -56,7 +55,7 @@ fun panelBlur(style: (isDark: Boolean) -> MaterialBlurStyle): PanelBlur? {
     val appState = LocalAppState.current
     val backdrop = LocalPageBackdrop.current
     if (!appState.enableBlur || backdrop == null || !isRuntimeShaderSupported()) return null
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     return PanelBlur(
         backgroundModifier = Modifier.couiMaterialBlur(backdrop = backdrop, style = style(isDark)),
         backgroundColor = Color.Transparent,

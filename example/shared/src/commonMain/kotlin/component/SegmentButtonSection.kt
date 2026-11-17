@@ -123,8 +123,8 @@ private fun MaterialBackdropSegmentButton() {
             ) {
                 Text(
                     text = "Material backdrop",
-                    color = COUITheme.colorScheme.onSurface,
-                    style = COUITheme.textStyles.footnote1,
+                    color = COUITheme.colorScheme.labelPrimary,
+                    style = COUITheme.textStyles.bodyS,
                 )
                 var index by remember { mutableIntStateOf(0) }
                 SegmentButton(

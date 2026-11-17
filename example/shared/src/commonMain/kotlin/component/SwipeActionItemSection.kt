@@ -17,11 +17,14 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.SwipeAction
 import io.github.suqi8.coui.kmp.basic.SwipeActionItem
+import io.github.suqi8.coui.kmp.basic.SwipeActionMenuStyle
 import io.github.suqi8.coui.kmp.basic.rememberSwipeActionItemState
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 
 private val SwipeDemoRows = listOf("Weekly report", "Team lunch", "Flight itinerary", "Invoice 2041", "Design review")
+
+private val SwipeRoundRectDemoRows = listOf("Grocery list", "Gym schedule", "Book club notes")
 
 fun LazyListScope.swipeActionItemSection() {
     item(key = "swipeActionItem") {
@@ -34,13 +37,71 @@ fun LazyListScope.swipeActionItemSection() {
             SwipeActionItemDemo()
         }
     }
+    item(key = "swipeActionItemRoundRect") {
+        SmallTitle(text = "SwipeActionItem (RoundRect)")
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp),
+        ) {
+            SwipeActionItemRoundRectDemo()
+        }
+    }
+}
+
+@Composable
+private fun SwipeActionItemRoundRectDemo() {
+    val rows = remember { mutableStateListOf(*SwipeRoundRectDemoRows.toTypedArray()) }
+    val scope = rememberCoroutineScope()
+    val rowColor = COUITheme.colorScheme.cardBackground
+    rows.forEachIndexed { index, title ->
+        key(title) {
+            val state = rememberSwipeActionItemState()
+            val actions = when (index % 3) {
+                1 -> listOf(
+                    SwipeAction(label = "Mark", color = COUITheme.colorScheme.primary),
+                    SwipeAction(label = "Move", color = COUITheme.colorScheme.labelSecondary),
+                )
+
+                else -> emptyList()
+            }
+            SwipeActionItem(
+                actions = actions,
+                onActionClick = { scope.launch { state.close() } },
+                state = state,
+                onDelete = { rows.remove(title) },
+                fastDeleteEnabled = index % 3 == 2,
+                deleteContentDescription = "Delete",
+                menuStyle = SwipeActionMenuStyle.RoundRect,
+            ) {
+                BasicComponent(
+                    modifier = Modifier.background(rowColor),
+                    title = title,
+                    summary = when (index % 3) {
+                        0 -> "Delete only: the fill grows while deleting"
+                        1 -> "Own colors: each action keeps its shape"
+                        else -> "Over-slide to delete"
+                    },
+                )
+            }
+        }
+    }
+    if (rows.size < SwipeRoundRectDemoRows.size) {
+        BasicComponent(
+            title = "Restore rows",
+            onClick = {
+                rows.clear()
+                rows.addAll(SwipeRoundRectDemoRows)
+            },
+        )
+    }
 }
 
 @Composable
 private fun SwipeActionItemDemo() {
     val rows = remember { mutableStateListOf(*SwipeDemoRows.toTypedArray()) }
     val scope = rememberCoroutineScope()
-    val rowColor = COUITheme.colorScheme.surfaceContainer
+    val rowColor = COUITheme.colorScheme.cardBackground
     rows.forEachIndexed { index, title ->
         // Key by title so a deleted row's state does not move to its neighbour.
         key(title) {
@@ -50,7 +111,7 @@ private fun SwipeActionItemDemo() {
 
                 1 -> listOf(
                     SwipeAction(label = "Mark", color = COUITheme.colorScheme.primary),
-                    SwipeAction(label = "Move", color = COUITheme.colorScheme.onSurfaceSecondary),
+                    SwipeAction(label = "Move", color = COUITheme.colorScheme.labelSecondary),
                 )
 
                 else -> emptyList()

@@ -21,7 +21,6 @@ import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.CardListPosition
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
 import io.github.suqi8.coui.kmp.basic.SmallTitle
@@ -66,7 +65,7 @@ fun SettingsPage(
     val isWideScreen = LocalIsWideScreen.current
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
     val topAppBarScrollBehavior = COUIScrollBehavior()
 
     Scaffold(
@@ -136,7 +135,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = isRuntimeShaderSupported()) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     SwitchPreference(
                                         title = "Enable Squircle Shapes",
                                         checked = appState.enableSquircle,
@@ -148,7 +146,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = isRuntimeShaderSupported()) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     SwitchPreference(
                                         title = "Enable Blur Effect",
                                         checked = appState.enableBlur,
@@ -158,7 +155,6 @@ private fun SettingsContent(
                             }
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Show TopAppBar",
                                 checked = appState.showTopAppBar,
@@ -166,7 +162,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = if (isWideScreen) "Show NavigationRail" else "Show NavigationBar",
                                 checked = appState.showNavigationBar,
@@ -176,7 +171,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && !appState.useFloatingNavigationBar) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "NavigationBar Mode",
                                         items = NavigationBarDisplayModeOptions,
@@ -189,7 +183,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showNavigationBar && isWideScreen) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "NavigationRail Mode",
                                         items = NavigationRailDisplayModeOptions,
@@ -202,7 +195,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     SwitchPreference(
                                         title = "Use FloatingNavigationBar",
                                         checked = appState.useFloatingNavigationBar,
@@ -214,7 +206,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showNavigationBar && !isWideScreen && appState.useFloatingNavigationBar) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingNavigationBar Style",
                                         items = FloatingNavigationBarStyleOptions,
@@ -232,7 +223,6 @@ private fun SettingsContent(
                                     appState.floatingNavigationBarStyle == 0,
                             ) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingNavigationBar Position",
                                         items = FloatingNavigationBarPositionOptions,
@@ -243,7 +233,6 @@ private fun SettingsContent(
                             }
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Show FloatingToolbar",
                                 checked = appState.showFloatingToolbar,
@@ -253,7 +242,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showFloatingToolbar) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingToolbar Position",
                                         items = FloatingToolbarPositionOptions,
@@ -266,7 +254,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showFloatingToolbar) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingToolbar Orientation",
                                         items = FloatingToolbarOrientationOptions,
@@ -277,7 +264,6 @@ private fun SettingsContent(
                             }
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Show FloatingActionButton",
                                 checked = appState.showFloatingActionButton,
@@ -287,7 +273,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.showFloatingActionButton) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "FloatingActionButton Position",
                                         items = FabPositionOptions,
@@ -298,7 +283,6 @@ private fun SettingsContent(
                             }
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Enable Scroll End Haptic",
                                 checked = appState.enableScrollEndHaptic,
@@ -306,7 +290,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Enable Page User Scroll",
                                 checked = appState.enablePageUserScroll,
@@ -314,7 +297,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             OverlayDropdownPreference(
                                 title = "Color Mode",
                                 items = ColorModeOptions,
@@ -328,7 +310,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.colorMode in 3..5) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "Key Color",
                                         items = KeyColorOptions,
@@ -342,7 +323,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "Palette Style",
                                         items = PaletteStyleOptions,
@@ -355,7 +335,6 @@ private fun SettingsContent(
                         item {
                             AnimatedVisibility(visible = appState.colorMode in 3..5 && appState.seedIndex > 0) {
                                 Column {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayDropdownPreference(
                                         title = "Color Spec",
                                         items = ColorSpecOptions,
@@ -383,7 +362,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Enable Dim",
                                 summary = "Dim the scene behind during transitions",
@@ -392,7 +370,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Block Input During Transition",
                                 summary = "Block touch input on the non-target scene",
@@ -401,7 +378,6 @@ private fun SettingsContent(
                             )
                         }
                         item {
-                            HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                             SwitchPreference(
                                 title = "Pop Follows Swipe Edge",
                                 summary = "Pop animation direction follows the finger swipe edge",

@@ -86,6 +86,8 @@ fun LazyListScope.badgeSection() {
             Badge(count = 1000)
             Badge(stroke = true)
             Badge(count = 99, stroke = true)
+            Badge(text = "N")
+            Badge(text = "Hot")
         }
         var badgeCount by remember { mutableIntStateOf(8) }
         Row(

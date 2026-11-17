@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Banner
+import io.github.suqi8.coui.kmp.basic.BannerType
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
 
@@ -40,17 +41,30 @@ fun LazyListScope.bannerSection() {
         ) { page ->
             BannerDemoPage(color = pages[page].first, title = pages[page].second)
         }
-        // Neighbouring cards peeking in, without the auto loop.
+        // Neighbouring cards peeking in and scaled down, without the auto loop.
         Banner(
             pageCount = pages.size,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
                 .height(140.dp),
+            type = BannerType.Pager,
             autoLoop = false,
             pageMargin = 8.dp,
             startItemWidth = 16.dp,
             endItemWidth = 16.dp,
+            scalePages = true,
+        ) { page ->
+            BannerDemoPage(color = pages[page].first, title = pages[page].second)
+        }
+        // The list form COUI uses from 600dp, forced here on any width.
+        Banner(
+            pageCount = pages.size,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+                .height(120.dp),
+            type = BannerType.List,
         ) { page ->
             BannerDemoPage(color = pages[page].first, title = pages[page].second)
         }

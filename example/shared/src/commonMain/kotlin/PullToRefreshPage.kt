@@ -69,7 +69,7 @@ fun PullToRefreshPage(
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
 
     val dropdownOptions = remember { listOf("Option 1", "Option 2", "Option 3", "Option 4") }
     var dropdownSelectedOption by remember { mutableIntStateOf(0) }
@@ -150,7 +150,7 @@ fun PullToRefreshPage(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
                                     .clip(shape)
-                                    .background(COUITheme.colorScheme.surfaceContainer),
+                                    .background(COUITheme.colorScheme.cardBackground),
                             ) {
                                 if (i % 2 == 0) {
                                     OverlayDropdownPreference(

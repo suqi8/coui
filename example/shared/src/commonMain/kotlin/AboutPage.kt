@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -52,7 +51,6 @@ import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardDefaults
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.ScrollBehavior
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
@@ -115,7 +113,7 @@ fun AboutPage(
     val barColor = if (blurActive) {
         Color.Transparent
     } else {
-        if (scrollProgress == 1f) COUITheme.colorScheme.surface else Color.Transparent
+        if (scrollProgress == 1f) COUITheme.colorScheme.backgroundWithCard else Color.Transparent
     }
 
     Scaffold(
@@ -127,22 +125,23 @@ fun AboutPage(
                     color = barColor,
                     // COUI 17 suppresses the bar divider whenever the material blur is enabled, not just
                     // once it shows (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur ->
-                    // setBlurDividerSuppressed(shouldEnableBlur)).
-                    showDivider = backdrop == null,
-                    glow = {
-                        if (backdrop != null) {
+                    // setBlurDividerSuppressed(shouldEnableBlur)): the bar does so while a glow is set.
+                    glow = if (backdrop != null) {
+                        {
                             TopAppBarGlow(
                                 backdrop = backdrop,
                                 scrollOffsetPx = topAppBarScrollBehavior.glowScrollOffsetPx(),
-                                isDark = COUITheme.colorScheme.background.luminance() < 0.5f,
-                                baseColor = COUITheme.colorScheme.surface,
+                                isDark = COUITheme.colorScheme.isDark,
+                                baseColor = COUITheme.colorScheme.backgroundWithCard,
                                 // This page already fades the bar in over its own scroll progress,
                                 // so the glow follows that instead of the bar's collapse offset.
                                 enabled = blurActive,
                             )
                         }
+                    } else {
+                        null
                     },
-                    titleColor = COUITheme.colorScheme.onSurface.copy(
+                    titleColor = COUITheme.colorScheme.labelPrimary.copy(
                         alpha = ((scrollProgress - 0.35f) / 0.65f).coerceIn(0f, 1f),
                     ),
                     defaultWindowInsetsPadding = false,
@@ -298,7 +297,7 @@ private fun AboutContent(
                         },
                     ),
                 text = "COUI for Compose",
-                color = COUITheme.colorScheme.onBackground,
+                color = COUITheme.colorScheme.labelPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 35.sp,
             )
@@ -309,7 +308,7 @@ private fun AboutContent(
                         scaleX = 1 - (versionCodeProgress * 0.05f)
                         scaleY = 1 - (versionCodeProgress * 0.05f)
                     },
-                color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                color = COUITheme.colorScheme.labelSecondaryVariant,
                 text = "v" + VersionInfo.VERSION_NAME + " (" + VersionInfo.VERSION_CODE + ")",
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -376,7 +375,7 @@ private fun AboutContent(
                                 },
                             ),
                         colors = CardDefaults.defaultColors(
-                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.surfaceContainer,
+                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.cardBackground,
                             Color.Transparent,
                         ),
                     ) {
@@ -387,22 +386,21 @@ private fun AboutContent(
                                     endActions = {
                                         Text(
                                             text = "GitHub",
-                                            fontSize = COUITheme.textStyles.body2.fontSize,
-                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                            fontSize = COUITheme.textStyles.bodyM.fontSize,
+                                            color = COUITheme.colorScheme.labelTertiary,
                                         )
                                     },
                                     onClick = { uriHandler.openUri("https://github.com/compose-coui-ui/coui") },
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Join Group",
                                     endActions = {
                                         Text(
                                             text = "Telegram",
-                                            fontSize = COUITheme.textStyles.body2.fontSize,
-                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                            fontSize = COUITheme.textStyles.bodyM.fontSize,
+                                            color = COUITheme.colorScheme.labelTertiary,
                                         )
                                     },
                                     onClick = { uriHandler.openUri("https://t.me/YuKongA13579") },
@@ -434,7 +432,7 @@ private fun AboutContent(
                                 },
                             ),
                         colors = CardDefaults.defaultColors(
-                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.surfaceContainer,
+                            if (backdrop != null) Color.Transparent else COUITheme.colorScheme.cardBackground,
                             Color.Transparent,
                         ),
                     ) {
@@ -445,8 +443,8 @@ private fun AboutContent(
                                     endActions = {
                                         Text(
                                             text = "Apache-2.0",
-                                            fontSize = COUITheme.textStyles.body2.fontSize,
-                                            color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                            fontSize = COUITheme.textStyles.bodyM.fontSize,
+                                            color = COUITheme.colorScheme.labelTertiary,
                                         )
                                     },
                                     onClick = {
@@ -455,7 +453,6 @@ private fun AboutContent(
                                 )
                             }
                             item {
-                                HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                 ArrowPreference(
                                     title = "Third Party Licenses",
                                     onClick = { navigator.push(Route.License) },
@@ -518,7 +515,7 @@ private fun AboutContent(
 private fun ValueText(text: String) {
     Text(
         text = text,
-        fontSize = COUITheme.textStyles.body2.fontSize,
-        color = COUITheme.colorScheme.onSurfaceVariantActions,
+        fontSize = COUITheme.textStyles.bodyM.fontSize,
+        color = COUITheme.colorScheme.labelTertiary,
     )
 }

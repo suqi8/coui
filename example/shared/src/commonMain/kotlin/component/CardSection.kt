@@ -20,11 +20,14 @@ import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.layout.DialogButtonBar
 import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
+import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.PressFeedbackType
+import utils.panelBlur
 
 fun LazyListScope.cardSection() {
     item(key = "card") {
@@ -38,13 +41,13 @@ fun LazyListScope.cardSection() {
             onClick = { println("Card click") },
         ) {
             Text(
-                color = COUITheme.colorScheme.onSurface,
+                color = COUITheme.colorScheme.labelPrimary,
                 text = "Card",
                 fontSize = 19.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                color = COUITheme.colorScheme.labelSecondaryVariant,
                 text = "PressFeedbackType: Tint (default)",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Normal,
@@ -64,15 +67,15 @@ fun LazyListScope.cardSection() {
                 onClick = { println("Card click") },
                 content = {
                     Text(
-                        color = COUITheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.labelPrimary,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.labelSecondaryVariant,
                         text = "PressFeedback\nType: Sink",
-                        style = COUITheme.textStyles.paragraph,
+                        style = COUITheme.textStyles.bodyL,
                     )
                 },
             )
@@ -83,15 +86,15 @@ fun LazyListScope.cardSection() {
                 onLongPress = { println("Card long press") },
                 content = {
                     Text(
-                        color = COUITheme.colorScheme.onSurface,
+                        color = COUITheme.colorScheme.labelPrimary,
                         text = "Card",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                     )
                     Text(
-                        color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                        color = COUITheme.colorScheme.labelSecondaryVariant,
                         text = "PressFeedback\nType: Tilt",
-                        style = COUITheme.textStyles.paragraph,
+                        style = COUITheme.textStyles.bodyL,
                     )
                 },
             )
@@ -118,25 +121,29 @@ private fun LongPressHoldDownCardDemo() {
         },
         content = {
             Text(
-                color = COUITheme.colorScheme.onSurface,
+                color = COUITheme.colorScheme.labelPrimary,
                 text = "Card",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                color = COUITheme.colorScheme.labelSecondaryVariant,
                 text = "Long press to show dialog",
-                style = COUITheme.textStyles.paragraph,
+                style = COUITheme.textStyles.bodyL,
             )
         },
     )
 
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
     OverlayDialog(
         show = showDialog,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
         title = "Long Press Action",
         summary = "Triggered by long pressing the card.",
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
         onDismissRequest = { showDialog = false },
         onDismissFinished = { holdDown = false },
+        materialStroke = blur != null,
         content = {
             DialogButtonBar(
                 negative = DialogButtonBarAction(text = "Cancel", onClick = { showDialog = false }),

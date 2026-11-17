@@ -39,7 +39,7 @@ fun LazyText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
-    style: TextStyle = COUITheme.textStyles.main,
+    style: TextStyle = COUITheme.textStyles.bodyXL,
 ) {
     val controller = LocalLazyTextController.current
     if (controller == null) {

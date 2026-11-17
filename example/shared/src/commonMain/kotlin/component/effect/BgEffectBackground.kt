@@ -39,7 +39,7 @@ fun BgEffectBackground(
     Box(
         modifier = modifier,
     ) {
-        val surface = COUITheme.colorScheme.surface
+        val surface = COUITheme.colorScheme.backgroundWithCard
         val deviceType = if (shouldShowSplitPane()) DeviceType.PAD else DeviceType.PHONE
         val isDarkTheme = isInDarkTheme()
         val painter = remember(isOs3Effect) { BgEffectPainter(isOs3Effect) }

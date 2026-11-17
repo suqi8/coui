@@ -85,7 +85,7 @@ private fun ListDetailLayoutDemo() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(COUITheme.colorScheme.surface)
+                        .background(COUITheme.colorScheme.backgroundWithCard)
                         .padding(12.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -100,7 +100,7 @@ private fun ListDetailLayoutDemo() {
                         Text(
                             text = ListDetailDemoItems[index].first,
                             modifier = Modifier.padding(start = 8.dp),
-                            style = COUITheme.textStyles.title3,
+                            style = COUITheme.textStyles.headlineM,
                         )
                     }
                     Text(
@@ -108,8 +108,8 @@ private fun ListDetailLayoutDemo() {
                             "layout shows one pane at a time; wider, the list keeps 40% of the width " +
                             "between 280dp and 412dp.",
                         modifier = Modifier.padding(start = 4.dp, top = 12.dp),
-                        style = COUITheme.textStyles.body2,
-                        color = COUITheme.colorScheme.onSurfaceSecondary,
+                        style = COUITheme.textStyles.bodyM,
+                        color = COUITheme.colorScheme.labelSecondary,
                     )
                 }
             }
@@ -118,8 +118,8 @@ private fun ListDetailLayoutDemo() {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Select an item",
-                    style = COUITheme.textStyles.body2,
-                    color = COUITheme.colorScheme.onSurfaceSecondary,
+                    style = COUITheme.textStyles.bodyM,
+                    color = COUITheme.colorScheme.labelSecondary,
                 )
             }
         },

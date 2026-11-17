@@ -16,19 +16,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextField
+import io.github.suqi8.coui.kmp.blur.MaterialBlurDefaults
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Contacts
 import io.github.suqi8.coui.kmp.layout.DialogButtonBar
 import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
+import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.preference.ArrowPreference
 import io.github.suqi8.coui.kmp.preference.SliderPreference
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import utils.panelBlur
 
 fun LazyListScope.arrowSection() {
     item(key = "arrow") {
@@ -47,28 +49,25 @@ fun LazyListScope.arrowSection() {
                     ArrowPreference(
                         title = "Arrow",
                         startAction = {
-                            Box(
-                                modifier = Modifier.padding(end = 8.dp),
-                            ) {
+                            Box {
                                 Icon(
                                     imageVector = COUIIcons.Contacts,
                                     contentDescription = "Personal",
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                 )
                             }
                         },
                         endActions = {
                             Text(
                                 text = "End",
-                                fontSize = COUITheme.textStyles.body2.fontSize,
-                                color = COUITheme.colorScheme.onSurfaceVariantActions,
+                                fontSize = COUITheme.textStyles.bodyM.fontSize,
+                                color = COUITheme.colorScheme.labelTertiary,
                             )
                         },
                         onClick = {},
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     SliderPreference(
                         title = "Volume",
                         valueText = "${(volume * 100).toInt()}%",
@@ -82,14 +81,13 @@ fun LazyListScope.arrowSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     ArrowPreference(
                         title = "Disabled Arrow",
                         endActions = {
                             Text(
                                 text = "End",
-                                fontSize = COUITheme.textStyles.body2.fontSize,
-                                color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                                fontSize = COUITheme.textStyles.bodyM.fontSize,
+                                color = COUITheme.colorScheme.disabledNeutral,
                             )
                         },
                         enabled = false,
@@ -114,14 +112,18 @@ private fun SliderDialog(
     onVolumeChange: (Float) -> Unit,
     onDismissFinished: () -> Unit,
 ) {
+    val blur = panelBlur(MaterialBlurDefaults::dialog)
     OverlayDialog(
         show = showDialog.value,
+        backgroundModifier = blur?.backgroundModifier ?: Modifier,
         title = "Adjust Volume",
         summary = "Enter 0-100",
+        backgroundColor = blur?.backgroundColor ?: DialogDefaults.backgroundColor(),
         onDismissRequest = {
             showDialog.value = false
         },
         onDismissFinished = onDismissFinished,
+        materialStroke = blur != null,
         content = {
             var text by remember { mutableStateOf(((volumeState() * 100).toInt()).toString()) }
             TextField(
@@ -132,6 +134,8 @@ private fun SliderDialog(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 18.dp),
                 value = text,
+                // COUIInputView sets no minimum height of its own.
+                minHeight = 0.dp,
                 maxLines = 1,
                 onValueChange = { newValue ->
                     val digits = newValue.filter { it.isDigit() }

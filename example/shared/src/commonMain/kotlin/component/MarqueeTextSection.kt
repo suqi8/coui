@@ -30,20 +30,20 @@ fun LazyListScope.marqueeTextSection() {
             ) {
                 MarqueeText(
                     text = "Battery optimisation is limiting background activity for several apps, tap to review them",
-                    style = COUITheme.textStyles.footnote1,
-                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                    style = COUITheme.textStyles.bodyS,
+                    color = COUITheme.colorScheme.labelSecondaryVariant,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MarqueeText(
                     text = "Short text stays still",
-                    style = COUITheme.textStyles.footnote1,
-                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                    style = COUITheme.textStyles.bodyS,
+                    color = COUITheme.colorScheme.labelSecondaryVariant,
                 )
                 MarqueeText(
                     text = "With the marquee disabled the same long text simply wraps onto the following lines instead of scrolling",
                     enabled = false,
-                    style = COUITheme.textStyles.footnote1,
-                    color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                    style = COUITheme.textStyles.bodyS,
+                    color = COUITheme.colorScheme.labelSecondaryVariant,
                 )
             }
         }

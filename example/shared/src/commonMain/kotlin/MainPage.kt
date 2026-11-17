@@ -46,18 +46,22 @@ import component.contextMenuSection
 import component.dateTimePickerSection
 import component.dialogSection
 import component.dropdownSection
+import component.editToolbarAndGuideSection
 import component.emptyStateSection
 import component.expandableGroupSection
 import component.floatingAccessoryNavigationBarSection
+import component.floatingToolbarSection
 import component.fullPageStatementSection
 import component.inputViewSection
 import component.installLoadProgressSection
 import component.intentSliderSection
+import component.linkAndDividerPreferenceSection
 import component.listDetailLayoutSection
 import component.listPreferenceSection
 import component.lockPatternViewSection
 import component.lockScreenPasswordInputSection
 import component.lunarDatePickerSection
+import component.markWithDividerPreferenceSection
 import component.marqueeTextSection
 import component.morePreferenceSection
 import component.navigationBarSection
@@ -65,6 +69,7 @@ import component.numberPickerSection
 import component.numericKeyboardSection
 import component.otherPageSection
 import component.pageIndicatorSection
+import component.preferenceCategorySection
 import component.preferenceExtrasSection
 import component.progressIndicatorSection
 import component.radioButtonSection
@@ -74,9 +79,12 @@ import component.segmentButtonSection
 import component.sideNavigationBarSection
 import component.sidePaneLayoutSection
 import component.simpleLockSection
+import component.slideSelectPreferenceSection
 import component.sliderSection
 import component.snackbarSection
 import component.spinnerSection
+import component.springChainAndCardSection
+import component.statusPreferenceSection
 import component.swipeActionItemSection
 import component.switchSection
 import component.tabRowSection
@@ -132,7 +140,7 @@ fun MainPage(
 
     val backdrop = rememberBlurBackdrop()
     val blurActive = backdrop != null
-    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.surface
+    val barColor = if (blurActive) Color.Transparent else COUITheme.colorScheme.backgroundWithCard
 
     val topAppBarScrollBehavior = COUIScrollBehavior()
     val lazyListState = rememberLazyListState()
@@ -396,6 +404,8 @@ fun MainPage(
                     segmentButtonSection()
                     navigationBarSection()
                     floatingAccessoryNavigationBarSection()
+                    floatingToolbarSection()
+                    editToolbarAndGuideSection()
                     sideNavigationBarSection()
                     sidePaneLayoutSection()
                     listDetailLayoutSection()
@@ -407,6 +417,7 @@ fun MainPage(
                     calendarPickerSection()
                     colorPickerSection()
                     cardSection()
+                    springChainAndCardSection()
                     pageIndicatorSection()
                     bannerSection()
                     responsiveGridSection()
@@ -418,8 +429,13 @@ fun MainPage(
                     alphabetIndexBarSection()
                     searchHistorySection()
                     preferenceExtrasSection()
+                    linkAndDividerPreferenceSection()
                     listPreferenceSection()
+                    slideSelectPreferenceSection()
+                    markWithDividerPreferenceSection()
+                    preferenceCategorySection()
                     morePreferenceSection()
+                    statusPreferenceSection()
                     swipeActionItemSection()
                     expandableGroupSection()
                     fullPageStatementSection()

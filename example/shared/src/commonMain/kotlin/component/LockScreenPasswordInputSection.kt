@@ -45,7 +45,7 @@ fun LazyListScope.lockScreenPasswordInputSection() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(16.dp),
             ) {
                 LockScreenPasswordInput(
@@ -119,7 +119,7 @@ fun LazyListScope.lockScreenPasswordInputSection() {
                 enabled = false,
                 label = "Disabled",
                 modifier = Modifier
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(16.dp),
             )
         }

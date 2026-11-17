@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -78,8 +77,8 @@ fun AdaptiveTopAppBar(
     isWideScreen: Boolean,
     scrollBehavior: ScrollBehavior,
     subtitle: String = "",
-    color: Color = COUITheme.colorScheme.surface,
-    titleColor: Color = COUITheme.colorScheme.onSurface,
+    color: Color = COUITheme.colorScheme.backgroundWithCard,
+    titleColor: Color = COUITheme.colorScheme.labelPrimary,
     backdrop: LayerBackdrop? = null,
     blurActive: Boolean = false,
     navigationIcon: @Composable () -> Unit = {},
@@ -88,18 +87,21 @@ fun AdaptiveTopAppBar(
 ) {
     if (!showTopAppBar) return
 
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
-    val glowEnabled = blurActive && backdrop != null
-    val glow: @Composable BoxScope.() -> Unit = {
-        if (glowEnabled) {
+    val isDark = COUITheme.colorScheme.isDark
+    // A null glow keeps the bar solid and its divider on; with the glow set the bar suppresses its
+    // divider like COUI 17 (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur).
+    val glow: (@Composable BoxScope.() -> Unit)? = if (blurActive && backdrop != null) {
+        {
             TopAppBarGlow(
                 backdrop = backdrop,
                 scrollOffsetPx = scrollBehavior.glowScrollOffsetPx(),
                 isDark = isDark,
-                baseColor = COUITheme.colorScheme.surface,
+                baseColor = COUITheme.colorScheme.backgroundWithCard,
                 enabled = true,
             )
         }
+    } else {
+        null
     }
 
     if (isWideScreen) {
@@ -110,9 +112,6 @@ fun AdaptiveTopAppBar(
             titleColor = titleColor,
             scrollBehavior = scrollBehavior,
             defaultWindowInsetsPadding = false,
-            // COUI 17 suppresses the bar divider while the material blur is on
-            // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
-            showDivider = !glowEnabled,
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,
@@ -125,9 +124,6 @@ fun AdaptiveTopAppBar(
             color = color,
             titleColor = titleColor,
             scrollBehavior = scrollBehavior,
-            // COUI 17 suppresses the bar divider while the material blur is on
-            // (AppBarBlurHelper.syncAppBarDividerWithMaterialBlur -> setBlurDividerSuppressed).
-            showDivider = !glowEnabled,
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,
@@ -140,7 +136,7 @@ fun AdaptiveTopAppBar(
 fun rememberBlurBackdrop(): LayerBackdrop? {
     val appState = LocalAppState.current
     if (!appState.enableBlur || !isRuntimeShaderSupported()) return null
-    val surfaceColor = COUITheme.colorScheme.surface
+    val surfaceColor = COUITheme.colorScheme.backgroundWithCard
     return rememberLayerBackdrop {
         drawRect(surfaceColor)
         drawContent()

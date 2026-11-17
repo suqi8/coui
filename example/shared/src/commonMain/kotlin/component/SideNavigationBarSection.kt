@@ -123,7 +123,7 @@ private fun SideNavigationBarDemoContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(COUITheme.colorScheme.surface)
+                .background(COUITheme.colorScheme.backgroundWithCard)
                 .padding(12.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -133,7 +133,7 @@ private fun SideNavigationBarDemoContent(
                 Text(
                     text = SideNavigationDemoPages[selected],
                     modifier = Modifier.padding(start = 8.dp),
-                    style = COUITheme.textStyles.title3,
+                    style = COUITheme.textStyles.headlineM,
                 )
             }
             Text(
@@ -142,8 +142,8 @@ private fun SideNavigationBarDemoContent(
                     SideNavigationBarMode.Overlay -> "Overlay: the drawer slides over the content; tap the mask to close it."
                 },
                 modifier = Modifier.padding(start = 4.dp, top = 12.dp),
-                style = COUITheme.textStyles.body2,
-                color = COUITheme.colorScheme.onSurfaceSecondary,
+                style = COUITheme.textStyles.bodyM,
+                color = COUITheme.colorScheme.labelSecondary,
             )
         }
     }

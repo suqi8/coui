@@ -34,7 +34,7 @@ data class SearchStatus(
     fun TopAppBarAnim(
         modifier: Modifier = Modifier,
         visible: Boolean = shouldCollapsed(),
-        backgroundColor: Color = colorScheme.surface,
+        backgroundColor: Color = colorScheme.backgroundWithCard,
         content: @Composable () -> Unit,
     ) {
         Box(modifier = modifier) {

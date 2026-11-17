@@ -69,7 +69,7 @@ fun ToolbarSearchPage(
         topBar = {
             Box {
                 ToolbarSearchAnchor(state = searchState) {
-                    val titleColor = COUITheme.colorScheme.onSurface
+                    val titleColor = COUITheme.colorScheme.labelPrimary
                     AdaptiveTopAppBar(
                         title = "Toolbar search",
                         titleColor = titleColor.copy(alpha = titleColor.alpha * searchState.toolbarTitleAlpha),

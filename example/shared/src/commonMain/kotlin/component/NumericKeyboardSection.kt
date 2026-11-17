@@ -48,7 +48,7 @@ fun LazyListScope.numericKeyboardSection() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -58,6 +58,7 @@ fun LazyListScope.numericKeyboardSection() {
                     state = state,
                     onNumberClick = { if (input.length < 12) input += it },
                     leftKey = if (input.isNotEmpty()) NumericKeyboardDefaults.finishKey() else null,
+                    rightKey = NumericKeyboardDefaults.deleteKey(),
                     onLeftKeyClick = { input = "" },
                     onRightKeyClick = { input = input.dropLast(1) },
                 )
@@ -90,6 +91,7 @@ fun LazyListScope.numericKeyboardSection() {
                 )
                 NumericKeyboard(
                     onNumberClick = { pin = if (pin.length < 4) pin + it else it.toString() },
+                    rightKey = NumericKeyboardDefaults.deleteKey(),
                     onRightKeyClick = { pin = pin.dropLast(1) },
                     pressEffect = NumericKeyboardPressEffect.Light,
                     colors = NumericKeyboardDefaults.lockScreenColors(),
@@ -105,7 +107,7 @@ fun LazyListScope.numericKeyboardSection() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(vertical = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {

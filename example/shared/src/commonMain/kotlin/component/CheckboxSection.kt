@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.Checkbox
+import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.basic.Text
@@ -42,11 +45,9 @@ fun LazyListScope.checkboxSection() {
                     CheckboxPreferenceEndDemo()
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     CheckboxPreferenceDemo()
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     CheckboxPreference(
                         title = "Disabled Checkbox",
                         checked = true,
@@ -64,6 +65,7 @@ private fun CheckboxRow() {
     var checkbox by remember { mutableStateOf(false) }
     var checkboxTrue by remember { mutableStateOf(true) }
     var checkboxIndeterminate by remember { mutableStateOf(ToggleableState.Indeterminate) }
+    var shapeChecked by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -109,6 +111,15 @@ private fun CheckboxRow() {
             modifier = Modifier.padding(start = 8.dp),
             enabled = false,
         )
+        // The shape checkbox, for images and colored backdrops.
+        Checkbox(
+            state = ToggleableState(shapeChecked),
+            onClick = { shapeChecked = !shapeChecked },
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .background(COUITheme.colorScheme.primary, CircleShape),
+            colors = CheckboxDefaults.shapeCheckboxColors(),
+        )
     }
 }
 
@@ -123,8 +134,8 @@ private fun CheckboxPreferenceEndDemo() {
         endActions = {
             Text(
                 text = "$checked",
-                fontSize = COUITheme.textStyles.body2.fontSize,
-                color = COUITheme.colorScheme.onSurfaceVariantActions,
+                fontSize = COUITheme.textStyles.bodyM.fontSize,
+                color = COUITheme.colorScheme.labelTertiary,
             )
         },
         onCheckedChange = { checked = it },

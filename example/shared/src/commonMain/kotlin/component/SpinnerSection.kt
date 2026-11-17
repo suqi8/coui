@@ -21,7 +21,6 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.SmallTitle
 import io.github.suqi8.coui.kmp.preference.OverlaySpinnerPreference
@@ -188,7 +187,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowSpinnerPreference(
                         title = "SpinnerPref (W)",
                         summary = if (windowExpanded) "Expanded" else "Collapsed",
@@ -199,7 +197,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlaySpinnerPreference(
                         title = "SpinnerPref (O)",
                         summary = "As Dialog (O)" + if (overlayDialogExpanded) " (Expanded)" else " (Collapsed)",
@@ -211,7 +208,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowSpinnerPreference(
                         title = "SpinnerPref (W)",
                         summary = "As Dialog (W)" + if (windowDialogExpanded) " (Expanded)" else " (Collapsed)",
@@ -223,7 +219,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlaySpinnerPreference(
                         title = "Grouped SpinnerPref (O)",
                         summary = if (overlayGroupedExpanded) "Expanded" else "Collapsed",
@@ -233,7 +228,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowSpinnerPreference(
                         title = "Grouped SpinnerPref (W)",
                         summary = if (windowGroupedExpanded) "Expanded" else "Collapsed",
@@ -243,7 +237,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlaySpinnerPreference(
                         title = "Grouped SpinnerPref (O)",
                         summary = "As Dialog (O)" + if (overlayGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
@@ -253,7 +246,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowSpinnerPreference(
                         title = "Grouped SpinnerPref (W)",
                         summary = "As Dialog (W)" + if (windowGroupedDialogExpanded) " (Expanded)" else " (Collapsed)",
@@ -263,7 +255,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     OverlaySpinnerPreference(
                         title = "Disabled SpinnerPref (O)",
                         summary = "Collapsed",
@@ -274,7 +265,6 @@ fun LazyListScope.spinnerSection() {
                     )
                 }
                 item {
-                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                     WindowSpinnerPreference(
                         title = "Disabled SpinnerPref (W)",
                         summary = "Collapsed",

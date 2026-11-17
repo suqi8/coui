@@ -60,8 +60,9 @@ fun LazyListScope.textFieldSection() {
         TextField(
             value = passwordText,
             onValueChange = { passwordText = it },
-            label = "Password",
+            label = "Password (starts masked)",
             showPasswordToggle = true,
+            initialPasswordVisible = false,
             singleLine = true,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
@@ -124,6 +125,8 @@ fun LazyListScope.textFieldSection() {
                     onValueChange = { focusLineText = it },
                     label = "Focus line only (COUIInputPreference)",
                     justShowFocusLine = true,
+                    // Widget.COUI.Input has no 62dp EditText minimum height.
+                    minHeight = 0.dp,
                     singleLine = true,
                     modifier = Modifier.padding(vertical = 6.dp),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
@@ -144,8 +147,21 @@ fun LazyListScope.textFieldSection() {
 
         var rectText by remember { mutableStateOf("") }
         var floatingText by remember { mutableStateOf("") }
+        var floatingLineText by remember { mutableStateOf("") }
 
         SmallTitle(text = "TextField (Rectangle & floating label)")
+        TextField(
+            value = floatingLineText,
+            onValueChange = { floatingLineText = it },
+            label = "Floating label (Line)",
+            useLabelAsPlaceholder = false,
+            singleLine = true,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 12.dp),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
         TextField(
             value = rectText,
             onValueChange = { rectText = it },
