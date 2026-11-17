@@ -27,21 +27,21 @@ COUI 提供了多种预定义的文本样式：
 ```kotlin
 Text(
     text = "Title Text",
-    style = COUITheme.textStyles.headline1
+    style = COUITheme.textStyles.headlineXS
 )
 
 Text(
     text = "Subtitle Text",
-    style = COUITheme.textStyles.subtitle
+    style = COUITheme.textStyles.buttonM
 )
 Text(
     text = "Summary Text",
-    style = COUITheme.textStyles.body2
+    style = COUITheme.textStyles.bodyM
 )
 
 Text(
     text = "Main Text",
-    style = COUITheme.textStyles.main
+    style = COUITheme.textStyles.bodyXL
 )
 
 ```
@@ -51,7 +51,7 @@ Text(
 ```kotlin
 Text(
     text = "Default Color Text",
-    color = COUITheme.colorScheme.onBackground
+    color = COUITheme.colorScheme.labelPrimary
 )
 
 Text(
@@ -61,7 +61,7 @@ Text(
 
 Text(
     text = "Secondary Text",
-    color = COUITheme.colorScheme.onSurfaceContainerVariant
+    color = COUITheme.colorScheme.labelSecondaryVariant
 )
 ```
 
@@ -88,7 +88,7 @@ Text(
 | maxLines       | Int            | 最大行数                 | Int.MAX_VALUE              | 否       |
 | minLines       | Int            | 最小行数                 | 1                          | 否       |
 | onTextLayout   | ((TextLayoutResult) -> Unit)? | 文本布局完成后的回调 | null                       | 否       |
-| style          | TextStyle      | 文本样式                 | COUITheme.textStyles.main | 否       |
+| style          | TextStyle      | 文本样式                 | COUITheme.textStyles.bodyXL | 否       |
 
 ### Text（AnnotatedString）属性
 
@@ -112,7 +112,7 @@ Text(
 | minLines       | Int                            | 最小行数                       | 1                          | 否       |
 | inlineContent  | Map<String, InlineTextContent> | 内联可组合项的映射             | mapOf()                    | 否       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | 文本布局完成后的回调           | {}                         | 否       |
-| style          | TextStyle                      | 文本样式                       | COUITheme.textStyles.main | 否       |
+| style          | TextStyle                      | 文本样式                       | COUITheme.textStyles.bodyXL | 否       |
 
 ## 进阶用法
 
@@ -188,7 +188,7 @@ Text(
     text = "Scroll-tinted text",
     color = {
         lerp(
-            COUITheme.colorScheme.onSurface,
+            COUITheme.colorScheme.labelPrimary,
             COUITheme.colorScheme.primary,
             (scrollState.value / 500f).coerceIn(0f, 1f),
         )

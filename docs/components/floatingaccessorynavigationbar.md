@@ -76,7 +76,7 @@ Like the capsule, the accessory draws the COUI 17 `TYPE_FRAMEWORK_BOTTOM_BAR` ba
 | backgroundModifier         | Modifier                  | Applied inside the capsule, above the fill                     | Modifier                                            | No       |
 | startAccessoryVisible      | Boolean                   | Whether the start accessory is shown                           | true                                                | No       |
 | endAccessoryVisible        | Boolean                   | Whether the end accessory is shown                             | true                                                | No       |
-| materialEffect             | Boolean                   | Whether the COUI 17 material and metaball merge are drawn      | true                                                | No       |
+| materialEffect             | Boolean                   | Whether the COUI 17 material and metaball merge are drawn      | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | showDivider                | Boolean                   | Whether to draw a divider ring around the capsule              | false                                               | No       |
 | defaultWindowInsetsPadding | Boolean                   | Whether to keep the bar above the navigation and caption bars  | true                                                | No       |
 | color                      | Color                     | Capsule fill without a backdrop                                | FloatingNavigationBarDefaults.color()               | No       |
@@ -96,7 +96,7 @@ Like the capsule, the accessory draws the COUI 17 `TYPE_FRAMEWORK_BOTTOM_BAR` ba
 | contentDescription | String?      | Accessibility label                                   | -                                               | Yes      |
 | modifier           | Modifier     | Modifier applied to the accessory                     | Modifier                                        | No       |
 | enabled            | Boolean      | Whether the accessory reacts to touches               | true                                            | No       |
-| materialEffect     | Boolean      | Whether the material, spotlight and full icon change are drawn | true                                   | No       |
+| materialEffect     | Boolean      | Whether the material, spotlight and full icon change are drawn | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | color              | Color        | Fill without a backdrop                               | FloatingNavigationBarDefaults.color()           | No       |
 | iconTint           | Color        | Tint of the icon; Unspecified leaves it untinted      | FloatingAccessoryNavigationBarDefaults.iconTint() | No     |
 | shadowElevation    | Dp           | Blur radius of the drop shadow                        | FloatingNavigationBarDefaults.ShadowElevation   | No       |
@@ -109,7 +109,7 @@ Like the capsule, the accessory draws the COUI 17 `TYPE_FRAMEWORK_BOTTOM_BAR` ba
 
 | Method     | Description                                                                             |
 | ---------- | --------------------------------------------------------------------------------------- |
-| iconTint() | `onSurfaceContainer` (`?couiColorLabelPrimary`); COUI draws the drawable as supplied     |
+| iconTint() | `labelPrimary` (`?couiColorLabelPrimary`); COUI draws the drawable as supplied     |
 
 ## Behavior
 

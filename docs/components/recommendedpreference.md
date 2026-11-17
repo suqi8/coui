@@ -68,9 +68,9 @@ RecommendedPreference(
 
 | Parameter      | Type  | Default                                                                     |
 | -------------- | ----- | --------------------------------------------------------------------------- |
-| containerColor | Color | couiColorContainer4 (#0A000000 light / #14FFFFFF dark, theme-aware)         |
-| titleColor     | Color | COUITheme.colorScheme.onSurfaceSecondary                                   |
-| itemColor      | Color | COUITheme.colorScheme.onSurface                                            |
+| containerColor | Color | couiColorContainer4 (`COUITheme.colorScheme.container4`, #0A000000 light / #1AFFFFFF dark)         |
+| titleColor     | Color | COUITheme.colorScheme.labelSecondary                                   |
+| itemColor      | Color | COUITheme.colorScheme.labelPrimary                                            |
 
 ## Advanced Usage
 
@@ -81,7 +81,7 @@ RecommendedPreference(
     title = "You might be looking for:",
     items = items,
     colors = RecommendedPreferenceDefaults.recommendedPreferenceColors(
-        containerColor = COUITheme.colorScheme.surfaceContainer,
+        containerColor = COUITheme.colorScheme.cardBackground,
         itemColor = COUITheme.colorScheme.primary
     )
 )

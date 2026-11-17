@@ -114,7 +114,7 @@ ChipTab(
 | label             | String                    | 文字标签（单行，超出省略）   | -                                | 是       |
 | modifier          | Modifier                  | 应用于标签的修饰符           | Modifier                         | 否       |
 | enabled           | Boolean                   | 是否可用                     | true                             | 否       |
-| materialEffect    | Boolean                   | 是否绘制 COUI 17 材质        | true                             | 否       |
+| materialEffect    | Boolean                   | 是否绘制 COUI 17 材质        | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | materialType      | ChipTabMaterialType       | 背景预设类型                 | ChipTabMaterialType.Default      | 否       |
 | icon              | (@Composable () -> Unit)? | 可选前置图标                 | null                             | 否       |
 | cornerRadius      | Dp                        | 圆角半径                     | ChipTabDefaults.CornerRadius     | 否       |
@@ -136,7 +136,7 @@ ChipTab(
 | onTabSelected      | (Int) -> Unit             | 点击未选中标签时的回调                                 | -                               | 是       |
 | modifier           | Modifier                  | 应用于行的修饰符                                       | Modifier                        | 否       |
 | enabled            | Boolean                   | 标签是否可用                                           | true                            | 否       |
-| materialEffect     | Boolean                   | 标签是否绘制 COUI 17 材质                              | true                            | 否       |
+| materialEffect     | Boolean                   | 标签是否绘制 COUI 17 材质                              | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | materialType       | ChipTabMaterialType       | 背景预设类型                                           | ChipTabMaterialType.Default     | 否       |
 | colors             | ChipTabColors             | 标签颜色配置                                           | ChipTabDefaults.chipTabColors() | 否       |
 | horizontalPadding  | Dp                        | 滚动标签的内边距；Unspecified = 16dp，有前置图标时 8dp | Dp.Unspecified                  | 否       |
@@ -169,7 +169,7 @@ ChipTab(
 
 | 方法名                                              | 类型                 | 说明                                                         |
 | --------------------------------------------------- | -------------------- | ------------------------------------------------------------ |
-| textStyle()                                         | TextStyle            | 文字样式（COUITheme.textStyles.subtitle，couiTextButtonM 14sp 中粗） |
+| textStyle()                                         | TextStyle            | 文字样式（COUITheme.textStyles.buttonM，couiTextButtonM 14sp 中粗） |
 | chipTabColors()                                     | ChipTabColors        | 创建颜色配置                                                 |
 | backdropSpec(isDark, materialType, selectedFraction) | MaterialBackdropSpec | 指定选中进度下插值后的 COUI 17 背景                          |
 
@@ -177,12 +177,12 @@ ChipTab(
 
 | 参数                   | 类型  | 默认值                                        | COUI 来源                                     |
 | ---------------------- | ----- | --------------------------------------------- | --------------------------------------------- |
-| containerColor         | Color | #0A000000 / #1AFFFFFF                         | couiColorContainer4（未选中底色）             |
+| containerColor         | Color | COUITheme.colorScheme.container4（#0A000000 / #1AFFFFFF） | couiColorContainer4（未选中底色）             |
 | selectedContainerColor | Color | COUITheme.colorScheme.surfaceContainerHighest | couiColorBackgroundElevated #FFFFFF / #1E1E1E |
 | selectedHighlightColor | Color | #40FFFFFF                                     | coui_color_checked_background_gradient_start  |
 | selectedStrokeColor    | Color | #0A000000 / #0AFFFFFF                         | coui_color_checked_background_stroke（0.6dp） |
-| contentColor           | Color | COUITheme.colorScheme.onSurface               | couiColorLabelPrimary                         |
-| disabledContentColor   | Color | COUITheme.colorScheme.onSurfaceVariantActions | couiColorLabelTertiary                        |
+| contentColor           | Color | COUITheme.colorScheme.labelPrimary               | couiColorLabelPrimary                         |
+| disabledContentColor   | Color | COUITheme.colorScheme.labelTertiary | couiColorLabelTertiary                        |
 
 ### ChipTabMaterialType
 

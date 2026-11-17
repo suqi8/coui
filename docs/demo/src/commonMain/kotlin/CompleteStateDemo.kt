@@ -42,6 +42,7 @@ fun CompleteStateDemo() {
             var replay by remember { mutableIntStateOf(0) }
             CompleteState(
                 title = when (type) {
+                    CompleteStateType.None -> "Done"
                     CompleteStateType.Success -> "Payment successful"
                     CompleteStateType.Failed -> "Payment failed"
                     CompleteStateType.Waiting -> "Waiting for confirmation"

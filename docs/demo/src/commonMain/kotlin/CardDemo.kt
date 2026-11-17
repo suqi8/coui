@@ -43,7 +43,7 @@ fun CardDemo() {
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = COUITheme.colorScheme.primaryVariant,
+                    color = COUITheme.colorScheme.primary,
                 ),
                 insideMargin = PaddingValues(16.dp),
             ) {
@@ -54,7 +54,7 @@ fun CardDemo() {
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    color = COUITheme.colorScheme.onPrimaryVariant,
+                    color = COUITheme.colorScheme.labelOnColor,
                     text = "This is a Card",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Normal,
@@ -73,15 +73,15 @@ fun CardDemo() {
                     onClick = { },
                     content = {
                         Text(
-                            color = COUITheme.colorScheme.onSurface,
+                            color = COUITheme.colorScheme.labelPrimary,
                             text = "Card",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                         )
                         Text(
-                            color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                            color = COUITheme.colorScheme.labelSecondaryVariant,
                             text = "PressFeedback: Sink\nShowIndication: true",
-                            style = COUITheme.textStyles.paragraph,
+                            style = COUITheme.textStyles.bodyL,
                         )
                     },
                 )
@@ -91,15 +91,15 @@ fun CardDemo() {
                     pressFeedbackType = PressFeedbackType.Tilt,
                     content = {
                         Text(
-                            color = COUITheme.colorScheme.onSurface,
+                            color = COUITheme.colorScheme.labelPrimary,
                             text = "Card",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                         )
                         Text(
-                            color = COUITheme.colorScheme.onSurfaceVariantSummary,
+                            color = COUITheme.colorScheme.labelSecondaryVariant,
                             text = "PressFeedback: Tilt\nShowIndication: false",
-                            style = COUITheme.textStyles.paragraph,
+                            style = COUITheme.textStyles.bodyL,
                         )
                     },
                 )

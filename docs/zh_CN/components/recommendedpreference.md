@@ -68,9 +68,9 @@ RecommendedPreference(
 
 | 参数           | 类型  | 默认值                                                              |
 | -------------- | ----- | ------------------------------------------------------------------- |
-| containerColor | Color | couiColorContainer4（浅色 #0A000000 / 深色 #14FFFFFF，随主题自动切换） |
-| titleColor     | Color | COUITheme.colorScheme.onSurfaceSecondary                           |
-| itemColor      | Color | COUITheme.colorScheme.onSurface                                    |
+| containerColor | Color | couiColorContainer4（`COUITheme.colorScheme.container4`，浅色 #0A000000 / 深色 #1AFFFFFF） |
+| titleColor     | Color | COUITheme.colorScheme.labelSecondary                           |
+| itemColor      | Color | COUITheme.colorScheme.labelPrimary                                    |
 
 ## 进阶用法
 
@@ -81,7 +81,7 @@ RecommendedPreference(
     title = "你可能想找：",
     items = items,
     colors = RecommendedPreferenceDefaults.recommendedPreferenceColors(
-        containerColor = COUITheme.colorScheme.surfaceContainer,
+        containerColor = COUITheme.colorScheme.cardBackground,
         itemColor = COUITheme.colorScheme.primary
     )
 )

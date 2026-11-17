@@ -104,8 +104,8 @@ The ArrowPreferenceDefaults object provides default color configuration for the 
 ### Arrow Tint
 
 - The trailing arrow icon is always shown and tinted automatically.
-- Tint uses `COUITheme.colorScheme.onSurfaceVariantActions` when `enabled = true`.
-- Tint uses `COUITheme.colorScheme.disabledOnSecondaryVariant` when `enabled = false`.
+- Tint uses `COUITheme.colorScheme.labelTertiary` when `enabled = true`.
+- Tint uses `COUITheme.colorScheme.disabledNeutral` when `enabled = false`.
 
 ## Advanced Usage
 
@@ -119,7 +119,7 @@ ArrowPreference(
         Icon(
             imageVector = COUIIcons.Contacts,
             contentDescription = "Personal Icon",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

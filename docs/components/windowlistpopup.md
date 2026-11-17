@@ -108,6 +108,14 @@ missing, the popup keeps the opaque `backgroundColor`, COUI's non-blur backgroun
 bottom sheets turn the provider off for their content. Pass `materialBlur = false` to opt one popup
 out. The window variant draws the same page recording into its own window; on Android it does not use the platform blur-behind, which blurs the whole screen behind a window rather than the menu's rounded rect.
 
+The shadow-edge stroke and the touch spotlight (`materialEffect`) are drawn on the opaque surface
+as well, with the same parameters. COUI only draws them once the popup is blurred; this library keeps
+them so a menu that cannot blur still lights up. Both are white light laid source-over onto the
+surface, which is what a ColorOS 17 popup shows: its OVERLAY spotlight lands on the panel's own
+transparent canvas above the window blur. They show on blurred and dark surfaces and disappear into
+a pure white light-scheme fill. The spotlight glows under the finger, follows it across the rows
+(drag-to-select included) and spreads out as it fades when the finger lifts.
+
 ## Properties
 
 ### WindowListPopup
@@ -125,8 +133,8 @@ out. The window variant draws the same page recording into its own window; on An
 | minWidth              | Dp                          | Minimum width of the popup content.                              | ListPopupDefaults.MinWidth                 |
 | backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows, on top of the default material blur. | Modifier |
 | backgroundColor       | Color                       | Surface fill when the popup is not blurred (couiColorBackgroundTop, COUI's non-blur background). | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | true |
-| materialEffect        | Boolean                     | On a blurred popup, draws the shadow-edge stroke and the touch spotlight. | true |
+| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | Draws the shadow-edge stroke and the touch spotlight, blurred or not. | `LocalCOUIMaterialEffectEnabled.current` |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                         | -                                          |
 
 ### ListPopupColumn
@@ -161,7 +169,7 @@ DropdownImpl(
 | dialogMode            | Boolean        | Use dialog-style row metrics instead of popup metrics | false            |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked | -                                 |
 
-`DropdownImpl` also provides an overload that takes a full `DropdownItem` instead of `text`, enabling rows with an icon or summary. It additionally accepts `hasSubmenu` (renders the up/down indicator), `submenuExpanded` (tints the indicator while its sub menu is open), and `isFirst` / `isLast`, kept for compatibility and ignored in popup mode by COUI 17; `enabled` defaults to `item.enabled`.
+`DropdownImpl` also provides an overload that takes a full `DropdownItem` instead of `text`, enabling rows with an icon or summary. It additionally accepts `hasSubmenu` (renders the up/down indicator) and `submenuExpanded` (tints the indicator while its sub menu is open); `enabled` defaults to `item.enabled`. Both overloads take `reserveIconSlot`: COUI 17 keeps the 20dp + 12dp icon slot on every row as soon as any item of the list has an icon, so pass `items.any { it.icon != null }` to every row you build yourself. `DropdownItem.stateIcon` draws a custom icon in the 24dp trailing state slot (`PopupListItem.setStateIcon`), tinted like the selection check.
 
 ```kotlin
 DropdownImpl(

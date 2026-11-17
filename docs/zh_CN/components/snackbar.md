@@ -161,9 +161,9 @@ data class SnackbarColors(
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
     containerColor = COUITheme.colorScheme.backgroundTop,
-    contentColor = COUITheme.colorScheme.onSurfaceContainer,
+    contentColor = COUITheme.colorScheme.labelPrimary,
     actionContentColor = COUITheme.colorScheme.primaryTextOnPopup,
-    dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
+    dismissActionContentColor = COUITheme.colorScheme.labelTertiary,
 )
 ```
 
@@ -322,7 +322,7 @@ SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
 | 属性名            | 类型                           | 说明                                        | 默认值                                           | 是否必须 |
 | -------------- | ---------------------------- | ----------------------------------------- | --------------------------------------------- | ---- |
 | title          | String                       | 标题（COUI content text），最多两行                | -                                             | 是    |
-| actionLabel    | String?                      | 小号操作按钮的文字；为 null 时隐藏                      | -                                             | 是    |
+| actionLabel    | String                       | 小号操作按钮的文字；COUI 要求必填（`COUINotificationSnackBar.make`）。`SnackbarData` 重载要求设置 `actionLabel` | - | 是 |
 | onActionClick  | () -> Unit                   | 点击操作按钮时回调                                 | -                                             | 是    |
 | onDismiss      | () -> Unit                   | 点击关闭按钮或滑走卡片时回调                            | -                                             | 是    |
 | modifier       | Modifier                     | 应用于卡片的修饰符                                 | Modifier                                      | 否    |
@@ -341,9 +341,9 @@ SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
 | 属性名            | 类型               | 说明                              | 默认值                                           |
 | -------------- | ---------------- | ------------------------------- | --------------------------------------------- |
 | containerColor | Color            | 卡片填充（couiColorBackgroundTop）     | COUITheme.colorScheme.backgroundTop           |
-| titleColor     | Color            | 标题颜色（couiColorPrimaryNeutral）    | COUITheme.colorScheme.onSurfaceContainer      |
-| subtitleColor  | Color            | 副文本颜色（couiColorSecondNeutral）    | COUITheme.colorScheme.onSurfaceVariantSummary |
-| closeIconColor | Color            | 关闭图标着色（couiColorLabelTertiary）   | COUITheme.colorScheme.onSurfaceVariantActions |
+| titleColor     | Color            | 标题颜色（couiColorPrimaryNeutral）    | COUITheme.colorScheme.labelPrimary      |
+| subtitleColor  | Color            | 副文本颜色（couiColorSecondNeutral）    | COUITheme.colorScheme.labelSecondaryVariant |
+| closeIconColor | Color            | 关闭图标着色（couiColorLabelTertiary）   | COUITheme.colorScheme.labelTertiary |
 | actionColors   | TextButtonColors | 操作按钮颜色                          | ButtonDefaults.textButtonColors()             |
 
 ### 布局与滑动

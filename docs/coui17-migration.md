@@ -101,7 +101,7 @@ Scaffold(topBar = { ... }) { padding ->
 | 弹窗 | `OverlayDialog(backgroundModifier = Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark)), backgroundColor = Transparent, materialStroke = true)`。打开 `materialStroke` 后，`DialogButtonBar` 会自动切成材质按钮 |
 | 底部面板 | 同上，用 `MaterialBlurDefaults.bottomSheet`（400px） |
 | 下拉菜单 / 列表弹出 | 只要提供了 `LocalPopupMaterialBlur` 就默认模糊，不需要改调用处 |
-| 顶栏 | `TopAppBar(color = Transparent, showDivider = false, glow = { TopAppBarGlow(backdrop, scrollBehavior.glowScrollOffsetPx(), isDark, surface, enabled = true) })`。凝光滚过 30dp 完全显现；需要自定义显现进度时，把进度换算成 `AlphaScrollThreshold × progress` 传入（见 OShin 的关于页）。打开凝光后不再需要 `BlurredBar`/`textureBlur` 那一套 |
+| 顶栏 | `TopAppBar(color = Transparent, glow = { TopAppBarGlow(backdrop, scrollBehavior.glowScrollOffsetPx(), isDark, surface, enabled = true) })`。凝光滚过 30dp 完全显现；需要自定义显现进度时，把进度换算成 `AlphaScrollThreshold × progress` 传入（见 OShin 的关于页）。打开凝光后不再需要 `BlurredBar`/`textureBlur` 那一套 |
 | 悬浮底栏 | `FloatingNavigationBar(color = Transparent, backgroundModifier = provider.materialBackdrop(FloatingNavigationBarDefaults.backdropSpec(isDark), capsuleShape))`，provider 来自 `MaterialBackdropProvider { spec, shape -> Modifier.couiViewBlur(...) }` |
 
 ---

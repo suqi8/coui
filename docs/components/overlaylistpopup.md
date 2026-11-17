@@ -170,6 +170,14 @@ missing, the popup keeps the opaque `backgroundColor`, COUI's non-blur backgroun
 bottom sheets turn the provider off for their content. Pass `materialBlur = false` to opt one popup
 out.
 
+The shadow-edge stroke and the touch spotlight (`materialEffect`) are drawn on the opaque surface
+as well, with the same parameters. COUI only draws them once the popup is blurred; this library keeps
+them so a menu that cannot blur still lights up. Both are white light laid source-over onto the
+surface, which is what a ColorOS 17 popup shows: its OVERLAY spotlight lands on the panel's own
+transparent canvas above the window blur. They show on blurred and dark surfaces and disappear into
+a pure white light-scheme fill. The spotlight glows under the finger, follows it across the rows
+(drag-to-select included) and spreads out as it fades when the finger lifts.
+
 ## Properties
 
 ### OverlayListPopup
@@ -188,8 +196,8 @@ out.
 | renderInRootScaffold  | Boolean                     | Whether to render the popup in the root (outermost) Scaffold. When true, the popup covers the full screen. When false, it renders within the current Scaffold's bounds with position compensation. | true |
 | backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows, on top of the default material blur. | Modifier |
 | backgroundColor       | Color                       | Surface fill when the popup is not blurred (couiColorBackgroundTop, COUI's non-blur background). | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | true |
-| materialEffect        | Boolean                     | On a blurred popup, draws the shadow-edge stroke and the touch spotlight. | true |
+| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | Draws the shadow-edge stroke and the touch spotlight, blurred or not. | `LocalCOUIMaterialEffectEnabled.current` |
 | content               | @Composable () -> Unit      | The content to display inside the popup.                          | -                                          |
 
 ### ListPopupColumn
@@ -224,9 +232,10 @@ The text-based overload:
 | dropdownColors        | DropdownColors | Color configuration for the option          | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | Whether this option can be clicked          | true                              |
 | dialogMode            | Boolean        | Whether the row is shown in dialog mode     | false                             |
+| reserveIconSlot       | Boolean        | Keep the 20dp + 12dp leading icon slot so the title lines up with rows that have an icon | false |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked        | -                                 |
 
-The item-based overload accepts a `DropdownItem` (with optional `icon` and `summary`) and exposes extra layout flags:
+The item-based overload accepts a `DropdownItem` (with optional `icon`, `summary` and custom trailing `stateIcon`) and exposes extra layout flags:
 
 | Property Name         | Type           | Description                                                                                                  | Default Value                     |
 | --------------------- | -------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------- |
@@ -238,9 +247,15 @@ The item-based overload accepts a `DropdownItem` (with optional `icon` and `summ
 | enabled               | Boolean        | Whether this option can be clicked                                                                           | item.enabled                      |
 | dialogMode            | Boolean        | Whether the row is shown in dialog mode                                                                      | false                             |
 | hasSubmenu            | Boolean        | When true, the row acts as a submenu trigger: the up/down indicator is shown instead of the selection check     | false                             |
-| isFirst               | Boolean        | Kept for compatibility; COUI 17 pads every row alike and insets the list, so popup mode ignores it        | index == 0                        |
-| isLast                | Boolean        | Kept for compatibility, see `isFirst`      | index == optionSize - 1           |
+| submenuExpanded       | Boolean        | Whether the sub menu this row opens is showing (the indicator takes the selected colour)                     | false                             |
+| reserveIconSlot       | Boolean        | Keep the leading icon slot when the item has no icon                                                         | false                             |
 | onSelectedIndexChange | (Int) -> Unit  | Callback when this option is clicked                                                                         | -                                 |
+
+COUI 17 `MixedPopupListAdapter` shows the icon view on every vertical row as soon as any item of the list has an icon, so the titles line up. When you build rows yourself, pass `reserveIconSlot = items.any { it.icon != null }` to every row of the list; the dropdown menus and spinners do this for you.
+
+`DropdownItem.stateIcon` puts a custom icon in the 24dp trailing state slot (`PopupListItem.setStateIcon`). It is shown whether or not the item is selected, replaces the selection check (a submenu trigger keeps its indicator) and is tinted like the check: `selectedIndicatorColor` while selected, `submenuIndicatorColor` (couiColorLabelTertiary) otherwise, `alertContentColor` on an alert item.
+
+Menus never dim the content behind them by default (`enableWindowDim = false`): `COUIPopupListWindow` clears its window background and adds no dim.
 
 ### PopupPositionProvider.Align
 

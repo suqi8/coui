@@ -17,10 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.FloatingToolbar
+import io.github.suqi8.coui.kmp.basic.FloatingToolbarItem
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.Scaffold
-import io.github.suqi8.coui.kmp.basic.ToolbarPosition
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Delete
 import io.github.suqi8.coui.kmp.icon.extended.Edit
@@ -61,14 +61,14 @@ fun FloatingToolbarDemo() {
                                         Icon(
                                             imageVector = COUIIcons.Edit,
                                             contentDescription = "Edit",
-                                            tint = COUITheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.labelPrimary,
                                         )
                                     }
                                     IconButton(onClick = { /* Action 2 */ }) {
                                         Icon(
                                             imageVector = COUIIcons.Delete,
                                             contentDescription = "Delete",
-                                            tint = COUITheme.colorScheme.onBackground,
+                                            tint = COUITheme.colorScheme.labelPrimary,
                                         )
                                     }
                                 }
@@ -89,42 +89,24 @@ fun FloatingToolbarDemo() {
                 Card(
                     modifier = Modifier.weight(0.5f),
                 ) {
-                    Scaffold(
-                        floatingToolbar = {
-                            FloatingToolbar {
-                                Row(
-                                    modifier = Modifier.padding(8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    // or Column
-                                    IconButton(onClick = { /* Action 1 */ }) {
-                                        Icon(
-                                            imageVector = COUIIcons.Edit,
-                                            contentDescription = "Edit",
-                                            tint = COUITheme.colorScheme.onBackground,
-                                        )
-                                    }
-                                    IconButton(onClick = { /* Action 2 */ }) {
-                                        Icon(
-                                            imageVector = COUIIcons.Delete,
-                                            contentDescription = "Delete",
-                                            tint = COUITheme.colorScheme.onBackground,
-                                        )
-                                    }
-                                }
-                            }
-                        },
-                        floatingToolbarPosition = ToolbarPosition.BottomEnd,
-                    ) { paddingValues ->
-                        LazyColumn(
-                            contentPadding = PaddingValues(top = paddingValues.calculateTopPadding()),
-                        ) {
+                    // The item toolbar: two groups, a title item and a red dot.
+                    Box {
+                        LazyColumn {
                             items(100) {
                                 ArrowPreference(
                                     title = "Something",
                                 )
                             }
                         }
+                        FloatingToolbar(
+                            items = listOf(
+                                FloatingToolbarItem(onClick = {}, icon = COUIIcons.Edit, title = "Edit"),
+                                FloatingToolbarItem(onClick = {}, icon = COUIIcons.Delete, title = "Delete", showRedDot = true),
+                                FloatingToolbarItem(onClick = {}, title = "Done", group = 1),
+                            ),
+                            modifier = Modifier.align(Alignment.BottomCenter),
+                            defaultWindowInsetsPadding = false,
+                        )
                     }
                 }
             }

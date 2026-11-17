@@ -60,8 +60,8 @@ LunarDatePicker(
 | fieldOrder    | DateFieldOrder           | 滚轮从左到右的顺序（RTL 下镜像）             | DatePickerDefaults.localeFieldOrder() | 否   |
 | columnWidth   | Dp                       | 每列滚轮宽度                                 | LunarDatePickerDefaults.ColumnWidth   | 否   |
 | colors        | NumberPickerColors       | 滚轮颜色配置                                 | NumberPickerDefaults.colors()         | 否   |
-| dividerColor  | Color                    | 选中行上下两条细线的颜色                     | COUITheme.colorScheme.dividerLine     | 否   |
-| textStyle     | TextStyle                | 滚轮项文字样式                               | COUITheme.textStyles.title3           | 否   |
+| dividerColor  | Color                    | 选中行上下两条细线的颜色                     | COUITheme.colorScheme.divider     | 否   |
+| textStyle     | TextStyle                | 滚轮项文字样式                               | COUITheme.textStyles.headlineM           | 否   |
 | itemHeight    | Dp                       | 每个滚轮项的高度                             | NumberPickerDefaults.ItemHeight       | 否   |
 | insideMargin  | PaddingValues            | 滚轮列外围内边距                             | LunarDatePickerDefaults.InsideMargin  | 否   |
 
@@ -69,7 +69,7 @@ LunarDatePicker(
 
 | 属性名            | 类型                     | 说明                              | 默认值                          |
 | ----------------- | ------------------------ | --------------------------------- | ------------------------------- |
-| MinDate           | DateValue                | 最早可选日期                      | 1910-01-01                      |
+| MinDate           | DateValue                | 最早可选日期（COUI sMinDate）     | 1910-03-10                      |
 | MaxDate           | DateValue                | 最晚可选日期                      | 2099-12-31                      |
 | ColumnWidth       | Dp                       | 每列宽度                          | 76.dp                           |
 | InsideMargin      | PaddingValues            | 滚轮列外围内边距                  | PaddingValues(vertical = 12.dp) |

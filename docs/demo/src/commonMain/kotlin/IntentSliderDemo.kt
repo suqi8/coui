@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.IntentSlider
+import io.github.suqi8.coui.kmp.basic.IntentSliderPlaybackState
 import io.github.suqi8.coui.kmp.basic.IntentSliderSize
 import io.github.suqi8.coui.kmp.basic.TextButton
 
@@ -53,7 +54,7 @@ fun IntentSliderDemo() {
                 value = value2,
                 onValueChange = { value2 = it },
                 showThumb = true,
-                paused = paused,
+                playbackState = if (paused) IntentSliderPlaybackState.Paused else IntentSliderPlaybackState.Playing,
                 size = IntentSliderSize.Large,
             )
             TextButton(
@@ -61,7 +62,7 @@ fun IntentSliderDemo() {
                 onClick = { paused = !paused },
             )
             // The fixed palette is meant for media content; without a backdrop provider it keeps
-            // its translucent white background fill.
+            // its translucent white background fill. The conic light trails the progress while playing.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,6 +77,8 @@ fun IntentSliderDemo() {
                     onValueChange = { value3 = it },
                     followSystemTheme = false,
                     showThumb = true,
+                    conicLight = true,
+                    playbackState = if (paused) IntentSliderPlaybackState.Paused else IntentSliderPlaybackState.Playing,
                     secondaryValue = 0.7f,
                 )
             }

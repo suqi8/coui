@@ -2,6 +2,8 @@
 
 `NavigationRail` is a side navigation component in COUI, suitable for wide screens. It offers different display modes (icon only, text only, icon and text, icon with selected label).
 
+The header keeps the top of the rail. The items spread over the middle of it as in `COUINavigationRailMenuView`: one gap before each item and one after the last, each `max((rail height x 0.4 - item heights) / (item count + 1), 8dp)`, the whole group centred vertically. The group never rides up under the header, and the rail scrolls when the items do not fit.
+
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=navigationRail" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
@@ -42,7 +44,7 @@ Row {
 
 ### Selected State
 
-`NavigationRailItem` automatically handles the visual style of the selected item, displaying it with bold text and highlighting the icon/text.
+`NavigationRailItem` automatically handles the visual style of the selected item, highlighting the icon and text. Labels always use medium font weight (`sans-serif-medium`).
 
 ## Properties
 
@@ -52,12 +54,12 @@ Row {
 | -------------------------- | -------------------------------------- | --------------------------------------------- | --------------------------------- | -------- |
 | modifier                   | Modifier                               | Modifier applied to the rail                  | Modifier                          | No       |
 | header                     | @Composable (ColumnScope.() -> Unit)?  | Header content (e.g. FAB or Logo)             | null                              | No       |
-| color                      | Color                                  | Background color of the rail                  | COUITheme.colorScheme.surface    | No       |
+| color                      | Color                                  | Background color of the rail                  | COUITheme.colorScheme.backgroundWithCard    | No       |
 | showDivider                | Boolean                                | Show divider line between rail and content    | true                              | No       |
 | defaultWindowInsetsPadding | Boolean                                | Apply default window insets padding           | true                              | No       |
 | minWidth                   | Dp                                     | Minimum width of the rail                     | NavigationRailDefaults.MinWidth   | No       |
 | mode                       | NavigationRailDisplayMode                  | Display mode for items                        | NavigationRailDisplayMode.IconAndText | No       |
-| content                    | @Composable ColumnScope.()             | The content of the rail                       | -                                 | Yes      |
+| content                    | @Composable () -> Unit                 | The items of the rail; each root composable is one item at the rail's full width | - | Yes |
 
 ### NavigationRailItem Properties
 
@@ -79,12 +81,14 @@ The NavigationRailDefaults object provides default values for NavigationRail and
 | Constant Name          | Type     | Description                                | Default Value |
 | ---------------------- | -------- | ------------------------------------------ | ------------- |
 | MinWidth               | Dp       | Minimum width of the rail                  | 72.dp         |
-| VerticalPadding        | Dp       | Vertical padding of the content            | 24.dp         |
-| HeaderSpacing          | Dp       | Spacing after the header                   | 24.dp         |
+| VerticalPadding        | Dp       | Distance of the header from the top        | 24.dp         |
+| HeaderSpacing          | Dp       | Least spacing between header and first item | 24.dp        |
+| MinItemSpacing         | Dp       | Least gap before each item (`coui_navigation_rail_root_view_divider_height`) | 8.dp |
+| ItemAreaFraction       | Float    | Share of the rail height the items spread over | 0.4f      |
 | IconSize               | Dp       | Icon size                                  | 24.dp         |
 | IconTextSpacing        | Dp       | Spacing between icon and text              | 2.dp          |
-| ItemVerticalPadding    | Dp       | Vertical padding for each item             | 12.dp         |
-| LabelFontSize          | TextUnit | Label font size                            | 10.sp         |
+| ItemVerticalPadding    | Dp       | Space above the icon and below the label (`coui_navigation_margin_vertical`) | 12.dp |
+| LabelFontSize          | Dp       | Label text size, in dp (does not follow the font scale) | 10.dp |
 | TextOnlyFontSize       | TextUnit | Font size in TextOnly mode                 | 14.sp         |
 | TextOnlyVerticalPadding| Dp       | Vertical padding in TextOnly mode          | 4.dp          |
 | SelectedPressedAlpha   | Float    | Alpha for selected pressed item            | 0.5f          |
@@ -139,7 +143,7 @@ NavigationRail(
 
 ```kotlin
 NavigationRail(
-    color = COUITheme.colorScheme.background,
+    color = COUITheme.colorScheme.backgroundElevated,
     minWidth = 96.dp
 ) {
     // ... items ...

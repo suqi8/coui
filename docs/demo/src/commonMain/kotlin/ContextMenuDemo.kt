@@ -23,7 +23,6 @@ import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.menu.OverlayContextMenu
@@ -76,7 +75,6 @@ fun ContextMenuDemo() {
                                     }
                                 }
                                 item {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     WindowContextMenu(entries = entries) {
                                         BasicComponent(
                                             title = "Photo.jpg",
@@ -86,7 +84,6 @@ fun ContextMenuDemo() {
                                     }
                                 }
                                 item {
-                                    HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                                     OverlayContextMenu(entries = entries, enabled = false) {
                                         BasicComponent(
                                             title = "Locked.txt",

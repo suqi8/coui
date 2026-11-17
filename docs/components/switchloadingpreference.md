@@ -115,7 +115,7 @@ SwitchLoadingPreference(
     endActions = {
         Text(
             text = if (isLoading) "Applying…" else "",
-            color = COUITheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.labelTertiary,
             modifier = Modifier.padding(end = 6.dp)
         )
     }

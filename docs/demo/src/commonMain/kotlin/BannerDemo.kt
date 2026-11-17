@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Banner
+import io.github.suqi8.coui.kmp.basic.BannerType
 import io.github.suqi8.coui.kmp.basic.Text
 
 @Composable
@@ -35,11 +36,13 @@ fun BannerDemo() {
         ) {
             // Demo artwork only: solid colors stand in for the banner images.
             val colors = listOf(Color(0xFF3D7BF7), Color(0xFFE5793B), Color(0xFF2FA572), Color(0xFF8A56E2))
+            // The demo page is wider than 600dp on most screens: pin the pager form.
             Banner(
                 pageCount = colors.size,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp),
+                type = BannerType.Pager,
             ) { page ->
                 BannerDemoPage(color = colors[page], title = "Banner ${page + 1}")
             }
@@ -48,12 +51,23 @@ fun BannerDemo() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
+                type = BannerType.Pager,
                 autoLoop = false,
                 pageMargin = 8.dp,
                 startItemWidth = 16.dp,
                 endItemWidth = 16.dp,
+                scalePages = true,
             ) { page ->
                 BannerDemoPage(color = colors[page], title = "Card ${page + 1}")
+            }
+            Banner(
+                pageCount = colors.size,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                type = BannerType.List,
+            ) { page ->
+                BannerDemoPage(color = colors[page], title = "Item ${page + 1}")
             }
         }
     }

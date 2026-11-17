@@ -55,7 +55,11 @@ Normally, you don't need to use it actively. See the [OverlayListPopup](../compo
 
 ## Overscroll Effects
 
-COUI provides easy-to-use overscroll effect modifiers for smoother and more natural scrolling experiences.
+COUI provides the overscroll of the COUI 17 scroll views (`COUIRecyclerView`, `COUINestedScrollView`) both as modifiers and as the theme's default `OverscrollEffect`:
+
+- A drag past the edge moves the content by `0.4 × (1 − |overscroll| / window size)` of the finger (`COUIPhysicalAnimationUtil.calcRealOverScrollDist`), so it starts at 40% and stiffens as it goes.
+- A release springs the content back on the `SpringOverScroller` RK4 spring (friction 12.19, tension 16 × 2.15 vertically / 16 × 3.2 horizontally, in origami units: slightly overdamped).
+- A fling that runs into the edge carries its leftover speed past it on the same spring; the overshoot saturates at 37.31% of the window (`calcOverFlingDecelerateDist`). A fling back towards the content while overscrolled scrolls the content; one further out is dropped.
 
 ### Vertical Overscroll
 
@@ -81,19 +85,12 @@ LazyRow(
 }
 ```
 
-### Custom Overscroll Parameters
-
-You can customize the overscroll effect parameters as needed:
+### Overscroll Parameters
 
 ```kotlin
 LazyColumn(
     modifier = Modifier.overScrollVertical(
         nestedScrollToParent = true, // Dispatch nested scroll events to parent, default true
-        scrollEasing = { distance, range -> // Custom easing, default effect is similar to HyperOS feel
-            // Example: DefaultParabolaScrollEasing(distance, range)
-        },
-        springStiff = 280f, // Spring stiffness, default 280f
-        springDamp = 1f,    // Spring damping, default 1f
         isEnabled = { platform() == Platform.Android || platform() == Platform.IOS } // Enable only on Android/iOS by default
     ),
     overscrollEffect = null // It is recommended to set this parameter to null to disable the default effect
@@ -105,14 +102,11 @@ LazyColumn(
 **Parameter Explanations:**
 
 * `nestedScrollToParent`: Boolean, whether to dispatch nested scroll events to parent. Default: `true`.
-* `scrollEasing`: Function `(distance: Float, range: Int) -> Float`, custom easing， default effect is similar to HyperOS feel.
-* `springStiff`: Float, spring stiffness for rebound. Default: `280f`.
-* `springDamp`: Float, spring damping for rebound. Default: `1f`.
 * `isEnabled`: Lambda, whether to enable overscroll. Default: only Android/iOS.
 
 ### Via OverscrollFactory (Theme-Level Integration)
 
-`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same spring-based overscroll physics as `overScrollVertical()`, but integrated at the theme level. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the COUI overscroll effect automatically — no extra modifier required.
+`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same overscroll physics as `overScrollVertical()`, but integrated at the theme level. Like `COUIRecyclerView` / `COUINestedScrollView` (`couiRecyclerViewEnableVibrator`, on by default), its effect also plays the scroll-edge vibration (`performHapticFeedback(307)`) when a fling runs into an edge or a drag is released while overscrolled; create `COUIOverscrollEffect(edgeHapticEnabled = false)` to turn it off. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the COUI overscroll effect automatically — no extra modifier required.
 
 ```kotlin
 // No modifier needed — COUITheme provides the overscroll effect automatically
@@ -156,6 +150,7 @@ LazyColumn(
 | :--- | :---: | :---: |
 | How it's applied | `Modifier` per component | Theme-level, automatic |
 | Spring physics | Identical | Identical |
+| Edge vibration (307) | ❌ (add `scrollEndHaptic()`) | ✅ |
 | Platforms enabled by default | Android, iOS | All platforms (via theme) |
 | Triggers when content does not overflow container | ✅ | ❌ |
 | Requires a modifier on each component | ✅ | ❌ |
@@ -164,16 +159,16 @@ LazyColumn(
 
 ## Scroll End Haptic Feedback (Modifier.scrollEndHaptic())
 
-COUI provides a `scrollEndHaptic` modifier to trigger haptic feedback when a scrollable container is flung to its start or end boundaries. This enhances the user experience by providing a tactile confirmation that the end of the list has been reached.
+COUI provides a `scrollEndHaptic` modifier to trigger haptic feedback when a scrollable container is flung to its start or end boundaries. By default it plays the COUI scroll-edge vibration (`performHapticFeedback(307)`, `EDGE_LIST_VIBRATE`) that `COUINestedScrollView` plays, falling back to the closest standard haptic off ColorOS. Scrollables using the theme's default `COUIOverscrollEffect` already vibrate at the edge; use this modifier with `overScrollVertical()` / `overScrollHorizontal()` or without COUI overscroll.
 
 ```kotlin
 LazyColumn(
     modifier = Modifier
         .fillMaxSize()
         // Add scroll end haptic feedback
-        .scrollEndHaptic(
-            hapticFeedbackType = HapticFeedbackType.TextHandleMove // Default value
-        )
+        .scrollEndHaptic()
+        .overScrollVertical(),
+    overscrollEffect = null
 ) {
     // List content
 }
@@ -181,7 +176,7 @@ LazyColumn(
 
 **Parameter Explanation:**
 
-* `hapticFeedbackType`: Specifies the type of haptic feedback to be performed when the scroll reaches its end. Defaults to `HapticFeedbackType.TextHandleMove`. You can use other types available in `androidx.compose.ui.hapticfeedback.HapticFeedbackType`.
+* `hapticFeedbackType`: A standard `HapticFeedbackType` to play instead, or `null` (the default) for the COUI scroll-edge vibration.
 
 ## Press Feedback Effects (Modifier.pressable())
 

@@ -150,7 +150,7 @@ The preference components live in the separate `coui-preference` artifact — ad
 
 ## 6. Custom color schemes
 
-The `Colors` constructor keeps Miuix's parameter order, so a fully custom scheme built with positional arguments carries over unchanged and keeps compiling. That said, consider deleting your custom palette entirely — `lightColorScheme()` / `darkColorScheme()` now return the native ColorOS 16 palette, which is usually what a COUI app wants; a real-world migration removed ~220 lines of custom colors this way.
+The `Colors` slots use the official COUI names (`couiColorXxx` → `xxx`), not Miuix's, so a fully custom scheme has to be ported to the new parameter names; the [upgrading guide](./upgrading.md) lists every old slot with its replacement. Consider deleting your custom palette entirely — `lightColorScheme()` / `darkColorScheme()` now return the native ColorOS 16 palette, which is usually what a COUI app wants; a real-world migration removed ~220 lines of custom colors this way.
 
 ## 7. Behavioral and visual differences
 

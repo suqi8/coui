@@ -94,8 +94,8 @@ CardInstructionPreference(
 
 | 参数             | 类型  | 默认值                                           |
 | ---------------- | ----- | ------------------------------------------------ |
-| containerColor   | Color | COUITheme.colorScheme.surfaceContainer           |
-| titleColor       | Color | COUITheme.colorScheme.onSurface                  |
-| summaryColor     | Color | COUITheme.colorScheme.onSurfaceSecondary         |
-| dotColor         | Color | COUITheme.colorScheme.onSurfaceContainerHigh     |
-| selectedDotColor | Color | COUITheme.colorScheme.onSurface                  |
+| containerColor   | Color | COUITheme.colorScheme.cardBackground           |
+| titleColor       | Color | COUITheme.colorScheme.labelPrimary                  |
+| summaryColor     | Color | COUITheme.colorScheme.labelSecondary         |
+| dotColor         | Color | COUITheme.colorScheme.labelTertiary     |
+| selectedDotColor | Color | COUITheme.colorScheme.labelPrimary                  |

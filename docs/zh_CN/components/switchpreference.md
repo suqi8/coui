@@ -95,7 +95,7 @@ SwitchPreference(
         Icon(
             imageVector = COUIIcons.Sort,
             contentDescription = "命令图标",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 12.dp)
         )
     }
@@ -115,7 +115,7 @@ SwitchPreference(
     endActions = {
         Text(
             text = if (locationEnabled) "已开启" else "已关闭",
-            color = COUITheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.labelTertiary,
             modifier = Modifier.padding(end = 6.dp)
         )
     }

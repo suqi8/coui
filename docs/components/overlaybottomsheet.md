@@ -11,7 +11,9 @@ popupHost: COUIPopupHost
 
 # OverlayBottomSheet
 
-`OverlayBottomSheet` is a bottom sheet component in COUI that slides up from the bottom of the screen. Supports swipe-to-dismiss gestures and custom styling.
+`OverlayBottomSheet` is the COUI panel (`COUIBottomSheetDialog`). On windows narrower than 600dp it slides up from the bottom edge; from 600dp on it floats centered, 64dp above the window bottom, with all four corners rounded and a scale (0.8 → 1) + fade entrance. Its width follows the COUI grid and never exceeds 540dp. The whole panel can be dragged; scrollable content scrolls first and drags the panel once it reaches the top.
+
+Dragging down dismisses the panel when released with a downward fling faster than 500px/s or past half of its height (content drags dismiss whenever the last move was downward). Pulling up stretches the panel by 0.2 of the finger travel, at most 28dp, and springs back.
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlayBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -64,15 +66,21 @@ Scaffold {
 | endAction                  | @Composable (() -> Unit)? | Optional composable for end action (e.g., submit button)       | null                                       | No       |
 | backgroundColor            | Color                     | Bottom sheet background color                                  | BottomSheetDefaults.backgroundColor() | No       |
 | enableWindowDim            | Boolean                   | Whether to enable dimming layer                                | true                                       | No       |
-| cornerRadius               | Dp                        | Corner radius of the top corners                               | BottomSheetDefaults.cornerRadius      | No       |
-| sheetMaxWidth              | Dp                        | Maximum width of the bottom sheet                              | BottomSheetDefaults.maxWidth          | No       |
+| cornerRadius               | Dp                        | Corner radius (top corners; all corners while floating)        | BottomSheetDefaults.cornerRadius      | No       |
+| sheetMaxWidth              | Dp                        | Extra width cap on top of the COUI grid and the 540dp cap      | BottomSheetDefaults.maxWidth          | No       |
 | onDismissRequest           | (() -> Unit)?             | Called when the user requests dismissal (outside tap or back)  | null                                       | No       |
 | onDismissFinished          | (() -> Unit)?             | Invoked after the hide animation completes; not invoked if the hide is cancelled mid-flight (e.g., `show` toggled back to true) | null      | No       |
 | outsideMargin              | DpSize                    | Bottom sheet external margin                                   | BottomSheetDefaults.outsideMargin     | No       |
 | insideMargin               | DpSize                    | Bottom sheet internal content margin                           | BottomSheetDefaults.insideMargin      | No       |
 | defaultWindowInsetsPadding | Boolean                   | Whether to apply default window insets padding                 | true                                       | No       |
 | dragHandleColor            | Color                     | Drag indicator color                                           | BottomSheetDefaults.dragHandleColor() | No       |
-| allowDismiss               | Boolean                   | Whether to allow dismissing the sheet via drag or back gesture | true                                       | No       |
+| showDragHandle             | Boolean                   | Whether to show the drag handle (COUI hides it on regular panels and keeps a 10dp gap) | false                    | No       |
+| handlePanel                | Boolean                   | COUI handle panel: shows the handle, fills the maximum height, rests half-expanded (portrait) or collapsed to 82dp (landscape) and settles between collapsed / half-expanded / expanded | false | No |
+| showInMaxHeight            | Boolean                   | Take the maximum height instead of wrapping the content        | false                                      | No       |
+| allowDismiss               | Boolean                   | Whether to allow dismissing the sheet via drag, back gesture or outside taps | true                         | No       |
+| dismissOnClickOutside      | Boolean                   | Whether tapping outside dismisses the sheet (with `allowDismiss`) | true                                    | No       |
+| draggable                  | Boolean                   | Whether the panel follows drag gestures                        | true                                       | No       |
+| enablePullUp               | Boolean                   | Whether the panel can be pulled above its resting position     | true                                       | No       |
 | enableNestedScroll         | Boolean                   | Whether to enable nested scrolling for the content             | true                                       | No       |
 | renderInRootScaffold       | Boolean                   | Whether to render the bottom sheet in the root (outermost) Scaffold. When true, it covers the full screen. When false, it renders within the current Scaffold's bounds | true | No |
 | backgroundModifier         | Modifier                  | Applied inside the sheet's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
@@ -87,10 +95,15 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 
 | Property Name | Type   | Description                          |
 | ------------- | ------ | ------------------------------------ |
-| cornerRadius  | Dp     | Default top corner radius (45.dp, COUI 17 `coui_round_corner_xxxxl_radius_large_16_1`) |
-| maxWidth      | Dp     | Default width cap (Dp.Infinity; width follows the COUI responsive grid) |
+| cornerRadius  | Dp     | Default corner radius (45.dp, COUI 17 `coui_round_corner_xxxxl_radius_large_16_1`) |
+| maxWidth      | Dp     | Default width cap (Dp.Infinity; width follows the COUI responsive grid and `PanelMaxWidth`) |
+| PanelMaxWidth | Dp     | Hard panel width cap (540.dp, `coui_panel_max_width`) |
+| LargeScreenWidthThreshold | Dp | Window width from which the panel floats centered (600.dp) |
+| LargeScreenMarginBottom | Dp | Bottom margin of a floating panel (64.dp, `coui_bottom_sheet_margin_bottom_default`) |
+| DragHandleShownHeight | Dp | Height of the handle area while shown (16.dp) |
+| DragHandleHiddenHeight | Dp | Gap kept above the content while the handle is hidden (10.dp, `coui_panel_drag_view_hide_height`) |
 | outsideMargin | DpSize | Default bottom sheet external margin (DpSize(0.dp, 0.dp)) |
-| insideMargin  | DpSize | Default bottom sheet internal margin (DpSize(24.dp, 0.dp); width = horizontal padding, height = bottom padding) |
+| insideMargin  | DpSize | Default bottom sheet internal margin (DpSize(0.dp, 0.dp): COUI panels add no padding, the content sets its own margins; width = horizontal padding, height = bottom padding) |
 
 #### BottomSheetDefaults Functions
 
@@ -100,6 +113,23 @@ The BottomSheetDefaults object provides default settings for the OverlayBottomSh
 | dragHandleColor() | Color       | Get default drag indicator color (`colorScheme.dragHandle`, COUI `?couiColorControls`) |
 
 ## Advanced Usage
+
+### Handle Panel
+
+```kotlin
+OverlayBottomSheet(
+    show = showSheet,
+    title = "Handle Panel",
+    handlePanel = true,
+    onDismissRequest = { showSheet = false },
+) {
+    LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp)) {
+        items(50) { Text("Item $it", modifier = Modifier.padding(vertical = 12.dp)) }
+    }
+}
+```
+
+The panel opens half-expanded; scrolling the list up first expands it, dragging down collapses it to the 82dp peek height or dismisses it.
 
 ### Blurred Material (COUI 17)
 
@@ -142,7 +172,7 @@ Scaffold {
     OverlayBottomSheet(
         show = showBottomSheet,
         title = "Custom Style",
-        backgroundColor = COUITheme.colorScheme.surfaceVariant,
+        backgroundColor = COUITheme.colorScheme.card,
         dragHandleColor = COUITheme.colorScheme.primary,
         outsideMargin = DpSize(16.dp, 0.dp),
         insideMargin = DpSize(32.dp, 16.dp),

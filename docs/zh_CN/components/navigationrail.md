@@ -2,6 +2,8 @@
 
 `NavigationRail` 是 COUI 中的侧边导航组件，适用于宽屏设备。提供不同的显示模式（仅图标、仅文本、图标和文本、仅选中项显示文本）。
 
+头部固定在侧栏顶部。导航项按 `COUINavigationRailMenuView` 的规则分布在侧栏中部：每项之前与最后一项之后各有一段间隔，间隔为 `max((侧栏高度 x 0.4 - 各项高度之和) / (项数 + 1), 8dp)`，整组垂直居中。整组不会上移到头部下方，放不下时侧栏可滚动。
+
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=navigationRail" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </div>
@@ -42,7 +44,7 @@ Row {
 
 ### 选中状态
 
-`NavigationRailItem` 都会自动处理选中项的视觉样式，选中项将显示粗体文本并高亮图标/文本。
+`NavigationRailItem` 都会自动处理选中项的视觉样式，选中项将高亮图标与文本。标签始终使用 Medium 字重（`sans-serif-medium`）。
 
 ## 属性
 
@@ -52,12 +54,12 @@ Row {
 | -------------------------- | -------------------------------------- | --------------------------------------------- | --------------------------------- | -------- |
 | modifier                   | Modifier                               | 应用于 NavigationRail 的修饰符                | Modifier                          | 否       |
 | header                     | @Composable (ColumnScope.() -> Unit)?  | 头部内容（通常是 FAB 或 Logo）                | null                              | 否       |
-| color                      | Color                                  | NavigationRail 的背景颜色                     | COUITheme.colorScheme.surface    | 否       |
+| color                      | Color                                  | NavigationRail 的背景颜色                     | COUITheme.colorScheme.backgroundWithCard    | 否       |
 | showDivider                | Boolean                                | 是否在 NavigationRail 和内容之间显示分割线    | true                              | 否       |
 | defaultWindowInsetsPadding | Boolean                                | 是否对 NavigationRail 应用默认的窗口边距      | true                              | 否       |
 | minWidth                   | Dp                                     | NavigationRail 的最小宽度                     | NavigationRailDefaults.MinWidth   | 否       |
 | mode                       | NavigationRailDisplayMode                  | 项目的显示模式                                | NavigationRailDisplayMode.IconAndText | 否       |
-| content                    | @Composable ColumnScope.()             | NavigationRail 的内容                         | -                                 | 是       |
+| content                    | @Composable () -> Unit                 | 侧栏的导航项；每个根组合项按侧栏全宽作为一项布局 | -                              | 是       |
 
 ### NavigationRailItem 属性
 
@@ -79,12 +81,14 @@ NavigationRailDefaults 对象提供了 NavigationRail 和 NavigationRailItem 组
 | 常量名                 | 类型     | 说明                         | 默认值 |
 | ---------------------- | -------- | ---------------------------- | ------ |
 | MinWidth               | Dp       | 导航栏最小宽度               | 72.dp  |
-| VerticalPadding        | Dp       | 内容垂直内边距               | 24.dp  |
-| HeaderSpacing          | Dp       | 头部后的间距                 | 24.dp  |
+| VerticalPadding        | Dp       | 头部距侧栏顶部的距离         | 24.dp  |
+| HeaderSpacing          | Dp       | 头部与第一项之间的最小间距   | 24.dp  |
+| MinItemSpacing         | Dp       | 每项之前的最小间隔（`coui_navigation_rail_root_view_divider_height`） | 8.dp |
+| ItemAreaFraction       | Float    | 导航项分布所占的侧栏高度比例 | 0.4f   |
 | IconSize               | Dp       | 图标尺寸                     | 24.dp  |
 | IconTextSpacing        | Dp       | 图标与文字间距               | 2.dp   |
-| ItemVerticalPadding    | Dp       | 每个项目的垂直内边距         | 12.dp  |
-| LabelFontSize          | TextUnit | 标签字号                     | 10.sp  |
+| ItemVerticalPadding    | Dp       | 图标上方与标签下方的间距（`coui_navigation_margin_vertical`） | 12.dp |
+| LabelFontSize          | Dp       | 标签字号，单位 dp（不随字体缩放） | 10.dp |
 | TextOnlyFontSize       | TextUnit | TextOnly 模式字号            | 14.sp  |
 | TextOnlyVerticalPadding| Dp       | TextOnly 模式垂直内边距      | 4.dp   |
 | SelectedPressedAlpha   | Float    | 选中项按压时的透明度         | 0.5f   |
@@ -139,7 +143,7 @@ NavigationRail(
 
 ```kotlin
 NavigationRail(
-    color = COUITheme.colorScheme.background,
+    color = COUITheme.colorScheme.backgroundElevated,
     minWidth = 96.dp
 ) {
     // ... items ...

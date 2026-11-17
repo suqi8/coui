@@ -44,22 +44,22 @@ fun TextDemo() {
                 ) {
                     Text(
                         text = "Title Text",
-                        style = COUITheme.textStyles.headline1,
+                        style = COUITheme.textStyles.headlineXS,
                         modifier = Modifier.padding(bottom = 16.dp),
                     )
                     Text(
                         text = "Subtitle Text",
-                        style = COUITheme.textStyles.subtitle,
+                        style = COUITheme.textStyles.buttonM,
                         modifier = Modifier.padding(bottom = 16.dp),
                     )
                     Text(
                         text = "Summary Text",
-                        style = COUITheme.textStyles.body2,
+                        style = COUITheme.textStyles.bodyM,
                         modifier = Modifier.padding(bottom = 16.dp),
                     )
                     Text(
                         text = "Main Text",
-                        style = COUITheme.textStyles.main,
+                        style = COUITheme.textStyles.bodyXL,
                         modifier = Modifier.padding(bottom = 16.dp),
                     )
                     Text(
@@ -69,7 +69,7 @@ fun TextDemo() {
                     )
                     Text(
                         text = "Secondary Text",
-                        color = COUITheme.colorScheme.onSurfaceContainerVariant,
+                        color = COUITheme.colorScheme.labelSecondaryVariant,
                     )
                 }
                 Card(

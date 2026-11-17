@@ -49,12 +49,12 @@ fun IconDemo() {
                     Icon(
                         imageVector = COUIIcons.Contacts,
                         contentDescription = "Personal",
-                        tint = COUITheme.colorScheme.onBackground,
+                        tint = COUITheme.colorScheme.labelPrimary,
                     )
                     Icon(
                         imageVector = COUIIcons.Settings,
                         contentDescription = "Settings",
-                        tint = COUITheme.colorScheme.onBackground,
+                        tint = COUITheme.colorScheme.labelPrimary,
                     )
                     Icon(
                         imageVector = COUIIcons.Edit,

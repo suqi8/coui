@@ -266,7 +266,7 @@ NavDisplay(
         cornerClipRadius = rememberNavSystemCornerRadius(),
         cornerClipMode = NavCornerClipMode.All,
         dimAmount = 0.32f,
-        backdropColor = COUITheme.colorScheme.background,
+        backdropColor = COUITheme.colorScheme.backgroundElevated,
     ),
 ) { /* ... */ }
 ```

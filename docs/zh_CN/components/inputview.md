@@ -28,7 +28,7 @@ InputView(
 
 ## 多行卡片
 
-设置 `singleLine = false` 使用 COUICardMultiInputView 形态：计数移动到卡片右下角（12sp），达到上限时以动画切换为错误色：
+设置 `singleLine = false` 使用 COUICardMultiInputView 形态：输入区固定 152dp 高，与内容多少无关（点按空白处会聚焦输入框）；计数位于卡片右下角（12sp，距卡片底 12dp），紧贴在文字区下方。达到上限时计数以动画切换为错误色，1 秒后恢复：
 
 ```kotlin
 var signature by remember { mutableStateOf("") }
@@ -76,7 +76,7 @@ InputView(
 | errorMessage         | String                    | 卡片下方的错误提示，为空时隐藏             | ""                                       | 否       |
 | cornerRadius         | Dp                        | 卡片圆角半径                               | InputViewDefaults.CornerRadius           | 否       |
 | colors               | InputViewColors           | 卡片、标题、计数与错误提示的颜色           | InputViewDefaults.inputViewColors()      | 否       |
-| textFieldColors      | TextFieldColors           | 内部输入框的颜色                           | TextFieldDefaults.textFieldColors()      | 否       |
+| textFieldColors      | TextFieldColors           | 内部输入框的颜色                           | InputViewDefaults.textFieldColors()      | 否       |
 | textStyle            | TextStyle                 | 输入文本样式                               | InputViewDefaults.textStyle()            | 否       |
 | keyboardOptions      | KeyboardOptions           | 键盘选项配置                               | KeyboardOptions.Default                  | 否       |
 | keyboardActions      | KeyboardActions           | 键盘操作配置                               | KeyboardActions.Default                  | 否       |
@@ -99,7 +99,7 @@ InputView(
 | FieldPaddingVertical        | Dp       | 无标题时输入区垂直内边距                     | 15.dp  |
 | FieldPaddingBottomWithTitle | Dp       | 有标题时输入区底部内边距（顶部为 0）         | 12.dp  |
 | MultiFieldPadding           | Dp       | 多行卡片输入区垂直内边距                     | 13.dp  |
-| MultiCountSpacing           | Dp       | 多行输入区与计数之间的间距                   | 4.dp   |
+| MultiInputHeight            | Dp       | 多行输入区固定高度                           | 152.dp |
 | MultiCountMarginBottom      | Dp       | 多行计数底部外边距                           | 12.dp  |
 | MultiCountFontSize          | TextUnit | 多行计数字号                                 | 12.sp  |
 | CountFontSize               | TextUnit | 单行行内计数字号                             | 10.sp  |
@@ -107,27 +107,29 @@ InputView(
 | ErrorPaddingTop             | Dp       | 错误提示顶部内边距                           | 4.dp   |
 | MaxLines                    | Int      | 默认最大行数                                 | 5      |
 
-`textStyle()` 返回默认输入文本样式（15sp 常规字重，COUI couiTextBodyL，行距同 `paragraph`）。
+`textStyle()` 返回默认输入文本样式（15sp 常规字重，COUI couiTextBodyL，行距同 `bodyL`）。
 
 `titleTextStyle()` 返回默认标题样式（16sp、中等字重，COUI couiTextAppearanceHeadline6）。
+
+`textFieldColors(labelColor)` 返回内部输入框的默认颜色：即 `TextFieldDefaults.textFieldColors()`，但提示文字使用 `labelTertiary`（couiColorHintNeutral，`#42000000` / `#4DFFFFFF`）——COUI 的 Input 系样式不设提示色，回落到主题提示色，而非 EditText 系样式的 54% 标签色。
 
 ### `inputViewColors()` 工厂
 
 | 参数               | 类型  | 默认值                                          |
 | ------------------ | ----- | ----------------------------------------------- |
-| cardColor          | Color | COUITheme.colorScheme.surfaceContainer         |
-| titleColor         | Color | COUITheme.colorScheme.onSurface                |
-| disabledTitleColor | Color | COUITheme.colorScheme.disabledOnSurface        |
-| countColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
+| cardColor          | Color | COUITheme.colorScheme.cardBackground         |
+| titleColor         | Color | COUITheme.colorScheme.labelPrimary                |
+| disabledTitleColor | Color | COUITheme.colorScheme.disabledNeutral        |
+| countColor         | Color | COUITheme.colorScheme.labelTertiary  |
 | errorColor         | Color | COUITheme.colorScheme.error                    |
 
 ## 行为
 
 - 内部输入框完全无装饰（`TextFieldMode.None`，COUIEditText MODE_BACKGROUND_NO_LINE）——无下划线也无描边，与 ColorOS 设置的卡片输入一致。
-- `maxCount > 0` 时输入被硬性限制在上限内；计数（如显示）为 `当前/上限`，达到上限时以 250ms 动画切换为错误色（同 COUICardMultiInputView）。
+- `maxCount > 0` 时输入被硬性限制在上限内；计数（如显示）为 `当前/上限`。单行计数达到上限时立即变为 `couiColorError`（COUIInputView）；多行计数以 250ms 动画切换为错误色并在 1 秒后恢复（COUICardMultiInputView）。
 - 设置非空 `errorMessage` 时在卡片下方显示提示（217ms 淡入 / 283ms 淡出，COUI ease 0.33, 0, 0.67, 1），输入框处于聚焦状态时同时播放 COUI 错误抖动。淡出过程中保留最后一条非空消息。
 - ColorOS 17 上两种卡片输入都由 COUIInputListSelectedItemLayout 绘制卡片，平滑圆角路径下使用 24dp 卡片列表圆角（coui_round_corner_xl_radius_normal_16_1）。
-- 输入区内边距对齐 COUICardSingleInputView：无标题上下各 15dp；有标题时顶部 0dp、底部 12dp；多行卡片为 13dp。
+- 输入区内边距对齐 COUICardSingleInputView：无标题上下各 15dp；有标题时顶部 0dp、底部 12dp。多行卡片在固定 152dp 的输入区内顶部留 13dp，有计数时文字区直接止于计数上沿（无计数时为 13dp + 12dp）。
 
 ## 进阶用法
 

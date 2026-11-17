@@ -103,7 +103,7 @@ Box(
 为避免此问题，请在 `onDraw` lambda 中绘制不透明背景：
 
 ```kotlin
-val backgroundColor = MaterialTheme.colorScheme.surface
+val backgroundColor = MaterialTheme.colorScheme.backgroundWithCard
 val backdrop = rememberLayerBackdrop {
     drawRect(backgroundColor) // 确保捕获到不透明背景
     drawContent()
@@ -315,7 +315,7 @@ import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
 Text(
     text = "磨砂文字",
-    style = COUITheme.textStyles.title1,
+    style = COUITheme.textStyles.displayS,
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
@@ -471,6 +471,11 @@ Box(
 最后以 overlay（深色）或 color dodge（浅色）混合 blend 颜色，算法取自 ColorOS 17 渲染器中的材质混合 shader。
 `MaterialBlurDefaults` 提供预设；把结果传给 coui-ui 对话框或底部抽屉的 `backgroundModifier` 插槽即可。
 
+原生窗口模糊用的是 Kawase 滤波（沿用 AOSP `KawaseBlurFilter` 的分趟方式：`r / 2` 拆成最多 4 趟 5 点采样），
+而不是高斯。`couiMaterialBlurRadius(r)` 把 COUI 半径换算成扩散程度相同的高斯半径（约 `0.433 * r / 0.45`，
+例如 200px 约为 192），`couiMaterialBlur` 内部已自动换算。与原生的 `KawaseBlur_Dither` 一样，模糊结果上会叠加
+±0.005 的抖动（`noiseCoefficient`，设为 0 关闭）。
+
 ```kotlin
 OverlayDialog(
     show = showDialog,
@@ -486,14 +491,17 @@ OverlayDialog(
 | --- | --- | --- | --- | --- |
 | `MaterialBlurDefaults.dialog(isDark)` | 200 | `#DC909090` / `#8C777777` | `#509F9F9F` / `#B2292929` | ColorDodge / Overlay |
 | `MaterialBlurDefaults.bottomSheet(isDark)` | 400 | `#DCC8C8C8` / `#A4515151` | `#376E6E6E` / `#B30F0F0F` | ColorDodge / Overlay |
+| `MaterialBlurDefaults.popup(isDark)` | 160 | `#99CDCDCD` / `#99262626` | `#BFEEEEEE` / `#99262626` | GlowOverlay（深浅相同） |
+| `MaterialBlurDefaults.popup(isDark, hdr = true)` | 160 | `#DC7A7A7A` / `#50262626` | `#C8868686` / `#990F0F0F` | ColorDodge / Overlay |
 
 | 参数 | 类型 | 说明 | 默认值 |
 | --- | --- | --- | --- |
 | backdrop | Backdrop | 提供表面背后内容的背景源 | - |
 | style | MaterialBlurStyle | 半径（原始 px）、mix 颜色、blend 颜色与混合模式 | - |
 | shape | Shape | 模糊的裁剪形状；在已裁剪的插槽内保持 `RectangleShape` | `RectangleShape` |
-| fraction | Float | 同比缩放半径与两种颜色的 alpha（COUI 抽屉随遮罩淡入淡出模糊） | 1f |
+| fraction | Float | 同比缩放半径（取整到像素）与两种颜色的 alpha（COUI 抽屉随遮罩淡入淡出模糊） | 1f |
 | enabled | Boolean | 是否绘制模糊 | true |
+| noiseCoefficient | Float | 叠加在模糊结果上的抖动，0 为关闭 | `MaterialBlurDefaults.NoiseCoefficient`（0.005f） |
 
 ## COUI 17 视图模糊
 
@@ -517,11 +525,19 @@ Box(Modifier.couiViewBlur(backdrop, ViewBlurDefaults.contentSecondaryButton(isDa
 | `topBar(TopBarMaterialTier.Default, isDark)` | 0 | 浅 `#66333333` ColorDodge；深 `#CC262626` SrcOver | 浅 `#99F5F5F5` Luminosity；深 `#B37F7F7F` Overlay |
 | `topBar(TopBarMaterialTier.Immersive, isDark)` | 25 | `#1A6E6E6E` ColorDodge | `#24F1F1F1` Luminosity（深浅相同） |
 | `topBar(TopBarMaterialTier.DefaultBlur, isDark)` | 20 | 同 `Default` | 同 `Default` |
+| `frameworkFab(themeColor, isDark, enabled)` | 10 | 同 `contentPrimaryButton` | `#1AFFFFFF`（浅）/ `#19FFFFFF`（深）Overlay；禁用时 `#19FFFFFF` Overlay |
+| `frameworkBottomBar(isDark)` | 25 | 浅 `#B3666666` ColorDodge；深 `#80666666` Overlay | 浅 `#99F5F5F5`；深 `#B3262626` Luminosity |
+| `searchBarNoMaterial(isDark)` | 0 | 浅 `#D6333333` ColorDodge；深 `#CC262626` SrcOver | 浅 `#66F5F5F5` Luminosity；深 `#B37F7F7F` Overlay |
+| `contentSegmentButton(isDark)` | 25 | 浅 `#7F333333` ColorDodge；深 `#7F7F7F7F` Overlay | 浅 `#99EFEFEF`；深 `#99262626` Luminosity |
+| `contentChipTab(isDark, selected, blur)` | 40（`blur = false` 时为 0） | 浅 ColorDodge；深 Luminosity | 浅 Luminosity；深 Overlay |
+| `NoEffect` | 0 | 透明 | 透明（不绘制） |
+
+`ViewBlurDefaults.interpolate(start, end, progress, blendModes = end)` 对应 `setViewBlurEffect` 的动画形式（搜索栏材质渐入、chip tab 选中切换）：半径线性插值，颜色按 `ArgbEvaluator` 插值（alpha 线性，RGB 在 gamma 2.2 线性空间），混合模式取自 `blendModes`。
 
 | 参数 | 类型 | 说明 | 默认值 |
 | --- | --- | --- | --- |
 | backdrop | Backdrop | 提供节点背后内容的背景源 | - |
-| style | ViewBlurStyle | 半径（原始 px）与两层颜色及其 Compose `BlendMode` | - |
+| style | ViewBlurStyle | 半径（原始 px）与两层颜色及其 Compose `BlendMode`。无效果的样式（半径 0、两层均为 `#00000000`）不绘制，与 COUI 清除效果一致 | - |
 | shape | Shape | 模糊的裁剪形状，即组件轮廓 | - |
 | enabled | Boolean | 是否绘制模糊 | true |
 

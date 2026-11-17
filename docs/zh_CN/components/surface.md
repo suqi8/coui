@@ -21,7 +21,7 @@ Surface(
     modifier = Modifier
         .size(200.dp)
         .padding(16.dp),
-    color = COUITheme.colorScheme.background,
+    color = COUITheme.colorScheme.surface,
     shape = RoundedCornerShape(16.dp),
     shadowElevation = 4.dp
 ) {
@@ -40,8 +40,8 @@ Surface(
 | --------------- | ---------------------- | ---------------------------- | --------------------------------- | -------- |
 | modifier        | Modifier               | 应用于 Surface 的修饰符      | Modifier                          | 否       |
 | shape           | Shape                  | Surface 的形状               | SurfaceDefaults.Shape             | 否       |
-| color           | Color                  | Surface 的背景颜色           | COUITheme.colorScheme.surface    | 否       |
-| contentColor    | Color                  | Surface 的内容颜色           | COUITheme.colorScheme.onSurface  | 否       |
+| color           | Color                  | Surface 的背景颜色           | COUITheme.colorScheme.backgroundWithCard    | 否       |
+| contentColor    | Color                  | Surface 的内容颜色           | COUITheme.colorScheme.labelPrimary  | 否       |
 | border          | BorderStroke?          | Surface 的边框样式           | null                              | 否       |
 | shadowElevation | Dp                     | Surface 的阴影高度           | SurfaceDefaults.ShadowElevation   | 否       |
 | content         | @Composable () -> Unit | Surface 内容区域的可组合函数 | -                                 | 是       |
@@ -77,7 +77,7 @@ Surface(
     onClick = { /* 处理点击事件 */ },
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.containerTheme,
     shadowElevation = 4.dp
 ) {
     Box(
@@ -126,7 +126,7 @@ Surface(
 Surface(
     modifier = Modifier.fillMaxWidth().padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     border = BorderStroke(1.dp, COUITheme.colorScheme.outline.copy(alpha = 0.2f)),
     shadowElevation = 4.dp
 ) {
@@ -135,12 +135,12 @@ Surface(
     ) {
         Text(
             text = "卡片标题",
-            style = COUITheme.textStyles.headline1
+            style = COUITheme.textStyles.headlineXS
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "这是卡片内容区域，可以放置各种组件和信息。Surface 组件提供了统一的视觉容器。",
-            style = COUITheme.textStyles.body1
+            style = COUITheme.textStyles.bodyXL
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -164,7 +164,7 @@ Surface(
     enabled = isEnabled,
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.surface.copy(alpha = 0.6f),
+    color = COUITheme.colorScheme.backgroundWithCard.copy(alpha = 0.6f),
     shadowElevation = 1.dp
 ) {
     Box(

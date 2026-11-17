@@ -27,21 +27,21 @@ COUI provides multiple predefined text styles:
 ```kotlin
 Text(
     text = "Title Text",
-    style = COUITheme.textStyles.headline1
+    style = COUITheme.textStyles.headlineXS
 )
 
 Text(
     text = "Subtitle Text",
-    style = COUITheme.textStyles.subtitle
+    style = COUITheme.textStyles.buttonM
 )
 Text(
     text = "Summary Text",
-    style = COUITheme.textStyles.body2
+    style = COUITheme.textStyles.bodyM
 )
 
 Text(
     text = "Main Text",
-    style = COUITheme.textStyles.main
+    style = COUITheme.textStyles.bodyXL
 )
 
 ```
@@ -51,7 +51,7 @@ Text(
 ```kotlin
 Text(
     text = "Default Color Text",
-    color = COUITheme.colorScheme.onBackground
+    color = COUITheme.colorScheme.labelPrimary
 )
 
 Text(
@@ -61,7 +61,7 @@ Text(
 
 Text(
     text = "Secondary Text",
-    color = COUITheme.colorScheme.onSurfaceContainerVariant
+    color = COUITheme.colorScheme.labelSecondaryVariant
 )
 ```
 
@@ -88,7 +88,7 @@ Text(
 | maxLines       | Int            | Maximum number of lines                 | Int.MAX_VALUE              | No       |
 | minLines       | Int            | Minimum number of lines                 | 1                          | No       |
 | onTextLayout   | ((TextLayoutResult) -> Unit)? | Callback after layout | null                       | No       |
-| style          | TextStyle      | Text style                              | COUITheme.textStyles.main | No       |
+| style          | TextStyle      | Text style                              | COUITheme.textStyles.bodyXL | No       |
 
 ### Text (AnnotatedString) Properties
 
@@ -112,7 +112,7 @@ Text(
 | minLines       | Int                            | Minimum number of lines                       | 1                          | No       |
 | inlineContent  | Map<String, InlineTextContent> | Mapping for inserting inline composables      | mapOf()                    | No       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | Callback after text layout is completed       | {}                         | No       |
-| style          | TextStyle                      | Text style                                    | COUITheme.textStyles.main | No       |
+| style          | TextStyle                      | Text style                                    | COUITheme.textStyles.bodyXL | No       |
 
 ## Advanced Usage
 
@@ -188,7 +188,7 @@ Text(
     text = "Scroll-tinted text",
     color = {
         lerp(
-            COUITheme.colorScheme.onSurface,
+            COUITheme.colorScheme.labelPrimary,
             COUITheme.colorScheme.primary,
             (scrollState.value / 500f).coerceIn(0f, 1f),
         )

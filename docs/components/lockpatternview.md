@@ -53,7 +53,7 @@ scope.launch { state.animateEnter() }
 | modifier              | Modifier                          | Modifier applied to the view (default 312x280dp) | Modifier                            | No       |
 | state                 | LockPatternState                  | Pattern, display mode and dot animations         | rememberLockPatternState()          | No       |
 | enabled               | Boolean                           | Whether touches are accepted                     | true                                | No       |
-| inStealthMode         | Boolean                           | Hide the path and selected dots (wrong still shows) | false                               | No       |
+| inStealthMode         | Boolean                           | Never draw the path; added dots get no ripple or glow | false                             | No       |
 | hapticFeedbackEnabled | Boolean                           | Tick per added dot, reject on a wrong pattern    | true                                | No       |
 | colors                | LockPatternViewColors             | Dot, success and error colors                    | LockPatternViewDefaults.colors()    | No       |
 | onPatternStart        | () -> Unit                        | A pattern starts                                 | {}                                  | No       |
@@ -65,9 +65,9 @@ scope.launch { state.animateEnter() }
 | Member                            | Description                                                                 |
 | --------------------------------- | --------------------------------------------------------------------------- |
 | pattern                           | The cells of the current pattern                                            |
-| displayMode                       | `Correct`, `Animate` or `Wrong`                                             |
-| setDisplayMode(mode, haptic)      | `Wrong` plays the 1s error flash (and a reject haptic for 2+ dots)          |
-| setPattern(mode, pattern)         | Replaces the pattern                                                        |
+| displayMode                       | `Correct`, `Animate`, `Wrong`, `FingerprintMatch` or `FingerprintNoMatch`   |
+| setDisplayMode(mode, haptic)      | `Wrong` plays the 1s error flash (and a reject haptic for 2+ dots); `FingerprintNoMatch` flashes all nine dots red |
+| setPattern(mode, pattern)         | Replaces the pattern (path and dots, without the glowing inner circles)     |
 | clearPattern()                    | Clears the pattern, after the error flash if it is running                  |
 | animateEnter()                    | Suspends while the entrance plays                                           |
 
@@ -103,4 +103,6 @@ scope.launch { state.animateEnter() }
 - A dot is hit within the middle 60% of its cell (`mHitFactor`). Jumping over a dot on a straight line adds it too.
 - Ripple: scale 1 -> 7 over 460ms (`COUIInEaseInterpolator`), alpha 0 -> peak -> 0. Inner circle: 230ms fade-in (`COUIEaseInterpolator`). Path end: 100ms snap (fast-out-slow-in).
 - Error flash: path and selected dots follow 1, 0.35, 1, 0.15, 0.5, 0 over 1s; the plain dot reappears once the flash drops below 0.1.
+- `FingerprintMatch` shows the pattern in the success color; `FingerprintNoMatch` uses the error color and runs the same 1s keyframes on the inner circles of all nine dots, without haptic.
+- Stealth mode never draws the path, even for a wrong pattern; a wrong flash still blinks the inner circles of the selected dots.
 - As in COUI, the path is colored with the success / error color, so there is no separate path color.

@@ -61,7 +61,7 @@ Scaffold(
 | floatingToolbarPosition      | ToolbarPosition                     | 显示悬浮工具栏的位置                         | ToolbarPosition.BottomCenter      | 否       |
 | snackbarHost                 | @Composable () -> Unit              | 承载通过 SnackbarHostState.showSnackbar 显示的 Snackbar 的容器，通常为 SnackbarHost | {}         | 否       |
 | popupHost                    | @Composable () -> Unit              | 用于显示弹出窗口的容器                       | \{ COUIPopupHost() }             | 否       |
-| containerColor               | Color                               | 脚手架的背景颜色                             | COUITheme.colorScheme.surface | 否       |
+| containerColor               | Color                               | 脚手架的背景颜色                             | COUITheme.colorScheme.backgroundWithCard | 否       |
 | contentWindowInsets          | WindowInsets                        | 传递给内容的窗口插入边距                     | WindowInsets.systemBars.union(WindowInsets.displayCutout) | 否       |
 | content                      | @Composable (PaddingValues) -> Unit | 脚手架的主要内容区域                         | -                                 | 是       |
 

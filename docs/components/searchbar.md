@@ -14,6 +14,7 @@ suggestions display.
 import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.CancelButton
+import io.github.suqi8.coui.kmp.basic.SearchBarType
 ```
 
 On ColorOS 17 the search capsule and the cancel button are both glass capsules with the top-bar
@@ -60,9 +61,13 @@ SearchBar(
 | inputField       | @Composable () -> Unit             | Search input field component                    | -                   | Yes      |
 | onExpandedChange | (Boolean) -> Unit                  | Callback when expanded state changes            | -                   | Yes      |
 | modifier         | Modifier                           | Modifier applied to the search bar              | Modifier            | No       |
-| insideMargin     | DpSize                             | Internal padding                                | SearchBarDefaults.InsideMargin | No       |
+| insideMargin     | DpSize                             | Internal padding; an unspecified width takes the responsive 16 / 24 / 40dp padding | SearchBarDefaults.InsideMargin | No       |
 | expanded         | Boolean                            | Whether to show search results                  | false               | No       |
-| outsideEndAction | @Composable (() -> Unit)?          | Action shown on the end when expanded, typically a `CancelButton` | null                | No       |
+| type             | SearchBarType                      | `Instant` (animated, functional button beside the capsule) or `NonInstant` (no animation, functional button inside the capsule) | SearchBarType.Instant | No       |
+| navigationButton | @Composable (() -> Unit)?          | 40dp button 12dp before the capsule; `NonInstant` only | null                | No       |
+| outerPrimaryButton | @Composable (() -> Unit)?        | 40dp button 12dp after the capsule              | null                | No       |
+| outerSecondaryButton | @Composable (() -> Unit)?      | Second outer button; an `Instant` bar shows an outer button only while it is the only one | null                | No       |
+| outsideEndAction | @Composable (() -> Unit)?          | Functional button shown when expanded, typically a `CancelButton`; `null` hides it | null                | No       |
 | content          | @Composable ColumnScope.() -> Unit | Content shown when expanded                     | -                   | Yes      |
 
 ### InputField Properties
@@ -75,13 +80,14 @@ SearchBar(
 | expanded          | Boolean                   | Whether in expanded state            | -                    | Yes      |
 | onExpandedChange  | (Boolean) -> Unit         | Callback when expanded state changes | -                    | Yes      |
 | modifier          | Modifier                  | Modifier applied to the input field  | Modifier             | No       |
-| label             | String                    | Placeholder text when empty          | ""                   | No       |
-| enabled           | Boolean                   | Whether search field is enabled      | true                 | No       |
-| material          | Boolean                   | Whether the capsule uses the COUI 17 glass material; `false` draws a flat `backgroundColor` capsule | true | No       |
+| label             | String                    | Hint shown while the query is empty, expanded or not; single line, ellipsized | ""                   | No       |
+| enabled           | Boolean                   | Whether search field is enabled; disabled, the hint and the default icon use the disabled colours | true                 | No       |
+| material          | Boolean                   | Whether the capsule uses the COUI 17 glass material; `false` draws a flat `backgroundColor` capsule | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | textStyle         | TextStyle?                | Style of text in search box          | null                 | No       |
 | colors            | SearchBarColors           | Colors of the input field            | SearchBarDefaults.searchBarColors() | No       |
 | leadingIcon       | @Composable (() -> Unit)? | Leading icon                         | default search icon  | No       |
-| trailingIcon      | @Composable (() -> Unit)? | Trailing icon                        | default clear button | No       |
+| innerPrimaryButton | @Composable (() -> Unit)? | Button in a 36dp slot inside the capsule, shown while the query is empty (the clear button takes its place once text is typed) | null | No       |
+| innerSecondaryButton | @Composable (() -> Unit)? | Second inner button after `innerPrimaryButton` | null              | No       |
 | interactionSource | MutableInteractionSource? | Interaction source                   | null                 | No       |
 | hints             | List<String>              | Rotating hints shown instead of `label` while the query is empty; empty keeps `label` | emptyList() | No       |
 | hintRepeatCount   | Int                       | Hint changes played before the rotation stops | Int.MAX_VALUE | No       |
@@ -95,15 +101,25 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 
 | Constant Name              | Type     | Description                                        | Default Value      |
 | -------------------------- | -------- | -------------------------------------------------- | ------------------ |
-| InsideMargin               | DpSize   | Internal padding of the SearchBar                  | DpSize(16.dp, 6.dp)|
+| InsideMargin               | DpSize   | Internal padding of the SearchBar (unspecified width: responsive) | DpSize(Dp.Unspecified, 6.dp)|
+| HorizontalPaddingCompact   | Dp       | Responsive horizontal padding, compact windows     | 16.dp              |
+| HorizontalPaddingMedium    | Dp       | Responsive horizontal padding, medium windows      | 24.dp              |
+| HorizontalPaddingExpanded  | Dp       | Responsive horizontal padding, expanded windows    | 40.dp              |
+| OuterButtonSize            | Dp       | Size of the navigation and outer buttons           | 40.dp              |
+| OuterButtonGap             | Dp       | Gap between the capsule and each outer button      | 12.dp              |
+| NavigationButtonEndGap     | Dp       | Gap after the navigation button                    | 12.dp              |
 | InputFieldMinHeight        | Dp       | Minimum height of the InputField background        | 40.dp              |
 | InputFieldFontSize         | TextUnit | Font size for the InputField text and label        | 15.sp              |
 | LeadingIconStartPadding    | Dp       | Start padding for default leading icon             | 12.dp              |
+| IconExpandLeadingIconStartPadding | Dp | Start padding for default leading icon while expanding out of a toolbar icon | 10.dp |
 | LeadingIconEndPadding      | Dp       | End padding for default leading icon               | 8.dp               |
-| TrailingIconStartPadding   | Dp       | Start padding for default clear button             | 4.dp               |
-| TrailingIconEndPadding     | Dp       | End padding for default clear button               | 4.dp               |
-| TrailingIconTouchTargetSize | Dp      | Circular touch target size of default clear button | 36.dp              |
-| TrailingIconVisualSize     | Dp       | Visual circle size of default clear button         | 18.dp              |
+| EditTextEndGap             | Dp       | Gap after the edit text                            | 4.dp               |
+| InnerButtonGap             | Dp       | Gap closing the inner buttons and around a non-instant functional button | 4.dp |
+| InnerButtonSize            | Dp       | Slot size of the clear button and the inner buttons | 36.dp             |
+| ClearButtonVisualSize      | Dp       | Visual circle size of default clear button         | 18.dp              |
+| FunctionalDividerWidth     | Dp       | Width of the divider before a non-instant functional button | 1.dp      |
+| FunctionalDividerHeight    | Dp       | Height of that divider                             | 16.dp              |
+| NonInstantCancelPadding    | PaddingValues | Padding of a CancelButton inside a non-instant capsule | PaddingValues(12.dp, 4.dp) |
 | CancelHeight               | Dp       | Height of the CancelButton capsule                 | 40.dp              |
 | CancelPaddingHorizontal    | Dp       | Horizontal label padding inside the CancelButton   | 16.dp              |
 | LiftAnimationSpec          | AnimationSpec<Float> | Animation of `Modifier.searchBarLift` (450ms, COUI move-ease) | tween(450) |
@@ -115,23 +131,28 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 | Method Name       | Type            | Description                             |
 | ----------------- | --------------- | --------------------------------------- |
 | searchBarColors() | SearchBarColors | Creates the default input field and cancel button colors |
+| responsiveHorizontalPadding(width, windowHeight) | Dp | The responsive horizontal padding for a bar of that width |
 
 ### SearchBarColors Class
 
 | Property Name   | Type  | Description                                                                       |
 | --------------- | ----- | --------------------------------------------------------------------------------- |
 | backgroundColor | Color | Capsule fill without the material, and the colour a collapsing capsule starts from (bar colour, `#FAFAFA` / `#1E1E1E`) |
-| labelColor      | Color | Label (hint) text color (onSurfaceSecondary, 54% black / 54% white)               |
-| iconColor       | Color | Tint of the default leading search icon (onSurfaceSecondary)                      |
-| clearIconColor  | Color | Fill of the default clear button circle (onSurfaceContainerHigh)                  |
-| cancelTextColor | Color | CancelButton label colour (onSurface, 90% black / 90% white)                      |
+| labelColor      | Color | Label (hint) text color (labelSecondary, 54% black / 54% white)               |
+| disabledLabelColor | Color | Label (hint) text color while disabled (disabledNeutral, couiColorLabelTertiary) |
+| iconColor       | Color | Tint of the default leading search icon (labelSecondary)                      |
+| disabledIconColor | Color | Tint of the default leading search icon while disabled (disabledNeutral)      |
+| clearIconColor  | Color | Fill of the default clear button circle (labelTertiary)                  |
+| cancelTextColor | Color | CancelButton label colour (labelPrimary, 90% black / 90% white)                      |
+| disabledCancelTextColor | Color | CancelButton label colour while disabled (disabledNeutral)             |
 
 ### CancelButton Properties
 
 `CancelButton` is the COUI 17 functional button: a 40dp glass capsule with a 14sp medium label.
 Inside `outsideEndAction` it follows the edit-state spring both ways: it scales between half and full
 size, its glass capsule comes out of (or dissolves into) a blur of up to 30px and is opaque for all
-but the first fifth of the progress, and its label fades with the progress.
+but the first fifth of the progress, and its label fades with the progress. In a `NonInstant` bar it
+sits inside the capsule as a plain text button (12dp x 4dp padding, no capsule or material).
 
 | Property Name | Type            | Description                                                   | Default Value                       | Required |
 | ------------- | --------------- | ------------------------------------------------------------- | ----------------------------------- | -------- |
@@ -139,7 +160,7 @@ but the first fifth of the progress, and its label fades with the progress.
 | modifier      | Modifier        | Modifier applied to the button                                | Modifier                            | No       |
 | text          | String          | Label of the button                                           | "Cancel"                            | No       |
 | enabled       | Boolean         | Whether the button responds to clicks                         | true                                | No       |
-| material      | Boolean         | Whether the capsule uses the COUI 17 glass material           | true                                | No       |
+| material      | Boolean         | Whether the capsule uses the COUI 17 glass material           | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | colors        | SearchBarColors | Label and fallback fill colours                               | SearchBarDefaults.searchBarColors() | No       |
 
 ## Advanced Usage
@@ -241,73 +262,92 @@ SearchBar(
 }
 ```
 
-### Expanding from the Toolbar
+### Inner Buttons
 
-On ColorOS 17 a search bar can live in the toolbar and expand out of its search icon
-(`COUISearchBar.showInToolBar`). The capsule starts as a circle on the icon, slides home while it
-widens, its text fades in and it blurs most half way; the cancel button flies out of the icon and
-merges with the capsule like a metaball, while the toolbar's own icons fade and shrink to 0.8
-and its title fades (the toolbar background stays). While the bar folds back it ignores touches;
-tapping the search icon then expands it again, and a touch in the last 5% of the collapse first
-completes the collapse at once.
-The expansion runs on a response 0.55 / bounce 0.2 spring (0.5 / 0.2 back), the toolbar icons on
-0.4 / 0.3 (0.5 / 0.2 back, growing from 0.5).
+`innerPrimaryButton` and `innerSecondaryButton` sit inside the capsule after the text, each in a
+36dp slot (COUI `setInnerPrimaryButton` / `setInnerSecondaryButton`), typically voice input or a
+scanner. They show while the query is empty; typing swaps them for the clear button at once, and
+clearing the text brings them back. A gesture that starts on one of them leaves the capsule's touch
+motion and spotlight alone.
 
 ```kotlin
-val searchState = rememberToolbarSearchState()
-var query by remember { mutableStateOf("") }
+InputField(
+    query = query,
+    onQueryChange = { query = it },
+    onSearch = {},
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    innerPrimaryButton = {
+        IconButton(
+            onClick = { /* voice input */ },
+            material = false,
+            minWidth = 36.dp,
+            minHeight = 36.dp,
+            cornerRadius = 18.dp,
+        ) {
+            Icon(imageVector = myMicIcon, contentDescription = "Voice input")
+        }
+    },
+)
+```
 
-Box {
-    ToolbarSearchAnchor(state = searchState) {
-        val titleColor = COUITheme.colorScheme.onSurface
-        TopAppBar(
-            title = "Title",
-            titleColor = titleColor.copy(alpha = titleColor.alpha * searchState.toolbarTitleAlpha),
-            navigationIcon = {
-                IconButton(modifier = Modifier.toolbarSearchItem(searchState), onClick = { /* back */ }) { /* ... */ }
-            },
-            actions = {
-                IconButton(
-                    modifier = Modifier.toolbarSearchEntry(searchState),
-                    onClick = { searchState.expand() },
-                ) {
-                    Icon(imageVector = COUIIcons.Basic.Search, contentDescription = "Search")
-                }
-            },
-        )
-    }
-    ToolbarFloatingSearchBar(
-        state = searchState,
-        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
-    ) {
-        SearchBar(
-            inputField = {
-                InputField(
-                    query = query,
-                    onQueryChange = { query = it },
-                    onSearch = {},
-                    expanded = searchState.expanded,
-                    onExpandedChange = { if (it) searchState.expand() else searchState.collapse() },
-                )
-            },
-            outsideEndAction = {
-                CancelButton(onClick = { query = ""; searchState.collapse() })
-            },
-            expanded = searchState.expanded,
-            onExpandedChange = { if (it) searchState.expand() else searchState.collapse() },
-        ) {}
-    }
+### Outer and Navigation Buttons
+
+`outerPrimaryButton` and `outerSecondaryButton` are 40dp buttons 12dp after the capsule, typically
+an `IconButton` (COUI `setOuterPrimaryButton` / `setOuterSecondaryButton`). On the default
+`SearchBarType.Instant` bar an outer button is shown only while it is the only one; it fades out
+and shrinks to 0.8 with a blur as the bar expands and the capsule takes its place, and grows back
+from 0.5 on a response 0.4 / bounce 0.3 spring.
+
+```kotlin
+SearchBar(
+    inputField = { /* InputField(...) */ },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    outerPrimaryButton = {
+        IconButton(onClick = { /* ... */ }) {
+            Icon(imageVector = myScanIcon, contentDescription = "Scan")
+        }
+    },
+    outsideEndAction = { CancelButton(onClick = { expanded = false }) },
+) {
+    // Search results
 }
 ```
 
-| API | Description |
-| --- | --- |
-| `rememberToolbarSearchState()` / `ToolbarSearchState` | Expanded state with `expand()` / `collapse()` |
-| `ToolbarSearchAnchor` | Hosts the toolbar content (the toolbar itself does not fade) |
-| `ToolbarSearchState.toolbarTitleAlpha` | Alpha to apply to the toolbar title colour while the bar is out |
-| `Modifier.toolbarSearchEntry(state)` | Marks the toolbar search icon the bar grows out of; hides it while the bar is out |
-| `Modifier.toolbarSearchItem(state)` | Fades and shrinks another toolbar icon along with the expansion |
-| `ToolbarFloatingSearchBar` | Hosts the `SearchBar` over the toolbar row; empty while the bar is folded away |
+### Non-instant Search
+
+`type = SearchBarType.NonInstant` is COUI's `TYPE_NON_INSTANT_SEARCH`: the bar switches state
+without animation, the functional button (`outsideEndAction`) moves inside the capsule while it is
+expanded, behind a 1dp x 16dp divider, and `navigationButton` (12dp before the capsule) and up to two
+outer buttons stay beside it.
+
+```kotlin
+SearchBar(
+    inputField = { /* InputField(...) */ },
+    expanded = expanded,
+    onExpandedChange = { expanded = it },
+    type = SearchBarType.NonInstant,
+    navigationButton = {
+        IconButton(onClick = { /* back */ }) { /* back icon */ }
+    },
+    outsideEndAction = { CancelButton(text = "Search", onClick = { /* submit */ }) },
+) {
+    // Search results
+}
+```
+
+### Responsive Padding
+
+With the default `insideMargin` the bar's horizontal padding follows its own width as COUI does
+(`setUseResponsivePadding(true)`): 16dp on compact, 24dp on medium and 40dp on expanded windows.
+Give `insideMargin` a specified width (for example `TabWithSearchLayoutDefaults.SearchBarInsideMargin`)
+to fix it.
+
+### Expanding from the Toolbar
+
+A search bar can also live in the toolbar and expand out of its search icon
+(`COUISearchBar.showInToolBar`); see [ToolbarSearch](./toolbarsearch).
 
 ### Rotating Hints
 
@@ -315,7 +355,8 @@ Box {
 hint shows at once, and every 3 seconds the current hint slides up and fades out over 250ms while
 the next one rises from below 150ms later. The travel is half the free height of the capsule plus
 5dp; the slide runs on `PathInterpolator(0.3, 0, 0.2, 1)` and the fade on the COUI ease curve.
-Typing hides the hints; clearing the query shows the current hint again and restarts the rotation.
+Typing hides the hints and stops the rotation; clearing the query shows the current hint again,
+still (the rotation resumes only when the field enters the composition again).
 Use `onHintChange` to remember the shown hint, for example to search for it on an empty submit.
 
 ```kotlin

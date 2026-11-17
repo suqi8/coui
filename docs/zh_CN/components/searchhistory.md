@@ -43,14 +43,14 @@ SearchHistory(
 | title                   | String              | 面板标题                     | -                                           | 是       |
 | items                   | List\<String\>      | 按显示顺序排列的历史记录     | -                                           | 是       |
 | onItemClick             | (String) -> Unit    | 以被点击的记录回调           | -                                           | 是       |
-| onClear                 | () -> Unit          | 清空动画结束后回调           | -                                           | 是       |
+| onClear                 | () -> Unit          | 清空动画开始时回调           | -                                           | 是       |
 | modifier                | Modifier            | 应用于面板的修饰符           | Modifier                                    | 否       |
 | expandable              | Boolean             | 折叠的记录是否可展开         | true                                        | 否       |
 | maxLinesFolded          | Int                 | 折叠时显示的行数             | SearchHistoryDefaults.MaxLinesFolded        | 否       |
 | maxLinesExpanded        | Int                 | 展开时显示的行数             | SearchHistoryDefaults.MaxLinesExpanded      | 否       |
 | clearContentDescription | String?             | 清空按钮的无障碍描述         | null                                        | 否       |
 | colors                  | SearchHistoryColors | 面板颜色                     | SearchHistoryDefaults.searchHistoryColors() | 否       |
-| insideMargin            | PaddingValues       | 面板内容四周的内边距         | SearchHistoryDefaults.InsideMargin          | 否       |
+| insideMargin            | PaddingValues       | 面板内容四周的内边距         | SearchHistoryDefaults.insideMargin()        | 否       |
 
 ### SearchHistoryDefaults
 
@@ -58,7 +58,11 @@ SearchHistory(
 | --------------------- | ------------- | ----------------------------------------- | ---------------------------------------------------- |
 | MaxLinesFolded        | Int           | Int.MAX_VALUE                             | maxRowFolded 默认值                                  |
 | MaxLinesExpanded      | Int           | 8                                         | DEFAULT_MAX_ROW_UNFOLDED                             |
-| InsideMargin          | PaddingValues | 起始 16、顶部 16、末端 16、底部 32（dp）  | coui_component_search_history_padding_*              |
+| HorizontalPadding     | Dp            | 16.dp                                     | coui_component_search_history_padding_start / _end   |
+| HorizontalPaddingWide | Dp            | 20.dp                                     | values-w600dp padding_start / _end                   |
+| WideWindowWidth       | Dp            | 600.dp                                    | values-w600dp 限定符                                 |
+| TopPadding            | Dp            | 16.dp                                     | coui_component_search_history_padding_top            |
+| BottomPadding         | Dp            | 32.dp                                     | coui_component_search_history_padding_bottom         |
 | TitleVerticalPadding  | Dp            | 7.dp                                      | coui_component_search_history_title_margin_vertical  |
 | ClearIconSize         | Dp            | 18.dp                                     | coui_component_search_history_delete_icon_size       |
 | ClearPressRadius      | Dp            | 24.dp                                     | coui_component_icon_bg 水波纹半径                    |
@@ -75,24 +79,25 @@ SearchHistory(
 | 方法                  | 类型                | 说明                                        |
 | --------------------- | ------------------- | ------------------------------------------- |
 | titleTextStyle()      | TextStyle           | subtitle，couiTextAppearanceButton 14sp 中粗 |
-| chipTextStyle()       | TextStyle           | footnote2，couiTextBodyXS 12sp              |
+| chipTextStyle()       | TextStyle           | bodyXS，couiTextBodyXS 12sp                 |
 | searchHistoryColors() | SearchHistoryColors | 创建面板颜色                                |
 
 ### `searchHistoryColors()` 工厂
 
 | 参数              | 类型  | 默认值                                   | COUI 来源               |
 | ----------------- | ----- | ---------------------------------------- | ----------------------- |
-| titleColor        | Color | COUITheme.colorScheme.onBackground       | couiColorPrimaryNeutral |
-| clearIconColor    | Color | COUITheme.colorScheme.onSurfaceSecondary | couiColorSecondNeutral  |
+| titleColor        | Color | COUITheme.colorScheme.labelPrimary       | couiColorPrimaryNeutral |
+| clearIconColor    | Color | COUITheme.colorScheme.labelSecondary | couiColorSecondNeutral  |
 | clearPressColor   | Color | COUITheme.colorScheme.press              | couiColorPress          |
 | chipColor         | Color | COUITheme.colorScheme.container8         | couiColorContainer8     |
-| chipContentColor  | Color | COUITheme.colorScheme.onSurface          | couiColorLabelPrimary   |
+| chipContentColor  | Color | COUITheme.colorScheme.labelPrimary          | couiColorLabelPrimary   |
 | toggleButtonColor | Color | COUITheme.colorScheme.container8         | couiColorContainer8     |
-| toggleIconColor   | Color | COUITheme.colorScheme.onSurfaceSecondary | couiColorSecondNeutral  |
+| toggleIconColor   | Color | COUITheme.colorScheme.labelSecondary | couiColorSecondNeutral  |
 
 ## 行为
 
 - 记录为 28dp 胶囊（12sp 文字，12dp 水平内边距），按 `COUIFlowLayout` 排布：放得下时以 8dp 间距加入当前行；比面板还宽的记录独占一行。
 - 展开时立即切换到展开高度，额外记录和收起按钮在 100ms 延迟后用 400ms 淡入，展开按钮用 250ms 淡出。收起时它们在 300ms 内淡出，然后面板收回。所有淡入淡出都使用 COUIMoveEaseInterpolator；不可见的记录无法点击。
 - 记录按 COUI 胶囊的方式按压（按压缩放 + couiColorPress 着色）；展开与收起按钮在 200ms 内缩放到 0.9，并在 340ms 内恢复。
-- 点击清空按钮后整个面板在 300ms 内淡出，然后调用 `onClear`。
+- 点击清空按钮会立即调用 `onClear`，同时整个面板在 300ms 内淡出；淡出期间仍显示被清空的记录，因此 `onClear` 里可以直接清空 `items`（COUI `setOnDeleteClickListener`）。
+- `SearchHistoryDefaults.insideMargin()` 左右内边距为 16dp，窗口宽度不小于 600dp 时为 20dp（COUI `values-w600dp`）。

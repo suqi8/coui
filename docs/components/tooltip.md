@@ -188,8 +188,4 @@ fun rememberTooltipState(
 | InfoMinWidth | Info window min width (inset included) | 80.dp |
 | windowInset(style, mode) | Transparent inset around the bubble for the arrow and shadow | 13 × 13dp; Info 16 × 13dp |
 | maxWidth(style) / minWidth(style, mode) | Per-style width limits | - |
-| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips: `primary` / `onPrimary`; others: `backgroundTop` / `onSurfaceSecondary`; title `onSurface`; action `primary` |
-
-## Deprecated
-
-The Miuix tooltip API — `TooltipBox(positionProvider, …)`, `TooltipBox(text, …)`, `RichTooltipBox`, `PlainTooltip`, `RichTooltip`, `RichTooltipColors`, `TooltipDefaults.rememberTooltipPositionProvider`, `caretShape` and the `PlainTooltip*` / `RichTooltip*` constants — still works but is deprecated. See the [upgrading guide](../guide/upgrading.md).
+| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips: `primary` / `onPrimary`; others: `backgroundTop` / `labelSecondary`; title `labelPrimary`; action `primary` |

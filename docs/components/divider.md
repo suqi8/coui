@@ -66,8 +66,8 @@ The DividerDefaults object provides default values for the divider components.
 | Constant Name | Type  | Description                                            | Default Value                      |
 | ------------- | ----- | ------------------------------------------------------ | ---------------------------------- |
 | Thickness     | Dp    | Default thickness of divider (COUI `coui_list_divider_height`). The stroke is rounded to whole pixels with a 1px floor, like COUIRecyclerView | 0.33.dp |
-| DividerColor  | Color | Default color of divider                               | COUITheme.colorScheme.dividerLine |
-| CardInset     | Dp    | Recommended horizontal inset inside a Card (COUI rule) | 16.dp                              |
+| DividerColor  | Color | Default color of divider                               | COUITheme.colorScheme.divider |
+| CardInset     | Dp    | End inset of the row dividers a CardListGroup draws (COUI rule) | 16.dp                              |
 
 ## Advanced Usage
 
@@ -97,17 +97,17 @@ Column {
 
 ### Divider Between Card Rows
 
-Following the COUI card list rule, place a divider only between adjacent rows inside a card
-(never after the last row) and inset it by `DividerDefaults.CardInset` on both sides. For rows
-with a leading icon, increase the start inset so the divider aligns with the title text start:
+Rows declared in a [CardListGroup](./cardlistgroup.md) get their dividers from the group: it draws
+one below every row but the last, starting at the row's title (past a leading icon) and ending
+`DividerDefaults.CardInset` before the card edge, and hides it around selected rows. Do not add
+`HorizontalDivider`s between such rows:
 
 ```kotlin
 Card {
-    BasicComponent(title = "First Row")
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = DividerDefaults.CardInset)
-    )
-    BasicComponent(title = "Second Row")
+    CardListGroup {
+        item { BasicComponent(title = "First Row") }
+        item { BasicComponent(title = "Second Row") }
+    }
 }
 ```
 

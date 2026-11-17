@@ -1,6 +1,6 @@
 # TopTips
 
-A tip banner shown at the top of a page, mirroring ColorOS's COUIDefaultTopTips: a rounded card holding an optional 24dp start icon, a 14sp message and one trailing element — either an accent colored action label or a round close button. Toggling visibility plays the COUI 250ms vertical scale animation.
+A tip banner shown at the top of a page, mirroring COUI 17 `COUIDefaultTopTips` (coui_default_toptips.xml): a rounded card holding an optional start icon, an optional 16sp medium title, a 13sp message, an optional solid primary action button and an optional close button — the action and close buttons can be shown together. The message can also scroll as a single-line marquee. Toggling visibility plays the COUI 17 expand / collapse animation (a 250ms height clip with a content fade).
 
 ## Import
 
@@ -32,10 +32,33 @@ TopTips(
         Icon(
             imageVector = COUIIcons.Basic.Search,
             contentDescription = null,
-            modifier = Modifier.size(24.dp),
         )
     },
     onClose = { visible = false },
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
+## Title, Action and Close Together
+
+```kotlin
+TopTips(
+    title = "Backup paused",
+    text = "Connect to Wi-Fi to continue backing up your photos",
+    startIcon = { Icon(imageVector = COUIIcons.Basic.Search, contentDescription = null) },
+    actionText = "Retry",
+    onAction = { /* handle action */ },
+    onClose = { /* hide the tips */ },
+    modifier = Modifier.fillMaxWidth(),
+)
+```
+
+## Marquee
+
+```kotlin
+TopTips(
+    text = "A message that is too long to fit on a single line keeps scrolling",
+    marquee = true,
     modifier = Modifier.fillMaxWidth(),
 )
 ```
@@ -49,48 +72,58 @@ TopTips(
 | text         | String                     | The message of the banner                              | -                               | Yes      |
 | modifier     | Modifier                   | Modifier applied to the banner                         | Modifier                        | No       |
 | visible      | Boolean                    | Whether the banner is visible (animated in/out)        | true                            | No       |
-| startIcon    | (@Composable () -> Unit)?  | Optional leading icon                                  | null                            | No       |
-| actionText   | String?                    | Optional label of the trailing action button           | null                            | No       |
+| title        | String?                    | Optional title above the message (16sp medium, at most 2 lines) | null                   | No       |
+| startIcon    | (@Composable () -> Unit)?  | Optional leading icon; its box (24dp, 36dp with a title) imposes its size on the icon | null | No |
+| actionText   | String?                    | Optional label of the action button                    | null                            | No       |
 | onAction     | (() -> Unit)?              | Callback when the action button is clicked             | null                            | No       |
-| onClose      | (() -> Unit)?              | Callback of the close button (shown without action)    | null                            | No       |
-| cornerRadius | Dp                         | Corner radius of the banner; unspecified = COUI 17 automatic (single-line capsule at weight 1.0, otherwise 28dp at weight 3.0, animated over 300ms) | Dp.Unspecified    | No       |
+| onClose      | (() -> Unit)?              | Callback of the close button; the button shows when not null | null                      | No       |
+| marquee      | Boolean                    | Scroll the message as a single line (`COUIMarqueeTopTips.startRoll`) | false             | No       |
+| cornerRadius | Dp                         | Corner radius of the banner; unspecified = COUI 17 automatic (a title-less single-line banner is a capsule at weight 1.0, otherwise 28dp at weight 3.0, animated over 300ms) | Dp.Unspecified | No |
 | colors       | TopTipsColors              | Color configuration                                    | TopTipsDefaults.topTipsColors() | No       |
 
 ### TopTipsDefaults
 
-| Constant        | Type | Default Value | COUI Source                          |
-| --------------- | ---- | ------------- | ------------------------------------ |
-| CornerRadius    | Dp   | 28.dp         | coui_toptips_view_radius (multi-line) |
-| Weight          | Float | 3.0          | `getMultiLineWeight` (weight_16_1_large) |
-| SingleLineCornerRadius | Dp | 72.dp     | couiRoundCornerFULL (single-line capsule) |
-| SingleLineWeight | Float | 1.0         | `getSingleLineWeight` (soft capsule) |
-| ContentPadding  | Dp   | 12.dp         | coui_toptips_view_btn_margin         |
-| VerticalPadding | Dp   | 12.dp         | coui_toptips_view_title_top_margin   |
-| IconSize        | Dp   | 24.dp         | coui_toptips_view_icon_btn_size      |
-| IconSpacing     | Dp   | 8.dp          | coui_toptips_view_title_start_margin |
-| TextMinHeight   | Dp   | 20.dp         | coui_toptips_view_title_min_height   |
+| Constant          | Type  | Default Value | COUI Source                          |
+| ----------------- | ----- | ------------- | ------------------------------------ |
+| CornerRadius      | Dp    | 28.dp         | coui_toptips_view_radius (multi-line) |
+| Weight            | Float | 3.0           | `getMultiLineWeight` (weight_16_1_large) |
+| SingleLineCornerRadius | Dp | 72.dp      | couiRoundCornerFULL (single-line capsule) |
+| SingleLineWeight  | Float | 1.0           | `getSingleLineWeight` (soft capsule) |
+| HorizontalPadding | Dp    | 16.dp         | coui_toptips_view_icon_start_margin / content_end_margin / btn_margin |
+| VerticalPadding   | Dp    | 12.dp         | coui_toptips_view_content_top_margin |
+| IconSize          | Dp    | 24.dp         | coui_toptips_view_icon_btn_size (icon without title, close button) |
+| TitleIconSize     | Dp    | 36.dp         | coui_toptips_view_title_icon_size    |
+| IconSpacing       | Dp    | 8.dp          | coui_toptips_view_content_start_margin |
+| TitleIconSpacing  | Dp    | 12.dp         | coui_toptips_view_title_icon_text_gap |
+| TextMinHeight     | Dp    | 20.dp         | coui_toptips_view_content_min_height |
+| TitleMinHeight    | Dp    | 22.dp         | coui_toptips_view_title_min_height   |
+| MarqueeVelocity   | Dp    | 25.dp         | coui_top_tips_scroll_speed (per second) |
 
 #### Methods
 
 | Method Name       | Type          | Description                                                                    |
 | ----------------- | ------------- | ------------------------------------------------------------------------------ |
-| textStyle()       | TextStyle     | Default text style of the message (14sp, `coui_toptips_view_default_text_size`) |
-| actionTextStyle() | TextStyle     | Default text style of the action button (14sp medium)                          |
+| titleTextStyle()  | TextStyle     | Text style of the title (couiTextHeadlineXS, 16sp medium)                      |
+| textStyle()       | TextStyle     | Text style of the message (couiTextBodyS, 13sp)                                |
+| actionTextStyle() | TextStyle     | Label style of the action button (Widget.COUI.Button.Small, 14sp medium)       |
 | topTipsColors()   | TopTipsColors | Creates the default color configuration (see below)                            |
 
 ### `topTipsColors()` factory
 
-| Parameter        | Type  | Default                                        | COUI Attribute        |
-| ---------------- | ----- | ---------------------------------------------- | --------------------- |
-| containerColor   | Color | #0A000000 light / #14FFFFFF dark               | couiColorContainer4   |
-| contentColor     | Color | COUITheme.colorScheme.onSurfaceSecondary      | couiColorSecondNeutral |
-| actionColor      | Color | COUITheme.colorScheme.primary                 | couiColorPrimaryText  |
-| closeButtonColor | Color | #29000000 light / #40FFFFFF dark               | couiColorControls     |
-| closeIconColor   | Color | Color.White                                    | coui_ic_toptips_close |
+| Parameter          | Type  | Default                                        | COUI Attribute          |
+| ------------------ | ----- | ---------------------------------------------- | ----------------------- |
+| containerColor     | Color | #0A000000 light / #1AFFFFFF dark               | couiColorContainer4     |
+| titleColor         | Color | COUITheme.colorScheme.labelPrimary                | couiColorLabelPrimary   |
+| contentColor       | Color | COUITheme.colorScheme.labelSecondary       | couiColorLabelSecondary |
+| actionColor        | Color | COUITheme.colorScheme.primary                  | couiColorContainerTheme (button fill) |
+| actionContentColor | Color | COUITheme.colorScheme.onPrimary                | couiColorLabelOnColor (button label) |
+| closeButtonColor   | Color | COUITheme.colorScheme.labelTertiary            | couiColorLabelTertiary  |
+| closeIconColor     | Color | Color.White                                    | ic_embedded_top_tips_close |
 
 ## Behavior
 
-- The trailing element is exclusive, matching COUIDefaultTopTipsView's button types: `actionText` shows the accent text button; otherwise `onClose` shows the round close button.
-- When the single-line message would collide with the action label, the label drops to its own end-aligned row below the text (COUIDefaultTopTipsView.isNeedMultiText); in that layout the start icon aligns with the first text line.
-- Toggling `visible` plays the COUICustomTopTips show/dismiss animation: a 250ms vertical scale pivoting at the center; the banner leaves the composition once the dismiss animation finishes.
-- The message uses 14sp (`coui_toptips_view_default_text_size`); the action label is 14sp medium.
+- The action button is a `Widget.COUI.Button.Small.ButtonNew` primary capsule (14sp medium, 12/4dp padding, 52x28dp minimum) with the material effect forced off. The action and the close button can be shown together (12dp apart, the close button 12dp from the end).
+- Without a title the start icon is 24dp and the buttons sit after the message, centred on it. Only when a start icon is shown and the message needs more than two lines next to the buttons does the action drop below the message, aligned with its start edge (8dp above, 12dp below), while the icon and the close button centre on the first two lines (`isNeedDefaultMultiTextWithoutTitle`).
+- With a title the start icon is 36dp (12dp gap) and the buttons are centred on the title + message block. When a start icon is shown and either text no longer fits on one line next to the buttons, the action drops below the message and the close button aligns with the title (`isNeedDefaultMultiTextWithTitle`).
+- With `marquee` the message is a single line that scrolls endlessly at 25dp/s with copies 80dp apart and 26dp fading edges when it does not fit (`COUIMarqueeTextView`); it never moves the action below it.
+- Toggling `visible` plays `COUIDefaultTopTips.animateExpand` / `animateCollapse`: the card is revealed from its top edge by a 250ms height clip (COUIEaseInterpolator) while the content fades with the same progress. The banner keeps its full height in the layout during the animation and leaves the composition once collapsed.

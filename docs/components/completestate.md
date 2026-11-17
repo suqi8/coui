@@ -39,17 +39,17 @@ CompleteState(
 | title         | String              | The title below the animation; hidden when empty        | -                                           | Yes      |
 | modifier      | Modifier            | Modifier applied to the component                       | Modifier                                    | No       |
 | subtitle      | String?             | The optional subtitle                                   | null                                        | No       |
-| type          | CompleteStateType   | Selects the animation                                   | CompleteStateType.Success                   | No       |
+| type          | CompleteStateType   | Selects the animation                                   | CompleteStateType.None                      | No       |
 | animate       | Boolean             | Whether to play the animation; false shows the last frame | true                                      | No       |
 | replayKey     | Any?                | Changing this value replays the animation               | null                                        | No       |
 | animationSize | Dp                  | Size of the animation                                   | CompleteStateDefaults.AnimationSize         | No       |
 | colors        | CompleteStateColors | Color configuration                                     | CompleteStateDefaults.completeStateColors() | No       |
-| titleStyle    | TextStyle           | Text style of the title                                 | COUITheme.textStyles.title3                 | No       |
-| subtitleStyle | TextStyle           | Text style of the subtitle                              | COUITheme.textStyles.footnote2              | No       |
+| titleStyle    | TextStyle           | Text style of the title                                 | COUITheme.textStyles.headlineM                 | No       |
+| subtitleStyle | TextStyle           | Text style of the subtitle                              | COUITheme.textStyles.bodyXS              | No       |
 
 ### CompleteStateType Enum
 
-`Success`, `Failed`, `Waiting`.
+`None` (no animation, the 100dp slot stays empty; COUI's default `completeType` 0), `Success`, `Failed`, `Waiting`.
 
 ### CompleteStateDefaults Object
 

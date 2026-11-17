@@ -43,14 +43,14 @@ With `maxLinesFolded`, records past that many lines are folded: a round expand b
 | title                   | String              | Panel title                                    | -                                           | Yes      |
 | items                   | List\<String\>      | History records in display order               | -                                           | Yes      |
 | onItemClick             | (String) -> Unit    | Called with the clicked record                 | -                                           | Yes      |
-| onClear                 | () -> Unit          | Called after the clear animation               | -                                           | Yes      |
+| onClear                 | () -> Unit          | Called as the clear animation starts           | -                                           | Yes      |
 | modifier                | Modifier            | Modifier applied to the panel                  | Modifier                                    | No       |
 | expandable              | Boolean             | Whether folded records can be expanded         | true                                        | No       |
 | maxLinesFolded          | Int                 | Lines shown while folded                       | SearchHistoryDefaults.MaxLinesFolded        | No       |
 | maxLinesExpanded        | Int                 | Lines shown while expanded                     | SearchHistoryDefaults.MaxLinesExpanded      | No       |
 | clearContentDescription | String?             | Accessibility label of the clear button        | null                                        | No       |
 | colors                  | SearchHistoryColors | Panel colors                                   | SearchHistoryDefaults.searchHistoryColors() | No       |
-| insideMargin            | PaddingValues       | Padding around the panel content               | SearchHistoryDefaults.InsideMargin          | No       |
+| insideMargin            | PaddingValues       | Padding around the panel content               | SearchHistoryDefaults.insideMargin()        | No       |
 
 ### SearchHistoryDefaults
 
@@ -58,7 +58,11 @@ With `maxLinesFolded`, records past that many lines are folded: a round expand b
 | --------------------- | ------------- | --------------------------------------------- | ---------------------------------------------------- |
 | MaxLinesFolded        | Int           | Int.MAX_VALUE                                 | maxRowFolded default                                 |
 | MaxLinesExpanded      | Int           | 8                                             | DEFAULT_MAX_ROW_UNFOLDED                             |
-| InsideMargin          | PaddingValues | start 16, top 16, end 16, bottom 32 (dp)      | coui_component_search_history_padding_*              |
+| HorizontalPadding     | Dp            | 16.dp                                         | coui_component_search_history_padding_start / _end   |
+| HorizontalPaddingWide | Dp            | 20.dp                                         | values-w600dp padding_start / _end                   |
+| WideWindowWidth       | Dp            | 600.dp                                        | the values-w600dp qualifier                          |
+| TopPadding            | Dp            | 16.dp                                         | coui_component_search_history_padding_top            |
+| BottomPadding         | Dp            | 32.dp                                         | coui_component_search_history_padding_bottom         |
 | TitleVerticalPadding  | Dp            | 7.dp                                          | coui_component_search_history_title_margin_vertical  |
 | ClearIconSize         | Dp            | 18.dp                                         | coui_component_search_history_delete_icon_size       |
 | ClearPressRadius      | Dp            | 24.dp                                         | coui_component_icon_bg ripple radius                 |
@@ -75,24 +79,25 @@ With `maxLinesFolded`, records past that many lines are folded: a round expand b
 | Method                | Type                | Description                                     |
 | --------------------- | ------------------- | ----------------------------------------------- |
 | titleTextStyle()      | TextStyle           | subtitle, couiTextAppearanceButton 14sp medium  |
-| chipTextStyle()       | TextStyle           | footnote2, couiTextBodyXS 12sp                  |
+| chipTextStyle()       | TextStyle           | bodyXS, couiTextBodyXS 12sp                     |
 | searchHistoryColors() | SearchHistoryColors | Creates the panel colors                        |
 
 ### `searchHistoryColors()` factory
 
 | Parameter         | Type  | Default                                  | COUI Source              |
 | ----------------- | ----- | ---------------------------------------- | ------------------------ |
-| titleColor        | Color | COUITheme.colorScheme.onBackground       | couiColorPrimaryNeutral  |
-| clearIconColor    | Color | COUITheme.colorScheme.onSurfaceSecondary | couiColorSecondNeutral   |
+| titleColor        | Color | COUITheme.colorScheme.labelPrimary       | couiColorPrimaryNeutral  |
+| clearIconColor    | Color | COUITheme.colorScheme.labelSecondary | couiColorSecondNeutral   |
 | clearPressColor   | Color | COUITheme.colorScheme.press              | couiColorPress           |
 | chipColor         | Color | COUITheme.colorScheme.container8         | couiColorContainer8      |
-| chipContentColor  | Color | COUITheme.colorScheme.onSurface          | couiColorLabelPrimary    |
+| chipContentColor  | Color | COUITheme.colorScheme.labelPrimary          | couiColorLabelPrimary    |
 | toggleButtonColor | Color | COUITheme.colorScheme.container8         | couiColorContainer8      |
-| toggleIconColor   | Color | COUITheme.colorScheme.onSurfaceSecondary | couiColorSecondNeutral   |
+| toggleIconColor   | Color | COUITheme.colorScheme.labelSecondary | couiColorSecondNeutral   |
 
 ## Behavior
 
 - Records are 28dp capsules (12sp text, 12dp horizontal padding) laid out like `COUIFlowLayout`: a record joins the line while it fits with 8dp gaps; a record wider than the panel takes a line of its own.
 - Expanding switches to the expanded height at once, fades the extra records and the fold button in over 400ms after 100ms and fades the expand button out over 250ms. Folding fades them out over 300ms and then shrinks the panel. All fades use COUIMoveEaseInterpolator; invisible records cannot be clicked.
 - Records press like COUI chips (press scale + couiColorPress tint); the expand and fold buttons scale to 0.9 over 200ms and back over 340ms.
-- Clicking the clear button fades the whole panel out over 300ms, then calls `onClear`.
+- Clicking the clear button calls `onClear` right away and fades the whole panel out over 300ms; the cleared records stay on screen during the fade, so `onClear` can empty `items` immediately (COUI `setOnDeleteClickListener`).
+- `SearchHistoryDefaults.insideMargin()` pads the sides by 16dp, or 20dp once the window is at least 600dp wide (COUI `values-w600dp`).

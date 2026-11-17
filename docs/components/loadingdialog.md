@@ -1,6 +1,6 @@
 # LoadingDialog
 
-`LoadingDialog` is a small always-centered dialog card with a rotating spinner and an optional message, mirroring ColorOS's rotating progress dialog (COUIRotatingDialogBuilder / `coui_progress_dialog_rotating.xml`): a 152dp-wide card with a 9dp corner radius, a 26dp spinner and 14sp label text.
+`LoadingDialog` is a small always-centered dialog card with a rotating spinner and an optional message, mirroring ColorOS's rotating progress dialog (COUIRotatingDialogBuilder / `coui_progress_dialog_rotating.xml`): a 152dp-wide card with the regular 45dp dialog corner radius, a 36dp spinner (28dp above, 12dp below) and 14sp secondary-label text. With a cancel button it takes the cancelable form (`COUIAlertDialog.Rotating.Cancelable`).
 
 Two variants are provided:
 
@@ -76,6 +76,19 @@ OverlayLoadingDialog(
 )
 ```
 
+## Cancelable Form
+
+Pass `cancelAction` to add a cancel button (`COUIRotatingDialogBuilder.setCancelButton`) and optionally a `title` (`setDialogTitle`). The card then takes the `COUIAlertDialog.Rotating.Cancelable` form: 180dp wide, no minimum height, the message 16dp above a one-button bar.
+
+```kotlin
+OverlayLoadingDialog(
+    show = showLoading,
+    title = "Downloading",
+    text = "Please wait...",
+    cancelAction = DialogButtonBarAction(text = "Cancel", onClick = { showLoading = false }),
+)
+```
+
 ## Properties
 
 ### OverlayLoadingDialog Properties
@@ -84,6 +97,7 @@ OverlayLoadingDialog(
 | -------------------- | ------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- | -------- |
 | show                 | Boolean       | Whether to show the dialog                                                                    | -                                      | Yes      |
 | modifier             | Modifier      | Modifier applied to the dialog                                                                | Modifier                               | No       |
+| backgroundModifier   | Modifier      | Applied inside the card's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
 | text                 | String?       | Message shown below the spinner                                                               | null                                   | No       |
 | textColor            | Color         | Message text color                                                                            | LoadingDialogDefaults.textColor()      | No       |
 | spinnerColor         | Color         | Spinner color                                                                                 | LoadingDialogDefaults.spinnerColor()   | No       |
@@ -92,6 +106,10 @@ OverlayLoadingDialog(
 | onDismissRequest     | (() -> Unit)? | Called when the user taps outside or presses back; when null the dialog cannot be dismissed   | null                                   | No       |
 | onDismissFinished    | (() -> Unit)? | Invoked after the hide animation completes                                                    | null                                   | No       |
 | renderInRootScaffold | Boolean       | Whether to render the dialog in the root (outermost) Scaffold. When true, the dialog covers the full screen. When false, it renders within the current Scaffold's bounds | true | No       |
+| materialStroke       | Boolean       | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred card carries; needs runtime shaders | false | No       |
+| title                | String?       | Title above the spinner (`setDialogTitle`)                                                    | null                                   | No       |
+| titleColor           | Color         | Title color                                                                                   | DialogDefaults.titleColor()            | No       |
+| cancelAction         | DialogButtonBarAction? | Cancel button (`setCancelButton`); switches to the cancelable form                   | null                                   | No       |
 
 ### WindowLoadingDialog Properties
 
@@ -101,6 +119,7 @@ Same as `OverlayLoadingDialog`, without `renderInRootScaffold` (the dialog alway
 | -------------------- | ------------- | --------------------------------------------------------------------------------------------- | -------------------------------------- | -------- |
 | show                 | Boolean       | Whether to show the dialog                                                                    | -                                      | Yes      |
 | modifier             | Modifier      | Modifier applied to the dialog                                                                | Modifier                               | No       |
+| backgroundModifier   | Modifier      | Applied inside the card's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
 | text                 | String?       | Message shown below the spinner                                                               | null                                   | No       |
 | textColor            | Color         | Message text color                                                                            | LoadingDialogDefaults.textColor()      | No       |
 | spinnerColor         | Color         | Spinner color                                                                                 | LoadingDialogDefaults.spinnerColor()   | No       |
@@ -108,21 +127,41 @@ Same as `OverlayLoadingDialog`, without `renderInRootScaffold` (the dialog alway
 | enableWindowDim      | Boolean       | Whether to enable dimming layer                                                               | true                                   | No       |
 | onDismissRequest     | (() -> Unit)? | Called when the user taps outside or presses back; when null the dialog cannot be dismissed   | null                                   | No       |
 | onDismissFinished    | (() -> Unit)? | Invoked after the hide animation completes                                                    | null                                   | No       |
+| materialStroke       | Boolean       | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred card carries; needs runtime shaders | false | No       |
+| title                | String?       | Title above the spinner (`setDialogTitle`)                                                    | null                                   | No       |
+| titleColor           | Color         | Title color                                                                                   | DialogDefaults.titleColor()            | No       |
+| cancelAction         | DialogButtonBarAction? | Cancel button (`setCancelButton`); switches to the cancelable form                   | null                                   | No       |
 
 ### LoadingDialogDefaults Object
 
-#### Properties
+#### Cancelable Form
+
+Pass `cancelAction` to add a cancel button (`COUIRotatingDialogBuilder.setCancelButton`) and optionally a `title` (`setDialogTitle`). The card then takes the `COUIAlertDialog.Rotating.Cancelable` form: 180dp wide, no minimum height, the message 16dp above a one-button bar.
+
+```kotlin
+OverlayLoadingDialog(
+    show = showLoading,
+    title = "Downloading",
+    text = "Please wait...",
+    cancelAction = DialogButtonBarAction(text = "Cancel", onClick = { showLoading = false }),
+)
+```
+
+## Properties
 
 | Property Name | Type | Description                                                       |
 | ------------- | ---- | ----------------------------------------------------------------- |
 | CardWidth     | Dp   | Card width, COUI `coui_spinner_layout_width` (152.dp)             |
+| CancelableCardWidth | Dp | Cancelable card width, COUI `coui_loading_alert_dialog_max_width_cancelable` (180.dp) |
 | CardMinHeight | Dp   | Minimum card height, COUI `coui_spinner_layout_min_height` (120.dp) |
-| CornerRadius  | Dp   | Card corner radius, COUI couiRoundCornerMRadius (9.dp)            |
-| SpinnerSize   | Dp   | Spinner diameter, COUI `coui_spinner_loading_anim_width` (26.dp)  |
+| CornerRadius  | Dp   | Card corner radius, the regular dialog radius `coui_round_corner_xxxxl_radius_large_16_1` (45.dp) |
+| SpinnerSize   | Dp   | Spinner size, COUI `coui_spinner_loading_anim_width` (36.dp)      |
+| SpinnerRingDiameter | Dp | Spinner ring diameter (33.43.dp)                            |
+| SpinnerStrokeWidth | Dp | Spinner stroke width (2.57.dp)                               |
 
 #### Functions
 
 | Function Name  | Return Type | Description                                    |
 | -------------- | ----------- | ---------------------------------------------- |
-| textColor()    | Color       | Default message color (primary label color)    |
-| spinnerColor() | Color       | Default spinner color (primary label color)    |
+| textColor()    | Color       | Default message color (`?couiColorLabelSecondary`) |
+| spinnerColor() | Color       | Default spinner color (the fixed `coui_rotating_loading.json` stroke) |

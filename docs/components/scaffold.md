@@ -61,7 +61,7 @@ Scaffold(
 | floatingToolbarPosition      | ToolbarPosition                     | Position to display the floating toolbar                                 | ToolbarPosition.BottomCenter      | No       |
 | snackbarHost                 | @Composable () -> Unit              | Container hosting Snackbars shown via SnackbarHostState.showSnackbar, typically a SnackbarHost | {}          | No       |
 | popupHost                    | @Composable () -> Unit              | Container for displaying popup windows                                   | \{ COUIPopupHost() }             | No       |
-| containerColor               | Color                               | Background color of the scaffold                                         | COUITheme.colorScheme.surface | No       |
+| containerColor               | Color                               | Background color of the scaffold                                         | COUITheme.colorScheme.backgroundWithCard | No       |
 | contentWindowInsets          | WindowInsets                        | Window insets passed to the content                                      | WindowInsets.systemBars.union(WindowInsets.displayCutout) | No       |
 | content                      | @Composable (PaddingValues) -> Unit | Main content area of the scaffold                                        | -                                 | Yes      |
 

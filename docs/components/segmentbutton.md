@@ -28,6 +28,8 @@ SegmentButton(
 
 Each segment is its label plus 12dp on each side, at least 52dp wide. Without a fixed width the control wraps its labels. With a fixed width (for example `Modifier.fillMaxWidth()`), or when the labels do not fit, the width is distributed like `COUISegmentButtonLayout.calculateChildrenWidths`: segments narrower than an equal share keep their width and the others split the rest equally.
 
+A fixed width is capped to the COUI responsive grid (`getResponsiveWidth`, on by default): 4 grid columns of the window on small screens (the full grid width), 6 on medium screens and 8 on large ones, centred in the given width. Pass `responsiveWidthEnabled = false` to fill the whole fixed width (`setResponsiveWidthEnabled(false)`).
+
 ```kotlin
 SegmentButton(
     items = listOf("All", "Allowed", "Not allowed"),
@@ -74,6 +76,7 @@ SegmentButton(
 | materialEffect        | Boolean             | Whether the COUI 17 material is drawn (see below); off by default, as in COUI | false                             | No       |
 | dragAnimationEnabled  | Boolean             | Whether the whole control follows the COUI 17 touch motion           | true                                       | No       |
 | hapticFeedbackEnabled | Boolean             | Whether dragging onto another segment ticks                          | true                                       | No       |
+| responsiveWidthEnabled | Boolean            | Whether a fixed width is capped to the 4 / 6 / 8-column responsive grid | true                              | No       |
 | height                | Dp                  | Control height, at least `MinHeight`                                 | SegmentButtonDefaults.Height               | No       |
 | padding               | Dp                  | Inset of the indicator from the track edge                           | SegmentButtonDefaults.Padding              | No       |
 | colors                | SegmentButtonColors | Color configuration                                                  | SegmentButtonDefaults.segmentButtonColors() | No      |
@@ -98,7 +101,7 @@ SegmentButton(
 | Method Name           | Type                 | Description                                                        |
 | --------------------- | -------------------- | ------------------------------------------------------------------ |
 | segmentButtonColors() | SegmentButtonColors  | Creates the default color configuration                            |
-| textStyle()           | TextStyle            | The label style, `couiTextButtonM` (14sp medium, `textStyles.subtitle`) |
+| textStyle()           | TextStyle            | The label style, `couiTextButtonM` (14sp medium, `textStyles.buttonM`) |
 | backdropSpec(isDark)  | MaterialBackdropSpec | The `TYPE_CONTENT_SEGMENT_BUTTON` backdrop blur: 25px, `#7F333333` color dodge + `#99EFEFEF` luminosity (light), `#7F7F7F7F` overlay + `#99262626` luminosity (dark) |
 
 ### SegmentButtonColors Class
@@ -107,8 +110,8 @@ SegmentButton(
 | ----------------------- | ----- | -------------------------------------------------------------------- | -------------------------- |
 | backgroundColor         | Color | Track fill                                                           | #0F000000 / #1FFFFFFF (dark) |
 | indicatorColor          | Color | Indicator fill                                                       | #B2FFFFFF / #33FFFFFF (dark) |
-| selectedTextColor       | Color | Label color of the selected segment                                  | `onSurface`                |
-| unselectedTextColor     | Color | Label color of the other segments                                    | `onSurface`                |
+| selectedTextColor       | Color | Label color of the selected segment                                  | `labelPrimary`                |
+| unselectedTextColor     | Color | Label color of the other segments                                    | `labelPrimary`                |
 | indicatorShadowColor    | Color | Shadow under the indicator: gradient centre (light), solid fill (dark) | #0D000000 / #14000000 (dark) |
 | indicatorShadowEndColor | Color | Light-scheme gradient edge of the indicator shadow                   | #03000000                  |
 

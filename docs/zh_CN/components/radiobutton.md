@@ -79,7 +79,7 @@ RadioButtonDefaults 对象提供了 RadioButton 组件的默认颜色配置。
 | disabledCenterColor     | Color | 禁用且选中状态时中心圆点颜色 |
 | animatingCenterColor    | Color | 切换动画播放期间的中心圆点颜色（默认 #FAFAFA，与 COUI AVD 一致） |
 
-默认颜色对齐 COUI 17（`coui_btn_radio_*.xml`）：外环为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；圆盘为 `primary`，禁用时为 `disabledPrimary`；中心圆点为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
+默认颜色对齐 COUI 17（`coui_btn_radio_*.xml`）：外环为 `labelTertiary`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；圆盘为 `primary`，禁用时为 `disable`；中心圆点为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
 
 ### 按压反馈
 

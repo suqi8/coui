@@ -65,7 +65,7 @@ BoxWithConstraints {
 | showToggleIcon      | Boolean                | Show the toggle icon                                               | true                             | No       |
 | paneWidth           | Dp                     | Pane width                                                         | SidePaneLayoutDefaults.PaneWidth | No       |
 | maskColor           | Color                  | Mask color at full opening                                         | SidePaneLayoutDefaults.maskColor | No       |
-| toggleIconColor     | Color                  | Toggle icon tint                                                   | colorScheme.onBackground         | No       |
+| toggleIconColor     | Color                  | Toggle icon tint                                                   | colorScheme.labelPrimary         | No       |
 | content             | @Composable () -> Unit | The main content                                                   | -                                | Yes      |
 
 ### SidePaneState
@@ -94,7 +94,7 @@ BoxWithConstraints {
 | ToggleIconGlyphSize       | Dp            | Icon inside the toggle button                        | 24.dp                |
 | ToggleIconMarginTop       | Dp            | `coui_side_pane_layout_icon_margin_top`              | 45.dp                |
 | ToggleIconMarginStart     | Dp            | `coui_side_pane_layout_icon_margin_start`            | 12.dp                |
-| maskColor                 | Color         | `coui_color_mask` (`colorScheme.windowDimming`)      | #33000000 / #99000000 |
+| maskColor                 | Color         | `coui_color_mask` (`colorScheme.mask`)      | #33000000 / #99000000 |
 | isSplitMode(width, windowHeight) | Boolean | Whether pane and content sit side by side        | width ≥ 600dp and windowHeight ≥ 480dp |
 
 ## Differences from COUI

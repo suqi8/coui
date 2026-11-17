@@ -68,7 +68,7 @@ CheckboxPreference(
     summary = "复选框位于起始端（默认）",
     checked = startChecked,
     onCheckedChange = { startChecked = it },
-    checkboxLocation = CheckboxLocation.Start // 默认值
+    checkboxLocation = CheckboxLocation.Start
 )
 ```
 
@@ -82,7 +82,7 @@ CheckboxPreference(
     summary = "复选框位于结束端",
     checked = endChecked,
     onCheckedChange = { endChecked = it },
-    checkboxLocation = CheckboxLocation.End
+    checkboxLocation = CheckboxLocation.End // 默认值
 )
 ```
 
@@ -104,7 +104,7 @@ CheckboxPreference(
 | checkboxColors   | CheckboxColors                     | 复选框控件的颜色配置  | CheckboxDefaults.checkboxColors()     | 否    |
 | startAction      | @Composable (() -> Unit)?          | 复选框后的自定义内容  | null                                  | 否    |
 | endActions       | @Composable (RowScope.() -> Unit)? | 复选框前的自定义内容  | null                                  | 否    |
-| checkboxLocation | CheckboxLocation                   | 复选框的位置      | CheckboxLocation.Start                | 否    |
+| checkboxLocation | CheckboxLocation                   | 复选框的位置      | CheckboxLocation.End                  | 否    |
 | bottomAction     | @Composable (() -> Unit)?          | 底部自定义内容     | null                                  | 否    |
 | insideMargin     | PaddingValues                      | 组件内部内容的边距   | BasicComponentDefaults.InsideMargin   | 否    |
 | cardListPosition | CardListPosition | 该行在卡片组（[CardListGroup](./card.md#cardlistgroup)）中的位置，圆角外边缘会获得额外内边距 | LocalCardListPosition.current（CardListGroup 之外为 None） | 否 |
@@ -126,7 +126,7 @@ CheckboxPreference(
     endActions = {
         Text(
             text = if (backupEnabled) "已启用" else "未启用",
-            color = COUITheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.labelTertiary,
             modifier = Modifier.padding(end = 6.dp)
         )
     }
@@ -149,7 +149,7 @@ CheckboxPreference(
         Icon(
             imageVector = COUIIcons.Contacts,
             contentDescription = null,
-            tint = COUITheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.labelPrimary
         )
     }
 )

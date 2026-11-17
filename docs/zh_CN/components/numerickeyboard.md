@@ -21,7 +21,8 @@ var input by remember { mutableStateOf("") }
 
 NumericKeyboard(
     onNumberClick = { input += it },
-    onRightKeyClick = { input = input.dropLast(1) }, // 默认右侧键为删除
+    rightKey = NumericKeyboardDefaults.deleteKey(), // 两个角默认都为空
+    onRightKeyClick = { input = input.dropLast(1) },
 )
 ```
 
@@ -33,6 +34,7 @@ NumericKeyboard(
 NumericKeyboard(
     onNumberClick = { input += it },
     leftKey = if (input.isNotEmpty()) NumericKeyboardDefaults.finishKey() else null,
+    rightKey = NumericKeyboardDefaults.deleteKey(),
     onLeftKeyClick = { submit(input) },
     onRightKeyClick = { input = input.dropLast(1) },
 )
@@ -60,7 +62,7 @@ NumericKeyboard(
 | enabled               | Boolean                    | 按键是否接受触摸                   | true                                 | 否   |
 | hapticFeedbackEnabled | Boolean                    | 按下时键盘振动                     | true                                 | 否   |
 | leftKey               | NumericKeyboardSideKey?    | 左下键，null 为空格                | null                                 | 否   |
-| rightKey              | NumericKeyboardSideKey?    | 右下键，null 为空格                | NumericKeyboardDefaults.deleteKey()  | 否   |
+| rightKey              | NumericKeyboardSideKey?    | 右下键，null 为空格                | null                                 | 否   |
 | pressEffect           | NumericKeyboardPressEffect | `Ripple` 或 `Light`                | Ripple                               | 否   |
 | keySize               | Dp                         | 按键直径                           | 68.dp                                | 否   |
 | colors                | NumericKeyboardColors      | 按键颜色                           | NumericKeyboardDefaults.colors()     | 否   |
@@ -71,11 +73,12 @@ NumericKeyboard(
 
 | 属性               | 类型         | 说明                                    | 默认值      |
 | ------------------ | ------------ | --------------------------------------- | ----------- |
-| icon               | ImageVector? | 图标，按数字颜色着色                    | null        |
+| icon               | ImageVector? | 图标，默认保留自身颜色，`tintIcon` 时着色 | null        |
 | text               | String?      | 粗体文字，无图标时使用                  | null        |
 | contentDescription | String?      | 无障碍描述                              | text        |
 | textColor          | Color        | 文字颜色；未指定时使用 `wordTextColor`  | Unspecified |
 | textSize           | Dp           | 文字大小                                | 16.dp       |
+| tintIcon           | Boolean      | 用数字颜色给图标着色（`deleteKey()` 已开启） | false   |
 
 ### NumericKeyboardDefaults
 
@@ -94,7 +97,7 @@ NumericKeyboard(
 
 | 方法               | 说明                                                                                      |
 | ------------------ | ----------------------------------------------------------------------------------------- |
-| colors()           | 设置页键盘：黑色 / #E6FFFFFF 数字，`surfaceContainer` / #8C3D3D3D 按键（放在页面 `surface` 上，而非卡片上），波纹 6% / 12%，文字 #2AD181   |
+| colors()           | 设置页键盘：黑色 / 白色数字，`cardBackground` / #8C3D3D3D 按键（放在页面 `backgroundWithCard` 上，而非卡片上），侧边键无底色，波纹 6% / 12%，文字 #2AD181   |
 | lockScreenColors() | 锁屏：白色数字，按键无填充，白色波纹 12%                                                  |
 | deleteKey()        | 删除侧边键                                                                                |
 | finishKey()        | “完成”侧边键                                                                              |

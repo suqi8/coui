@@ -103,12 +103,12 @@ SwitchDefaults 对象提供了 Switch 组件的尺寸和默认颜色配置。
 | 属性名                      | 类型  | 说明                         | 默认值 | 是否必须 |
 | --------------------------- | ----- | ---------------------------- | ------ | -------- |
 | checkedThumbColor           | Color | 选中状态时滑块的颜色         | `onPrimary`           | 是       |
-| uncheckedThumbColor         | Color | 未选中状态时滑块的颜色       | `onSecondary`         | 是       |
+| uncheckedThumbColor         | Color | 未选中状态时滑块的颜色       | `labelOnColor`         | 是       |
 | disabledCheckedThumbColor   | Color | 禁用且选中状态时滑块的颜色   | `disabledSliderThumb` | 是       |
 | disabledUncheckedThumbColor | Color | 禁用且未选中状态时滑块的颜色 | `disabledSliderThumb` | 是       |
 | checkedTrackColor           | Color | 选中状态时轨道的颜色         | `primary`             | 是       |
 | uncheckedTrackColor         | Color | 未选中状态时轨道的颜色       | `dragHandle`          | 是       |
-| disabledCheckedTrackColor   | Color | 禁用且选中状态时轨道的颜色   | `disabledPrimary`     | 是       |
+| disabledCheckedTrackColor   | Color | 禁用且选中状态时轨道的颜色   | `disable`     | 是       |
 | disabledUncheckedTrackColor | Color | 禁用且未选中状态时轨道的颜色 | `secondaryContainer`  | 是       |
 
 表中默认值为 `switchColors()` 使用的 `COUITheme.colorScheme` 色值；启用动态取色时，两种启用态滑块均使用 `onPrimary`。

@@ -7,6 +7,8 @@ A capsule shaped, checkable filter tag mirroring ColorOS's COUIChip in its selec
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.Chip
 import io.github.suqi8.coui.kmp.basic.ChipDefaults
+import io.github.suqi8.coui.kmp.basic.IconChip
+import io.github.suqi8.coui.kmp.basic.SuggestionChip
 ```
 
 ## Basic Usage
@@ -40,23 +42,46 @@ Chip(
 )
 ```
 
-## Single Selection Group
+## Close Icon, Count and Red Dot
+
+`onClose` shows the COUI close icon (`ic_chip_close`) at the end of the chip; tapping it calls `onClose` instead of `onClick` (`setCloseIconVisible` + `setOnCloseIconClickListener`). `count` draws a secondary-colored number 2dp after the label (`setCountText`), and `showRedDot` draws the 6dp hint red dot after the label (`setShowRedDot`).
 
 ```kotlin
-var selectedIndex by remember { mutableIntStateOf(0) }
+Chip(
+    selected = selected,
+    onClick = { selected = !selected },
+    label = "Downloads",
+    count = "12",
+    showRedDot = true,
+    onClose = { /* Remove the chip */ },
+)
+```
 
-Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    listOf("All", "Photos", "Videos").forEachIndexed { index, label ->
-        Chip(
-            selected = selectedIndex == index,
-            onClick = { selectedIndex = index },
-            label = label,
-        )
-    }
+## Suggestion Chip
+
+`SuggestionChip` is the smaller, non-checkable chip of `Widget.COUI.Chip.Suggestion` (also `Widget.COUI.Chip.Record` for search history): 28dp high, a 12sp label, a 14dp leading icon and a 12dp close icon. A tap only calls `onClick`.
+
+```kotlin
+SuggestionChip(
+    onClick = { /* Search again */ },
+    label = "Wallpaper",
+    onClose = { /* Delete the record */ },
+)
+```
+
+## Icon Chip
+
+`IconChip` is the 28dp round, icon-only chip of `Widget.COUI.Chip.Suggestion.Collapsable`, which `ChipGroup` uses for its expand / collapse button.
+
+```kotlin
+IconChip(onClick = { /* ... */ }) {
+    Icon(imageVector = COUIIcons.Basic.Search, contentDescription = "Search")
 }
 ```
 
-The 8dp spacing matches COUIChipGroup's default horizontal/vertical spacing.
+## Chip Groups
+
+Use [ChipGroup](./chipgroup) to wrap chips into rows 8dp apart, with COUI single / required selection and the collapsable mode.
 
 ## Component States
 
@@ -84,7 +109,10 @@ Chip(
 | label             | String                     | Text label (single line, ellipsized)       | -                         | Yes      |
 | modifier          | Modifier                   | Modifier applied to the chip               | Modifier                  | No       |
 | enabled           | Boolean                    | Whether the chip is enabled                | true                      | No       |
+| showRedDot        | Boolean                    | Whether to draw the hint red dot           | false                     | No       |
 | icon              | (@Composable () -> Unit)?  | Optional leading icon                      | null                      | No       |
+| onClose           | (() -> Unit)?              | Shows the close icon and handles its tap   | null                      | No       |
+| count             | String?                    | Count drawn after the label                | null                      | No       |
 | cornerRadius      | Dp                         | Corner radius of the capsule               | ChipDefaults.CornerRadius | No       |
 | minWidth          | Dp                         | Minimum width                              | ChipDefaults.MinWidth     | No       |
 | minHeight         | Dp                         | Minimum height                             | ChipDefaults.MinHeight    | No       |
@@ -93,6 +121,21 @@ Chip(
 | insideMargin      | PaddingValues              | Horizontal padding inside the chip         | ChipDefaults.InsideMargin | No       |
 | interactionSource | MutableInteractionSource?  | Interaction source of the chip             | null                      | No       |
 | indication        | Indication?                | Indication (press feedback is built in)    | null                      | No       |
+
+### SuggestionChip
+
+Same parameters as `Chip` without `selected`; the defaults are `cornerRadius = ChipDefaults.SuggestionCornerRadius` and `minHeight = ChipDefaults.SuggestionMinHeight`, with the `suggestionTextStyle()` label.
+
+### IconChip
+
+| Property          | Type                      | Description                    | Default Value             | Required |
+| ----------------- | ------------------------- | ------------------------------ | ------------------------- | -------- |
+| onClick           | () -> Unit                | Callback when clicked          | -                         | Yes      |
+| modifier          | Modifier                  | Modifier applied to the chip   | Modifier                  | No       |
+| enabled           | Boolean                   | Whether the chip is enabled    | true                      | No       |
+| colors            | ChipColors                | Color configuration            | ChipDefaults.chipColors() | No       |
+| interactionSource | MutableInteractionSource? | Interaction source of the chip | null                      | No       |
+| icon              | @Composable () -> Unit    | The 16dp icon                  | -                         | Yes      |
 
 ### ChipDefaults
 
@@ -106,12 +149,22 @@ Chip(
 | IconSize     | Dp            | 16.dp                            | coui_chip_selection_style_chip_icon_size       |
 | IconSpacing  | Dp            | 4.dp                             | coui_chip_selection_style_chip_icon_end_padding |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |
+| SuggestionMinHeight | Dp     | 28.dp                            | coui_chip_suggest_style_height                 |
+| SuggestionCornerRadius | Dp  | 14.dp                            | capsule of the 28dp height                     |
+| SuggestionIconSize | Dp      | 14.dp                            | coui_chip_suggest_style_chip_icon_size         |
+| CloseIconSize | Dp           | 12.dp                            | coui_chip_suggest_style_close_icon_size        |
+| CloseIconStartPadding | Dp   | 8.dp                             | coui_chip_suggest_style_close_icon_start_padding |
+| CloseIconEndPadding | Dp     | 8.dp                             | coui_chip_suggest_style_close_icon_end_padding |
+| CountSpacing | Dp            | 2.dp                             | COUIChipDrawable mCountMarginStart             |
+| CollapsableSize | Dp         | 28.dp                            | coui_chip_group_collapsable_button_size        |
+| CollapsableIconSize | Dp     | 16.dp                            | Widget.COUI.Chip.Suggestion.Collapsable chipIconSize |
 
 #### Methods
 
 | Method Name  | Type       | Description                                                                  |
 | ------------ | ---------- | ---------------------------------------------------------------------------- |
-| textStyle()  | TextStyle  | Default label style (COUITheme.textStyles.body2, COUI couiTextBodyM 14sp)    |
+| textStyle()  | TextStyle  | Default label style (COUITheme.textStyles.bodyM, COUI couiTextBodyM 14sp)    |
+| suggestionTextStyle() | TextStyle | Suggestion chip label (COUITheme.textStyles.bodyXS, couiTextBodyXS 12sp) |
 | chipColors() | ChipColors | Creates the color configuration for the chip                                 |
 
 ### `chipColors()` factory
@@ -121,11 +174,13 @@ Chip(
 | containerColor                 | Color | COUITheme.colorScheme.container8                  | uncheckedBackgroundColor          |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor            |
 | disabledContainerColor         | Color | COUITheme.colorScheme.container8                  | uncheckedDisabledBackgroundColor  |
-| selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor    |
-| contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor                |
+| selectedDisabledContainerColor | Color | COUITheme.colorScheme.disable       | checkedDisabledBackgroundColor    |
+| contentColor                   | Color | COUITheme.colorScheme.labelPrimary                   | uncheckedTextColor                |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                  |
 | disabledContentColor           | Color | COUITheme.colorScheme.disabledChipText            | uncheckedDisabledTextColor        |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor          |
+| countColor                     | Color | COUITheme.colorScheme.labelSecondary          | couiColorLabelSecondary (count)   |
+| closeIconColor                 | Color | COUITheme.colorScheme.labelSecondary          | `ic_chip_close` couiColorSecondNeutral |
 
 ## Behavior
 

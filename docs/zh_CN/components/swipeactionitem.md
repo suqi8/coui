@@ -12,6 +12,7 @@
 import io.github.suqi8.coui.kmp.basic.SwipeAction
 import io.github.suqi8.coui.kmp.basic.SwipeActionItem
 import io.github.suqi8.coui.kmp.basic.SwipeActionItemDefaults
+import io.github.suqi8.coui.kmp.basic.SwipeActionMenuStyle
 import io.github.suqi8.coui.kmp.basic.rememberSwipeActionItemState
 ```
 
@@ -30,7 +31,26 @@ SwipeActionItem(
     onDelete = { rows.remove(row) },
 ) {
     BasicComponent(
-        modifier = Modifier.background(COUITheme.colorScheme.surfaceContainer),
+        modifier = Modifier.background(COUITheme.colorScheme.cardBackground),
+        title = row,
+    )
+}
+```
+
+## 圆角矩形样式
+
+`menuStyle = SwipeActionMenuStyle.RoundRect` 对应 `COUISlideView.setMenuItemStyle(MENU_ITEM_ROUND_RECT_STYLE)`：每个操作各自是一个满行高的圆角矩形（圆角 `couiRoundCornerM` 12dp，最大为行高的一半），彼此间隔 4dp，距内容边缘 8dp，距行末端 12dp。越界滑动时菜单保持紧凑，不会拉开。
+
+```kotlin
+SwipeActionItem(
+    actions = listOf(SwipeAction(label = "Pin", color = COUITheme.colorScheme.primary)),
+    onActionClick = { scope.launch { state.close() } },
+    state = state,
+    onDelete = { rows.remove(row) },
+    menuStyle = SwipeActionMenuStyle.RoundRect,
+) {
+    BasicComponent(
+        modifier = Modifier.background(COUITheme.colorScheme.cardBackground),
         title = row,
     )
 }
@@ -64,6 +84,7 @@ scope.launch { state.close() }
 | onDelete                 | (() -> Unit)?           | 添加删除操作，删除动画结束后回调       | null                                             | 否       |
 | fastDeleteEnabled        | Boolean                 | 是否允许越界滑动删除（需要 `onDelete`） | false                                           | 否       |
 | deleteContentDescription | String?                 | 删除操作的无障碍描述                   | null                                             | 否       |
+| menuStyle                | SwipeActionMenuStyle    | 操作的绘制样式                         | SwipeActionMenuStyle.Rect                        | 否       |
 | actionMinWidth           | Dp                      | 每个操作的最小宽度                     | SwipeActionItemDefaults.ActionMinWidth           | 否       |
 | colors                   | SwipeActionItemColors   | 菜单颜色                               | SwipeActionItemDefaults.swipeActionItemColors()  | 否       |
 | textStyle                | TextStyle               | 操作文字样式                           | SwipeActionItemDefaults.textStyle()              | 否       |
@@ -78,6 +99,13 @@ scope.launch { state.close() }
 | color              | Color         | 自身底色；`Unspecified` 时使用 `colors.containerColor` | Color.Unspecified |
 | contentDescription | String?       | 无障碍描述                                        | label             |
 
+### SwipeActionMenuStyle
+
+| 取值      | COUI 来源                    | 说明                                               |
+| --------- | ---------------------------- | -------------------------------------------------- |
+| Rect      | MENU_ITEM_NORMAL_RECT_STYLE  | 从内容边缘到末端整块填充；越界滑动时各操作拉开     |
+| RoundRect | MENU_ITEM_ROUND_RECT_STYLE   | 每个操作一个圆角矩形，带间距与边距；越界时不拉开   |
+
 ### SwipeActionItemState
 
 | 成员         | 类型    | 说明                                                  |
@@ -91,16 +119,20 @@ scope.launch { state.close() }
 
 ### SwipeActionItemDefaults
 
-| 常量                | 类型 | 默认值 | COUI 来源                            |
-| ------------------- | ---- | ------ | ------------------------------------ |
-| ActionMinWidth      | Dp   | 80.dp  | coui_slideview_menuitem_width        |
-| ActionTextPadding   | Dp   | 12.dp  | coui_slide_view_text_padding         |
-| FastDeleteOverSlide | Dp   | 48.dp  | coui_slideview_over_slide_delete     |
-| FastDeleteQuickSlop | Dp   | 30.dp  | coui_slideview_quick_delete          |
+| 常量                  | 类型 | 默认值 | COUI 来源                              |
+| --------------------- | ---- | ------ | -------------------------------------- |
+| ActionMinWidth        | Dp   | 80.dp  | coui_slideview_menuitem_width          |
+| ActionTextPadding     | Dp   | 12.dp  | coui_slide_view_text_padding           |
+| FastDeleteOverSlide   | Dp   | 48.dp  | coui_slideview_over_slide_delete       |
+| FastDeleteQuickSlop   | Dp   | 30.dp  | coui_slideview_quick_delete            |
+| RoundRectCornerRadius | Dp   | 12.dp  | couiRoundCornerM（coui_round_corner_m） |
+| RoundRectActionGap    | Dp   | 4.dp   | coui_slide_view_menuitem_gap_size      |
+| RoundRectStartMargin  | Dp   | 8.dp   | coui_slide_view_menuitem_start_margin  |
+| RoundRectEndMargin    | Dp   | 12.dp  | coui_slide_view_menuitem_end_margin    |
 
 | 方法                    | 类型                  | 说明                                       |
 | ----------------------- | --------------------- | ------------------------------------------ |
-| textStyle()             | TextStyle             | body1，字号 15sp（coui_slide_view_text_size） |
+| textStyle()             | TextStyle             | bodyXL，字号 15sp（coui_slide_view_text_size） |
 | swipeActionItemColors() | SwipeActionItemColors | 创建菜单颜色                               |
 
 ### `swipeActionItemColors()` 工厂
@@ -113,8 +145,9 @@ scope.launch { state.close() }
 ## 行为
 
 - 水平移动超过触摸阈值、且水平位移大于垂直位移的两倍时，行才接管拖动（`COUISlideView.onInterceptTouchEvent`）；以垂直为主的拖动继续滚动父列表。收起状态下朝结束方向的拖动交给父容器，因此可放在水平分页器中。
-- 菜单范围内内容 1:1 跟手；越过菜单后按 `delta x (1 - min(越界 / (宽度 - 菜单宽), 1)) x 2 / 5` 阻尼，各操作随之拉开，第 `k` 个（从起始方向数）偏移 `k x 越界 / (数量 + 1)`。
+- 菜单范围内内容 1:1 跟手；越过菜单后按 `delta x (1 - min(越界 / (宽度 - 菜单宽), 1)) x 2 / 5` 阻尼；矩形样式下各操作随之拉开，第 `k` 个（从起始方向数）偏移 `k x 越界 / (数量 + 1)`。
 - 松手时，速度超过 1000 px/s 的甩动决定展开或收起；否则露出超过一半菜单即展开。以阻尼 1、刚度 200 的弹簧归位。开启快速删除时只按一半菜单的规则判断。
+- 圆角矩形样式下菜单宽度包含间距与两侧边距，一半菜单、阻尼与快速删除的阈值都按它计算。越界滑动时各操作仍紧贴内容。删除时若没有操作设置自身底色，单个圆角底色从内容边缘一直延伸到末端边距；有自身底色时各操作保持各自的圆角矩形。
 - 文字宽于 80dp 时，操作宽度扩展为 `文字 + 2 x 12dp`。
 - 菜单展开时点击内容会收起菜单。点击非删除操作后菜单保持展开，与 COUI 一致。
 - RTL 布局下菜单位于左侧，行向右滑动。

@@ -76,6 +76,7 @@ WindowDialog(
 | cornerRadius               | Dp?                    | 圆角半径覆写；为 null 时，居中呈现使用 DialogDefaults.CornerRadius，底部吸附时由屏幕圆角推导（限制在 32dp..48dp） | null | 否       |
 | backgroundModifier         | Modifier               | 作用在面板圆角裁剪内、内容之下；用于 COUI 17 模糊背景（同时把 `backgroundColor` 设为透明） | Modifier | 否       |
 | materialStroke             | Boolean                | 是否绘制 COUI 17 模糊对话框的材质描边（边缘光 + 内阴影）；需要 RuntimeShader。同时让内部的 `DialogButtonBar` 变为材质按钮 | false | 否       |
+| customContent              | (@Composable () -> Unit)? | 摘要与 `content` 之间的自定义视图槽位 (COUI `customPanel`), 下方留 8dp; 传入后摘要下方只留 4dp, 仅有标题的对话框也不再在标题下补 16dp | null | 否       |
 | content                    | @Composable () -> Unit | 对话框内容                                     | -                                      | 是       |
 
 ### DialogDefaults
@@ -85,7 +86,8 @@ WindowDialog(
 | 属性名        | 类型   | 说明                         |
 | ------------- | ------ | ---------------------------- |
 | CornerRadius  | Dp     | 对话框面板圆角（45.dp，`coui_round_corner_xxxxl_radius_large_16_1`） |
-| MaxWidth      | Dp     | 对话框内容最大宽度（392.dp） |
+| MaxWidth      | Dp     | 面板可见最大宽度（360.dp：`coui_dialog_max_width` 392dp 减去左右各 16dp 内缩） |
+| CustomContentPaddingBottom | Dp | `customContent` 下方内边距（8.dp，`coui_alert_dialog_customer_layout_padding_bottom`） |
 | MaxHeight     | Dp     | 面板最大高度（600.dp：`coui_dialog_max_height` 632dp 减去 32dp 底部边距） |
 | outsideMargin | DpSize | 对话框外部默认边距（16, 32）；高度为无导航栏时的底部间距 |
 | MarginBottomWithNavigationBar | Dp | 三键导航下底部对话框与屏幕底边的间距（60.dp） |
@@ -122,7 +124,7 @@ TextButton(
 
 ### 呈现方式覆写
 
-默认情况下，对话框在紧凑窗口中吸附于底部，在大窗口（>= 840dp x 480dp）中居中显示。可通过 `largeScreen`、`cornerRadius` 和 `maxWidth` 覆写呈现方式：
+默认情况下，对话框在紧凑窗口中吸附于底部，在大窗口（任一方向 >= 840dp x 480dp，不含宽度小于 960dp 的高竖屏窗口）中居中显示。可通过 `largeScreen`、`cornerRadius` 和 `maxWidth` 覆写呈现方式：
 
 ```kotlin
 var showDialog by remember { mutableStateOf(false) }

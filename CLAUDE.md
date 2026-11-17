@@ -146,8 +146,8 @@ object ButtonDefaults {
     fun buttonColors(                       // Color factories must be @Composable
         color: Color = COUITheme.colorScheme.secondaryVariant,
         disabledColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
-        contentColor: Color = COUITheme.colorScheme.onSecondaryVariant,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledNeutral,
     ): ButtonColors = remember(color, disabledColor, contentColor, disabledContentColor) {
         ButtonColors(
             color = color,
@@ -179,7 +179,7 @@ data class ButtonColors(
 - **`@Immutable`** on color/style data classes
 - **Shapes**: Use `RoundedCornerShape(cornerRadius)` for rounded corners and `CircleShape` for capsules from `androidx.compose.foundation.shape`
 - **Theme colors**: Always use `COUITheme.colorScheme.*`, never hardcode colors
-- **Text styles**: Always use `COUITheme.textStyles.*` (e.g., `COUITheme.textStyles.button`)
+- **Text styles**: Always use `COUITheme.textStyles.*` (e.g., `COUITheme.textStyles.buttonL`)
 
 ## Critical Constraints
 

@@ -50,10 +50,9 @@ fun BasicComponentDemo() {
                     summary = "A brief introduction",
                     startAction = {
                         Icon(
-                            modifier = Modifier.padding(end = 16.dp),
                             imageVector = COUIIcons.Contacts,
                             contentDescription = "Avatar Icon",
-                            tint = COUITheme.colorScheme.onBackground,
+                            tint = COUITheme.colorScheme.labelPrimary,
                         )
                     },
                     onClick = { /* Handle click event */ },

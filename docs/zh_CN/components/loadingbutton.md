@@ -62,7 +62,7 @@ LoadingButton(
 | minHeight         | Dp                        | 按钮最小高度                             | ButtonDefaults.MinHeight          | 否   |
 | colors            | TextButtonColors          | 颜色配置                                 | ButtonDefaults.textButtonColors() | 否   |
 | insideMargin      | PaddingValues             | 按钮内部边距                             | ButtonDefaults.InsideMargin       | 否   |
-| textStyle         | TextStyle                 | 标签、加载文案与圆点字形的文字样式（小尺寸档用 `ButtonDefaults.textStyleSmall()`） | COUITheme.textStyles.button | 否 |
+| textStyle         | TextStyle                 | 标签、加载文案与圆点字形的文字样式（小尺寸档用 `ButtonDefaults.textStyleSmall()`） | COUITheme.textStyles.buttonL | 否 |
 | material          | ButtonMaterial            | COUI 17 材质层，见 [Button](./button)    | ButtonMaterial.Auto               | 否   |
 | materialBackdrop  | Boolean                   | 材质是否可用背景模糊替代填充，见 [Button](./button#背景模糊) | true | 否   |
 | interactionSource | MutableInteractionSource? | 按钮的交互源                             | null                              | 否   |
@@ -79,6 +79,6 @@ LoadingButton(
 
 - `isLoading` 为 `true` 时标签隐藏但仍参与测量，按钮宽度不会跳变；点击被吞掉，COUI 按压反馈（缩放 + 着色）仍会播放。
 - 三个圆点按线性曲线以 20% -> 50% -> 100% -> 50% -> 20% 的透明度脉动；相邻圆点错峰 333ms，整个 1332ms 波浪循环播放，与 COUILoadingButton 的动画器时序一致。
-- 设置 `loadingText` 后，加载态显示该文案及其后三个逐点动画的 "." 字形，替代纯圆点指示（COUIButton `isShowLoadingText`）。
+- 设置 `loadingText` 后，加载态显示该文案及其后三个逐点动画的 "." 字形，替代纯圆点指示（COUIButton `isShowLoadingText`）。当文案加三个点宽于按钮去掉内边距后的宽度时，改画纯圆点（`COUILoadingButton.onDraw`）。
 - 圆点使用按钮内容色绘制，与 COUILoadingButton 使用标签画笔一致。
 - 几何、颜色与 COUI 17 按压反馈继承自 `Button`：随高度的胶囊圆角、132dp 最小宽度、单行标签。

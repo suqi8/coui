@@ -66,8 +66,8 @@ DividerDefaults 对象提供了分割线组件的默认值。
 | 常量名       | 类型  | 说明                                     | 默认值                             |
 | ------------ | ----- | ---------------------------------------- | ---------------------------------- |
 | Thickness    | Dp    | 分割线的默认厚度（COUI `coui_list_divider_height`）。绘制时取整到整像素且不小于 1px，与 COUIRecyclerView 一致 | 0.33.dp |
-| DividerColor | Color | 分割线的默认颜色                         | COUITheme.colorScheme.dividerLine |
-| CardInset    | Dp    | 卡片内行间分割线的推荐水平缩进（COUI 规则） | 16.dp                              |
+| DividerColor | Color | 分割线的默认颜色                         | COUITheme.colorScheme.divider |
+| CardInset    | Dp    | CardListGroup 所绘行间分隔线的末端缩进（COUI 规则） | 16.dp                              |
 
 ## 进阶用法
 
@@ -97,16 +97,15 @@ Column {
 
 ### 卡片内行间分割线
 
-遵循 COUI 卡片列表规则：仅在卡片内相邻两行之间放置分割线（末行之后不放），两侧缩进
-`DividerDefaults.CardInset`；带前置图标的行应加大起始缩进，使分割线与标题文本起点对齐：
+在 [CardListGroup](./cardlistgroup.md) 中声明的行由分组绘制分隔线：除末行外每行下方一条，起点对齐该行标题（越过前置图标），
+终点距卡片边缘 `DividerDefaults.CardInset`，选中行上下隐藏。这类行之间不要再手工插入 `HorizontalDivider`：
 
 ```kotlin
 Card {
-    BasicComponent(title = "第一行")
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = DividerDefaults.CardInset)
-    )
-    BasicComponent(title = "第二行")
+    CardListGroup {
+        item { BasicComponent(title = "第一行") }
+        item { BasicComponent(title = "第二行") }
+    }
 }
 ```
 

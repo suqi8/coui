@@ -66,7 +66,7 @@ Box(
     modifier = Modifier
         .size(120.dp, 80.dp)
         .squircleBackground(
-            color = COUITheme.colorScheme.primaryVariant,
+            color = COUITheme.colorScheme.primary,
             cornerRadius = 20.dp,
         ),
 )
@@ -81,7 +81,7 @@ Box(
 
 ```kotlin
 Modifier.squircleBackground(
-    color = COUITheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primary,
     cornerRadius = 16.dp,
 )
 ```
@@ -94,7 +94,7 @@ Modifier.squircleBackground(
 
 ```kotlin
 Modifier.squircleSurface(
-    color = COUITheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primary,
     cornerRadius = 16.dp,
 )
 ```
@@ -157,7 +157,7 @@ Modifier.squircleSurface(
 
 ```kotlin
 Modifier.absoluteSquircleSurface(
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     topLeft = 24.dp,
     topRight = 24.dp,
     bottomRight = 0.dp,
@@ -186,7 +186,7 @@ ColorOS 17 用到以下值，`coui-ui` 在 `COUIRoundCorner` 上提供：
 
 ```kotlin
 Modifier.squircleSurface(
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     cornerRadius = 45.dp,
     weight = 3f,
 )
@@ -225,7 +225,7 @@ ColorOS 很多调用点根本不传权重（`addSmoothRoundRect(rect, rx, ry, di
 
 ```kotlin
 Modifier.squircleBackground(
-    color = COUITheme.colorScheme.surfaceContainer,
+    color = COUITheme.colorScheme.cardBackground,
     cornerRadius = cornerRadius, // 72.dp：软胶囊；16.dp：权重 2.45
     weight = SquircleDefaults.UnspecifiedWeight,
 )
@@ -233,8 +233,8 @@ Modifier.squircleBackground(
 
 ::: info 从 `extension` 迁移
 旧版本使用 `extension`（角部区域倍数，默认 1.2819），三次曲线角会延伸到
-`cornerRadius` 之外。该参数现已改为 `weight`；`SquircleDefaults.Extension*`
-仅作为已弃用常量保留。
+`cornerRadius` 之外。该参数现已改为 `weight`，`SquircleDefaults.Extension*`
+常量已移除。
 :::
 
 ## Path API
@@ -293,7 +293,7 @@ ColorOS 17 仍有少数组件用 COUI 的 Java 回退 path `COUIShapePath.getRou
 ```kotlin
 import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 
-Modifier.background(COUITheme.colorScheme.surface, LegacySquircleShape(8.dp))
+Modifier.background(COUITheme.colorScheme.backgroundWithCard, LegacySquircleShape(8.dp))
 ```
 
 它基于 path（无需 shader），不受 `LocalSquircleEnabled` 影响。
@@ -323,7 +323,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
     val path = remember { Path() }
     Box(
         Modifier
-            .squircleBackground(COUITheme.colorScheme.surface, cornerRadius)
+            .squircleBackground(COUITheme.colorScheme.backgroundWithCard, cornerRadius)
             .drawWithContent {
                 drawContent()
                 path.rewind()

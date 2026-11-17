@@ -11,7 +11,7 @@
 - 各行按默认字体的 top/bottom 度量居中，与 COUI 一致（比按 ascent/descent 居中高约 0.8dp）。
 - 点击中心上方或下方的行会前后步进一格；按住则每隔 `longPressStepInterval` 毫秒重复步进。
 
-通过 `wrapAround` 参数支持无限循环滚动。
+与 COUI 一致默认循环滚动（`wrapAround`）；传 `wrapAround = false` 可在两端停住。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=numberPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -21,6 +21,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.NumberPicker
+import io.github.suqi8.coui.kmp.basic.NumberPickerDefaults
 ```
 
 ## 基本用法
@@ -54,16 +55,20 @@ NumberPicker(
 
 ### 无限滚动
 
-启用 `wrapAround` 后，选择器会从最后一项循环回到第一项，实现连续滚动。
+`wrapAround`（默认开启，对应 COUI `mWrapSelectorWheelPreferred = true`）时，选择器会从最后一项循环回到第一项，实现连续滚动。与 COUI 一致，仅当项数多于 `visibleItemCount` 时才循环。
+
+### 可选值
+
+`ignorable = true` 会在最后一个值之后加一行占位（绘制为两条短横），选中时回调 `NumberPickerDefaults.IgnoredValue`（COUI `setIgnorable`，`DatePicker` 的可忽略年份即用它）。
 
 ```kotlin
-var value by remember { mutableIntStateOf(0) }
+var year by remember { mutableIntStateOf(NumberPickerDefaults.IgnoredValue) }
 
 NumberPicker(
-    value = value,
-    onValueChange = { value = it },
-    range = 0..23,
-    wrapAround = true
+    value = year,
+    onValueChange = { year = it },
+    range = 1950..2030,
+    ignorable = true
 )
 ```
 
@@ -81,10 +86,11 @@ NumberPicker(
 | label            | (Int) -> String    | 将值转换为显示字符串的函数                           | { it.toString() }                | 否       |
 | unit             | String             | 绘制在选中值之后的单位标签，为空则隐藏               | ""                               | 否       |
 | visibleItemCount | Int                | 可见项数。必须为奇数且不小于 3                       | 3                                | 否       |
-| wrapAround       | Boolean            | 是否启用循环滚动（仅当项数多于 visibleItemCount 时生效） | false                        | 否       |
+| wrapAround       | Boolean            | 是否启用循环滚动（仅当项数多于 visibleItemCount 时生效） | true                         | 否       |
+| ignorable        | Boolean            | 在最后一个值之后加一行占位，选中时回调 `NumberPickerDefaults.IgnoredValue` | false      | 否       |
 | longPressStepInterval | Long          | 按住上下行时自动步进的间隔（毫秒）                   | NumberPickerDefaults.LongPressStepInterval | 否 |
 | colors           | NumberPickerColors | 选择器的颜色配置                                     | NumberPickerDefaults.colors()    | 否       |
-| textStyle        | TextStyle          | 基础文本样式，字号会被下面两个尺寸替换               | COUITheme.textStyles.title3     | 否       |
+| textStyle        | TextStyle          | 基础文本样式，字号会被下面两个尺寸替换               | COUITheme.textStyles.headlineM     | 否       |
 | selectedTextSize | Dp                 | 选中带内的字号                                       | NumberPickerDefaults.SelectedTextSize | 否 |
 | unselectedTextSize | Dp               | 选中带外的字号                                       | NumberPickerDefaults.UnselectedTextSize | 否 |
 | itemHeight       | Dp                 | 每个项目的高度                                       | NumberPickerDefaults.ItemHeight   | 否       |
@@ -102,6 +108,11 @@ NumberPickerDefaults 对象提供了 NumberPicker 组件的默认配置。
 | UnselectedTextSize | Dp | 选中带外的字号 | 16.dp |
 | UnitTextSize | Dp | 单位标签字号 | 14.dp |
 | LongPressStepInterval | Long | 按住上下行时的自动步进间隔（毫秒） | 300L |
+| IgnoredValue | Int | 可忽略滚轮的占位行回调的值 | Int.MIN_VALUE |
+| MinWidth | Dp | modifier 未给宽度时滚轮的宽度 | 80.dp |
+| PickersMaxWidth | Dp | DatePicker、TimePicker、DateTimePicker、LunarDatePicker 的最大宽度 | 640.dp |
+
+`modifier` 未指定宽度时滚轮宽 80dp（COUI `internalMinWidth`）。无障碍服务可以向前 / 向后步进滚轮，RTL 布局下单位标签会镜像到数值左侧。
 
 #### 方法
 
@@ -113,19 +124,15 @@ NumberPickerDefaults 对象提供了 NumberPicker 组件的默认配置。
 
 | 参数名                      | 类型  | 默认值                                         |
 | --------------------------- | ----- | ---------------------------------------------- |
-| selectedTextColor           | Color | COUITheme.colorScheme.onSurface                |
-| unselectedTextColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
-| disabledSelectedTextColor   | Color | selectedTextColor                              |
-| disabledUnselectedTextColor | Color | unselectedTextColor                            |
+| selectedTextColor           | Color | COUITheme.colorScheme.labelPrimary                |
+| unselectedTextColor         | Color | COUITheme.colorScheme.labelTertiary  |
 
 ### NumberPickerColors 类
 
-| 属性名                      | 类型  | 说明                       |
-| --------------------------- | ----- | -------------------------- |
-| selectedTextColor           | Color | 选中项（居中）的文字颜色   |
-| unselectedTextColor         | Color | 未选中项的文字颜色         |
-| disabledSelectedTextColor   | Color | 禁用时选中项的文字颜色     |
-| disabledUnselectedTextColor | Color | 禁用时未选中项的文字颜色   |
+| 属性名                      | 类型  | 说明                                 |
+| --------------------------- | ----- | ------------------------------------ |
+| selectedTextColor           | Color | 选中项（居中）与单位标签的文字颜色   |
+| unselectedTextColor         | Color | 未选中项与占位短横的颜色             |
 
 ## 进阶用法
 

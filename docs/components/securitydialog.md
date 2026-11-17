@@ -1,6 +1,6 @@
 # SecurityDialog
 
-`SecurityDialog` is a security statement dialog mirroring ColorOS's COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): a regular alert dialog extended with a statement paragraph (with an optional tappable link), a "Don't remind me again" checkbox row and a cancel / confirm button bar of borderless accent-tinted text buttons.
+`SecurityDialog` is a security statement dialog mirroring ColorOS's COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): a regular alert dialog extended with a statement paragraph (with an optional tappable link), a "Don't ask me again" checkbox row and a cancel / confirm button bar of borderless accent-tinted text buttons.
 
 Two variants are provided:
 
@@ -50,7 +50,8 @@ Scaffold {
 ```
 
 - The substring of `statement` equal to `statementLinkText` is rendered in the accent color and invokes `onLinkClick` when tapped.
-- Tapping outside and pressing back both invoke `onCancel`, matching COUI reporting the back key as the negative selection.
+- Pressing back invokes `onCancel`, matching COUI reporting the back key as the negative selection. Tapping outside does nothing: COUI makes the dialog non-cancelable once a selection listener is set.
+- `onCheckedChange` reports every checkbox toggle, like COUI's `onSelected(0, isChecked)`.
 - Passing `checkboxText = null` hides the checkbox row (equivalent to `setHasCheckBox(false)`).
 
 ## Properties
@@ -61,8 +62,9 @@ Scaffold {
 | -------------------- | ----------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------- | -------- |
 | show                 | Boolean           | Whether to show the dialog                                                                 | -                                            | Yes      |
 | onConfirm            | (Boolean) -> Unit | Called on confirm with the current checkbox state                                          | -                                            | Yes      |
-| onCancel             | () -> Unit        | Called on cancel button, outside tap, or back press                                        | -                                            | Yes      |
+| onCancel             | () -> Unit        | Called on cancel button or back press (an outside tap does nothing)                        | -                                            | Yes      |
 | modifier             | Modifier          | Modifier applied to the dialog                                                             | Modifier                                     | No       |
+| backgroundModifier   | Modifier          | Applied inside the panel's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
 | title                | String?           | Dialog title                                                                               | null                                         | No       |
 | summary              | String?           | Dialog summary (message)                                                                   | null                                         | No       |
 | statement            | String?           | Statement paragraph; hidden when null                                                      | null                                         | No       |
@@ -70,6 +72,7 @@ Scaffold {
 | onLinkClick          | (() -> Unit)?     | Called when the statement link is tapped                                                   | null                                         | No       |
 | checkboxText         | String?           | Checkbox row label; hidden when null                                                       | SecurityDialogDefaults.CheckboxText          | No       |
 | initialChecked       | Boolean           | Initial checkbox state, re-applied each time the dialog is shown                           | false                                        | No       |
+| onCheckedChange      | ((Boolean) -> Unit)? | Called on every checkbox toggle                                                         | null                                         | No       |
 | confirmText          | String            | Confirm (positive) button label                                                            | SecurityDialogDefaults.ConfirmText           | No       |
 | cancelText           | String            | Cancel (negative) button label                                                             | SecurityDialogDefaults.CancelText            | No       |
 | titleColor           | Color             | Title text color                                                                           | DialogDefaults.titleColor()                  | No       |
@@ -79,6 +82,7 @@ Scaffold {
 | enableWindowDim      | Boolean           | Whether to enable dimming layer                                                            | true                                         | No       |
 | onDismissFinished    | (() -> Unit)?     | Invoked after the hide animation completes                                                 | null                                         | No       |
 | renderInRootScaffold | Boolean           | Whether to render the dialog in the root (outermost) Scaffold (`OverlaySecurityDialog` only) | true                                       | No       |
+| materialStroke       | Boolean           | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders. The cancel / confirm buttons turn material too | false | No       |
 
 ### SecurityDialogDefaults Object
 
@@ -86,7 +90,7 @@ Scaffold {
 
 | Property Name | Type   | Description                                                          |
 | ------------- | ------ | -------------------------------------------------------------------- |
-| CheckboxText  | String | Default checkbox label ("Don't remind me again")                     |
+| CheckboxText  | String | Default checkbox label ("Don't ask me again")                        |
 | ConfirmText   | String | Default confirm button label ("OK")                                  |
 | CancelText    | String | Default cancel button label ("Cancel")                               |
 

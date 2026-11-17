@@ -173,10 +173,10 @@ TabRowDefaults 对象提供了 TabRow 组件的默认配置。
 | 参数名               | 类型  | 说明                     | 默认值                                   |
 | -------------------- | ----- | ------------------------ | ---------------------------------------- |
 | trackColor           | Color | 2dp 轨道的颜色           | `#0F000000`（浅色）/ `#19FFFFFF`（深色） |
-| indicatorColor       | Color | 2dp 指示器的颜色         | COUITheme.colorScheme.onSurface          |
-| contentColor         | Color | 未选中标签的文字颜色     | COUITheme.colorScheme.onSurfaceSecondary |
-| selectedContentColor | Color | 选中及按下标签的文字颜色 | COUITheme.colorScheme.onSurface          |
-| disabledContentColor | Color | 禁用标签的文字颜色       | COUITheme.colorScheme.disabledOnSurface  |
+| indicatorColor       | Color | 2dp 指示器的颜色         | COUITheme.colorScheme.labelPrimary          |
+| contentColor         | Color | 未选中标签的文字颜色     | COUITheme.colorScheme.labelSecondary |
+| selectedContentColor | Color | 选中及按下标签的文字颜色 | COUITheme.colorScheme.labelPrimary          |
+| disabledContentColor | Color | 禁用标签的文字颜色       | COUITheme.colorScheme.disabledNeutral  |
 | disabledIndicatorColor | Color | 禁用标签行的指示器颜色 | `#FFD9D9D9`                              |
 
 ### TabRowColors 类

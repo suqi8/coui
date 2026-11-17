@@ -49,7 +49,7 @@ TextField(
 
 ### 浮动标签
 
-设置 `useLabelAsPlaceholder = false` 可启用 COUI HintAnim 浮动标签：输入框获得焦点或有内容时，标签缩小到 10sp 并上浮（200ms，COUI move ease 曲线）：
+设置 `useLabelAsPlaceholder = false` 可启用 COUI HintAnim 浮动标签：输入框获得焦点或有内容时，标签缩小到 10sp 并上浮（200ms，COUI move ease 曲线）。与 COUIEditText 一样，输入框会为标签预留位置：`Line` 模式在文字上方预留 10dp + 折叠标签高度 + 5dp，浮动标签位于距顶 10dp 处；`Rectangle` 模式的边框从顶部下移半个折叠标签高度开始，浮动标签（medium 字重）骑在上边框上，边框在标签两侧各留 4dp 缺口：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -94,8 +94,10 @@ TextField(
 `TextField` 通过 `backgroundMode` 支持 COUIEditText 的三种背景模式：
 
 - `TextFieldMode.Line`（默认）：无填充；0.33dp 细下划线，聚焦时 1dp 主题色线条从起始边展开——即 ColorOS 设置的对话框 / 底部面板输入形态
-- `TextFieldMode.Rectangle`：纯描边圆角矩形（10dp 圆角，无填充）；未聚焦 0.33dp 细描边，聚焦 1dp 主题色描边；默认文本加粗
+- `TextFieldMode.Rectangle`：纯描边圆角矩形（10dp 圆角，无填充）；0.33dp 细描边，聚焦时只变为主题色（仅错误态为 1dp）；默认文本加粗
 - `TextFieldMode.None`：无任何背景装饰——裸文本，即白卡输入使用的形态（见 `InputView`）
+
+`Line` 与 `Rectangle` 模式的最小高度为 62dp（Widget.COUI.EditText `coui_edit_text_height_min`），内容在其中垂直居中；`None` 模式没有最小高度。可通过 `minHeight` 覆盖（例如 `EditTextPreference` 对话框字段的 34dp）。
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -146,7 +148,7 @@ Card {
 
 ## 错误状态
 
-设置 `isError = true` 会让描边 / 下划线在 217ms 内过渡到错误色，并用它染色文本选区；若输入框处于聚焦状态，还会播放一次水平抖动动画。标签颜色保持不变。与 COUIEditText 一致，默认错误色为 `couiColorErrorTextBg`（`textFieldError`：浅色为 30% 透明度红 `#4DE82A18`，深色为 `#EA3939`），因此浅色下的错误线是淡红色；需要更醒目时可向 `textFieldColors()` 传入 `errorColor`。禁用状态的描边 / 下划线使用 `disabledTextFieldBorder`（`#19000000` / `#19FFFFFF`）：
+设置 `isError = true` 会让描边 / 下划线在 217ms 内过渡到错误色，并用它（30% 透明度）染色文本选区；若输入框处于聚焦状态，还会播放一次水平抖动动画。450ms 的错误动画结束后会全选文本，使红色选区罩住整段文字（COUIErrorEditTextHelper）。标签颜色保持不变。与 COUIEditText 一致，默认错误色为 `couiColorErrorTextBg`（`errorTextBg`：浅色为 30% 透明度红 `#4DE82A18`，深色为 `#EA3939`），因此浅色下的错误线是淡红色；需要更醒目时可向 `textFieldColors()` 传入 `errorColor`。禁用状态的描边 / 下划线与标签使用 `disabledTextFieldBorder`（`#19000000` / `#19FFFFFF`）：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -161,7 +163,7 @@ TextField(
 
 ## 字数统计
 
-设置 `maxCount` 会在输入框尾部显示「当前/上限」计数，并在超出上限时截断输入。达到上限后计数变红：
+设置 `maxCount` 会在输入框尾部显示「当前/上限」计数，并在超出上限时截断输入。达到上限时计数立即变为 `counterErrorColor`（`couiColorError`）：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -191,7 +193,7 @@ TextField(
 
 ## 密码可见切换
 
-设置 `showPasswordToggle = true` 会显示一个眼睛按钮用于切换密码可见性。隐藏时文本以圆点掩码显示：
+设置 `showPasswordToggle = true` 会显示一个眼睛按钮用于切换密码可见性，斜线在 300ms 内画入 / 画出。隐藏时文本以圆点掩码显示。密码初始为掩码；传入 `initialPasswordVisible = true` 则初始为明文（`InputView` 即如此，与 COUIInputView 默认的 `couiPasswordType` OPEN 一致）。输入框禁用时，眼睛按钮同步禁用并使用 `disabledIconColor`：
 
 ```kotlin
 var password by remember { mutableStateOf("") }
@@ -218,6 +220,7 @@ TextField(
 | insideMargin          | DpSize                                       | 输入框内部边距         | TextFieldDefaults.insideMargin(backgroundMode)       | 否       |
 | colors                | TextFieldColors                              | 输入框使用的颜色       | TextFieldDefaults.textFieldColors()                  | 否       |
 | cornerRadius          | Dp                                           | 圆角半径（Rectangle 模式） | TextFieldDefaults.CornerRadius                    | 否       |
+| minHeight             | Dp                                           | 最小高度               | TextFieldDefaults.minHeight(backgroundMode)          | 否       |
 | label                 | String                                       | 标签 / 占位符文本      | ""                                                   | 否       |
 | useLabelAsPlaceholder | Boolean                                      | 普通占位符（true）或浮动标签（false） | true                                  | 否       |
 | justShowFocusLine     | Boolean                                      | Line 模式：隐藏静息下划线 | false                                             | 否       |
@@ -227,6 +230,7 @@ TextField(
 | maxCount              | Int?                                         | 最大字符数；显示计数   | null                                                 | 否       |
 | showClearButton       | Boolean                                      | 聚焦时显示清除按钮     | false                                                | 否       |
 | showPasswordToggle    | Boolean                                      | 显示密码可见切换按钮   | false                                                | 否       |
+| initialPasswordVisible | Boolean                                     | 密码初始是否可见       | false                                                 | 否       |
 | textStyle             | TextStyle                                    | 输入文本样式           | TextFieldDefaults.textStyle(backgroundMode)          | 否       |
 | keyboardOptions       | KeyboardOptions                              | 键盘选项配置           | KeyboardOptions.Default                              | 否       |
 | keyboardActions       | KeyboardActions                              | 键盘操作配置           | KeyboardActions.Default                              | 否       |
@@ -250,6 +254,7 @@ TextField(
 | insideMargin          | DpSize                                              | 输入框内部边距                 | TextFieldDefaults.insideMargin(backgroundMode) | 否       |
 | colors                | TextFieldColors                                     | 输入框使用的颜色               | TextFieldDefaults.textFieldColors()           | 否       |
 | cornerRadius          | Dp                                                  | 圆角半径（Rectangle 模式）     | TextFieldDefaults.CornerRadius                | 否       |
+| minHeight             | Dp                                                  | 最小高度                       | TextFieldDefaults.minHeight(backgroundMode)   | 否       |
 | label                 | String                                              | 标签 / 占位符文本              | ""                                            | 否       |
 | useLabelAsPlaceholder | Boolean                                             | 普通占位符（true）或浮动标签（false） | true                                   | 否       |
 | justShowFocusLine     | Boolean                                             | Line 模式：隐藏静息下划线      | false                                         | 否       |
@@ -259,6 +264,7 @@ TextField(
 | maxCount              | Int?                                                | 最大字符数；显示计数           | null                                          | 否       |
 | showClearButton       | Boolean                                             | 聚焦时显示清除按钮             | false                                         | 否       |
 | showPasswordToggle    | Boolean                                             | 显示密码可见切换按钮           | false                                         | 否       |
+| initialPasswordVisible | Boolean                                            | 密码初始是否可见               | false                                          | 否       |
 | inputTransformation   | InputTransformation?                                | 输入变换器                     | null                                          | 否       |
 | textStyle             | TextStyle                                           | 输入文本样式                   | TextFieldDefaults.textStyle(backgroundMode)   | 否       |
 | keyboardOptions       | KeyboardOptions                                     | 键盘选项配置                   | KeyboardOptions.Default                       | 否       |
@@ -285,10 +291,15 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 | LineInsideMargin | DpSize   | Line 模式内部边距          | DpSize(0.dp, 15.dp)   |
 | NoneInsideMargin | DpSize   | None 模式内部边距          | DpSize(0.dp, 9.dp)    |
 | CounterFontSize  | TextUnit | 字数统计文字字号           | 10.sp                 |
+| MinHeight        | Dp       | Line 与 Rectangle 模式最小高度 | 62.dp             |
 
 #### `insideMargin()` 函数
 
 `TextFieldDefaults.insideMargin(mode: TextFieldMode): DpSize` 返回指定背景模式的默认内部边距。
+
+#### `minHeight()` 函数
+
+`TextFieldDefaults.minHeight(mode: TextFieldMode): Dp` 对 `Line`、`Rectangle` 返回 `MinHeight`，对 `None` 返回 0dp。
 
 #### `textStyle()` 函数
 
@@ -300,15 +311,18 @@ TextFieldDefaults 对象提供了 TextField 组件的默认值。
 
 | 参数             | 类型  | 默认值                                            |
 | ---------------- | ----- | ------------------------------------------------- |
-| backgroundColor  | Color | Color.Transparent（COUI 矩形模式仅描边无填充）    |
-| labelColor       | Color | COUITheme.colorScheme.onSurfaceSecondary         |
+| labelColor       | Color | COUITheme.colorScheme.labelSecondary         |
 | borderColor      | Color | COUITheme.colorScheme.primary                    |
-| unfocusedBorderColor | Color | COUITheme.colorScheme.dividerLine            |
-| errorColor       | Color | COUITheme.colorScheme.textFieldError             |
-| counterColor     | Color | COUITheme.colorScheme.onSurfaceContainerHigh     |
-| iconColor        | Color | COUITheme.colorScheme.onSurfaceSecondary         |
-| disabledTextColor | Color | COUITheme.colorScheme.disabledOnSurface         |
-| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder |
+| unfocusedBorderColor | Color | COUITheme.colorScheme.divider            |
+| errorColor       | Color | COUITheme.colorScheme.errorTextBg             |
+| counterColor     | Color | COUITheme.colorScheme.labelTertiary     |
+| counterErrorColor | Color | COUITheme.colorScheme.error                     |
+| iconColor        | Color | COUITheme.colorScheme.labelSecondary         |
+| disabledIconColor | Color | COUITheme.colorScheme.quarternaryNeutral        |
+| disabledTextColor | Color | COUITheme.colorScheme.disabledNeutral         |
+| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder（禁用态的描边、下划线与标签） |
+
+矩形框没有填充（COUIEditText 绘制的是仅描边的 GradientDrawable）。
 
 ## 进阶用法
 
@@ -350,7 +364,7 @@ TextField(
         ) {
             Icon(
                 imageVector = COUIIcons.Rename,
-                tint = if (passwordVisible) COUITheme.colorScheme.primary else COUITheme.colorScheme.onSurfaceSecondary,
+                tint = if (passwordVisible) COUITheme.colorScheme.primary else COUITheme.colorScheme.labelSecondary,
                 contentDescription = if (passwordVisible) "隐藏密码" else "显示密码"
             )
         }
@@ -375,7 +389,7 @@ Column {
         },
         label = "电子邮箱",
         colors = TextFieldDefaults.textFieldColors(
-            labelColor = if (isError) errorColor else COUITheme.colorScheme.onSurfaceSecondary,
+            labelColor = if (isError) errorColor else COUITheme.colorScheme.labelSecondary,
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
     )
@@ -383,7 +397,7 @@ Column {
         Text(
             text = "请输入有效的邮箱地址",
             color = errorColor,
-            style = COUITheme.textStyles.body2,
+            style = COUITheme.textStyles.bodyM,
             modifier = Modifier.padding(start = 16.dp, top = 4.dp)
         )
     }
@@ -399,9 +413,10 @@ TextField(
     value = text,
     onValueChange = { text = it },
     label = "自定义输入框",
+    backgroundMode = TextFieldMode.Rectangle,
     cornerRadius = 8.dp,
     colors = TextFieldDefaults.textFieldColors(
-        backgroundColor = COUITheme.colorScheme.primary.copy(alpha = 0.1f),
+        unfocusedBorderColor = COUITheme.colorScheme.primary.copy(alpha = 0.3f),
     ),
     textStyle = TextStyle(
         fontWeight = FontWeight.Medium,

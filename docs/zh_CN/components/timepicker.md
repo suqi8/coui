@@ -1,6 +1,6 @@
 # TimePicker
 
-`TimePicker` 是 COUI 中的基础交互组件，通过时 / 分垂直滚轮选择时间，对应 ColorOS 的 COUITimeLimitPicker。支持 24 小时制与 12 小时制；12 小时制下会增加上午/下午（AM/PM）滚轮，可按语言习惯放在小时列之前或分钟列之后。还可以在选中值之后绘制单位标签（如“时”/“分”），字号 14dp，基线为选中行基线上移 2dp，与 COUI 的单位文本一致。选中行上下各有一条 `dividerLine` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp；AM/PM 滚轮未选中项字号为 18dp；按住分钟滚轮的上下行时每 100ms 步进一次。滚轮本身的行为见 [NumberPicker](./numberpicker)。
+`TimePicker` 是 COUI 中的基础交互组件，通过时 / 分垂直滚轮选择时间，对应 ColorOS 的 COUITimeLimitPicker。支持 24 小时制与 12 小时制；12 小时制下会增加上午/下午（AM/PM）滚轮，可按语言习惯放在小时列之前或分钟列之后。还可以在选中值之后绘制单位标签（如“时”/“分”），字号 14dp，基线为选中行基线上移 2dp，与 COUI 的单位文本一致。选中行上下各有一条 `divider` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp；AM/PM 滚轮未选中项字号为 18dp；按住分钟滚轮的上下行时每 100ms 步进一次。滚轮本身的行为见 [NumberPicker](./numberpicker)。
 
 时间由纯数据类 `TimeValue` 表示；无论显示模式如何，小时始终以 24 小时制（0..23）存储。
 
@@ -58,17 +58,18 @@ TimePicker(
 | modifier          | Modifier            | 应用于选择器的修饰符                         | Modifier                             | 否       |
 | enabled           | Boolean             | 是否启用用户交互                             | true                                 | 否       |
 | is24Hour          | Boolean             | 小时滚轮是否使用 24 小时制                   | true                                 | 否       |
-| amPmFirst         | Boolean             | AM/PM 滚轮是否放在小时滚轮之前               | false                                | 否       |
-| amLabel           | String              | AM/PM 滚轮上「上午」的显示文本               | TimePickerDefaults.AmLabel           | 否       |
-| pmLabel           | String              | AM/PM 滚轮上「下午」的显示文本               | TimePickerDefaults.PmLabel           | 否       |
+| amPmFirst         | Boolean             | AM/PM 滚轮是否放在小时滚轮之前               | TimePickerDefaults.localeAmPmFirst() | 否       |
+| amLabel           | String              | AM/PM 滚轮上「上午」的显示文本               | TimePickerDefaults.amLabel()         | 否       |
+| pmLabel           | String              | AM/PM 滚轮上「下午」的显示文本               | TimePickerDefaults.pmLabel()         | 否       |
 | hourUnit          | String              | 选中小时旁的单位标签，为空则隐藏             | TimePickerDefaults.HourUnit          | 否       |
 | minuteUnit        | String              | 选中分钟旁的单位标签，为空则隐藏             | TimePickerDefaults.MinuteUnit        | 否       |
+| visibleItemCount  | Int                 | 每个滚轮的可见行数（COUI setRowNumber），奇数且 ≥ 3 | 3                             | 否       |
 | hourColumnWidth   | Dp                  | 小时列宽度                                   | TimePickerDefaults.HourColumnWidth   | 否       |
 | minuteColumnWidth | Dp                  | 分钟列宽度                                   | TimePickerDefaults.MinuteColumnWidth | 否       |
 | amPmColumnWidth   | Dp                  | AM/PM 列宽度                                 | TimePickerDefaults.AmPmColumnWidth   | 否       |
 | colors            | NumberPickerColors  | 滚轮的颜色配置                               | NumberPickerDefaults.colors()        | 否       |
-| dividerColor      | Color               | 选中行上下两条细线的颜色                     | COUITheme.colorScheme.dividerLine    | 否       |
-| textStyle         | TextStyle           | 滚轮项目的文本样式                           | COUITheme.textStyles.title3         | 否       |
+| dividerColor      | Color               | 选中行上下两条细线的颜色                     | COUITheme.colorScheme.divider    | 否       |
+| textStyle         | TextStyle           | 滚轮项目的文本样式                           | COUITheme.textStyles.headlineM         | 否       |
 | itemHeight        | Dp                  | 每个滚轮项目的高度                           | NumberPickerDefaults.ItemHeight      | 否       |
 | insideMargin      | PaddingValues       | 滚轮列周围的内边距                           | TimePickerDefaults.InsideMargin      | 否       |
 
@@ -89,10 +90,16 @@ TimePicker(
 | InsideMargin      | PaddingValues | 滚轮列周围的默认内边距           | PaddingValues(vertical = 12.dp) |
 | AmPmUnselectedTextSize | Dp       | AM/PM 滚轮未选中项字号           | 18.dp                           |
 | MinuteStepInterval | Long         | 按住时分钟自动步进间隔（毫秒）   | 100L                            |
-| AmLabel           | String        | 默认 AM 文本                     | "AM"                            |
-| PmLabel           | String        | 默认 PM 文本                     | "PM"                            |
 | HourUnit          | String        | 默认小时单位标签（隐藏）         | ""                              |
 | MinuteUnit        | String        | 默认分钟单位标签（隐藏）         | ""                              |
+
+| 方法名            | 返回类型 | 说明                                                           |
+| ----------------- | -------- | -------------------------------------------------------------- |
+| amLabel()         | String   | 当前语言的上午文本（"AM"、"上午"）                             |
+| pmLabel()         | String   | 当前语言的下午文本（"PM"、"下午"）                             |
+| localeAmPmFirst() | Boolean  | 当前语言的最佳 "hm" 模式是否把上午/下午放在前面（中文为 true） |
+
+选择器最大宽度 640dp（`NumberPickerDefaults.PickersMaxWidth`）。
 
 ## 进阶用法
 
@@ -111,7 +118,7 @@ TimePicker(
 
 ### 本地化 12 小时制
 
-对于时间格式以上午/下午开头的语言（如中文），可将 AM/PM 滚轮放在最前并本地化其文本：
+上午/下午文本以及该滚轮的位置默认随语言变化（中文在小时之前，英文在分钟之后），需要时可覆盖：
 
 ```kotlin
 TimePicker(
@@ -119,8 +126,6 @@ TimePicker(
     onValueChange = { time = it },
     is24Hour = false,
     amPmFirst = true,
-    amLabel = "上午",
-    pmLabel = "下午",
     hourUnit = "时",
     minuteUnit = "分"
 )

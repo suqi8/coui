@@ -54,7 +54,8 @@ FloatingActionButton(
 | onClick                | () -> Unit                | Callback triggered when clicked                                      | -                                                          | Yes      |
 | modifier               | Modifier                  | Modifier applied to the button                                       | Modifier                                                   | No       |
 | enabled                | Boolean                   | Whether the button is enabled                                        | true                                                       | No       |
-| material               | Boolean                   | Whether the COUI 17 material (edge lighting, backdrop blur) is drawn | true                                                       | No       |
+| visible                | Boolean                   | Whether the button is shown; changes play the enlarge / shrink animation | true                                                   | No       |
+| material               | Boolean                   | Whether the COUI 17 material (edge lighting, backdrop blur) is drawn | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | hapticFeedbackEnabled  | Boolean                   | Whether a touch down plays the press haptic (OPLUS 302)              | true                                                       | No       |
 | shape                  | Shape                     | Shape of the button                                                  | CircleShape                                                | No       |
 | containerColor         | Color                     | Background color of the button                                       | COUITheme.colorScheme.primary                              | No       |
@@ -82,8 +83,9 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 | ShadowLightY      | Dp    | Y of the shadow light, above the window top               | -800.dp       |
 | ShadowLightZ      | Dp    | Height of the shadow light                                | 10000.dp      |
 | ShadowLightRadius | Dp    | Radius of the shadow light                                | 2000.dp       |
-| PressedScale      | Float | Deprecated, no longer read                                | 0.92f         |
 | ExpandedRotation  | Float | Main button content rotation of the expanded ExpandableFloatingActionButton | 45f |
+| TinySize          | Dp    | Size of the tiny tier (`FloatingButton.Icon.Tiny`)        | 48.dp         |
+| AutoShowDelayMillis | Long | Delay before a scroll-hidden button shows again (`DELAY_TIME_NO_ACTION_SLIDE_OUT`) | 5000L |
 
 #### Functions
 
@@ -91,6 +93,9 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 | ------------------------- | ---------------------------------------------------------------------------- |
 | disabledContainerColor()  | `couiColorDisable` over the disabled base color: #B2D9FF light, #3E6083 dark |
 | shadowPenumbra(elevation) | Blur of the spot shadow for an elevation (about 12dp at 60dp)                |
+| secondaryContainerColor() | Fill of the secondary preset, `COUITheme.colorScheme.neutralButton` (`coui_button_neutral_color`) |
+| secondaryDisabledContainerColor() | Disabled fill of the secondary preset, `COUITheme.colorScheme.pressBackground` (`couiColorPressBackground`) |
+| translateContainerColor() | Fill of the translucent preset laid over images (#33FFFFFF)                  |
 
 ## Behavior
 
@@ -98,6 +103,45 @@ The FloatingActionButtonDefaults object provides default values for FloatingActi
 - **Shadow**: the OPlus light-source shadow COUI requests. It is a soft glow in the button's own color at alpha 86/255. The blur equals the penumbra of a 2000dp light 10000dp up (about 12dp). The shadow is offset downwards by `elevation × (centerY + 800dp) / (10000dp − elevation)`, so a button lower in the window casts its shadow further down.
 - **Material**: with `material = true` (the ColorOS 17 default), the `TYPE_FRAMEWORK_CIRCLE_2` edge lighting and inner shadow are drawn over the fill, and the press mask is off. With a `LocalMaterialBackdrop` provider, the fill is replaced by the `TYPE_FRAMEWORK_FAB` backdrop blur: 10px, the fill at alpha 229 (light) / 230 (dark), then a white OVERLAY. With `material = false`, the opaque fill shows the `couiColorPress` mask while pressed. The edge lighting needs runtime shaders (Android 13+ and every Skia target).
 - **Disabled**: the fill turns to `disabledContainerColor`; touches, haptics and the touch motion are ignored, and the material switches to its disabled presets.
+- **Show / hide**: toggling `visible` plays `animationFloatingButtonEnlarge` / `animationFloatingButtonShrink` (alpha 0 ↔ 1, scale 0.6 ↔ 1 over 350ms on COUIMoveEaseInterpolator). A hidden button ignores touches and leaves the layout.
+
+## Presets and Sizes
+
+COUI 17 ships three color presets, each at 56dp or the 48dp tiny size (`FloatingButton.Icon.{Medium,Small,Tiny}.{Main,Secondary,Translate}`). Those styles also turn the shadow off (`fabNeedElevation = false`):
+
+```kotlin
+FloatingActionButton(
+    onClick = { /* Handle click event */ },
+    containerColor = FloatingActionButtonDefaults.secondaryContainerColor(),
+    disabledContainerColor = FloatingActionButtonDefaults.secondaryDisabledContainerColor(),
+    contentColor = COUITheme.colorScheme.labelPrimary,
+    shadowElevation = 0.dp,
+    minWidth = FloatingActionButtonDefaults.TinySize,
+    minHeight = FloatingActionButtonDefaults.TinySize,
+) {
+    Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+}
+```
+
+## Hide on Scroll
+
+`rememberFloatingActionButtonScrollState()` mirrors `COUIFloatingButton.ScrollViewBehavior`: a scroll step of more than 10px towards the end hides the button, a step back towards the start shows it, and a hidden button shows itself again after 5 seconds (pass `autoShowDelayMillis = 0` to keep it hidden, `setAutoSlideInDisable`).
+
+```kotlin
+val fabScroll = rememberFloatingActionButtonScrollState()
+Scaffold(
+    floatingActionButton = {
+        FloatingActionButton(onClick = {}, visible = fabScroll.visible) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
+    },
+) { padding ->
+    LazyColumn(
+        modifier = Modifier.nestedScroll(fabScroll.nestedScrollConnection),
+        contentPadding = padding,
+    ) { /* ... */ }
+}
+```
 
 ## Advanced Usage
 
@@ -239,7 +283,8 @@ menu; clicks on items that are sliding back into the main button are ignored.
 | items                  | List<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
 | modifier               | Modifier                       | Modifier applied to the main button slot                     | Modifier                                              | No       |
 | enabled                | Boolean                        | Whether the main button is enabled                           | true                                                  | No       |
-| material               | Boolean                        | Whether the buttons and labels draw the COUI 17 material     | true                                                  | No       |
+| visible                | Boolean                        | Whether the main button is shown; hiding also collapses the menu | true                                              | No       |
+| material               | Boolean                        | Whether the buttons and labels draw the COUI 17 material     | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | hapticFeedbackEnabled  | Boolean                        | Whether a touch down plays the press haptic                  | true                                                  | No       |
 | containerColor         | Color                          | Fill of the main button                                      | COUITheme.colorScheme.primary                         | No       |
 | disabledContainerColor | Color                          | Fill of the disabled main button                             | FloatingActionButtonDefaults.disabledContainerColor() | No       |

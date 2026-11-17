@@ -53,7 +53,10 @@ TextField(
 
 Set `useLabelAsPlaceholder = false` to enable the COUI HintAnim floating label: the label
 shrinks to 10sp and floats up as soon as the field is focused or filled (200ms, COUI move
-ease curve):
+ease curve). The field reserves room for it as COUIEditText does: in `Line` mode 10dp + the
+collapsed label height + 5dp above the text, with the floating label 10dp from the top; in
+`Rectangle` mode the border starts half a collapsed label below the top and the floating
+label (medium weight) rides on it inside a cutout 4dp wider than the label on each side:
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -101,9 +104,14 @@ TextField(
   line that expands from the start edge when focused — the form ColorOS Settings uses for
   dialog and bottom-sheet inputs
 - `TextFieldMode.Rectangle`: stroke-only rounded rectangle (10dp corners, no fill);
-  0.33dp hairline stroke, 1dp accent stroke when focused; text is bold by default
+  a 0.33dp hairline stroke that turns to the accent color when focused (1dp only in error
+  state); text is bold by default
 - `TextFieldMode.None`: no background decoration at all — bare text, the form used inside
   white input cards (see `InputView`)
+
+`Line` and `Rectangle` fields are at least 62dp tall (Widget.COUI.EditText
+`coui_edit_text_height_min`) with the content centered vertically; `None` has no minimum.
+Override it with `minHeight` (for example the 34dp dialog field of `EditTextPreference`).
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -159,11 +167,13 @@ Card {
 ## Error State
 
 Setting `isError = true` blends the border / underline to the error color over 217ms, tints the
-text selection with it, and, if the field is focused, plays a one-shot horizontal shake animation.
-The label keeps its color. As in COUIEditText, the default error color is `couiColorErrorTextBg`
-(`textFieldError`: red at 30% alpha `#4DE82A18` in light mode, `#EA3939` in dark mode), so the light
-error line is a soft red; pass `errorColor` to `textFieldColors()` for a stronger tint. A disabled
-field draws its border / underline in `disabledTextFieldBorder` (`#19000000` / `#19FFFFFF`):
+text selection with it (30% alpha), and, if the field is focused, plays a one-shot horizontal shake
+animation. When the 450ms animation ends the whole text is selected, so the red selection covers it
+(COUIErrorEditTextHelper). The label keeps its color. As in COUIEditText, the default error color is
+`couiColorErrorTextBg` (`errorTextBg`: red at 30% alpha `#4DE82A18` in light mode, `#EA3939` in
+dark mode), so the light error line is a soft red; pass `errorColor` to `textFieldColors()` for a
+stronger tint. A disabled field draws its border / underline and its label in
+`disabledTextFieldBorder` (`#19000000` / `#19FFFFFF`):
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -179,7 +189,8 @@ TextField(
 ## Character Counter
 
 Setting `maxCount` shows a "count/max" counter at the end of the field and truncates input
-beyond the limit. The counter turns red once the limit is reached:
+beyond the limit. The counter switches to `counterErrorColor` (`couiColorError`) as soon as the
+limit is reached:
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -211,7 +222,10 @@ TextField(
 ## Password Toggle
 
 Setting `showPasswordToggle = true` shows an eye button that switches the password
-visibility. While hidden, the text is masked with bullets:
+visibility; the slash draws in or out over 300ms. While hidden, the text is masked with
+bullets. The password starts masked; pass `initialPasswordVisible = true` to start visible
+(`InputView` does, following COUIInputView's default `couiPasswordType` OPEN). A disabled field disables the
+toggle and tints it with `disabledIconColor`:
 
 ```kotlin
 var password by remember { mutableStateOf("") }
@@ -238,6 +252,7 @@ TextField(
 | insideMargin          | DpSize                                       | Internal padding of input field     | TextFieldDefaults.insideMargin(backgroundMode)   | No       |
 | colors                | TextFieldColors                              | Colors used by the field            | TextFieldDefaults.textFieldColors()              | No       |
 | cornerRadius          | Dp                                           | Corner radius (Rectangle mode)      | TextFieldDefaults.CornerRadius                    | No       |
+| minHeight             | Dp                                           | Minimum height                      | TextFieldDefaults.minHeight(backgroundMode)      | No       |
 | label                 | String                                       | Label / placeholder text            | ""                                               | No       |
 | useLabelAsPlaceholder | Boolean                                      | Plain placeholder (true) or floating label (false) | true                              | No       |
 | justShowFocusLine     | Boolean                                      | Line mode: hide the resting underline | false                                          | No       |
@@ -247,6 +262,7 @@ TextField(
 | maxCount              | Int?                                         | Max characters; shows a counter     | null                                             | No       |
 | showClearButton       | Boolean                                      | Show clear button when focused      | false                                            | No       |
 | showPasswordToggle    | Boolean                                      | Show password visibility toggle     | false                                            | No       |
+| initialPasswordVisible | Boolean                                     | Whether the password starts visible | false                                             | No       |
 | textStyle             | TextStyle                                    | Text style                          | TextFieldDefaults.textStyle(backgroundMode)      | No       |
 | keyboardOptions       | KeyboardOptions                              | Keyboard options                    | KeyboardOptions.Default                          | No       |
 | keyboardActions       | KeyboardActions                              | Keyboard actions                    | KeyboardActions.Default                          | No       |
@@ -270,6 +286,7 @@ TextField(
 | insideMargin          | DpSize                                         | Internal padding of input field                    | TextFieldDefaults.insideMargin(backgroundMode) | No       |
 | colors                | TextFieldColors                                | Colors used by the field                           | TextFieldDefaults.textFieldColors()        | No       |
 | cornerRadius          | Dp                                             | Corner radius (Rectangle mode)                     | TextFieldDefaults.CornerRadius              | No       |
+| minHeight             | Dp                                             | Minimum height                                     | TextFieldDefaults.minHeight(backgroundMode) | No       |
 | label                 | String                                         | Label / placeholder text                           | ""                                         | No       |
 | useLabelAsPlaceholder | Boolean                                        | Plain placeholder (true) or floating label (false) | true                                       | No       |
 | justShowFocusLine     | Boolean                                        | Line mode: hide the resting underline              | false                                      | No       |
@@ -279,6 +296,7 @@ TextField(
 | maxCount              | Int?                                           | Max characters; shows a counter                    | null                                       | No       |
 | showClearButton       | Boolean                                        | Show clear button when focused                     | false                                      | No       |
 | showPasswordToggle    | Boolean                                        | Show password visibility toggle                    | false                                      | No       |
+| initialPasswordVisible | Boolean                                       | Whether the password starts visible                | false                                       | No       |
 | inputTransformation   | InputTransformation?                           | Input transformation                               | null                                       | No       |
 | textStyle             | TextStyle                                      | Text style                                         | TextFieldDefaults.textStyle(backgroundMode) | No       |
 | keyboardOptions       | KeyboardOptions                                | Keyboard options                                   | KeyboardOptions.Default                    | No       |
@@ -305,10 +323,15 @@ The TextFieldDefaults object provides default values for TextField components.
 | LineInsideMargin | DpSize   | Internal padding in Line mode                      | DpSize(0.dp, 15.dp)   |
 | NoneInsideMargin | DpSize   | Internal padding in None mode                      | DpSize(0.dp, 9.dp)    |
 | CounterFontSize  | TextUnit | Font size of the character counter                 | 10.sp                 |
+| MinHeight        | Dp       | Minimum height in Line and Rectangle modes         | 62.dp                 |
 
 #### `insideMargin()` function
 
 `TextFieldDefaults.insideMargin(mode: TextFieldMode): DpSize` returns the default internal padding for the given background mode.
+
+#### `minHeight()` function
+
+`TextFieldDefaults.minHeight(mode: TextFieldMode): Dp` returns `MinHeight` for `Line` and `Rectangle`, and 0dp for `None`.
 
 #### `textStyle()` function
 
@@ -320,15 +343,18 @@ Builds a [TextFieldColors] instance. Override any subset; unspecified params fal
 
 | Parameter        | Type  | Default                                          |
 | ---------------- | ----- | ------------------------------------------------ |
-| backgroundColor  | Color | Color.Transparent (COUI rect mode is stroke-only) |
-| labelColor       | Color | COUITheme.colorScheme.onSurfaceSecondary        |
+| labelColor       | Color | COUITheme.colorScheme.labelSecondary        |
 | borderColor      | Color | COUITheme.colorScheme.primary                   |
-| unfocusedBorderColor | Color | COUITheme.colorScheme.dividerLine           |
-| errorColor       | Color | COUITheme.colorScheme.textFieldError            |
-| counterColor     | Color | COUITheme.colorScheme.onSurfaceContainerHigh    |
-| iconColor        | Color | COUITheme.colorScheme.onSurfaceSecondary        |
-| disabledTextColor | Color | COUITheme.colorScheme.disabledOnSurface        |
-| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder |
+| unfocusedBorderColor | Color | COUITheme.colorScheme.divider           |
+| errorColor       | Color | COUITheme.colorScheme.errorTextBg            |
+| counterColor     | Color | COUITheme.colorScheme.labelTertiary    |
+| counterErrorColor | Color | COUITheme.colorScheme.error                    |
+| iconColor        | Color | COUITheme.colorScheme.labelSecondary        |
+| disabledIconColor | Color | COUITheme.colorScheme.quarternaryNeutral       |
+| disabledTextColor | Color | COUITheme.colorScheme.disabledNeutral        |
+| disabledBorderColor | Color | COUITheme.colorScheme.disabledTextFieldBorder (border, underline and label when disabled) |
+
+The rectangle box has no fill (COUIEditText draws a stroke-only GradientDrawable).
 
 ## Advanced Usage
 
@@ -370,7 +396,7 @@ TextField(
         ) {
             Icon(
                 imageVector = COUIIcons.Rename,
-                tint = if (passwordVisible) COUITheme.colorScheme.primary else COUITheme.colorScheme.onSurfaceSecondary,
+                tint = if (passwordVisible) COUITheme.colorScheme.primary else COUITheme.colorScheme.labelSecondary,
                 contentDescription = if (passwordVisible) "Hide Password" else "Show Password"
             )
         }
@@ -395,7 +421,7 @@ Column {
         },
         label = "Email",
         colors = TextFieldDefaults.textFieldColors(
-            labelColor = if (isError) errorColor else COUITheme.colorScheme.onSurfaceSecondary,
+            labelColor = if (isError) errorColor else COUITheme.colorScheme.labelSecondary,
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
     )
@@ -403,7 +429,7 @@ Column {
         Text(
             text = "Please enter a valid email address",
             color = errorColor,
-            style = COUITheme.textStyles.body2,
+            style = COUITheme.textStyles.bodyM,
             modifier = Modifier.padding(start = 16.dp, top = 4.dp)
         )
     }
@@ -419,9 +445,10 @@ TextField(
     value = text,
     onValueChange = { text = it },
     label = "Custom Input Field",
+    backgroundMode = TextFieldMode.Rectangle,
     cornerRadius = 8.dp,
     colors = TextFieldDefaults.textFieldColors(
-        backgroundColor = COUITheme.colorScheme.primary.copy(alpha = 0.1f),
+        unfocusedBorderColor = COUITheme.colorScheme.primary.copy(alpha = 0.3f),
     ),
     textStyle = TextStyle(
         fontWeight = FontWeight.Medium,

@@ -115,7 +115,7 @@ Buttons are 44dp tall (56dp when a stacked label wraps), with 12dp horizontal an
 | colors        | TextButtonColors       | Colors of the negative and positive buttons                             | materialButtonColors() with `material`, else buttonColors() | No       |
 | neutralColors | TextButtonColors       | Colors of the neutral button                                            | materialNeutralButtonColors() with `material`, else neutralButtonColors() | No       |
 | recommendedColors | TextButtonColors   | Colors of the recommended button, whatever its role                     | recommendedButtonColors()                       | No       |
-| textStyle     | TextStyle              | Label text style, also used to measure labels for the stacking decision | COUITheme.textStyles.button                     | No       |
+| textStyle     | TextStyle              | Label text style, also used to measure labels for the stacking decision | COUITheme.textStyles.buttonL                     | No       |
 
 ### DialogButtonBarAction Properties
 
@@ -139,14 +139,15 @@ The row tier's button height and paddings live in `DialogDefaults.ButtonBarMinHe
 | CellPaddingBottom               | Dp   | Bottom padding of the bottom-most cell (the panel bottom inset)             | 16.dp |
 | StackedButtonMinHeight          | Dp   | Min height of a stacked button                                              | 44.dp |
 | StackedButtonMinHeightMultiline | Dp   | Min height of a stacked button whose label wraps                            | 56.dp |
+| LabelMaxLines | Int | Max lines of a button label before it ellipsizes (`android:maxLines`) | 2 |
 
 | Function              | Return Type      | Description                                                                                   |
 | :-------------------- | :--------------- | :-------------------------------------------------------------------------------------------- |
-| buttonColors()        | TextButtonColors | `colorScheme.dialogButton` fill (`?couiColorContainer8`), `onSecondaryVariant` label          |
+| buttonColors()        | TextButtonColors | `colorScheme.dialogButton` fill (`?couiColorContainer8`), `labelPrimary` label          |
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` fill, `error` label (error at 30% alpha when disabled)             |
 | materialButtonColors() | TextButtonColors | Material dialog fill: white at alpha 166 (`#A6FFFFFF`, light) / 51 (`#33FFFFFF`, dark); disabled fill stays `dialogButton` |
 | materialNeutralButtonColors() | TextButtonColors | The material fill with the `error` labels of `neutralButtonColors()` |
-| recommendedButtonColors() | TextButtonColors | Recommended button: `primary` fill (`?couiColorContainerTheme`, opaque even in a material dialog), `onPrimary` label; `disabledPrimaryButton` / `disabledOnPrimaryButton` when disabled |
+| recommendedButtonColors() | TextButtonColors | Recommended button: `primary` fill (`?couiColorContainerTheme`, opaque even in a material dialog), `onPrimary` label; `disable` / `disabledOnPrimaryButton` when disabled |
 
 ## Behavior Notes
 

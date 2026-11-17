@@ -81,8 +81,8 @@ CardEntrancePreference(
 
 | Parameter            | Type  | Default                                            |
 | -------------------- | ----- | -------------------------------------------------- |
-| containerColor       | Color | COUITheme.colorScheme.surfaceContainer             |
-| titleColor           | Color | COUITheme.colorScheme.onSurface                    |
-| summaryColor         | Color | COUITheme.colorScheme.onSurfaceSecondary           |
+| containerColor       | Color | COUITheme.colorScheme.cardBackground             |
+| titleColor           | Color | COUITheme.colorScheme.labelPrimary                    |
+| summaryColor         | Color | COUITheme.colorScheme.labelSecondary           |
 | statusOnSummaryColor | Color | COUITheme.colorScheme.primary                      |
-| disabledColor        | Color | COUITheme.colorScheme.disabledOnSecondaryVariant   |
+| disabledColor        | Color | COUITheme.colorScheme.disabledNeutral   |

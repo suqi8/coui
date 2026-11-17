@@ -65,7 +65,7 @@ SideNavigationBar(
 | parentChildHierarchy | Boolean                | 内容本身是列表-详情分栏（仅大屏停靠）          | false                                  | 否   |
 | editMode             | Boolean                | 编辑状态：遮罩停靠模式下的内容                 | false                                  | 否   |
 | editModeMask         | Boolean                | 编辑模式是否绘制遮罩                           | true                                   | 否   |
-| drawerColor          | Color                  | 抽屉背景                                       | colorScheme.surface                    | 否   |
+| drawerColor          | Color                  | 抽屉背景                                       | colorScheme.backgroundWithCard                    | 否   |
 | maskColor            | Color                  | 遮罩 / 编辑遮罩颜色                            | SideNavigationBarDefaults.maskColor    | 否   |
 | dividerColor         | Color                  | 抽屉分割线颜色                                 | DividerDefaults.DividerColor           | 否   |
 | content              | @Composable () -> Unit | 主内容                                         | -                                      | 是   |
@@ -92,7 +92,7 @@ SideNavigationBar(
 | DividerThickness             | Dp      | `coui_side_navigation_drawer_divider_width`  | 0.33.dp                  |
 | EDIT_MASK_DURATION_MILLIS    | Int     | 编辑遮罩淡入时长                             | 300                      |
 | SettleEasing                 | Easing  | `ViewDragHelper` 插值器 `(t - 1)^5 + 1`      | -                        |
-| maskColor                    | Color   | `coui_color_mask`（`colorScheme.windowDimming`） | #33000000 / #99000000 |
+| maskColor                    | Color   | `coui_color_mask`（`colorScheme.mask`） | #33000000 / #99000000 |
 | drawerMode(width, height, parentChildHierarchy) | SideNavigationBarMode | 某尺寸下的模式 | -          |
 | drawerWidth(width, height, mode) | Dp  | 某尺寸下的抽屉宽度                           | -                        |
 

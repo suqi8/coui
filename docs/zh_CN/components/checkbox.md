@@ -76,26 +76,27 @@ CheckboxDefaults 对象提供了 Checkbox 组件的默认颜色配置。
 
 #### 方法
 
-| 方法名           | 类型           | 说明                     |
-| ---------------- | -------------- | ------------------------ |
-| checkboxColors() | CheckboxColors | 创建复选框的默认颜色配置 |
+| 方法名                | 类型           | 说明                                                              |
+| --------------------- | -------------- | ----------------------------------------------------------------- |
+| checkboxColors()      | CheckboxColors | 创建复选框的默认颜色配置                                          |
+| shapeCheckboxColors() | CheckboxColors | 叠在图片上使用的 COUI Shape 复选框配色（`couiShapeCheckBoxStyle`） |
 
 ### CheckboxColors 类
 
 | 属性名                           | 类型  | 说明                         |
 | -------------------------------- | ----- | ---------------------------- |
-| checkedForegroundColor           | Color | 选中状态时前景色（对勾颜色） |
-| uncheckedForegroundColor         | Color | 未选中状态时前景色           |
-| disabledCheckedForegroundColor   | Color | 禁用且选中状态时前景色       |
-| disabledUncheckedForegroundColor | Color | 禁用且未选中状态时前景色     |
-| checkedBackgroundColor           | Color | 选中状态时背景色             |
-| uncheckedBackgroundColor         | Color | 未选中状态时背景色           |
-| disabledCheckedBackgroundColor   | Color | 禁用且选中状态时背景色       |
-| disabledUncheckedBackgroundColor | Color | 禁用且未选中状态时背景色     |
+| checkedForegroundColor           | Color | 选中状态时前景色（对勾颜色）         |
+| disabledCheckedForegroundColor   | Color | 禁用且选中状态时前景色               |
+| checkedBackgroundColor           | Color | 选中状态时背景色                     |
+| uncheckedBackgroundColor         | Color | 未选中状态时外框颜色                 |
+| disabledCheckedBackgroundColor   | Color | 禁用且选中状态时背景色               |
+| disabledUncheckedBackgroundColor | Color | 禁用且未选中状态时外框颜色           |
+| uncheckedFillColor               | Color | 未选中状态时外框内的填充（默认透明） |
+| disabledUncheckedFillColor       | Color | 禁用且未选中状态时外框内的填充       |
 
 > 半选中状态与选中状态共用同一套颜色。
 
-默认颜色对齐 COUI 17（`coui_btn_check_*.xml`）：未选中外框为 `onSurfaceVariantActions`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；选中填充为 `primary`，禁用时为 `disabledPrimary`；对勾为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
+默认颜色对齐 COUI 17（`coui_btn_check_*.xml`）：未选中外框为 `labelTertiary`（#42000000 / #4DFFFFFF），禁用时为 `quarternaryNeutral`（#14000000 / #26FFFFFF）；选中填充为 `primary`，禁用时为 `disable`；对勾为白色，禁用时为 `disabledOnPrimaryButton`（#8AFFFFFF / #29FFFFFF）。
 
 ### 按压反馈
 
@@ -104,6 +105,18 @@ CheckboxDefaults 对象提供了 Checkbox 组件的默认颜色配置。
 只有启用时状态切换才播放 COUI 动画；禁用时直接跳到新状态，半选与选中之间除外（COUI 禁用时也为其播放动画）。静止的半选状态按 COUI 静态资源绘制：方框比其他状态低 0.666dp，横线 1.6dp 粗（禁用时 1.5dp）。
 
 ## 进阶用法
+
+### Shape 复选框
+
+叠在图片或彩色背景上时，使用 COUI Shape 复选框（`Widget.COUI.CompoundButton.COUICheckBox.Shape`）：未选中为 40% 黑色填充加 40% 白色外框（禁用时为 8% 黑色填充加 30% 白色外框），深浅色主题相同；选中与半选状态不变。
+
+```kotlin
+Checkbox(
+    state = state,
+    onClick = { state = if (state == ToggleableState.On) ToggleableState.Off else ToggleableState.On },
+    colors = CheckboxDefaults.shapeCheckboxColors()
+)
+```
 
 ### 自定义颜色
 

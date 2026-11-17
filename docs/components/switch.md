@@ -103,12 +103,12 @@ The SwitchDefaults object provides the dimensions and default color configuratio
 | Property Name               | Type  | Description                             | Default Value | Required |
 | --------------------------- | ----- | --------------------------------------- | ------------- | -------- |
 | checkedThumbColor           | Color | Thumb color when checked                | `onPrimary`           | Yes      |
-| uncheckedThumbColor         | Color | Thumb color when unchecked              | `onSecondary`         | Yes      |
+| uncheckedThumbColor         | Color | Thumb color when unchecked              | `labelOnColor`         | Yes      |
 | disabledCheckedThumbColor   | Color | Thumb color when disabled and checked   | `disabledSliderThumb` | Yes      |
 | disabledUncheckedThumbColor | Color | Thumb color when disabled and unchecked | `disabledSliderThumb` | Yes      |
 | checkedTrackColor           | Color | Track color when checked                | `primary`             | Yes      |
 | uncheckedTrackColor         | Color | Track color when unchecked              | `dragHandle`          | Yes      |
-| disabledCheckedTrackColor   | Color | Track color when disabled and checked   | `disabledPrimary`     | Yes      |
+| disabledCheckedTrackColor   | Color | Track color when disabled and checked   | `disable`     | Yes      |
 | disabledUncheckedTrackColor | Color | Track color when disabled and unchecked | `secondaryContainer`  | Yes      |
 
 The default values in the table are the `COUITheme.colorScheme` tokens `switchColors()` uses. With dynamic colors, both enabled thumbs use `onPrimary`.

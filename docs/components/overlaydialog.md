@@ -80,6 +80,7 @@ Scaffold {
 | cornerRadius               | Dp?                    | Corner radius override; when null, DialogDefaults.CornerRadius is used | null | No       |
 | backgroundModifier         | Modifier               | Applied inside the panel's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
 | materialStroke             | Boolean                | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders. Also turns a `DialogButtonBar` inside material | false | No       |
+| customContent              | (@Composable () -> Unit)? | Custom view slot between the summary and `content` (COUI `customPanel`), padded 8dp below; with it the summary keeps only 4dp below and a title-only dialog drops the extra 16dp under the title | null | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                     | Yes      |
 
 ### DialogDefaults Object
@@ -91,7 +92,8 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 | Property Name | Type   | Description                             |
 | ------------- | ------ | --------------------------------------- |
 | CornerRadius  | Dp     | Dialog panel corner radius (45.dp, `coui_round_corner_xxxxl_radius_large_16_1`) |
-| MaxWidth      | Dp     | Maximum dialog content width (392.dp) |
+| MaxWidth      | Dp     | Maximum visible panel width (360.dp: `coui_dialog_max_width` 392dp minus the two 16dp side insets) |
+| CustomContentPaddingBottom | Dp | Bottom padding of `customContent` (8.dp, `coui_alert_dialog_customer_layout_padding_bottom`) |
 | MaxHeight     | Dp     | Maximum panel height (600.dp: `coui_dialog_max_height` 632dp minus the 32dp bottom margin) |
 | outsideMargin | DpSize | Default dialog external margin (16, 32); the height is the bottom gap without a navigation bar |
 | MarginBottomWithNavigationBar | Dp | Gap between a bottom-aligned dialog and the screen edge under three-button navigation (60.dp) |
@@ -140,9 +142,13 @@ OverlayDialog(
 }
 ```
 
+### Long Content
+
+The title scrolls once it outgrows 80 / 120 / 160dp (by window height, `coui_alert_dialog_builder_title_scroll_max_height`), and a long summary or `customContent` scrolls inside the 600dp panel, so the button bar in `content` always stays in view.
+
 ### Centered Presentation (Large Screens)
 
-On windows at least 840dp wide and 480dp tall, the dialog is automatically centered and uses scale/fade transitions instead of sliding up from the bottom. Use `largeScreen` to force either presentation, and `cornerRadius` to override the panel radius:
+On large windows (COUI `isLargePadWindow`: at least 840dp x 480dp in either orientation, except a portrait window at least 900dp tall and narrower than 960dp), the dialog is automatically centered and uses scale/fade transitions instead of sliding up from the bottom. Use `largeScreen` to force either presentation, and `cornerRadius` to override the panel radius:
 
 ```kotlin
 var showDialog by remember { mutableStateOf(false) }

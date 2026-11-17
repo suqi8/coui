@@ -108,7 +108,7 @@ Box(
 To avoid this, draw an opaque background in the `onDraw` lambda:
 
 ```kotlin
-val backgroundColor = MaterialTheme.colorScheme.surface
+val backgroundColor = MaterialTheme.colorScheme.backgroundWithCard
 val backdrop = rememberLayerBackdrop {
     drawRect(backgroundColor) // Ensures an opaque background is captured
     drawContent()
@@ -320,7 +320,7 @@ import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
 
 Text(
     text = "Frosted Text",
-    style = COUITheme.textStyles.title1,
+    style = COUITheme.textStyles.displayS,
     modifier = Modifier
         .textureBlur(
             backdrop = backdrop,
@@ -477,6 +477,12 @@ mix color is lerped in, then a blend color is blended with overlay (dark) or col
 following the material blend shader in the ColorOS 17 renderer. `MaterialBlurDefaults` holds the
 presets; feed the result to the coui-ui `backgroundModifier` slot of a dialog or bottom sheet.
 
+The native window blur is a Kawase filter (AOSP `KawaseBlurFilter` pass schedule: `r / 2` split over
+at most 4 passes of a 5-tap kernel), not a Gaussian. `couiMaterialBlurRadius(r)` converts the COUI
+radius to the Gaussian radius of the same spread (about `0.433 * r / 0.45`, e.g. 200px → ~192), and
+`couiMaterialBlur` applies it for you. Like the native `KawaseBlur_Dither` pass, a ±0.005 dither is
+added to the blurred result (`noiseCoefficient`, 0 disables it).
+
 ```kotlin
 OverlayDialog(
     show = showDialog,
@@ -492,14 +498,17 @@ OverlayDialog(
 | --- | --- | --- | --- | --- |
 | `MaterialBlurDefaults.dialog(isDark)` | 200 | `#DC909090` / `#8C777777` | `#509F9F9F` / `#B2292929` | ColorDodge / Overlay |
 | `MaterialBlurDefaults.bottomSheet(isDark)` | 400 | `#DCC8C8C8` / `#A4515151` | `#376E6E6E` / `#B30F0F0F` | ColorDodge / Overlay |
+| `MaterialBlurDefaults.popup(isDark)` | 160 | `#99CDCDCD` / `#99262626` | `#BFEEEEEE` / `#99262626` | GlowOverlay (both) |
+| `MaterialBlurDefaults.popup(isDark, hdr = true)` | 160 | `#DC7A7A7A` / `#50262626` | `#C8868686` / `#990F0F0F` | ColorDodge / Overlay |
 
 | Parameter | Type | Description | Default |
 | --- | --- | --- | --- |
 | backdrop | Backdrop | The backdrop providing the content behind the surface | - |
 | style | MaterialBlurStyle | Radius (raw px), mix color, blend color and blend mode | - |
 | shape | Shape | Clip of the blur; keep `RectangleShape` inside an already-clipped slot | `RectangleShape` |
-| fraction | Float | Scales the radius and both color alphas (COUI fades the sheet blur with its mask) | 1f |
+| fraction | Float | Scales the radius (rounded to whole px) and both color alphas (COUI fades the sheet blur with its mask) | 1f |
 | enabled | Boolean | Whether the blur is drawn | true |
+| noiseCoefficient | Float | Dither applied to the blurred result, 0 disables | `MaterialBlurDefaults.NoiseCoefficient` (0.005f) |
 
 ## COUI 17 View Blur
 
@@ -521,11 +530,19 @@ The backdrop must not record the node that draws it: put the blurred element on 
 | `topBar(TopBarMaterialTier.Default, isDark)` | 0 | light `#66333333` ColorDodge; dark `#CC262626` SrcOver | light `#99F5F5F5` Luminosity; dark `#B37F7F7F` Overlay |
 | `topBar(TopBarMaterialTier.Immersive, isDark)` | 25 | `#1A6E6E6E` ColorDodge | `#24F1F1F1` Luminosity (same in both schemes) |
 | `topBar(TopBarMaterialTier.DefaultBlur, isDark)` | 20 | as `Default` | as `Default` |
+| `frameworkFab(themeColor, isDark, enabled)` | 10 | as `contentPrimaryButton` | `#1AFFFFFF` (light) / `#19FFFFFF` (dark) Overlay; disabled `#19FFFFFF` Overlay |
+| `frameworkBottomBar(isDark)` | 25 | light `#B3666666` ColorDodge; dark `#80666666` Overlay | light `#99F5F5F5`; dark `#B3262626` Luminosity |
+| `searchBarNoMaterial(isDark)` | 0 | light `#D6333333` ColorDodge; dark `#CC262626` SrcOver | light `#66F5F5F5` Luminosity; dark `#B37F7F7F` Overlay |
+| `contentSegmentButton(isDark)` | 25 | light `#7F333333` ColorDodge; dark `#7F7F7F7F` Overlay | light `#99EFEFEF`; dark `#99262626` Luminosity |
+| `contentChipTab(isDark, selected, blur)` | 40 (0 when `blur = false`) | light ColorDodge; dark Luminosity | light Luminosity; dark Overlay |
+| `NoEffect` | 0 | transparent | transparent (nothing is drawn) |
+
+`ViewBlurDefaults.interpolate(start, end, progress, blendModes = end)` reproduces the animated form of `setViewBlurEffect` (search bar fading in its material, chip tab selection): the radius is lerped linearly, the colors with `ArgbEvaluator` (alpha linear, RGB in gamma-2.2 linear space), and the blend modes come from `blendModes`.
 
 | Parameter | Type | Description | Default |
 | --- | --- | --- | --- |
 | backdrop | Backdrop | The backdrop providing the content behind the node | - |
-| style | ViewBlurStyle | Radius (raw px) and the two color layers with their Compose `BlendMode`s | - |
+| style | ViewBlurStyle | Radius (raw px) and the two color layers with their Compose `BlendMode`s. A style without effect (radius 0, both layers `#00000000`) draws nothing, as COUI clears the effect | - |
 | shape | Shape | Clip of the blur, the component's outline | - |
 | enabled | Boolean | Whether the blur is drawn | true |
 

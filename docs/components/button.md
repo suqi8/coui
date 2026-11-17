@@ -99,6 +99,35 @@ TextButton(
 )
 ```
 
+### Single-Button Width Tiers
+
+COUI fixes the width of a standalone button by tier (`SingleButtonWrap`): the medium tier is 152dp (`ButtonDefaults.MediumWidth`); the large tier is 174dp (`ButtonDefaults.LargeWidth`) on medium and large screens, 296dp (`ButtonDefaults.SingleLargeWidth`) on small screens at least 360dp wide and the full width below. `ButtonDefaults.largeWidth()` resolves the large tier for the current window (`Dp.Unspecified` means fill the width). These tiers allow two label lines:
+
+```kotlin
+val largeWidth = ButtonDefaults.largeWidth()
+TextButton(
+    text = "Continue",
+    onClick = { /* Handle click event */ },
+    modifier = if (largeWidth == Dp.Unspecified) Modifier.fillMaxWidth() else Modifier.width(largeWidth),
+    colors = ButtonDefaults.textButtonColorsPrimary(),
+    maxLines = 2
+)
+```
+
+### Description Button
+
+`DescTextButton` is the COUI desc-type button (`COUIButton.setDescType`): a 16sp label over a 10sp description, each centred and ellipsized on its own line, with 12dp / 4dp padding, the 44dp min height and no min width:
+
+```kotlin
+DescTextButton(
+    text = "Upgrade",
+    descText = "Free for the first month",
+    onClick = { /* Handle click event */ },
+    modifier = Modifier.width(ButtonDefaults.MediumWidth),
+    colors = ButtonDefaults.textButtonColorsPrimary()
+)
+```
+
 ## Press Feedback
 
 The press feedback follows COUI 17 `COUIButton` (`COUITouchMotionAnimator` + `COUIMaskEffectDrawable`):
@@ -179,8 +208,8 @@ Button(
 | minHeight         | Dp                              | Minimum height of the button           | ButtonDefaults.MinHeight      | No       |
 | colors            | ButtonColors                    | Button color configuration             | ButtonDefaults.buttonColors() | No       |
 | insideMargin      | PaddingValues                   | Internal padding of the button         | ButtonDefaults.InsideMargin   | No       |
-| material          | ButtonMaterial                  | COUI 17 material layer (edge lighting, inner shadow, touch spotlight); the press tint is off while it is drawn | ButtonMaterial.Auto | No       |
-| materialBackdrop  | Boolean                         | Whether the material may replace the fill with the backdrop blur; only drawn with a `LocalMaterialBackdrop` provider | true | No       |
+| material          | ButtonMaterial                  | COUI 17 material layer (edge lighting, inner shadow, touch spotlight); the press tint is off while it is drawn. `Auto` draws none while `LocalCOUIMaterialEffectEnabled` is `false` | ButtonMaterial.Auto | No       |
+| materialBackdrop  | Boolean                         | Whether the material may replace the fill with the backdrop blur; only drawn with a `LocalMaterialBackdrop` provider | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | interactionSource | MutableInteractionSource?       | Interaction source for the button      | null                          | No       |
 | indication        | Indication?                     | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
 | content           | @Composable RowScope.() -> Unit | Composable function for button content | -                             | Yes      |
@@ -199,12 +228,31 @@ Button(
 | minWidth          | Dp                        | Minimum width of the button       | ButtonDefaults.MinWidth           | No       |
 | minHeight         | Dp                        | Minimum height of the button      | ButtonDefaults.MinHeight          | No       |
 | insideMargin      | PaddingValues             | Internal padding of the button    | ButtonDefaults.InsideMargin       | No       |
-| textStyle         | TextStyle                 | Text style of the label (pass `ButtonDefaults.textStyleSmall()` with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.button | No       |
+| textStyle         | TextStyle                 | Text style of the label (pass `ButtonDefaults.textStyleSmall()` with the `Small` metrics for the COUI small size tier) | COUITheme.textStyles.buttonL | No       |
 | maxLines          | Int                       | Maximum number of label lines; COUIButton is single-line with an end ellipsis | 1 | No       |
 | material          | ButtonMaterial            | COUI 17 material layer, see `Button` | ButtonMaterial.Auto | No       |
-| materialBackdrop  | Boolean                   | Whether the material may replace the fill with the backdrop blur, see `Button` | true | No       |
+| materialBackdrop  | Boolean                   | Whether the material may replace the fill with the backdrop blur, see `Button` | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | interactionSource | MutableInteractionSource? | Interaction source for the button | null                              | No       |
 | indication        | Indication?               | Indication for click interactions; `null` because the COUI press feedback (scale + press tint) is built in | null | No       |
+
+### DescTextButton Properties
+
+| Property Name     | Type                      | Description                                  | Default Value                     | Required |
+| ----------------- | ------------------------- | -------------------------------------------- | --------------------------------- | -------- |
+| text              | String                    | Label (16sp)                                 | -                                 | Yes      |
+| descText          | String                    | Description under the label (10sp)           | -                                 | Yes      |
+| onClick           | () -> Unit                | Callback triggered on click                  | -                                 | Yes      |
+| modifier          | Modifier                  | Modifier applied to the button               | Modifier                          | No       |
+| enabled           | Boolean                   | Whether the button is clickable              | true                              | No       |
+| pressScaleEnabled | Boolean                   | Whether the button shrinks while pressed     | true                              | No       |
+| cornerRadius      | Dp                        | Corner radius; unspecified = capsule         | ButtonDefaults.CornerRadius       | No       |
+| minWidth          | Dp                        | Minimum width                                | ButtonDefaults.MinWidthDesc       | No       |
+| minHeight         | Dp                        | Minimum height                               | ButtonDefaults.MinHeight          | No       |
+| colors            | TextButtonColors          | Color configuration                          | ButtonDefaults.textButtonColors() | No       |
+| insideMargin      | PaddingValues             | Internal padding                             | ButtonDefaults.InsideMarginDesc   | No       |
+| material          | ButtonMaterial            | COUI 17 material layer, see `Button`         | ButtonMaterial.Auto               | No       |
+| materialBackdrop  | Boolean                   | Whether the material may use the backdrop    | `LocalCOUIMaterialEffectEnabled.current` | No       |
+| interactionSource | MutableInteractionSource? | Interaction source for the button            | null                              | No       |
 
 ### ButtonDefaults Object
 
@@ -214,8 +262,6 @@ The ButtonDefaults object provides default values and color configurations for b
 
 | Constant Name | Type          | Description                    | Default Value        |
 | ------------- | ------------- | ------------------------------ | -------------------- |
-| PressedScale  | Float         | Legacy COUI 16 press end scale; retained for source compatibility only, no longer used (the COUI 17 target is size-derived) | 0.92f |
-| PressedBrightness | Float     | Legacy COUIButton `brightness` value; retained for source compatibility only, no longer used | 0.8f |
 | MinWidth      | Dp            | Minimum width of the button (COUI `coui_btn_large_width_min`) | 132.dp |
 | MinHeight     | Dp            | Minimum height of the button   | 44.dp                |
 | CornerRadius  | Dp            | Corner radius of the button; unspecified = capsule at half the measured height | Dp.Unspecified |
@@ -224,6 +270,12 @@ The ButtonDefaults object provides default values and color configurations for b
 | MinHeightSmall | Dp           | Minimum height of the small size tier | 28.dp |
 | CornerRadiusSmall | Dp        | Corner radius of the small size tier (height-derived capsule) | Dp.Unspecified |
 | InsideMarginSmall | PaddingValues | Internal padding of the small size tier | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
+| MediumWidth   | Dp            | Width of the medium single-button tier (COUI `coui_medium_btn_width`) | 152.dp |
+| LargeWidth    | Dp            | Width of the large tier on medium and large screens (COUI `coui_larger_btn_width`) | 174.dp |
+| SingleLargeWidth | Dp         | Width of the large tier on small screens at least 360dp wide (COUI `coui_single_larger_btn_width`) | 296.dp |
+| SingleLargeWindowWidth | Dp   | Narrowest small-screen window that gets `SingleLargeWidth` (COUI `coui_single_larger_window_screen`) | 360.dp |
+| MinWidthDesc  | Dp            | Minimum width of the desc-type button | 0.dp |
+| InsideMarginDesc | PaddingValues | Internal padding of the desc-type button (COUI `coui_btn_desc_padding_*`) | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
 
 #### Methods
 
@@ -234,6 +286,9 @@ The ButtonDefaults object provides default values and color configurations for b
 | textButtonColors()        | TextButtonColors | Creates color configuration for secondary text buttons |
 | textButtonColorsPrimary() | TextButtonColors | Creates color configuration for primary text buttons   |
 | textStyleSmall()          | TextStyle        | Label style of the small size tier (14sp medium)       |
+| largeWidth()              | Dp               | Width of the large single-button tier for the current window; `Dp.Unspecified` = fill the width |
+| textStyleDesc()           | TextStyle        | Label style of the desc-type button (16sp medium)      |
+| textStyleDescSub()        | TextStyle        | Description style of the desc-type button (10sp medium) |
 | buttonColorsTransparent() | ButtonColors     | Creates color configuration for transparent buttons (translucent white fill, white label) |
 | textButtonColorsTransparent() | TextButtonColors | Creates color configuration for transparent text buttons |
 | textButtonColorsBorderless() | TextButtonColors | Creates color configuration for borderless / text buttons (transparent fill, themed label) |

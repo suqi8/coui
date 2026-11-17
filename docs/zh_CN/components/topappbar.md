@@ -64,9 +64,30 @@ Scaffold(
 )
 ```
 
+`SmallTopAppBar` 是独立的 COUI 工具栏，标题使用 `TextAppearance.COUI.Toolbar.SecondTitle`（18dp、中等字重）；可折叠的 `TopAppBar` 折叠后标题为 24dp。
+
+### 居中标题
+
+`centerTitle = true` 让 `SmallTopAppBar` 的标题和副标题居中（COUI `setIsTitleCenterStyle`）。能在导航图标与操作按钮之间对称放下时以整条栏居中，否则在两者之间剩余的空间内居中：
+
+```kotlin
+SmallTopAppBar(
+    title = "标题",
+    centerTitle = true,
+    navigationIcon = { /* ... */ },
+    actions = {
+        ToolbarTextButton(text = "完成", onClick = { /* 处理点击事件 */ })
+    }
+)
+```
+
+### 文字按钮与红点
+
+在 `actions` 中放 `ToolbarTextButton` 即为文字菜单项（宽 60–104dp，14dp 主题色文字）。`IconButton` 通过 `redDot` 显示红点（`0` 为纯红点，正数为数字）；参见 [IconButton](./iconbutton)。
+
 ### 带副标题
 
-两种顶部栏都可以在标题下方显示副标题。可折叠的 `TopAppBar` 中副标题默认随折叠渐隐；设置 `hideSubtitleOnCollapse = false` 可让其保持可见并滑入折叠栏标题下方：
+两种顶部栏都可以在标题下方显示副标题。可折叠的 `TopAppBar` 中副标题默认随折叠渐隐；设置 `hideSubtitleOnCollapse = false` 可让其保持可见并滑入折叠栏标题下方，此时折叠标题由 24dp 缩为 18dp：
 
 ```kotlin
 TopAppBar(
@@ -123,6 +144,8 @@ TopAppBar(
 
 ### 自定义内容边距
 
+默认情况下标题、导航图标与操作按钮的边距像 COUI 一样随栏宽分档：紧凑窗口 16dp、中等窗口 24dp、展开窗口 40dp（`TopAppBarDefaults.horizontalPadding`）。传入具体值即可固定：
+
 ```kotlin
 TopAppBar(
     title = "标题",
@@ -148,27 +171,27 @@ TopAppBar(
 | -------------------------- | ------------------------------- | ------------------------------ | --------------------------------- | -------- |
 | title                      | String                          | 顶部栏标题                     | -                                 | 是       |
 | modifier                   | Modifier                        | 应用于顶部栏的修饰符           | Modifier                          | 否       |
-| color                      | Color                           | 顶部栏背景颜色                 | COUITheme.colorScheme.surface    | 否       |
-| titleColor                 | Color                           | 折叠时小标题文字颜色           | COUITheme.colorScheme.onSurface  | 否       |
+| color                      | Color                           | 顶部栏背景颜色                 | COUITheme.colorScheme.backgroundWithCard    | 否       |
+| titleColor                 | Color                           | 折叠时小标题文字颜色           | COUITheme.colorScheme.labelPrimary  | 否       |
 | largeTitle                 | String                          | 大标题文本                     | title                             | 否       |
-| largeTitleColor            | Color                           | 展开时大标题文字颜色           | COUITheme.colorScheme.onSurface  | 否       |
+| largeTitleColor            | Color                           | 展开时大标题文字颜色           | COUITheme.colorScheme.labelPrimary  | 否       |
 | subtitle                   | String                          | 显示在标题栏下方的副标题文本   | ""                                | 否       |
-| subtitleColor              | Color                           | 副标题文字颜色                 | COUITheme.colorScheme.onSurfaceVariantSummary  | 否       |
-| dividerColor               | Color                           | 折叠时显现的底部细分割线颜色   | COUITheme.colorScheme.dividerLine | 否       |
+| subtitleColor              | Color                           | 副标题文字颜色                 | COUITheme.colorScheme.labelSecondaryVariant  | 否       |
+| dividerColor               | Color                           | 折叠时显现的底部细分割线颜色   | COUITheme.colorScheme.divider | 否       |
 | navigationIcon             | @Composable () -> Unit          | 导航图标区域的可组合函数       | {}                                | 否       |
 | actions                    | @Composable RowScope.() -> Unit | 操作按钮区域的可组合函数（建议使用 24dp 图标） | {}                                | 否       |
 | scrollBehavior             | ScrollBehavior?                 | 控制顶部栏滚动行为             | null                              | 否       |
 | defaultWindowInsetsPadding | Boolean                         | 是否应用默认窗口边距           | true                              | 否       |
-| showDivider                | Boolean                         | 是否绘制随折叠渐显的底部细分割线 | true                              | 否       |
-| hideSubtitleOnCollapse     | Boolean                         | 副标题是否随折叠渐隐；为 false 时保持不透明并滑入折叠栏标题下方 | true                              | 否       |
-| titlePadding          | Dp                              | 水平内容边距                   | TopAppBarDefaults.TitlePadding | 否       |
-| navigationIconPadding      | Dp                              | 导航图标的起始边距             | TopAppBarDefaults.NavigationIconPadding | 否       |
-| actionIconPadding          | Dp                              | 操作图标的末尾边距             | TopAppBarDefaults.ActionIconPadding | 否       |
+| showDivider                | Boolean                         | 是否绘制随折叠渐显的底部细分割线；设置了 `glow` 时始终隐藏 | true                              | 否       |
+| hideSubtitleOnCollapse     | Boolean                         | 副标题是否随折叠渐隐；为 false 时保持不透明并滑入折叠栏标题下方，折叠标题为 18dp | true                              | 否       |
+| titlePadding          | Dp                              | 水平内容边距；未指定时随栏宽分档（16 / 24 / 40dp） | Dp.Unspecified | 否       |
+| navigationIconPadding      | Dp                              | 导航图标的起始边距；未指定时随栏宽分档 | Dp.Unspecified | 否       |
+| actionIconPadding          | Dp                              | 操作图标的末尾边距；未指定时随栏宽分档 | Dp.Unspecified | 否       |
 | expandedHeight             | Dp                              | 无副标题时的展开高度           | TopAppBarDefaults.ExpandedHeight | 否       |
 | largeTitleFontSize         | TextUnit                        | 展开态大标题字号               | TopAppBarDefaults.largeTitleFontSize() (32dp) | 否       |
 | largeTitleBottomMargin     | Dp                              | 指定后大标题按此边距贴展开态底部，而不是用顶部边距 | Dp.Unspecified | 否       |
 | fadeLargeTitleOnCollapse   | Boolean                         | 折叠时让大标题淡出缩小，而不是变形为折叠标题（COUI 17 设置首页） | false | 否       |
-| glow                       | @Composable BoxScope.() -> Unit | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow` | {} | 否       |
+| glow                       | (@Composable BoxScope.() -> Unit)? | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow`；`null` 为实色顶栏 | null | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
 ### SmallTopAppBar 属性
@@ -177,20 +200,21 @@ TopAppBar(
 | -------------------------- | ------------------------------- | ------------------------ | --------------------------------- | -------- |
 | title                      | String                          | 顶部栏标题               | -                                 | 是       |
 | modifier                   | Modifier                        | 应用于顶部栏的修饰符     | Modifier                          | 否       |
-| color                      | Color                           | 顶部栏背景颜色           | COUITheme.colorScheme.surface    | 否       |
-| titleColor                 | Color                           | 标题文字颜色             | COUITheme.colorScheme.onSurface  | 否       |
+| color                      | Color                           | 顶部栏背景颜色           | COUITheme.colorScheme.backgroundWithCard    | 否       |
+| titleColor                 | Color                           | 标题文字颜色             | COUITheme.colorScheme.labelPrimary  | 否       |
 | subtitle                   | String                          | 显示在标题栏下方的副标题文本 | ""                                | 否       |
-| subtitleColor              | Color                           | 副标题文字颜色           | COUITheme.colorScheme.onSurfaceVariantSummary  | 否       |
-| dividerColor               | Color                           | 滚动时显现的底部细分割线颜色 | COUITheme.colorScheme.dividerLine | 否       |
+| subtitleColor              | Color                           | 副标题文字颜色           | COUITheme.colorScheme.labelSecondaryVariant  | 否       |
+| dividerColor               | Color                           | 滚动时显现的底部细分割线颜色 | COUITheme.colorScheme.divider | 否       |
 | navigationIcon             | @Composable () -> Unit          | 导航图标区域的可组合函数 | {}                                | 否       |
 | actions                    | @Composable RowScope.() -> Unit | 操作按钮区域的可组合函数（建议使用 24dp 图标） | {}                                | 否       |
 | scrollBehavior             | ScrollBehavior?                 | 控制顶部栏滚动行为       | null                              | 否       |
 | defaultWindowInsetsPadding | Boolean                         | 是否应用默认窗口边距     | true                              | 否       |
-| showDivider                | Boolean                         | 内容在栏下滚动时是否绘制底部细分割线（需要 scrollBehavior） | true    | 否       |
-| titlePadding          | Dp                              | 水平内容边距             | TopAppBarDefaults.TitlePadding | 否       |
-| navigationIconPadding      | Dp                              | 导航图标的起始边距       | TopAppBarDefaults.NavigationIconPadding | 否       |
-| actionIconPadding          | Dp                              | 操作图标的末尾边距       | TopAppBarDefaults.ActionIconPadding | 否       |
-| glow                       | @Composable BoxScope.() -> Unit | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow` | {} | 否       |
+| showDivider                | Boolean                         | 内容在栏下滚动时是否绘制底部细分割线（需要 scrollBehavior）；设置了 `glow` 时始终隐藏 | true    | 否       |
+| centerTitle                | Boolean                         | 标题与副标题居中（COUI 标题居中样式） | false | 否       |
+| titlePadding          | Dp                              | 水平内容边距；未指定时随栏宽分档（16 / 24 / 40dp） | Dp.Unspecified | 否       |
+| navigationIconPadding      | Dp                              | 导航图标的起始边距；未指定时随栏宽分档 | Dp.Unspecified | 否       |
+| actionIconPadding          | Dp                              | 操作图标的末尾边距；未指定时随栏宽分档 | Dp.Unspecified | 否       |
+| glow                       | (@Composable BoxScope.() -> Unit)? | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow`；`null` 为实色顶栏 | null | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
 ### TopAppBarDefaults 对象
@@ -201,12 +225,13 @@ TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认�
 
 | 常量名                    | 类型 | 说明                              | 默认值 |
 | ------------------------- | ---- | --------------------------------- | ------ |
-| TitlePadding    | Dp   | 标题和大标题的水平内边距          | 16.dp  |
+| HorizontalPaddingCompact   | Dp   | 紧凑窗口下标题与图标的边距        | 16.dp  |
+| HorizontalPaddingMedium    | Dp   | 中等窗口下标题与图标的边距        | 24.dp  |
+| HorizontalPaddingExpanded  | Dp   | 展开窗口下标题与图标的边距        | 40.dp  |
+| SmallTitleTextSize         | Dp   | SmallTopAppBar 标题字号（SecondTitle，中等字重） | 18.dp  |
 | LargeTitleTopPadding | Dp | 展开态大标题的顶部内边距          | 54.dp  |
-| NavigationIconPadding      | Dp   | 导航图标的起始边距               | 16.dp  |
-| ActionIconPadding          | Dp   | 操作图标的末尾边距               | 16.dp  |
 | CollapsedHeight            | Dp   | TopAppBar 折叠时的高度           | 52.dp  |
-| ExpandedHeight             | Dp   | 无副标题时 TopAppBar 展开态的最小高度 | 107.dp |
+| ExpandedHeight             | Dp   | 无副标题时 TopAppBar 展开态的最小高度 | 110.dp |
 | SmallTopAppBarCenterHeight | Dp   | SmallTopAppBar 布局的垂直中心高度 | 52.dp  |
 | LargeTitleBottomPadding    | Dp   | 展开态大标题区块下方的底部边距（折叠时渐变至 0.dp） | 12.dp   |
 | SubtitleBottomPadding      | Dp   | 副标题溢出折叠栏时其下方的底部边距 | 8.dp   |
@@ -214,6 +239,12 @@ TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认�
 | NavigationIconGap          | Dp   | 导航图标与折叠态标题之间的水平间距 | 10.dp  |
 | ActionIconGap              | Dp   | 标题与操作图标之间的水平间距      | 4.dp   |
 | ActionItemSpacing          | Dp   | 相邻操作图标之间的水平间距        | 10.dp  |
+
+#### 函数
+
+| 函数名            | 说明 |
+| ----------------- | ---- |
+| horizontalPadding(barWidth, windowHeight) | `titlePadding` / `navigationIconPadding` / `actionIconPadding` 未指定时使用的边距：栏宽不足 600dp 为 16dp，否则按栏宽与窗口高度对应的 COUI 屏幕档位取 24dp 或 40dp |
 
 ### ScrollBehavior
 
@@ -280,7 +311,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                     Icon(
                         imageVector = COUIIcons.Back,
                         contentDescription = "切换到大标题",
-                        tint = COUITheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.labelPrimary
                     )
                 }
             }
@@ -294,7 +325,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                     Icon(
                         imageVector = COUIIcons.Back,
                         contentDescription = "切换到小标题",
-                        tint = COUITheme.colorScheme.onBackground
+                        tint = COUITheme.colorScheme.labelPrimary
                     )
                 }
             }

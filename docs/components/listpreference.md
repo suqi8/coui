@@ -110,12 +110,12 @@ Additional / differing properties compared to `ListPreference`:
 
 | Parameter                      | Type  | Default                                       | COUI role               |
 | ------------------------------ | ----- | --------------------------------------------- | ----------------------- |
-| itemTextColor                  | Color | COUITheme.colorScheme.onSurface              | couiColorPrimaryNeutral |
-| disabledItemTextColor          | Color | COUITheme.colorScheme.disabledOnSecondaryVariant | couiColorDisabledNeutral |
-| itemSummaryColor               | Color | COUITheme.colorScheme.onSurfaceSecondary     | couiColorSecondNeutral  |
-| disabledItemSummaryColor       | Color | COUITheme.colorScheme.disabledOnSecondaryVariant | couiColorDisabledNeutral |
+| itemTextColor                  | Color | COUITheme.colorScheme.labelPrimary              | couiColorPrimaryNeutral |
+| disabledItemTextColor          | Color | COUITheme.colorScheme.disabledNeutral | couiColorDisabledNeutral |
+| itemSummaryColor               | Color | COUITheme.colorScheme.labelSecondary     | couiColorSecondNeutral  |
+| disabledItemSummaryColor       | Color | COUITheme.colorScheme.disabledNeutral | couiColorDisabledNeutral |
 | selectedIndicatorColor         | Color | COUITheme.colorScheme.primary                | couiColorPrimary        |
-| disabledSelectedIndicatorColor | Color | COUITheme.colorScheme.disabledPrimary        | -                       |
+| disabledSelectedIndicatorColor | Color | COUITheme.colorScheme.disable        | -                       |
 
 ## Behavior
 

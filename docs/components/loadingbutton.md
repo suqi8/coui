@@ -62,7 +62,7 @@ LoadingButton(
 | minHeight         | Dp                        | Minimum height of the button                            | ButtonDefaults.MinHeight         | No       |
 | colors            | TextButtonColors          | Color configuration                                     | ButtonDefaults.textButtonColors() | No      |
 | insideMargin      | PaddingValues             | Margin inside the button                                | ButtonDefaults.InsideMargin      | No       |
-| textStyle         | TextStyle                 | Style of the label, loading text and dot glyphs (`ButtonDefaults.textStyleSmall()` for the small tier) | COUITheme.textStyles.button | No |
+| textStyle         | TextStyle                 | Style of the label, loading text and dot glyphs (`ButtonDefaults.textStyleSmall()` for the small tier) | COUITheme.textStyles.buttonL | No |
 | material          | ButtonMaterial            | COUI 17 material layer, see [Button](./button)          | ButtonMaterial.Auto              | No       |
 | materialBackdrop  | Boolean                   | Whether the material may replace the fill with the backdrop blur, see [Button](./button#backdrop-blur) | true | No       |
 | interactionSource | MutableInteractionSource? | Interaction source of the button                        | null                             | No       |
@@ -79,6 +79,6 @@ LoadingButton(
 
 - While `isLoading` is `true` the label is hidden but stays measured, so the button keeps its width; clicks are swallowed while the COUI press feedback (scale + tint) still plays.
 - The three dots pulse 20% -> 50% -> 100% -> 50% -> 20% alpha on a linear curve; each dot is delayed by 333ms and the whole 1332ms wave loops, matching the COUILoadingButton animator set.
-- With `loadingText` set, the loading state shows that label followed by three animated dot glyphs instead of the plain dot indicator (COUIButton `isShowLoadingText`).
+- With `loadingText` set, the loading state shows that label followed by three animated dot glyphs instead of the plain dot indicator (COUIButton `isShowLoadingText`). When the text and its dots are wider than the button minus its padding, the plain dots are drawn instead (`COUILoadingButton.onDraw`).
 - The dots are drawn with the button's content color, like COUILoadingButton draws them with the label paint.
 - Geometry, colors and the COUI 17 press feedback come from `Button`: a height-derived capsule, 132dp minimum width and a single-line label.

@@ -99,6 +99,35 @@ TextButton(
 )
 ```
 
+### 单按钮宽度档
+
+COUI 按档位固定独立按钮的宽度（`SingleButtonWrap`）：中档 152dp（`ButtonDefaults.MediumWidth`）；大档在中、大屏为 174dp（`ButtonDefaults.LargeWidth`），在宽度不小于 360dp 的小屏为 296dp（`ButtonDefaults.SingleLargeWidth`），更窄时铺满宽度。`ButtonDefaults.largeWidth()` 按当前窗口给出大档宽度（`Dp.Unspecified` 表示铺满）。这些档位允许标签显示两行：
+
+```kotlin
+val largeWidth = ButtonDefaults.largeWidth()
+TextButton(
+    text = "继续",
+    onClick = { /* 处理点击 */ },
+    modifier = if (largeWidth == Dp.Unspecified) Modifier.fillMaxWidth() else Modifier.width(largeWidth),
+    colors = ButtonDefaults.textButtonColorsPrimary(),
+    maxLines = 2
+)
+```
+
+### 描述按钮
+
+`DescTextButton` 对应 COUI 的 desc 型按钮（`COUIButton.setDescType`）：16sp 主文字在上、10sp 描述在下，两行各自居中、各自省略，内边距 12dp / 4dp，最小高度 44dp，无最小宽度：
+
+```kotlin
+DescTextButton(
+    text = "升级",
+    descText = "首月免费",
+    onClick = { /* 处理点击 */ },
+    modifier = Modifier.width(ButtonDefaults.MediumWidth),
+    colors = ButtonDefaults.textButtonColorsPrimary()
+)
+```
+
 ## 按压反馈
 
 按压反馈遵循 COUI 17 `COUIButton`（`COUITouchMotionAnimator` + `COUIMaskEffectDrawable`）：
@@ -185,8 +214,8 @@ Button(
 | minHeight         | Dp                              | 按钮最小高度             | ButtonDefaults.MinHeight      | 否       |
 | colors            | ButtonColors                    | 按钮颜色配置             | ButtonDefaults.buttonColors() | 否       |
 | insideMargin      | PaddingValues                   | 按钮内部边距             | ButtonDefaults.InsideMargin   | 否       |
-| material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光）；绘制时关闭按压着色 | ButtonMaterial.Auto | 否       |
-| materialBackdrop  | Boolean                         | 材质是否可用背景模糊替代填充；仅在有 `LocalMaterialBackdrop` provider 时绘制 | true | 否       |
+| material          | ButtonMaterial                  | COUI 17 材质层（描边光、内阴影、触摸聚光）；绘制时关闭按压着色。`LocalCOUIMaterialEffectEnabled` 为 `false` 时 `Auto` 不绘制 | ButtonMaterial.Auto | 否       |
+| materialBackdrop  | Boolean                         | 材质是否可用背景模糊替代填充；仅在有 `LocalMaterialBackdrop` provider 时绘制 | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | interactionSource | MutableInteractionSource?       | 按钮的交互源             | null                          | 否       |
 | indication        | Indication?                     | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
 | content           | @Composable RowScope.() -> Unit | 按钮内容区域的可组合函数 | -                             | 是       |
@@ -205,12 +234,31 @@ Button(
 | minWidth          | Dp                        | 按钮最小宽度         | ButtonDefaults.MinWidth           | 否       |
 | minHeight         | Dp                        | 按钮最小高度         | ButtonDefaults.MinHeight          | 否       |
 | insideMargin      | PaddingValues             | 按钮内部边距         | ButtonDefaults.InsideMargin       | 否       |
-| textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()` 可得到 COUI 小尺寸档） | COUITheme.textStyles.button | 否       |
+| textStyle         | TextStyle                 | 标签文字样式（配合 `Small` 系列常量与 `ButtonDefaults.textStyleSmall()` 可得到 COUI 小尺寸档） | COUITheme.textStyles.buttonL | 否       |
 | maxLines          | Int                       | 标签最大行数；COUIButton 为单行、末尾省略 | 1 | 否       |
 | material          | ButtonMaterial            | COUI 17 材质层，见 `Button` | ButtonMaterial.Auto | 否       |
-| materialBackdrop  | Boolean                   | 材质是否可用背景模糊替代填充，见 `Button` | true | 否       |
+| materialBackdrop  | Boolean                   | 材质是否可用背景模糊替代填充，见 `Button` | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | interactionSource | MutableInteractionSource? | 按钮的交互源         | null                              | 否       |
 | indication        | Indication?               | 点击交互的反馈效果；默认为 `null`，因为 COUI 按压反馈（缩放 + 按压着色）已内置于按钮 | null | 否       |
+
+### DescTextButton 属性
+
+| 属性名            | 类型                      | 说明                         | 默认值                            | 是否必须 |
+| ----------------- | ------------------------- | ---------------------------- | --------------------------------- | -------- |
+| text              | String                    | 主文字（16sp）               | -                                 | 是       |
+| descText          | String                    | 主文字下方的描述（10sp）     | -                                 | 是       |
+| onClick           | () -> Unit                | 点击回调                     | -                                 | 是       |
+| modifier          | Modifier                  | 应用于按钮的修饰符           | Modifier                          | 否       |
+| enabled           | Boolean                   | 是否可点击                   | true                              | 否       |
+| pressScaleEnabled | Boolean                   | 按下时是否缩小               | true                              | 否       |
+| cornerRadius      | Dp                        | 圆角；未指定时为胶囊         | ButtonDefaults.CornerRadius       | 否       |
+| minWidth          | Dp                        | 最小宽度                     | ButtonDefaults.MinWidthDesc       | 否       |
+| minHeight         | Dp                        | 最小高度                     | ButtonDefaults.MinHeight          | 否       |
+| colors            | TextButtonColors          | 颜色配置                     | ButtonDefaults.textButtonColors() | 否       |
+| insideMargin      | PaddingValues             | 内部边距                     | ButtonDefaults.InsideMarginDesc   | 否       |
+| material          | ButtonMaterial            | COUI 17 材质层，见 `Button`  | ButtonMaterial.Auto               | 否       |
+| materialBackdrop  | Boolean                   | 材质是否可使用背景模糊       | `LocalCOUIMaterialEffectEnabled.current` | 否       |
+| interactionSource | MutableInteractionSource? | 交互源                       | null                              | 否       |
 
 ### ButtonDefaults 对象
 
@@ -220,8 +268,6 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 
 | 常量名       | 类型          | 说明           | 默认值               |
 | ------------ | ------------- | -------------- | -------------------- |
-| PressedScale | Float         | 旧版 COUI 16 按压终点缩放；仅为源码兼容保留，已不再使用（COUI 17 目标值由尺寸推导） | 0.92f |
-| PressedBrightness | Float    | 旧版 COUIButton 的 `brightness` 属性值；仅为源码兼容保留，已不再使用 | 0.8f |
 | MinWidth     | Dp            | 按钮的最小宽度（COUI `coui_btn_large_width_min`） | 132.dp |
 | MinHeight    | Dp            | 按钮的最小高度 | 44.dp                |
 | CornerRadius | Dp            | 按钮的圆角半径；未指定 = 按实测高度一半的胶囊 | Dp.Unspecified |
@@ -230,6 +276,12 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 | MinHeightSmall | Dp          | 小尺寸档的最小高度 | 28.dp |
 | CornerRadiusSmall | Dp       | 小尺寸档的圆角半径（随高度的胶囊） | Dp.Unspecified |
 | InsideMarginSmall | PaddingValues | 小尺寸档的内部边距 | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
+| MediumWidth   | Dp            | 中档单按钮宽度（COUI `coui_medium_btn_width`） | 152.dp |
+| LargeWidth    | Dp            | 中、大屏的大档宽度（COUI `coui_larger_btn_width`） | 174.dp |
+| SingleLargeWidth | Dp         | 宽度不小于 360dp 的小屏上的大档宽度（COUI `coui_single_larger_btn_width`） | 296.dp |
+| SingleLargeWindowWidth | Dp   | 使用 `SingleLargeWidth` 的最窄小屏窗口（COUI `coui_single_larger_window_screen`） | 360.dp |
+| MinWidthDesc  | Dp            | desc 型按钮的最小宽度 | 0.dp |
+| InsideMarginDesc | PaddingValues | desc 型按钮的内部边距（COUI `coui_btn_desc_padding_*`） | PaddingValues(horizontal = 12.dp, vertical = 4.dp) |
 
 #### 方法
 
@@ -240,6 +292,9 @@ ButtonDefaults 对象提供了按钮组件的默认值和颜色配置。
 | textButtonColors()        | TextButtonColors | 创建次要文本按钮的颜色配置 |
 | textButtonColorsPrimary() | TextButtonColors | 创建主要文本按钮的颜色配置 |
 | textStyleSmall()          | TextStyle        | 小尺寸档的标签样式（14sp 中粗） |
+| largeWidth()              | Dp               | 当前窗口下大档单按钮的宽度；`Dp.Unspecified` 表示铺满 |
+| textStyleDesc()           | TextStyle        | desc 型按钮的主文字样式（16sp 中粗） |
+| textStyleDescSub()        | TextStyle        | desc 型按钮的描述样式（10sp 中粗） |
 | buttonColorsTransparent() | ButtonColors     | 创建透明按钮的颜色配置（半透明白色填充、白色文字） |
 | textButtonColorsTransparent() | TextButtonColors | 创建透明文本按钮的颜色配置 |
 | textButtonColorsBorderless() | TextButtonColors | 创建无边框 / 文字按钮的颜色配置(透明填充、主题色文字) |

@@ -24,6 +24,7 @@ import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.Scaffold
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.ToolbarTextButton
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Back
@@ -110,6 +111,7 @@ fun TopAppBarDemo() {
                         topBar = {
                             SmallTopAppBar(
                                 title = "Title",
+                                centerTitle = true,
                                 navigationIcon = {
                                     IconButton(
                                         onClick = { /* Handle click event */ },
@@ -121,14 +123,10 @@ fun TopAppBarDemo() {
                                     }
                                 },
                                 actions = {
-                                    IconButton(
+                                    ToolbarTextButton(
+                                        text = "Done",
                                         onClick = { /* Handle click event */ },
-                                    ) {
-                                        Icon(
-                                            COUIIcons.More,
-                                            contentDescription = "More",
-                                        )
-                                    }
+                                    )
                                 },
                             )
                         },

@@ -60,8 +60,8 @@ LunarDatePicker(
 | fieldOrder    | DateFieldOrder             | Left-to-right order of the wheels (mirrored in RTL)      | DatePickerDefaults.localeFieldOrder() | No     |
 | columnWidth   | Dp                         | Width of each wheel                                      | LunarDatePickerDefaults.ColumnWidth | No       |
 | colors        | NumberPickerColors         | Color configuration of the wheels                        | NumberPickerDefaults.colors()       | No       |
-| dividerColor  | Color                      | Color of the two hairlines around the selected row       | COUITheme.colorScheme.dividerLine   | No       |
-| textStyle     | TextStyle                  | Text style for the wheel items                           | COUITheme.textStyles.title3         | No       |
+| dividerColor  | Color                      | Color of the two hairlines around the selected row       | COUITheme.colorScheme.divider   | No       |
+| textStyle     | TextStyle                  | Text style for the wheel items                           | COUITheme.textStyles.headlineM         | No       |
 | itemHeight    | Dp                         | The height of each wheel item                            | NumberPickerDefaults.ItemHeight     | No       |
 | insideMargin  | PaddingValues              | Padding around the wheel columns                         | LunarDatePickerDefaults.InsideMargin | No      |
 
@@ -69,7 +69,7 @@ LunarDatePicker(
 
 | Property Name     | Type                     | Description                                   | Default Value                   |
 | ----------------- | ------------------------ | --------------------------------------------- | ------------------------------- |
-| MinDate           | DateValue                | Earliest selectable date                      | 1910-01-01                      |
+| MinDate           | DateValue                | Earliest selectable date (COUI sMinDate)      | 1910-03-10                      |
 | MaxDate           | DateValue                | Latest selectable date                        | 2099-12-31                      |
 | ColumnWidth       | Dp                       | Width of every wheel                          | 76.dp                           |
 | InsideMargin      | PaddingValues            | Padding around the wheel columns              | PaddingValues(vertical = 12.dp) |

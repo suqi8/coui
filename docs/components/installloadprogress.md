@@ -49,7 +49,12 @@ InstallLoadProgress(text = "Get", onClick = {})
 
 // Large: 220 × 44dp
 InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.Large)
+
+// Circle (LOAD_STYLE_CIRCLE): a 33dp icon button; text becomes the content description
+InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.Circle)
 ```
+
+The circle style draws no label and no progress fill: a 30dp rounded square (7dp corners) holds a download arrow in the accent color on the tinted fill when idle, a white pause icon on the accent fill while loading, and a white arrow on the accent fill when paused or failed. The new icon cross-fades in over 340ms; a press shrinks the square to 90% in 200ms and dims it.
 
 ## Properties
 
@@ -65,7 +70,7 @@ InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.La
 | enabled           | Boolean                    | Whether the button is enabled                            | true                                                    | No       |
 | style             | InstallLoadStyle           | Size style                                               | InstallLoadStyle.Small                                  | No       |
 | colors            | InstallLoadProgressColors  | Color configuration                                      | InstallLoadProgressDefaults.installLoadProgressColors() | No       |
-| textStyle         | TextStyle                  | Label text style                                         | COUITheme.textStyles.subtitle                           | No       |
+| textStyle         | TextStyle                  | Label text style                                         | COUITheme.textStyles.buttonM                           | No       |
 | interactionSource | MutableInteractionSource?  | Interaction source                                       | null                                                    | No       |
 
 ### InstallLoadProgressDefaults Object
@@ -81,6 +86,9 @@ InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.La
 | LargeHeight                    | Dp    | 44.dp         | Height of the large style                       |
 | TextPadding                    | Dp    | 6.dp          | Horizontal label padding                        |
 | PressedBrightness              | Float | 0.8f          | Fill lightness factor while pressed             |
+| CircleSize                     | Dp    | 33.dp         | Size of the circle style                        |
+| CircleRadius                   | Dp    | 15.dp         | Half side of the circle-style square            |
+| CircleCornerRadius             | Dp    | 7.dp          | Corner radius of the circle-style square        |
 
 #### Methods
 

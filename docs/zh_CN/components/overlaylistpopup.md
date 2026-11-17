@@ -167,6 +167,9 @@ Box(Modifier.layerBackdrop(backdrop)) {
 即 COUI 的非模糊背景。对话框与底部弹窗会为其内容关闭该提供者。传入 `materialBlur = false`
 可让单个弹窗不模糊。
 
+阴影描边与跟手光斑（`materialEffect`）在不透明表面上同样绘制，参数不变。COUI 只在弹窗模糊后才绘制它们；
+本库保留它们，使无法模糊的菜单也有光效。二者都是以 source-over 叠在表面上的白光，与 ColorOS 17 的实际观感一致：COUI 的 OVERLAY 光斑落在面板自身透明的画布上、位于窗口模糊之上。它们在模糊与深色表面上可见，在浅色模式的纯白填充上则看不出。光斑在手指按下处亮起，随手指在各行之间移动（包括拖动选择），松手时一边扩散一边熄灭。
+
 ## 属性
 
 ### OverlayListPopup
@@ -185,8 +188,8 @@ Box(Modifier.layerBackdrop(backdrop)) {
 | renderInRootScaffold  | Boolean                     | 是否在根（最外层）Scaffold 中渲染弹窗。为 true 时，弹窗覆盖全屏。为 false 时，在当前 Scaffold 的范围内渲染并进行位置补偿 | true |
 | backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下，叠加在默认材质模糊之上 | Modifier |
 | backgroundColor       | Color                       | 弹窗不模糊时的表面填充色（couiColorBackgroundTop，即 COUI 的非模糊背景） | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | true |
-| materialEffect        | Boolean                     | 弹窗模糊时绘制阴影描边与跟手光斑 | true |
+| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | 绘制阴影描边与跟手光斑（模糊与否均绘制） | `LocalCOUIMaterialEffectEnabled.current` |
 | content               | @Composable () -> Unit      | 要在弹窗内显示的内容                 | -                                          |
 
 ### ListPopupColumn
@@ -221,9 +224,10 @@ DropdownImpl(
 | dropdownColors        | DropdownColors | 选项颜色配置       | DropdownDefaults.dropdownColors() |
 | enabled               | Boolean        | 此选项是否可点击   | true                              |
 | dialogMode            | Boolean        | 是否以对话框模式显示此行 | false                        |
+| reserveIconSlot       | Boolean        | 保留 20dp + 12dp 的前置图标位，使标题与带图标的行对齐 | false     |
 | onSelectedIndexChange | (Int) -> Unit  | 点击此选项时的回调 | -                                 |
 
-基于条目的重载接受 `DropdownItem`（可携带 `icon` 与 `summary`），并暴露额外的布局标志：
+基于条目的重载接受 `DropdownItem`（可携带 `icon`、`summary` 与自定义尾部 `stateIcon`），并暴露额外的布局标志：
 
 | 属性名                | 类型           | 说明                                                                       | 默认值                            |
 | --------------------- | -------------- | -------------------------------------------------------------------------- | --------------------------------- |
@@ -235,9 +239,15 @@ DropdownImpl(
 | enabled               | Boolean        | 此选项是否可点击                                                           | item.enabled                      |
 | dialogMode            | Boolean        | 是否以对话框模式显示此行                                                   | false                             |
 | hasSubmenu            | Boolean        | 为 true 时此行作为子菜单触发行：尾部显示上下箭头指示器而非选中对勾              | false                             |
-| isFirst               | Boolean        | 兼容保留；COUI 17 各行内边距一致、由列表统一留白，弹窗模式不再读取               | index == 0                        |
-| isLast                | Boolean        | 兼容保留，同 `isFirst`             | index == optionSize - 1           |
+| submenuExpanded       | Boolean        | 此行打开的子菜单是否正在显示（指示器变为选中色）                           | false                             |
+| reserveIconSlot       | Boolean        | 条目没有图标时仍保留前置图标位                                             | false                             |
 | onSelectedIndexChange | (Int) -> Unit  | 点击此选项时的回调                                                         | -                                 |
+
+COUI 17 `MixedPopupListAdapter` 只要列表中有任一条目带图标，就让所有竖向行都显示图标位，使标题对齐。自己拼行时，请给同一列表的每一行传 `reserveIconSlot = items.any { it.icon != null }`；下拉菜单与 Spinner 已自动处理。
+
+`DropdownItem.stateIcon` 在 24dp 尾部状态位放一个自定义图标（`PopupListItem.setStateIcon`）。无论是否选中都会显示，并取代选中对勾（子菜单触发行仍显示指示器）；着色与对勾一致：选中时 `selectedIndicatorColor`，否则 `submenuIndicatorColor`（couiColorLabelTertiary），警示条目为 `alertContentColor`。
+
+菜单默认不压暗背后的内容（`enableWindowDim = false`）：`COUIPopupListWindow` 会清空窗口背景，也不添加任何遮罩。
 
 ### PopupPositionProvider.Align
 

@@ -84,7 +84,7 @@ fun NavigationRailDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex]}",
-                                style = COUITheme.textStyles.title1,
+                                style = COUITheme.textStyles.displayS,
                             )
                         }
                     }

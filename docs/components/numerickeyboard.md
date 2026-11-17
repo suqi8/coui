@@ -21,7 +21,8 @@ var input by remember { mutableStateOf("") }
 
 NumericKeyboard(
     onNumberClick = { input += it },
-    onRightKeyClick = { input = input.dropLast(1) }, // the default right key is delete
+    rightKey = NumericKeyboardDefaults.deleteKey(), // both corners are empty by default
+    onRightKeyClick = { input = input.dropLast(1) },
 )
 ```
 
@@ -33,6 +34,7 @@ A side key shows an icon or a bold label. Changing a side key after the first co
 NumericKeyboard(
     onNumberClick = { input += it },
     leftKey = if (input.isNotEmpty()) NumericKeyboardDefaults.finishKey() else null,
+    rightKey = NumericKeyboardDefaults.deleteKey(),
     onLeftKeyClick = { submit(input) },
     onRightKeyClick = { input = input.dropLast(1) },
 )
@@ -60,7 +62,7 @@ NumericKeyboard(
 | enabled               | Boolean                    | Whether keys accept touches                     | true                                 | No       |
 | hapticFeedbackEnabled | Boolean                    | Keyboard haptic on touch down                   | true                                 | No       |
 | leftKey               | NumericKeyboardSideKey?    | Bottom-left key, null for an empty cell         | null                                 | No       |
-| rightKey              | NumericKeyboardSideKey?    | Bottom-right key, null for an empty cell        | NumericKeyboardDefaults.deleteKey()  | No       |
+| rightKey              | NumericKeyboardSideKey?    | Bottom-right key, null for an empty cell        | null                                 | No       |
 | pressEffect           | NumericKeyboardPressEffect | `Ripple` or `Light`                             | Ripple                               | No       |
 | keySize               | Dp                         | Key diameter                                    | 68.dp                                | No       |
 | colors                | NumericKeyboardColors      | Key colors                                      | NumericKeyboardDefaults.colors()     | No       |
@@ -71,11 +73,12 @@ NumericKeyboard(
 
 | Property           | Type          | Description                                          | Default Value |
 | ------------------ | ------------- | ---------------------------------------------------- | ------------- |
-| icon               | ImageVector?  | Icon, tinted with the number color                   | null          |
+| icon               | ImageVector?  | Icon, drawn with its own colors unless `tintIcon`   | null          |
 | text               | String?       | Bold label, used when there is no icon               | null          |
 | contentDescription | String?       | Accessibility description                            | text          |
 | textColor          | Color         | Label color; unspecified uses `wordTextColor`        | Unspecified   |
 | textSize           | Dp            | Label size                                           | 16.dp         |
+| tintIcon           | Boolean       | Tint the icon with the number color (`deleteKey()` sets it) | false  |
 
 ### NumericKeyboardDefaults
 
@@ -94,7 +97,7 @@ NumericKeyboard(
 
 | Method             | Description                                                                                                  |
 | ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| colors()           | Settings keyboard: black / #E6FFFFFF digits on `surfaceContainer` / #8C3D3D3D keys (place it on the page `surface`, not on a card), ripple 6% / 12%, label #2AD181        |
+| colors()           | Settings keyboard: black / white digits on `cardBackground` / #8C3D3D3D keys (place it on the page `backgroundWithCard`, not on a card), side keys unfilled, ripple 6% / 12%, label #2AD181 |
 | lockScreenColors() | Lock screen: white digits, no key fill, white ripple 12%                                                      |
 | deleteKey()        | The delete side key                                                                                           |
 | finishKey()        | The "Done" side key                                                                                           |

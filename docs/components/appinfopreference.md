@@ -80,7 +80,7 @@ AppInfoPreference(
 
 | Parameter             | Type  | Default                                   |
 | --------------------- | ----- | ----------------------------------------- |
-| nameColor             | Color | COUITheme.colorScheme.onSurface           |
-| versionColor          | Color | COUITheme.colorScheme.onSurfaceSecondary  |
+| nameColor             | Color | COUITheme.colorScheme.labelPrimary           |
+| versionColor          | Color | COUITheme.colorScheme.labelSecondary  |
 | copyPopupColor        | Color | COUITheme.colorScheme.backgroundTop       |
-| copyPopupContentColor | Color | COUITheme.colorScheme.onSurface           |
+| copyPopupContentColor | Color | COUITheme.colorScheme.labelPrimary           |

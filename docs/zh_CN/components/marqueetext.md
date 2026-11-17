@@ -18,7 +18,7 @@ import io.github.suqi8.coui.kmp.basic.MarqueeTextDefaults
 ```kotlin
 MarqueeText(
     text = "电池优化正在限制多个应用的后台活动，点击查看详情并逐一调整",
-    style = COUITheme.textStyles.footnote1,
+    style = COUITheme.textStyles.bodyS,
     modifier = Modifier.fillMaxWidth(),
 )
 ```

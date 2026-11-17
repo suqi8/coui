@@ -21,7 +21,7 @@ Surface(
     modifier = Modifier
         .size(200.dp)
         .padding(16.dp),
-    color = COUITheme.colorScheme.background,
+    color = COUITheme.colorScheme.surface,
     shape = RoundedCornerShape(16.dp),
     shadowElevation = 4.dp
 ) {
@@ -40,8 +40,8 @@ Surface(
 | --------------- | ---------------------- | ------------------------------------------------ | --------------------------------- | -------- |
 | modifier        | Modifier               | Modifiers applied to Surface                     | Modifier                          | No       |
 | shape           | Shape                  | Shape of the Surface                             | SurfaceDefaults.Shape             | No       |
-| color           | Color                  | Background color of Surface                      | COUITheme.colorScheme.surface    | No       |
-| contentColor    | Color                  | Content color of Surface                         | COUITheme.colorScheme.onSurface  | No       |
+| color           | Color                  | Background color of Surface                      | COUITheme.colorScheme.backgroundWithCard    | No       |
+| contentColor    | Color                  | Content color of Surface                         | COUITheme.colorScheme.labelPrimary  | No       |
 | border          | BorderStroke?          | Border style of Surface                          | null                              | No       |
 | shadowElevation | Dp                     | Shadow elevation of Surface                      | SurfaceDefaults.ShadowElevation   | No       |
 | content         | @Composable () -> Unit | Composable function for the Surface content area | -                                 | Yes      |
@@ -77,7 +77,7 @@ Surface(
     onClick = { /* Handle click event */ },
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.containerTheme,
     shadowElevation = 4.dp
 ) {
     Box(
@@ -126,7 +126,7 @@ Combine Surface with other components to create card-like layouts:
 Surface(
     modifier = Modifier.fillMaxWidth().padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     border = BorderStroke(1.dp, COUITheme.colorScheme.outline.copy(alpha = 0.2f)),
     shadowElevation = 4.dp
 ) {
@@ -135,12 +135,12 @@ Surface(
     ) {
         Text(
             text = "Card Title",
-            style = COUITheme.textStyles.headline1
+            style = COUITheme.textStyles.headlineXS
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "This is the card content area, where various components and information can be placed. The Surface component provides a unified visual container.",
-            style = COUITheme.textStyles.body1
+            style = COUITheme.textStyles.bodyXL
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -164,7 +164,7 @@ Surface(
     enabled = isEnabled,
     modifier = Modifier.size(200.dp).padding(16.dp),
     shape = RoundedCornerShape(16.dp),
-    color = COUITheme.colorScheme.surface.copy(alpha = 0.6f),
+    color = COUITheme.colorScheme.backgroundWithCard.copy(alpha = 0.6f),
     shadowElevation = 1.dp
 ) {
     Box(

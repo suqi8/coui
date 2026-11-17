@@ -117,7 +117,7 @@ Scaffold {
 | 参数                 | 类型  | 默认值                                         |
 | -------------------- | ----- | ---------------------------------------------- |
 | color                | Color | COUITheme.colorScheme.primary                 |
-| disabledColor        | Color | COUITheme.colorScheme.disabledPrimaryButton   |
+| disabledColor        | Color | COUITheme.colorScheme.disable   |
 | contentColor         | Color | COUITheme.colorScheme.onPrimary               |
 | disabledContentColor | Color | COUITheme.colorScheme.disabledOnPrimaryButton |
 
@@ -150,7 +150,7 @@ ButtonPreference(
     endActions = {
         Text(
             text = "免费版",
-            color = COUITheme.colorScheme.onSurfaceVariantActions
+            color = COUITheme.colorScheme.labelTertiary
         )
     }
 )
@@ -168,7 +168,7 @@ ButtonPreference(
         Icon(
             imageVector = COUIIcons.Sort,
             contentDescription = null,
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 12.dp)
         )
     }

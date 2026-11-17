@@ -55,8 +55,8 @@ Stepper(
 | Parameter            | Type  | Default                                   |
 | -------------------- | ----- | ----------------------------------------- |
 | buttonColor          | Color | COUITheme.colorScheme.dialogButton (couiColorContainer8) |
-| contentColor         | Color | COUITheme.colorScheme.onSurface          |
-| disabledContentColor | Color | COUITheme.colorScheme.dividerLine (couiColorDivider) |
+| contentColor         | Color | COUITheme.colorScheme.labelPrimary          |
+| disabledContentColor | Color | COUITheme.colorScheme.divider (couiColorDivider) |
 
 ## Behavior
 

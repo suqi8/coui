@@ -110,12 +110,12 @@ MultiSelectListPreference(
 
 | 参数                           | 类型  | 默认值                                            | COUI 角色                |
 | ------------------------------ | ----- | ------------------------------------------------- | ------------------------ |
-| itemTextColor                  | Color | COUITheme.colorScheme.onSurface                  | couiColorPrimaryNeutral  |
-| disabledItemTextColor          | Color | COUITheme.colorScheme.disabledOnSecondaryVariant | couiColorDisabledNeutral |
-| itemSummaryColor               | Color | COUITheme.colorScheme.onSurfaceSecondary         | couiColorSecondNeutral   |
-| disabledItemSummaryColor       | Color | COUITheme.colorScheme.disabledOnSecondaryVariant | couiColorDisabledNeutral |
+| itemTextColor                  | Color | COUITheme.colorScheme.labelPrimary                  | couiColorPrimaryNeutral  |
+| disabledItemTextColor          | Color | COUITheme.colorScheme.disabledNeutral | couiColorDisabledNeutral |
+| itemSummaryColor               | Color | COUITheme.colorScheme.labelSecondary         | couiColorSecondNeutral   |
+| disabledItemSummaryColor       | Color | COUITheme.colorScheme.disabledNeutral | couiColorDisabledNeutral |
 | selectedIndicatorColor         | Color | COUITheme.colorScheme.primary                    | couiColorPrimary         |
-| disabledSelectedIndicatorColor | Color | COUITheme.colorScheme.disabledPrimary            | -                        |
+| disabledSelectedIndicatorColor | Color | COUITheme.colorScheme.disable            | -                        |
 
 ## 行为
 

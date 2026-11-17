@@ -60,18 +60,20 @@ DateTimePicker(
 | modifier        | Modifier                 | Modifier applied to the picker                                     | Modifier                                   | No       |
 | enabled         | Boolean                  | Whether the picker is enabled for user interaction                 | true                                       | No       |
 | is24Hour        | Boolean                  | Whether the hour wheel uses the 24-hour format                     | true                                       | No       |
-| amPmFirst       | Boolean                  | Whether the AM/PM wheel sits before the hour wheel                 | true                                       | No       |
+| amPmFirst       | Boolean                  | Whether the AM/PM wheel sits before the hour wheel                 | TimePickerDefaults.localeAmPmFirst()       | No       |
 | minuteFiveStep  | Boolean                  | Whether the minute wheel steps by five minutes                     | false                                      | No       |
 | yearRange       | IntRange?                | Years the date wheel covers; null = 50 years before to 150 after the first value | null                         | No       |
-| dateLabel       | (DateValue) -> String    | Converts a date to its display string                              | DateTimePickerDefaults.DateLabel           | No       |
-| todayLabel      | String                   | Display string of today's row                                      | DateTimePickerDefaults.TodayLabel          | No       |
-| amLabel         | String                   | Display string for AM                                              | TimePickerDefaults.AmLabel                 | No       |
-| pmLabel         | String                   | Display string for PM                                              | TimePickerDefaults.PmLabel                 | No       |
+| dateLabel       | (DateValue) -> String    | Converts a date to its display string                              | DateTimePickerDefaults.dateLabel()         | No       |
+| todayLabel      | String                   | Display string of today's row                                      | DateTimePickerDefaults.todayLabel()        | No       |
+| amLabel         | String                   | Display string for AM                                              | TimePickerDefaults.amLabel()               | No       |
+| pmLabel         | String                   | Display string for PM                                              | TimePickerDefaults.pmLabel()               | No       |
+| hourUnit        | String                   | Unit label beside the selected hour (COUI setUnitVisible); empty to hide | TimePickerDefaults.HourUnit          | No       |
+| minuteUnit      | String                   | Unit label beside the selected minute; empty to hide               | TimePickerDefaults.MinuteUnit              | No       |
 | dateColumnWidth | Dp                       | Width of the date column                                           | DateTimePickerDefaults.dateColumnWidth()   | No       |
 | timeColumnWidth | Dp                       | Width of the hour, minute and AM/PM columns                        | DateTimePickerDefaults.TimeColumnWidth     | No       |
 | colors          | NumberPickerColors       | Color configuration of the wheels                                  | NumberPickerDefaults.colors()              | No       |
-| dividerColor    | Color                    | Color of the two hairlines around the selected row                 | COUITheme.colorScheme.dividerLine          | No       |
-| textStyle       | TextStyle                | Text style for the wheel items                                     | COUITheme.textStyles.title3                | No       |
+| dividerColor    | Color                    | Color of the two hairlines around the selected row                 | COUITheme.colorScheme.divider          | No       |
+| textStyle       | TextStyle                | Text style for the wheel items                                     | COUITheme.textStyles.headlineM                | No       |
 | itemHeight      | Dp                       | The height of each wheel item                                      | NumberPickerDefaults.ItemHeight            | No       |
 | insideMargin    | PaddingValues            | Padding around the wheel columns                                   | DateTimePickerDefaults.InsideMargin        | No       |
 
@@ -92,26 +94,26 @@ DateTimePicker(
 | WideDateColumnWidth | Dp                    | Date column width in other languages                 | 174.dp                          |
 | TimeColumnWidth     | Dp                    | Width of the hour, minute and AM/PM columns          | 62.dp                           |
 | InsideMargin        | PaddingValues         | Padding around the wheel columns                     | PaddingValues(vertical = 12.dp) |
-| TodayLabel          | String                | Label of today's row                                 | "Today"                         |
-| DateLabel           | (DateValue) -> String | English weekday, month and day                       | "Thu, Oct 23"                   |
 | dateColumnWidth()   | Dp                    | DateColumnWidth for zh / en, WideDateColumnWidth otherwise | -                         |
+| dateLabel()         | (DateValue) -> String | "10月23日 周四" in Chinese, the locale's abbreviated weekday, month and day otherwise ("Thu, Oct 23") | - |
+| todayLabel()        | String                | The locale's "Today" ("今天" in Chinese)             | -                               |
+
+The columns shrink by `width / (date + 3 × time column)`, counting the AM/PM column even in 24-hour mode as COUITimePicker does, and the picker is at most 640dp wide. The AM/PM wheel follows the locale's order by default (before the hour in Chinese, after the minute in English).
 
 ## Advanced Usage
 
-### Chinese Labels
+### Custom Labels
 
-COUI shows "10月23日 周五" and "今天" in Chinese:
+The default labels follow the locale. Pass your own to override them:
 
 ```kotlin
-val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
-
 DateTimePicker(
     value = value,
     onValueChange = { value = it },
     is24Hour = false,
-    dateLabel = { "${it.month}月${it.day.toString().padStart(2, '0')}日 ${weekdays[it.dayOfWeek - 1]}" },
-    todayLabel = "今天",
-    amLabel = "上午",
-    pmLabel = "下午"
+    dateLabel = { "${it.month}/${it.day}" },
+    todayLabel = "Now",
+    hourUnit = "h",
+    minuteUnit = "min"
 )
 ```

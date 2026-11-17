@@ -89,14 +89,14 @@ fun OverlayIconDropdownMenuDemo() {
                             OverlayIconDropdownMenu(entry = actionEntry) {
                                 Icon(
                                     imageVector = COUIIcons.Edit,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Action menu",
                                 )
                             }
                             OverlayIconDropdownMenu(entry = sortEntry) {
                                 Icon(
                                     imageVector = COUIIcons.Sort,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Sort",
                                 )
                             }
@@ -106,7 +106,7 @@ fun OverlayIconDropdownMenuDemo() {
                             ) {
                                 Icon(
                                     imageVector = COUIIcons.SelectAll,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Multiple selection",
                                 )
                             }
@@ -116,7 +116,7 @@ fun OverlayIconDropdownMenuDemo() {
                             ) {
                                 Icon(
                                     imageVector = COUIIcons.MoreCircle,
-                                    tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                                    tint = COUITheme.colorScheme.disabledNeutral,
                                     contentDescription = "More",
                                 )
                             }

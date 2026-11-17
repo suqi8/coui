@@ -20,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.SwipeAction
 import io.github.suqi8.coui.kmp.basic.SwipeActionItem
+import io.github.suqi8.coui.kmp.basic.SwipeActionMenuStyle
 import io.github.suqi8.coui.kmp.basic.rememberSwipeActionItemState
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
@@ -44,13 +45,13 @@ fun SwipeActionItemDemo() {
         ) {
             val rows = remember { mutableStateListOf(*SwipeDemoTitles.toTypedArray()) }
             val scope = rememberCoroutineScope()
-            val rowColor = COUITheme.colorScheme.surfaceContainer
+            val rowColor = COUITheme.colorScheme.cardBackground
             Card {
                 rows.forEachIndexed { index, title ->
                     key(title) {
                         val state = rememberSwipeActionItemState()
                         SwipeActionItem(
-                            actions = if (index == 0) {
+                            actions = if (index < 2) {
                                 listOf(SwipeAction(label = "Pin", color = COUITheme.colorScheme.primary))
                             } else {
                                 emptyList()
@@ -60,11 +61,16 @@ fun SwipeActionItemDemo() {
                             onDelete = { rows.remove(title) },
                             fastDeleteEnabled = index == 2,
                             deleteContentDescription = "Delete",
+                            menuStyle = if (index == 1) SwipeActionMenuStyle.RoundRect else SwipeActionMenuStyle.Rect,
                         ) {
                             BasicComponent(
                                 modifier = Modifier.background(rowColor),
                                 title = title,
-                                summary = if (index == 2) "Over-slide to delete" else "Swipe towards the start",
+                                summary = when (index) {
+                                    1 -> "Round rect actions"
+                                    2 -> "Over-slide to delete"
+                                    else -> "Swipe towards the start"
+                                },
                             )
                         }
                     }

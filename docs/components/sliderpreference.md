@@ -63,7 +63,7 @@ SliderPreference(
 | summary               | String?                           | Summary description                                                                                                                                                            | null                               | No       |
 | summaryColor          | BasicComponentColors              | Summary text color configuration                                                                                                                                               | BasicComponentDefaults.summaryColor() | No       |
 | startAction           | @Composable (() -> Unit)?         | Custom start side content                                                                                                                                                      | null                               | No       |
-| valueText             | String?                           | Current slider value text displayed in the end area at 13sp (`footnote1`, the COUI list end value) with summary-style formatting. Rendered inside the Row layout with center-vertical alignment and weight                     | null                               | No       |
+| valueText             | String?                           | Current slider value text displayed in the end area at 13sp (`bodyS`, the COUI list end value) with summary-style formatting. Rendered inside the Row layout with center-vertical alignment and weight                     | null                               | No       |
 | endActions            | @Composable (RowScope.() -> Unit)?| Custom end side content, rendered after valueText within the same Row                                                                                                          | null                               | No       |
 | bottomAction          | @Composable (() -> Unit)?         | Custom content at the top of the bottom area, above the slider                                                                                                                 | null                               | No       |
 | onClick               | (() -> Unit)?                     | Callback triggered on click. When non-null, an arrow icon is displayed in the end area                                                                                        | null                               | No       |
@@ -75,8 +75,8 @@ SliderPreference(
 | reverseDirection      | Boolean                           | Controls the direction of slider. When false (default), follows LayoutDirection (L-R in LTR, R-L in RTL). When true, reverses the direction.                                   | false                              | No       |
 | sliderHeight          | Dp                                | Height of the slider                                                                                                                                                           | SliderDefaults.MinHeight           | No       |
 | sliderColors          | SliderColors                      | Color configuration of the slider                                                                                                                                              | SliderDefaults.sliderColors()      | No       |
-| hapticEffect          | SliderDefaults.SliderHapticEffect | Type of haptic feedback                                                                                                                                                        | SliderDefaults.DefaultHapticEffect | No       |
-| showKeyPoints         | Boolean                           | Whether to show key point indicators on the slider. Only works when keyPoints is not null                                                                                      | false                              | No       |
+| hapticEffect          | SliderDefaults.SliderHapticEffect | Type of haptic feedback                                                                                                                                                        | SliderDefaults.SliderHapticEffect.Step | No       |
+| showKeyPoints         | Boolean                           | Whether to show key point indicators on the slider. Only works when keyPoints is not null                                                                                      | true                               | No       |
 | keyPoints             | List\<Float\>?                    | Custom key point values to display on the slider. If null, uses step positions from steps parameter. Values should be within valueRange                                        | null                               | No       |
 | magnetThreshold       | Float                             | Magnetic snap threshold as a fraction (0.0 to 1.0). When slider value is within this distance from a key point, it will snap to that point. Only applies when keyPoints is set | 0.02f                              | No       |
 | material              | Boolean                           | Whether the slider draws the COUI 17 material effects (glass thumb while pressed, touch spotlight), see `Slider`                                                              | true                               | No       |
@@ -131,7 +131,7 @@ SliderPreference(
         Icon(
             imageVector = COUIIcons.Basic.Audio,
             contentDescription = "Volume Icon",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

@@ -65,7 +65,7 @@ The drawer moves like a `DrawerLayout` settle: 512ms for a full move (`ViewDragH
 | parentChildHierarchy | Boolean                | The content is itself a list-detail split (docks only on large screens) | false                        | No       |
 | editMode             | Boolean                | Edit state: mask the docked content                           | false                                  | No       |
 | editModeMask         | Boolean                | Whether edit mode draws the mask                              | true                                   | No       |
-| drawerColor          | Color                  | Drawer background                                             | colorScheme.surface                    | No       |
+| drawerColor          | Color                  | Drawer background                                             | colorScheme.backgroundWithCard                    | No       |
 | maskColor            | Color                  | Scrim / edit mask color                                       | SideNavigationBarDefaults.maskColor    | No       |
 | dividerColor         | Color                  | Drawer divider color                                          | DividerDefaults.DividerColor           | No       |
 | content              | @Composable () -> Unit | Main content                                                  | -                                      | Yes      |
@@ -92,7 +92,7 @@ The drawer moves like a `DrawerLayout` settle: 512ms for a full move (`ViewDragH
 | DividerThickness             | Dp      | `coui_side_navigation_drawer_divider_width`      | 0.33.dp                  |
 | EDIT_MASK_DURATION_MILLIS    | Int     | Edit mask fade                                   | 300                      |
 | SettleEasing                 | Easing  | `ViewDragHelper` interpolator `(t - 1)^5 + 1`    | -                        |
-| maskColor                    | Color   | `coui_color_mask` (`colorScheme.windowDimming`)  | #33000000 / #99000000    |
+| maskColor                    | Color   | `coui_color_mask` (`colorScheme.mask`)  | #33000000 / #99000000    |
 | drawerMode(width, height, parentChildHierarchy) | SideNavigationBarMode | Mode of a bar size | -          |
 | drawerWidth(width, height, mode) | Dp  | Drawer width of a bar size                       | -                        |
 

@@ -63,7 +63,7 @@ SliderPreference(
 | summary               | String?                           | 摘要说明                                                                                                         | null                               | 否       |
 | summaryColor          | BasicComponentColors              | 摘要文本的颜色配置                                                                                               | BasicComponentDefaults.summaryColor() | 否       |
 | startAction           | @Composable (() -> Unit)?         | 左侧自定义内容                                                                                                   | null                               | 否       |
-| valueText             | String?                           | 当前滑块值文本，以 13sp（`footnote1`，COUI 列表右侧值字号）摘要样式显示在末尾区域。在 Row 布局中居中垂直对齐并使用权重                                     | null                               | 否       |
+| valueText             | String?                           | 当前滑块值文本，以 13sp（`bodyS`，COUI 列表右侧值字号）摘要样式显示在末尾区域。在 Row 布局中居中垂直对齐并使用权重                                     | null                               | 否       |
 | endActions            | @Composable (RowScope.() -> Unit)?| 右侧自定义内容，紧跟 valueText 在同一 Row 中渲染                                                                 | null                               | 否       |
 | bottomAction          | @Composable (() -> Unit)?         | 底部区域顶部的自定义内容，位于滑块上方                                                                           | null                               | 否       |
 | onClick               | (() -> Unit)?                     | 点击时触发的回调。当非 null 时，末尾区域显示箭头图标                                                              | null                               | 否       |
@@ -75,8 +75,8 @@ SliderPreference(
 | reverseDirection      | Boolean                           | 控制滑块的方向。默认 false，方向跟随 LayoutDirection (LTR 时从左到右，RTL 时从右到左)。为 true 时反转方向。       | false                              | 否       |
 | sliderHeight          | Dp                                | 滑块的高度                                                                                                       | SliderDefaults.MinHeight           | 否       |
 | sliderColors          | SliderColors                      | 滑块的颜色配置                                                                                                   | SliderDefaults.sliderColors()      | 否       |
-| hapticEffect          | SliderDefaults.SliderHapticEffect | 滑块的触感反馈类型                                                                                               | SliderDefaults.DefaultHapticEffect | 否       |
-| showKeyPoints         | Boolean                           | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | false                              | 否       |
+| hapticEffect          | SliderDefaults.SliderHapticEffect | 滑块的触感反馈类型                                                                                               | SliderDefaults.SliderHapticEffect.Step | 否       |
+| showKeyPoints         | Boolean                           | 是否显示关键点指示器。仅当 keyPoints 不为 null 时有效                                                            | true                               | 否       |
 | keyPoints             | List\<Float\>?                    | 要在滑块上显示的自定义关键点值。如果为 null，则使用 steps 参数的步长位置。值应在 valueRange 范围内               | null                               | 否       |
 | magnetThreshold       | Float                             | 磁吸对齐阈值，以分数表示 (0.0 到 1.0)。当滑块值与关键点的距离在此阈值内时，将对齐到该点。仅在设置 keyPoints 时生效 | 0.02f                              | 否       |
 | material              | Boolean                           | 滑块是否绘制 COUI 17 材质效果（按下时的玻璃拇指、跟手聚光），见 `Slider`                                         | true                               | 否       |
@@ -131,7 +131,7 @@ SliderPreference(
         Icon(
             imageVector = COUIIcons.Basic.Audio,
             contentDescription = "音量图标",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

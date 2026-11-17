@@ -89,14 +89,14 @@ fun WindowIconDropdownMenuDemo() {
                             WindowIconDropdownMenu(entry = actionEntry) {
                                 Icon(
                                     imageVector = COUIIcons.Edit,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Action menu",
                                 )
                             }
                             WindowIconDropdownMenu(entry = sortEntry) {
                                 Icon(
                                     imageVector = COUIIcons.Sort,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Sort",
                                 )
                             }
@@ -106,7 +106,7 @@ fun WindowIconDropdownMenuDemo() {
                             ) {
                                 Icon(
                                     imageVector = COUIIcons.SelectAll,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Multiple selection",
                                 )
                             }
@@ -116,7 +116,7 @@ fun WindowIconDropdownMenuDemo() {
                             ) {
                                 Icon(
                                     imageVector = COUIIcons.MoreCircle,
-                                    tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                                    tint = COUITheme.colorScheme.disabledNeutral,
                                     contentDescription = "More",
                                 )
                             }

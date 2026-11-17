@@ -1,6 +1,6 @@
 # SecurityDialog
 
-`SecurityDialog` 是安全声明对话框, 对应 ColorOS 的 COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): 在常规对话框基础上扩展声明文字段落 (含可点击链接)、「不再提醒」勾选行, 以及取消 / 确认双按钮 (无填充强调色文字按钮)。
+`SecurityDialog` 是安全声明对话框, 对应 ColorOS 的 COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): 在常规对话框基础上扩展声明文字段落 (含可点击链接)、「不再询问」勾选行, 以及取消 / 确认双按钮 (无填充强调色文字按钮)。
 
 提供两种形态:
 
@@ -50,7 +50,8 @@ Scaffold {
 ```
 
 - `statement` 中与 `statementLinkText` 相同的子串会以强调色渲染, 点按时回调 `onLinkClick`。
-- 点击外部与按返回键均回调 `onCancel`, 对应 COUI 将返回键上报为负向选择的行为。
+- 按返回键回调 `onCancel`, 对应 COUI 将返回键上报为负向选择的行为。点击外部无效: 设置了选择监听后 COUI 会把对话框设为不可取消。
+- `onCheckedChange` 在每次切换勾选时回调, 对应 COUI 的 `onSelected(0, isChecked)`。
 - 传入 `checkboxText = null` 可隐藏勾选行 (等价于 `setHasCheckBox(false)`)。
 
 ## 属性
@@ -61,8 +62,9 @@ Scaffold {
 | -------------------- | -------------------- | ----------------------------------------------------------------- | --------------------------------------------- | ---- |
 | show                 | Boolean              | 是否显示对话框                                                    | -                                             | 是   |
 | onConfirm            | (Boolean) -> Unit    | 点击确认按钮时回调, 携带当前勾选状态                              | -                                             | 是   |
-| onCancel             | () -> Unit           | 点击取消按钮、点击外部或按返回键时回调                            | -                                             | 是   |
+| onCancel             | () -> Unit           | 点击取消按钮或按返回键时回调 (点击外部无效)                       | -                                             | 是   |
 | modifier             | Modifier             | 应用于对话框的修饰符                                              | Modifier                                      | 否   |
+| backgroundModifier   | Modifier             | 应用在面板圆角裁剪内、内容之下; 用于 COUI 17 模糊背景 (同时传入透明的 `backgroundColor`) | Modifier | 否   |
 | title                | String?              | 对话框标题                                                        | null                                          | 否   |
 | summary              | String?              | 对话框摘要 (message)                                              | null                                          | 否   |
 | statement            | String?              | 声明文字段落; 为 null 时隐藏                                      | null                                          | 否   |
@@ -70,6 +72,7 @@ Scaffold {
 | onLinkClick          | (() -> Unit)?        | 点击声明链接时回调                                                | null                                          | 否   |
 | checkboxText         | String?              | 勾选行文字; 为 null 时隐藏                                        | SecurityDialogDefaults.CheckboxText           | 否   |
 | initialChecked       | Boolean              | 初始勾选状态, 每次显示对话框时重新应用                            | false                                         | 否   |
+| onCheckedChange      | ((Boolean) -> Unit)? | 每次切换勾选时回调                                                | null                                          | 否   |
 | confirmText          | String               | 确认 (positive) 按钮文字                                          | SecurityDialogDefaults.ConfirmText            | 否   |
 | cancelText           | String               | 取消 (negative) 按钮文字                                          | SecurityDialogDefaults.CancelText             | 否   |
 | titleColor           | Color                | 标题颜色                                                          | DialogDefaults.titleColor()                   | 否   |
@@ -79,6 +82,7 @@ Scaffold {
 | enableWindowDim      | Boolean              | 是否启用背景遮罩                                                  | true                                          | 否   |
 | onDismissFinished    | (() -> Unit)?        | 隐藏动画完成后回调                                                | null                                          | 否   |
 | renderInRootScaffold | Boolean              | 是否渲染在根 (最外层) Scaffold 中 (仅 `OverlaySecurityDialog`)    | true                                          | 否   |
+| materialStroke       | Boolean              | 是否绘制模糊对话框的 COUI 17 材质描边 (边缘光 + 内阴影); 需要 runtime shader。取消 / 确认按钮也随之切换为材质按钮 | false | 否   |
 
 ### SecurityDialogDefaults 对象
 
@@ -86,7 +90,7 @@ Scaffold {
 
 | 属性名       | 类型   | 说明                                        |
 | ------------ | ------ | ------------------------------------------- |
-| CheckboxText | String | 默认勾选行文字 ("Don't remind me again")    |
+| CheckboxText | String | 默认勾选行文字 ("Don't ask me again")       |
 | ConfirmText  | String | 默认确认按钮文字 ("OK")                     |
 | CancelText   | String | 默认取消按钮文字 ("Cancel")                 |
 

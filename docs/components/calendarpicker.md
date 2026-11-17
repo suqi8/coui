@@ -1,6 +1,6 @@
 # CalendarPicker
 
-`CalendarPicker` is a month-grid date picker mirroring ColorOS's calendar picker family (COUICalendarDayPickerView / COUIDateMonthView / COUICalendarYearView). A header row holds the previous / next month buttons and the month-year label with an expand arrow; the body is a horizontally paged month grid. The selected day is a filled primary circle that grows from 80% while fading in (280ms), the previously selected day of the same month fades out (150ms), and today is ringed in the primary color. Days of the adjacent months fill the first and last rows and can be tapped as well. Tapping the month-year label rotates the arrow and swaps the grid for a [DatePicker](./datepicker) wheel, cross-fading 280ms in / 150ms out.
+`CalendarPicker` is a month-grid date picker mirroring ColorOS's calendar picker family (COUICalendarDayPickerView / COUIDateMonthView / COUICalendarYearView). A header row holds the previous / next month buttons and the month-year label with an expand arrow; the body is a horizontally paged month grid. The selected day is a filled primary circle that grows from 80% while fading in (280ms), the previously selected day of the same month fades out (150ms), and today is ringed in the primary color. Days of the adjacent months fill the first and last rows and can be tapped as well. Tapping the month-year label rotates the arrow, turns the label primary, fades the month buttons out (150ms) and, 120ms later, swaps the grid for a [DatePicker](./datepicker) wheel bounded by `minDate` .. `maxDate`, cross-fading 280ms in / 150ms out; collapsing fades the buttons back in over 280ms. The header and weekday labels follow the locale ("October 2026" / S M T W T F S in English, "2026年10月" / 日 一 二 三 四 五 六 in Chinese), the picker is at most 724dp wide, and every day cell is exposed to accessibility services as a clickable node.
 
 Dates are represented by the plain `DateValue` data class, so no date/time library dependency is required.
 
@@ -40,13 +40,13 @@ CalendarPicker(
 | maxDate          | DateValue                    | The latest selectable date                                   | CalendarPickerDefaults.MaxDate             | No       |
 | today            | DateValue?                   | The date ringed as today; null for none                      | CalendarPickerDefaults.today()             | No       |
 | firstDayOfWeek   | Int                          | First grid column, 1 = Sunday .. 7 = Saturday                | CalendarPickerDefaults.FirstDayOfWeek      | No       |
-| monthYearLabel   | (Int, Int) -> String         | Converts a year and month (1..12) to the header label        | CalendarPickerDefaults.MonthYearLabel      | No       |
-| weekdayLabel     | (Int) -> String              | Converts a day of week (1 = Sunday) to its column label      | CalendarPickerDefaults.WeekdayLabel        | No       |
+| monthYearLabel   | (Int, Int) -> String         | Converts a year and month (1..12) to the header label        | CalendarPickerDefaults.monthYearLabel()    | No       |
+| weekdayLabel     | (Int) -> String              | Converts a day of week (1 = Sunday) to its column label      | CalendarPickerDefaults.weekdayLabel()      | No       |
 | dayLabel         | (Int) -> String              | Converts a day of month to its cell label                    | CalendarPickerDefaults.DayLabel            | No       |
 | colors           | CalendarPickerColors         | Color configuration                                          | CalendarPickerDefaults.calendarPickerColors() | No    |
-| headerTextStyle  | TextStyle                    | Text style of the month-year label                           | COUITheme.textStyles.headline2             | No       |
-| weekdayTextStyle | TextStyle                    | Text style of the weekday labels                             | COUITheme.textStyles.subtitle              | No       |
-| dayTextStyle     | TextStyle                    | Text style of the day labels                                 | COUITheme.textStyles.headline2             | No       |
+| headerTextStyle  | TextStyle                    | Text style of the month-year label                           | COUITheme.textStyles.headlineXS             | No       |
+| weekdayTextStyle | TextStyle                    | Text style of the weekday labels                             | COUITheme.textStyles.buttonM              | No       |
+| dayTextStyle     | TextStyle                    | Text style of the day labels                                 | COUITheme.textStyles.headlineXS             | No       |
 | insideMargin     | PaddingValues                | Padding around the whole picker                              | CalendarPickerDefaults.InsideMargin        | No       |
 
 ### CalendarPickerDefaults Object
@@ -70,17 +70,21 @@ CalendarPicker(
 | DayCircleDiameter       | Dp              | Diameter of the selection / press / today circles           | 32.dp                             |
 | TodayStrokeWidth        | Dp              | Stroke width of the today ring                              | 1.8.dp                            |
 | YearViewOffset          | Dp              | Vertical offset of the expanded wheel                       | (-18).dp                          |
-| MonthYearLabel          | (Int, Int) -> String | English "MMMMy" label                                  | "October 2026"                    |
-| WeekdayLabel            | (Int) -> String | Shortest English weekday names                              | S M T W T F S                     |
+| MaxWidth                | Dp              | Maximum width of the picker (calendar_picker_max_width)     | 724.dp                            |
 | DayLabel                | (Int) -> String | Plain day number                                            | { it.toString() }                 |
 
-`CalendarPickerDefaults.today()` reads the system date once.
+| Method Name      | Return Type          | Description                                                          |
+| ---------------- | -------------------- | -------------------------------------------------------------------- |
+| today()          | DateValue            | The system date, read once                                           |
+| monthYearLabel() | (Int, Int) -> String | The locale's best "MMMMy" label ("October 2026", "2026年10月")       |
+| weekdayLabel()   | (Int) -> String      | The locale's shortest weekday names (S M T W T F S, 日 一 二 …)      |
 
 ### CalendarPickerColors Class
 
 | Property Name      | Type  | Description                                     |
 | ------------------ | ----- | ----------------------------------------------- |
 | headerColor        | Color | Month-year label and chevrons                   |
+| expandedHeaderColor | Color | Month-year label while the wheel is open (primary) |
 | arrowColor         | Color | Collapsed expand arrow                          |
 | expandedArrowColor | Color | Expanded arrow                                  |
 | weekdayColor       | Color | Weekday labels                                  |
@@ -105,13 +109,15 @@ CalendarPicker(
 )
 ```
 
-### Localized Labels
+### Custom Labels
+
+The default labels follow the locale. Pass your own to override them:
 
 ```kotlin
 CalendarPicker(
     value = date,
     onValueChange = { date = it },
-    monthYearLabel = { year, month -> "${year}年${month}月" },
-    weekdayLabel = { listOf("日", "一", "二", "三", "四", "五", "六")[it - 1] }
+    monthYearLabel = { year, month -> "$year.$month" },
+    weekdayLabel = { listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")[it - 1] }
 )
 ```

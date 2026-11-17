@@ -47,6 +47,23 @@ Badge(count = unread)
 Badge(count = 1000)
 ```
 
+### 文本角标
+
+`Badge(text = ...)` 在胶囊内显示短文本(COUI `setPointText(String)`)。纯数字文本按数字角标处理;其他文本按测得宽度与 "10"、"100"、"1000" 比较选择胶囊宽度,比 "1000" 更宽时回退为 20dp 的省略号胶囊:
+
+```kotlin
+Badge(text = "N")
+Badge(text = "Hot")
+```
+
+### 显示与隐藏
+
+`visible` 播放 COUI 的显示 / 隐藏缩放动画(520ms 内 0 到 1 往返,曲线 COUIMoveEaseInterpolator);隐藏后不再占位:
+
+```kotlin
+Badge(count = unread, visible = unread > 0)
+```
+
 ### 白色描边
 
 `stroke = true` 会在圆点或胶囊外绘制 1dp 白色描边,用于放在彩色背景上的角标(COUI POINT_ONLY_MODE_STROKE / POINT_NUM_MODE_STROKE):
@@ -95,11 +112,24 @@ BadgeBox(
 | ----------- | ----------- | ----------------------------------- | --------------------------- | ---- |
 | modifier    | Modifier    | 应用于角标的修饰符                  | Modifier                    | 否   |
 | count       | Int         | 角标显示的数字,<= 0 时显示纯圆点   | 0                           | 否   |
+| visible     | Boolean     | 是否显示;切换时播放缩放动画        | true                        | 否   |
 | stroke      | Boolean     | 是否绘制白色描边                    | false                       | 否   |
 | colors      | BadgeColors | 颜色配置                            | BadgeDefaults.badgeColors() | 否   |
 | dotDiameter | Dp          | 纯圆点形态的直径                    | BadgeDefaults.DotDiameter   | 否   |
 | height      | Dp          | 数字胶囊形态的高度                  | BadgeDefaults.Height        | 否   |
 | navigation  | Boolean     | 使用底部导航宽度（`COUIHintRedDot` POINT_NAVI 模式）：小于 10 为 12dp，小于 100 为 16dp，其余 20dp，不按高度加宽 | false | 否 |
+
+### Badge(文本)
+
+| 属性       | 类型        | 说明                         | 默认值                      | 必需 |
+| ---------- | ----------- | ---------------------------- | --------------------------- | ---- |
+| text       | String      | 胶囊内显示的文本             | -                           | 是   |
+| modifier   | Modifier    | 应用于角标的修饰符           | Modifier                    | 否   |
+| visible    | Boolean     | 是否显示;切换时播放缩放动画 | true                        | 否   |
+| stroke     | Boolean     | 是否绘制白色描边             | false                       | 否   |
+| colors     | BadgeColors | 颜色配置                     | BadgeDefaults.badgeColors() | 否   |
+| height     | Dp          | 胶囊高度                     | BadgeDefaults.Height        | 否   |
+| navigation | Boolean     | 使用底部导航宽度             | false                       | 否   |
 
 ### BadgeBox
 
@@ -132,7 +162,7 @@ BadgeBox(
 
 | 参数           | 类型  | 默认值                                          |
 | -------------- | ----- | ----------------------------------------------- |
-| containerColor | Color | COUI 专用红(浅色 #EB3B2F,深色 #EB493D)       |
+| containerColor | Color | `COUITheme.colorScheme.red`(浅色 #EB3B2F,深色 #EB493D)       |
 | contentColor   | Color | Color.White                                     |
 | strokeColor    | Color | Color.White                                     |
 
@@ -143,4 +173,4 @@ BadgeBox(
 - 数字文本按密度换算为 10dp(sans-serif medium)渲染,与原版一样不受用户字体缩放影响。
 - `stroke = true` 绘制 1dp 白色描边;圆点形态的红色圆核按描边宽度缩小,胶囊形态的红色填充内缩于白色描边之内。
 - `BadgeBox` 的 `overhang` 为正时,角标超出内容右上角并相应扩大布局(COUI 矩形锚点);为负时角标内缩于角内(COUI 圆形锚点,如头像)。
-- 若需要 COUIHintRedDot 的显示 / 隐藏缩放动画,可用 `AnimatedVisibility` 配合 `scaleIn` / `scaleOut`,时长取 `BadgeDefaults.ScaleAnimDurationMillis`。
+- 切换 `visible` 播放 COUIHintRedDot 的显示 / 隐藏缩放动画(`executeScaleAnim`:0 到 1 往返,时长 `BadgeDefaults.ScaleAnimDurationMillis`,曲线 COUIMoveEaseInterpolator);隐藏完成后角标不再占位。

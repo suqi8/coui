@@ -68,7 +68,7 @@ fun ListDetailLayoutDemo() {
                         Text(
                             text = ListDetailItems[index].first,
                             modifier = Modifier.padding(start = 8.dp),
-                            style = COUITheme.textStyles.title3,
+                            style = COUITheme.textStyles.headlineM,
                         )
                     }
                 }
@@ -78,8 +78,8 @@ fun ListDetailLayoutDemo() {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Select an item",
-                    style = COUITheme.textStyles.body2,
-                    color = COUITheme.colorScheme.onSurfaceSecondary,
+                    style = COUITheme.textStyles.bodyM,
+                    color = COUITheme.colorScheme.labelSecondary,
                 )
             }
         },

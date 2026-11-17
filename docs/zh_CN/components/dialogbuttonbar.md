@@ -115,7 +115,7 @@ available = min(392.dp, barWidth) / buttonCount
 | colors        | TextButtonColors       | 否定与肯定按钮的颜色                           | `material` 时为 materialButtonColors()，否则 buttonColors() | 否   |
 | neutralColors | TextButtonColors       | 中性按钮的颜色                                 | `material` 时为 materialNeutralButtonColors()，否则 neutralButtonColors() | 否   |
 | recommendedColors | TextButtonColors   | 推荐按钮的颜色（不论其角色）                   | recommendedButtonColors()                     | 否   |
-| textStyle     | TextStyle              | 文案样式，同时用于纵排判定时的文案测量         | COUITheme.textStyles.button                   | 否   |
+| textStyle     | TextStyle              | 文案样式，同时用于纵排判定时的文案测量         | COUITheme.textStyles.buttonL                   | 否   |
 
 ### DialogButtonBarAction 属性
 
@@ -139,14 +139,15 @@ available = min(392.dp, barWidth) / buttonCount
 | CellPaddingBottom               | Dp   | 最底部单元格的下内边距（即面板底部留白）         | 16.dp |
 | StackedButtonMinHeight          | Dp   | 纵排按钮的最小高度                               | 44.dp |
 | StackedButtonMinHeightMultiline | Dp   | 文案换行的纵排按钮最小高度                       | 56.dp |
+| LabelMaxLines | Int | 按钮文案最多行数, 超出省略 (`android:maxLines`) | 2 |
 
 | 函数                  | 返回类型         | 说明                                                                 |
 | :-------------------- | :--------------- | :------------------------------------------------------------------- |
-| buttonColors()        | TextButtonColors | `colorScheme.dialogButton` 填充（`?couiColorContainer8`），`onSecondaryVariant` 文字 |
+| buttonColors()        | TextButtonColors | `colorScheme.dialogButton` 填充（`?couiColorContainer8`），`labelPrimary` 文字 |
 | neutralButtonColors() | TextButtonColors | `colorScheme.dialogButton` 填充，`error` 文字（禁用时为 30% 透明度的错误色） |
 | materialButtonColors() | TextButtonColors | 材质对话框填充：白色 alpha 166（浅色 `#A6FFFFFF`）/ 51（深色 `#33FFFFFF`）；禁用填充保持 `dialogButton` |
 | materialNeutralButtonColors() | TextButtonColors | 材质填充 + `neutralButtonColors()` 的 `error` 文字 |
-| recommendedButtonColors() | TextButtonColors | 推荐按钮：`primary` 填充（`?couiColorContainerTheme`，材质对话框中也保持不透明），`onPrimary` 文字；禁用时为 `disabledPrimaryButton` / `disabledOnPrimaryButton` |
+| recommendedButtonColors() | TextButtonColors | 推荐按钮：`primary` 填充（`?couiColorContainerTheme`，材质对话框中也保持不透明），`onPrimary` 文字；禁用时为 `disable` / `disabledOnPrimaryButton` |
 
 ## 行为说明
 

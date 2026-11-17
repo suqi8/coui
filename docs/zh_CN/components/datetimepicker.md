@@ -60,18 +60,20 @@ DateTimePicker(
 | modifier        | Modifier                 | 应用于选择器的修饰符                                   | Modifier                                   | 否       |
 | enabled         | Boolean                  | 是否启用用户交互                                       | true                                       | 否       |
 | is24Hour        | Boolean                  | 小时滚轮是否使用 24 小时制                             | true                                       | 否       |
-| amPmFirst       | Boolean                  | 上午/下午滚轮是否位于小时滚轮之前                      | true                                       | 否       |
+| amPmFirst       | Boolean                  | 上午/下午滚轮是否位于小时滚轮之前                      | TimePickerDefaults.localeAmPmFirst()       | 否       |
 | minuteFiveStep  | Boolean                  | 分钟滚轮是否以 5 分钟步进                              | false                                      | 否       |
 | yearRange       | IntRange?                | 日期滚轮覆盖的年份；null 表示首个值之前 50 年到之后 150 年 | null                                   | 否       |
-| dateLabel       | (DateValue) -> String    | 日期的显示文本转换函数                                 | DateTimePickerDefaults.DateLabel           | 否       |
-| todayLabel      | String                   | 当天那一行的显示文本                                   | DateTimePickerDefaults.TodayLabel          | 否       |
-| amLabel         | String                   | 上午的显示文本                                         | TimePickerDefaults.AmLabel                 | 否       |
-| pmLabel         | String                   | 下午的显示文本                                         | TimePickerDefaults.PmLabel                 | 否       |
+| dateLabel       | (DateValue) -> String    | 日期的显示文本转换函数                                 | DateTimePickerDefaults.dateLabel()         | 否       |
+| todayLabel      | String                   | 当天那一行的显示文本                                   | DateTimePickerDefaults.todayLabel()        | 否       |
+| amLabel         | String                   | 上午的显示文本                                         | TimePickerDefaults.amLabel()               | 否       |
+| pmLabel         | String                   | 下午的显示文本                                         | TimePickerDefaults.pmLabel()               | 否       |
+| hourUnit        | String                   | 选中小时旁的单位标签（COUI setUnitVisible），为空则隐藏 | TimePickerDefaults.HourUnit               | 否       |
+| minuteUnit      | String                   | 选中分钟旁的单位标签，为空则隐藏                       | TimePickerDefaults.MinuteUnit              | 否       |
 | dateColumnWidth | Dp                       | 日期列宽度                                             | DateTimePickerDefaults.dateColumnWidth()   | 否       |
 | timeColumnWidth | Dp                       | 时、分、上午/下午列宽度                                | DateTimePickerDefaults.TimeColumnWidth     | 否       |
 | colors          | NumberPickerColors       | 滚轮的颜色配置                                         | NumberPickerDefaults.colors()              | 否       |
-| dividerColor    | Color                    | 选中行上下两条细线的颜色                               | COUITheme.colorScheme.dividerLine          | 否       |
-| textStyle       | TextStyle                | 滚轮项目的文本样式                                     | COUITheme.textStyles.title3                | 否       |
+| dividerColor    | Color                    | 选中行上下两条细线的颜色                               | COUITheme.colorScheme.divider          | 否       |
+| textStyle       | TextStyle                | 滚轮项目的文本样式                                     | COUITheme.textStyles.headlineM                | 否       |
 | itemHeight      | Dp                       | 每个滚轮项目的高度                                     | NumberPickerDefaults.ItemHeight            | 否       |
 | insideMargin    | PaddingValues            | 滚轮列周围的内边距                                     | DateTimePickerDefaults.InsideMargin        | 否       |
 
@@ -92,26 +94,26 @@ DateTimePicker(
 | WideDateColumnWidth | Dp                    | 其他语言下的日期列宽度                     | 174.dp                          |
 | TimeColumnWidth     | Dp                    | 时、分、上午/下午列宽度                    | 62.dp                           |
 | InsideMargin        | PaddingValues         | 滚轮列周围的内边距                         | PaddingValues(vertical = 12.dp) |
-| TodayLabel          | String                | 当天那一行的文本                           | "Today"                         |
-| DateLabel           | (DateValue) -> String | 英文星期、月、日                           | "Thu, Oct 23"                   |
 | dateColumnWidth()   | Dp                    | zh / en 返回 DateColumnWidth，否则 WideDateColumnWidth | -                   |
+| dateLabel()         | (DateValue) -> String | 中文为「10月23日 周四」，其他语言为本地化的星期、月、日缩写（"Thu, Oct 23"） | - |
+| todayLabel()        | String                | 当前语言的「今天」                         | -                               |
+
+各列按 `宽度 / (日期列 + 3 × 时间列)` 收缩，与 COUITimePicker 一致在 24 小时制下也把隐藏的上午/下午列算进去；选择器最大宽度 640dp。上午/下午滚轮默认按语言习惯放置（中文在小时之前，英文在分钟之后）。
 
 ## 进阶用法
 
-### 中文文本
+### 自定义文本
 
-COUI 在中文下显示「10月23日 周五」和「今天」：
+默认文本已随语言变化，需要时可传入自己的文本：
 
 ```kotlin
-val weekdays = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
-
 DateTimePicker(
     value = value,
     onValueChange = { value = it },
     is24Hour = false,
-    dateLabel = { "${it.month}月${it.day.toString().padStart(2, '0')}日 ${weekdays[it.dayOfWeek - 1]}" },
-    todayLabel = "今天",
-    amLabel = "上午",
-    pmLabel = "下午"
+    dateLabel = { "${it.month}/${it.day}" },
+    todayLabel = "现在",
+    hourUnit = "时",
+    minuteUnit = "分"
 )
 ```

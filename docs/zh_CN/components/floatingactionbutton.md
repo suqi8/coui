@@ -54,7 +54,8 @@ FloatingActionButton(
 | onClick                | () -> Unit                | 点击按钮时触发的回调                         | -                                                         | 是       |
 | modifier               | Modifier                  | 应用于按钮的修饰符                           | Modifier                                                  | 否       |
 | enabled                | Boolean                   | 按钮是否启用                                 | true                                                      | 否       |
-| material               | Boolean                   | 是否绘制 COUI 17 材质(边缘光、背景模糊)     | true                                                      | 否       |
+| visible                | Boolean                   | 是否显示;切换时播放放大 / 缩小动画           | true                                                      | 否       |
+| material               | Boolean                   | 是否绘制 COUI 17 材质(边缘光、背景模糊)     | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | hapticFeedbackEnabled  | Boolean                   | 按下时是否播放按压震动(OPLUS 302)          | true                                                      | 否       |
 | shape                  | Shape                     | 按钮的形状                                   | CircleShape                                               | 否       |
 | containerColor         | Color                     | 按钮的背景颜色                               | COUITheme.colorScheme.primary                             | 否       |
@@ -82,8 +83,9 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 | ShadowLightY      | Dp    | 阴影光源的 y 坐标,位于窗口顶部之上               | -800.dp    |
 | ShadowLightZ      | Dp    | 阴影光源的高度                                     | 10000.dp   |
 | ShadowLightRadius | Dp    | 阴影光源的半径                                     | 2000.dp    |
-| PressedScale      | Float | 已弃用,不再读取                                   | 0.92f      |
 | ExpandedRotation  | Float | ExpandableFloatingActionButton 展开时主按钮内容的旋转角度 | 45f |
+| TinySize          | Dp    | 迷你档尺寸(`FloatingButton.Icon.Tiny`) | 48.dp |
+| AutoShowDelayMillis | Long | 滚动隐藏后自动重新显示的延时(`DELAY_TIME_NO_ACTION_SLIDE_OUT`) | 5000L |
 
 #### 函数
 
@@ -91,6 +93,9 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 | ------------------------- | --------------------------------------------------------------- |
 | disabledContainerColor()  | `couiColorDisable` 叠加在禁用底色上:浅色 #B2D9FF,深色 #3E6083 |
 | shadowPenumbra(elevation) | 给定高度下点光源阴影的模糊半径(60dp 时约 12dp)                |
+| secondaryContainerColor() | 次要色板填充,`COUITheme.colorScheme.neutralButton`(`coui_button_neutral_color`) |
+| secondaryDisabledContainerColor() | 次要色板的禁用填充,`COUITheme.colorScheme.pressBackground`(`couiColorPressBackground`) |
+| translateContainerColor() | 叠在图片上的半透明色板填充(#33FFFFFF) |
 
 ## 行为
 
@@ -98,6 +103,45 @@ FloatingActionButtonDefaults 对象提供了 FloatingActionButton 组件的默�
 - **阴影**:COUI 请求的 OPlus 光源阴影,是按钮自身颜色、透明度 86/255 的柔和光晕。模糊半径等于 10000dp 高处、半径 2000dp 的光源形成的半影(约 12dp)。阴影向下偏移 `elevation × (centerY + 800dp) / (10000dp − elevation)`,按钮在窗口中越靠下,阴影偏移越大。
 - **材质**:`material = true`(ColorOS 17 默认)时,填充之上绘制 `TYPE_FRAMEWORK_CIRCLE_2` 边缘光和内阴影,并关闭按压蒙层。若存在 `LocalMaterialBackdrop` 提供者,填充会被 `TYPE_FRAMEWORK_FAB` 背景模糊取代:模糊 10px,叠加透明度 229(浅色)/ 230(深色)的填充色,再叠加白色 OVERLAY。`material = false` 时,不透明填充在按下时显示 `couiColorPress` 蒙层。边缘光需要运行时着色器(Android 13+ 及所有 Skia 平台)。
 - **禁用**:填充变为 `disabledContainerColor`,忽略触摸、震动和触摸动效,材质切换到禁用预设。
+- **显示 / 隐藏**:切换 `visible` 播放 `animationFloatingButtonEnlarge` / `animationFloatingButtonShrink`(透明度 0 ↔ 1、缩放 0.6 ↔ 1,350ms,COUIMoveEaseInterpolator)。隐藏后不响应触摸,也不再占位。
+
+## 色板与尺寸
+
+COUI 17 提供三套色板,每套有 56dp 与 48dp 迷你两种尺寸(`FloatingButton.Icon.{Medium,Small,Tiny}.{Main,Secondary,Translate}`),这些样式同时关闭阴影(`fabNeedElevation = false`):
+
+```kotlin
+FloatingActionButton(
+    onClick = { /* 处理点击 */ },
+    containerColor = FloatingActionButtonDefaults.secondaryContainerColor(),
+    disabledContainerColor = FloatingActionButtonDefaults.secondaryDisabledContainerColor(),
+    contentColor = COUITheme.colorScheme.labelPrimary,
+    shadowElevation = 0.dp,
+    minWidth = FloatingActionButtonDefaults.TinySize,
+    minHeight = FloatingActionButtonDefaults.TinySize,
+) {
+    Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+}
+```
+
+## 滚动时隐藏
+
+`rememberFloatingActionButtonScrollState()` 对应 `COUIFloatingButton.ScrollViewBehavior`:单次滚动超过 10px 且朝内容末尾时隐藏按钮,反向时显示;隐藏 5 秒后自动重新显示(传入 `autoShowDelayMillis = 0` 则保持隐藏,对应 `setAutoSlideInDisable`)。
+
+```kotlin
+val fabScroll = rememberFloatingActionButtonScrollState()
+Scaffold(
+    floatingActionButton = {
+        FloatingActionButton(onClick = {}, visible = fabScroll.visible) {
+            Icon(imageVector = COUIIcons.Add, contentDescription = "Add")
+        }
+    },
+) { padding ->
+    LazyColumn(
+        modifier = Modifier.nestedScroll(fabScroll.nestedScrollConnection),
+        contentPadding = padding,
+    ) { /* ... */ }
+}
+```
 
 ## 进阶用法
 
@@ -236,7 +280,8 @@ ExpandableFloatingActionButton(
 | items                  | List<FloatingActionButtonItem> | 子操作，下标 0 离主按钮最近       | -                                                     | 是    |
 | modifier               | Modifier                       | 应用于主按钮位置的修饰符      | Modifier                                              | 否    |
 | enabled                | Boolean                        | 主按钮是否启用              | true                                                  | 否    |
-| material               | Boolean                        | 按钮与标签是否绘制 COUI 17 材质 | true                                                  | 否    |
+| visible                | Boolean                        | 主按钮是否显示;隐藏时同时收起菜单 | true                                            | 否    |
+| material               | Boolean                        | 按钮与标签是否绘制 COUI 17 材质 | `LocalCOUIMaterialEffectEnabled.current` | 否    |
 | hapticFeedbackEnabled  | Boolean                        | 按下时是否触发按压振动          | true                                                  | 否    |
 | containerColor         | Color                          | 主按钮填充色               | COUITheme.colorScheme.primary                         | 否    |
 | disabledContainerColor | Color                          | 主按钮禁用时的填充色           | FloatingActionButtonDefaults.disabledContainerColor() | 否    |

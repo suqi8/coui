@@ -47,6 +47,23 @@ Counts of 1000 and above render a 20dp-wide capsule with a three-dot ellipsis (C
 Badge(count = 1000)
 ```
 
+### Text Badge
+
+`Badge(text = ...)` shows a short text in the capsule (COUI `setPointText(String)`). A numeric text behaves like the count badge; other text picks the capsule width by its measured width against "10", "100" and "1000", and text wider than "1000" falls back to the 20dp ellipsis capsule:
+
+```kotlin
+Badge(text = "N")
+Badge(text = "Hot")
+```
+
+### Show and Hide
+
+`visible` plays the COUI show / hide scale animation (0 to 1 and back over 520ms on COUIMoveEaseInterpolator); a hidden badge takes no space:
+
+```kotlin
+Badge(count = unread, visible = unread > 0)
+```
+
 ### Stroke Outline
 
 `stroke = true` draws a 1dp white outline around the dot or capsule, for badges placed on colored surfaces (COUI POINT_ONLY_MODE_STROKE / POINT_NUM_MODE_STROKE):
@@ -95,11 +112,24 @@ BadgeBox(
 | ----------- | ----------- | ------------------------------------------------- | --------------------------- | -------- |
 | modifier    | Modifier    | Modifier applied to the badge                     | Modifier                    | No       |
 | count       | Int         | Number shown in the badge; values <= 0 show a dot | 0                           | No       |
+| visible     | Boolean     | Whether the badge is shown; changes animate       | true                        | No       |
 | stroke      | Boolean     | Whether to draw a white outline                   | false                       | No       |
 | colors      | BadgeColors | Color configuration                               | BadgeDefaults.badgeColors() | No       |
 | dotDiameter | Dp          | Diameter of the plain dot form                    | BadgeDefaults.DotDiameter   | No       |
 | height      | Dp          | Height of the number capsule form                 | BadgeDefaults.Height        | No       |
 | navigation  | Boolean     | Use the bottom-navigation widths (`COUIHintRedDot` POINT_NAVI mode): 12dp under 10, 16dp under 100, 20dp otherwise, not widened to the height | false | No |
+
+### Badge (text)
+
+| Property   | Type        | Description                                  | Default Value               | Required |
+| ---------- | ----------- | -------------------------------------------- | --------------------------- | -------- |
+| text       | String      | Text shown in the capsule                    | -                           | Yes      |
+| modifier   | Modifier    | Modifier applied to the badge                | Modifier                    | No       |
+| visible    | Boolean     | Whether the badge is shown; changes animate  | true                        | No       |
+| stroke     | Boolean     | Whether to draw a white outline              | false                       | No       |
+| colors     | BadgeColors | Color configuration                          | BadgeDefaults.badgeColors() | No       |
+| height     | Dp          | Height of the capsule                        | BadgeDefaults.Height        | No       |
+| navigation | Boolean     | Use the bottom-navigation widths             | false                       | No       |
 
 ### BadgeBox
 
@@ -132,7 +162,7 @@ BadgeBox(
 
 | Parameter      | Type  | Default                                                          |
 | -------------- | ----- | ---------------------------------------------------------------- |
-| containerColor | Color | COUI additional red (#EB3B2F in light themes, #EB493D in dark)   |
+| containerColor | Color | `COUITheme.colorScheme.red` (#EB3B2F in light themes, #EB493D in dark)   |
 | contentColor   | Color | Color.White                                                      |
 | strokeColor    | Color | Color.White                                                      |
 
@@ -143,4 +173,4 @@ BadgeBox(
 - The count text renders at a density-scaled 10dp (sans-serif medium), ignoring the user font scale like the original.
 - `stroke = true` draws a 1dp white outline; the dot form shrinks its red core by the stroke width, the capsule form insets the red fill inside the white outline.
 - A positive `BadgeBox` overhang lets the badge stick out beyond the content's top end corner and grows the layout accordingly (COUI rectangular anchors); a negative overhang insets the badge inside the corner (COUI circular anchors such as avatars).
-- To animate badge visibility like COUIHintRedDot's show / hide scale animation, wrap it in `AnimatedVisibility` with `scaleIn` / `scaleOut` over `BadgeDefaults.ScaleAnimDurationMillis`.
+- Toggling `visible` plays COUIHintRedDot's show / hide scale animation (`executeScaleAnim`: 0 to 1 and back over `BadgeDefaults.ScaleAnimDurationMillis` on COUIMoveEaseInterpolator); once hidden the badge leaves the layout.

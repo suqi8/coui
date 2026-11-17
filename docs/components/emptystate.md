@@ -1,6 +1,6 @@
 # EmptyState
 
-`EmptyState` is the empty-page placeholder mirroring ColorOS's COUIEmptyStateView: an illustration slot, a title, a subtitle and a borderless action text button, stacked and centered. When the height is bounded the group is placed 45% of the way down the free height (50% for the small size type). The illustration is scaled by the size type: hidden for `Small`, 60% for `Medium`, full size for `Large`; `Auto` picks Small below 200dp of height, Medium below 320dp of width or 480dp of height, else Large. The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll once they exceed 92dp together.
+`EmptyState` is the empty-page placeholder mirroring ColorOS's COUIEmptyStateView: an illustration slot, a title, a subtitle and a borderless action text button, stacked and centered. When the height is bounded the group is placed 45% of the way down the free height (50% for the small size type). The illustration is hidden for `Small` and shown at full size for `Medium` and `Large` (COUI 17 scales both by 1.0); `Auto` picks Small below 200dp of height, Medium below 320dp of width or 480dp of height, else Large. The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll once they exceed 92dp together.
 
 COUI fills the illustration with a Lottie animation or an image; here `illustration` is a composable slot drawn inside a box of the resolved illustration size.
 
@@ -44,9 +44,9 @@ EmptyState(
 | illustrationWidth  | Dp                         | Full illustration width                             | EmptyStateDefaults.IllustrationWidth   | No       |
 | illustrationHeight | Dp                         | Full illustration height                            | EmptyStateDefaults.IllustrationHeight  | No       |
 | colors             | EmptyStateColors           | Color configuration                                 | EmptyStateDefaults.emptyStateColors()  | No       |
-| titleStyle         | TextStyle                  | Text style of the title                             | COUITheme.textStyles.headline2         | No       |
-| subtitleStyle      | TextStyle                  | Text style of the subtitle                          | COUITheme.textStyles.footnote2         | No       |
-| actionStyle        | TextStyle                  | Text style of the action                            | COUITheme.textStyles.subtitle          | No       |
+| titleStyle         | TextStyle                  | Text style of the title                             | COUITheme.textStyles.headlineXS         | No       |
+| subtitleStyle      | TextStyle                  | Text style of the subtitle                          | COUITheme.textStyles.bodyXS         | No       |
+| actionStyle        | TextStyle                  | Text style of the action                            | COUITheme.textStyles.buttonM          | No       |
 | illustration       | (@Composable () -> Unit)?  | The illustration slot; not composed for Small       | null                                   | No       |
 
 ### EmptyStateSizeType Enum
@@ -57,8 +57,8 @@ EmptyState(
 
 | Property Name         | Type          | Description                                      | Default Value                                   |
 | --------------------- | ------------- | ------------------------------------------------ | ----------------------------------------------- |
-| IllustrationWidth     | Dp            | Full illustration width                          | 280.dp                                          |
-| IllustrationHeight    | Dp            | Full illustration height                         | 200.dp                                          |
+| IllustrationWidth     | Dp            | Full illustration width                          | 120.dp                                          |
+| IllustrationHeight    | Dp            | Full illustration height                         | 100.dp                                          |
 | TextWidth             | Dp            | Width of the title and subtitle                  | 280.dp                                          |
 | TextMaxHeight         | Dp            | Maximum height of the scrolling text block       | 92.dp                                           |
 | SubtitleMarginTop     | Dp            | Top margin of the subtitle                       | 2.dp                                            |

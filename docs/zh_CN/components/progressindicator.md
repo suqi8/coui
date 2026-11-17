@@ -1,6 +1,6 @@
 # ProgressIndicator
 
-`ProgressIndicator` 是 COUI 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条、无限旋转指示器和旋转加载指示器四种样式，适用于不同场景下的加载和进度展示需求。
+`ProgressIndicator` 是 COUI 中的进度指示组件，用于展示操作的进度状态。提供了线性进度条、环形进度条、无限旋转指示器、旋转加载指示器以及带提示文字的组合加载指示器，适用于不同场景下的加载和进度展示需求。
 
 <div style="position: relative; height: 250px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=progressIndicator" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -13,6 +13,7 @@ import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator // 线性进度条
 import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator // 环形进度条
 import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator // 无限旋转指示器
 import io.github.suqi8.coui.kmp.basic.RotatingProgressIndicator // 旋转加载指示器
+import io.github.suqi8.coui.kmp.basic.CompProgressIndicator // 带提示文字的加载指示器
 ```
 
 ## 基本用法
@@ -58,11 +59,31 @@ CircularProgressIndicator(progress = progress)
 CircularProgressIndicator()
 ```
 
-传入进度值时移植自 `COUICircularProgressBar`：中性色圆弧叠在分割线色轨道上，进度变化走临界阻尼弹簧（阻尼比 1、刚度 50）。不传进度时移植自 `COUILoadingView`，默认使用 `ProgressIndicatorDefaults.loadingViewColors()`：主色圆弧（`#0080FF` / `#1A8CFF`）叠在主色淡染轨道（`#260080FF` / `#401A8CFF`）上。
+传入进度值时移植自 `COUICircularProgressBar`：中性色圆弧叠在分割线色轨道上，进度变化走临界阻尼弹簧（阻尼比 1、刚度 50）。与原版一样，布局尺寸为 `size + 2 × 4dp`，圆环外径为 `size − 2 × 4dp`：默认大号档（40dp，描边 5dp）是 48dp 的框、32dp 的圆环；中号档（30dp，描边 3dp）是 38dp 的框、22dp 的圆环。
 
-::: info 几何
-`COUICircularProgressBar` 的测量尺寸是 `length + 2 × 4dp`，但绘制的圆环外径是 `length − 2 × 4dp`（40dp 大号档为 48dp 视图、32dp 圆环）。本组件的圆环铺满整个 `size`；在真机实测圆环尺寸之前，默认尺寸仍保持 30dp 中号档。
-:::
+不传进度时移植自 `COUILoadingView`：18dp 圆环（描边 2.67dp），主色圆弧（`#0080FF` / `#1A8CFF`）叠在主色淡染轨道（`#260080FF` / `#401A8CFF`）上，即 `ProgressIndicatorDefaults.loadingViewColors()`。
+
+#### 状态与类型
+
+确定进度的环形进度条接受 `CircularProgressState`（对应原版 `pause()` / `resume()` / `error()` / `recover()`）与 `CircularProgressType`（`couiCircularProgressBarType`）：
+
+```kotlin
+// 错误：圆环在 350ms 内收缩成 19dp 的细圈，中间出现感叹号
+CircularProgressIndicator(progress = 0.6f, state = CircularProgressState.Error)
+
+// 暂停：只有图上类型可以暂停；圆环淡出，暂停图标淡入
+CircularProgressIndicator(
+    progress = 0.6f,
+    state = CircularProgressState.Paused,
+    type = CircularProgressType.OnImage
+)
+```
+
+| 类型        | 外观                                                         |
+| ----------- | ------------------------------------------------------------ |
+| Default     | `TYPE_DEFAULT`                                               |
+| OnImage     | `TYPE_ON_IMAGE`：轨道带 4dp、下移 2dp 的阴影；唯一可以暂停的类型 |
+| FollowTheme | `TYPE_FOLLOW_THEME`：轨道透明度 89 / 255                      |
 
 ### 无限旋转指示器
 
@@ -74,7 +95,7 @@ InfiniteProgressIndicator()
 
 ### 旋转加载指示器
 
-`RotatingProgressIndicator` 是 ColorOS 系统默认的不确定态加载指示器：一段没有背景圆环的裸圆弧，端点为平头（butt cap），以 85% 不透明度的黑/白色绘制（`#D9000000` / `#D9FFFFFF`），在 1250 ms 的一个周期内旋转两整圈，同时弧长在 273.6° 与 50.4° 之间脉动。它直接移植自 `Theme.COUI` 通过 `couiRotatingSpinnerJsonName` 属性绑定的 `coui_rotating_loading.json` 资源，用单个 `drawArc` 实现，因此不需要引入 Lottie 运行时。
+`RotatingProgressIndicator` 是 ColorOS 系统默认的不确定态加载指示器：一段没有背景圆环的裸圆弧，端点为平头（butt cap），以 85% 不透明度的黑/白色绘制（`#D9000000` / `#D9FFFFFF`），在 76 帧（1266.7 ms）的一个周期内旋转两整圈，同时弧长在 273.6° 与 50.4° 之间脉动。它直接移植自 `Theme.COUI` 通过 `couiRotatingSpinnerJsonName` 属性绑定的 `coui_rotating_loading.json` 资源，用单个 `drawArc` 实现，因此不需要引入 Lottie 运行时。
 
 ```kotlin
 RotatingProgressIndicator()
@@ -91,15 +112,35 @@ RotatingProgressIndicator(
 )
 ```
 
-### 尺寸规格
+### 带提示文字的加载指示器
 
-环形与无限旋转指示器提供中号（默认）和大号两种规格，定义在 `ProgressIndicatorDefaults` 中：
+`CompProgressIndicator` 移植自 `COUICompProgressIndicator`：26dp（大号）或 14dp（小号）的旋转加载动画，可附带提示文字（couiTextBodyS / couiColorLabelSecondary）——横排时单行、位于小号动画右侧 4dp；竖排时最多两行，位于动画下方 16dp（大号）/ 12dp（小号）。
 
 ```kotlin
-// Large circular progress indicator
+CompProgressIndicator(
+    type = CompProgressIndicatorType.LargeWithTextVertical,
+    text = "正在加载…"
+)
+```
+
+| CompProgressIndicatorType | 原版                                   |
+| ------------------------- | -------------------------------------- |
+| Large                     | `LARGE_ANIMATION`                      |
+| Small                     | `SMALL_ANIMATION`                      |
+| SmallWithTextHorizontal   | `SMALL_ANIMATION_WITH_TEXT_HORIZONTAL` |
+| LargeWithTextVertical     | `LARGE_ANIMATION_WITH_TEXT_VERTICAL`   |
+| SmallWithTextVertical     | `SMALL_ANIMATION_WITH_TEXT_VERTICAL`   |
+
+### 尺寸规格
+
+确定进度的环形进度条默认为大号档，另提供中号档；无限旋转指示器提供默认与大号两档，均定义在 `ProgressIndicatorDefaults` 中：
+
+```kotlin
+// 中号环形进度条
 CircularProgressIndicator(
-    size = ProgressIndicatorDefaults.LargeCircularProgressIndicatorSize,
-    strokeWidth = ProgressIndicatorDefaults.LargeCircularProgressIndicatorStrokeWidth
+    progress = 0.5f,
+    size = ProgressIndicatorDefaults.MediumCircularProgressIndicatorSize,
+    strokeWidth = ProgressIndicatorDefaults.MediumCircularProgressIndicatorStrokeWidth
 )
 
 // Large infinite progress indicator
@@ -151,9 +192,22 @@ CircularProgressIndicator(progress = null)
 | ----------- | ----------------------- | ------------------------------ | --------------------------------------------------------------------- | -------- |
 | modifier    | Modifier                | 应用于进度条的修饰符           | Modifier                                                              | 否       |
 | progress    | Float?                  | 当前进度值，null表示不确定状态 | null                                                                  | 否       |
+| state       | CircularProgressState   | Normal / Paused / Error（仅确定进度） | CircularProgressState.Normal                                   | 否       |
+| type        | CircularProgressType    | Default / OnImage / FollowTheme（仅确定进度） | CircularProgressType.Default                           | 否       |
 | colors      | ProgressIndicatorColors | 进度条的颜色配置               | 有进度时 circularProgressIndicatorColors()，无进度时 loadingViewColors() | 否       |
-| strokeWidth | Dp                      | 环形进度条的描边宽度           | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth | 否       |
-| size        | Dp                      | 环形进度条的大小               | ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize        | 否       |
+| strokeWidth | Dp                      | 环形进度条的描边宽度           | 有进度时 LargeCircularProgressIndicatorStrokeWidth，无进度时 DefaultLoadingViewStrokeWidth | 否 |
+| size        | Dp                      | 有进度时为长度档（布局四周再加 4dp），无进度时为直径 | 有进度时 LargeCircularProgressIndicatorSize，无进度时 DefaultLoadingViewSize | 否 |
+
+### CompProgressIndicator 属性
+
+| 属性名    | 类型                      | 说明                               | 默认值                                                     | 是否必须 |
+| --------- | ------------------------- | ---------------------------------- | ---------------------------------------------------------- | -------- |
+| modifier  | Modifier                  | 应用于指示器的修饰符               | Modifier                                                   | 否       |
+| type      | CompProgressIndicatorType | 布局类型                           | CompProgressIndicatorType.Large                            | 否       |
+| text      | String?                   | 提示文字，仅 `...WithText...` 类型绘制 | null                                                   | 否       |
+| color     | Color                     | 旋转圆弧的颜色                     | ProgressIndicatorDefaults.rotatingProgressIndicatorColor() | 否       |
+| textColor | Color                     | 提示文字颜色                       | CompProgressIndicatorDefaults.textColor()                  | 否       |
+| textStyle | TextStyle                 | 提示文字样式                       | COUITheme.textStyles.bodyS                                 | 否       |
 
 ### InfiniteProgressIndicator 属性
 
@@ -183,12 +237,16 @@ ProgressIndicatorDefaults 对象提供了进度指示器组件的默认值和颜
 | 常量名                                          | 类型 | 默认值 | 说明                     |
 | ----------------------------------------------- | ---- | ------ | ------------------------ |
 | DefaultLinearProgressIndicatorHeight            | Dp   | 4.dp   | 线性进度条的默认高度     |
-| DefaultCircularProgressIndicatorStrokeWidth     | Dp   | 3.dp   | 环形进度条的默认描边宽度 |
-| DefaultCircularProgressIndicatorSize            | Dp   | 30.dp  | 环形进度条的默认大小     |
+| MediumCircularProgressIndicatorStrokeWidth      | Dp   | 3.dp   | 中号环形进度条的描边宽度 |
+| MediumCircularProgressIndicatorSize             | Dp   | 30.dp  | 中号环形进度条的长度     |
+| LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp   | 大号（默认）环形进度条的描边宽度 |
+| LargeCircularProgressIndicatorSize              | Dp   | 40.dp  | 大号（默认）环形进度条的长度 |
+| DefaultLoadingViewStrokeWidth                   | Dp   | 2.67.dp | 不确定进度环形指示器的描边宽度 |
+| DefaultLoadingViewSize                          | Dp   | 18.dp  | 不确定进度环形指示器的大小 |
+| LargeLoadingViewStrokeWidth                     | Dp   | 3.33.dp | 大号加载视图的描边宽度 |
+| LargeLoadingViewSize                            | Dp   | 26.dp  | 大号加载视图的大小       |
 | DefaultInfiniteProgressIndicatorStrokeWidth     | Dp   | 2.67.dp | 无限指示器的默认描边宽度 |
 | DefaultInfiniteProgressIndicatorSize            | Dp   | 18.dp  | 无限指示器的默认大小     |
-| LargeCircularProgressIndicatorStrokeWidth       | Dp   | 5.dp   | 大号环形进度条的描边宽度 |
-| LargeCircularProgressIndicatorSize              | Dp   | 40.dp  | 大号环形进度条的大小     |
 | LargeInfiniteProgressIndicatorStrokeWidth       | Dp   | 3.33.dp | 大号无限指示器的描边宽度 |
 | LargeInfiniteProgressIndicatorSize              | Dp   | 26.dp  | 大号无限指示器的大小     |
 | DefaultRotatingProgressIndicatorSize            | Dp   | 26.dp  | 旋转指示器默认视图框大小 |
@@ -216,6 +274,9 @@ ProgressIndicatorDefaults 对象提供了进度指示器组件的默认值和颜
 | disabledForegroundColor | Color | 禁用状态时进度指示器的前景色 |
 | backgroundColor         | Color | 进度指示器的背景色           |
 | disabledBackgroundColor | Color | 禁用状态时进度指示器的背景色（默认等于 backgroundColor） |
+| errorColor              | Color | 错误状态环形指示器的圆环与图标颜色（默认等于 foregroundColor） |
+| pauseIconColor          | Color | 暂停状态环形指示器的图标颜色（默认等于 foregroundColor） |
+| shadowColor             | Color | 图上类型环形指示器的阴影（默认透明） |
 
 ## 进阶用法
 

@@ -76,26 +76,27 @@ The CheckboxDefaults object provides default color configurations for the Checkb
 
 #### Methods
 
-| Method Name      | Type           | Description                               |
-| ---------------- | -------------- | ----------------------------------------- |
-| checkboxColors() | CheckboxColors | Creates default color config for checkbox |
+| Method Name           | Type           | Description                                                                   |
+| --------------------- | -------------- | ----------------------------------------------------------------------------- |
+| checkboxColors()      | CheckboxColors | Creates default color config for checkbox                                     |
+| shapeCheckboxColors() | CheckboxColors | Colors of the COUI shape checkbox laid over images (`couiShapeCheckBoxStyle`) |
 
 ### CheckboxColors Class
 
 | Property Name                    | Type  | Description                                  |
 | -------------------------------- | ----- | -------------------------------------------- |
-| checkedForegroundColor           | Color | Foreground color when checked (checkmark)    |
-| uncheckedForegroundColor         | Color | Foreground color when unchecked              |
-| disabledCheckedForegroundColor   | Color | Foreground color when disabled and checked   |
-| disabledUncheckedForegroundColor | Color | Foreground color when disabled and unchecked |
-| checkedBackgroundColor           | Color | Background color when checked                |
-| uncheckedBackgroundColor         | Color | Background color when unchecked              |
-| disabledCheckedBackgroundColor   | Color | Background color when disabled and checked   |
-| disabledUncheckedBackgroundColor | Color | Background color when disabled and unchecked |
+| checkedForegroundColor           | Color | Foreground color when checked (checkmark)         |
+| disabledCheckedForegroundColor   | Color | Foreground color when disabled and checked        |
+| checkedBackgroundColor           | Color | Background color when checked                     |
+| uncheckedBackgroundColor         | Color | Ring color when unchecked                         |
+| disabledCheckedBackgroundColor   | Color | Background color when disabled and checked        |
+| disabledUncheckedBackgroundColor | Color | Ring color when disabled and unchecked            |
+| uncheckedFillColor               | Color | Fill inside the ring when unchecked (transparent) |
+| disabledUncheckedFillColor       | Color | Fill inside the ring when disabled and unchecked  |
 
 > The indeterminate state shares the same colors as the checked state.
 
-Default colors follow COUI 17 (`coui_btn_check_*.xml`): the unchecked ring is `onSurfaceVariantActions` (#42000000 / #4DFFFFFF) and `quarternaryNeutral` (#14000000 / #26FFFFFF) when disabled; the checked fill is `primary`, `disabledPrimary` when disabled; the checkmark is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
+Default colors follow COUI 17 (`coui_btn_check_*.xml`): the unchecked ring is `labelTertiary` (#42000000 / #4DFFFFFF) and `quarternaryNeutral` (#14000000 / #26FFFFFF) when disabled; the checked fill is `primary`, `disable` when disabled; the checkmark is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
 
 ### Press Feedback
 
@@ -104,6 +105,18 @@ Like `COUICheckBox`, the box never shrinks on press. An interactive checkbox (`o
 State changes replay the COUI animations only while enabled; a disabled checkbox jumps to its new state, except between indeterminate and checked, which COUI also animates when disabled. At rest the indeterminate box follows COUI's static drawable: it sits 0.666dp lower than the other states, with a 1.6dp dash (1.5dp when disabled).
 
 ## Advanced Usage
+
+### Shape Checkbox
+
+Over images or colored backdrops, use the COUI shape checkbox (`Widget.COUI.CompoundButton.COUICheckBox.Shape`): the unchecked box is a black 40% fill inside a white 40% ring (black 8% inside a white 30% ring when disabled), the same in light and dark themes. The checked and indeterminate states are unchanged.
+
+```kotlin
+Checkbox(
+    state = state,
+    onClick = { state = if (state == ToggleableState.On) ToggleableState.Off else ToggleableState.On },
+    colors = CheckboxDefaults.shapeCheckboxColors()
+)
+```
 
 ### Custom Colors
 

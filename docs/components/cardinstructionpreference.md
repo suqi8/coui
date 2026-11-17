@@ -94,8 +94,8 @@ Pass your own `pagerState` (`rememberPagerState { pages.size }`) to read or driv
 
 | Parameter        | Type  | Default                                          |
 | ---------------- | ----- | ------------------------------------------------ |
-| containerColor   | Color | COUITheme.colorScheme.surfaceContainer           |
-| titleColor       | Color | COUITheme.colorScheme.onSurface                  |
-| summaryColor     | Color | COUITheme.colorScheme.onSurfaceSecondary         |
-| dotColor         | Color | COUITheme.colorScheme.onSurfaceContainerHigh     |
-| selectedDotColor | Color | COUITheme.colorScheme.onSurface                  |
+| containerColor   | Color | COUITheme.colorScheme.cardBackground           |
+| titleColor       | Color | COUITheme.colorScheme.labelPrimary                  |
+| summaryColor     | Color | COUITheme.colorScheme.labelSecondary         |
+| dotColor         | Color | COUITheme.colorScheme.labelTertiary     |
+| selectedDotColor | Color | COUITheme.colorScheme.labelPrimary                  |

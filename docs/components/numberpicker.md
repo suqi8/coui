@@ -11,7 +11,7 @@
 - Rows are centered on the default typeface's top/bottom font metrics, like COUI (about 0.8dp higher than an ascent/descent center).
 - Tapping the row above or below the center steps by one; holding it repeats the step every `longPressStepInterval` milliseconds.
 
-Supports infinite scrolling with the `wrapAround` parameter.
+Wraps around by default like COUI (`wrapAround`); pass `wrapAround = false` to stop at the ends.
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=numberPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -21,6 +21,7 @@ Supports infinite scrolling with the `wrapAround` parameter.
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.NumberPicker
+import io.github.suqi8.coui.kmp.basic.NumberPickerDefaults
 ```
 
 ## Basic Usage
@@ -54,16 +55,20 @@ NumberPicker(
 
 ### Infinite Scrolling
 
-When `wrapAround` is enabled, the picker wraps from the last item back to the first, allowing continuous scrolling. As in COUI, wrapping only applies when the range has more items than `visibleItemCount`.
+With `wrapAround` (the default, COUI `mWrapSelectorWheelPreferred = true`), the picker wraps from the last item back to the first, allowing continuous scrolling. As in COUI, wrapping only applies when the range has more items than `visibleItemCount`.
+
+### Optional Value
+
+`ignorable = true` adds a placeholder row, drawn as two short bars, after the last value. Selecting it reports `NumberPickerDefaults.IgnoredValue` (COUI `setIgnorable`, used by the optional year of `DatePicker`).
 
 ```kotlin
-var value by remember { mutableIntStateOf(0) }
+var year by remember { mutableIntStateOf(NumberPickerDefaults.IgnoredValue) }
 
 NumberPicker(
-    value = value,
-    onValueChange = { value = it },
-    range = 0..23,
-    wrapAround = true
+    value = year,
+    onValueChange = { year = it },
+    range = 1950..2030,
+    ignorable = true
 )
 ```
 
@@ -81,10 +86,11 @@ NumberPicker(
 | label            | (Int) -> String    | Converts a value to its display string                                   | { it.toString() }          | No       |
 | unit             | String             | Unit label drawn after the selected value; empty to hide                 | ""                         | No       |
 | visibleItemCount | Int                | Number of visible items. Must be odd and at least 3                      | 3                          | No       |
-| wrapAround       | Boolean            | Whether the picker wraps around (infinite scrolling)                     | false                      | No       |
+| wrapAround       | Boolean            | Whether the picker wraps around (only when there are more items than visibleItemCount) | true         | No       |
+| ignorable        | Boolean            | Adds a placeholder row after the last value, reported as `NumberPickerDefaults.IgnoredValue` | false  | No       |
 | longPressStepInterval | Long          | Interval (ms) between auto-repeated steps while a side row is held       | NumberPickerDefaults.LongPressStepInterval | No |
 | colors           | NumberPickerColors | Color configuration of the picker                                        | NumberPickerDefaults.colors() | No       |
-| textStyle        | TextStyle          | Base text style; its font size is replaced by the two sizes below        | COUITheme.textStyles.title3 | No       |
+| textStyle        | TextStyle          | Base text style; its font size is replaced by the two sizes below        | COUITheme.textStyles.headlineM | No       |
 | selectedTextSize | Dp                 | Text size inside the center band                                         | NumberPickerDefaults.SelectedTextSize | No |
 | unselectedTextSize | Dp               | Text size outside the center band                                        | NumberPickerDefaults.UnselectedTextSize | No |
 | itemHeight       | Dp                 | The height of each item in the picker                                    | NumberPickerDefaults.ItemHeight | No       |
@@ -102,6 +108,11 @@ The NumberPickerDefaults object provides default configurations for the NumberPi
 | UnselectedTextSize | Dp | Text size outside the center band | 16.dp    |
 | UnitTextSize  | Dp   | Text size of the unit label     | 14.dp         |
 | LongPressStepInterval | Long | Auto-repeat interval (ms) while a side row is held | 300L |
+| IgnoredValue  | Int  | Value reported for the placeholder row of an ignorable wheel | Int.MIN_VALUE |
+| MinWidth      | Dp   | Width of a wheel that gets none from its modifier | 80.dp |
+| PickersMaxWidth | Dp | Maximum width of DatePicker, TimePicker, DateTimePicker and LunarDatePicker | 640.dp |
+
+Without a width from `modifier`, the wheel is 80dp wide (COUI `internalMinWidth`). Accessibility services can step the wheel forward and backward, and the unit label is mirrored in RTL layouts.
 
 #### Methods
 
@@ -113,19 +124,15 @@ The `colors()` factory accepts the following parameters:
 
 | Parameter Name              | Type  | Default Value                                  |
 | --------------------------- | ----- | ---------------------------------------------- |
-| selectedTextColor           | Color | COUITheme.colorScheme.onSurface                |
-| unselectedTextColor         | Color | COUITheme.colorScheme.onSurfaceVariantActions  |
-| disabledSelectedTextColor   | Color | selectedTextColor                              |
-| disabledUnselectedTextColor | Color | unselectedTextColor                            |
+| selectedTextColor           | Color | COUITheme.colorScheme.labelPrimary                |
+| unselectedTextColor         | Color | COUITheme.colorScheme.labelTertiary  |
 
 ### NumberPickerColors Class
 
-| Property Name              | Type  | Description                                  |
-| -------------------------- | ----- | -------------------------------------------- |
-| selectedTextColor          | Color | Text color for the selected (center) item    |
-| unselectedTextColor        | Color | Text color for unselected items              |
-| disabledSelectedTextColor  | Color | Selected text color when disabled            |
-| disabledUnselectedTextColor| Color | Unselected text color when disabled          |
+| Property Name              | Type  | Description                                                    |
+| -------------------------- | ----- | -------------------------------------------------------------- |
+| selectedTextColor          | Color | Text color for the selected (center) item and the unit label   |
+| unselectedTextColor        | Color | Text color for unselected items and the placeholder bars       |
 
 ## Advanced Usage
 

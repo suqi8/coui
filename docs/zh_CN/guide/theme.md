@@ -85,6 +85,20 @@ fun App() {
   }
   ```
 
+- **主题色族**
+
+  COUI 换主题色只替换十个主题属性（主色、主题容器与主题文字、禁用色、焦点、焦点描边、半透明主题浅底），其余不变。
+  `COUIThemeColors` 收录官方色族：静态的 `Blue`（默认）、`Green`、`Red`、`Orange`、`Yellow`（`Theme.COUI.<Color>`），
+  以及全部 `COUIOverlay.Theme.*` 预设（`GreenFirst`、`SkyBlueThird`、`SingleFirst` .. `SingleTenth` 等；另有
+  `COUIThemeColors.overlay(identity, set)` 与 `COUIThemeColors.Singles`）；`COUIThemeColor.fromColor(color)` 按 COUI
+  单色规则从任意颜色推导一个色族。
+
+  ```kotlin
+  val controller = remember { ThemeController(ColorSchemeMode.System, themeColor = COUIThemeColors.Green) }
+  // 或：lightColorScheme(COUIThemeColors.Green)、darkColorScheme(COUIThemeColors.Green)、
+  //     myColors.withThemeColor(COUIThemeColor.fromColor(Color(0xFFFF6436)))
+  ```
+
 - **直接使用**
 
   直接传入颜色方案到 `COUITheme(colors = ...)`，用于在不使用 Controller 的情况下完全自定义：
@@ -112,6 +126,13 @@ fun App() {
 | colorSpec | ThemeColorSpec | Material 颜色规范版本 | ThemeColorSpec.Spec2021 |
 | paletteStyle | ThemePaletteStyle | 动态取色的调色板风格 | ThemePaletteStyle.TonalSpot |
 | isDark | Boolean? | 覆盖系统深色模式。`null` 时跟随系统 | null |
+| themeColor | COUIThemeColor? | 叠加到 `lightColors` / `darkColors` 上的主题色族（Monet 模式不生效） | null |
+
+::: tip Monet
+COUI 本身没有色阶映射：系统主题色只替换十个主题属性。因此 Monet 模式下主题相关槽按单色规则取值（`couiColorSecondary` =
+15% / 30%、`couiColorDisable` = 30% 等），文字槽保留 COUI 的透明度（`couiColorLabelSecondary` 54%、
+`couiColorLabelTertiary` / `couiColorDisabledNeutral` 26% / 30%），只是叠在色调化的 `onSurface` 上。
+:::
 
 ### ColorSchemeMode
 
@@ -154,6 +175,7 @@ val colors = COUITheme.colorScheme
 val textStyles = COUITheme.textStyles
 val mode = COUITheme.colorSchemeMode
 val isDynamic = COUITheme.isDynamicColor
+val isDark = COUITheme.isDark
 ```
 
 | 属性 | 类型 | 说明 |
@@ -162,6 +184,10 @@ val isDynamic = COUITheme.isDynamicColor
 | textStyles | TextStyles | 当前文本样式 |
 | colorSchemeMode | ColorSchemeMode? | 当前配色模式（使用直接 `colors` 重载时为 null） |
 | isDynamicColor | Boolean | 当前模式是否为 Monet 动态取色模式 |
+| isDark | Boolean | 当前方案是否为暗色（COUI `isCOUIDarkTheme`，即 `Colors.isDark`） |
+
+`COUITheme` 同时提供 `LocalTextSelectionColors`：手柄用 `primary`（`coui_text_select_*_tint`），高亮用
+`textColorHighlight`（`android:textColorHighlight` = `?couiColorSecondary`）。
 
 ## 自定义主题
 
@@ -174,7 +200,7 @@ val isDynamic = COUITheme.isDynamicColor
 
 ```kotlin
 val customTextStyles = defaultTextStyles(
-    title1 = TextStyle(
+    displayS = TextStyle(
         fontSize = 36.sp,
         fontWeight = FontWeight.Bold
     ),
@@ -206,7 +232,11 @@ fun MyApp() {
 
 ## 圆角档位
 
-`COUIRoundCorner` 收录 COUI 圆角档位（`coui_round_corner_*`）：`XS` 4、`S` 8、`M` 12、`L` 16、`XL` 20、`XXL` 24、`XXXL` 28、`XXXXL` 32 dp。ColorOS 17 在平滑圆角路径上会把基础档换成更大的半径，对应 `COUIRoundCorner.Normal`（卡片列表，`*_radius_normal_16_1`；`Normal.XL` = 24dp，即 `Card` 默认圆角）和 `COUIRoundCorner.Large`（按钮与卡片视图，`*_radius_large_16_1`）。每组档位附带平滑权重，即 squircle modifier 的 `weight` 参数（超椭圆指数，见 [平滑圆角](./squircle.md)）：`COUIRoundCorner.Normal.Weight` = 2.5（`weight_16_1_normal`），`COUIRoundCorner.Large.Weight` = 3.0（`weight_16_1_large`，对话框、底部面板与气泡提示也用它），基础档与圆形用 `COUIRoundCorner.CircularWeight` = 2.0（ColorOS 17 不做平滑），全圆控件用 `COUIRoundCorner.CapsuleWeight` = 1.0（Oplus 软胶囊，配合 `COUIRoundCorner.Full`，即 couiRoundCornerFULL 72dp）。`COUIRoundCorner.UnspecifiedWeight` 对应 COUI 不传权重的调用点：全圆时解析为软胶囊，否则为 `COUIRoundCorner.DefaultG2Weight` = 2.45（`default_g2_weight`）。
+`COUIRoundCorner` 收录 COUI 圆角档位（`coui_round_corner_*`）：`XS` 4、`S` 8、`M` 12、`L` 16、`XL` 20、`XXL` 24、`XXXL` 28、`XXXXL` 32 dp。ColorOS 17 在平滑圆角路径上会把基础档换成更大的半径，对应 `COUIRoundCorner.Normal`（卡片列表，`*_radius_normal_16_1`；`Normal.XL` = 24dp，即 `Card` 默认圆角）和 `COUIRoundCorner.Large`（按钮与卡片视图，`*_radius_large_16_1`）。每组档位附带平滑权重，即 squircle modifier 的 `weight` 参数（超椭圆指数，见 [平滑圆角](./squircle.md)）：`COUIRoundCorner.Normal.Weight` = 2.5（`weight_16_1_normal`），`COUIRoundCorner.Large.Weight` = 3.0（`weight_16_1_large`，对话框、底部面板与气泡提示也用它），基础档与圆形用 `COUIRoundCorner.CircularWeight` = 2.0（ColorOS 17 不做平滑），全圆控件用 `COUIRoundCorner.CapsuleWeight` = 1.0（Oplus 软胶囊，配合 `COUIRoundCorner.Full`，即 couiRoundCornerFULL 72dp）。`COUIRoundCorner.UnspecifiedWeight` 对应 COUI 不传权重的调用点：全圆时解析为软胶囊，否则为 `COUIRoundCorner.DefaultG2Weight` = 2.45（`default_g2_weight`）。`COUIRoundCorner.largeRadiusFor(radius)` 把基础档映射到对应的 `Large` 半径（`RoundCornerUtil.getRoundCornerForOS17`）。
+
+## 栅格与间距
+
+`COUILayoutGrid` 是 COUI 响应式栅格（按窗口尺寸给出 `columnCount`、`margin`、`gutter`、`columnWidth`、`spanWidth`、`gridWidth`、`screenTier`），并集中定义通用页面间距：`CardMarginHorizontal` 16dp（`coui_preference_card_margin_horizontal`）、`DefaultMarginHorizontal` 24dp（`grid_guide_column_default_margin_*`）、`ColumnGap` 8dp、`CardSpecialPadding` 16dp、`ListSpecialPadding` 24dp、`MarginSmall` 16dp、`MarginLarge` 24dp、`Gutter` 8dp、`GutterExpanded` 12dp。
 
 ## 状态蒙层
 

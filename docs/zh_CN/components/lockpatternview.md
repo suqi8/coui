@@ -53,7 +53,7 @@ scope.launch { state.animateEnter() }
 | modifier              | Modifier                          | 应用于视图的修饰符（默认 312x280dp）   | Modifier                            | 否   |
 | state                 | LockPatternState                  | 图案、显示模式与圆点动画               | rememberLockPatternState()          | 否   |
 | enabled               | Boolean                           | 是否接受触摸                           | true                                | 否   |
-| inStealthMode         | Boolean                           | 隐藏路径与选中圆点（错误状态仍显示）   | false                               | 否   |
+| inStealthMode         | Boolean                           | 从不绘制路径；新增圆点无波纹与发光     | false                               | 否   |
 | hapticFeedbackEnabled | Boolean                           | 每个圆点轻振，错误图案拒绝振动         | true                                | 否   |
 | colors                | LockPatternViewColors             | 圆点、成功与错误颜色                   | LockPatternViewDefaults.colors()    | 否   |
 | onPatternStart        | () -> Unit                        | 开始绘制                               | {}                                  | 否   |
@@ -65,9 +65,9 @@ scope.launch { state.animateEnter() }
 | 成员                         | 说明                                                   |
 | ---------------------------- | ------------------------------------------------------ |
 | pattern                      | 当前图案的圆点                                         |
-| displayMode                  | `Correct`、`Animate` 或 `Wrong`                        |
-| setDisplayMode(mode, haptic) | `Wrong` 播放 1 秒错误闪烁（2 个以上圆点时附带拒绝振动） |
-| setPattern(mode, pattern)    | 替换图案                                               |
+| displayMode                  | `Correct`、`Animate`、`Wrong`、`FingerprintMatch` 或 `FingerprintNoMatch` |
+| setDisplayMode(mode, haptic) | `Wrong` 播放 1 秒错误闪烁（2 个以上圆点时附带拒绝振动）；`FingerprintNoMatch` 让九个圆点全部红色闪烁 |
+| setPattern(mode, pattern)    | 替换图案（显示路径与圆点，不带发光内圆）               |
 | clearPattern()               | 清除图案；错误闪烁进行中则在其结束后清除               |
 | animateEnter()               | 挂起直至入场动画结束                                   |
 
@@ -103,4 +103,6 @@ scope.launch { state.animateEnter() }
 - 圆点命中区域为格子中间 60%（`mHitFactor`）。直线跨过的中间圆点会被一并添加。
 - 波纹：460ms 内缩放 1 -> 7（`COUIInEaseInterpolator`），透明度 0 -> 峰值 -> 0。内圆：230ms 淡入（`COUIEaseInterpolator`）。路径端点：100ms 吸附（fast-out-slow-in）。
 - 错误闪烁：路径与选中圆点在 1 秒内按 1、0.35、1、0.15、0.5、0 变化；低于 0.1 后普通圆点重新出现。
+- `FingerprintMatch` 以成功色显示图案；`FingerprintNoMatch` 使用错误色，并对九个圆点的内圆播放同样的 1 秒关键帧，不振动。
+- 隐身模式下任何状态都不绘制路径（包括错误图案）；错误闪烁仍会让选中圆点的内圆闪烁。
 - 与 COUI 一致，路径使用成功 / 错误颜色绘制，因此没有单独的路径颜色。

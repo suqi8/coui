@@ -7,68 +7,28 @@ This page lists all colors in the COUI color scheme with their default light and
 - Use `COUITheme.colorScheme.<name>` in composables.
 - The colors shown below apply to non-Monet mode.
 
-## Colors
+## Core and Component Slots
+
+The primary and error colors, the state layers and the component-level tokens.
 
 | Name | Role | Light | Dark |
 |------|------|-------|------|
 | `primary` | Primary color | `#FF0080FF` | `#FF1A8CFF` |
 | `onPrimary` | Text on primary | `#FFFFFFFF` | `#FFFFFFFF` |
-| `primaryVariant` | Primary variant | `#FF0080FF` | `#FF1A8CFF` |
-| `onPrimaryVariant` | Text on primary variant | `#FFAECDFF` | `#FF99C7F1` |
 | `error` | Error color | `#FFDB382C` | `#FFFF6C61` |
 | `onError` | Text on error | `#FFFFFFFF` | `#FFFFFFFF` |
-| `errorContainer` | Error container | `#26EB3B2F` | `#40EB493D` |
-| `onErrorContainer` | Text on error container | `#FFDB382C` | `#FFFF6C61` |
-| `disabledPrimary` | Disabled primary (switch/btn/slider) | `#4D0080FF` | `#4D1A8CFF` |
-| `disabledOnPrimary` | Text on disabled primary | `#FFFFFFFF` | `#FF404040` |
-| `disabledPrimaryButton` | Disabled primary for button | `#4D0080FF` | `#4D1A8CFF` |
 | `disabledOnPrimaryButton` | Text on disabled primary button (COUI `coui_button_main_disable_text`) | `#8AFFFFFF` | `#29FFFFFF` |
-| `disabledPrimarySlider` | Disabled primary for slider | `#4D0080FF` | `#4D1A8CFF` |
-| `primaryContainer` | Primary container | `#FF0080FF` | `#FF1A8CFF` |
-| `onPrimaryContainer` | Text on primary container | `#FFFFFFFF` | `#FFFFFFFF` |
-| `secondary` | Secondary color | `#FFE5E5E5` | `#FF757575` |
-| `onSecondary` | Text on secondary | `#FFFFFFFF` | `#FFFFFFFF` |
 | `secondaryVariant` | Secondary variant | `#14000000` | `#26FFFFFF` |
-| `onSecondaryVariant` | Text on secondary variant | `#E6000000` | `#E6FFFFFF` |
-| `disabledSecondary` | Disabled secondary | `#FFF2F2F2` | `#4D757575` |
-| `disabledOnSecondary` | Text on disabled secondary | `#42000000` | `#4DFFFFFF` |
 | `disabledSecondaryVariant` | Disabled secondary variant | `#14000000` | `#1AFFFFFF` |
-| `disabledOnSecondaryVariant` | Text on disabled secondary variant | `#42000000` | `#4DFFFFFF` |
 | `secondaryContainer` | Secondary container | `#14000000` | `#26FFFFFF` |
-| `onSecondaryContainer` | Text on secondary container | `#66000000` | `#66FFFFFF` |
-| `secondaryContainerVariant` | Secondary container variant | `#14000000` | `#26FFFFFF` |
-| `onSecondaryContainerVariant` | Text on secondary container variant | `#66000000` | `#66FFFFFF` |
-| `tertiaryContainer` | Tertiary container | `#260080FF` | `#401A8CFF` |
-| `onTertiaryContainer` | Text on tertiary container | `#FF0080FF` | `#FF5C9DFF` |
-| `tertiaryContainerVariant` | Tertiary container variant | `#260080FF` | `#401A8CFF` |
-| `background` | App background | `#FFFFFFFF` | `#FF1E1E1E` |
-| `onBackground` | Text on background | `#E6000000` | `#E6FFFFFF` |
-| `onBackgroundVariant` | Variant text on background | `#8A000000` | `#8AFFFFFF` |
-| `surface` | Surface | `#FFF0F1F2` | `#FF000000` |
-| `onSurface` | Text on surface | `#E6000000` | `#E6FFFFFF` |
-| `surfaceVariant` | Surface variant | `#FFFFFFFF` | `#1AFFFFFF` |
-| `onSurfaceSecondary` | Secondary text on surface | `#8A000000` | `#8AFFFFFF` |
-| `onSurfaceVariantSummary` | Summary text on surface variant | `#66000000` | `#66FFFFFF` |
-| `onSurfaceVariantActions` | Action text on surface variant | `#42000000` | `#4DFFFFFF` |
-| `disabledOnSurface` | Text on disabled surface | `#42000000` | `#4DFFFFFF` |
-| `surfaceContainer` | Surface container | `#FFFFFFFF` | `#1AFFFFFF` |
-| `onSurfaceContainer` | Text on surface container | `#E6000000` | `#E6FFFFFF` |
-| `onSurfaceContainerVariant` | Variant text on surface container | `#66000000` | `#66FFFFFF` |
-| `surfaceContainerHigh` | High surface container | `#FFE6E6E6` | `#33FFFFFF` |
-| `onSurfaceContainerHigh` | Text on high surface container | `#42000000` | `#4DFFFFFF` |
 | `surfaceContainerHighest` | Highest surface container | `#FFFFFFFF` | `#FF1E1E1E` |
-| `onSurfaceContainerHighest` | Text on highest surface container | `#E6000000` | `#E6FFFFFF` |
 | `outline` | Outlines/borders | `#26000000` | `#26FFFFFF` |
-| `dividerLine` | Dividers | `#1F000000` | `#33FFFFFF` |
-| `windowDimming` | Window dimming (dialogs/dropdowns) | `#33000000` | `#99000000` |
-| `sliderKeyPoint` | Slider key point | `#FFF2F2F2` | `#FF595959` |
-| `sliderKeyPointForeground` | Slider key point foreground | `#FF6EB5FF` | `#FF5DAAFF` |
 | `sliderBackground` | Slider background | `#1F000000` | `#33FFFFFF` |
 | `dialogButton` | Dialog bar button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
 | `dragHandle` | Bottom sheet drag handle (COUI `couiColorControls`) | `#29000000` | `#40FFFFFF` |
 | `secondaryButton` | Secondary button fill (COUI `couiColorContainer8` over `couiColorBackgroundElevated`) | `#FFEBEBEB` | `#FF353535` |
 | `disabledSecondaryButton` | Disabled secondary button fill (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
-| `disabledOnSecondaryButton` | Disabled secondary button label (COUI `coui_button_second_disable_text`) | `#42000000` | `#29FFFFFF` |
+| `disabledOnSecondaryButton` | Disabled secondary button label (COUI `coui_btn_secondary_text_color_disable`) | `#42000000` | `#28FFFFFF` |
 | `transparentButton` | Transparent button fill (COUI `coui_button_translate_color`) | `#33FFFFFF` | `#33FFFFFF` |
 | `onTransparentButton` | Transparent button label | `#FFFFFFFF` | `#FFFFFFFF` |
 | `disabledOnTransparentButton` | Disabled transparent button label | `#4DFFFFFF` | `#4DFFFFFF` |
@@ -79,7 +39,89 @@ This page lists all colors in the COUI color scheme with their default light and
 | `focus` | Focused / selected list row layer (COUI `couiColorFocus`), drawn by `COUIIndication` | `#1F0080FF` | `#331A8CFF` |
 | `disabledProgress` | Disabled linear progress bar fill (COUI `coui_progressbar_color_disabled`) | `#FFE6E6E6` | `#FF262626` |
 | `disabledProgressBackground` | Disabled linear progress bar track (COUI `coui_progressbar_background_color_disabled`) | `#08000000` | `#33FFFFFF` |
+| `disabledSliderThumb` | Thumb and on-progress key points of a disabled Slider (COUI `coui_seekbar_thumb_disable_color`) | `#8AFFFFFF` | `#29FFFFFF` |
+| `disabledSliderKeyPoint` | Off-progress key points of a disabled Slider (COUI `coui_seekbar_inactive_mark_disable_color`) | `#42000000` | `#29FFFFFF` |
+| `sliderThumbShadow` | Slider thumb shadow (COUI `coui_seekbar_thumb_shadow_color`) | `#1A000000` | `#40000000` |
+| `disabledTextFieldBorder` | Border / underline of a disabled TextField (COUI `coui_textinput_stroke_color_disabled`) | `#19000000` | `#19FFFFFF` |
 | `quarternaryNeutral` | Faintest neutral, e.g. disabled Checkbox / RadioButton rings (COUI `couiColorQuarternaryNeutral`) | `#14000000` | `#26FFFFFF` |
 | `container8` | Translucent container fill, e.g. the unselected Chip (COUI `couiColorContainer8`) | `#14000000` | `#1AFFFFFF` |
 | `disabledChipText` | Label of a disabled unselected Chip (COUI `chip_unchecked_text_disable_color`) | `#42000000` | `#29FFFFFF` |
 | `focusOutline` | Keyboard focus outline, e.g. the Chip focus stroke (COUI `couiColorFocusOutline`) | `#660080FF` | `#665C9DFF` |
+
+## COUI Semantic Colors
+
+These slots carry the COUI `Theme.COUI` / `Theme.COUI.Dark` color attributes under their official names
+(`couiColorXxx` → `xxx`).
+
+| Name | COUI attribute | Light | Dark |
+|------|----------------|-------|------|
+| `primaryText` | `couiColorPrimaryText` (also `couiColorOnSecondary`) | `#FF0080FF` | `#FF5C9DFF` |
+| `labelTheme` | `couiColorLabelTheme` | `#FF0080FF` | `#FF1A8CFF` |
+| `link` | `couiColorLink` | `#FF0080FF` | `#FF1A8CFF` |
+| `disable` | `couiColorDisable` | `#4D0080FF` | `#4D1A8CFF` |
+| `containerTheme` | `couiColorContainerTheme` | `#FF0080FF` | `#FF1A8CFF` |
+| `containerThemeHalftone` | `couiColorContainerThemeHalftone` | `#260080FF` | `#401A8CFF` |
+| `secondary` | `couiColorSecondary` (the theme color at 15% / 25%) | `#260080FF` | `#401A8CFF` |
+| `textColorHighlight` | `android:textColorHighlight` (`?couiColorSecondary`) | `#260080FF` | `#401A8CFF` |
+| `errorDisabled` | `couiColorErrorDisabled` | `#4DDB382C` | `#4DFF6C61` |
+| `errorTextBg` | `couiColorErrorTextBg` | `#4DE82A18` | `#FFEA3939` |
+| `success` | `couiColorSuccess` | `#FF00BD13` | `#FF24B232` |
+| `tips` | `couiColorTips` | `#FF0080FF` | `#FF1A8CFF` |
+| `additional` | `couiColorAdditional` | `#FF0080FF` | `#FF1A8CFF` |
+| `assist` | `couiColorAssist` | `#FF5C93E5` | `#FF5C93E5` |
+| `background` | `couiColorBackground` | `#FFFFFFFF` | `#FF000000` |
+| `surface` | `couiColorSurface` (dialog, bottom sheet and popup panels) | `#FFFFFFFF` | `#FF1E1E1E` |
+| `backgroundElevated` | `couiColorBackgroundElevated` | `#FFFFFFFF` | `#FF1E1E1E` |
+| `backgroundElevatedWithCard` | `couiColorBackgroundElevatedWithCard` | `#FFF0F1F2` | `#FF1E1E1E` |
+| `backgroundWithCard` | `couiColorBackgroundWithCard` (`Scaffold` and page backgrounds) | `#FFF0F1F2` | `#FF000000` |
+| `surfaceTop` | `couiColorSurfaceTop` | `#FFFFFFFF` | `#FF333333` |
+| `surfaceWithCard` | `couiColorSurfaceWithCard` | `#FFF0F1F2` | `#FF1E1E1E` |
+| `bar` | `couiColorBar` | `#FFFAFAFA` | `#FF1E1E1E` |
+| `bottomBar` | `couiColorBottomBar` | `#FFFAFAFA` | `#FF1E1E1E` |
+| `card` | `couiColorCard` | `#FFFFFFFF` | `#1AFFFFFF` |
+| `cardBackground` | `couiColorCardBackground` | `#FFFFFFFF` | `#1AFFFFFF` |
+| `cardPressed` | `couiColorCardPressed` | `#FFE6E6E6` | `#33FFFFFF` |
+| `labelPrimary` | `couiColorLabelPrimary` | `#E6000000` | `#E6FFFFFF` |
+| `labelPrimaryVariant` | `couiColorLabelPrimaryVariant` | `#B8000000` | `#B8FFFFFF` |
+| `labelSecondary` | `couiColorLabelSecondary` | `#8A000000` | `#8AFFFFFF` |
+| `labelSecondaryVariant` | `couiColorLabelSecondaryVariant` | `#66000000` | `#66FFFFFF` |
+| `labelTertiary` | `couiColorLabelTertiary` | `#42000000` | `#4DFFFFFF` |
+| `labelQuaternary` | `couiColorLabelQuaternary` | `#14000000` | `#26FFFFFF` |
+| `labelOnColor` | `couiColorLabelOnColor` | `#FFFFFFFF` | `#FFFFFFFF` |
+| `disabledNeutral` | `couiColorDisabledNeutral` | `#42000000` | `#4DFFFFFF` |
+| `hintNeutral` | `couiColorHintNeutral` | `#42000000` | `#4DFFFFFF` |
+| `container4` | `couiColorContainer4` | `#0A000000` | `#1AFFFFFF` |
+| `container12` | `couiColorContainer12` | `#1F000000` | `#33FFFFFF` |
+| `container16` | `couiColorContainer16` | `#29000000` | `#40FFFFFF` |
+| `containerSolid` | `couiColorContainerSolid` | `#FFEBEBEB` | `#FF262626` |
+| `fillSolid` | `couiColorFillSolid` | `#FFEBEBEB` | `#FF262626` |
+| `fillThin` | `couiColorFillThin` | `#0A000000` | `#14FFFFFF` |
+| `controls` | `couiColorControls` | `#29000000` | `#40FFFFFF` |
+| `divider` | `couiColorDivider` | `#1F000000` | `#33FFFFFF` |
+| `mask` | `couiColorMask` | `#33000000` | `#99000000` |
+| `pressBackground` | `couiColorPressBackground` | `#14000000` | `#26FFFFFF` |
+| `ripplePressBackground` | `couiColorRipplePressBackground` | `#99B4B4B4` | `#80FFFFFF` |
+
+### Hue Palette
+
+Each hue has the color (`couiColor<Hue>`), a `<hue>Variant` (`couiColor<Hue>Variant`) and a `container<Hue>` tint
+(`couiColorContainer<Hue>`). The palette is fixed: theme color families and Monet do not change it.
+
+| Hue | Color (light / dark) | Variant (light / dark) | Container (light / dark) |
+|-----|----------------------|------------------------|--------------------------|
+| `red` | `#EB3B2F` / `#EB493D` | `#E56E65` / `#CC615A` | `#EEDADC` / `#3A3030` |
+| `orange` | `#FF7700` / `#F08222` | `#E58F45` / `#CC7F3D` | `#FAE7D6` / `#39332C` |
+| `yellow` | `#FFB200` / `#E5A100` | `#E5AF2E` / `#C29427` | `#F6E7C6` / `#373530` |
+| `green` | `#00BD13` / `#24B232` | `#4BBD57` / `#43A84E` | `#BADECA` / `#353E36` |
+| `mint` | `#00CC88` / `#1AB883` | `#39BD91` / `#32A881` | `#BADEDB` / `#394342` |
+| `cyan` | `#1DBACC` / `#25A9B8` | `#39AFBD` / `#329DA8` | `#BEDADD` / `#343E3D` |
+| `azure` | `#00A1FF` / `#209DE5` | `#45ABE5` / `#3D98CC` | `#CEE5EB` / `#373F42` |
+| `blue` | `#0080FF` / `#1A8CFF` | `#5C93E5` / `#5C93E5` | `#C9DAE4` / `#323739` |
+| `violet` | `#5A47FF` / `#7161FF` | `#7E73E5` / `#7E73E5` | `#D6D5EE` / `#3A3A43` |
+| `purple` | `#A723FF` / `#AC33FF` | `#B873E5` / `#A466CC` | `#E0D6EB` / `#3A3540` |
+
+## Dark Flag
+
+`Colors.isDark` (also `COUITheme.isDark`) tells whether the scheme is dark, like COUI `isCOUIDarkTheme`.
+`lightColorScheme()`, `darkColorScheme()` and the Monet schemes set it; use it instead of guessing from a color's
+luminance.

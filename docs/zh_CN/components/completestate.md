@@ -39,17 +39,17 @@ CompleteState(
 | title         | String              | 动画下方的标题，为空时隐藏               | -                                           | 是   |
 | modifier      | Modifier            | 应用于组件的修饰符                       | Modifier                                    | 否   |
 | subtitle      | String?             | 可选副标题                               | null                                        | 否   |
-| type          | CompleteStateType   | 选择动画                                 | CompleteStateType.Success                   | 否   |
+| type          | CompleteStateType   | 选择动画                                 | CompleteStateType.None                      | 否   |
 | animate       | Boolean             | 是否播放动画，false 时直接显示最后一帧   | true                                        | 否   |
 | replayKey     | Any?                | 该值变化时重新播放动画                   | null                                        | 否   |
 | animationSize | Dp                  | 动画尺寸                                 | CompleteStateDefaults.AnimationSize         | 否   |
 | colors        | CompleteStateColors | 颜色配置                                 | CompleteStateDefaults.completeStateColors() | 否   |
-| titleStyle    | TextStyle           | 标题文字样式                             | COUITheme.textStyles.title3                 | 否   |
-| subtitleStyle | TextStyle           | 副标题文字样式                           | COUITheme.textStyles.footnote2              | 否   |
+| titleStyle    | TextStyle           | 标题文字样式                             | COUITheme.textStyles.headlineM                 | 否   |
+| subtitleStyle | TextStyle           | 副标题文字样式                           | COUITheme.textStyles.bodyXS              | 否   |
 
 ### CompleteStateType 枚举
 
-`Success`、`Failed`、`Waiting`。
+`None`（无动画，100dp 区域留空；对应 COUI 默认的 `completeType` 0）、`Success`、`Failed`、`Waiting`。
 
 ### CompleteStateDefaults 对象
 

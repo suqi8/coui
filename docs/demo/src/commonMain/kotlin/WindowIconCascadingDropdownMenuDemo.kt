@@ -96,7 +96,7 @@ fun WindowIconCascadingDropdownMenuDemo() {
                             WindowIconCascadingDropdownMenu(entries = entries) {
                                 Icon(
                                     imageVector = COUIIcons.Tune,
-                                    tint = COUITheme.colorScheme.onBackground,
+                                    tint = COUITheme.colorScheme.labelPrimary,
                                     contentDescription = "Adjust",
                                 )
                             }
@@ -106,7 +106,7 @@ fun WindowIconCascadingDropdownMenuDemo() {
                             ) {
                                 Icon(
                                     imageVector = COUIIcons.MoreCircle,
-                                    tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                                    tint = COUITheme.colorScheme.disabledNeutral,
                                     contentDescription = "More",
                                 )
                             }

@@ -7,6 +7,8 @@
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.Chip
 import io.github.suqi8.coui.kmp.basic.ChipDefaults
+import io.github.suqi8.coui.kmp.basic.IconChip
+import io.github.suqi8.coui.kmp.basic.SuggestionChip
 ```
 
 ## 基本用法
@@ -40,23 +42,46 @@ Chip(
 )
 ```
 
-## 单选组
+## 关闭图标、计数与红点
+
+`onClose` 会在 Chip 末尾显示 COUI 关闭图标(`ic_chip_close`),点击它调用 `onClose` 而不是 `onClick`(`setCloseIconVisible` + `setOnCloseIconClickListener`)。`count` 在标签后 2dp 处绘制次要色计数(`setCountText`),`showRedDot` 在标签后绘制 6dp 提示红点(`setShowRedDot`)。
 
 ```kotlin
-var selectedIndex by remember { mutableIntStateOf(0) }
+Chip(
+    selected = selected,
+    onClick = { selected = !selected },
+    label = "下载",
+    count = "12",
+    showRedDot = true,
+    onClose = { /* 移除该 Chip */ },
+)
+```
 
-Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    listOf("全部", "照片", "视频").forEachIndexed { index, label ->
-        Chip(
-            selected = selectedIndex == index,
-            onClick = { selectedIndex = index },
-            label = label,
-        )
-    }
+## 建议 Chip
+
+`SuggestionChip` 对应 `Widget.COUI.Chip.Suggestion`(搜索历史的 `Widget.COUI.Chip.Record` 同样式):不可选中,高 28dp,标签 12sp,前置图标 14dp,关闭图标 12dp;点击只调用 `onClick`。
+
+```kotlin
+SuggestionChip(
+    onClick = { /* 再次搜索 */ },
+    label = "壁纸",
+    onClose = { /* 删除记录 */ },
+)
+```
+
+## 图标 Chip
+
+`IconChip` 对应 `Widget.COUI.Chip.Suggestion.Collapsable`:28dp 圆形、仅含图标,`ChipGroup` 的展开 / 收起按钮即用它。
+
+```kotlin
+IconChip(onClick = { /* ... */ }) {
+    Icon(imageVector = COUIIcons.Basic.Search, contentDescription = "搜索")
 }
 ```
 
-8dp 间距对应 COUIChipGroup 的默认横/纵间距。
+## Chip 组
+
+多个 Chip 请放进 [ChipGroup](./chipgroup):自动换行、8dp 间距,支持 COUI 的单选 / 必选与折叠。
 
 ## 组件状态
 
@@ -84,7 +109,10 @@ Chip(
 | label             | String                     | 文本标签(单行,超长省略)      | -                         | 是   |
 | modifier          | Modifier                   | 应用于 Chip 的修饰符             | Modifier                  | 否   |
 | enabled           | Boolean                    | 是否启用                         | true                      | 否   |
+| showRedDot        | Boolean                    | 是否绘制提示红点                 | false                     | 否   |
 | icon              | (@Composable () -> Unit)?  | 可选前置图标                     | null                      | 否   |
+| onClose           | (() -> Unit)?              | 显示关闭图标并处理其点击         | null                      | 否   |
+| count             | String?                    | 标签后的计数文本                 | null                      | 否   |
 | cornerRadius      | Dp                         | 胶囊圆角                         | ChipDefaults.CornerRadius | 否   |
 | minWidth          | Dp                         | 最小宽度                         | ChipDefaults.MinWidth     | 否   |
 | minHeight         | Dp                         | 最小高度                         | ChipDefaults.MinHeight    | 否   |
@@ -93,6 +121,21 @@ Chip(
 | insideMargin      | PaddingValues              | Chip 内部横向内边距              | ChipDefaults.InsideMargin | 否   |
 | interactionSource | MutableInteractionSource?  | 交互源                           | null                      | 否   |
 | indication        | Indication?                | 指示效果(按压反馈已内置)      | null                      | 否   |
+
+### SuggestionChip
+
+参数与 `Chip` 相同但没有 `selected`;默认 `cornerRadius = ChipDefaults.SuggestionCornerRadius`、`minHeight = ChipDefaults.SuggestionMinHeight`,标签样式为 `suggestionTextStyle()`。
+
+### IconChip
+
+| 属性              | 类型                      | 说明          | 默认值                    | 必需 |
+| ----------------- | ------------------------- | ------------- | ------------------------- | ---- |
+| onClick           | () -> Unit                | 点击回调      | -                         | 是   |
+| modifier          | Modifier                  | 修饰符        | Modifier                  | 否   |
+| enabled           | Boolean                   | 是否启用      | true                      | 否   |
+| colors            | ChipColors                | 颜色配置      | ChipDefaults.chipColors() | 否   |
+| interactionSource | MutableInteractionSource? | 交互源        | null                      | 否   |
+| icon              | @Composable () -> Unit    | 16dp 图标     | -                         | 是   |
 
 ### ChipDefaults
 
@@ -106,12 +149,22 @@ Chip(
 | IconSize     | Dp            | 16.dp                             | coui_chip_selection_style_chip_icon_size         |
 | IconSpacing  | Dp            | 4.dp                              | coui_chip_selection_style_chip_icon_end_padding  |
 | InsideMargin | PaddingValues | PaddingValues(horizontal = 12.dp) | coui_chip_selection_style_chip_horizontal_padding |
+| SuggestionMinHeight | Dp     | 28.dp                             | coui_chip_suggest_style_height                   |
+| SuggestionCornerRadius | Dp  | 14.dp                             | 28dp 高度的胶囊                                  |
+| SuggestionIconSize | Dp      | 14.dp                             | coui_chip_suggest_style_chip_icon_size           |
+| CloseIconSize | Dp           | 12.dp                             | coui_chip_suggest_style_close_icon_size          |
+| CloseIconStartPadding | Dp   | 8.dp                              | coui_chip_suggest_style_close_icon_start_padding |
+| CloseIconEndPadding | Dp     | 8.dp                              | coui_chip_suggest_style_close_icon_end_padding   |
+| CountSpacing | Dp            | 2.dp                              | COUIChipDrawable mCountMarginStart               |
+| CollapsableSize | Dp         | 28.dp                             | coui_chip_group_collapsable_button_size          |
+| CollapsableIconSize | Dp     | 16.dp                             | Widget.COUI.Chip.Suggestion.Collapsable chipIconSize |
 
 #### 方法
 
 | 方法名       | 类型       | 说明                                                                    |
 | ------------ | ---------- | ----------------------------------------------------------------------- |
-| textStyle()  | TextStyle  | 默认标签样式(COUITheme.textStyles.body2,COUI couiTextBodyM 14sp)     |
+| textStyle()  | TextStyle  | 默认标签样式(COUITheme.textStyles.bodyM,COUI couiTextBodyM 14sp)     |
+| suggestionTextStyle() | TextStyle | 建议 Chip 标签样式(COUITheme.textStyles.bodyXS,couiTextBodyXS 12sp) |
 | chipColors() | ChipColors | 创建 Chip 的颜色配置                                                    |
 
 ### `chipColors()` 工厂
@@ -121,11 +174,13 @@ Chip(
 | containerColor                 | Color | COUITheme.colorScheme.container8                  | uncheckedBackgroundColor         |
 | selectedContainerColor         | Color | COUITheme.colorScheme.primary                     | checkedBackgroundColor           |
 | disabledContainerColor         | Color | COUITheme.colorScheme.container8                  | uncheckedDisabledBackgroundColor |
-| selectedDisabledContainerColor | Color | COUITheme.colorScheme.disabledPrimaryButton       | checkedDisabledBackgroundColor   |
-| contentColor                   | Color | COUITheme.colorScheme.onSurface                   | uncheckedTextColor               |
+| selectedDisabledContainerColor | Color | COUITheme.colorScheme.disable       | checkedDisabledBackgroundColor   |
+| contentColor                   | Color | COUITheme.colorScheme.labelPrimary                   | uncheckedTextColor               |
 | selectedContentColor           | Color | COUITheme.colorScheme.onPrimary                   | checkedTextColor                 |
 | disabledContentColor           | Color | COUITheme.colorScheme.disabledChipText            | uncheckedDisabledTextColor       |
 | selectedDisabledContentColor   | Color | COUITheme.colorScheme.disabledOnPrimaryButton     | checkedDisabledTextColor         |
+| countColor                     | Color | COUITheme.colorScheme.labelSecondary          | couiColorLabelSecondary(计数)  |
+| closeIconColor                 | Color | COUITheme.colorScheme.labelSecondary          | `ic_chip_close` couiColorSecondNeutral |
 
 ## 行为
 

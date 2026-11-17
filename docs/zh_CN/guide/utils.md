@@ -55,7 +55,11 @@ PopupLayout(
 
 ## 越界回弹效果 (Overscroll)
 
-COUI 提供了易于使用的越界回弹效果修饰符，让滚动体验更加流畅自然。
+COUI 以修饰符和主题默认 `OverscrollEffect` 两种形式提供 COUI 17 滚动容器（`COUIRecyclerView`、`COUINestedScrollView`）的越界回弹：
+
+- 拖过边缘时，内容只跟随手指的 `0.4 × (1 − |越界量| / 窗口尺寸)`（`COUIPhysicalAnimationUtil.calcRealOverScrollDist`），起始 40%，越拉越紧。
+- 松手后按 `SpringOverScroller` 的 RK4 弹簧回弹（摩擦 12.19，张力竖向 16 × 2.15、横向 16 × 3.2，origami 单位，略过阻尼）。
+- 快速滑动撞到边缘时，剩余速度带着内容冲过边缘再由同一弹簧拉回，冲出距离最多为窗口的 37.31%（`calcOverFlingDecelerateDist`）。越界状态下朝内容方向快速滑动会滚动内容，朝外的则被丢弃。
 
 ### 垂直越界回弹
 
@@ -81,19 +85,12 @@ LazyRow(
 }
 ```
 
-### 自定义越界回弹参数
-
-您可以根据需要自定义越界回弹效果的参数：
+### 越界回弹参数
 
 ```kotlin
 LazyColumn(
     modifier = Modifier.overScrollVertical(
         nestedScrollToParent = true, // 是否分发嵌套滚动事件到父级，默认 true
-        scrollEasing = { distance, range -> // 自定义回弹阻尼，默认效果类似 HyperOS 手感
-            // 示例：DefaultParabolaScrollEasing(distance, range)
-        },
-        springStiff = 280f, // 回弹弹性系数，默认 280f
-        springDamp = 1f,    // 回弹阻尼系数，默认 1f
         isEnabled = { platform() == Platform.Android || platform() == Platform.IOS } // 默认仅在 Android/iOS 启用
     ),
     overscrollEffect = null // 建议将此参数设置为 null，禁用默认效果
@@ -105,14 +102,11 @@ LazyColumn(
 **参数说明:**
 
 * `nestedScrollToParent`：布尔值，是否分发嵌套滚动事件到父级。默认：`true`。
-* `scrollEasing`：函数 `(distance: Float, range: Int) -> Float`，自定义回弹阻尼，默认效果类似 HyperOS 手感。
-* `springStiff`：浮点数，回弹弹性系数。默认：`280f`。
-* `springDamp`：浮点数，回弹阻尼系数。默认：`1f`。
 * `isEnabled`：Lambda，是否启用越界回弹。默认仅 Android/iOS。
 
 ### 通过 OverscrollFactory（主题级集成）
 
-`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的弹簧物理效果，但以主题级别集成。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 COUI 越界回弹效果。
+`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的物理效果，但以主题级别集成。与 `COUIRecyclerView` / `COUINestedScrollView`（`couiRecyclerViewEnableVibrator`，默认开启）一样，快速滑动撞到边缘、或在越界状态下松手时，它会播放滚动边缘振动（`performHapticFeedback(307)`）；如需关闭可创建 `COUIOverscrollEffect(edgeHapticEnabled = false)`。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 COUI 越界回弹效果。
 
 ```kotlin
 // 无需额外修饰符 —— COUITheme 已自动提供越界回弹效果
@@ -156,6 +150,7 @@ LazyColumn(
 | :--- | :---: | :---: |
 | 使用方式 | 每个组件手动添加 `Modifier` | 主题级别，自动生效 |
 | 物理效果 | 相同弹簧物理 | 相同弹簧物理 |
+| 边缘振动（307） | ❌（需加 `scrollEndHaptic()`） | ✅ |
 | 默认启用平台 | Android、iOS | 全平台（通过主题） |
 | 内容未超出容器时仍可触发 | ✅ | ❌ |
 | 需要逐个组件手动添加修饰符 | ✅ | ❌ |
@@ -164,16 +159,16 @@ LazyColumn(
 
 ## 滚动到边界触觉反馈 (Modifier.scrollEndHaptic())
 
-COUI 提供了用于在可滚动容器快速滑动到其开始或结束边界时触发触觉反馈的修饰符，通过触觉反馈确认已到达边界增强用户的交互体验。
+COUI 提供了用于在可滚动容器快速滑动到其开始或结束边界时触发触觉反馈的修饰符。默认播放 `COUINestedScrollView` 使用的 COUI 滚动边缘振动（`performHapticFeedback(307)`，`EDGE_LIST_VIBRATE`），非 ColorOS 设备退回最接近的标准触感。使用主题默认 `COUIOverscrollEffect` 的可滚动组件已经自带边缘振动；本修饰符用于 `overScrollVertical()` / `overScrollHorizontal()` 或未使用 COUI 越界回弹的容器。
 
 ```kotlin
 LazyColumn(
     modifier = Modifier
         .fillMaxSize()
         // 添加滚动到边界触觉反馈
-        .scrollEndHaptic(
-            hapticFeedbackType = HapticFeedbackType.TextHandleMove // 默认值
-        )
+        .scrollEndHaptic()
+        .overScrollVertical(),
+    overscrollEffect = null
 ) {
     // 列表内容
 }
@@ -181,7 +176,7 @@ LazyColumn(
 
 **参数说明:**
 
-* `hapticFeedbackType`: 指定滚动到达末端时要执行的触觉反馈类型。默认为 `HapticFeedbackType.TextHandleMove`。您可以使用 `androidx.compose.ui.hapticfeedback.HapticFeedbackType` 中可用的其他类型。
+* `hapticFeedbackType`：改用的标准 `HapticFeedbackType`；为 `null`（默认）时播放 COUI 滚动边缘振动。
 
 ## 按压反馈效果 (Modifier.pressable())
 

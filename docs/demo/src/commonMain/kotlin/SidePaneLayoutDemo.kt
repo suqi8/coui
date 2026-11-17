@@ -42,7 +42,7 @@ fun SidePaneLayoutDemo() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(COUITheme.colorScheme.surfaceContainer)
+                        .background(COUITheme.colorScheme.cardBackground)
                         .padding(top = 104.dp),
                 ) {
                     SidePaneFolders.forEachIndexed { index, folder ->
@@ -62,15 +62,15 @@ fun SidePaneLayoutDemo() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(start = 72.dp, top = 56.dp, end = 16.dp),
             ) {
-                Text(text = SidePaneFolders[selected], style = COUITheme.textStyles.title3)
+                Text(text = SidePaneFolders[selected], style = COUITheme.textStyles.headlineM)
                 Text(
                     text = if (split) "Split mode: the content resizes with the pane." else "Compact: the pane slides over the content.",
                     modifier = Modifier.padding(top = 8.dp),
-                    style = COUITheme.textStyles.body2,
-                    color = COUITheme.colorScheme.onSurfaceSecondary,
+                    style = COUITheme.textStyles.bodyM,
+                    color = COUITheme.colorScheme.labelSecondary,
                 )
             }
         }

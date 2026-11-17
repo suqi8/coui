@@ -69,7 +69,7 @@ fun ButtonDemo() {
                     )
                     Text(
                         text = buttonText1,
-                        style = COUITheme.textStyles.button,
+                        style = COUITheme.textStyles.buttonL,
                         modifier = Modifier.padding(start = 8.dp),
                     )
                 }
@@ -99,7 +99,7 @@ fun ButtonDemo() {
                     )
                     Text(
                         text = "Disabled Button",
-                        style = COUITheme.textStyles.button,
+                        style = COUITheme.textStyles.buttonL,
                         color = COUITheme.colorScheme.disabledOnPrimaryButton,
                         modifier = Modifier.padding(start = 8.dp),
                     )

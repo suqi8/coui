@@ -62,7 +62,7 @@ fun WindowBottomSheetDemo() {
                             Icon(
                                 imageVector = COUIIcons.Close,
                                 contentDescription = "Cancel",
-                                tint = COUITheme.colorScheme.onBackground,
+                                tint = COUITheme.colorScheme.labelPrimary,
                             )
                         }
                     },
@@ -72,13 +72,13 @@ fun WindowBottomSheetDemo() {
                             Icon(
                                 imageVector = COUIIcons.Ok,
                                 contentDescription = "Confirm",
-                                tint = COUITheme.colorScheme.onBackground,
+                                tint = COUITheme.colorScheme.labelPrimary,
                             )
                         }
                     },
                     onDismissRequest = { showBottomSheet = false },
                 ) {
-                    Card(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Card(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp)) {
                         SwitchPreference(
                             title = "Notifications",
                             summary = "Receive push notifications",

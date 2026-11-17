@@ -150,7 +150,7 @@ Preference 系组件位于独立的 `coui-preference` 构件中——如果你�
 
 ## 6. 自定义配色方案
 
-`Colors` 构造器保持了 Miuix 的参数顺序，按位置传参构建的完整自定义配色可原样迁移、继续编译。不过更建议直接删掉自定义配色——`lightColorScheme()` / `darkColorScheme()` 现在返回的就是原生 ColorOS 16 配色，通常正是 COUI 应用想要的效果；一次真实迁移借此删掉了约 220 行自定义颜色。
+`Colors` 的色槽改用 COUI 官方命名（`couiColorXxx` → `xxx`），不再沿用 Miuix 的名字，完整的自定义配色需要改成新的参数名；[升级指南](./upgrading.md) 列出了每个旧色槽的替代项。更建议直接删掉自定义配色——`lightColorScheme()` / `darkColorScheme()` 现在返回的就是原生 ColorOS 16 配色，通常正是 COUI 应用想要的效果；一次真实迁移借此删掉了约 220 行自定义颜色。
 
 ## 7. 行为与视觉差异
 

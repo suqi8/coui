@@ -161,9 +161,9 @@ You can create a color configuration via `SnackbarDefaults.snackbarColors`:
 ```kotlin
 val colors = SnackbarDefaults.snackbarColors(
     containerColor = COUITheme.colorScheme.backgroundTop,
-    contentColor = COUITheme.colorScheme.onSurfaceContainer,
+    contentColor = COUITheme.colorScheme.labelPrimary,
     actionContentColor = COUITheme.colorScheme.primaryTextOnPopup,
-    dismissActionContentColor = COUITheme.colorScheme.onSurfaceVariantActions,
+    dismissActionContentColor = COUITheme.colorScheme.labelTertiary,
 )
 ```
 
@@ -324,7 +324,7 @@ SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
 | Property Name  | Type                         | Description                                                    | Default Value                                    | Required |
 | -------------- | ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------ | -------- |
 | title          | String                       | Title (COUI content text), at most two lines                   | -                                                | Yes      |
-| actionLabel    | String?                      | Label of the small action button; null hides it                | -                                                | Yes      |
+| actionLabel    | String                       | Label of the small action button; COUI requires one (`COUINotificationSnackBar.make`). The `SnackbarData` overload requires `actionLabel` to be set | - | Yes |
 | onActionClick  | () -> Unit                   | Called when the action button is clicked                       | -                                                | Yes      |
 | onDismiss      | () -> Unit                   | Called when the close button is clicked or the card is swiped away | -                                            | Yes      |
 | modifier       | Modifier                     | Modifier applied to the card                                   | Modifier                                         | No       |
@@ -343,9 +343,9 @@ The `SnackbarData` overload takes `data` instead of `title`, `actionLabel`, `onA
 | Property Name  | Type             | Description                                | Default Value                                 |
 | -------------- | ---------------- | ------------------------------------------ | --------------------------------------------- |
 | containerColor | Color            | Card fill (couiColorBackgroundTop)         | COUITheme.colorScheme.backgroundTop           |
-| titleColor     | Color            | Title color (couiColorPrimaryNeutral)      | COUITheme.colorScheme.onSurfaceContainer      |
-| subtitleColor  | Color            | Subtitle color (couiColorSecondNeutral)    | COUITheme.colorScheme.onSurfaceVariantSummary |
-| closeIconColor | Color            | Close glyph tint (couiColorLabelTertiary)  | COUITheme.colorScheme.onSurfaceVariantActions |
+| titleColor     | Color            | Title color (couiColorPrimaryNeutral)      | COUITheme.colorScheme.labelPrimary      |
+| subtitleColor  | Color            | Subtitle color (couiColorSecondNeutral)    | COUITheme.colorScheme.labelSecondaryVariant |
+| closeIconColor | Color            | Close glyph tint (couiColorLabelTertiary)  | COUITheme.colorScheme.labelTertiary |
 | actionColors   | TextButtonColors | Colors of the action button                | ButtonDefaults.textButtonColors()             |
 
 ### Layout and Swipe

@@ -114,7 +114,7 @@ ChipTab(
 | label             | String                    | Text label (single line, ellipsized)               | -                                | Yes      |
 | modifier          | Modifier                  | Modifier applied to the chip tab                   | Modifier                         | No       |
 | enabled           | Boolean                   | Whether the chip tab is enabled                    | true                             | No       |
-| materialEffect    | Boolean                   | Whether the COUI 17 material is drawn              | true                             | No       |
+| materialEffect    | Boolean                   | Whether the COUI 17 material is drawn              | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | materialType      | ChipTabMaterialType       | Backdrop preset family                             | ChipTabMaterialType.Default      | No       |
 | icon              | (@Composable () -> Unit)? | Optional leading icon                              | null                             | No       |
 | cornerRadius      | Dp                        | Corner radius                                      | ChipTabDefaults.CornerRadius     | No       |
@@ -136,7 +136,7 @@ The icon-only overload takes `icon: @Composable () -> Unit` instead of `label`/`
 | onTabSelected      | (Int) -> Unit             | Callback when an unselected chip is clicked                      | -                               | Yes      |
 | modifier           | Modifier                  | Modifier applied to the row                                      | Modifier                        | No       |
 | enabled            | Boolean                   | Whether the chips are enabled                                    | true                            | No       |
-| materialEffect     | Boolean                   | Whether the chips draw the COUI 17 material                      | true                            | No       |
+| materialEffect     | Boolean                   | Whether the chips draw the COUI 17 material                      | `LocalCOUIMaterialEffectEnabled.current` | No       |
 | materialType       | ChipTabMaterialType       | Backdrop preset family                                           | ChipTabMaterialType.Default     | No       |
 | colors             | ChipTabColors             | Color configuration of the chips                                 | ChipTabDefaults.chipTabColors() | No       |
 | horizontalPadding  | Dp                        | Inset of the scrolling chips; Unspecified = 16dp, 8dp with a leading icon | Dp.Unspecified         | No       |
@@ -169,7 +169,7 @@ The icon-only overload takes `icon: @Composable () -> Unit` instead of `label`/`
 
 | Method Name                                         | Type                 | Description                                                              |
 | --------------------------------------------------- | -------------------- | ------------------------------------------------------------------------ |
-| textStyle()                                         | TextStyle            | Label style (COUITheme.textStyles.subtitle, couiTextButtonM 14sp medium) |
+| textStyle()                                         | TextStyle            | Label style (COUITheme.textStyles.buttonM, couiTextButtonM 14sp medium) |
 | chipTabColors()                                     | ChipTabColors        | Creates the color configuration                                          |
 | backdropSpec(isDark, materialType, selectedFraction) | MaterialBackdropSpec | The interpolated COUI 17 backdrop at a selection fraction                |
 
@@ -177,12 +177,12 @@ The icon-only overload takes `icon: @Composable () -> Unit` instead of `label`/`
 
 | Parameter              | Type  | Default                                        | COUI Source                                       |
 | ---------------------- | ----- | ---------------------------------------------- | ------------------------------------------------- |
-| containerColor         | Color | #0A000000 / #1AFFFFFF                          | couiColorContainer4 (unselected tint)             |
+| containerColor         | Color | COUITheme.colorScheme.container4 (#0A000000 / #1AFFFFFF) | couiColorContainer4 (unselected tint)             |
 | selectedContainerColor | Color | COUITheme.colorScheme.surfaceContainerHighest  | couiColorBackgroundElevated #FFFFFF / #1E1E1E     |
 | selectedHighlightColor | Color | #40FFFFFF                                      | coui_color_checked_background_gradient_start      |
 | selectedStrokeColor    | Color | #0A000000 / #0AFFFFFF                          | coui_color_checked_background_stroke (0.6dp)      |
-| contentColor           | Color | COUITheme.colorScheme.onSurface                | couiColorLabelPrimary                             |
-| disabledContentColor   | Color | COUITheme.colorScheme.onSurfaceVariantActions  | couiColorLabelTertiary                            |
+| contentColor           | Color | COUITheme.colorScheme.labelPrimary                | couiColorLabelPrimary                             |
+| disabledContentColor   | Color | COUITheme.colorScheme.labelTertiary  | couiColorLabelTertiary                            |
 
 ### ChipTabMaterialType
 

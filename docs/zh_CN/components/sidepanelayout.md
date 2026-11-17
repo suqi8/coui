@@ -65,7 +65,7 @@ BoxWithConstraints {
 | showToggleIcon      | Boolean                | 是否显示切换图标                             | true                             | 否   |
 | paneWidth           | Dp                     | 侧栏宽度                                     | SidePaneLayoutDefaults.PaneWidth | 否   |
 | maskColor           | Color                  | 完全展开时的遮罩颜色                         | SidePaneLayoutDefaults.maskColor | 否   |
-| toggleIconColor     | Color                  | 切换图标颜色                                 | colorScheme.onBackground         | 否   |
+| toggleIconColor     | Color                  | 切换图标颜色                                 | colorScheme.labelPrimary         | 否   |
 | content             | @Composable () -> Unit | 主内容                                       | -                                | 是   |
 
 ### SidePaneState
@@ -94,7 +94,7 @@ BoxWithConstraints {
 | ToggleIconGlyphSize       | Dp            | 切换按钮内的图标                             | 24.dp                |
 | ToggleIconMarginTop       | Dp            | `coui_side_pane_layout_icon_margin_top`      | 45.dp                |
 | ToggleIconMarginStart     | Dp            | `coui_side_pane_layout_icon_margin_start`    | 12.dp                |
-| maskColor                 | Color         | `coui_color_mask`（`colorScheme.windowDimming`） | #33000000 / #99000000 |
+| maskColor                 | Color         | `coui_color_mask`（`colorScheme.mask`） | #33000000 / #99000000 |
 | isSplitMode(width, windowHeight) | Boolean | 侧栏与内容是否并排                       | width ≥ 600dp 且 windowHeight ≥ 480dp |
 
 ## 与 COUI 的差异

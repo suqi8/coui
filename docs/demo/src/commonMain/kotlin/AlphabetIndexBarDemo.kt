@@ -27,8 +27,8 @@ fun AlphabetIndexBarDemo() {
     ) {
         Text(
             text = "Selected: $selected",
-            color = COUITheme.colorScheme.onBackground,
-            style = COUITheme.textStyles.title3,
+            color = COUITheme.colorScheme.labelPrimary,
+            style = COUITheme.textStyles.headlineM,
             modifier = Modifier.align(Alignment.Center),
         )
         AlphabetIndexBar(

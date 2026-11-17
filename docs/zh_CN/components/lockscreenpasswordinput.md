@@ -87,7 +87,7 @@ LockScreenPasswordInput(
 
 | 方法         | 说明                                                                                                     |
 | ------------ | -------------------------------------------------------------------------------------------------------- |
-| colors(mode) | Setting：`surfaceContainer` 输入框与按钮，三级 / 主要箭头色。Desktop：透明，白色文字，#4DFFFFFF / 白色箭头 |
+| colors(mode) | Setting：`cardBackground` 输入框与按钮，三级 / 主要箭头色。Desktop：透明，白色文字，#4DFFFFFF / 白色箭头 |
 
 ### LockScreenPasswordInputColors
 
@@ -97,8 +97,9 @@ LockScreenPasswordInput(
 | buttonColor     | Color | 下一步按钮填充           |
 | textColor       | Color | 密码文字                 |
 | hintColor       | Color | 提示文字                 |
-| iconColor       | Color | 未激活箭头与眼睛按钮     |
+| iconColor       | Color | 未激活箭头               |
 | activeIconColor | Color | 已激活箭头               |
+| eyeColor        | Color | 眼睛按钮：设置模式为次要标签色，桌面模式为白色 |
 | errorColor      | Color | 错误文字                 |
 
 ## 行为

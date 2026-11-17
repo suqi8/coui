@@ -70,7 +70,7 @@ CheckboxPreference(
     summary = "Checkbox is on the start side (default)",
     checked = startChecked,
     onCheckedChange = { startChecked = it },
-    checkboxLocation = CheckboxLocation.Start // Default value
+    checkboxLocation = CheckboxLocation.Start
 )
 ```
 
@@ -84,7 +84,7 @@ CheckboxPreference(
     summary = "Checkbox is on the end side",
     checked = endChecked,
     onCheckedChange = { endChecked = it },
-    checkboxLocation = CheckboxLocation.End
+    checkboxLocation = CheckboxLocation.End // Default value
 )
 ```
 
@@ -106,7 +106,7 @@ As in COUI's `COUICheckBoxPreference`, the whole row is the touch target: the ch
 | checkboxColors   | CheckboxColors                     | Checkbox control color configuration | CheckboxDefaults.checkboxColors()     | No       |
 | startAction      | @Composable (() -> Unit)?          | Custom content after checkbox        | null                                  | No       |
 | endActions       | @Composable (RowScope.() -> Unit)? | Custom content before checkbox       | null                                  | No       |
-| checkboxLocation | CheckboxLocation                   | Checkbox position                    | CheckboxLocation.Start                | No       |
+| checkboxLocation | CheckboxLocation                   | Checkbox position                    | CheckboxLocation.End                  | No       |
 | bottomAction     | @Composable (() -> Unit)?          | Custom bottom content                | null                                  | No       |
 | insideMargin     | PaddingValues                      | Internal content padding             | BasicComponentDefaults.InsideMargin   | No       |
 | cardListPosition | CardListPosition | Row position inside its card group ([CardListGroup](./card.md#cardlistgroup)); rounded outer edges gain extra padding | LocalCardListPosition.current (None outside a CardListGroup) | No |
@@ -128,7 +128,7 @@ CheckboxPreference(
     endActions = {
         Text(
             text = if (backupEnabled) "Enabled" else "Disabled",
-            color = COUITheme.colorScheme.onSurfaceVariantActions,
+            color = COUITheme.colorScheme.labelTertiary,
             modifier = Modifier.padding(end = 6.dp)
         )
     }
@@ -151,7 +151,7 @@ CheckboxPreference(
         Icon(
             imageVector = COUIIcons.Contacts,
             contentDescription = null,
-            tint = COUITheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.labelPrimary
         )
     }
 )

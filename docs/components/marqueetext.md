@@ -18,7 +18,7 @@ import io.github.suqi8.coui.kmp.basic.MarqueeTextDefaults
 ```kotlin
 MarqueeText(
     text = "Battery optimisation is limiting background activity for several apps, tap to review them",
-    style = COUITheme.textStyles.footnote1,
+    style = COUITheme.textStyles.bodyS,
     modifier = Modifier.fillMaxWidth(),
 )
 ```

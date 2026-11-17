@@ -20,6 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.CircularProgressIndicator
+import io.github.suqi8.coui.kmp.basic.CircularProgressState
+import io.github.suqi8.coui.kmp.basic.CircularProgressType
+import io.github.suqi8.coui.kmp.basic.CompProgressIndicator
+import io.github.suqi8.coui.kmp.basic.CompProgressIndicatorType
 import io.github.suqi8.coui.kmp.basic.InfiniteProgressIndicator
 import io.github.suqi8.coui.kmp.basic.LinearProgressIndicator
 import io.github.suqi8.coui.kmp.basic.ProgressIndicatorDefaults
@@ -91,6 +95,19 @@ fun ProgressIndicatorDemo() {
                     ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
                     strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,
                 )
+            }
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                CircularProgressIndicator(progress = 0.6f, state = CircularProgressState.Error)
+                CircularProgressIndicator(
+                    progress = 0.6f,
+                    state = CircularProgressState.Paused,
+                    type = CircularProgressType.OnImage,
+                )
+                CompProgressIndicator(type = CompProgressIndicatorType.SmallWithTextHorizontal, text = "Loading")
+                CompProgressIndicator(type = CompProgressIndicatorType.LargeWithTextVertical, text = "Loading")
             }
         }
     }

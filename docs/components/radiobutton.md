@@ -79,7 +79,7 @@ The RadioButtonDefaults object provides default color configurations for the Rad
 | disabledCenterColor     | Color | Center dot color when disabled and selected      |
 | animatingCenterColor    | Color | Center dot color while a toggle animation plays (default #FAFAFA, as in the COUI AVDs) |
 
-Default colors follow COUI 17 (`coui_btn_radio_*.xml`): the ring is `onSurfaceVariantActions` (#42000000 / #4DFFFFFF) and `quarternaryNeutral` (#14000000 / #26FFFFFF) when disabled; the disc is `primary`, `disabledPrimary` when disabled; the center dot is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
+Default colors follow COUI 17 (`coui_btn_radio_*.xml`): the ring is `labelTertiary` (#42000000 / #4DFFFFFF) and `quarternaryNeutral` (#14000000 / #26FFFFFF) when disabled; the disc is `primary`, `disable` when disabled; the center dot is white, `disabledOnPrimaryButton` (#8AFFFFFF / #29FFFFFF) when disabled.
 
 ### Press Feedback
 

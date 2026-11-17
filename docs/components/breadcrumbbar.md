@@ -136,9 +136,9 @@ BreadcrumbBar(
     items = items,
     onItemClick = { index -> /* Handle click */ },
     colors = BreadcrumbBarDefaults.breadcrumbBarColors(
-        color = COUITheme.colorScheme.onBackground.copy(alpha = 0.55f),
+        color = COUITheme.colorScheme.labelPrimary.copy(alpha = 0.55f),
         highlightColor = COUITheme.colorScheme.primary,
-        backgroundColor = COUITheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        backgroundColor = COUITheme.colorScheme.labelPrimary.copy(alpha = 0.1f),
         highlightBackgroundColor = COUITheme.colorScheme.primary.copy(alpha = 0.2f),
     ),
 )

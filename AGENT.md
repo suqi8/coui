@@ -31,9 +31,9 @@
 | 系统 | ColorOS 16 / Android 16（`ro.build.version.oplusrom = V16.0.0`，SDK 36） |
 | Root | 已 root（KernelSU，`u:r:ksu:s0`）→ 可提取 framework / overlay 资源 |
 | ADB | 已连接（`adb devices` 可见），直接用 `adb` |
-| JADX | `D:\jadx-1.5.0\bin\jadx.bat` |
-| Apktool | `D:\ApkTool\apktool_3.0.1.jar` |
-| 逆向工作区 | `D:\AndroidStudioProjects\jadx\work\<target_name>\` |
+| JADX | `E:\jadx-1.5.0\bin\jadx.bat`（jar：`E:\jadx-1.5.0\lib\jadx-1.5.5-all.jar`） |
+| Apktool | `E:\ApkTool\apktool.jar` |
+| 逆向工作区 | `E:\AndroidStudioProjects\jadx\work\<target_name>\`（下文 `D:\…` 路径一律按 E 盘读） |
 
 设备状态可能变化，每次进入逆向前先 `adb devices` 确认连接，再 `adb shell getprop ro.build.version.oplusrom` 确认版本未漂移。
 
@@ -182,11 +182,11 @@ adb exec-out screencap -p > D:\AndroidStudioProjects\jadx\work\_shots\settings.p
 
 | COUI token 类型 | Miuix 落点 | 备注 |
 | :--- | :--- | :--- |
-| 主色 / 强调色 | `Colors.kt` → `primary` / `primaryVariant` / `primaryContainer`（light + dark 两处） | 当前 `#3482FF`，替换为 ColorOS 主色 |
-| 语义色（错误等） | `Colors.kt` → `error` / `errorContainer` 等 | light + dark 都要改 |
-| 背景 / 表面层级 | `Colors.kt` → `background` / `surface` / `surfaceContainer*` | ColorOS 卡片层级感强，注意 container 梯度 |
-| 文字色 | `Colors.kt` → `onBackground` / `onSurface*` | |
-| 全局字号 / 字重 | `TextStyles.kt` → `Main` / `Body*` / `Title*` 等私有 `val` | |
+| 主色 / 强调色 | `Colors.kt` → `primary` / `containerTheme` / `secondary` / `disable` / `primaryText`（light + dark 两处；主题色预设在 `COUIThemeColor.kt`） | 当前 `#3482FF`，替换为 ColorOS 主色 |
+| 语义色（错误等） | `Colors.kt` → `error` / `errorDisabled` / `errorTextBg` 等 | light + dark 都要改 |
+| 背景 / 表面层级 | `Colors.kt` → `background` / `surface` / `backgroundWithCard` / `backgroundElevated` / `card*` / `container*` | ColorOS 卡片层级感强，注意 container 梯度 |
+| 文字色 | `Colors.kt` → `label*` / `disabledNeutral` / `hintNeutral` | |
+| 全局字号 / 字重 | `TextStyles.kt` → `Display*` / `Headline*` / `Body*` / `Button*` 等私有 `val` | |
 | 控件圆角 | 对应组件的 `XxxDefaults.CornerRadius`（如 `ButtonDefaults.CornerRadius`） | 配合 squircle |
 | 控件尺寸 / 内边距 | 对应组件的 `XxxDefaults.MinWidth/MinHeight/InsideMargin` | |
 | squircle 平滑度 | `coui-squircle/` 模块参数 | 全局连续曲率 |

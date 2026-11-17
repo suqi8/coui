@@ -137,7 +137,7 @@ DropdownItem(
 
 ### Sub Menu Behavior
 
-The sub menu follows COUI 17. On a compact window (narrower than 600dp) it covers the main menu: it is as wide as the main menu and starts with a copy of the parent row (medium title, tinted indicator) sitting on that row, then slides up to 14dp above it while its outline grows from the row; the main menu shrinks to 0.9, moves up to keep a 12dp strip visible and dims its rows to 30%. On wider windows the main menu shrinks to 0.9 with its rows at 70% while the sub menu scales in beside it, overlapping 14dp. Tapping the main menu, the copied header, outside the popup, or going back collapses the sub menu; dragging across the main menu collapses it after 500ms; holding a sub-menu row for 650ms opens it and the same finger can then slide into the sub menu and lift over a row to pick it; if the finger stays on the main menu instead, the drag keeps selecting there (a deliberate deviation: COUI ignores the main menu once a sub menu opens), and lifting on the long-pressed row itself picks nothing; on a compact window the sub menu's shadow fades in with it; at the top level, back and outside taps dismiss the popup via `onDismissRequest`. Predictive back previews the collapse or dismissal and restores the popup when cancelled.
+The sub menu follows COUI 17. On a compact window (narrower than 600dp) it covers the main menu: it is as wide as the main menu and starts with a copy of the parent row (medium title, tinted indicator) sitting on that row, then slides up to 14dp above it while its outline grows from the row; the main menu shrinks to 0.9, moves up to keep a 12dp strip visible and dims its rows to 30%. On wider windows the main menu shrinks to 0.9 with its rows at 70% while the sub menu scales in beside it, overlapping 14dp. Tapping the main menu, the copied header, outside the popup, or going back collapses the sub menu; dragging across the main menu collapses it after 500ms; holding a sub-menu row for 650ms opens it and the same finger can then slide into the sub menu and lift over a row to pick it; if the finger stays on the main menu instead, the drag keeps selecting there (a deliberate deviation: COUI ignores the main menu once a sub menu opens), and lifting on the long-pressed row itself picks nothing; on a compact window the sub menu's shadow fades in with it, and while it closes the copied header drops back to the plain title and indicator and its band closes onto the parent row where the shrinking main menu currently draws it; the sub menu stops taking touches as soon as it starts to close; a finger relayed into the sub menu lights its spotlight and drags its panel like a direct touch; at the top level, back and outside taps dismiss the popup via `onDismissRequest`. Predictive back previews the collapse or dismissal and restores the popup when cancelled.
 
 ## Blurred Background
 
@@ -168,6 +168,14 @@ missing, the popup keeps the opaque `backgroundColor`, COUI's non-blur backgroun
 bottom sheets turn the provider off for their content. Pass `materialBlur = false` to opt one popup
 out.
 
+The shadow-edge stroke and the touch spotlight (`materialEffect`) are drawn on the opaque surface
+as well, with the same parameters. COUI only draws them once the popup is blurred; this library keeps
+them so a menu that cannot blur still lights up. Both are white light laid source-over onto the
+surface, which is what a ColorOS 17 popup shows: its OVERLAY spotlight lands on the panel's own
+transparent canvas above the window blur. They show on blurred and dark surfaces and disappear into
+a pure white light-scheme fill. The spotlight glows under the finger, follows it across the rows
+(drag-to-select included) and spreads out as it fades when the finger lifts.
+
 ## Properties
 
 ### OverlayCascadingListPopup
@@ -189,8 +197,8 @@ out.
 | collapseOnSelection   | Boolean                     | When true, selecting any leaf dismisses the popup.                                                                                                                           | true                                       |
 | backgroundModifier    | Modifier                    | Applied inside the popup surface under the rows, on top of the default material blur. | Modifier |
 | backgroundColor       | Color                       | Surface fill when the popup is not blurred (couiColorBackgroundTop, COUI's non-blur background). | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | true |
-| materialEffect        | Boolean                     | On a blurred popup, draws the shadow-edge stroke and the touch spotlight. | true |
+| materialBlur          | Boolean                     | Blurs what lies behind the popup with the COUI 17 popup material from `LocalPopupMaterialBlur`; false keeps the opaque `backgroundColor`. | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | Draws the shadow-edge stroke and the touch spotlight, blurred or not. | `LocalCOUIMaterialEffectEnabled.current` |
 
 ### DropdownEntry
 

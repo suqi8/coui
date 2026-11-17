@@ -1,6 +1,10 @@
 # SmallTitle
 
-`SmallTitle` is a basic title component in COUI used to create small-sized title text. It follows the COUI category title style (`textStyles.footnote2` in Medium: 12sp, line spacing 1.143, COUI `couiTextAppearanceSmallButton`) with preset padding and a 16dp minimum text height.
+`SmallTitle` is a basic title component in COUI used to create small-sized title text. It follows the COUI category title style (`textStyles.bodyXS` in Medium: 12sp, line spacing 1.143, COUI `couiTextAppearanceSmallButton`) with preset padding and a 16dp minimum text height.
+
+`SmallTitle` is the small, title-only form of ColorOS's `COUIPreferenceCategory`. For medium / large titles, the 16dp start margin type, a title icon or badge, or an end widget, use [PreferenceCategory](./preferencecategory).
+
+Spacing convention: `SmallTitle` only carries the title's own 8dp vertical margin, not the COUI 16dp category top margin. Cards bring that space with their own `padding(bottom = 16.dp)`, which adds up to the COUI 24dp from a card bottom to the title text.
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=smallTitle" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -50,7 +54,7 @@ SmallTitle(
 | ------------- | ------------- | ----------------------------- | ------------------------------------------ | -------- |
 | text          | String        | Text content to display       | -                                          | Yes      |
 | modifier      | Modifier      | Modifier applied to component | Modifier                                   | No       |
-| textColor     | Color         | Title text color              | COUITheme.colorScheme.onBackgroundVariant | No       |
+| textColor     | Color         | Title text color              | COUITheme.colorScheme.labelSecondary | No       |
 | insideMargin  | PaddingValues | Component internal padding    | SmallTitleDefaults.InsideMargin             | No       |
 
 ### SmallTitleDefaults Object
@@ -62,6 +66,7 @@ The SmallTitleDefaults object provides default values for SmallTitle components.
 | Constant Name | Type          | Description                | Default Value            |
 | ------------- | ------------- | -------------------------- | ------------------------ |
 | InsideMargin  | PaddingValues | Component internal padding | PaddingValues(32.dp, 8.dp)|
+| InsideMarginSmall | PaddingValues | Padding of the COUI small margin type (16dp start) | PaddingValues(16.dp, 8.dp)|
 | MinHeight     | Dp            | Minimum text height        | 16.dp                    |
 
 ## Advanced Usage

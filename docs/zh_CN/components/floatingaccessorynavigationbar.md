@@ -76,7 +76,7 @@ FloatingNavigationBarAccessory(
 | backgroundModifier         | Modifier                  | 应用于胶囊内部、填充之上                 | Modifier                                            | 否       |
 | startAccessoryVisible      | Boolean                   | 是否显示起始侧附件                       | true                                                | 否       |
 | endAccessoryVisible        | Boolean                   | 是否显示末尾侧附件                       | true                                                | 否       |
-| materialEffect             | Boolean                   | 是否绘制 COUI 17 材质与融球连接          | true                                                | 否       |
+| materialEffect             | Boolean                   | 是否绘制 COUI 17 材质与融球连接          | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | showDivider                | Boolean                   | 是否在胶囊外绘制分割线环                 | false                                               | 否       |
 | defaultWindowInsetsPadding | Boolean                   | 是否让导航栏避开导航栏与标题栏 insets    | true                                                | 否       |
 | color                      | Color                     | 无背景模糊时的胶囊填充色                 | FloatingNavigationBarDefaults.color()               | 否       |
@@ -96,7 +96,7 @@ FloatingNavigationBarAccessory(
 | contentDescription | String?     | 无障碍标签                                 | -                                                 | 是       |
 | modifier           | Modifier    | 应用于附件的修饰符                         | Modifier                                          | 否       |
 | enabled            | Boolean     | 附件是否响应触摸                           | true                                              | 否       |
-| materialEffect     | Boolean     | 是否绘制材质、聚光与完整的图标切换效果     | true                                              | 否       |
+| materialEffect     | Boolean     | 是否绘制材质、聚光与完整的图标切换效果     | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | color              | Color       | 无背景模糊时的填充色                       | FloatingNavigationBarDefaults.color()             | 否       |
 | iconTint           | Color       | 图标着色；Unspecified 不着色               | FloatingAccessoryNavigationBarDefaults.iconTint() | 否       |
 | shadowElevation    | Dp          | 投影的模糊半径                             | FloatingNavigationBarDefaults.ShadowElevation     | 否       |
@@ -109,7 +109,7 @@ FloatingNavigationBarAccessory(
 
 | 方法       | 说明                                                                |
 | ---------- | ------------------------------------------------------------------- |
-| iconTint() | `onSurfaceContainer`（`?couiColorLabelPrimary`）；COUI 按原样绘制 drawable |
+| iconTint() | `labelPrimary`（`?couiColorLabelPrimary`）；COUI 按原样绘制 drawable |
 
 ## 行为
 

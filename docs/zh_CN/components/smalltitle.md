@@ -1,6 +1,10 @@
 # SmallTitle
 
-`SmallTitle` 是 COUI 中的基础小标题组件，用于快速创建小型标题文本。采用 COUI 分组标题样式（`textStyles.footnote2` 加 Medium 字重：12sp、行距倍数 1.143，COUI `couiTextAppearanceSmallButton`），具有预设的内边距和 16dp 最小文本高度。
+`SmallTitle` 是 COUI 中的基础小标题组件，用于快速创建小型标题文本。采用 COUI 分组标题样式（`textStyles.bodyXS` 加 Medium 字重：12sp、行距倍数 1.143，COUI `couiTextAppearanceSmallButton`），具有预设的内边距和 16dp 最小文本高度。
+
+`SmallTitle` 是 ColorOS `COUIPreferenceCategory` 的 small 档、纯标题形态。需要 medium / large 标题、16dp 起始边距档、标题图标或红点、或右侧控件时，请使用 [PreferenceCategory](./preferencecategory)。
+
+间距约定：`SmallTitle` 只带标题自身上下 8dp 边距，不含 COUI 分组 16dp 顶部边距。这段间距由卡片自带的 `padding(bottom = 16.dp)` 提供，合起来即 COUI「卡片底到标题文字 24dp」。
 
 <div style="position: relative; height: 160px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=smallTitle" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -50,7 +54,7 @@ SmallTitle(
 | ------------ | ------------- | ------------------ | ------------------------------------------ | -------- |
 | text         | String        | 要显示的文本内容   | -                                          | 是       |
 | modifier     | Modifier      | 应用于组件的修饰符 | Modifier                                   | 否       |
-| textColor    | Color         | 标题文本颜色       | COUITheme.colorScheme.onBackgroundVariant | 否       |
+| textColor    | Color         | 标题文本颜色       | COUITheme.colorScheme.labelSecondary | 否       |
 | insideMargin | PaddingValues | 组件内部边距       | SmallTitleDefaults.InsideMargin             | 否       |
 
 ### SmallTitleDefaults 对象
@@ -62,6 +66,7 @@ SmallTitleDefaults 对象提供了 SmallTitle 组件的默认值。
 | 常量名       | 类型          | 说明           | 默认值                   |
 | ------------ | ------------- | -------------- | ------------------------ |
 | InsideMargin | PaddingValues | 组件内部边距   | PaddingValues(32.dp, 8.dp)|
+| InsideMarginSmall | PaddingValues | COUI Small 边距档的内部边距（起始 16dp） | PaddingValues(16.dp, 8.dp)|
 | MinHeight    | Dp            | 最小文本高度   | 16.dp                    |
 
 ## 进阶用法

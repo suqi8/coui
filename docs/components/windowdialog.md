@@ -76,6 +76,7 @@ WindowDialog(
 | cornerRadius               | Dp?                    | Corner radius override; if null, DialogDefaults.CornerRadius for the centered presentation, or derived from the screen corner radius (clamped to 32dp..48dp) when bottom-attached | null | No       |
 | backgroundModifier         | Modifier               | Applied inside the panel's corner clip, under the content; use it for the COUI 17 blurred background (pair it with a transparent `backgroundColor`) | Modifier | No       |
 | materialStroke             | Boolean                | Whether to draw the COUI 17 material stroke (edge lighting + inner shadow) a blurred dialog carries; needs runtime shaders. Also turns a `DialogButtonBar` inside material | false | No       |
+| customContent              | (@Composable () -> Unit)? | Custom view slot between the summary and `content` (COUI `customPanel`), padded 8dp below; with it the summary keeps only 4dp below and a title-only dialog drops the extra 16dp under the title | null | No       |
 | content                    | @Composable () -> Unit | Dialog content                                                | -                                      | Yes      |
 
 ### DialogDefaults
@@ -85,7 +86,8 @@ WindowDialog(
 | Name          | Type   | Description                               |
 | ------------- | ------ | ----------------------------------------- |
 | CornerRadius  | Dp     | Dialog panel corner radius (45.dp, `coui_round_corner_xxxxl_radius_large_16_1`) |
-| MaxWidth      | Dp     | Maximum dialog content width (392.dp) |
+| MaxWidth      | Dp     | Maximum visible panel width (360.dp: `coui_dialog_max_width` 392dp minus the two 16dp side insets) |
+| CustomContentPaddingBottom | Dp | Bottom padding of `customContent` (8.dp, `coui_alert_dialog_customer_layout_padding_bottom`) |
 | MaxHeight     | Dp     | Maximum panel height (600.dp: `coui_dialog_max_height` 632dp minus the 32dp bottom margin) |
 | outsideMargin | DpSize | Default dialog external margin (16, 32); the height is the bottom gap without a navigation bar |
 | MarginBottomWithNavigationBar | Dp | Gap between a bottom-aligned dialog and the screen edge under three-button navigation (60.dp) |
@@ -123,7 +125,7 @@ main window is not guaranteed to line up with it; prefer `OverlayDialog` for the
 
 ### Presentation Overrides
 
-By default the dialog is bottom-attached on compact windows and centered on large windows (>= 840dp x 480dp). Use `largeScreen`, `cornerRadius` and `maxWidth` to override the presentation:
+By default the dialog is bottom-attached on compact windows and centered on large windows (>= 840dp x 480dp in either orientation, except tall portrait windows narrower than 960dp). Use `largeScreen`, `cornerRadius` and `maxWidth` to override the presentation:
 
 ```kotlin
 var showDialog by remember { mutableStateOf(false) }

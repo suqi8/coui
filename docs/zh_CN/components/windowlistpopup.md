@@ -105,6 +105,9 @@ Box(Modifier.layerBackdrop(backdrop)) {
 即 COUI 的非模糊背景。对话框与底部弹窗会为其内容关闭该提供者。传入 `materialBlur = false`
 可让单个弹窗不模糊。窗口版本把同一份页面录制绘制到自己的窗口中；在 Android 上不使用系统 blur-behind，因为它模糊的是窗口背后的整个屏幕，而不是菜单的圆角矩形区域。
 
+阴影描边与跟手光斑（`materialEffect`）在不透明表面上同样绘制，参数不变。COUI 只在弹窗模糊后才绘制它们；
+本库保留它们，使无法模糊的菜单也有光效。二者都是以 source-over 叠在表面上的白光，与 ColorOS 17 的实际观感一致：COUI 的 OVERLAY 光斑落在面板自身透明的画布上、位于窗口模糊之上。它们在模糊与深色表面上可见，在浅色模式的纯白填充上则看不出。光斑在手指按下处亮起，随手指在各行之间移动（包括拖动选择），松手时一边扩散一边熄灭。
+
 ## 属性
 
 ### WindowListPopup 属性
@@ -122,8 +125,8 @@ Box(Modifier.layerBackdrop(backdrop)) {
 | minWidth              | Dp                          | 弹窗内容的最小宽度                   | ListPopupDefaults.MinWidth                 |
 | backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下，叠加在默认材质模糊之上 | Modifier |
 | backgroundColor       | Color                       | 弹窗不模糊时的表面填充色（couiColorBackgroundTop，即 COUI 的非模糊背景） | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | true |
-| materialEffect        | Boolean                     | 弹窗模糊时绘制阴影描边与跟手光斑 | true |
+| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | 绘制阴影描边与跟手光斑（模糊与否均绘制） | `LocalCOUIMaterialEffectEnabled.current` |
 | content               | @Composable () -> Unit      | 要在弹窗内显示的内容                 | -                                          |
 
 ### ListPopupColumn 属性
@@ -158,7 +161,7 @@ DropdownImpl(
 | dialogMode            | Boolean       | 使用对话框样式的行高与内边距，而非弹窗样式 | false             |
 | onSelectedIndexChange | (Int) -> Unit | 点击此选项时的回调 | -                                 |
 
-`DropdownImpl` 还提供接收完整 `DropdownItem`（代替 `text`）的重载，用于显示带图标或摘要的行。它额外接受 `hasSubmenu`（渲染尾部上下箭头指示器）、`submenuExpanded`（子菜单展开时指示器变为主色）以及兼容保留的 `isFirst` / `isLast`（COUI 17 弹窗模式下不再读取）；`enabled` 默认为 `item.enabled`。
+`DropdownImpl` 还提供接收完整 `DropdownItem`（代替 `text`）的重载，用于显示带图标或摘要的行。它额外接受 `hasSubmenu`（渲染尾部上下箭头指示器）和 `submenuExpanded`（子菜单展开时指示器变为主色）；`enabled` 默认为 `item.enabled`。两个重载都接受 `reserveIconSlot`：COUI 17 只要列表中有任一条目带图标，就让每一行都保留 20dp + 12dp 的图标位，所以自己拼行时请给每一行传 `items.any { it.icon != null }`。`DropdownItem.stateIcon` 在 24dp 尾部状态位绘制自定义图标（`PopupListItem.setStateIcon`），着色与选中对勾一致。
 
 ```kotlin
 DropdownImpl(

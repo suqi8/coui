@@ -178,10 +178,10 @@ The TabRowDefaults object provides default configurations for the TabRow compone
 | Parameter Name       | Type  | Description                              | Default Value                            |
 | -------------------- | ----- | ---------------------------------------- | ---------------------------------------- |
 | trackColor           | Color | Color of the 2dp track                   | `#0F000000` (light) / `#19FFFFFF` (dark) |
-| indicatorColor       | Color | Color of the 2dp indicator               | COUITheme.colorScheme.onSurface          |
-| contentColor         | Color | Label color of unselected tabs           | COUITheme.colorScheme.onSurfaceSecondary |
-| selectedContentColor | Color | Label color of selected and pressed tabs | COUITheme.colorScheme.onSurface          |
-| disabledContentColor | Color | Label color of disabled tabs             | COUITheme.colorScheme.disabledOnSurface  |
+| indicatorColor       | Color | Color of the 2dp indicator               | COUITheme.colorScheme.labelPrimary          |
+| contentColor         | Color | Label color of unselected tabs           | COUITheme.colorScheme.labelSecondary |
+| selectedContentColor | Color | Label color of selected and pressed tabs | COUITheme.colorScheme.labelPrimary          |
+| disabledContentColor | Color | Label color of disabled tabs             | COUITheme.colorScheme.disabledNeutral  |
 | disabledIndicatorColor | Color | Indicator color of a disabled row      | `#FFD9D9D9`                              |
 
 ### TabRowColors Class

@@ -115,7 +115,7 @@ Surface {
     ) {
         Text(
             text = "Select Color",
-            style = COUITheme.textStyles.title2
+            style = COUITheme.textStyles.displayXS
         )
         Spacer(modifier = Modifier.height(16.dp))
         ColorPalette(

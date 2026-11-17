@@ -70,7 +70,7 @@ Box(
     modifier = Modifier
         .size(120.dp, 80.dp)
         .squircleBackground(
-            color = COUITheme.colorScheme.primaryVariant,
+            color = COUITheme.colorScheme.primary,
             cornerRadius = 20.dp,
         ),
 )
@@ -86,7 +86,7 @@ let children overflow or paint their own corners.
 
 ```kotlin
 Modifier.squircleBackground(
-    color = COUITheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primary,
     cornerRadius = 16.dp,
 )
 ```
@@ -99,7 +99,7 @@ the same offscreen layer as the fill, so there is no double-pass cost.
 
 ```kotlin
 Modifier.squircleSurface(
-    color = COUITheme.colorScheme.primaryVariant,
+    color = COUITheme.colorScheme.primary,
     cornerRadius = 16.dp,
 )
 ```
@@ -167,7 +167,7 @@ regardless of RTL/LTR (e.g. a transition reveal tied to a swipe edge).
 
 ```kotlin
 Modifier.absoluteSquircleSurface(
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     topLeft = 24.dp,
     topRight = 24.dp,
     bottomRight = 0.dp,
@@ -197,7 +197,7 @@ ColorOS 17 uses these values, exposed on `COUIRoundCorner` in `coui-ui`:
 
 ```kotlin
 Modifier.squircleSurface(
-    color = COUITheme.colorScheme.surface,
+    color = COUITheme.colorScheme.backgroundWithCard,
     cornerRadius = 45.dp,
     weight = 3f,
 )
@@ -241,7 +241,7 @@ soft capsule while a customised smaller radius draws at `SquircleDefaults.Defaul
 
 ```kotlin
 Modifier.squircleBackground(
-    color = COUITheme.colorScheme.surfaceContainer,
+    color = COUITheme.colorScheme.cardBackground,
     cornerRadius = cornerRadius, // 72.dp: soft capsule; 16.dp: weight 2.45
     weight = SquircleDefaults.UnspecifiedWeight,
 )
@@ -250,7 +250,7 @@ Modifier.squircleBackground(
 ::: info Migrating from `extension`
 Earlier versions took an `extension` (corner-tile multiplier, default 1.2819)
 and drew a cubic corner that reached past `cornerRadius`. That parameter is now
-`weight`; `SquircleDefaults.Extension*` remain only as deprecated constants.
+`weight`, and the `SquircleDefaults.Extension*` constants are removed.
 :::
 
 ## Path API
@@ -312,7 +312,7 @@ reaches 90 % of the shorter half-side). `LegacySquircleShape` wraps it as a
 ```kotlin
 import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 
-Modifier.background(COUITheme.colorScheme.surface, LegacySquircleShape(8.dp))
+Modifier.background(COUITheme.colorScheme.backgroundWithCard, LegacySquircleShape(8.dp))
 ```
 
 It is path based (no shader) and ignores `LocalSquircleEnabled`.
@@ -342,7 +342,7 @@ fun OutlinedSurface(cornerRadius: Dp) {
     val path = remember { Path() }
     Box(
         Modifier
-            .squircleBackground(COUITheme.colorScheme.surface, cornerRadius)
+            .squircleBackground(COUITheme.colorScheme.backgroundWithCard, cornerRadius)
             .drawWithContent {
                 drawContent()
                 path.rewind()

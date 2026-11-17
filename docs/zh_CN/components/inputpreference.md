@@ -33,6 +33,7 @@ Card {
 ```
 
 无标题时输入框上下内边距均为 13dp；有标题时为上 0dp / 下 11dp。
+输入框没有最小高度（Widget.COUI.Input），提示文字使用 couiColorHintNeutral；与 COUIInputPreference 默认行为一致（`quickDelete` 继承自 Widget.COUI.Input），聚焦且非空时显示清除按钮，传入 `showClearButton = false` 可隐藏。
 
 ## 组件状态
 
@@ -78,11 +79,11 @@ InputPreference(
 | readOnly             | Boolean               | 是否只读                                   | false                                            | 否       |
 | justShowFocusLine    | Boolean               | 只显示焦点线（不画常驻下划线）             | true                                             | 否       |
 | maxCount             | Int?                  | 最大字符数，显示 `count/max` 计数          | null                                             | 否       |
-| showClearButton      | Boolean               | 获得焦点且非空时显示清除按钮               | false                                            | 否       |
+| showClearButton      | Boolean               | 获得焦点且非空时显示清除按钮               | true                                             | 否       |
 | showPasswordToggle   | Boolean               | 显示密码可见切换                           | false                                            | 否       |
 | errorMessage         | String                | 输入框下方的错误文字，空串隐藏             | ""                                               | 否       |
 | colors               | InputPreferenceColors | 标题 / 错误文字颜色                        | InputPreferenceDefaults.inputPreferenceColors()  | 否       |
-| textFieldColors      | TextFieldColors       | 输入框颜色                                 | TextFieldDefaults.textFieldColors()              | 否       |
+| textFieldColors      | TextFieldColors       | 输入框颜色                                 | InputViewDefaults.textFieldColors()              | 否       |
 | textStyle            | TextStyle             | 输入文字样式                               | InputViewDefaults.textStyle()                    | 否       |
 | keyboardOptions      | KeyboardOptions       | 键盘选项                                   | KeyboardOptions.Default                          | 否       |
 | keyboardActions      | KeyboardActions       | 键盘动作                                   | KeyboardActions.Default                          | 否       |
@@ -108,6 +109,6 @@ InputPreference(
 
 | 参数               | 类型  | 默认值                                    |
 | ------------------ | ----- | ----------------------------------------- |
-| titleColor         | Color | COUITheme.colorScheme.onSurface           |
-| disabledTitleColor | Color | COUITheme.colorScheme.disabledOnSurface   |
+| titleColor         | Color | COUITheme.colorScheme.labelPrimary           |
+| disabledTitleColor | Color | COUITheme.colorScheme.disabledNeutral   |
 | errorColor         | Color | COUITheme.colorScheme.error               |

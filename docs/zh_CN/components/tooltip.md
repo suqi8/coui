@@ -188,8 +188,4 @@ fun rememberTooltipState(
 | InfoMinWidth | Info 窗口最小宽度（含内边距） | 80.dp |
 | windowInset(style, mode) | 气泡外容纳箭头与阴影的透明内边距 | 13 × 13dp；Info 为 16 × 13dp |
 | maxWidth(style) / minWidth(style, mode) | 各样式的宽度限制 | - |
-| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips：`primary` / `onPrimary`；其他：`backgroundTop` / `onSurfaceSecondary`；标题 `onSurface`；操作 `primary` |
-
-## 已弃用
-
-Miuix 版 tooltip API —— `TooltipBox(positionProvider, …)`、`TooltipBox(text, …)`、`RichTooltipBox`、`PlainTooltip`、`RichTooltip`、`RichTooltipColors`、`TooltipDefaults.rememberTooltipPositionProvider`、`caretShape` 以及 `PlainTooltip*` / `RichTooltip*` 常量 —— 仍可使用但已弃用。参见[升级指南](../guide/upgrading.md)。
+| tooltipColors(style, mode, …) | `TooltipColors(containerColor, contentColor, titleColor, actionColor)` | Tooltips：`primary` / `onPrimary`；其他：`backgroundTop` / `labelSecondary`；标题 `labelPrimary`；操作 `primary` |

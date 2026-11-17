@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
+import io.github.suqi8.coui.kmp.basic.ToolbarTextButton
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Favorites
 import io.github.suqi8.coui.kmp.icon.extended.More
@@ -47,16 +48,18 @@ fun IconButtonDemo() {
                     IconButton(
                         modifier = Modifier,
                         onClick = {},
+                        redDot = 0,
                     ) {
                         Icon(
                             imageVector = COUIIcons.More,
-                            tint = COUITheme.colorScheme.onBackground,
+                            tint = COUITheme.colorScheme.labelPrimary,
                             contentDescription = "More",
                         )
                     }
                     IconButton(
                         modifier = Modifier,
                         onClick = {},
+                        redDot = 3,
                     ) {
                         Icon(
                             imageVector = COUIIcons.Favorites,
@@ -70,7 +73,7 @@ fun IconButtonDemo() {
                     ) {
                         Icon(
                             imageVector = COUIIcons.More,
-                            tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                            tint = COUITheme.colorScheme.disabledNeutral,
                             contentDescription = "More",
                         )
                     }
@@ -81,10 +84,27 @@ fun IconButtonDemo() {
                     ) {
                         Icon(
                             imageVector = COUIIcons.Favorites,
-                            tint = COUITheme.colorScheme.disabledOnSecondaryVariant,
+                            tint = COUITheme.colorScheme.disabledNeutral,
                             contentDescription = "Favorites",
                         )
                     }
+                }
+            }
+            Card(
+                insideMargin = PaddingValues(16.dp),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                ) {
+                    ToolbarTextButton(
+                        text = "Done",
+                        onClick = {},
+                    )
+                    ToolbarTextButton(
+                        text = "Done",
+                        onClick = {},
+                        enabled = false,
+                    )
                 }
             }
         }

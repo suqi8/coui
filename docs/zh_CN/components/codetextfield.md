@@ -80,10 +80,12 @@ CodeTextField(
 | CellCornerRadius     | Dp     | 单格圆角，与 COUICodeInputView 一样用 COUIShapePath Java path 绘制（`LegacySquircleShape`） | 8.dp                 |
 | MinCellSpacing       | Dp     | 相邻格之间的最小间距             | 4.dp                 |
 | MaxCellSpacing       | Dp     | 相邻格之间的最大间距             | 16.dp                |
+| DefaultCellSpacing   | Dp     | 宽度不受限时的格间距             | 8.dp                 |
+| ContainerMarginHorizontal | Dp | 计算格间距时每侧扣除的外边距   | 16.dp                |
 | CellStrokeWidth      | Dp     | 活动格描边宽度                   | 1.6.dp               |
 | SecurityCircleRadius | Dp     | 安全模式圆点半径                 | 5.dp                 |
 | CursorWidth          | Dp     | 闪烁光标宽度                     | 2.dp                 |
-| ReferenceWidth       | Dp     | 触发缩放的参考宽度               | 360.dp               |
+| ReferenceWidth       | Dp     | 触发缩放的参考窗口宽度           | 360.dp               |
 
 #### 方法
 
@@ -96,10 +98,10 @@ CodeTextField(
 
 | 参数                | 类型  | 默认值                                          |
 | ------------------- | ----- | ----------------------------------------------- |
-| cellBackgroundColor | Color | COUITheme.colorScheme.surfaceContainer         |
-| textColor           | Color | COUITheme.colorScheme.onSurface                |
+| cellBackgroundColor | Color | COUITheme.colorScheme.cardBackground         |
+| textColor           | Color | COUITheme.colorScheme.labelPrimary                |
 | focusedStrokeColor  | Color | COUITheme.colorScheme.primary                  |
-| securityCircleColor | Color | COUITheme.colorScheme.onSurface(alpha 0.847)   |
+| securityCircleColor | Color | COUITheme.colorScheme.labelPrimary(alpha 0.847)   |
 | cursorColor         | Color | COUITheme.colorScheme.primary                  |
 
 ## 行为
@@ -108,7 +110,7 @@ CodeTextField(
 - 一次插入多个字符(粘贴)会替换整个验证码并分发到各格,对应 COUICodeInputView 的 TextWatcher 行为。
 - 活动格(第一个空格,填满时为最后一格)在聚焦时显示 1.6dp 描边;描边以 100ms(延迟 33ms)淡入、100ms 淡出(COUI move 缓动 0.3, 0, 0.1, 1)。
 - 数字以 0.6 -> 1.0 缩放 + 100ms 淡入出现,删除时延迟 33ms 淡出;安全模式跳过数字动画,与 COUI 一致。
-- 可用宽度低于 360dp 参考宽度时,各格按比例缩小,格间距在 4dp 与 16dp 之间自适应。
+- 窗口宽度低于 360dp 时,各格按 `窗口宽度 / 360dp` 缩小(COUICodeInputView 以屏幕宽度而非组件宽度为基准)。每格单侧外边距为 `round((宽度 - n × 格宽 - 2 × 16dp) / (2n - 2))`,钳在 2..8dp,即格间距在 4dp 与 16dp 之间自适应。
 
 ## 进阶用法
 

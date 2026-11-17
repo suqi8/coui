@@ -28,6 +28,8 @@ SegmentButton(
 
 每个分段宽度为文字宽度加左右各 12dp，至少 52dp。未固定宽度时控件包裹文字；宽度固定（例如 `Modifier.fillMaxWidth()`）或文字放不下时，按 `COUISegmentButtonLayout.calculateChildrenWidths` 分配宽度：比均分宽度窄的分段保持原宽，其余分段平分剩余宽度。
 
+固定宽度会被 COUI 响应式栅格截断（`getResponsiveWidth`，默认开启）：小屏取窗口的 4 栅格（即整个栅格宽度），中屏 6 栅格，大屏 8 栅格，并在给定宽度内居中。传入 `responsiveWidthEnabled = false` 可铺满整个固定宽度（`setResponsiveWidthEnabled(false)`）。
+
 ```kotlin
 SegmentButton(
     items = listOf("All", "Allowed", "Not allowed"),
@@ -74,6 +76,7 @@ SegmentButton(
 | materialEffect        | Boolean             | 是否绘制 COUI 17 材质（见下文）；与 COUI 一致默认关闭  | false                                       | 否       |
 | dragAnimationEnabled  | Boolean             | 整个控件是否跟随 COUI 17 触摸动效                      | true                                        | 否       |
 | hapticFeedbackEnabled | Boolean             | 拖到其他分段时是否振动                                 | true                                        | 否       |
+| responsiveWidthEnabled | Boolean            | 固定宽度是否按 4 / 6 / 8 栅格截断                     | true                                        | 否       |
 | height                | Dp                  | 控件高度，至少为 `MinHeight`                           | SegmentButtonDefaults.Height                | 否       |
 | padding               | Dp                  | 指示器相对轨道边缘的内缩                               | SegmentButtonDefaults.Padding               | 否       |
 | colors                | SegmentButtonColors | 颜色配置                                               | SegmentButtonDefaults.segmentButtonColors() | 否       |
@@ -98,7 +101,7 @@ SegmentButton(
 | 方法名                | 类型                 | 说明                                                       |
 | --------------------- | -------------------- | ---------------------------------------------------------- |
 | segmentButtonColors() | SegmentButtonColors  | 创建默认颜色配置                                           |
-| textStyle()           | TextStyle            | 文字样式 `couiTextButtonM`（14sp 中粗，`textStyles.subtitle`） |
+| textStyle()           | TextStyle            | 文字样式 `couiTextButtonM`（14sp 中粗，`textStyles.buttonM`） |
 | backdropSpec(isDark)  | MaterialBackdropSpec | `TYPE_CONTENT_SEGMENT_BUTTON` 背景模糊：25px，浅色 `#7F333333` 颜色减淡 + `#99EFEFEF` 明度，深色 `#7F7F7F7F` 叠加 + `#99262626` 明度 |
 
 ### SegmentButtonColors 类
@@ -107,8 +110,8 @@ SegmentButton(
 | ----------------------- | ----- | -------------------------------------------------- | ---------------------------- |
 | backgroundColor         | Color | 轨道填充色                                         | #0F000000 / #1FFFFFFF（深色）|
 | indicatorColor          | Color | 指示器填充色                                       | #B2FFFFFF / #33FFFFFF（深色）|
-| selectedTextColor       | Color | 选中分段的文字颜色                                 | `onSurface`                  |
-| unselectedTextColor     | Color | 其他分段的文字颜色                                 | `onSurface`                  |
+| selectedTextColor       | Color | 选中分段的文字颜色                                 | `labelPrimary`                  |
+| unselectedTextColor     | Color | 其他分段的文字颜色                                 | `labelPrimary`                  |
 | indicatorShadowColor    | Color | 指示器下方阴影：浅色为渐变中心色，深色为纯色填充   | #0D000000 / #14000000（深色）|
 | indicatorShadowEndColor | Color | 浅色模式下指示器阴影渐变的边缘色                   | #03000000                    |
 

@@ -32,6 +32,20 @@ Box(Modifier.fillMaxSize()) {
 }
 ```
 
+## Following the List
+
+Pass the section of the first visible list item as `selectedKey` so the highlight follows scrolling (COUI `updateMoveTouchBarText`). It moves the highlight without a haptic or the bubble, is ignored while a finger is on the bar, and a key hidden behind a dot highlights that dot:
+
+```kotlin
+val firstSection by remember {
+    derivedStateOf { sectionOf(listState.firstVisibleItemIndex) }
+}
+AlphabetIndexBar(
+    onKeySelected = { key -> scope.launch { listState.scrollToItem(indexOfSection(key)) } },
+    selectedKey = firstSection,
+)
+```
+
 ## Available Keys and Dots
 
 Keys outside `availableKeys` stay visible but cannot be selected: touching one selects the closest available key above it (COUI `hasValue`). When the bar is too short for every key, runs of keys collapse into `·` dots following COUITouchSearchView's dot levels; dragging over a dot walks through the keys it hides. Below the smallest level the bar draws nothing.
@@ -44,6 +58,7 @@ Keys outside `availableKeys` stay visible but cannot be selected: touching one s
 | --------------------- | ---------------------- | --------------------------------------------------- | ------------------------------------------------- | -------- |
 | onKeySelected         | (String) -> Unit       | Called with each newly selected key                 | -                                                 | Yes      |
 | modifier              | Modifier               | Modifier applied to the bar                         | Modifier                                          | No       |
+| selectedKey           | String?                | Key highlighted while the bar is not touched        | null                                              | No       |
 | keys                  | List\<String\>         | Index keys, top to bottom                           | AlphabetIndexBarDefaults.Keys                     | No       |
 | availableKeys         | Set\<String\>?         | Selectable keys, or `null` for all                  | null                                              | No       |
 | showCollectKey        | Boolean                | Whether the favorites star leads the keys           | true                                              | No       |
@@ -69,15 +84,15 @@ Keys outside `availableKeys` stay visible but cannot be selected: touching one s
 
 | Parameter          | Type  | Default                                   | COUI Source                                        |
 | ------------------ | ----- | ----------------------------------------- | -------------------------------------------------- |
-| keyColor           | Color | COUITheme.colorScheme.onSurfaceSecondary  | coui_touchsearchview_text_color (couiColorSecondNeutral) |
+| keyColor           | Color | COUITheme.colorScheme.labelSecondary  | coui_touchsearchview_text_color (couiColorSecondNeutral) |
 | selectedKeyColor   | Color | COUITheme.colorScheme.primaryTextOnPopup  | pressed state, couiColorPrimaryTextOnPopup         |
 | dotColor           | Color | COUITheme.colorScheme.dragHandle          | coui_touchsearchview_dot_color (couiColorControls) |
 | bubbleColor        | Color | COUITheme.colorScheme.backgroundTop       | coui_touch_search_popup_bg (couiColorBackgroundTop) |
-| bubbleContentColor | Color | COUITheme.colorScheme.onBackground        | couiColorPrimaryNeutral                            |
+| bubbleContentColor | Color | COUITheme.colorScheme.labelPrimary        | couiColorPrimaryNeutral                            |
 
 ## Behavior
 
 - Keys are 12dp medium text centered in 16dp rows below a 16dp top padding; the star is a 12dp outline icon. The bar wraps to the height all keys need and compresses into dots when given less.
 - The selected key, star or dot turns `selectedKeyColor` and keeps it after the finger lifts, like COUI.
 - The 48dp bubble shows the key in 20sp medium with the font scale capped at 1.35 (`COUIChangeTextUtil.getSuitableFontSize` level 4) (or a 24dp star), centered on the key row and 8.5dp beside the bar. It grows from 0.8 and fades in over 350ms on COUIMoveEaseInterpolator, and one second after the finger lifts it shrinks back to 0.8 and fades out over 300ms.
-- Moving to another key ticks a `TextHandleMove` haptic. Every selectable key is also exposed as an accessibility custom action.
+- Moving to another key plays the COUI `GRANULAR_SHORT_VIBRATE_SYNC` (308) tick (`CouiHapticEffect.Strength`); changes of `selectedKey` play none. Every selectable key is also exposed as an accessibility custom action.

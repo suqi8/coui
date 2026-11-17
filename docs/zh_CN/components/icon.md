@@ -2,7 +2,7 @@
 
 `Icon` 是 COUI 中的基础图标组件，用于在界面中展示各种矢量图标、位图图标或自定义绘制内容。它提供了多种绘制图标的方式，适应不同的图标资源类型。
 
-`tint` 的默认值是 `LocalContentColor.current`，因此图标会跟随父级组件（如 `Button`、`Surface`）提供的内容颜色。若需要覆盖该颜色，传入显式的 `Color`（例如 `COUITheme.colorScheme.onBackground`）；若想保留资源本身的颜色而不做着色，传入 `Color.Unspecified`。
+`tint` 的默认值是 `LocalContentColor.current`，因此图标会跟随父级组件（如 `Button`、`Surface`）提供的内容颜色。若需要覆盖该颜色，传入显式的 `Color`（例如 `COUITheme.colorScheme.labelPrimary`）；若想保留资源本身的颜色而不做着色，传入 `Color.Unspecified`。
 
 `Icon` 是为**单色图标**设计的组件，会根据所处场景对图标着色。如果要原样渲染多色图片，或图片不应遵循推荐图标尺寸，请使用 `androidx.compose.foundation.Image`。需要点击交互的图标，请使用 `IconButton`。
 
@@ -189,7 +189,7 @@ IconButton(onClick = { isSelected = !isSelected }) {
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }
 val tint by animateColorAsState(
-    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.onBackground,
+    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.labelPrimary,
 )
 
 Icon(

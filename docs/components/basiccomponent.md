@@ -45,10 +45,9 @@ BasicComponent(
     summary = "A brief introduction",
     startAction = {
         Icon(
-            modifier = Modifier.padding(end = 16.dp),
             imageVector = COUIIcons.Contacts,
             contentDescription = "Avatar Icon",
-            tint = COUITheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.labelPrimary
         )
     },
     onClick = { /* Handle click event */ }
@@ -79,10 +78,9 @@ In addition to the title and summary variant, BasicComponent also provides an ov
 BasicComponent(
     startAction = {
         Icon(
-            modifier = Modifier.padding(end = 16.dp),
             imageVector = COUIIcons.Contacts,
             contentDescription = "Avatar Icon",
-            tint = COUITheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.labelPrimary
         )
     },
     endActions = {
@@ -91,11 +89,11 @@ BasicComponent(
 ) {
     Text(
         text = "Custom Title",
-        style = COUITheme.textStyles.headline1
+        style = COUITheme.textStyles.headlineXS
     )
     Text(
         text = "Custom content description",
-        style = COUITheme.textStyles.footnote1
+        style = COUITheme.textStyles.bodyS
     )
 }
 ```
@@ -133,6 +131,10 @@ BasicComponent(
 | role              | Role?                              | Semantic role for accessibility services              | null                                  | No       |
 | holdDownState     | Boolean                            | Whether the component is in the pressed state         | false                                 | No       |
 | enabled           | Boolean                            | Whether the component is enabled                      | true                                  | No       |
+| selected          | Boolean                            | Whether the row is selected: the press layer stays on and, inside a CardListGroup, the dividers above and below the row hide | false | No       |
+| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction | false | No       |
+| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number | null | No       |
+| endIcon           | @Composable (() -> Unit)?          | 16dp icon right before endActions                     | null                                  | No       |
 | interactionSource | MutableInteractionSource?          | Interaction source of the component                   | null                                  | No       |
 
 ### BasicComponent Properties (custom content variant)
@@ -150,6 +152,10 @@ BasicComponent(
 | role              | Role?                              | Semantic role for accessibility services              | null                                | No       |
 | holdDownState     | Boolean                            | Whether the component is in the pressed state         | false                               | No       |
 | enabled           | Boolean                            | Whether the component is enabled                      | true                                | No       |
+| selected          | Boolean                            | Whether the row is selected: the press layer stays on and, inside a CardListGroup, the dividers above and below the row hide | false | No       |
+| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction | false | No       |
+| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number | null | No       |
+| endIcon           | @Composable (() -> Unit)?          | 16dp icon right before endActions                     | null                                  | No       |
 | interactionSource | MutableInteractionSource?          | Interaction source of the component                   | null                                | No       |
 | content           | @Composable ColumnScope.() -> Unit | Composable content of the component                   | -                                   | Yes      |
 
@@ -163,16 +169,25 @@ The BasicComponentDefaults object provides default values and color configuratio
 | ------------- | ------------- | --------------------------------- | -------------------- |
 | MinHeight     | Dp            | Minimum row height, before card-group position padding | 48.dp |
 | InsideMargin  | PaddingValues | Internal padding of the component | PaddingValues(horizontal = 16.dp, vertical = 10.dp) |
+| StartActionSpacing | Dp | Gap between startAction and the title (coui_preference_icon_margin_right) | 16.dp |
+| EndActionsSpacing | Dp | Minimum gap between the title and the end content (support_preference_title_margin_end_in_right) | 16.dp |
+| EndLowPriorityMinWidth | Dp | Width the end content keeps when the title is long; below it the end content always gets its full width | 80.dp |
+| EndDecorationSpacing | Dp | Gap after the end red dot / end icon | 4.dp |
+| EndIconSize | Dp | Size of endIcon | 16.dp |
+| StartBadgeInset | Dp | Inset of the start red dot from the startAction corner | 2.dp |
+| StartActionMinTopMargin | Dp | Minimum distance from the row top to top-aligned start content | 8.dp |
+
+`startActionVerticalMargin(heightDp, lineCount)` returns the COUI vertical margin of the start content: 24dp content 12dp (20dp with two lines of text), 32dp 10dp / 16dp, 36dp 12dp / 14dp, 50dp 8dp, other sizes 14dp. The row grows to fit the start content plus these margins; once the title and summary exceed two lines, the start content is aligned with the center of the first two lines instead. The start content keeps 16dp to the title, so do not pad your icons yourself.
 
 #### BasicComponentDefaults Methods
 
 | Method Name    | Type                 | Description                         |
 | -------------- | -------------------- | ----------------------------------- |
-| titleColor()   | BasicComponentColors | Creates title color configuration (`onBackground`, disabled `disabledOnSecondaryVariant`) |
-| summaryColor() | BasicComponentColors | Creates summary color configuration (`onSurfaceSecondary`, COUI `couiColorSecondNeutral`; disabled `disabledOnSecondaryVariant`) |
+| titleColor()   | BasicComponentColors | Creates title color configuration (`labelPrimary`, disabled `disabledNeutral`) |
+| summaryColor() | BasicComponentColors | Creates summary color configuration (`labelSecondary`, COUI `couiColorSecondNeutral`; disabled `disabledNeutral`) |
 
-The title uses `textStyles.headline1` (16sp Medium, COUI `TextAppearance.COUI.List.Title`). The summary uses
-`textStyles.footnote1` (13sp, COUI `TextAppearance.COUI.Preference.Summary`) and sits directly below the
+The title uses `textStyles.headlineXS` (16sp Medium, COUI `TextAppearance.COUI.List.Title`). The summary uses
+`textStyles.bodyS` (13sp, COUI `TextAppearance.COUI.Preference.Summary`) and sits directly below the
 title: COUI 17 removed the 2dp `layout_marginTop` the summary had in COUI 16.
 
 ### BasicComponentColors Class
@@ -194,10 +209,9 @@ BasicComponent(
     summary = "Media Volume: 70%",
     startAction = {
         Icon(
-            modifier = Modifier.padding(end = 16.dp),
             imageVector = COUIIcons.Play,
             contentDescription = "Volume Icon",
-            tint = COUITheme.colorScheme.onBackground
+            tint = COUITheme.colorScheme.labelPrimary
         )
     },
     endActions = {
@@ -205,7 +219,7 @@ BasicComponent(
             Icon(
                 imageVector = COUIIcons.Remove,
                 contentDescription = "Decrease Volume",
-                tint = COUITheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.labelPrimary
             )
         }
         Text("70%")
@@ -213,7 +227,7 @@ BasicComponent(
             Icon(
                 imageVector = COUIIcons.Add,
                 contentDescription = "Increase Volume",
-                tint = COUITheme.colorScheme.onBackground
+                tint = COUITheme.colorScheme.labelPrimary
             )
         }
     }
@@ -258,14 +272,15 @@ Column {
 
 Inside a `Card`, wrap the rows in a `CardListGroup` so each row gets its card list position (the
 2dp head / tail padding on the rounded edges). Rows outside a group keep `CardListPosition.None`,
-and an explicit `cardListPosition` always wins. See [Card](./card.md#cardlistgroup).
+and an explicit `cardListPosition` always wins. The group also draws the row dividers, aligned with
+each row's title and hidden around `selected` rows, so do not add `HorizontalDivider`s between them.
+See [CardListGroup](./cardlistgroup.md).
 
 ```kotlin
 Card {
     CardListGroup {
-        options.forEachIndexed { index, option ->
+        options.forEach { option ->
             item(key = option) {
-                if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 BasicComponent(
                     title = option,
                     onClick = { /* Handle option click */ }

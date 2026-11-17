@@ -44,7 +44,7 @@ fun NumericKeyboardDemo() {
             // The Settings keys are card-colored discs: they sit on the page surface, not on a card.
             Column(
                 modifier = Modifier
-                    .background(COUITheme.colorScheme.surface)
+                    .background(COUITheme.colorScheme.backgroundWithCard)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -52,6 +52,7 @@ fun NumericKeyboardDemo() {
                 Text(text = input.ifEmpty { "Ripple" })
                 NumericKeyboard(
                     onNumberClick = { if (input.length < 12) input += it },
+                    rightKey = NumericKeyboardDefaults.deleteKey(),
                     onRightKeyClick = { input = input.dropLast(1) },
                 )
             }
@@ -66,6 +67,7 @@ fun NumericKeyboardDemo() {
                 Text(text = pin.ifEmpty { "Light" }, color = Color.White)
                 NumericKeyboard(
                     onNumberClick = { if (pin.length < 12) pin += it },
+                    rightKey = NumericKeyboardDefaults.deleteKey(),
                     onRightKeyClick = { pin = pin.dropLast(1) },
                     pressEffect = NumericKeyboardPressEffect.Light,
                     colors = NumericKeyboardDefaults.lockScreenColors(),

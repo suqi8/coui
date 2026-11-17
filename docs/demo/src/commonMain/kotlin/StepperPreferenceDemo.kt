@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.preference.StepperPreference
 
 @Composable
@@ -50,7 +49,6 @@ fun StepperPreferenceDemo() {
                         )
                     }
                     item {
-                        HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                         StepperPreference(
                             value = 3,
                             onValueChange = {},

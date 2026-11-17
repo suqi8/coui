@@ -86,6 +86,21 @@ fun App() {
   }
   ```
 
+- **Theme Color Families**
+
+  COUI themes change color by swapping ten theme attributes (primary, theme containers and labels, disable, focus,
+  focus outline, the translucent theme tint) and nothing else. `COUIThemeColors` holds the official families: the
+  static `Blue` (default), `Green`, `Red`, `Orange` and `Yellow` (`Theme.COUI.<Color>`), every
+  `COUIOverlay.Theme.*` preset (`GreenFirst`, `SkyBlueThird`, `SingleFirst` .. `SingleTenth`, ...; also
+  `COUIThemeColors.overlay(identity, set)` and `COUIThemeColors.Singles`), and
+  `COUIThemeColor.fromColor(color)` derives a family from any color with the COUI single-color rule.
+
+  ```kotlin
+  val controller = remember { ThemeController(ColorSchemeMode.System, themeColor = COUIThemeColors.Green) }
+  // or: lightColorScheme(COUIThemeColors.Green), darkColorScheme(COUIThemeColors.Green),
+  //     myColors.withThemeColor(COUIThemeColor.fromColor(Color(0xFFFF6436)))
+  ```
+
 - **Direct Usage**
 
   Provide a color scheme directly to `COUITheme(colors = ...)` for full customization without a controller:
@@ -113,6 +128,14 @@ The `ThemeController` manages the current color scheme of the COUI theme.
 | colorSpec | ThemeColorSpec | Material color specification version | ThemeColorSpec.Spec2021 |
 | paletteStyle | ThemePaletteStyle | Palette style for dynamic color generation | ThemePaletteStyle.TonalSpot |
 | isDark | Boolean? | Override system dark mode. `null` follows system | null |
+| themeColor | COUIThemeColor? | Theme color family applied over `lightColors` / `darkColors` (not in Monet modes) | null |
+
+::: tip Monet
+COUI itself has no tonal mapping: a system theme color only replaces the ten theme attributes. In Monet modes the
+theme slots therefore follow the single-color rule (`couiColorSecondary` = 15% / 30%, `couiColorDisable` = 30%, ...)
+and the labels keep their COUI alphas (`couiColorLabelSecondary` 54%, `couiColorLabelTertiary` /
+`couiColorDisabledNeutral` 26% / 30%) over the tonal `onSurface`.
+:::
 
 ### ColorSchemeMode
 
@@ -155,6 +178,7 @@ val colors = COUITheme.colorScheme
 val textStyles = COUITheme.textStyles
 val mode = COUITheme.colorSchemeMode
 val isDynamic = COUITheme.isDynamicColor
+val isDark = COUITheme.isDark
 ```
 
 | Property | Type | Description |
@@ -163,6 +187,10 @@ val isDynamic = COUITheme.isDynamicColor
 | textStyles | TextStyles | Current text styles |
 | colorSchemeMode | ColorSchemeMode? | Current color scheme mode (null if using direct `colors` overload) |
 | isDynamicColor | Boolean | Whether the current mode is a Monet dynamic color mode |
+| isDark | Boolean | Whether the current scheme is dark (COUI `isCOUIDarkTheme`, `Colors.isDark`) |
+
+`COUITheme` also provides `LocalTextSelectionColors`: handles in `primary` (`coui_text_select_*_tint`) and the
+highlight `textColorHighlight` (`android:textColorHighlight` = `?couiColorSecondary`).
 
 ## Customizing the Theme
 
@@ -175,7 +203,7 @@ You can customize the theme in the following ways:
 
 ```kotlin
 val customTextStyles = defaultTextStyles(
-    title1 = TextStyle(
+    displayS = TextStyle(
         fontSize = 36.sp,
         fontWeight = FontWeight.Bold
     ),
@@ -218,6 +246,15 @@ steps and circles, which ColorOS 17 draws without smoothing, and `COUIRoundCorne
 capsule of full-round controls (pair it with `COUIRoundCorner.Full`, couiRoundCornerFULL 72dp).
 `COUIRoundCorner.UnspecifiedWeight` stands for the COUI call sites that pass no weight: it resolves to the soft capsule
 when the rect is fully rounded and to `COUIRoundCorner.DefaultG2Weight` = 2.45 (`default_g2_weight`) otherwise.
+`COUIRoundCorner.largeRadiusFor(radius)` maps a base step to its `Large` radius (`RoundCornerUtil.getRoundCornerForOS17`).
+
+## Layout Grid and Spacing
+
+`COUILayoutGrid` is the COUI responsive grid (`columnCount`, `margin`, `gutter`, `columnWidth`, `spanWidth`,
+`gridWidth`, `screenTier` for a window size) plus the shared page spacings: `CardMarginHorizontal` 16dp
+(`coui_preference_card_margin_horizontal`), `DefaultMarginHorizontal` 24dp (`grid_guide_column_default_margin_*`),
+`ColumnGap` 8dp, `CardSpecialPadding` 16dp, `ListSpecialPadding` 24dp, `MarginSmall` 16dp, `MarginLarge` 24dp,
+`Gutter` 8dp and `GutterExpanded` 12dp.
 
 ## State Layers
 

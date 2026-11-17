@@ -87,7 +87,7 @@ Without a blurred wallpaper behind it, give the desktop field a fill: `colors = 
 
 | Method       | Description                                                                                                         |
 | ------------ | ------------------------------------------------------------------------------------------------------------------- |
-| colors(mode) | Setting: `surfaceContainer` field and button, tertiary / primary arrow. Desktop: transparent, white text, #4DFFFFFF / white arrow |
+| colors(mode) | Setting: `cardBackground` field and button, tertiary / primary arrow. Desktop: transparent, white text, #4DFFFFFF / white arrow |
 
 ### LockScreenPasswordInputColors
 
@@ -97,8 +97,9 @@ Without a blurred wallpaper behind it, give the desktop field a fill: `colors = 
 | buttonColor     | Color | Next button fill                             |
 | textColor       | Color | Password text                                |
 | hintColor       | Color | Hint                                         |
-| iconColor       | Color | Inactive arrow and the eye toggle            |
+| iconColor       | Color | Inactive arrow                               |
 | activeIconColor | Color | Active arrow                                 |
+| eyeColor        | Color | Eye toggle: label secondary in setting mode, white in desktop mode |
 | errorColor      | Color | Error line                                   |
 
 ## Behavior

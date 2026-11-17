@@ -73,7 +73,7 @@ fun TooltipDemo() {
                         ImageTooltip(
                             title = "Image tooltip",
                             text = "Image tooltips show a cropped image above the text.",
-                            image = ColorPainter(COUITheme.colorScheme.primaryContainer),
+                            image = ColorPainter(COUITheme.colorScheme.containerTheme),
                             dismissText = "Got it",
                         )
                     }

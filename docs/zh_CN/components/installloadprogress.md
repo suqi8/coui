@@ -49,7 +49,12 @@ InstallLoadProgress(text = "获取", onClick = {})
 
 // 大号：220 × 44dp
 InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Large)
+
+// 圆形（LOAD_STYLE_CIRCLE）：33dp 图标按钮，text 用作内容描述
+InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Circle)
 ```
+
+圆形样式不绘制文字和进度填充：30dp 圆角方块（圆角 7dp）中是一个下载箭头——空闲时为浅色底、主色箭头；下载中为主色底、白色暂停图标；暂停或失败时为主色底、白色箭头。图标切换时新图标在 340ms 内淡入；按下时方块在 200ms 内缩小到 90% 并变暗。
 
 ## 属性
 
@@ -65,7 +70,7 @@ InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Larg
 | enabled           | Boolean                   | 是否启用                                     | true                                                    | 否       |
 | style             | InstallLoadStyle          | 尺寸样式                                     | InstallLoadStyle.Small                                  | 否       |
 | colors            | InstallLoadProgressColors | 颜色配置                                     | InstallLoadProgressDefaults.installLoadProgressColors() | 否       |
-| textStyle         | TextStyle                 | 文字样式                                     | COUITheme.textStyles.subtitle                           | 否       |
+| textStyle         | TextStyle                 | 文字样式                                     | COUITheme.textStyles.buttonM                           | 否       |
 | interactionSource | MutableInteractionSource? | 交互源                                       | null                                                    | 否       |
 
 ### InstallLoadProgressDefaults 对象
@@ -81,6 +86,9 @@ InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Larg
 | LargeHeight                    | Dp    | 44.dp  | 大号高度                       |
 | TextPadding                    | Dp    | 6.dp   | 文字水平内边距                 |
 | PressedBrightness              | Float | 0.8f   | 按下时填充色的亮度系数         |
+| CircleSize                     | Dp    | 33.dp  | 圆形样式尺寸                   |
+| CircleRadius                   | Dp    | 15.dp  | 圆形样式方块的半边长           |
+| CircleCornerRadius             | Dp    | 7.dp   | 圆形样式方块的圆角半径         |
 
 #### 方法
 

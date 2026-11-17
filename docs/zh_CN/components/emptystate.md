@@ -1,6 +1,6 @@
 # EmptyState
 
-`EmptyState` 是空页面占位组件，对应 ColorOS 的 COUIEmptyStateView：插画槽位、标题、副标题和无边框的操作文字按钮自上而下居中排列。高度有界时，整组位于剩余高度的 45% 处（Small 尺寸类型为 50%）。插画按尺寸类型缩放：`Small` 隐藏，`Medium` 为 60%，`Large` 为原尺寸；`Auto` 在高度低于 200dp 时取 Small，宽度低于 320dp 或高度低于 480dp 时取 Medium，否则取 Large。标题最多两行、副标题最多三行，二者宽 280dp，合计超过 92dp 时可滚动。
+`EmptyState` 是空页面占位组件，对应 ColorOS 的 COUIEmptyStateView：插画槽位、标题、副标题和无边框的操作文字按钮自上而下居中排列。高度有界时，整组位于剩余高度的 45% 处（Small 尺寸类型为 50%）。插画在 `Small` 下隐藏，`Medium` 与 `Large` 均为原尺寸（COUI 17 两档缩放均为 1.0）；`Auto` 在高度低于 200dp 时取 Small，宽度低于 320dp 或高度低于 480dp 时取 Medium，否则取 Large。标题最多两行、副标题最多三行，二者宽 280dp，合计超过 92dp 时可滚动。
 
 COUI 用 Lottie 动画或图片填充插画；这里的 `illustration` 是一个可组合槽位，绘制在按尺寸类型换算后的插画区域内。
 
@@ -44,9 +44,9 @@ EmptyState(
 | illustrationWidth  | Dp                        | 插画原始宽度                           | EmptyStateDefaults.IllustrationWidth   | 否   |
 | illustrationHeight | Dp                        | 插画原始高度                           | EmptyStateDefaults.IllustrationHeight  | 否   |
 | colors             | EmptyStateColors          | 颜色配置                               | EmptyStateDefaults.emptyStateColors()  | 否   |
-| titleStyle         | TextStyle                 | 标题文字样式                           | COUITheme.textStyles.headline2         | 否   |
-| subtitleStyle      | TextStyle                 | 副标题文字样式                         | COUITheme.textStyles.footnote2         | 否   |
-| actionStyle        | TextStyle                 | 操作按钮文字样式                       | COUITheme.textStyles.subtitle          | 否   |
+| titleStyle         | TextStyle                 | 标题文字样式                           | COUITheme.textStyles.headlineXS         | 否   |
+| subtitleStyle      | TextStyle                 | 副标题文字样式                         | COUITheme.textStyles.bodyXS         | 否   |
+| actionStyle        | TextStyle                 | 操作按钮文字样式                       | COUITheme.textStyles.buttonM          | 否   |
 | illustration       | (@Composable () -> Unit)? | 插画槽位，Small 时不组合               | null                                   | 否   |
 
 ### EmptyStateSizeType 枚举
@@ -57,8 +57,8 @@ EmptyState(
 
 | 属性名                | 类型          | 说明                         | 默认值                                          |
 | --------------------- | ------------- | ---------------------------- | ----------------------------------------------- |
-| IllustrationWidth     | Dp            | 插画原始宽度                 | 280.dp                                          |
-| IllustrationHeight    | Dp            | 插画原始高度                 | 200.dp                                          |
+| IllustrationWidth     | Dp            | 插画原始宽度                 | 120.dp                                          |
+| IllustrationHeight    | Dp            | 插画原始高度                 | 100.dp                                          |
 | TextWidth             | Dp            | 标题与副标题宽度             | 280.dp                                          |
 | TextMaxHeight         | Dp            | 文字区最大高度（超出滚动）   | 92.dp                                           |
 | SubtitleMarginTop     | Dp            | 副标题上边距                 | 2.dp                                            |

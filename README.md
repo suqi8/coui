@@ -2,7 +2,7 @@
 
 A ColorOS-styled UI library for Compose Multiplatform, based on [Miuix](https://github.com/compose-miuix-ui/miuix).
 
-> Components are calibrated against ColorOS 16 (COUI) design: colors, metrics, motion curves and press feedback are transcribed from the real system implementation.
+> Components are calibrated against ColorOS 17 (COUI 17) design: colors, metrics, motion curves and press feedback are transcribed from the real system implementation.
 >
 > This library is experimental. APIs may change without notice.
 
@@ -99,5 +99,5 @@ fun AppTheme(
 ### Credits
 
 COUI is a fork of [Miuix](https://github.com/compose-miuix-ui/miuix) by YuKongA and the
-compose-miuix-ui contributors, rethemed to the ColorOS 16 design language. Both projects are
+compose-miuix-ui contributors, rethemed to the ColorOS 17 design language. Both projects are
 licensed under Apache-2.0.

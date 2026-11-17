@@ -64,7 +64,7 @@ RangeSliderPreference(
 | summary               | String?                                     | 摘要说明                                                                                                         | null                               | 否       |
 | summaryColor          | BasicComponentColors                        | 摘要文本的颜色配置                                                                                               | BasicComponentDefaults.summaryColor() | 否       |
 | startAction           | @Composable (() -> Unit)?                   | 左侧自定义内容                                                                                                   | null                               | 否       |
-| valueText             | String?                                     | 当前滑块值文本，以 13sp（`footnote1`，COUI 列表右侧值字号）摘要样式显示在末尾区域。在 Row 布局中居中垂直对齐并使用权重                                     | null                               | 否       |
+| valueText             | String?                                     | 当前滑块值文本，以 13sp（`bodyS`，COUI 列表右侧值字号）摘要样式显示在末尾区域。在 Row 布局中居中垂直对齐并使用权重                                     | null                               | 否       |
 | endActions            | @Composable (RowScope.() -> Unit)?          | 右侧自定义内容，紧跟 valueText 在同一 Row 中渲染                                                                 | null                               | 否       |
 | bottomAction          | @Composable (() -> Unit)?                   | 底部区域顶部的自定义内容，位于范围滑块上方                                                                       | null                               | 否       |
 | onClick               | (() -> Unit)?                               | 点击时触发的回调。当非 null 时，末尾区域显示箭头图标                                                              | null                               | 否       |
@@ -113,7 +113,7 @@ RangeSliderPreference(
         Icon(
             imageVector = COUIIcons.Basic.Audio,
             contentDescription = "频率图标",
-            tint = COUITheme.colorScheme.onBackground,
+            tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)
         )
     },

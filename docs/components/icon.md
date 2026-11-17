@@ -2,7 +2,7 @@
 
 `Icon` is a fundamental icon component in COUI used to display various vector icons, bitmap icons, or custom drawn content in the interface. It provides multiple ways to render icons to accommodate different icon resource types.
 
-By default, `tint` resolves to `LocalContentColor.current`, so the icon follows the content color provided by parent components such as `Button` or `Surface`. Pass an explicit `Color` (for example `COUITheme.colorScheme.onBackground`) when you need to override that, or `Color.Unspecified` to disable tinting and keep the source colors.
+By default, `tint` resolves to `LocalContentColor.current`, so the icon follows the content color provided by parent components such as `Button` or `Surface`. Pass an explicit `Color` (for example `COUITheme.colorScheme.labelPrimary`) when you need to override that, or `Color.Unspecified` to disable tinting and keep the source colors.
 
 `Icon` is an opinionated component designed for **single-color** icons that should be tinted to match their surroundings. If you need to render a multicolored image untouched, or an image that should not follow the recommended icon size, use `androidx.compose.foundation.Image` instead. For a clickable icon, wrap it with `IconButton`.
 
@@ -189,7 +189,7 @@ For tint colors that change every frame (animations, gesture-driven values, sele
 ```kotlin
 var isSelected by remember { mutableStateOf(false) }
 val tint by animateColorAsState(
-    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.onBackground,
+    if (isSelected) COUITheme.colorScheme.primary else COUITheme.colorScheme.labelPrimary,
 )
 
 Icon(

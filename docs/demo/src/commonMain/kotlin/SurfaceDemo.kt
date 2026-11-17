@@ -39,14 +39,14 @@ fun SurfaceDemo() {
                 modifier = Modifier
                     .size(height = 200.dp, width = 400.dp)
                     .padding(16.dp),
-                color = COUITheme.colorScheme.background,
+                color = COUITheme.colorScheme.surface,
                 shape = RoundedCornerShape(16.dp),
                 shadowElevation = 4.dp,
             ) {
                 Text(
                     text = "Surface Example\n\n" +
                         "Size: height = 200.dp, width = 400.dp\n" +
-                        "color: COUITheme.colorScheme.background\n" +
+                        "color: COUITheme.colorScheme.surface\n" +
                         "shape: RoundedCornerShape(16.dp)\n" +
                         "shadowElevation: 4.dp\n" +
                         "isSystemInDarkTheme: ${isSystemInDarkTheme()}",

@@ -83,7 +83,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex1]}",
-                                style = COUITheme.textStyles.title1,
+                                style = COUITheme.textStyles.displayS,
                             )
                         }
                     }
@@ -113,7 +113,7 @@ fun NavigationBarDemo() {
                         ) {
                             Text(
                                 text = "Current: ${pages[selectedIndex2]}",
-                                style = COUITheme.textStyles.title1,
+                                style = COUITheme.textStyles.displayS,
                             )
                         }
                     }

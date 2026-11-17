@@ -55,8 +55,8 @@ Stepper(
 | 参数                 | 类型  | 默认值                                    |
 | -------------------- | ----- | ----------------------------------------- |
 | buttonColor          | Color | COUITheme.colorScheme.dialogButton(couiColorContainer8) |
-| contentColor         | Color | COUITheme.colorScheme.onSurface          |
-| disabledContentColor | Color | COUITheme.colorScheme.dividerLine(couiColorDivider) |
+| contentColor         | Color | COUITheme.colorScheme.labelPrimary          |
+| disabledContentColor | Color | COUITheme.colorScheme.divider(couiColorDivider) |
 
 ## 行为
 

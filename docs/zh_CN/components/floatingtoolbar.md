@@ -1,8 +1,9 @@
 # FloatingToolbar
 
-`FloatingToolbar` 是 COUI 中的悬浮工具栏组件，它将其内容渲染在一个具有圆角背景的容器中，可以水平或垂直排列。实际的屏幕放置由父组件（通常是 `Scaffold`）处理。
+`FloatingToolbar` 是 COUI 17 悬浮工具栏（`COUIBottomFloatingToolbar`），有两种形态：
 
-此组件通常与 `Scaffold` 结合使用，放置在页面的特定位置，提供快捷操作或信息展示。
+- **条目工具栏**（`FloatingToolbar(items = ...)`）：COUI 工具栏本体，一条至少 76dp 高的满宽栏，按条目分组最多放三个胶囊，支持图标项、文字项、红点与溢出菜单。
+- **内容胶囊**（`FloatingToolbar { ... }`）：包住自定义内容的单个胶囊，可水平或垂直排列（对应 COUI 的自定义视图条目）。实际的屏幕放置由父组件（通常是 `Scaffold`）处理。
 
 <div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=floatingToolbar" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -13,10 +14,33 @@
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.FloatingToolbar
 import io.github.suqi8.coui.kmp.basic.FloatingToolbarDefaults
+import io.github.suqi8.coui.kmp.basic.FloatingToolbarGroupArrangement
+import io.github.suqi8.coui.kmp.basic.FloatingToolbarItem
 import io.github.suqi8.coui.kmp.basic.ToolbarPosition // 用于 Scaffold
 ```
 
-## 基本用法
+## 条目工具栏
+
+```kotlin
+Box(Modifier.fillMaxSize()) {
+    FloatingToolbar(
+        items = listOf(
+            FloatingToolbarItem(onClick = { /* 编辑 */ }, icon = COUIIcons.Edit, title = "编辑"),
+            FloatingToolbarItem(onClick = { /* 删除 */ }, icon = COUIIcons.Delete, title = "删除", showRedDot = true),
+            FloatingToolbarItem(onClick = { /* 完成 */ }, title = "完成", group = 1),
+        ),
+        modifier = Modifier.align(Alignment.BottomCenter),
+    )
+}
+```
+
+- **布局**：宽度小于 600dp 时两侧留 16dp，小于 840dp 时 24dp，此后 40dp；胶囊在至少 76dp 的高度内垂直居中。两个分组贴两侧（`Spread`）或以 16dp 间距并排居中（`Packed`）；第三个分组居中。
+- **胶囊**：高 44dp，条目间距 4dp，首尾条目外侧各留 6dp 胶囊（单个条目时不留）。图标项 44 x 40dp、图标 24dp；没有图标的条目显示标题（16sp 中黑，宽 52-200dp，两侧内边距 16dp）。
+- **溢出**：每组最多显示六个条目；后面还有条目或放不下时，最后一位换成「更多」项，点击弹出其余条目的菜单。
+- **红点**：直径 6dp，圆心距条目右上角各 12dp；禁用的条目不显示红点。
+- **触摸**：每个胶囊整体响应 COUI 按压形变与触摸聚光，条目本身没有按压蒙层。
+
+## 内容胶囊
 
 ```kotlin
 Scaffold(
@@ -41,17 +65,44 @@ Scaffold(
 
 ## 属性
 
-### FloatingToolbar 属性
+### FloatingToolbar（条目工具栏）属性
+
+| 属性名                     | 类型                            | 说明                                               | 默认值                                             | 是否必须 |
+| -------------------------- | ------------------------------- | -------------------------------------------------- | -------------------------------------------------- | -------- |
+| items                      | List<FloatingToolbarItem>       | 条目；同一 `group` 组成一个胶囊（最多三组）        | -                                                  | 是       |
+| modifier                   | Modifier                        | 应用于满宽工具栏的修饰符                           | Modifier                                           | 否       |
+| visible                    | Boolean                         | 是否显示胶囊（缩放弹簧）                           | true                                               | 否       |
+| materialEffect             | Boolean                         | 是否在胶囊上绘制 COUI 17 底栏材质                  | `LocalCOUIMaterialEffectEnabled.current` | 否       |
+| defaultWindowInsetsPadding | Boolean                         | 是否让胶囊避开导航栏与标题栏                       | true                                               | 否       |
+| groupArrangement           | FloatingToolbarGroupArrangement | `Spread`（贴两侧）或 `Packed`（并排居中）          | FloatingToolbarGroupArrangement.Spread             | 否       |
+| color                      | Color                           | 无材质模糊时的胶囊底色                             | FloatingToolbarDefaults.defaultColor()             | 否       |
+| shadowElevation            | Dp                              | 胶囊阴影的模糊半径，0 表示关闭                     | FloatingToolbarDefaults.ShadowElevation            | 否       |
+| colors                     | FloatingToolbarItemColors       | 条目内容颜色                                       | FloatingToolbarDefaults.itemColors()               | 否       |
+| overflowContentDescription | String                          | 溢出项的无障碍标签                                 | FloatingToolbarDefaults.OverflowContentDescription | 否       |
+
+### FloatingToolbarItem
+
+| 属性名             | 类型         | 说明                                           | 默认值 |
+| ------------------ | ------------ | ---------------------------------------------- | ------ |
+| onClick            | () -> Unit   | 在工具栏或溢出菜单中点击条目时调用             | -      |
+| icon               | ImageVector? | 图标；为空时显示标题                           | null   |
+| title              | String       | 标题文字、溢出菜单中的行文字及备用无障碍标签   | ""     |
+| contentDescription | String?      | 无障碍标签                                     | null   |
+| group              | Int          | 条目所属分组（胶囊），按数值排序               | 0      |
+| enabled            | Boolean      | 是否启用                                       | true   |
+| showRedDot         | Boolean      | 是否显示红点                                   | false  |
+
+### FloatingToolbar（内容胶囊）属性
 
 | 属性名                     | 类型                   | 说明                       | 默认值                                 | 是否必须 |
 | -------------------------- | ---------------------- | -------------------------- | -------------------------------------- | -------- |
 | modifier                   | Modifier               | 应用于工具栏的修饰符       | Modifier                               | 否       |
 | visible                    | Boolean                | 是否显示工具栏；切换时运行 COUI 17 的缩放显示 / 隐藏弹簧 | true | 否       |
-| materialEffect             | Boolean                | 是否使用 COUI 17 底栏材质：有 `LocalMaterialBackdrop` 时由背景模糊取代 `color` | true | 否       |
+| materialEffect             | Boolean                | 是否使用 COUI 17 底栏材质：有 `LocalMaterialBackdrop` 时由背景模糊取代 `color` | `LocalCOUIMaterialEffectEnabled.current` | 否       |
 | color                      | Color                  | 工具栏背景颜色             | FloatingToolbarDefaults.defaultColor() | 否       |
 | cornerRadius               | Dp                     | 工具栏圆角半径             | FloatingToolbarDefaults.CornerRadius   | 否       |
 | outSidePadding             | PaddingValues          | 工具栏外部的内边距         | FloatingToolbarDefaults.OutSidePadding | 否       |
-| shadowElevation            | Dp                     | 工具栏的阴影高度           | 4.dp                                   | 否       |
+| shadowElevation            | Dp                     | 焦散投影的模糊半径，0 表示关闭 | FloatingToolbarDefaults.ShadowElevation | 否   |
 | showDivider                | Boolean                | 是否显示工具栏周围的分割线 | false                                  | 否       |
 | content                    | @Composable () -> Unit | 工具栏内容区域的可组合函数 | -                                      | 是       |
 
@@ -60,9 +111,23 @@ Scaffold(
 | 属性名         | 类型                    | 说明           | 值                                      |
 | -------------- | ----------------------- | -------------- | --------------------------------------- |
 | CornerRadius   | Dp                      | 默认圆角半径（44dp 高度的一半，按权重 1.0 软胶囊绘制；小于高度一半时按 `default_g2_weight` 2.45 绘制） | 22.dp                                   |
-| defaultColor() | @Composable () -> Color | 默认背景颜色   | COUITheme.colorScheme.surfaceContainer |
+| defaultColor() | @Composable () -> Color | 默认背景颜色：COUI 无模糊回退色 `?couiColorBar` | FloatingNavigationBarDefaults.color() |
+| ShadowElevation | Dp                     | 焦散阴影模糊半径（`SHADOW_CAUSTIC_DOWN`，alpha 45） | 24.dp           |
 | backdropSpec(isDark) | MaterialBackdropSpec | COUI 17 底栏材质 `TYPE_FRAMEWORK_BOTTOM_BAR`，与 `FloatingNavigationBarDefaults.backdropSpec` 相同 | 25px 模糊 + 两层混合色 |
-| OutSidePadding | PaddingValues           | 默认外部内边距 | PaddingValues(12.dp, 8.dp)              |
+| OutSidePadding | PaddingValues           | 内容胶囊的默认外部内边距（两侧 16dp；44dp 胶囊连同上下共 76dp） | PaddingValues(horizontal = 16.dp, vertical = 16.dp) |
+| MinHeight      | Dp                      | 条目工具栏的最小高度 | 76.dp                             |
+| HorizontalOutSidePaddingCompact / Medium / Expanded | Dp | 宽度小于 600dp / 小于 840dp / 不小于 840dp 时的两侧边距 | 16.dp / 24.dp / 40.dp |
+| horizontalOutSidePadding(width) | Dp     | 按工具栏宽度取两侧边距 | -                               |
+| MinGroupSpacing | Dp                     | 分组间最小间距 | 16.dp                                   |
+| CapsuleHeight  | Dp                      | 胶囊高度       | 44.dp                                   |
+| CapsuleInnerPadding | Dp                 | 多个条目时首尾条目外侧的胶囊宽度 | 6.dp                  |
+| ItemSpacing    | Dp                      | 条目间距       | 4.dp                                    |
+| ItemMinWidth / ItemHeight | Dp           | 图标项尺寸     | 44.dp / 40.dp                           |
+| TitleMinWidth / TitleMaxWidth | Dp       | 文字项宽度范围 | 52.dp / 200.dp                          |
+| TitleFontSize  | TextUnit                | 标题字号       | 16.sp                                   |
+| RedDotDiameter / RedDotOffset | Dp       | 红点直径；圆心距右上角的距离 | 6.dp / 12.dp              |
+| MaxVisibleItems | Int                    | 出现溢出项前每组最多显示的条目数 | 6                     |
+| itemColors()   | FloatingToolbarItemColors | `?couiColorLabelPrimary` / `?couiColorLabelTertiary` | -              |
 
 ### ToolbarPosition (用于 Scaffold)
 
@@ -74,7 +139,7 @@ Scaffold(
 
 ```kotlin
 FloatingToolbar(
-    color = COUITheme.colorScheme.primaryContainer,
+    color = COUITheme.colorScheme.containerTheme,
     cornerRadius = 16.dp,
     outSidePadding = PaddingValues(24.dp),
     showDivider = false
@@ -84,10 +149,10 @@ FloatingToolbar(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) { // 或 Column
         IconButton(onClick = { /* 操作 1 */ }) {
-            Icon(COUIIcons.Edit, contentDescription = "编辑", tint = COUITheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Edit, contentDescription = "编辑", tint = COUITheme.colorScheme.labelOnColor)
         }
         IconButton(onClick = { /* 操作 2 */ }) {
-            Icon(COUIIcons.Delete, contentDescription = "删除", tint = COUITheme.colorScheme.onPrimaryContainer)
+            Icon(COUIIcons.Delete, contentDescription = "删除", tint = COUITheme.colorScheme.labelOnColor)
         }
     }
 }

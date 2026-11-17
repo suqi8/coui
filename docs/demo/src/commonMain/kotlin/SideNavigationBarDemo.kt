@@ -77,7 +77,7 @@ private fun SideNavigationBarDemoContent(state: SideNavigationBarState) {
                 Text(
                     text = SideNavigationPages[selected],
                     modifier = Modifier.padding(start = 8.dp),
-                    style = COUITheme.textStyles.title3,
+                    style = COUITheme.textStyles.headlineM,
                 )
             }
             Text(
@@ -86,8 +86,8 @@ private fun SideNavigationBarDemoContent(state: SideNavigationBarState) {
                     SideNavigationBarMode.Overlay -> "Overlay: the drawer slides over the content; tap the mask to close it."
                 },
                 modifier = Modifier.padding(start = 4.dp, top = 12.dp),
-                style = COUITheme.textStyles.body2,
-                color = COUITheme.colorScheme.onSurfaceSecondary,
+                style = COUITheme.textStyles.bodyM,
+                color = COUITheme.colorScheme.labelSecondary,
             )
         }
     }

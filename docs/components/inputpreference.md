@@ -33,6 +33,9 @@ Card {
 ```
 
 Without a title the field is padded 13dp above and below; below a title it is padded 0dp / 11dp.
+The field has no minimum height (Widget.COUI.Input), its hint uses couiColorHintNeutral, and it
+shows a clear button while focused and not empty, as COUIInputPreference does by default
+(`quickDelete` inherited from Widget.COUI.Input); pass `showClearButton = false` to hide it.
 
 ## Component States
 
@@ -78,11 +81,11 @@ InputPreference(
 | readOnly             | Boolean               | Whether the field is read-only                                     | false                                            | No       |
 | justShowFocusLine    | Boolean               | Show only the focused underline (no resting line)                  | true                                             | No       |
 | maxCount             | Int?                  | Maximum characters; shows a `count/max` counter                    | null                                             | No       |
-| showClearButton      | Boolean               | Show the clear button while focused and not empty                  | false                                            | No       |
+| showClearButton      | Boolean               | Show the clear button while focused and not empty                  | true                                             | No       |
 | showPasswordToggle   | Boolean               | Show the password eye toggle                                       | false                                            | No       |
 | errorMessage         | String                | Error text below the field; empty hides it                         | ""                                               | No       |
 | colors               | InputPreferenceColors | Title / error colors                                               | InputPreferenceDefaults.inputPreferenceColors()  | No       |
-| textFieldColors      | TextFieldColors       | Field colors                                                       | TextFieldDefaults.textFieldColors()              | No       |
+| textFieldColors      | TextFieldColors       | Field colors                                                       | InputViewDefaults.textFieldColors()              | No       |
 | textStyle            | TextStyle             | Input text style                                                   | InputViewDefaults.textStyle()                    | No       |
 | keyboardOptions      | KeyboardOptions       | Keyboard options                                                   | KeyboardOptions.Default                          | No       |
 | keyboardActions      | KeyboardActions       | Keyboard actions                                                   | KeyboardActions.Default                          | No       |
@@ -108,6 +111,6 @@ InputPreference(
 
 | Parameter          | Type  | Default                                   |
 | ------------------ | ----- | ----------------------------------------- |
-| titleColor         | Color | COUITheme.colorScheme.onSurface           |
-| disabledTitleColor | Color | COUITheme.colorScheme.disabledOnSurface   |
+| titleColor         | Color | COUITheme.colorScheme.labelPrimary           |
+| disabledTitleColor | Color | COUITheme.colorScheme.disabledNeutral   |
 | errorColor         | Color | COUITheme.colorScheme.error               |

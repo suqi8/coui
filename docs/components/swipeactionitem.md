@@ -12,6 +12,7 @@
 import io.github.suqi8.coui.kmp.basic.SwipeAction
 import io.github.suqi8.coui.kmp.basic.SwipeActionItem
 import io.github.suqi8.coui.kmp.basic.SwipeActionItemDefaults
+import io.github.suqi8.coui.kmp.basic.SwipeActionMenuStyle
 import io.github.suqi8.coui.kmp.basic.rememberSwipeActionItemState
 ```
 
@@ -30,7 +31,26 @@ SwipeActionItem(
     onDelete = { rows.remove(row) },
 ) {
     BasicComponent(
-        modifier = Modifier.background(COUITheme.colorScheme.surfaceContainer),
+        modifier = Modifier.background(COUITheme.colorScheme.cardBackground),
+        title = row,
+    )
+}
+```
+
+## Round Rect Style
+
+`menuStyle = SwipeActionMenuStyle.RoundRect` switches to `COUISlideView.setMenuItemStyle(MENU_ITEM_ROUND_RECT_STYLE)`: every action is its own full-height rounded rectangle (radius `couiRoundCornerM` 12dp, at most half of the row height), 4dp apart, 8dp after the content edge and 12dp before the end of the row. The menu stays packed while over-sliding instead of spreading.
+
+```kotlin
+SwipeActionItem(
+    actions = listOf(SwipeAction(label = "Pin", color = COUITheme.colorScheme.primary)),
+    onActionClick = { scope.launch { state.close() } },
+    state = state,
+    onDelete = { rows.remove(row) },
+    menuStyle = SwipeActionMenuStyle.RoundRect,
+) {
+    BasicComponent(
+        modifier = Modifier.background(COUITheme.colorScheme.cardBackground),
         title = row,
     )
 }
@@ -64,6 +84,7 @@ scope.launch { state.close() }
 | onDelete                 | (() -> Unit)?           | Adds the delete action; called after the delete animation | null                                            | No       |
 | fastDeleteEnabled        | Boolean                 | Whether over-sliding deletes (needs `onDelete`)          | false                                            | No       |
 | deleteContentDescription | String?                 | Accessibility label of the delete action                 | null                                             | No       |
+| menuStyle                | SwipeActionMenuStyle    | How the actions are drawn                                | SwipeActionMenuStyle.Rect                        | No       |
 | actionMinWidth           | Dp                      | Minimum width of each action                             | SwipeActionItemDefaults.ActionMinWidth           | No       |
 | colors                   | SwipeActionItemColors   | Menu colors                                              | SwipeActionItemDefaults.swipeActionItemColors()  | No       |
 | textStyle                | TextStyle               | Action label style                                       | SwipeActionItemDefaults.textStyle()              | No       |
@@ -78,6 +99,13 @@ scope.launch { state.close() }
 | color              | Color         | Own fill; `Unspecified` keeps `colors.containerColor`         | Color.Unspecified |
 | contentDescription | String?       | Accessibility label                                           | label             |
 
+### SwipeActionMenuStyle
+
+| Value     | COUI Source                  | Description                                                                 |
+| --------- | ---------------------------- | --------------------------------------------------------------------------- |
+| Rect      | MENU_ITEM_NORMAL_RECT_STYLE  | One fill from the content edge to the end; actions spread when over-sliding |
+| RoundRect | MENU_ITEM_ROUND_RECT_STYLE   | One rounded rectangle per action, with gaps and margins; no spreading       |
+
 ### SwipeActionItemState
 
 | Member         | Type             | Description                                                      |
@@ -91,16 +119,20 @@ scope.launch { state.close() }
 
 ### SwipeActionItemDefaults
 
-| Constant            | Type | Default Value | COUI Source                          |
-| ------------------- | ---- | ------------- | ------------------------------------ |
-| ActionMinWidth      | Dp   | 80.dp         | coui_slideview_menuitem_width        |
-| ActionTextPadding   | Dp   | 12.dp         | coui_slide_view_text_padding         |
-| FastDeleteOverSlide | Dp   | 48.dp         | coui_slideview_over_slide_delete     |
-| FastDeleteQuickSlop | Dp   | 30.dp         | coui_slideview_quick_delete          |
+| Constant              | Type | Default Value | COUI Source                            |
+| --------------------- | ---- | ------------- | -------------------------------------- |
+| ActionMinWidth        | Dp   | 80.dp         | coui_slideview_menuitem_width          |
+| ActionTextPadding     | Dp   | 12.dp         | coui_slide_view_text_padding           |
+| FastDeleteOverSlide   | Dp   | 48.dp         | coui_slideview_over_slide_delete       |
+| FastDeleteQuickSlop   | Dp   | 30.dp         | coui_slideview_quick_delete            |
+| RoundRectCornerRadius | Dp   | 12.dp         | couiRoundCornerM (coui_round_corner_m) |
+| RoundRectActionGap    | Dp   | 4.dp          | coui_slide_view_menuitem_gap_size      |
+| RoundRectStartMargin  | Dp   | 8.dp          | coui_slide_view_menuitem_start_margin  |
+| RoundRectEndMargin    | Dp   | 12.dp         | coui_slide_view_menuitem_end_margin    |
 
 | Method                  | Type                  | Description                                        |
 | ----------------------- | --------------------- | -------------------------------------------------- |
-| textStyle()             | TextStyle             | body1 at 15sp (coui_slide_view_text_size)          |
+| textStyle()             | TextStyle             | bodyXL at 15sp(coui_slide_view_text_size)          |
 | swipeActionItemColors() | SwipeActionItemColors | Creates the menu colors                            |
 
 ### `swipeActionItemColors()` factory
@@ -113,8 +145,9 @@ scope.launch { state.close() }
 ## Behavior
 
 - The row takes a drag once it moves past the touch slop horizontally while moving more than twice as far horizontally as vertically (`COUISlideView.onInterceptTouchEvent`); a mostly vertical drag keeps scrolling the parent list. A closed row leaves drags towards the end edge to its parent, so it works inside a horizontal pager.
-- Within the menu the content follows the finger 1:1. Past it the drag is damped by `delta x (1 - min(over / (width - menu), 1)) x 2 / 5` and the actions spread apart, action `k` (counted from the start) moving by `k x over / (count + 1)`.
+- Within the menu the content follows the finger 1:1. Past it the drag is damped by `delta x (1 - min(over / (width - menu), 1)) x 2 / 5` and, in the rect style, the actions spread apart, action `k` (counted from the start) moving by `k x over / (count + 1)`.
 - On release, a fling faster than 1000 px/s opens or closes the menu; otherwise it opens when more than half of the menu shows. It settles on a damping 1 / stiffness 200 spring. With fast delete only the half-menu rule applies.
+- In the round rect style the menu width also counts the gaps and both margins, so the half-menu, damping and fast delete thresholds all use it. Over-sliding leaves the actions packed against the content. When the delete runs and no action has its own color, a single rounded fill grows from the content edge to the end margin; with own colors each action keeps its own rounded rectangle.
 - A label wider than 80dp widens its action to `text + 2 x 12dp`.
 - Tapping the content while the menu is open closes it. Clicking a non-delete action keeps the menu open, like COUI.
 - In RTL layouts the menu is at the left edge and the row slides to the right.

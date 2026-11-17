@@ -76,7 +76,7 @@ PageIndicator(
 
 | 方法     | 说明                                                                                           |
 | -------- | ---------------------------------------------------------------------------------------------- |
-| colors() | 圆点 `?couiColorHintNeutral`（`onSurfaceContainerHigh`），轨迹 `?couiColorLabelPrimary`（`onSurfaceContainer`） |
+| colors() | 圆点 `?couiColorHintNeutral`（`labelTertiary`），轨迹 `?couiColorLabelPrimary`（`labelPrimary`） |
 
 ### PageIndicatorColors
 

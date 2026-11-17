@@ -137,7 +137,7 @@ DropdownItem(
 
 ### 子菜单行为
 
-子菜单遵循 COUI 17。紧凑窗口（宽度小于 600dp）下子菜单覆盖在主菜单上：宽度与主菜单一致，首行是父项的副本（中粗标题、着色指示器），起始时正好盖在父项所在行上，随后上移到该行上方 14dp，同时轮廓从该行逐渐展开；主菜单缩小到 0.9、上移以保留 12dp 可见，并把行的不透明度降到 30%。较宽窗口下主菜单缩小到 0.9、行不透明度 70%，子菜单在其旁边缩放出现并重叠 14dp。点击主菜单、点击副本标题行、点击弹窗外部或返回会收起子菜单；在主菜单上拖动 500ms 后也会收起；长按子菜单行 650ms 展开后，同一根手指可以直接滑入子菜单并在某一行上松手选中；若手指留在主菜单上，拖动会继续在主菜单中选择（与 COUI 不同：COUI 在子菜单打开后不再响应主菜单），在被长按的那一行上直接松手则不选中任何项；紧凑窗口下子菜单的阴影随展开进度淡入；处于主菜单层级时，返回与点击外部通过 `onDismissRequest` 关闭弹窗。预测式返回会预览收起或关闭过程，取消时弹窗恢复。
+子菜单遵循 COUI 17。紧凑窗口（宽度小于 600dp）下子菜单覆盖在主菜单上：宽度与主菜单一致，首行是父项的副本（中粗标题、着色指示器），起始时正好盖在父项所在行上，随后上移到该行上方 14dp，同时轮廓从该行逐渐展开；主菜单缩小到 0.9、上移以保留 12dp 可见，并把行的不透明度降到 30%。较宽窗口下主菜单缩小到 0.9、行不透明度 70%，子菜单在其旁边缩放出现并重叠 14dp。点击主菜单、点击副本标题行、点击弹窗外部或返回会收起子菜单；在主菜单上拖动 500ms 后也会收起；长按子菜单行 650ms 展开后，同一根手指可以直接滑入子菜单并在某一行上松手选中；若手指留在主菜单上，拖动会继续在主菜单中选择（与 COUI 不同：COUI 在子菜单打开后不再响应主菜单），在被长按的那一行上直接松手则不选中任何项；紧凑窗口下子菜单的阴影随展开进度淡入，收起时副本标题行恢复普通字重与指示器颜色，其展开带收拢到主菜单正在缩放中的父项行的当前位置；子菜单一开始收起就不再响应触摸；长按后滑入子菜单的手指同样会点亮子菜单的光斑并带动其面板形变，与直接触摸一致；处于主菜单层级时，返回与点击外部通过 `onDismissRequest` 关闭弹窗。预测式返回会预览收起或关闭过程，取消时弹窗恢复。
 
 ## 模糊背景
 
@@ -165,6 +165,9 @@ Box(Modifier.layerBackdrop(backdrop)) {
 即 COUI 的非模糊背景。对话框与底部弹窗会为其内容关闭该提供者。传入 `materialBlur = false`
 可让单个弹窗不模糊。
 
+阴影描边与跟手光斑（`materialEffect`）在不透明表面上同样绘制，参数不变。COUI 只在弹窗模糊后才绘制它们；
+本库保留它们，使无法模糊的菜单也有光效。二者都是以 source-over 叠在表面上的白光，与 ColorOS 17 的实际观感一致：COUI 的 OVERLAY 光斑落在面板自身透明的画布上、位于窗口模糊之上。它们在模糊与深色表面上可见，在浅色模式的纯白填充上则看不出。光斑在手指按下处亮起，随手指在各行之间移动（包括拖动选择），松手时一边扩散一边熄灭。
+
 ## 属性
 
 ### OverlayCascadingListPopup
@@ -186,8 +189,8 @@ Box(Modifier.layerBackdrop(backdrop)) {
 | collapseOnSelection   | Boolean                     | 为 true 时，选中任何叶子项后即关闭弹窗                                                                         | true                                       |
 | backgroundModifier    | Modifier                    | 作用于弹窗表面内部、位于行之下，叠加在默认材质模糊之上 | Modifier |
 | backgroundColor       | Color                       | 弹窗不模糊时的表面填充色（couiColorBackgroundTop，即 COUI 的非模糊背景） | ListPopupDefaults.backgroundColor() |
-| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | true |
-| materialEffect        | Boolean                     | 弹窗模糊时绘制阴影描边与跟手光斑 | true |
+| materialBlur          | Boolean                     | 使用 `LocalPopupMaterialBlur` 提供的 COUI 17 弹窗材质模糊弹窗背后的内容；false 时保持不透明的 `backgroundColor` | `LocalCOUIMaterialEffectEnabled.current` |
+| materialEffect        | Boolean                     | 绘制阴影描边与跟手光斑（模糊与否均绘制） | `LocalCOUIMaterialEffectEnabled.current` |
 
 ### DropdownEntry
 

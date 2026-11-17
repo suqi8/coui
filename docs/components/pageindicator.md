@@ -76,7 +76,7 @@ PageIndicator(
 
 | Method   | Description                                                                                       |
 | -------- | ------------------------------------------------------------------------------------------------- |
-| colors() | Dots `?couiColorHintNeutral` (`onSurfaceContainerHigh`), trace `?couiColorLabelPrimary` (`onSurfaceContainer`) |
+| colors() | Dots `?couiColorHintNeutral` (`labelTertiary`), trace `?couiColorLabelPrimary` (`labelPrimary`) |
 
 ### PageIndicatorColors
 
