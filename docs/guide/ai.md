@@ -4,10 +4,44 @@ COUI ships an agent skill, `coui-app`, that teaches AI coding assistants to buil
 
 ## Install the skill
 
-The skill is a folder in this repository: `.claude/skills/coui-app/`.
+The skill is a folder in the COUI repository: `.claude/skills/coui-app/`. Copy the whole folder; the files reference each other by relative path.
 
-- **Claude Code**: copy the whole folder into your project's `.claude/skills/` (or `~/.claude/skills/` for all projects). It triggers on its own when the code imports `io.github.suqi8.coui.kmp` or when you ask for a ColorOS-style screen.
-- **Other assistants** (Cursor, Copilot, Codex, …): point the assistant's rules file at `SKILL.md` and its `references/` folder, or paste the rules below. The docs site also serves a short plain-text index, `llms.txt`, next to this guide (`/coui/llms.txt`).
+### Claude Code
+
+Copy it into your project's `.claude/skills/` (or `~/.claude/skills/` to use it in every project):
+
+```bash
+mkdir -p .claude/skills
+cp -r <path-to-COUI>/.claude/skills/coui-app .claude/skills/
+```
+
+```powershell
+New-Item -ItemType Directory -Force .claude\skills
+Copy-Item -Recurse <path-to-COUI>\.claude\skills\coui-app .claude\skills\
+```
+
+Restart the session, then check that `coui-app` appears in the skill list (`/skills`). It loads on its own when the code imports `io.github.suqi8.coui.kmp` or when you ask for a ColorOS-style screen; you can also ask for it by name ("use the coui-app skill").
+
+### Other assistants
+
+Copy the same folder anywhere in your project and reference it from the assistant's rules file:
+
+| Assistant | Rules file |
+| --- | --- |
+| Cursor | `.cursor/rules/coui.mdc` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Codex and tools that read `AGENTS.md` | `AGENTS.md` |
+
+```md
+When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
+.claude/skills/coui-app/SKILL.md and the files in its references/ folder.
+```
+
+If the assistant cannot read files, paste the rules below. The docs site also serves a short plain-text index, `llms.txt` (`/coui/llms.txt`).
+
+### Updating
+
+The skill follows the library version it ships with. When you upgrade COUI, copy the folder again.
 
 | File | Contents |
 | --- | --- |

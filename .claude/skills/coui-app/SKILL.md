@@ -134,7 +134,7 @@ Category titles: pages with several topics put a `PreferenceCategory` above each
 
 Top bars: collapsing large title on narrow windows, small pinned bar on wide windows (`wide = isWideWindow()` — a helper in `CouiPage.kt`: at least 840dp wide, or 600dp wide in landscape). Pushed pages pass `onBack` to show the back button.
 
-Home / top-level page (ColorOS Settings home): `topBarStyle = CouiTopBarStyle.SettingsHome` (116dp bar, 40sp title, 24dp side and 18dp bottom margins; collapses into the pinned small title) with `topBarBottomContent = { TopAppBarSearchSlot(inputField = { InputField(…) }) }`. Tapping the capsule opens a separate search page with an expanded `SearchBar` + a localized `CancelButton`, like ColorOS.
+Home / top-level page (ColorOS Settings home): `topBarStyle = CouiTopBarStyle.SettingsHome` (116dp bar, 40sp title, 24dp side and 18dp bottom margins; collapses into the pinned small title) with `topBarBottomContent = { TopAppBarSearchSlot(inputField = { InputField(…) }) }`. Tapping the capsule searches in place: through `CouiPageScaffold(topBarContainer = …)` swap the top bar for a pinned row with an expanded `SearchBar` (focused) + a localized `CancelButton`, show the results in the same list, and let system back leave the search (`NavigationBackHandler` from `androidx.navigationevent`). Do not navigate to a separate search page.
 
 Icons in rows go in `startAction` (`Modifier.size(24.dp)`, tinted `colorScheme.primary` for entry rows) — no extra padding, the row already spaces it.
 

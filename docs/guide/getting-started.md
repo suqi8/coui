@@ -168,6 +168,10 @@ Components such as `OverlayDialog`, `OverlayDropdownPreference`, `OverlaySpinner
 all implemented based on this and therefore need to be wrapped by this component.
 :::
 
+## Writing with AI
+
+COUI ships an agent skill, `coui-app` (`.claude/skills/coui-app/` in the repository), that lets Claude Code, Cursor, Copilot and others write screens the way ColorOS 17 does. See [Writing with AI](./ai) for installation.
+
 ## API Documentation
 
 - View the [API Documentation](/coui/dokka/index.html){target="\_blank"},

@@ -284,6 +284,7 @@ fun CouiPageScaffold(
     wide: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
     topBarBottomContent: @Composable () -> Unit = {},
+    topBarContainer: @Composable (topBar: @Composable () -> Unit) -> Unit = { topBar -> topBar() },
     snackbarHostState: SnackbarHostState? = null,
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -299,17 +300,20 @@ fun CouiPageScaffold(
     Scaffold(
         modifier = modifier,
         topBar = {
-            CouiPageTopBar(
-                title = title,
-                scrollBehavior = scrollBehavior,
-                backdrop = backdrop,
-                subtitle = subtitle,
-                onBack = onBack,
-                style = topBarStyle,
-                wide = wide,
-                actions = actions,
-                bottomContent = topBarBottomContent,
-            )
+            // topBarContainer can swap the bar for something else, e.g. an in-place search row.
+            topBarContainer {
+                CouiPageTopBar(
+                    title = title,
+                    scrollBehavior = scrollBehavior,
+                    backdrop = backdrop,
+                    subtitle = subtitle,
+                    onBack = onBack,
+                    style = topBarStyle,
+                    wide = wide,
+                    actions = actions,
+                    bottomContent = topBarBottomContent,
+                )
+            }
         },
         // The slots sit outside the page recording, so their material can blur the page.
         bottomBar = {

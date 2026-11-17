@@ -167,6 +167,10 @@ Scaffold 组件为跨平台提供了一个合适的弹出窗口的容器。`Over
 `OverlayListPopup` 等组件都基于此实现弹出窗口，因此都需要被该组件包裹。
 :::
 
+## 用 AI 编写
+
+COUI 附带 AI 编程助手用的技能 `coui-app`（仓库内 `.claude/skills/coui-app/`），能让 Claude Code、Cursor、Copilot 等按 ColorOS 17 的方式写页面。安装方法见[用 AI 编写](./ai)。
+
 ## API 文档
 
 - 查看 [API 文档](/coui/dokka/index.html){target="_blank"}，此文档使用 Dokka 生成，包含了所有 API

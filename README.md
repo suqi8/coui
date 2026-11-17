@@ -96,6 +96,28 @@ fun AppTheme(
 }
 ```
 
+### Writing with AI
+
+COUI ships an agent skill, `coui-app` ([`.claude/skills/coui-app`](.claude/skills/coui-app)), that teaches AI coding
+assistants to build screens the way ColorOS 17 does: page scaffold, preference cards, material blur, bilingual strings.
+
+- **Claude Code**: copy the folder into your project (or `~/.claude/skills/` for every project). It loads on its own
+  when your code uses `io.github.suqi8.coui.kmp` or you ask for a ColorOS-style screen.
+
+  ```bash
+  mkdir -p .claude/skills && cp -r <path-to-COUI>/.claude/skills/coui-app .claude/skills/
+  ```
+
+  ```powershell
+  New-Item -ItemType Directory -Force .claude\skills; Copy-Item -Recurse <path-to-COUI>\.claude\skills\coui-app .claude\skills\
+  ```
+
+- **Cursor / Copilot / Codex and others**: copy the same folder anywhere in your project and reference it from the
+  tool's rules file (`.cursor/rules/coui.mdc`, `.github/copilot-instructions.md`, `AGENTS.md`), e.g.
+  "When writing UI with COUI, follow `.claude/skills/coui-app/SKILL.md` and its `references/`."
+
+More in the [Writing with AI](docs/guide/ai.md) guide.
+
 ### Credits
 
 COUI is a fork of [Miuix](https://github.com/compose-miuix-ui/miuix) by YuKongA and the

@@ -4,10 +4,44 @@ COUI 附带一个 AI 编程助手用的技能 `coui-app`，教它按 ColorOS 17 
 
 ## 安装技能
 
-技能是本仓库里的一个目录：`.claude/skills/coui-app/`。
+技能是 COUI 仓库里的一个目录：`.claude/skills/coui-app/`。请复制整个目录，里面的文件通过相对路径互相引用。
 
-- **Claude Code**：把整个目录复制到你项目的 `.claude/skills/`（想让所有项目都能用就放到 `~/.claude/skills/`）。代码里引用了 `io.github.suqi8.coui.kmp`，或者你要求做 ColorOS 风格页面时，它会自动生效。
-- **其他助手**（Cursor、Copilot、Codex 等）：在它们的规则文件里引用 `SKILL.md` 和 `references/` 目录，或者直接粘贴下面的规则。文档站点还提供了一份纯文本简短索引 `llms.txt`（`/coui/llms.txt`）。
+### Claude Code
+
+复制到你项目的 `.claude/skills/`（想让所有项目都能用就放到 `~/.claude/skills/`）：
+
+```bash
+mkdir -p .claude/skills
+cp -r <COUI 仓库路径>/.claude/skills/coui-app .claude/skills/
+```
+
+```powershell
+New-Item -ItemType Directory -Force .claude\skills
+Copy-Item -Recurse <COUI 仓库路径>\.claude\skills\coui-app .claude\skills\
+```
+
+重新开一个会话，确认技能列表（`/skills`）里出现了 `coui-app`。代码里引用了 `io.github.suqi8.coui.kmp`，或者你要求做 ColorOS 风格页面时，它会自动生效；也可以直接点名「用 coui-app 技能」。
+
+### 其他助手
+
+把同一个目录复制到项目里任意位置，再在助手的规则文件里引用它：
+
+| 助手 | 规则文件 |
+| --- | --- |
+| Cursor | `.cursor/rules/coui.mdc` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Codex 等读取 `AGENTS.md` 的工具 | `AGENTS.md` |
+
+```md
+When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
+.claude/skills/coui-app/SKILL.md and the files in its references/ folder.
+```
+
+助手读不了文件时，就粘贴下面的规则摘要。文档站点还提供了一份纯文本简短索引 `llms.txt`（`/coui/llms.txt`）。
+
+### 更新
+
+技能跟随它所在的库版本。升级 COUI 后，请重新复制一次这个目录。
 
 | 文件 | 内容 |
 | --- | --- |
