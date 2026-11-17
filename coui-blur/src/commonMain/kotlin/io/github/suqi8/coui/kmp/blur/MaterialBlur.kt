@@ -7,6 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import io.github.suqi8.coui.kmp.blur.internal.BLUR_RADIUS_TO_SIGMA
+import kotlin.math.ceil
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * How [MaterialBlurStyle.blendColor] is blended over the blurred backdrop, after the
@@ -84,15 +88,45 @@ object MaterialBlurDefaults {
     val PopupBlurRadiusPx: Float = 160f
 
     /**
-     * The popup menu blur (`RoundFrameLayout.applyBlurColorParams`, SDR branch): radius
-     * [PopupBlurRadiusPx], mode 4 ([MaterialBlendMode.GlowOverlay]) in both schemes, mix colors
-     * `coui_popup_list_mix_blur_light` `#99CDCDCD` / `_dark` `#99262626` and blend colors
-     * `coui_popup_list_blend_blur_light` `#BFEEEEEE` / `_dark` `#99262626`. The HDR branch
-     * (`getHdrSdrRatio() > 1`) is not reproduced.
+     * The popup menu blur (`RoundFrameLayout.applyBlurColorParams`): radius [PopupBlurRadiusPx].
+     * - SDR branch: mode 4 ([MaterialBlendMode.GlowOverlay]) in both schemes, mix colors
+     *   `coui_popup_list_mix_blur_light` `#99CDCDCD` / `_dark` `#99262626` and blend colors
+     *   `coui_popup_list_blend_blur_light` `#BFEEEEEE` / `_dark` `#99262626`.
+     * - HDR branch (`RoundFrameLayout.useHdrBlurParams`, `Display.getHdrSdrRatio() > 1`): mode 2
+     *   (overlay) in the dark scheme and 3 (color dodge) in the light one, mix colors
+     *   `coui_popup_list_mix_blur_light_hdr` `#DC7A7A7A` / `_dark_hdr` `#50262626` and blend colors
+     *   `coui_popup_list_blend_blur_light_hdr` `#C8868686` / `_dark_hdr` `#990F0F0F`.
      *
      * @param isDark Whether the dark scheme is active.
+     * @param hdr Whether the display currently shows HDR content (COUI reads the display's
+     *   HDR/SDR ratio); the caller decides, since Compose has no common HDR signal.
      */
-    fun popup(isDark: Boolean): MaterialBlurStyle = if (isDark) PopupDark else PopupLight
+    fun popup(isDark: Boolean, hdr: Boolean = false): MaterialBlurStyle = when {
+        hdr -> if (isDark) PopupHdrDark else PopupHdrLight
+        else -> if (isDark) PopupDark else PopupLight
+    }
+
+    /**
+     * The dither strength [couiMaterialBlur] applies by default. The ColorOS 17 Kawase material
+     * blur ends with a `KawaseBlur_Dither` pass (`libhwui.so` shader: `ditherRange = float2(-0.005,
+     * 0.005)`, `originColor.rgb += mixValue * ditherAlpha`), i.e. at most ±0.005 per channel, which
+     * this coefficient reproduces through [noiseDither]. `ditherAlpha` is taken as 1.
+     */
+    val NoiseCoefficient: Float = 0.005f
+
+    private val PopupHdrLight = MaterialBlurStyle(
+        blurRadiusPx = PopupBlurRadiusPx,
+        mixColor = Color(0xDC7A7A7A),
+        blendColor = Color(0xC8868686),
+        blendMode = MaterialBlendMode.ColorDodge,
+    )
+
+    private val PopupHdrDark = MaterialBlurStyle(
+        blurRadiusPx = PopupBlurRadiusPx,
+        mixColor = Color(0x50262626),
+        blendColor = Color(0x990F0F0F),
+        blendMode = MaterialBlendMode.Overlay,
+    )
 
     private val PopupLight = MaterialBlurStyle(
         blurRadiusPx = PopupBlurRadiusPx,
@@ -138,14 +172,52 @@ object MaterialBlurDefaults {
 }
 
 /**
+ * Converts a COUI raw-pixel material (window background) blur radius into the radius [blur] takes,
+ * so both produce the same spread.
+ *
+ * The ColorOS 17 renderer blurs window backgrounds with a Kawase filter, not a Gaussian:
+ * `OplusKawaseBlurImageFilter` in `libhwui.so` keeps the AOSP `KawaseBlurFilter` pass schedule (its
+ * `numberOfPasses` / `radiusByPasses` symbols) and its 5-tap pass shader (`c` plus four diagonal
+ * taps at `±in_blurOffset`, `* 0.2`). With `tmp = r / 2`, `passes = min(4, ceil(tmp))` and
+ * `step = tmp / passes`, the pass offsets are `step, 1·step, 2·step, …, (passes − 1)·step` in
+ * full-resolution pixels, and each pass adds a per-axis variance of `0.8 · offset²`. The chain thus
+ * spreads like a Gaussian of `sigma² = 0.8 · step² · (1 + Σ i²)`, about `0.433 · r` from 8px up
+ * (the resampling filters add only a few px² and are ignored). The result is that sigma divided by
+ * the `0.45` radius-to-sigma factor of [blur]. A radius of 0 stays 0.
+ *
+ * @param radiusPx The COUI radius in raw pixels, e.g. [MaterialBlurStyle.blurRadiusPx].
+ */
+fun couiMaterialBlurRadius(radiusPx: Float): Float {
+    if (radiusPx <= 0f) return 0f
+    val tmpRadius = radiusPx / 2f
+    val passes = ceil(tmpRadius).toInt().coerceIn(1, KAWASE_MAX_PASSES)
+    val step = tmpRadius / passes
+    // Offsets: step (first pass), then i * step for i in 1 until passes.
+    var offsetSquares = 1f
+    for (i in 1 until passes) offsetSquares += (i * i).toFloat()
+    val sigma = step * sqrt(KAWASE_PASS_VARIANCE * offsetSquares)
+    return sigma / BLUR_RADIUS_TO_SIGMA
+}
+
+/** AOSP `BlurFilter::kMaxPasses`, the Kawase pass cap. */
+private const val KAWASE_MAX_PASSES = 4
+
+/** Per-axis variance of one 5-tap Kawase pass in units of its offset²: four of five taps at ±d. */
+private const val KAWASE_PASS_VARIANCE = 0.8f
+
+/**
  * Paints the COUI 17 material blur behind this node: the [backdrop] blurred by
- * [MaterialBlurStyle.blurRadiusPx], then the renderer's material blend applied to the result.
+ * [MaterialBlurStyle.blurRadiusPx] (converted with [couiMaterialBlurRadius] to match the native
+ * Kawase filter), then the renderer's material blend applied to the result, then a light dither.
  *
  * The blend follows the material shader in the ColorOS 17 `libhwui.so` (`.rodata`): the mix color
- * is lerped in first (`inColor.rgb = mix(inColor.rgb, uMixColor.rgb, uMixColor.w)`), then the blend
- * color is blended with `overlay(s, d)` or `colorDodge(s, d) = d / (1 - s)` and lerped in by its
- * alpha (`inColor.rgb = mix(inColor.rgb, blendColor, uBlendColor.w)`). The native colour dodge is
- * not clamped before that last lerp, which this port keeps.
+ * is lerped in first (`inColor.rgb = mix(inColor.rgb, uMixColor.rgb, uMixColor.w * ratio)`, or the
+ * luminosity of the mix color for the glow modes), then the blend color is blended with
+ * `overlay(s, d)` or `colorDodge(s, d) = d / (1 - s)` and lerped in by its alpha
+ * (`inColor.rgb = mix(inColor.rgb, blendColor.rgb, uBlendColor.w * ratio)`). A uniform window blur
+ * has `ratio = 1`. The native colour dodge is not clamped before that last lerp, which this port
+ * keeps. The native shader runs on the opaque window content; this port unpremultiplies first so a
+ * translucent backdrop pixel gets the same result scaled by its alpha.
  *
  * Draws nothing where runtime shaders are unavailable; callers should then keep the opaque
  * `?couiColorSurface` fill COUI falls back to (`COUIAlertDialogOverlayHelper.BLUR_DEGRADED`).
@@ -155,8 +227,11 @@ object MaterialBlurDefaults {
  * @param shape The shape the blur is clipped to. A surface that already clips its content (such as
  *   the coui-ui dialog and bottom sheet `backgroundModifier` slot) can keep [RectangleShape].
  * @param fraction Scales the blur radius and both color alphas, as
- *   `COUIBottomSheetDialog.updateBlurAlphaParams` does while the panel mask fades. 1 is full strength.
+ *   `COUIBottomSheetDialog.updateBlurAlphaParams` does while the panel mask fades (the scaled radius
+ *   is rounded to whole pixels, `Math.round(mBlurRadius * f)`). 1 is full strength.
  * @param enabled Whether the blur is drawn.
+ * @param noiseCoefficient The dither strength, see [MaterialBlurDefaults.NoiseCoefficient]. 0
+ *   disables the dither.
  */
 fun Modifier.couiMaterialBlur(
     backdrop: Backdrop,
@@ -164,13 +239,19 @@ fun Modifier.couiMaterialBlur(
     shape: Shape = RectangleShape,
     fraction: Float = 1f,
     enabled: Boolean = true,
+    noiseCoefficient: Float = MaterialBlurDefaults.NoiseCoefficient,
 ): Modifier = this.drawBackdrop(
     backdrop = backdrop,
     shape = { shape },
     effects = {
         val strength = fraction.coerceIn(0f, 1f)
-        val radiusPx = (style.blurRadiusPx * strength).coerceIn(0f, BlurDefaults.MaxBlurRadius * density)
-        if (radiusPx > 0f) blur(radiusPx, radiusPx)
+        val couiRadiusPx = (style.blurRadiusPx * strength).roundToInt().toFloat()
+        val radiusPx = couiMaterialBlurRadius(couiRadiusPx).coerceIn(0f, BlurDefaults.MaxBlurRadius * density)
+        // A zero radius takes the native `KawaseBlur_NoBlur_ReturnSource` path: no blur, no dither.
+        if (radiusPx > 0f) {
+            noiseDither(noiseCoefficient)
+            blur(radiusPx, radiusPx)
+        }
         runtimeShaderEffect(
             key = "COUIMaterialBlend",
             shaderString = MATERIAL_BLEND_SHADER,

@@ -2,13 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference.internal
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+
+/**
+ * The caller's end actions of a preference row, placed before the preference's own widget. The
+ * [endSpacing] to the widget is only kept when [content] actually draws something, so an empty slot
+ * leaves the widget at BasicComponent's title gap.
+ */
+@Composable
+internal fun RowScope.EndActionsSlot(
+    endSpacing: Dp,
+    content: @Composable RowScope.() -> Unit,
+) {
+    StartActionSlot(
+        modifier = Modifier
+            .align(Alignment.CenterVertically)
+            .weight(1f, fill = false),
+        endSpacing = endSpacing,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) { content() }
+    }
+}
 
 @Composable
 @NonRestartableComposable

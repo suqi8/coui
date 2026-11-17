@@ -38,14 +38,13 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
@@ -81,6 +80,15 @@ enum class LockPatternDisplayMode {
 
     /** A wrong pattern: error color, and the path and selected dots flash out over 1s. */
     Wrong,
+
+    /** A matching fingerprint: the current pattern in the success color, without animation. */
+    FingerprintMatch,
+
+    /**
+     * A fingerprint that does not match: the error color, and the inner circles of all nine dots
+     * flash out over 1s with the [Wrong] keyframes (`startFingerprintNoMatchAnimator`).
+     */
+    FingerprintNoMatch,
 }
 
 /**
@@ -108,6 +116,9 @@ class LockPatternState internal constructor() {
 
     /** The last [wrongToken] whose flash was started, so re-entering composition does not replay it. */
     internal var handledWrongToken = 0
+    internal var fingerprintToken by mutableIntStateOf(0)
+    internal var handledFingerprintToken = 0
+    internal var fingerprintJob: Job? = null
     internal var wrongHaptic = false
     internal var wrongJob: Job? = null
     internal var pendingClear = false
@@ -123,7 +134,8 @@ class LockPatternState internal constructor() {
     /**
      * Sets the display mode (`setDisplayMode`). [LockPatternDisplayMode.Wrong] plays the error
      * flash and, when [hapticFeedback] is set and the pattern has more than one dot, a reject
-     * haptic. [LockPatternDisplayMode.Animate] needs a non-empty pattern.
+     * haptic. [LockPatternDisplayMode.FingerprintNoMatch] flashes the inner circles of all nine
+     * dots, without haptic. [LockPatternDisplayMode.Animate] needs a non-empty pattern.
      */
     fun setDisplayMode(mode: LockPatternDisplayMode, hapticFeedback: Boolean = true) {
         if (mode == LockPatternDisplayMode.Animate) {
@@ -135,23 +147,26 @@ class LockPatternState internal constructor() {
             wrongHaptic = hapticFeedback && cells.size > 1
             wrongToken++
         }
+        if (mode == LockPatternDisplayMode.FingerprintNoMatch) fingerprintToken++
     }
 
     /**
-     * Replaces the pattern and sets [mode] (`setPattern`). A running error flash stops, and the
-     * path and the selected dots show at full alpha (they never ran the add animation).
+     * Replaces the pattern and sets [mode] (`setPattern`). A running error flash stops. The path
+     * and the resting dots show, but not the glowing inner circles: those only fade in when a
+     * finger adds a dot.
      */
     fun setPattern(mode: LockPatternDisplayMode, pattern: List<LockPatternCell>) {
         pendingClear = false
         wrongJob?.cancel()
-        dots.forEach { it.innerOverride = -1f }
+        fingerprintJob?.cancel()
+        dots.forEach {
+            it.innerOverride = 0f
+            it.hideDot = false
+        }
         cells.clear()
         cells.addAll(pattern)
         clearLookup()
-        pattern.forEach {
-            selected[it.row][it.column] = true
-            dot(it).innerOverride = 1f
-        }
+        pattern.forEach { selected[it.row][it.column] = true }
         pathAlpha = 1f
         selectionVersion++
         setDisplayMode(mode)
@@ -244,8 +259,9 @@ fun rememberLockPatternState(): LockPatternState = remember { LockPatternState()
  * @param modifier The modifier applied to the view.
  * @param state The [LockPatternState] holding the pattern.
  * @param enabled Whether touches are accepted (`enableInput` / `disableInput`).
- * @param inStealthMode Whether the path and the selected dots are hidden (a
- *   [LockPatternDisplayMode.Wrong] pattern still shows).
+ * @param inStealthMode Whether the pattern is hidden: the path is never drawn and added dots get
+ *   no ripple or glow (`mInStealthMode`). A [LockPatternDisplayMode.Wrong] flash still blinks the
+ *   inner circles of the selected dots, but draws no path.
  * @param hapticFeedbackEnabled Whether each added dot and a wrong pattern vibrate.
  * @param colors The [LockPatternViewColors].
  * @param onPatternStart Called when a pattern starts.
@@ -267,7 +283,7 @@ fun LockPatternView(
 ) {
     val scope = rememberCoroutineScope()
     state.scope = scope
-    val haptic = LocalHapticFeedback.current
+    val haptic = rememberCouiHaptic()
     val currentHaptic by rememberUpdatedState(haptic)
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
     val currentStealth by rememberUpdatedState(inStealthMode)
@@ -281,7 +297,7 @@ fun LockPatternView(
     LaunchedEffect(state, state.wrongToken) {
         if (state.wrongToken == state.handledWrongToken) return@LaunchedEffect
         state.handledWrongToken = state.wrongToken
-        if (state.wrongHaptic && currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.Reject)
+        if (state.wrongHaptic && currentHapticEnabled) currentHaptic(CouiHapticEffect.ShortTripleVibrate)
         state.wrongJob = currentCoroutineContext()[Job]
         val progress = Animatable(0f)
         try {
@@ -300,6 +316,26 @@ fun LockPatternView(
                 state.pendingClear = false
                 state.reset()
             }
+        }
+    }
+
+    // The fingerprint mismatch flash (startFingerprintNoMatchAnimator): the same keyframes over
+    // 1s, driving the inner circles of all nine dots; the path alpha is left alone.
+    LaunchedEffect(state, state.fingerprintToken) {
+        if (state.fingerprintToken == state.handledFingerprintToken) return@LaunchedEffect
+        state.handledFingerprintToken = state.fingerprintToken
+        state.fingerprintJob = currentCoroutineContext()[Job]
+        val progress = Animatable(0f)
+        try {
+            progress.animateTo(1f, tween(WRONG_DURATION_MS, easing = AccelerateDecelerateEasing)) {
+                val alpha = wrongKeyframes(value)
+                state.dots.forEach { dot ->
+                    dot.innerOverride = alpha
+                    dot.hideDot = alpha > 0.1f
+                }
+            }
+        } finally {
+            state.dots.forEach { it.hideDot = false }
         }
     }
 
@@ -331,7 +367,7 @@ fun LockPatternView(
                         grid = grid,
                         scope = scope,
                         stealth = currentStealth,
-                        onHit = { if (currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.SegmentTick) },
+                        onHit = { if (currentHapticEnabled) currentHaptic(CouiHapticEffect.Switch) },
                         onStart = { currentOnStart() },
                         onAdded = { currentOnAdded(it) },
                     )
@@ -376,7 +412,11 @@ fun LockPatternView(
             LockPatternViewDefaults.VerticalPadding.toPx(),
         )
         val mode = state.displayMode
-        val currentColor = if (mode == LockPatternDisplayMode.Wrong) colors.errorColor else colors.successColor
+        val currentColor = if (mode == LockPatternDisplayMode.Wrong || mode == LockPatternDisplayMode.FingerprintNoMatch) {
+            colors.errorColor
+        } else {
+            colors.successColor
+        }
         val cells = state.cells
         state.selectionVersion
 
@@ -404,9 +444,10 @@ fun LockPatternView(
             }
         }
 
-        // Stealth mode hides the path and the selected-dot circles, except to show a wrong pattern.
-        val showPattern = !inStealthMode || mode == LockPatternDisplayMode.Wrong
-        if (showPattern) {
+        // Stealth mode never draws the path, whatever the display mode (onDraw skips it on
+        // mInStealthMode). The selected-dot circles are still drawn: in stealth no add animation
+        // runs, so they only show while a flash drives their inner alpha.
+        if (!inStealthMode) {
             path.rewind()
             var lastX = 0f
             var lastY = 0f
@@ -445,12 +486,13 @@ fun LockPatternView(
         val innerRadius = INNER_CIRCLE_RADIUS_DP.dp.toPx()
         val outerRadius = OUTER_CIRCLE_RADIUS_DP.dp.toPx()
         val tint = ColorFilter.tint(currentColor.copy(alpha = 1f))
+        val allCircles = mode == LockPatternDisplayMode.FingerprintNoMatch
         for (row in 0..2) {
             for (column in 0..2) {
                 val dot = state.dots[row * 3 + column]
                 val cx = grid.centerX(column)
                 val cy = grid.centerY(row) + dot.enterTranslate.value * maxTranslate
-                if (showPattern && lookup[row][column]) {
+                if (allCircles || lookup[row][column]) {
                     val inner = if (dot.innerOverride >= 0f) dot.innerOverride else dot.innerAlpha.value
                     val innerAlpha = inner.coerceIn(0f, 1f) * currentColor.alpha
                     if (innerAlpha > 0f) {
@@ -525,6 +567,7 @@ private class PatternTouch(
 ) {
     fun down(position: Offset) {
         state.wrongJob?.cancel()
+        state.fingerprintJob?.cancel()
         state.pendingClear = false
         state.pathAlpha = 1f
         state.reset()
@@ -579,7 +622,7 @@ private class PatternTouch(
         state.selected[cell.row][cell.column] = true
         state.cells.add(cell)
         state.selectionVersion++
-        if (!stealth) startCellActivated(cell)
+        if (stealth) state.dot(cell).innerOverride = 0f else startCellActivated(cell)
         onAdded(state.pattern)
     }
 
@@ -652,7 +695,7 @@ object LockPatternViewDefaults {
     }
 
     @Composable
-    private fun isDark(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+    private fun isDark(): Boolean = COUITheme.colorScheme.isDark
 }
 
 /**

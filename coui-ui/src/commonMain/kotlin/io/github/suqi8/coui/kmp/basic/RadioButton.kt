@@ -231,8 +231,8 @@ object RadioButtonDefaults {
     @Composable
     fun radioButtonColors(
         selectedColor: Color = COUITheme.colorScheme.primary,
-        disabledSelectedColor: Color = COUITheme.colorScheme.disabledPrimary,
-        unselectedColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        disabledSelectedColor: Color = COUITheme.colorScheme.disable,
+        unselectedColor: Color = COUITheme.colorScheme.labelTertiary,
         disabledUnselectedColor: Color = COUITheme.colorScheme.quarternaryNeutral,
         // The COUI selected center is hardcoded #ffffff with no night variant.
         centerColor: Color = Color.White,

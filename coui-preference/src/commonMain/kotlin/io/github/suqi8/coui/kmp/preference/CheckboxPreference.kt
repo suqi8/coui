@@ -43,7 +43,9 @@ import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
  * @param checkboxColors The [CheckboxColors] of the [CheckboxPreference].
  * @param startAction The [Composable] content on the start side of the [CheckboxPreference].
  * @param endActions The [Composable] content on the end side of the [CheckboxPreference].
- * @param checkboxLocation The location of checkbox, [CheckboxLocation.Start] or [CheckboxLocation.End].
+ * @param checkboxLocation The location of the checkbox. COUI only places it at the end
+ *   (`Preference.COUI.COUICheckBoxPreference`: `widget_frame` with `coui_preferenc_widget_checkbox_margin_left` 16dp),
+ *   so [CheckboxLocation.End] is the default.
  * @param bottomAction The [Composable] content at the bottom of the [CheckboxPreference].
  * @param insideMargin The margin inside the [CheckboxPreference].
  * @param cardListPosition The row's position inside its card group, by default the one a
@@ -64,7 +66,7 @@ fun CheckboxPreference(
     checkboxColors: CheckboxColors = CheckboxDefaults.checkboxColors(),
     startAction: @Composable (() -> Unit)? = null,
     endActions: @Composable (RowScope.() -> Unit)? = null,
-    checkboxLocation: CheckboxLocation = CheckboxLocation.Start,
+    checkboxLocation: CheckboxLocation = CheckboxLocation.End,
     bottomAction: (@Composable () -> Unit)? = null,
     insideMargin: PaddingValues = BasicComponentDefaults.InsideMargin,
     cardListPosition: CardListPosition = LocalCardListPosition.current,

@@ -133,7 +133,7 @@ fun SidePaneLayout(
     showToggleIcon: Boolean = true,
     paneWidth: Dp = SidePaneLayoutDefaults.PaneWidth,
     maskColor: Color = SidePaneLayoutDefaults.maskColor,
-    toggleIconColor: Color = COUITheme.colorScheme.onBackground,
+    toggleIconColor: Color = COUITheme.colorScheme.labelPrimary,
     content: @Composable () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -263,7 +263,7 @@ object SidePaneLayoutDefaults {
 
     /** `coui_color_mask` (#33000000 light, #99000000 dark): the window dimming color. */
     val maskColor: Color
-        @Composable get() = COUITheme.colorScheme.windowDimming
+        @Composable get() = COUITheme.colorScheme.mask
 
     /**
      * `COUISidePaneUtils.isSplitMode`: the pane and the content sit side by side when the layout

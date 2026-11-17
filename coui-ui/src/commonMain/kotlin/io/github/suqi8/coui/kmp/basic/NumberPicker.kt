@@ -8,12 +8,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,8 +32,12 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -42,6 +45,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -81,7 +85,12 @@ import kotlin.time.TimeSource
  *
  * Text sizes are in dp, not sp, so they do not follow the system font scale (like COUI).
  *
+ * Without a width from [modifier] the wheel is 80dp wide (COUINumberPicker internalMinWidth).
+ * Accessibility services can step the wheel forward and backward (COUINumberPicker's
+ * ACTION_SCROLL_FORWARD / ACTION_SCROLL_BACKWARD), and the unit label is mirrored in RTL.
+ *
  * @param value The current selected value. If outside [range], it will be coerced into the range.
+ *   With [ignorable], [NumberPickerDefaults.IgnoredValue] selects the placeholder row.
  * @param onValueChange The callback invoked whenever the selected value changes.
  * @param modifier The modifier to be applied to the [NumberPicker].
  * @param enabled Whether the [NumberPicker] is enabled for user interaction.
@@ -90,8 +99,11 @@ import kotlin.time.TimeSource
  * @param unit A unit label drawn after the selected value (COUI setUnitText); empty to hide.
  * @param visibleItemCount The number of visible items. Must be odd and at least 3.
  * @param wrapAround Whether the picker wraps around from the last item to the first (infinite
- *   scrolling). As in COUI, wrapping only applies when the range has more items than
- *   [visibleItemCount].
+ *   scrolling, COUI mWrapSelectorWheelPreferred, on by default). As in COUI, wrapping only
+ *   applies when the range has more items than [visibleItemCount].
+ * @param ignorable Whether the wheel has an extra placeholder row after the last value, drawn as
+ *   two short bars and reported as [NumberPickerDefaults.IgnoredValue] (COUINumberPicker
+ *   setIgnorable, used for an optional year).
  * @param longPressStepInterval The interval, in milliseconds, between auto-repeated steps while a
  *   row above or below the center is held.
  * @param colors The [NumberPickerColors] for this [NumberPicker].
@@ -111,10 +123,11 @@ fun NumberPicker(
     label: (Int) -> String = { it.toString() },
     unit: String = "",
     visibleItemCount: Int = 3,
-    wrapAround: Boolean = false,
+    wrapAround: Boolean = true,
+    ignorable: Boolean = false,
     longPressStepInterval: Long = NumberPickerDefaults.LongPressStepInterval,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    textStyle: TextStyle = COUITheme.textStyles.title3,
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
     selectedTextSize: Dp = NumberPickerDefaults.SelectedTextSize,
     unselectedTextSize: Dp = NumberPickerDefaults.UnselectedTextSize,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
@@ -126,11 +139,16 @@ fun NumberPicker(
         "range must not be empty"
     }
 
-    val itemCount = range.last - range.first + 1
+    val valueCount = range.last - range.first + 1
+    // COUINumberPicker.getWrappedSelectorIndex: an ignorable wheel has one more row after the
+    // last value (SELECTOR_INDEX_IGNORE).
+    val itemCount = valueCount + if (ignorable) 1 else 0
+    val ignoredIndex = if (ignorable) valueCount else -1
+    val isIgnored = ignorable && value == NumberPickerDefaults.IgnoredValue
     val coercedValue = value.coerceIn(range)
-    val currentIndex = coercedValue - range.first
+    val currentIndex = if (isIgnored) ignoredIndex else coercedValue - range.first
     // COUINumberPicker.updateWrapSelectorWheel: max - min >= rows and wrapping preferred.
-    val canWrap = wrapAround && itemCount > visibleItemCount
+    val canWrap = wrapAround && valueCount > visibleItemCount
 
     val performHaptic = rememberCouiScaledHaptic()
     val playClick = rememberNumberPickerClickSound()
@@ -154,6 +172,7 @@ fun NumberPicker(
     val latestMaxFlingVelocity by rememberUpdatedState(maxFlingVelocity)
     val latestRowPx by rememberUpdatedState(with(density) { itemHeight.toPx() })
     val latestRangeStart by rememberUpdatedState(range.first)
+    val latestIgnoredIndex by rememberUpdatedState(ignoredIndex)
     val latestItemCount by rememberUpdatedState(itemCount)
     val latestCanWrap by rememberUpdatedState(canWrap)
     val latestStepInterval by rememberUpdatedState(longPressStepInterval)
@@ -165,6 +184,8 @@ fun NumberPicker(
     }
 
     fun clampPosition(target: Float): Float = if (latestCanWrap) target else target.coerceIn(0f, (latestItemCount - 1).toFloat())
+
+    fun valueAt(index: Int): Int = if (index == latestIgnoredIndex) NumberPickerDefaults.IgnoredValue else latestRangeStart + index
 
     // Follow external value / range changes while the wheel is at rest.
     LaunchedEffect(currentIndex, itemCount, canWrap) {
@@ -191,7 +212,7 @@ fun NumberPicker(
                     )
                 }
                 latestPlayClick()
-                latestOnValueChange(latestRangeStart + wrapIndex(next))
+                latestOnValueChange(valueAt(wrapIndex(next)))
             }
         }
     }
@@ -215,9 +236,10 @@ fun NumberPicker(
     }
 
     // COUINumberPicker.changeValueByOne: one row over 300ms on the fling scroller, then adjust.
-    fun step(direction: Int) {
+    // Accessibility jumps reuse it with a larger [rows].
+    fun step(rows: Int) {
         val from = (if (animationJob?.isActive == true) position.targetValue else position.value).roundToInt()
-        val target = clampPosition((from + direction).toFloat())
+        val target = clampPosition((from + rows).toFloat())
         launchAnimation {
             position.animateTo(target, tween(NumberPickerSnapDurationMillis, easing = NumberPickerFlingEasing))
             settle()
@@ -260,18 +282,33 @@ fun NumberPicker(
         val (top, bottom) = numberPickerFontTopBottom(with(density) { unselectedTextSize.toPx() })
         (top + bottom) / 2f
     }
-    val selectedColor = colors.selectedTextColor(enabled)
-    val unselectedColor = colors.unselectedTextColor(enabled)
+    val selectedColor = colors.selectedTextColor
+    val unselectedColor = colors.unselectedTextColor
     val latestLabel by rememberUpdatedState(label)
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
-    val displayValue = label(coercedValue)
+    val displayValue = if (isIgnored) NumberPickerIgnoredDescription else label(coercedValue)
     Spacer(
         modifier = modifier
-            .fillMaxWidth()
+            .widthIn(min = NumberPickerDefaults.MinWidth)
             .height(itemHeight * visibleItemCount)
             .clipToBounds()
             .semantics {
                 contentDescription = "$displayValue, ${range.first} - ${range.last}"
+                if (enabled) {
+                    // Exposed as a stepped range so TalkBack offers scroll forward / backward,
+                    // like COUINumberPicker's AccessibilityNodeProvider.
+                    progressBarRangeInfo = ProgressBarRangeInfo(
+                        current = currentIndex.toFloat(),
+                        range = 0f..(itemCount - 1).toFloat(),
+                        steps = (itemCount - 2).coerceAtLeast(0),
+                    )
+                    setProgress { target ->
+                        val index = target.roundToInt().coerceIn(0, itemCount - 1)
+                        if (index != currentIndex) step(index - currentIndex)
+                        true
+                    }
+                }
             }
             .then(
                 if (enabled) {
@@ -368,13 +405,16 @@ fun NumberPicker(
                     position = position.value,
                     visibleItemCount = visibleItemCount,
                     itemCount = itemCount,
+                    ignoredIndex = ignoredIndex,
                     wrap = canWrap,
                     labelOf = { latestLabel(range.first + it) },
                     unit = unit,
+                    isRtl = isRtl,
                     selectedStyle = selectedStyle,
                     unselectedStyle = unselectedStyle,
                     unitStyle = unitStyle,
                     fontCenter = fontCenter,
+                    ignoreBarScale = unselectedTextSize / selectedTextSize,
                     selectedColor = selectedColor,
                     unselectedColor = unselectedColor,
                 )
@@ -387,13 +427,16 @@ private fun DrawScope.drawNumberPickerRows(
     position: Float,
     visibleItemCount: Int,
     itemCount: Int,
+    ignoredIndex: Int,
     wrap: Boolean,
     labelOf: (Int) -> String,
     unit: String,
+    isRtl: Boolean,
     selectedStyle: TextStyle,
     unselectedStyle: TextStyle,
     unitStyle: TextStyle,
     fontCenter: Float,
+    ignoreBarScale: Float,
     selectedColor: Color,
     unselectedColor: Color,
 ) {
@@ -413,12 +456,16 @@ private fun DrawScope.drawNumberPickerRows(
             if (row !in 0 until itemCount) continue
             row
         }
+        val rowCenter = centerY + (row - position) * rowPx
+        if (index == ignoredIndex) {
+            drawIgnoreBars(rowCenter, (rowCenter - centerY) / rowPx, ignoreBarScale, unselectedColor)
+            continue
+        }
         val text = labelOf(index)
         val normal = measureRow(textMeasurer, text, unselectedStyle)
         val focus = measureRow(textMeasurer, text, selectedStyle)
         // Both passes share one baseline: (2 * rowTop + rowHeight - top - bottom) / 2 with the
         // default typeface metrics at the normal size, as in COUINumberPicker.onDraw.
-        val rowCenter = centerY + (row - position) * rowPx
         val baseline = rowCenter - fontCenter
 
         clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Difference) {
@@ -434,8 +481,31 @@ private fun DrawScope.drawNumberPickerRows(
         // plus a 4dp margin (coui_number_picker_text_width / _text_margin_start).
         val baseline = centerY - fontCenter - NumberPickerUnitMarginBottom.toPx()
         val unitLayout = measureRow(textMeasurer, unit, unitStyle)
-        val x = size.width / 2f + (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
+        val start = size.width / 2f + (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
+        // COUINumberPicker.onDraw mirrors the unit to the left of the value in RTL.
+        val x = if (isRtl) size.width - start - unitLayout.size.width else start
         drawText(unitLayout, color = selectedColor, topLeft = Offset(x, baseline - unitLayout.firstBaseline))
+    }
+}
+
+/**
+ * The placeholder row of an ignorable wheel (COUINumberPicker.onDraw, SELECTOR_INDEX_IGNORE): two
+ * bars in the unselected color, scaled like the text from [minScale] (normal / focus size) up to
+ * full size as the row nears the center, where [rowOffset] is its distance from it in rows.
+ */
+private fun DrawScope.drawIgnoreBars(rowCenter: Float, rowOffset: Float, minScale: Float, color: Color) {
+    val distance = abs(rowOffset)
+    val scale = if (distance < 0.5f) 1f - (1f - minScale) * 2f * distance else minScale
+    val barWidth = NumberPickerIgnoreBarWidth.toPx() * scale
+    val barHeight = NumberPickerIgnoreBarHeight.toPx() * scale
+    val pitch = (NumberPickerIgnoreBarWidth + NumberPickerIgnoreBarSpacing).toPx() * scale
+    for (side in floatArrayOf(-0.5f, 0.5f)) {
+        val x = size.width / 2f + pitch * side
+        drawRect(
+            color = color,
+            topLeft = Offset(x - barWidth / 2f, rowCenter - barHeight / 2f),
+            size = Size(barWidth, barHeight),
+        )
     }
 }
 
@@ -560,10 +630,29 @@ private val NumberPickerSelectedValueWidth = 18.dp
 private val NumberPickerUnitMarginStart = 4.dp
 private val NumberPickerUnitMarginBottom = 2.dp
 
+// coui_numberpicker_ignore_bar_width / _height / _spacing.
+private val NumberPickerIgnoreBarWidth = 17.67.dp
+private val NumberPickerIgnoreBarHeight = 1.67.dp
+private val NumberPickerIgnoreBarSpacing = 4.67.dp
+
+private val NumberPickerIgnoredDescription = "--"
+
 /**
  * Contains default values used by [NumberPicker].
  */
 object NumberPickerDefaults {
+
+    /** The value an ignorable wheel reports for its placeholder row (COUINumberPicker.SELECTOR_INDEX_IGNORE). */
+    val IgnoredValue: Int = Int.MIN_VALUE
+
+    /** Width of a wheel that gets none from its modifier (COUINumberPicker internalMinWidth). */
+    val MinWidth = 80.dp
+
+    /**
+     * Maximum width of the date and time pickers built from wheels (couiPickersMaxWidth,
+     * coui_number_picker_view_max_width), applied in their onMeasure.
+     */
+    val PickersMaxWidth = 640.dp
 
     /** Row height inside the COUI date and time pickers (135dp / 3 rows). */
     val ItemHeight = 45.dp
@@ -583,31 +672,19 @@ object NumberPickerDefaults {
     /**
      * Creates the default [NumberPickerColors] for a [NumberPicker].
      *
-     * COUI does not change the picker colors when it is disabled, so the disabled colors default
-     * to the enabled ones.
+     * COUI keeps these colors when the picker is disabled; it only stops reacting to touch.
      *
-     * @param selectedTextColor The color for the selected (center) item text.
-     * @param unselectedTextColor The color for unselected item text.
-     * @param disabledSelectedTextColor The color for the selected item text when disabled.
-     * @param disabledUnselectedTextColor The color for unselected item text when disabled.
+     * @param selectedTextColor The color for the selected (center) item text (couiFocusTextColor).
+     * @param unselectedTextColor The color for unselected item text (couiNormalTextColor).
      */
     @Composable
     fun colors(
-        selectedTextColor: Color = COUITheme.colorScheme.onSurface,
-        unselectedTextColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        disabledSelectedTextColor: Color = selectedTextColor,
-        disabledUnselectedTextColor: Color = unselectedTextColor,
-    ): NumberPickerColors = remember(
-        selectedTextColor,
-        unselectedTextColor,
-        disabledSelectedTextColor,
-        disabledUnselectedTextColor,
-    ) {
+        selectedTextColor: Color = COUITheme.colorScheme.labelPrimary,
+        unselectedTextColor: Color = COUITheme.colorScheme.labelTertiary,
+    ): NumberPickerColors = remember(selectedTextColor, unselectedTextColor) {
         NumberPickerColors(
             selectedTextColor = selectedTextColor,
             unselectedTextColor = unselectedTextColor,
-            disabledSelectedTextColor = disabledSelectedTextColor,
-            disabledUnselectedTextColor = disabledUnselectedTextColor,
         )
     }
 }
@@ -615,22 +692,15 @@ object NumberPickerDefaults {
 /**
  * The colors for a [NumberPicker].
  *
+ * @param selectedTextColor The color for the selected (center) item text and the unit label.
+ * @param unselectedTextColor The color for unselected item text and the ignorable placeholder bars.
  * @see NumberPickerDefaults.colors
  */
 @Immutable
 data class NumberPickerColors(
-    private val selectedTextColor: Color,
-    private val unselectedTextColor: Color,
-    private val disabledSelectedTextColor: Color,
-    private val disabledUnselectedTextColor: Color,
-) {
-
-    @Stable
-    internal fun selectedTextColor(enabled: Boolean): Color = if (enabled) selectedTextColor else disabledSelectedTextColor
-
-    @Stable
-    internal fun unselectedTextColor(enabled: Boolean): Color = if (enabled) unselectedTextColor else disabledUnselectedTextColor
-}
+    val selectedTextColor: Color,
+    val unselectedTextColor: Color,
+)
 
 /**
  * Draws the two COUI picker hairlines at the center ± 24dp, inset 16dp from both sides

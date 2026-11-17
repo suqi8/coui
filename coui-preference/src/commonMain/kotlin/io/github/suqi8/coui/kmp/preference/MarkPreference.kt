@@ -117,9 +117,10 @@ fun MarkPreference(
             }
 
             if (markLocation == MarkLocation.End) {
+                // BasicComponent keeps 16dp from the title; the caller's end actions keep 8dp.
                 Row(
                     modifier = Modifier
-                        .padding(start = 8.dp)
+                        .padding(start = if (endActions != null) 8.dp else 0.dp)
                         .align(Alignment.CenterVertically),
                 ) {
                     MarkPreferenceMark(

@@ -20,8 +20,8 @@ import kotlin.math.roundToInt
 /**
  * A divider is a thin line that groups content in lists and layouts.
  *
- * For COUI card lists, place one divider between each pair of adjacent rows inside a [Card]
- * (never after the last row) and inset it with [DividerDefaults.CardInset].
+ * Rows inside a [CardListGroup] get their COUI dividers drawn by the group, aligned with each row's
+ * title; use this composable only for dividers outside such groups.
  *
  * @param modifier the [Modifier] to be applied to this divider line.
  * @param thickness thickness of this divider line, rounded to whole pixels and never thinner than one
@@ -80,14 +80,11 @@ object DividerDefaults {
     /**
      * Default color of the divider line.
      */
-    val DividerColor @Composable get() = COUITheme.colorScheme.dividerLine
+    val DividerColor @Composable get() = COUITheme.colorScheme.divider
 
     /**
-     * Recommended horizontal inset for a [HorizontalDivider] placed between rows inside a [Card]
-     * (COUI coui_preference_divider_default_horizontal_padding). For rows with a leading icon,
-     * align the start inset with the title text start instead.
-     *
-     * Usage: `HorizontalDivider(Modifier.padding(horizontal = DividerDefaults.CardInset))`.
+     * The end inset of a row divider inside a card (COUI coui_preference_divider_default_horizontal_padding
+     * 32dp, less the 16dp card margin). [CardListGroup] uses it for the end of its row dividers.
      */
     val CardInset = 16.dp
 }

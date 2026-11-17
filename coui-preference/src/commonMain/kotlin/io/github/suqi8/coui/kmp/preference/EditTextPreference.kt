@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -135,11 +133,11 @@ fun EditTextPreference(
                 Text(
                     text = value,
                     modifier = Modifier.weight(1f, fill = false),
-                    style = COUITheme.textStyles.footnote1,
+                    style = COUITheme.textStyles.bodyS,
                     color = if (enabled) {
-                        COUITheme.colorScheme.onSurfaceSecondary
+                        COUITheme.colorScheme.labelSecondary
                     } else {
-                        COUITheme.colorScheme.disabledOnSecondaryVariant
+                        COUITheme.colorScheme.disabledNeutral
                     },
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,
@@ -162,71 +160,64 @@ fun EditTextPreference(
         onDismissRequest = { setExpanded(false) },
         onDismissFinished = { isHoldDown.value = false },
         renderInRootScaffold = renderInRootScaffold,
+        // The field is the dialog's custom view (COUIEditTextPreferenceDialogFragment sets it
+        // through the builder's setView), so it goes into the custom panel slot.
+        customContent = {
+            EditTextPreferenceDialogField(
+                text = draft.value,
+                onTextChange = { draft.value = it },
+                hint = hint,
+                textFieldColors = textFieldColors,
+                keyboardOptions = keyboardOptions,
+            )
+        },
     ) {
-        EditTextPreferenceDialogContent(
-            text = draft.value,
-            onTextChange = { draft.value = it },
-            hint = hint,
-            positiveButtonText = positiveButtonText,
-            negativeButtonText = negativeButtonText,
-            supportEmptyInput = supportEmptyInput,
-            textFieldColors = textFieldColors,
-            keyboardOptions = keyboardOptions,
-            onConfirm = {
-                currentOnValueChange(draft.value)
-                setExpanded(false)
-            },
-            onCancel = { setExpanded(false) },
+        DialogButtonBar(
+            negative = DialogButtonBarAction(text = negativeButtonText, onClick = { setExpanded(false) }),
+            positive = DialogButtonBarAction(
+                text = positiveButtonText,
+                // COUIEditTextPreferenceDialogFragment: afterTextChanged disables BUTTON_POSITIVE
+                // for an empty field unless couiSupportEmptyInput.
+                enabled = supportEmptyInput || draft.value.isNotEmpty(),
+                onClick = {
+                    currentOnValueChange(draft.value)
+                    setExpanded(false)
+                },
+            ),
         )
     }
 }
 
 @Composable
-private fun EditTextPreferenceDialogContent(
+private fun EditTextPreferenceDialogField(
     text: String,
     onTextChange: (String) -> Unit,
     hint: String,
-    positiveButtonText: String,
-    negativeButtonText: String,
-    supportEmptyInput: Boolean,
     textFieldColors: TextFieldColors,
     keyboardOptions: KeyboardOptions,
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     // COUIEditTextPreferenceDialogFragment.onResume: requestFocus + SOFT_INPUT_STATE_VISIBLE.
     LaunchedEffect(focusRequester) {
         runCatching { focusRequester.requestFocus() }
     }
-    Column(modifier = Modifier.fillMaxWidth()) {
-        TextField(
-            value = text,
-            onValueChange = onTextChange,
-            modifier = Modifier
-                .padding(horizontal = EditTextPreferenceDefaults.FieldHorizontalMargin)
-                .padding(bottom = EditTextPreferenceDefaults.FieldBottomMargin)
-                .fillMaxWidth()
-                .heightIn(min = EditTextPreferenceDefaults.FieldMinHeight)
-                .focusRequester(focusRequester),
-            backgroundMode = TextFieldMode.Line,
-            colors = textFieldColors,
-            label = hint,
-            showClearButton = true,
-            keyboardOptions = keyboardOptions,
-            singleLine = true,
-        )
-        DialogButtonBar(
-            negative = DialogButtonBarAction(text = negativeButtonText, onClick = onCancel),
-            positive = DialogButtonBarAction(
-                text = positiveButtonText,
-                // COUIEditTextPreferenceDialogFragment: afterTextChanged disables BUTTON_POSITIVE
-                // for an empty field unless couiSupportEmptyInput.
-                enabled = supportEmptyInput || text.isNotEmpty(),
-                onClick = onConfirm,
-            ),
-        )
-    }
+    TextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = Modifier
+            .padding(horizontal = EditTextPreferenceDefaults.FieldHorizontalMargin)
+            .padding(bottom = EditTextPreferenceDefaults.FieldBottomMargin)
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
+        backgroundMode = TextFieldMode.Line,
+        // The dialog layout overrides the Widget.COUI.EditText 62dp minHeight.
+        minHeight = EditTextPreferenceDefaults.FieldMinHeight,
+        colors = textFieldColors,
+        label = hint,
+        showClearButton = true,
+        keyboardOptions = keyboardOptions,
+        singleLine = true,
+    )
 }
 
 object EditTextPreferenceDefaults {

@@ -18,8 +18,41 @@ import androidx.compose.ui.unit.dp
  * Every function takes the width the grid is laid over (`ResponsiveUIModel` is built from the
  * measured width of the view that uses it, not necessarily the window) and the window height.
  * The margin type defaults to [MarginType.Small], the type the existing callers use.
+ *
+ * It also carries the fixed page spacings COUI layouts share ([CardMarginHorizontal],
+ * [DefaultMarginHorizontal], [ColumnGap], ...).
  */
-internal object COUILayoutGrid {
+object COUILayoutGrid {
+
+    /**
+     * The horizontal margin of card lists and grouped preferences: 16dp (COUI
+     * coui_preference_card_margin_horizontal, grid_guide_column_card_margin_start / _end).
+     */
+    val CardMarginHorizontal = 16.dp
+
+    /** The default horizontal page margin: 24dp (COUI grid_guide_column_default_margin_start / _end). */
+    val DefaultMarginHorizontal = 24.dp
+
+    /** The gap between grid guide columns: 8dp (COUI grid_guide_column_gap). */
+    val ColumnGap = 8.dp
+
+    /** The extra padding of card grids: 16dp (COUI grid_card_special_padding). */
+    val CardSpecialPadding = 16.dp
+
+    /** The extra padding of list grids: 24dp (COUI grid_list_special_padding). */
+    val ListSpecialPadding = 24.dp
+
+    /** The small responsive margin: 16dp (COUI layout_grid_margin_small, responsive_ui_margin_small). */
+    val MarginSmall = 16.dp
+
+    /** The large responsive margin: 24dp (COUI layout_grid_margin_large, responsive_ui_margin_large). */
+    val MarginLarge = 24.dp
+
+    /** The compact / medium gutter: 8dp (COUI layout_grid_gutter). */
+    val Gutter = 8.dp
+
+    /** The expanded gutter: 12dp (COUI layout_grid_gutter_expanded). */
+    val GutterExpanded = 12.dp
 
     /**
      * The width spanned by [columns] adjacent columns centred in the grid, like
@@ -103,6 +136,7 @@ internal object COUILayoutGrid {
         ScreenTier.Large -> 8
     }
 
+    /** The COUI screen tiers (`COUIResponsiveUtils.isSmallScreen` / `isMediumScreen` / `isLargeScreen`). */
     enum class ScreenTier { Small, Medium, Large }
 
     /** `com.coui.component.responsiveui.layoutgrid.MarginType`. */

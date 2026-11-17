@@ -16,6 +16,12 @@ actual fun rememberCouiHaptic(): (CouiHapticEffect) -> Unit {
                 CouiHapticEffect.Switch -> HapticFeedbackType.ToggleOn
                 CouiHapticEffect.Strength -> HapticFeedbackType.SegmentTick
                 CouiHapticEffect.ScrollEdge -> HapticFeedbackType.SegmentTick
+                CouiHapticEffect.LongVibrate -> HapticFeedbackType.LongPress
+                CouiHapticEffect.KeyboardTouch -> HapticFeedbackType.KeyboardTap
+                CouiHapticEffect.ShortTripleVibrate -> HapticFeedbackType.Reject
+                CouiHapticEffect.SteppingShort -> HapticFeedbackType.SegmentFrequentTick
+                CouiHapticEffect.EdgeShort -> HapticFeedbackType.GestureThresholdActivate
+                CouiHapticEffect.EdgeSqueeze -> HapticFeedbackType.GestureEnd
             },
         )
     }

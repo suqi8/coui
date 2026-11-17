@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -35,13 +36,14 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * The date is clamped to [minDate] .. [maxDate]. As in COUILunarDatePicker.updateSpinners, the
  * month and day wheels stop wrapping and only offer the values on the reachable side while the
  * date sits exactly on [minDate] or [maxDate]. Two hairlines frame the selected row and the wheels
- * follow the locale's date field order, like [DatePicker].
+ * follow the locale's date field order, like [DatePicker]. The picker is at most
+ * [NumberPickerDefaults.PickersMaxWidth] wide (COUILunarDatePicker.onMeasure).
  *
  * @param value The selected Gregorian date. It is clamped to [minDate] .. [maxDate].
  * @param onValueChange The callback invoked with the new Gregorian date when a wheel moves.
  * @param modifier The modifier to be applied to the [LunarDatePicker].
  * @param enabled Whether the [LunarDatePicker] is enabled for user interaction.
- * @param minDate The earliest selectable Gregorian date (COUI 1910-01-01). Kept at or after
+ * @param minDate The earliest selectable Gregorian date (COUI 1910-03-10). Kept at or after
  *   [LunarCalendar.MinSolarDate].
  * @param maxDate The latest selectable Gregorian date (COUI 2099-12-31). Kept at or before
  *   [LunarCalendar.MaxSolarDate].
@@ -70,8 +72,8 @@ fun LunarDatePicker(
     fieldOrder: DateFieldOrder = DatePickerDefaults.localeFieldOrder(),
     columnWidth: Dp = LunarDatePickerDefaults.ColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    dividerColor: Color = COUITheme.colorScheme.dividerLine,
-    textStyle: TextStyle = COUITheme.textStyles.title3,
+    dividerColor: Color = COUITheme.colorScheme.divider,
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = LunarDatePickerDefaults.InsideMargin,
 ) {
@@ -155,6 +157,7 @@ fun LunarDatePicker(
 
     Row(
         modifier = modifier
+            .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
@@ -214,8 +217,13 @@ fun LunarDatePicker(
 /** Contains default values used by [LunarDatePicker]. */
 object LunarDatePickerDefaults {
 
-    /** The earliest selectable date (COUILunarDatePicker constructor: setMinDate(1910-01-01)). */
-    val MinDate: DateValue = DateValue(1910, 1, 1)
+    /**
+     * The earliest selectable date: COUILunarDatePicker's static sMinDate, 1910-03-10. Its
+     * constructor also calls setMinDate(1910-01-01), but setMinDate only accepts a date in a
+     * different year or on the same day of the year, so that call is rejected ("setMinDate
+     * failed!") and 1910-03-10 stays in effect.
+     */
+    val MinDate: DateValue = DateValue(1910, 3, 10)
 
     /** The latest selectable date (COUILunarDatePicker constructor: setMaxDate(2099-12-31)). */
     val MaxDate: DateValue = DateValue(2099, 12, 31)

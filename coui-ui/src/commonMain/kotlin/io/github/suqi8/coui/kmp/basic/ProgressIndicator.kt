@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -28,6 +30,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
@@ -36,6 +39,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -44,8 +48,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
+import io.github.suqi8.coui.kmp.anim.COUIInEaseEasing
+import io.github.suqi8.coui.kmp.anim.COUIMoveEaseEasing
+import io.github.suqi8.coui.kmp.anim.COUIOutEaseEasing
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.min
+import kotlin.math.sqrt
 
 /**
  * A [LinearProgressIndicator] with COUI style.
@@ -147,34 +159,49 @@ fun LinearProgressIndicator(
  *
  * With a [progress] value it ports COUICircularProgressBar / COUICircularProgressDrawable: a
  * neutral arc over a divider-colored track, starting at 12 o'clock, which follows progress changes
- * on a critically damped spring (dampingRatio 1, stiffness 50). Without one it ports
- * COUILoadingView, whose arc and track use the theme accent (couiColorPrimary on
- * couiColorSecondary), so the default [colors] depend on [progress].
+ * on a critically damped spring (dampingRatio 1, stiffness 50). Like `onMeasure` /
+ * `configDrawable`, the indicator lays out at [size] plus 4dp of padding on each side and draws a
+ * ring whose outer diameter is [size] less 4dp on each side: the default large tier (40dp) is a
+ * 48dp box around a 32dp ring. It can be [CircularProgressState.Paused] (the ring fades out and
+ * two bars fade in, [CircularProgressType.OnImage] only) or show a
+ * [CircularProgressState.Error] (the ring shrinks to a 19dp outline around an exclamation mark).
  *
- * Geometry note: COUICircularProgressBar measures its view as `length + 2 x 4dp` but draws a ring
- * whose outer diameter is `length - 2 x 4dp` (a 48dp view with a 32dp ring for the 40dp large tier).
- * This indicator draws the ring across the full [size] (outer diameter = [size]); pass a smaller
- * [size] if the device-measured ring matches the narrower geometry.
+ * Without a [progress] it ports COUILoadingView, a ring across the whole [size] whose arc and track
+ * use the theme accent (couiColorPrimary on couiColorSecondary), so the default [colors], [size]
+ * and [strokeWidth] depend on [progress]. [state] and [type] only apply with a [progress].
  *
  * @param modifier The modifier to be applied to the indicator.
  * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
+ * @param state The [CircularProgressState]: `pause()` / `resume()` / `error()` / `recover()`.
+ * @param type The [CircularProgressType] (`couiCircularProgressBarType`).
  * @param colors The colors used for the indicator. Defaults to
  *   [ProgressIndicatorDefaults.circularProgressIndicatorColors] with a [progress] value and to
  *   [ProgressIndicatorDefaults.loadingViewColors] without one.
  * @param strokeWidth The width of the circular stroke.
- * @param size The size (diameter) of the circular indicator.
+ * @param size The length of the indicator: the `coui_circular_progress_*_length` tier with a
+ *   [progress], or the diameter of the loading view without one.
  */
 @Composable
 fun CircularProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
+    state: CircularProgressState = CircularProgressState.Normal,
+    type: CircularProgressType = CircularProgressType.Default,
     colors: ProgressIndicatorColors = if (progress == null) {
         ProgressIndicatorDefaults.loadingViewColors()
     } else {
         ProgressIndicatorDefaults.circularProgressIndicatorColors()
     },
-    strokeWidth: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorStrokeWidth,
-    size: Dp = ProgressIndicatorDefaults.DefaultCircularProgressIndicatorSize,
+    strokeWidth: Dp = if (progress == null) {
+        ProgressIndicatorDefaults.DefaultLoadingViewStrokeWidth
+    } else {
+        ProgressIndicatorDefaults.LargeCircularProgressIndicatorStrokeWidth
+    },
+    size: Dp = if (progress == null) {
+        ProgressIndicatorDefaults.DefaultLoadingViewSize
+    } else {
+        ProgressIndicatorDefaults.LargeCircularProgressIndicatorSize
+    },
 ) {
     val currentBackgroundColor = colors.backgroundColor()
     val currentForegroundColor = colors.foregroundColor(true)
@@ -230,39 +257,262 @@ fun CircularProgressIndicator(
             targetValue = progressValue,
             animationSpec = CircularProgressSpring,
         )
+        val stateAnimation = rememberCircularProgressStateAnimation(
+            paused = state == CircularProgressState.Paused && type == CircularProgressType.OnImage,
+            error = state == CircularProgressState.Error,
+        )
+        // configDrawable: TYPE_FOLLOW_THEME draws the track at alpha 89.
+        val trackColor = if (type == CircularProgressType.FollowTheme) {
+            currentBackgroundColor.copy(alpha = FollowThemeTrackAlpha)
+        } else {
+            currentBackgroundColor
+        }
+        val errorColor = colors.errorColor()
+        val pauseIconColor = colors.pauseIconColor()
+        val shadowColor = colors.shadowColor()
+        val drawShadow = type == CircularProgressType.OnImage
 
         Canvas(
             modifier = modifier
                 .semantics { progressBarRangeInfo = ProgressBarRangeInfo(progressValue, 0f..1f) }
-                .size(size),
+                .size(size + CircularProgressPadding * 2),
         ) {
-            val strokeWidthPx = strokeWidth.toPx()
-            val radius = (size.toPx() - strokeWidthPx) / 2
-            val center = Offset(size.toPx() / 2, size.toPx() / 2)
+            val center = this.center
+            val error = stateAnimation.error.value
+            // The error animators move the ring from its own geometry to the 19dp / 1.5dp outline.
+            val outerDiameter = lerp((size - CircularProgressPadding * 2).toPx(), CircularErrorDiameter.toPx(), error)
+            val strokeWidthPx = lerp(strokeWidth.toPx(), CircularErrorStrokeWidth.toPx(), error)
+            val radius = ((outerDiameter - strokeWidthPx) / 2f).coerceAtLeast(0f)
+            val ringTrackColor = lerp(trackColor, errorColor, error)
+            val ringProgressColor = lerp(currentForegroundColor, errorColor, error)
 
             // COUICircularProgressDrawable.drawProgress: sweep = max(1e-4, progress * 360 / max).
             val sweepAngle = maxOf(1.0E-4f, visualProgress * 360f)
 
-            withSrcCompositingLayer {
-                drawCircularBackground(currentBackgroundColor, radius, center, strokeWidthPx)
+            val ringAlpha = stateAnimation.ringAlpha.value
+            if (ringAlpha > 0f) {
+                if (drawShadow) drawRingShadow(shadowColor, radius, center, strokeWidthPx, ringAlpha)
+                withSrcCompositingLayer(alpha = ringAlpha) {
+                    drawCircularBackground(ringTrackColor, radius, center, strokeWidthPx)
 
-                drawArc(
-                    color = currentForegroundColor,
-                    startAngle = -90f,
-                    sweepAngle = sweepAngle,
-                    useCenter = false,
-                    topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2),
-                    size = Size(2 * radius, 2 * radius),
-                    style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
-                    blendMode = BlendMode.Src,
-                )
+                    drawArc(
+                        color = ringProgressColor,
+                        startAngle = -90f,
+                        sweepAngle = sweepAngle,
+                        useCenter = false,
+                        topLeft = Offset(center.x - radius, center.y - radius),
+                        size = Size(2 * radius, 2 * radius),
+                        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+                        blendMode = BlendMode.Src,
+                    )
+                }
+            }
+
+            // drawPauseIcon: two 4 x 16dp bars 4dp apart with 1dp corners.
+            val pauseAlpha = stateAnimation.pauseIconAlpha.value
+            if (pauseAlpha > 0f) {
+                scale(stateAnimation.pauseIconScale.value, pivot = center) {
+                    val barWidth = CircularPauseBarWidth.toPx()
+                    val barHeight = CircularPauseBarHeight.toPx()
+                    val gap = CircularPauseBarGap.toPx()
+                    val corner = CornerRadius(CircularPauseBarRadius.toPx())
+                    for (left in floatArrayOf(center.x - gap / 2f - barWidth, center.x + gap / 2f)) {
+                        drawRoundRect(
+                            color = pauseIconColor,
+                            topLeft = Offset(left, center.y - barHeight / 2f),
+                            size = Size(barWidth, barHeight),
+                            cornerRadius = corner,
+                            alpha = pauseAlpha,
+                        )
+                    }
+                }
+            }
+
+            // drawErrorIcon: an exclamation mark, a 1.6 x 5.25dp bar over a 1.1dp-radius dot.
+            if (error > 0f) {
+                scale(ErrorIconMinScale + (1f - ErrorIconMinScale) * error, pivot = center) {
+                    val barWidth = CircularErrorBarWidth.toPx()
+                    val barTop = center.y - CircularErrorBarBias.toPx()
+                    drawRect(
+                        color = errorColor,
+                        topLeft = Offset(center.x - barWidth / 2f, barTop),
+                        size = Size(barWidth, CircularErrorBarHeight.toPx()),
+                        alpha = error,
+                    )
+                    drawCircle(
+                        color = errorColor,
+                        radius = CircularErrorDotRadius.toPx(),
+                        center = Offset(center.x, center.y + CircularErrorDotBias.toPx()),
+                        alpha = error,
+                    )
+                }
             }
         }
     }
 }
 
+/**
+ * The state of a determinate [CircularProgressIndicator] (`COUICircularProgressBar.pause()` /
+ * `resume()` / `error()` / `recover()`).
+ */
+enum class CircularProgressState {
+    /** The ring shows the progress. */
+    Normal,
+
+    /**
+     * The ring fades out in 200ms and a pause icon fades in after it, 300ms on the COUI in-ease
+     * curve, growing from 70%. Only a [CircularProgressType.OnImage] indicator pauses, as
+     * `pause()` refuses the other types.
+     */
+    Paused,
+
+    /**
+     * In 350ms on the COUI move-ease curve the ring shrinks to a 19dp, 1.5dp outline in the error
+     * color around an exclamation mark that fades in, growing from 70%.
+     */
+    Error,
+}
+
+/** The look of a determinate [CircularProgressIndicator] (`couiCircularProgressBarType`). */
+enum class CircularProgressType {
+    /** `TYPE_DEFAULT`. */
+    Default,
+
+    /**
+     * `TYPE_ON_IMAGE`: the track and the icons cast a soft shadow (radius 4dp, 2dp down) so the
+     * indicator reads over pictures; the only type that can pause.
+     */
+    OnImage,
+
+    /** `TYPE_FOLLOW_THEME`: the track is drawn at alpha 89 / 255. */
+    FollowTheme,
+}
+
+/** The animated state values of a determinate [CircularProgressIndicator]. */
+@Stable
+private class CircularProgressStateAnimation {
+    /** `mProgressBarAlpha`. */
+    val ringAlpha = Animatable(1f)
+
+    /** `mCurrentPauseIconAlpha`. */
+    val pauseIconAlpha = Animatable(0f)
+
+    /** `mIconPauseScale`. */
+    val pauseIconScale = Animatable(1f)
+
+    /** The progress of the error animators: 0 normal, 1 error (`mCurrentErrorIconAlpha`). */
+    val error = Animatable(0f)
+}
+
+@Composable
+private fun rememberCircularProgressStateAnimation(paused: Boolean, error: Boolean): CircularProgressStateAnimation {
+    val animation = remember { CircularProgressStateAnimation() }
+    LaunchedEffect(paused) {
+        val target = if (paused) 1f else 0f
+        if (animation.pauseIconAlpha.value == target && animation.ringAlpha.value == 1f - target) return@LaunchedEffect
+        if (paused) {
+            // initPauseAnimator: the ring fades out (200ms, linear) while the icon fades in after a
+            // 200ms delay (300ms, in-ease) from 70% scale.
+            launch { animation.ringAlpha.animateTo(0f, tween(200, easing = LinearEasing)) }
+            launch {
+                animation.pauseIconScale.snapTo(PauseIconMinScale)
+                animation.pauseIconAlpha.snapTo(0f)
+                delay(200)
+                launch { animation.pauseIconScale.animateTo(1f, tween(300, easing = COUIInEaseEasing)) }
+                animation.pauseIconAlpha.animateTo(1f, tween(300, easing = COUIInEaseEasing))
+            }
+        } else {
+            // initResumeAnimator: the icon fades out (200ms, linear) at full scale while the ring
+            // fades in after a 200ms delay (200ms, out-ease).
+            animation.pauseIconScale.snapTo(1f)
+            launch { animation.pauseIconAlpha.animateTo(0f, tween(200, easing = LinearEasing)) }
+            launch { animation.ringAlpha.animateTo(1f, tween(200, delayMillis = 200, easing = COUIOutEaseEasing)) }
+        }
+    }
+    LaunchedEffect(error) {
+        // initErrorAnimator / initRecoverAnimator: 350ms on the move-ease curve.
+        animation.error.animateTo(if (error) 1f else 0f, tween(350, easing = COUIMoveEaseEasing))
+    }
+    return animation
+}
+
+/**
+ * The `TYPE_ON_IMAGE` shadow of the track (`setShadowLayer(4dp, 0, 2dp,
+ * coui_circular_progress_shadow_color)`): the stroke blurred with the Android sigma of a 4dp shadow
+ * radius, drawn 2dp below the ring as a radial gradient.
+ */
+private fun DrawScope.drawRingShadow(
+    color: Color,
+    radius: Float,
+    center: Offset,
+    strokeWidthPx: Float,
+    alpha: Float,
+) {
+    val sigma = 0.57735f * CircularShadowRadius.toPx() + 0.5f
+    val inner = radius - strokeWidthPx / 2f
+    val outer = radius + strokeWidthPx / 2f
+    val reach = outer + 3f * sigma
+    if (reach <= 0f) return
+    val samples = 16
+    val stops = Array(samples + 1) { i ->
+        val distance = reach * i / samples
+        val coverage = progressGaussianCdf((distance - inner) / sigma) - progressGaussianCdf((distance - outer) / sigma)
+        distance / reach to color.copy(alpha = color.alpha * coverage.coerceIn(0f, 1f) * alpha)
+    }
+    val shadowCenter = Offset(center.x, center.y + CircularShadowOffsetY.toPx())
+    drawCircle(
+        brush = Brush.radialGradient(*stops, center = shadowCenter, radius = reach),
+        radius = reach,
+        center = shadowCenter,
+    )
+}
+
+/** The standard normal cumulative distribution, after Abramowitz and Stegun 7.1.26. */
+private fun progressGaussianCdf(x: Float): Float {
+    val z = abs(x) / sqrt(2f)
+    val t = 1f / (1f + 0.3275911f * z)
+    val poly = t * (0.25482959f + t * (-0.28449672f + t * (1.4214138f + t * (-1.4531521f + t * 1.0614054f))))
+    val erf = 1f - poly * exp(-z * z)
+    return if (x >= 0f) 0.5f * (1f + erf) else 0.5f * (1f - erf)
+}
+
 /** COUICircularProgressDrawable.initSpring: SpringForce(dampingRatio = 1.0, stiffness = 50). */
 private val CircularProgressSpring = spring(dampingRatio = 1f, stiffness = 50f, visibilityThreshold = 0.001f)
+
+/** coui_circular_progress_default_padding: the inset between the box and the length, and between the length and the ring. */
+private val CircularProgressPadding = 4.dp
+
+/** COUICircularProgressBar FOLLOW_THEME_PROGRESS_BAR_TRACK_ALPHA (89 / 255). */
+private val FollowThemeTrackAlpha = 89f / 255f
+
+/** coui_circular_progress_error_diameter. */
+private val CircularErrorDiameter = 19.dp
+
+/** coui_circular_progress_error_stroke_width. */
+private val CircularErrorStrokeWidth = 1.5.dp
+
+/** coui_circular_progress_error_icon_rect_width / _height / _bias. */
+private val CircularErrorBarWidth = 1.6.dp
+private val CircularErrorBarHeight = 5.25.dp
+private val CircularErrorBarBias = 4.25.dp
+
+/** coui_circular_progress_error_icon_circle_radius / _bias. */
+private val CircularErrorDotRadius = 1.1.dp
+private val CircularErrorDotBias = 3.1.dp
+
+/** coui_circular_progress_pause_icon_rect_width / _height / _gap / _radius. */
+private val CircularPauseBarWidth = 4.dp
+private val CircularPauseBarHeight = 16.dp
+private val CircularPauseBarGap = 4.dp
+private val CircularPauseBarRadius = 1.dp
+
+/** coui_circular_progress_shadow_radius / _y_bias. */
+private val CircularShadowRadius = 4.dp
+private val CircularShadowOffsetY = 2.dp
+
+/** The icons grow from 70% (`0.3 * fraction + 0.7`). */
+private val PauseIconMinScale = 0.7f
+private val ErrorIconMinScale = 0.7f
 
 /**
  * A [InfiniteProgressIndicator] with COUI style.
@@ -318,11 +568,11 @@ fun RotatingProgressIndicator(
     strokeWidth: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth,
 ) {
     val transition = rememberInfiniteTransition()
-    // coui_rotating_loading.json: fr = 60, ip = 0, op = 76, so frames 0..75 at 60 fps play in
-    // 1250 ms and then repeat forever.
-    val cycle by transition.animateFloat(
+    // coui_rotating_loading.json: fr = 60, ip = 0, op = 76, so the 76 frames play in 1266.7 ms and
+    // repeat forever. The keyframes end at frame 75, which holds for the last frame.
+    val frame by transition.animateFloat(
         initialValue = 0f,
-        targetValue = 1f,
+        targetValue = RotatingSpinnerFrameCount,
         animationSpec = infiniteRepeatable(
             animation = tween(RotatingSpinnerCycleMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
@@ -337,6 +587,7 @@ fun RotatingProgressIndicator(
         val strokeWidthPx = strokeWidth.toPx()
         val diameterPx = ringDiameter.toPx()
         val inset = (this.size.minDimension - diameterPx) / 2
+        val cycle = min(frame, RotatingSpinnerLastKeyframe) / RotatingSpinnerLastKeyframe
 
         // `Trim Paths 1` pins `end` at 100% and animates `start`, so the arc's trailing edge is
         // fixed while its leading edge swings; both the sweep and the start angle derive from it.
@@ -357,7 +608,13 @@ fun RotatingProgressIndicator(
 }
 
 /** The cycle duration of [RotatingProgressIndicator] (coui_rotating_loading.json: 76 frames at 60 fps). */
-private val RotatingSpinnerCycleMillis = 1250
+private val RotatingSpinnerCycleMillis = 1267
+
+/** coui_rotating_loading.json `op`: the frames of one cycle. */
+private val RotatingSpinnerFrameCount = 76f
+
+/** The last keyframe of coui_rotating_loading.json; the cycle's last frame holds it. */
+private val RotatingSpinnerLastKeyframe = 75f
 
 /** The normalized time at which the arc is shortest (coui_rotating_loading.json keyframe t = 37 of 75). */
 private val RotatingSpinnerBreakpoint = 37f / 75f
@@ -483,11 +740,12 @@ private fun DrawScope.drawCircularBackground(
  * Runs [block] inside an offscreen layer so the progress arc drawn with [BlendMode.Src]
  * replaces the track pixels underneath it instead of stacking on top of them.
  * COUICircularProgressDrawable does the same with saveLayerAlpha + PorterDuff.Mode.SRC,
- * which matters because both track and progress colors are translucent.
+ * which matters because both track and progress colors are translucent. [alpha] fades the whole
+ * layer (`mProgressBarAlpha`).
  */
-private inline fun DrawScope.withSrcCompositingLayer(block: DrawScope.() -> Unit) {
+private inline fun DrawScope.withSrcCompositingLayer(alpha: Float = 1f, block: DrawScope.() -> Unit) {
     val canvas = drawContext.canvas
-    canvas.saveLayer(Rect(Offset.Zero, size), Paint())
+    canvas.saveLayer(Rect(Offset.Zero, size), Paint().apply { this.alpha = alpha })
     block()
     canvas.restore()
 }
@@ -496,17 +754,42 @@ object ProgressIndicatorDefaults {
     /** The default height of [LinearProgressIndicator] (COUI coui_loading_dialog_progress_height). */
     val DefaultLinearProgressIndicatorHeight = 4.dp
 
-    /** The default stroke width of [CircularProgressIndicator] (COUI coui_circular_progress_medium_stroke_width). */
-    val DefaultCircularProgressIndicatorStrokeWidth = 3.dp
+    /** The stroke width of the medium [CircularProgressIndicator] tier (COUI coui_circular_progress_medium_stroke_width). */
+    val MediumCircularProgressIndicatorStrokeWidth = 3.dp
 
-    /** The default size of [CircularProgressIndicator] (COUI coui_circular_progress_medium_length). */
-    val DefaultCircularProgressIndicatorSize = 30.dp
+    /**
+     * The length of the medium [CircularProgressIndicator] tier (COUI coui_circular_progress_medium_length):
+     * a 38dp box around a 22dp ring.
+     */
+    val MediumCircularProgressIndicatorSize = 30.dp
 
-    /** The stroke width of the large [CircularProgressIndicator] tier (COUI coui_circular_progress_large_stroke_width). */
+    /**
+     * The stroke width of the large [CircularProgressIndicator] tier, the default with a progress
+     * (COUI coui_circular_progress_large_stroke_width).
+     */
     val LargeCircularProgressIndicatorStrokeWidth = 5.dp
 
-    /** The size of the large [CircularProgressIndicator] tier (COUI coui_circular_progress_large_length). */
+    /**
+     * The length of the large [CircularProgressIndicator] tier, the default with a progress
+     * (COUI coui_circular_progress_large_length, `couiCircularProgressBarSize` large_size): a 48dp
+     * box around a 32dp ring.
+     */
     val LargeCircularProgressIndicatorSize = 40.dp
+
+    /**
+     * The stroke width of the indeterminate [CircularProgressIndicator], the default loading view
+     * (COUI coui_circle_loading_medium_strokewidth).
+     */
+    val DefaultLoadingViewStrokeWidth = 2.67.dp
+
+    /** The size of the indeterminate [CircularProgressIndicator] (COUI coui_loading_view_default_length). */
+    val DefaultLoadingViewSize = 18.dp
+
+    /** The stroke width of the large loading view (COUI coui_circle_loading_large_strokewidth). */
+    val LargeLoadingViewStrokeWidth = 3.33.dp
+
+    /** The size of the large loading view (COUI coui_loading_view_large_width / _height). */
+    val LargeLoadingViewSize = 26.dp
 
     /** The default stroke width of [InfiniteProgressIndicator] (COUI coui_circle_loading_medium_strokewidth). */
     val DefaultInfiniteProgressIndicatorStrokeWidth = 2.67.dp
@@ -575,7 +858,7 @@ object ProgressIndicatorDefaults {
      * alpha component is discarded and the arc renders as #D9000000 / #D9FFFFFF.
      */
     @Composable
-    fun rotatingProgressIndicatorColor(): Color = COUITheme.colorScheme.onSurfaceContainer.copy(alpha = RotatingSpinnerOpacity)
+    fun rotatingProgressIndicatorColor(): Color = COUITheme.colorScheme.labelPrimary.copy(alpha = RotatingSpinnerOpacity)
 
     /**
      * The default [ProgressIndicatorColors] used by [LinearProgressIndicator]
@@ -586,7 +869,7 @@ object ProgressIndicatorDefaults {
     fun progressIndicatorColors(
         foregroundColor: Color = COUITheme.colorScheme.primary,
         disabledForegroundColor: Color = COUITheme.colorScheme.disabledProgress,
-        backgroundColor: Color = COUITheme.colorScheme.dividerLine,
+        backgroundColor: Color = COUITheme.colorScheme.divider,
         disabledBackgroundColor: Color = COUITheme.colorScheme.disabledProgressBackground,
     ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor, disabledBackgroundColor) {
         ProgressIndicatorColors(
@@ -605,8 +888,8 @@ object ProgressIndicatorDefaults {
     @Composable
     fun loadingViewColors(
         foregroundColor: Color = COUITheme.colorScheme.primary,
-        disabledForegroundColor: Color = COUITheme.colorScheme.disabledPrimary,
-        backgroundColor: Color = COUITheme.colorScheme.tertiaryContainer,
+        disabledForegroundColor: Color = COUITheme.colorScheme.disable,
+        backgroundColor: Color = COUITheme.colorScheme.secondary,
     ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor) {
         ProgressIndicatorColors(
             foregroundColor = foregroundColor,
@@ -618,18 +901,26 @@ object ProgressIndicatorDefaults {
     /**
      * The default [ProgressIndicatorColors] used by [CircularProgressIndicator]
      * (Widget.COUI.COUICircularProgressBar style: progress = couiColorHintNeutral,
-     * track = couiColorDivider).
+     * track = couiColorDivider, couiCircularErrorDrawableTint and couiCircularPauseDrawableTint =
+     * couiColorHintNeutral). The [CircularProgressType.OnImage] shadow is
+     * coui_circular_progress_shadow_color (#19000000); the closest theme slot is used.
      */
     @Composable
     fun circularProgressIndicatorColors(
-        foregroundColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        disabledForegroundColor: Color = COUITheme.colorScheme.disabledPrimarySlider,
-        backgroundColor: Color = COUITheme.colorScheme.dividerLine,
-    ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor) {
+        foregroundColor: Color = COUITheme.colorScheme.labelTertiary,
+        disabledForegroundColor: Color = COUITheme.colorScheme.disable,
+        backgroundColor: Color = COUITheme.colorScheme.divider,
+        errorColor: Color = COUITheme.colorScheme.labelTertiary,
+        pauseIconColor: Color = COUITheme.colorScheme.labelTertiary,
+        shadowColor: Color = COUITheme.colorScheme.sliderThumbShadow,
+    ): ProgressIndicatorColors = remember(foregroundColor, disabledForegroundColor, backgroundColor, errorColor, pauseIconColor, shadowColor) {
         ProgressIndicatorColors(
             foregroundColor = foregroundColor,
             disabledForegroundColor = disabledForegroundColor,
             backgroundColor = backgroundColor,
+            errorColor = errorColor,
+            pauseIconColor = pauseIconColor,
+            shadowColor = shadowColor,
         )
     }
 }
@@ -637,13 +928,36 @@ object ProgressIndicatorDefaults {
 /** The stroke opacity of coui_rotating_loading.json (`"o": 85`). */
 private val RotatingSpinnerOpacity = 0.85f
 
+/**
+ * The colors of the progress indicators.
+ *
+ * @param foregroundColor The progress or arc color.
+ * @param disabledForegroundColor The progress color when disabled.
+ * @param backgroundColor The track color.
+ * @param disabledBackgroundColor The track color when disabled.
+ * @param errorColor The ring and icon color of a [CircularProgressState.Error] circular indicator.
+ * @param pauseIconColor The icon color of a [CircularProgressState.Paused] circular indicator.
+ * @param shadowColor The shadow of a [CircularProgressType.OnImage] circular indicator.
+ */
 @Immutable
 data class ProgressIndicatorColors(
     private val foregroundColor: Color,
     private val disabledForegroundColor: Color,
     private val backgroundColor: Color,
     private val disabledBackgroundColor: Color = backgroundColor,
+    private val errorColor: Color = foregroundColor,
+    private val pauseIconColor: Color = foregroundColor,
+    private val shadowColor: Color = Color.Transparent,
 ) {
+    @Stable
+    internal fun errorColor(): Color = errorColor
+
+    @Stable
+    internal fun pauseIconColor(): Color = pauseIconColor
+
+    @Stable
+    internal fun shadowColor(): Color = shadowColor
+
     @Stable
     internal fun foregroundColor(enabled: Boolean): Color = if (enabled) foregroundColor else disabledForegroundColor
 

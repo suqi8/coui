@@ -14,6 +14,7 @@ import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.layout.ListPopupLayout
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
 
@@ -24,7 +25,8 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  * @param popupModifier The modifier to be applied to the [OverlayListPopup].
  * @param popupPositionProvider The [PopupPositionProvider] of the [OverlayListPopup].
  * @param alignment The alignment of the [OverlayListPopup].
- * @param enableWindowDim Whether to enable window dimming when the [OverlayListPopup] is shown.
+ * @param enableWindowDim Whether to dim the window while the [OverlayListPopup] is shown. Off by
+ *   default, as COUI 17 `COUIPopupListWindow` never dims what lies behind a menu.
  *   Defaults to false: `COUIPopupListWindow` calls `setBackgroundDrawable(null)` and never dims,
  *   so a COUI dropdown leaves the content behind it untouched.
  * @param onDismissRequest The callback when the [OverlayListPopup] is dismissed.
@@ -48,9 +50,10 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  *   scope where the popup is called; without one, or without runtime-shader support, the popup keeps
  *   [backgroundColor]. Pass false to opt out. (COUI itself leaves popup blur off unless an app calls
  *   `COUIPopupListWindow.setUseBackgroundBlur`.)
- * @param materialEffect Whether a blurred popup surface draws the COUI 17 material effects: the
- *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). An opaque
- *   surface never draws them.
+ * @param materialEffect Whether the popup surface draws the COUI 17 material effects: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). Drawn on the
+ *   blurred and the opaque surface alike (COUI only draws them once blurred). Both [materialBlur]
+ *   and [materialEffect] default to [LocalCOUIMaterialEffectEnabled].
  * @param content The [Composable] content of the [OverlayListPopup]. You should use the [ListPopupColumn] in general.
  */
 @Composable
@@ -68,8 +71,8 @@ fun OverlayListPopup(
     renderInRootScaffold: Boolean = true,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     content: @Composable () -> Unit,
 ) {
     ListPopupLayout(

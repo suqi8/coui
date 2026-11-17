@@ -44,7 +44,7 @@ enum class EmptyStateSizeType {
     /** No illustration, the text group sits at half the free height. */
     Small,
 
-    /** The illustration at 60% of its size. */
+    /** The illustration at full size (COUI 17 ANIM_SIZE_SCALE_VALUE_NORMAL = 1.0). */
     Medium,
 
     /** The illustration at full size. */
@@ -58,7 +58,8 @@ enum class EmptyStateSizeType {
  *
  * As in COUIEmptyStateView.onMeasure / onLayout, the group is centered horizontally and, when the
  * height is bounded, placed 45% of the way down the free height (50% for [EmptyStateSizeType.Small]).
- * The illustration is scaled by the size type: hidden for Small, 60% for Medium, 100% for Large.
+ * The illustration is hidden for Small and shown at full size otherwise
+ * (COUIEmptyStateView.getAnimTargetSize: `sizeType != SMALL ? 1.0 : 0.0` in COUI 17).
  * The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll
  * once they exceed 92dp together (COUIMaxHeightScrollView).
  *
@@ -92,9 +93,9 @@ fun EmptyState(
     illustrationWidth: Dp = EmptyStateDefaults.IllustrationWidth,
     illustrationHeight: Dp = EmptyStateDefaults.IllustrationHeight,
     colors: EmptyStateColors = EmptyStateDefaults.emptyStateColors(),
-    titleStyle: TextStyle = COUITheme.textStyles.headline2,
-    subtitleStyle: TextStyle = COUITheme.textStyles.footnote2,
-    actionStyle: TextStyle = COUITheme.textStyles.subtitle,
+    titleStyle: TextStyle = COUITheme.textStyles.headlineXS,
+    subtitleStyle: TextStyle = COUITheme.textStyles.bodyXS,
+    actionStyle: TextStyle = COUITheme.textStyles.buttonM,
     illustration: (@Composable () -> Unit)? = null,
 ) {
     BoxWithConstraints(modifier = modifier) {
@@ -103,11 +104,7 @@ fun EmptyState(
             width = if (constraints.hasBoundedWidth) maxWidth else Dp.Infinity,
             height = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity,
         )
-        val scale = when (resolved) {
-            EmptyStateSizeType.Small -> 0f
-            EmptyStateSizeType.Medium -> 0.6f
-            else -> 1f
-        }
+        val scale = if (resolved == EmptyStateSizeType.Small) 0f else 1f
         val offsetRatio = if (resolved == EmptyStateSizeType.Small) 0.5f else 0.45f
         Layout(
             content = {
@@ -219,11 +216,11 @@ private fun EmptyStateGroup(
 /** Contains default values used by [EmptyState]. */
 object EmptyStateDefaults {
 
-    /** Full illustration width (COUI coui_component_empty_anim_view_width_normal). */
-    val IllustrationWidth = 280.dp
+    /** Full illustration width (COUI 17 coui_component_empty_anim_view_width_normal). */
+    val IllustrationWidth = 120.dp
 
-    /** Full illustration height (COUI coui_component_empty_anim_view_height_normal). */
-    val IllustrationHeight = 200.dp
+    /** Full illustration height (COUI 17 coui_component_empty_anim_view_height_normal). */
+    val IllustrationHeight = 100.dp
 
     /** Width of the title and subtitle (COUI coui_component_empty_group_width). */
     val TextWidth = 280.dp
@@ -266,8 +263,8 @@ object EmptyStateDefaults {
      */
     @Composable
     fun emptyStateColors(
-        titleColor: Color = COUITheme.colorScheme.onBackground,
-        subtitleColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        subtitleColor: Color = COUITheme.colorScheme.labelSecondary,
         actionColor: Color = COUITheme.colorScheme.primary,
     ): EmptyStateColors = remember(titleColor, subtitleColor, actionColor) {
         EmptyStateColors(

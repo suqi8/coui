@@ -18,8 +18,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -43,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,18 +57,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
@@ -76,24 +89,26 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.suqi8.coui.kmp.squircle.squircleBackground
-import io.github.suqi8.coui.kmp.squircle.squircleBorder
-import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
 /**
  * Background mode of a [TextField], mirroring COUIEditText couiBackgroundMode.
  *
- * - [Rectangle]: stroke-only rounded rectangle (no fill), 10dp corners; unfocused
- *   stroke 0.33dp couiColorDivider, focused 1dp couiColorPrimary
+ * - [Rectangle]: stroke-only rounded rectangle (no fill), 10dp corners; a 0.33dp stroke in
+ *   couiColorDivider that turns couiColorPrimary while focused (1dp only in error state)
  *   (COUIEditText MODE_BACKGROUND_RECT, Widget.COUI.EditText.HintAnim.Rectangle).
  * - [Line]: no fill; a 0.33dp bottom underline plus a focused 1dp primary line that
  *   expands from the start edge (COUIEditText MODE_BACKGROUND_LINE — the form used by
@@ -118,10 +133,17 @@ enum class TextFieldMode { Rectangle, Line, None }
  *   [TextFieldDefaults.textFieldColors] to customize.
  * @param cornerRadius The corner radius of the [TextField] (only used by
  *   [TextFieldMode.Rectangle]).
+ * @param minHeight The minimum height of the [TextField]. Defaults to
+ *   [TextFieldDefaults.minHeight] of the [backgroundMode]: 62dp for [TextFieldMode.Line] and
+ *   [TextFieldMode.Rectangle] (Widget.COUI.EditText coui_edit_text_height_min), 0dp for
+ *   [TextFieldMode.None]. The content is centered vertically inside it.
  * @param label The label (hint) to be displayed when the [TextField] is empty.
  * @param useLabelAsPlaceholder Whether the label behaves as a plain placeholder that
  *   disappears once text is entered (COUI default). Set to `false` to enable the COUI
- *   HintAnim floating-label animation.
+ *   HintAnim floating label: in [TextFieldMode.Line] the field reserves 10dp + the collapsed
+ *   label height + 5dp above the text and the label floats to 10dp from the top; in
+ *   [TextFieldMode.Rectangle] the border starts half a collapsed label below the top and the
+ *   floating label rides on it inside a 4dp cutout (COUIEditText / COUICutoutDrawable).
  * @param justShowFocusLine Only used by [TextFieldMode.Line]: hide the resting
  *   underline and show just the focused expanding line, mirroring
  *   COUIInputPreference couiJustShowFocusLine.
@@ -129,16 +151,23 @@ enum class TextFieldMode { Rectangle, Line, None }
  * @param readOnly Whether the [TextField] is read-only.
  * @param isError Whether the [TextField] is in error state. Turning this on blends the
  *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
- *   when the field is focused, plays a horizontal shake animation, mirroring
- *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
+ *   when the field is focused, plays a horizontal shake animation; when the 450ms error
+ *   animation ends the whole text is selected, so the error-tinted selection covers it, mirroring
+ *   COUIErrorEditTextHelper.setErrorStateEnd. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
- *   COUIInputView couiInputMaxCount.
+ *   COUIInputView couiInputMaxCount. The counter switches to
+ *   [TextFieldColors.counterErrorColor] at the limit.
  * @param showClearButton Whether to show a clear (fast delete) button when the
  *   [TextField] is focused and not empty, mirroring COUIEditText quickDelete.
  * @param showPasswordToggle Whether to show an eye toggle that switches the
  *   password visibility, mirroring COUIInputView couiEnablePassword. While the
- *   password is hidden, the text is masked and [outputTransformation] is ignored.
+ *   password is hidden, the text is masked and [outputTransformation] is ignored. The toggle
+ *   follows [enabled] (COUIInputView.setEnabled): a disabled toggle is not clickable and uses
+ *   [TextFieldColors.disabledIconColor].
+ * @param initialPasswordVisible Whether the password starts visible. Defaults to masked, like a
+ *   COUIEditText with a password input type; [InputView] passes `true` because COUIInputView
+ *   couiPasswordType defaults to OPEN.
  * @param inputTransformation The input transformation to be applied to the [TextField].
  * @param textStyle The text style to be applied to the [TextField]. Defaults to the
  *   COUI input text of the selected [backgroundMode]: 16sp regular
@@ -163,6 +192,7 @@ fun TextField(
     insideMargin: DpSize = TextFieldDefaults.insideMargin(backgroundMode),
     colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
     cornerRadius: Dp = TextFieldDefaults.CornerRadius,
+    minHeight: Dp = TextFieldDefaults.minHeight(backgroundMode),
     label: String = "",
     useLabelAsPlaceholder: Boolean = true,
     justShowFocusLine: Boolean = false,
@@ -172,6 +202,7 @@ fun TextField(
     maxCount: Int? = null,
     showClearButton: Boolean = false,
     showPasswordToggle: Boolean = false,
+    initialPasswordVisible: Boolean = false,
     inputTransformation: InputTransformation? = null,
     textStyle: TextStyle = TextFieldDefaults.textStyle(backgroundMode),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -202,7 +233,7 @@ fun TextField(
         textStyle.copy(color = textColor)
     }
 
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(initialPasswordVisible) }
     val resolvedOutputTransformation =
         if (showPasswordToggle && !passwordVisible) PasswordMaskOutputTransformation else outputTransformation
     val resolvedInputTransformation = if (maxCount != null) {
@@ -215,6 +246,10 @@ fun TextField(
         }
     } else {
         inputTransformation
+    }
+
+    ErrorSelectAllEffect(isError = isError) {
+        state.edit { selection = TextRange(0, length) }
     }
 
     ErrorSelectionColors(isError = isError, errorColor = colors.errorColor) {
@@ -238,10 +273,12 @@ fun TextField(
                 TextFieldChrome(
                     label = label,
                     labelState = labelState,
+                    floatingLabel = !useLabelAsPlaceholder && label.isNotEmpty(),
                     labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
                     colors = colors,
                     cornerRadius = cornerRadius,
                     insideMargin = insideMargin,
+                    minHeight = minHeight,
                     backgroundMode = backgroundMode,
                     justShowFocusLine = justShowFocusLine,
                     enabled = enabled,
@@ -277,10 +314,17 @@ fun TextField(
  *   [TextFieldDefaults.textFieldColors] to customize.
  * @param cornerRadius The corner radius of the [TextField] (only used by
  *   [TextFieldMode.Rectangle]).
+ * @param minHeight The minimum height of the [TextField]. Defaults to
+ *   [TextFieldDefaults.minHeight] of the [backgroundMode]: 62dp for [TextFieldMode.Line] and
+ *   [TextFieldMode.Rectangle] (Widget.COUI.EditText coui_edit_text_height_min), 0dp for
+ *   [TextFieldMode.None]. The content is centered vertically inside it.
  * @param label The label (hint) to be displayed when the [TextField] is empty.
  * @param useLabelAsPlaceholder Whether the label behaves as a plain placeholder that
  *   disappears once text is entered (COUI default). Set to `false` to enable the COUI
- *   HintAnim floating-label animation.
+ *   HintAnim floating label: in [TextFieldMode.Line] the field reserves 10dp + the collapsed
+ *   label height + 5dp above the text and the label floats to 10dp from the top; in
+ *   [TextFieldMode.Rectangle] the border starts half a collapsed label below the top and the
+ *   floating label rides on it inside a 4dp cutout (COUIEditText / COUICutoutDrawable).
  * @param justShowFocusLine Only used by [TextFieldMode.Line]: hide the resting
  *   underline and show just the focused expanding line, mirroring
  *   COUIInputPreference couiJustShowFocusLine.
@@ -288,16 +332,23 @@ fun TextField(
  * @param readOnly Whether the [TextField] is read-only.
  * @param isError Whether the [TextField] is in error state. Turning this on blends the
  *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
- *   when the field is focused, plays a horizontal shake animation, mirroring
- *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
+ *   when the field is focused, plays a horizontal shake animation; when the 450ms error
+ *   animation ends the whole text is selected, so the error-tinted selection covers it, mirroring
+ *   COUIErrorEditTextHelper.setErrorStateEnd. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
- *   COUIInputView couiInputMaxCount.
+ *   COUIInputView couiInputMaxCount. The counter switches to
+ *   [TextFieldColors.counterErrorColor] at the limit.
  * @param showClearButton Whether to show a clear (fast delete) button when the
  *   [TextField] is focused and not empty, mirroring COUIEditText quickDelete.
  * @param showPasswordToggle Whether to show an eye toggle that switches the
  *   password visibility, mirroring COUIInputView couiEnablePassword. While the
- *   password is hidden, the text is masked and [visualTransformation] is ignored.
+ *   password is hidden, the text is masked and [visualTransformation] is ignored. The toggle
+ *   follows [enabled] (COUIInputView.setEnabled): a disabled toggle is not clickable and uses
+ *   [TextFieldColors.disabledIconColor].
+ * @param initialPasswordVisible Whether the password starts visible. Defaults to masked, like a
+ *   COUIEditText with a password input type; [InputView] passes `true` because COUIInputView
+ *   couiPasswordType defaults to OPEN.
  * @param textStyle The text style to be applied to the [TextField]. Defaults to the
  *   COUI input text of the selected [backgroundMode].
  * @param keyboardOptions The keyboard options to be applied to the [TextField].
@@ -322,6 +373,7 @@ fun TextField(
     insideMargin: DpSize = TextFieldDefaults.insideMargin(backgroundMode),
     colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
     cornerRadius: Dp = TextFieldDefaults.CornerRadius,
+    minHeight: Dp = TextFieldDefaults.minHeight(backgroundMode),
     label: String = "",
     useLabelAsPlaceholder: Boolean = true,
     justShowFocusLine: Boolean = false,
@@ -331,6 +383,7 @@ fun TextField(
     maxCount: Int? = null,
     showClearButton: Boolean = false,
     showPasswordToggle: Boolean = false,
+    initialPasswordVisible: Boolean = false,
     textStyle: TextStyle = TextFieldDefaults.textStyle(backgroundMode),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -358,11 +411,16 @@ fun TextField(
         textStyle.copy(color = textColor)
     }
 
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(initialPasswordVisible) }
     val resolvedVisualTransformation = if (showPasswordToggle && !passwordVisible) {
         remember { PasswordVisualTransformation() }
     } else {
         visualTransformation
+    }
+    val currentValue by rememberUpdatedState(value)
+    ErrorSelectAllEffect(isError = isError) {
+        val latest = currentValue
+        currentOnValueChange(latest.copy(selection = TextRange(0, latest.text.length)))
     }
     val handleValueChange: (TextFieldValue) -> Unit = if (maxCount == null) {
         { currentOnValueChange(it) }
@@ -408,10 +466,12 @@ fun TextField(
                 TextFieldChrome(
                     label = label,
                     labelState = labelState,
+                    floatingLabel = !useLabelAsPlaceholder && label.isNotEmpty(),
                     labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
                     colors = colors,
                     cornerRadius = cornerRadius,
                     insideMargin = insideMargin,
+                    minHeight = minHeight,
                     backgroundMode = backgroundMode,
                     justShowFocusLine = justShowFocusLine,
                     enabled = enabled,
@@ -446,10 +506,17 @@ fun TextField(
  *   [TextFieldDefaults.textFieldColors] to customize.
  * @param cornerRadius The corner radius of the [TextField] (only used by
  *   [TextFieldMode.Rectangle]).
+ * @param minHeight The minimum height of the [TextField]. Defaults to
+ *   [TextFieldDefaults.minHeight] of the [backgroundMode]: 62dp for [TextFieldMode.Line] and
+ *   [TextFieldMode.Rectangle] (Widget.COUI.EditText coui_edit_text_height_min), 0dp for
+ *   [TextFieldMode.None]. The content is centered vertically inside it.
  * @param label The label (hint) to be displayed when the [TextField] is empty.
  * @param useLabelAsPlaceholder Whether the label behaves as a plain placeholder that
  *   disappears once text is entered (COUI default). Set to `false` to enable the COUI
- *   HintAnim floating-label animation.
+ *   HintAnim floating label: in [TextFieldMode.Line] the field reserves 10dp + the collapsed
+ *   label height + 5dp above the text and the label floats to 10dp from the top; in
+ *   [TextFieldMode.Rectangle] the border starts half a collapsed label below the top and the
+ *   floating label rides on it inside a 4dp cutout (COUIEditText / COUICutoutDrawable).
  * @param justShowFocusLine Only used by [TextFieldMode.Line]: hide the resting
  *   underline and show just the focused expanding line, mirroring
  *   COUIInputPreference couiJustShowFocusLine.
@@ -457,16 +524,23 @@ fun TextField(
  * @param readOnly Whether the [TextField] is read-only.
  * @param isError Whether the [TextField] is in error state. Turning this on blends the
  *   border / underline to [TextFieldColors.errorColor], tints the text selection with it and,
- *   when the field is focused, plays a horizontal shake animation, mirroring
- *   COUIErrorEditTextHelper. The label keeps its color, as in COUI.
+ *   when the field is focused, plays a horizontal shake animation; when the 450ms error
+ *   animation ends the whole text is selected, so the error-tinted selection covers it, mirroring
+ *   COUIErrorEditTextHelper.setErrorStateEnd. The label keeps its color, as in COUI.
  * @param maxCount The maximum number of characters. When not null a "count/max"
  *   counter is shown at the end and input is truncated at [maxCount], mirroring
- *   COUIInputView couiInputMaxCount.
+ *   COUIInputView couiInputMaxCount. The counter switches to
+ *   [TextFieldColors.counterErrorColor] at the limit.
  * @param showClearButton Whether to show a clear (fast delete) button when the
  *   [TextField] is focused and not empty, mirroring COUIEditText quickDelete.
  * @param showPasswordToggle Whether to show an eye toggle that switches the
  *   password visibility, mirroring COUIInputView couiEnablePassword. While the
- *   password is hidden, the text is masked and [visualTransformation] is ignored.
+ *   password is hidden, the text is masked and [visualTransformation] is ignored. The toggle
+ *   follows [enabled] (COUIInputView.setEnabled): a disabled toggle is not clickable and uses
+ *   [TextFieldColors.disabledIconColor].
+ * @param initialPasswordVisible Whether the password starts visible. Defaults to masked, like a
+ *   COUIEditText with a password input type; [InputView] passes `true` because COUIInputView
+ *   couiPasswordType defaults to OPEN.
  * @param textStyle The text style to be applied to the [TextField]. Defaults to the
  *   COUI input text of the selected [backgroundMode].
  * @param keyboardOptions The keyboard options to be applied to the [TextField].
@@ -491,6 +565,7 @@ fun TextField(
     insideMargin: DpSize = TextFieldDefaults.insideMargin(backgroundMode),
     colors: TextFieldColors = TextFieldDefaults.textFieldColors(),
     cornerRadius: Dp = TextFieldDefaults.CornerRadius,
+    minHeight: Dp = TextFieldDefaults.minHeight(backgroundMode),
     label: String = "",
     useLabelAsPlaceholder: Boolean = true,
     justShowFocusLine: Boolean = false,
@@ -500,6 +575,7 @@ fun TextField(
     maxCount: Int? = null,
     showClearButton: Boolean = false,
     showPasswordToggle: Boolean = false,
+    initialPasswordVisible: Boolean = false,
     textStyle: TextStyle = TextFieldDefaults.textStyle(backgroundMode),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -527,26 +603,49 @@ fun TextField(
         textStyle.copy(color = textColor)
     }
 
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(initialPasswordVisible) }
     val resolvedVisualTransformation = if (showPasswordToggle && !passwordVisible) {
         remember { PasswordVisualTransformation() }
     } else {
         visualTransformation
     }
-    val handleValueChange: (String) -> Unit = if (maxCount == null) {
-        { currentOnValueChange(it) }
-    } else {
-        remember(maxCount) {
-            { new ->
-                // Truncate instead of rejecting, mirroring COUIInputView subSequence(0, maxCount).
-                currentOnValueChange(if (new.length > maxCount) new.take(maxCount) else new)
-            }
+
+    // Mirrors the String overload of BasicTextField, but keeps the selection here so the error
+    // state can select the whole text (COUIErrorEditTextHelper.setErrorStateEnd).
+    var textFieldValueState by remember { mutableStateOf(TextFieldValue(text = value)) }
+    val textFieldValue = textFieldValueState.copy(text = value)
+    SideEffect {
+        if (textFieldValue.selection != textFieldValueState.selection ||
+            textFieldValue.composition != textFieldValueState.composition
+        ) {
+            textFieldValueState = textFieldValue
         }
+    }
+    var lastTextValue by remember(value) { mutableStateOf(value) }
+    val currentValue by rememberUpdatedState(value)
+    ErrorSelectAllEffect(isError = isError) {
+        val latest = currentValue
+        textFieldValueState = TextFieldValue(text = latest, selection = TextRange(0, latest.length))
+    }
+    val handleValueChange: (TextFieldValue) -> Unit = { new ->
+        // Truncate instead of rejecting, mirroring COUIInputView subSequence(0, maxCount).
+        val limited = if (maxCount != null && new.text.length > maxCount) {
+            TextFieldValue(
+                text = new.text.take(maxCount),
+                selection = TextRange(minOf(new.selection.start, maxCount), minOf(new.selection.end, maxCount)),
+            )
+        } else {
+            new
+        }
+        textFieldValueState = limited
+        val changed = lastTextValue != limited.text
+        lastTextValue = limited.text
+        if (changed) currentOnValueChange(limited.text)
     }
 
     ErrorSelectionColors(isError = isError, errorColor = colors.errorColor) {
         BasicTextField(
-            value = value,
+            value = textFieldValue,
             onValueChange = handleValueChange,
             modifier = modifier,
             enabled = enabled,
@@ -565,10 +664,12 @@ fun TextField(
                 TextFieldChrome(
                     label = label,
                     labelState = labelState,
+                    floatingLabel = !useLabelAsPlaceholder && label.isNotEmpty(),
                     labelNormalFontSize = resolvedTextStyle.fontSize.takeIf { it.isSp }?.value ?: DefaultLabelFontSize,
                     colors = colors,
                     cornerRadius = cornerRadius,
                     insideMargin = insideMargin,
+                    minHeight = minHeight,
                     backgroundMode = backgroundMode,
                     justShowFocusLine = justShowFocusLine,
                     enabled = enabled,
@@ -646,13 +747,51 @@ object TextFieldDefaults {
         TextFieldMode.None -> NoneInsideMargin
     }
 
+    /**
+     * The minimum height of the [TextFieldMode.Line] and [TextFieldMode.Rectangle] fields
+     * (COUI Widget.COUI.EditText android:minHeight = coui_edit_text_height_min, inherited by the
+     * HintAnim.Line, Line.HintDisable and Rectangle styles).
+     */
+    val MinHeight = 62.dp
+
+    /**
+     * Returns the default minimum height for the given [mode]: [MinHeight] for the decorated
+     * modes and 0dp for [TextFieldMode.None], the undecorated field of the Widget.COUI.Input
+     * family (card inputs), which resets android:minHeight to 0.
+     */
+    fun minHeight(mode: TextFieldMode): Dp = if (mode == TextFieldMode.None) 0.dp else MinHeight
+
+    /**
+     * The gap above the floating label in [TextFieldMode.Line] (COUI
+     * coui_textinput_line_padding_top).
+     */
+    internal val LineLabelPaddingTop = 10.dp
+
+    /**
+     * The gap between the floating label and the text in [TextFieldMode.Line] (COUI
+     * coui_textinput_line_padding_middle).
+     */
+    internal val LineLabelPaddingMiddle = 5.dp
+
+    /**
+     * The horizontal room the [TextFieldMode.Rectangle] border cutout leaves around the floating
+     * label (COUI coui_textinput_label_cutout_padding).
+     */
+    internal val LabelCutoutPadding = 4.dp
+
     /** The character counter font size (COUI coui_input_view input_count: 10sp). */
     val CounterFontSize = 10.sp
 
-    /** The default border width when the [TextField] is focused (COUI coui_textinput_focus_stroke_width). */
+    /**
+     * The width of the focused underline and of the error border / underline
+     * (COUI coui_textinput_focus_stroke_width).
+     */
     internal val BorderWidth = 1.dp
 
-    /** The default border width when the [TextField] is not focused (COUI coui_textinput_stroke_width). */
+    /**
+     * The width of the resting underline and of the rect border outside the error state
+     * (COUI coui_textinput_stroke_width).
+     */
     internal val UnfocusedBorderWidth = 0.33.dp
 
     /**
@@ -670,8 +809,8 @@ object TextFieldDefaults {
     /** The circular touch target size of the built-in trailing buttons. */
     internal val TrailingButtonTouchTarget = 36.dp
 
-    /** The visual circle size of the clear button (ic_edit_text_delete: 18dp circle in a 22dp icon). */
-    internal val ClearButtonVisualSize = 18.dp
+    /** The size of the clear button icon (ic_edit_text_delete: 22dp vector, 18dp circle at 2..20). */
+    internal val ClearButtonVisualSize = 22.dp
 
     /** The visual size of the password eye icon (COUI coui_inputview_password_size). */
     internal val PasswordIconSize = 28.dp
@@ -684,7 +823,7 @@ object TextFieldDefaults {
      */
     @Composable
     fun textStyle(mode: TextFieldMode): TextStyle {
-        val base = COUITheme.textStyles.body1
+        val base = COUITheme.textStyles.bodyXL
         return remember(base, mode) {
             if (mode == TextFieldMode.Rectangle) base.copy(fontWeight = FontWeight.Bold) else base
         }
@@ -693,56 +832,61 @@ object TextFieldDefaults {
     /**
      * Default colors used by the [TextField].
      *
-     * @param backgroundColor The fill color of the [TextFieldMode.Rectangle] box.
-     *   COUI rect mode is stroke-only (GradientDrawable with no solid color), so this
-     *   defaults to transparent.
      * @param labelColor The color of the label / placeholder
-     *   (COUI android:textColorHint = couiColorLabelSecondary; the collapsed label
-     *   couiColorSecondNeutral resolves to the same 54% neutral).
+     *   (COUI Widget.COUI.EditText android:textColorHint = couiColorLabelSecondary; the collapsed
+     *   label couiColorSecondNeutral resolves to the same 54% neutral).
      * @param borderColor The color of the border / focused underline
      *   (COUI couiStrokeColor = couiColorPrimary).
      * @param unfocusedBorderColor The color of the border / underline when the [TextField]
      *   is not focused (COUI couiDefaultStrokeColor = couiColorDivider).
-     * @param errorColor The border / underline color and the selection tint in error state, and the
-     *   color of an overflowing counter (COUI couiEditTextErrorColor, which defaults to
-     *   couiColorErrorTextBg: red at 30% alpha in light mode, opaque in dark mode).
+     * @param errorColor The border / underline color and the selection tint in error state
+     *   (COUI couiEditTextErrorColor, which defaults to couiColorErrorTextBg: red at 30% alpha in
+     *   light mode, opaque in dark mode).
      * @param counterColor The color of the character counter (COUI couiColorHintNeutral).
+     * @param counterErrorColor The color of the counter once the text reaches the limit
+     *   (COUIInputView sets couiColorError on the count view).
      * @param iconColor The tint of the built-in clear / password buttons (COUI couiColorLabelSecondary).
-     * @param disabledTextColor The input text / label color when the [TextField] is disabled
+     * @param disabledIconColor The tint of the password toggle when the [TextField] is disabled
+     *   (COUI coui_btn_eye_on_disabled / coui_btn_eye_off_disabled: couiColorLabelQuaternary).
+     * @param disabledTextColor The input text color when the [TextField] is disabled
      *   (COUI coui_edit_text_color state_enabled=false -> couiColorDisabledNeutral).
-     * @param disabledBorderColor The border / underline color when the [TextField] is disabled
-     *   (COUI couiDisabledStrokeColor = coui_textinput_stroke_color_disabled).
+     * @param disabledBorderColor The border / underline and the label color when the [TextField]
+     *   is disabled (COUI couiDisabledStrokeColor = coui_textinput_stroke_color_disabled, which
+     *   COUIEditText.updateLabelState also applies to the collapsed and expanded hint).
      */
     @Composable
     fun textFieldColors(
-        backgroundColor: Color = Color.Transparent,
-        labelColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        labelColor: Color = COUITheme.colorScheme.labelSecondary,
         borderColor: Color = COUITheme.colorScheme.primary,
-        unfocusedBorderColor: Color = COUITheme.colorScheme.dividerLine,
-        errorColor: Color = COUITheme.colorScheme.textFieldError,
-        counterColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        iconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
-        disabledTextColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        unfocusedBorderColor: Color = COUITheme.colorScheme.divider,
+        errorColor: Color = COUITheme.colorScheme.errorTextBg,
+        counterColor: Color = COUITheme.colorScheme.labelTertiary,
+        counterErrorColor: Color = COUITheme.colorScheme.error,
+        iconColor: Color = COUITheme.colorScheme.labelSecondary,
+        disabledIconColor: Color = COUITheme.colorScheme.quarternaryNeutral,
+        disabledTextColor: Color = COUITheme.colorScheme.disabledNeutral,
         disabledBorderColor: Color = COUITheme.colorScheme.disabledTextFieldBorder,
     ): TextFieldColors = remember(
-        backgroundColor,
         labelColor,
         borderColor,
         unfocusedBorderColor,
         errorColor,
         counterColor,
+        counterErrorColor,
         iconColor,
+        disabledIconColor,
         disabledTextColor,
         disabledBorderColor,
     ) {
         TextFieldColors(
-            backgroundColor = backgroundColor,
             labelColor = labelColor,
             borderColor = borderColor,
             unfocusedBorderColor = unfocusedBorderColor,
             errorColor = errorColor,
             counterColor = counterColor,
+            counterErrorColor = counterErrorColor,
             iconColor = iconColor,
+            disabledIconColor = disabledIconColor,
             disabledTextColor = disabledTextColor,
             disabledBorderColor = disabledBorderColor,
         )
@@ -752,27 +896,28 @@ object TextFieldDefaults {
 /**
  * Colors used by a [TextField] in different parts of the component.
  *
- * @param backgroundColor The fill color of the [TextFieldMode.Rectangle] box
- *   (transparent in COUI).
  * @param labelColor The color of the label / placeholder.
  * @param borderColor The color of the border / focused underline.
  * @param unfocusedBorderColor The color of the border / underline when the [TextField] is not focused.
- * @param errorColor The border / underline color and the selection tint in error state, and the
- *   color of an overflowing counter.
+ * @param errorColor The border / underline color and the selection tint in error state.
  * @param counterColor The color of the character counter.
+ * @param counterErrorColor The color of the character counter once the text reaches the limit.
  * @param iconColor The tint of the built-in clear / password buttons.
- * @param disabledTextColor The input text / label color when the [TextField] is disabled.
- * @param disabledBorderColor The border / underline color when the [TextField] is disabled.
+ * @param disabledIconColor The tint of the password toggle when the [TextField] is disabled.
+ * @param disabledTextColor The input text color when the [TextField] is disabled.
+ * @param disabledBorderColor The border / underline and the label color when the [TextField] is
+ *   disabled.
  */
 @Immutable
 data class TextFieldColors(
-    val backgroundColor: Color,
     val labelColor: Color,
     val borderColor: Color,
     val unfocusedBorderColor: Color,
     val errorColor: Color,
     val counterColor: Color,
+    val counterErrorColor: Color,
     val iconColor: Color,
+    val disabledIconColor: Color,
     val disabledTextColor: Color,
     val disabledBorderColor: Color,
 )
@@ -798,11 +943,42 @@ private val LineAnimDuration = 250
 /** Duration of the label collapse animation (COUIEditText LABEL_SCALE_ANIMATION_DURATION). */
 private val LabelAnimDuration = 200
 
-/** Duration of the counter color change (COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME). */
-private val CounterColorAnimDuration = 250
-
 /** Total duration of the error shake animation (COUIErrorEditTextHelper ShakeInterpolator TOTAL_DURATION). */
 private val ShakeDuration = 450
+
+/** Duration of the password eye slash animation (coui_btn_eye_off_anim / coui_btn_eye_on_anim). */
+private val PasswordEyeAnimDuration = 300
+
+/**
+ * `-ascent / textSize` of the collapsed label paint, COUICollapseTextHelper.getCollapsedTextHeight
+ * (sans-serif hhea ascent 1900 / 2048).
+ */
+private val CollapsedLabelAscentRatio = 0.9277f
+
+/**
+ * `(descent - ascent) / textSize` of the collapsed label paint, COUICollapseTextHelper.getHintHeight
+ * (the 1.1719 sans-serif line height).
+ */
+private val CollapsedLabelHeightRatio = 1.1719f
+
+/**
+ * Selects the whole text once the error animation ends, as
+ * COUIErrorEditTextHelper.setErrorStateEnd(true, true, true) does after the 450ms error animator
+ * set, so the error-tinted selection ([ErrorSelectionColors]) covers the text.
+ */
+@Composable
+private fun ErrorSelectAllEffect(
+    isError: Boolean,
+    selectAll: () -> Unit,
+) {
+    val currentSelectAll by rememberUpdatedState(selectAll)
+    LaunchedEffect(isError) {
+        if (isError) {
+            delay(ShakeDuration.toLong())
+            currentSelectAll()
+        }
+    }
+}
 
 /**
  * Tints the text selection with [errorColor] at 30% alpha while [isError] is on, as
@@ -847,10 +1023,12 @@ private object PasswordMaskOutputTransformation : OutputTransformation {
 private fun TextFieldChrome(
     label: String,
     labelState: LabelAnimState,
+    floatingLabel: Boolean,
     labelNormalFontSize: Float,
     colors: TextFieldColors,
     cornerRadius: Dp,
     insideMargin: DpSize,
+    minHeight: Dp,
     backgroundMode: TextFieldMode,
     justShowFocusLine: Boolean,
     enabled: Boolean,
@@ -866,13 +1044,11 @@ private fun TextFieldChrome(
     isFocused: Boolean,
     innerTextField: @Composable () -> Unit,
 ) {
-    // Rectangle mode: stroke width/color (error keeps the focused width, per
-    // COUIErrorEditTextHelper which strokes with mStrokeWidthFocused). Disabled fields
-    // fall back to the thin resting stroke in couiDisabledStrokeColor (COUIEditText
-    // updateTextInputBoxState).
-    val borderWidthState = animateDpAsState(
-        if (enabled && (isFocused || isError)) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth,
-    )
+    // Rectangle mode: the stroke keeps the 0.33dp couiStrokeWidth when focused, only its color
+    // changes (COUIEditText.applyBoxAttributes / updateTextInputBoxState); the 1dp
+    // couiFocusStrokeWidth is only used by COUIErrorEditTextHelper.drawModeBackgroundRect in error
+    // state. Disabled fields use couiDisabledStrokeColor.
+    val borderWidth = if (enabled && isError) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth
     val borderColorState = animateColorAsState(
         when {
             !enabled -> colors.disabledBorderColor
@@ -916,9 +1092,10 @@ private fun TextFieldChrome(
                 // COUIEditText updateLineModeBackground: disabled resets mDrawXProgress to 0.
                 lineAlpha.snapTo(0f)
                 lineFraction.snapTo(0f)
-            } else if (lineAlpha.value > 0f) {
-                // COUIEditText animateToHideBackground: the focused line fades out in place.
-                lineAlpha.animateTo(0f, tween(LineAnimDuration, easing = CouiInEaseEasing))
+            } else {
+                // COUIEditText.draw only paints the focused line while hasFocus(), so it is gone as
+                // soon as the field loses focus (the animateToHideBackground fade is never visible).
+                lineAlpha.snapTo(0f)
             }
         }
     }
@@ -949,24 +1126,64 @@ private fun TextFieldChrome(
     }
 
     // COUI never tints the label in error state: COUIErrorEditTextHelper.drawCollapseText has
-    // no caller, so the hint keeps its color.
+    // no caller, so the hint keeps its color. A disabled field draws the collapsed and expanded
+    // hint in couiDisabledStrokeColor (COUIEditText.updateLabelState).
     val labelColorState = animateColorAsState(
-        if (enabled) colors.labelColor else colors.disabledTextColor,
+        if (enabled) colors.labelColor else colors.disabledBorderColor,
         animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
     )
     // Label collapse: 200ms with COUIMoveEaseInterpolator
     // (COUIEditText LABEL_SCALE_ANIMATION_DURATION / mPathInterpolator1).
-    val labelAnim = animateDpAsState(
-        if (labelState == LabelAnimState.Floating) -insideMargin.height / 2 else 0.dp,
+    val labelFraction = animateFloatAsState(
+        if (labelState == LabelAnimState.Floating) 1f else 0f,
         animationSpec = tween(LabelAnimDuration, easing = CouiMoveEaseEasing),
     )
-    val labelFontSize by animateFloatAsState(
-        when (labelState) {
-            LabelAnimState.Floating -> TextFieldDefaults.LabelFontSizeFloating.value
-            else -> labelNormalFontSize
-        },
-        animationSpec = tween(LabelAnimDuration, easing = CouiMoveEaseEasing),
-    )
+    val labelFontSize = labelNormalFontSize +
+        (TextFieldDefaults.LabelFontSizeFloating.value - labelNormalFontSize) * labelFraction.value
+
+    // Vertical geometry. With the HintAnim floating label COUIEditText.getModePaddingTop reserves
+    // room above the text: in line mode coui_textinput_line_padding_top + the collapsed label
+    // height (getHintHeight) + coui_textinput_line_padding_middle, with the collapsed label at
+    // padding_top; in rect mode rectModePaddingTop + half the collapsed label ascent
+    // (getCollapsedTextHeight), with the border starting half that ascent below the top
+    // (getBoundsTop) and the collapsed label at 0 (calculateCollapsedTextTopBounds).
+    val density = LocalDensity.current
+    val collapsedAscent = with(density) {
+        (TextFieldDefaults.LabelFontSizeFloating.toPx() * CollapsedLabelAscentRatio).toDp()
+    }
+    val collapsedLabelHeight = with(density) {
+        (TextFieldDefaults.LabelFontSizeFloating.toPx() * CollapsedLabelHeightRatio).toDp()
+    }
+    val labelGeometry = when {
+        floatingLabel && backgroundMode == TextFieldMode.Rectangle -> LabelGeometry(
+            contentTop = insideMargin.height + collapsedAscent / 2,
+            collapsedTop = 0.dp,
+            borderTop = collapsedAscent / 2,
+        )
+
+        floatingLabel && backgroundMode == TextFieldMode.Line -> LabelGeometry(
+            contentTop = TextFieldDefaults.LineLabelPaddingTop + collapsedLabelHeight + TextFieldDefaults.LineLabelPaddingMiddle,
+            collapsedTop = TextFieldDefaults.LineLabelPaddingTop,
+            borderTop = 0.dp,
+        )
+
+        // The undecorated mode keeps its padding: the floating label moves up and the text down
+        // by half the vertical inside margin.
+        else -> LabelGeometry(
+            contentTop = insideMargin.height,
+            collapsedTop = null,
+            borderTop = 0.dp,
+        )
+    }
+    val textOffset = if (labelGeometry.collapsedTop == null && labelState == LabelAnimState.Floating) {
+        insideMargin.height / 2
+    } else {
+        0.dp
+    }
+    // COUIEditText.openCutout / closeCutout: the rect border is cut around the collapsed label as
+    // soon as the label starts collapsing, and closed as soon as it starts expanding.
+    val cutout = remember { LabelCutout() }
+    val cutoutOpen = floatingLabel && backgroundMode == TextFieldMode.Rectangle && labelState == LabelAnimState.Floating
     // COUI only switches the collapsed label to sans-serif-medium in rect mode
     // (COUIEditText initHintMode: setTypefaces for couiBackgroundMode == 2).
     val labelFontWeight = if (labelState == LabelAnimState.Floating && backgroundMode == TextFieldMode.Rectangle) {
@@ -976,15 +1193,36 @@ private fun TextFieldChrome(
     }
 
     val backgroundModifier = when (backgroundMode) {
-        TextFieldMode.Rectangle ->
-            Modifier
-                .squircleBackground(color = colors.backgroundColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.CircularWeight)
-                .squircleBorder(
-                    width = { borderWidthState.value },
-                    color = { borderColorState.value },
-                    cornerRadius = cornerRadius,
-                    weight = COUIRoundCorner.CircularWeight,
+        // A stroke-only round rect (GradientDrawable / COUICutoutDrawable with no fill and plain
+        // circular corners), inset by half the stroke like GradientDrawable, starting at the
+        // border top and cut open around the collapsed label.
+        TextFieldMode.Rectangle -> Modifier.drawBehind {
+            val strokePx = borderWidth.toPx()
+            val half = strokePx / 2f
+            val top = labelGeometry.borderTop.toPx()
+            val boxWidth = size.width - strokePx
+            val boxHeight = size.height - top - strokePx
+            if (boxWidth <= 0f || boxHeight <= 0f) return@drawBehind
+            val radius = (cornerRadius.toPx() - half).coerceAtLeast(0f)
+            val drawBorder: DrawScope.() -> Unit = {
+                drawRoundRect(
+                    color = borderColorState.value,
+                    topLeft = Offset(half, top + half),
+                    size = Size(boxWidth, boxHeight),
+                    cornerRadius = CornerRadius(radius),
+                    style = Stroke(width = strokePx),
                 )
+            }
+            if (cutoutOpen && cutout.right > cutout.left) {
+                val left = if (layoutDirection == LayoutDirection.Rtl) size.width - cutout.right else cutout.left
+                val right = if (layoutDirection == LayoutDirection.Rtl) size.width - cutout.left else cutout.right
+                clipRect(left = left, top = 0f, right = right, bottom = top + strokePx * 2, clipOp = ClipOp.Difference) {
+                    drawBorder()
+                }
+            } else {
+                drawBorder()
+            }
+        }
 
         TextFieldMode.Line -> Modifier.drawBehind {
             if (!justShowFocusLine || (isError && enabled)) {
@@ -1021,16 +1259,12 @@ private fun TextFieldChrome(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (counterText != null) {
-                    // The counter turns to the error color at the limit; COUICardMultiInputView
-                    // animates the change over 250ms.
-                    val counterColorState = animateColorAsState(
-                        if (counterOverflow) colors.errorColor else colors.counterColor,
-                        animationSpec = tween(CounterColorAnimDuration),
-                    )
+                    // COUIInputView switches the count view to couiColorError at the limit
+                    // without an animation.
                     Text(
                         text = counterText,
                         fontSize = TextFieldDefaults.CounterFontSize,
-                        color = counterColorState.value,
+                        color = if (counterOverflow) colors.counterErrorColor else colors.counterColor,
                         modifier = Modifier.padding(start = TextFieldDefaults.CounterPadding),
                     )
                 }
@@ -1040,13 +1274,14 @@ private fun TextFieldChrome(
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
-                        TextFieldClearButton(circleColor = colors.iconColor, onClear = onClearText)
+                        TextFieldClearButton(color = colors.iconColor, onClear = onClearText)
                     }
                 }
                 if (passwordVisible != null) {
                     TextFieldPasswordToggle(
                         visible = passwordVisible,
-                        tint = colors.iconColor,
+                        enabled = enabled,
+                        tint = if (enabled) colors.iconColor else colors.disabledIconColor,
                         onToggle = onPasswordToggle,
                     )
                 }
@@ -1054,28 +1289,29 @@ private fun TextFieldChrome(
         }
     }
 
-    val hasLeadingIcon = leadingIcon != null
     val hasTrailingContent = trailingIcon != null || hasBuiltinTrailing
-    val paddingModifier = remember(hasLeadingIcon, hasTrailingContent, insideMargin) {
-        when {
-            !hasLeadingIcon && !hasTrailingContent -> Modifier.padding(insideMargin.width, vertical = insideMargin.height)
-            !hasLeadingIcon -> Modifier.padding(start = insideMargin.width).padding(vertical = insideMargin.height)
-            !hasTrailingContent -> Modifier.padding(end = insideMargin.width).padding(vertical = insideMargin.height)
-            else -> Modifier.padding(vertical = insideMargin.height)
-        }
-    }
+    val contentPadding = PaddingValues(
+        start = if (leadingIcon == null) insideMargin.width else 0.dp,
+        top = labelGeometry.contentTop,
+        end = if (hasTrailingContent) 0.dp else insideMargin.width,
+        bottom = insideMargin.height,
+    )
 
     TextFieldDecorationBox(
         label = label,
+        labelVisible = labelState != LabelAnimState.Hidden && labelState != LabelAnimState.Placeholder,
         labelFontSize = labelFontSize,
         labelFontWeight = labelFontWeight,
         labelColor = labelColorState.value,
-        labelState = labelState,
-        backgroundModifier = backgroundModifier,
-        paddingModifier = paddingModifier,
-        labelAnim = { labelAnim.value },
+        labelFraction = { labelFraction.value },
+        collapsedLabelTop = labelGeometry.collapsedTop,
+        legacyFloatOffset = insideMargin.height / 2,
+        textOffset = textOffset,
         shakeOffset = { shakeOffset.value },
-        insideMargin = insideMargin,
+        minHeight = minHeight,
+        contentPadding = contentPadding,
+        cutout = cutout,
+        backgroundModifier = backgroundModifier,
         leadingIcon = leadingIcon,
         builtinTrailing = builtinTrailing,
         trailingIcon = trailingIcon,
@@ -1083,49 +1319,74 @@ private fun TextFieldChrome(
     )
 }
 
+/**
+ * The vertical geometry of the field content and its label.
+ *
+ * @param contentTop The padding above the text.
+ * @param collapsedTop The top of the floating label in the field, or `null` to float it half the
+ *   vertical inside margin above the text start.
+ * @param borderTop The top of the [TextFieldMode.Rectangle] border.
+ */
+@Immutable
+private class LabelGeometry(
+    val contentTop: Dp,
+    val collapsedTop: Dp?,
+    val borderTop: Dp,
+)
+
+/**
+ * The horizontal span (in px, left-to-right) of the [TextFieldMode.Rectangle] border cutout around
+ * the collapsed label. Written while the decoration is placed and read when its border is drawn,
+ * which always follows in the same frame.
+ */
+private class LabelCutout {
+    var left = 0f
+    var right = 0f
+}
+
+/**
+ * Lays out leading icon, padded field, built-in trailing cluster and trailing icon in a row, each
+ * centered vertically in a box at least [minHeight] tall (EditText gravity center_vertical within
+ * its min height), and places the label: expanded on the text start, collapsed at
+ * [collapsedLabelTop] (or [legacyFloatOffset] above the text start when null), interpolated by
+ * [labelFraction]. Records the collapsed label span in [cutout] for the rect border.
+ */
 @Composable
 private fun TextFieldDecorationBox(
     label: String,
+    labelVisible: Boolean,
     labelFontSize: Float,
     labelFontWeight: FontWeight,
     labelColor: Color,
-    labelState: LabelAnimState,
-    labelAnim: () -> Dp,
+    labelFraction: () -> Float,
+    collapsedLabelTop: Dp?,
+    legacyFloatOffset: Dp,
+    textOffset: Dp,
     shakeOffset: () -> Float,
-    insideMargin: DpSize,
+    minHeight: Dp,
+    contentPadding: PaddingValues,
+    cutout: LabelCutout,
     leadingIcon: @Composable (() -> Unit)?,
     builtinTrailing: (@Composable () -> Unit)?,
     trailingIcon: @Composable (() -> Unit)?,
     backgroundModifier: Modifier = Modifier,
-    paddingModifier: Modifier = Modifier,
     innerTextField: @Composable () -> Unit,
 ) {
-    Box(
+    Layout(
         modifier = backgroundModifier,
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            leadingIcon?.invoke()
+        content = {
+            if (leadingIcon != null) {
+                Box(modifier = Modifier.layoutId(DecorationSlot.Leading), contentAlignment = Alignment.Center) { leadingIcon() }
+            }
             Box(
-                modifier = Modifier.weight(1f).then(paddingModifier),
+                modifier = Modifier
+                    .layoutId(DecorationSlot.Field)
+                    .padding(contentPadding),
                 contentAlignment = Alignment.TopStart,
             ) {
-                if (labelState != LabelAnimState.Hidden && labelState != LabelAnimState.Placeholder) {
-                    Text(
-                        text = label,
-                        fontSize = labelFontSize.sp,
-                        color = labelColor,
-                        fontWeight = labelFontWeight,
-                        modifier = Modifier.offset { IntOffset(0, labelAnim().roundToPx()) },
-                        textAlign = TextAlign.Start,
-                    )
-                }
                 Box(
                     modifier = Modifier
-                        .offset(y = if (labelState == LabelAnimState.Floating) insideMargin.height / 2 else 0.dp)
+                        .offset(y = textOffset)
                         .offset {
                             // COUIErrorEditTextHelper only shakes the text canvas, not the box.
                             IntOffset((shakeOffset() * TextFieldDefaults.ShakeAmplitude.toPx()).roundToInt(), 0)
@@ -1135,21 +1396,96 @@ private fun TextFieldDecorationBox(
                     innerTextField()
                 }
             }
-            builtinTrailing?.invoke()
-            trailingIcon?.invoke()
+            if (builtinTrailing != null) {
+                Box(modifier = Modifier.layoutId(DecorationSlot.BuiltinTrailing), contentAlignment = Alignment.Center) { builtinTrailing() }
+            }
+            if (trailingIcon != null) {
+                Box(modifier = Modifier.layoutId(DecorationSlot.Trailing), contentAlignment = Alignment.Center) { trailingIcon() }
+            }
+            if (labelVisible) {
+                Text(
+                    text = label,
+                    fontSize = labelFontSize.sp,
+                    color = labelColor,
+                    fontWeight = labelFontWeight,
+                    modifier = Modifier.layoutId(DecorationSlot.Label),
+                    textAlign = TextAlign.Start,
+                )
+            }
+        },
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val leading = measurables.firstOrNull { it.layoutId == DecorationSlot.Leading }?.measure(loose)
+        val builtin = measurables.firstOrNull { it.layoutId == DecorationSlot.BuiltinTrailing }?.measure(loose)
+        val trailing = measurables.firstOrNull { it.layoutId == DecorationSlot.Trailing }?.measure(loose)
+        val sideWidth = (leading?.width ?: 0) + (builtin?.width ?: 0) + (trailing?.width ?: 0)
+        val fieldMeasurable = measurables.first { it.layoutId == DecorationSlot.Field }
+        val field = if (constraints.hasBoundedWidth) {
+            val fieldWidth = (constraints.maxWidth - sideWidth).coerceAtLeast(0)
+            fieldMeasurable.measure(loose.copy(minWidth = fieldWidth, maxWidth = fieldWidth))
+        } else {
+            fieldMeasurable.measure(loose)
+        }
+        val padStart = contentPadding.calculateStartPadding(layoutDirection).roundToPx()
+        val padEnd = contentPadding.calculateEndPadding(layoutDirection).roundToPx()
+        val padTop = contentPadding.calculateTopPadding().roundToPx()
+        val labelPlaceable = measurables.firstOrNull { it.layoutId == DecorationSlot.Label }
+            ?.measure(Constraints(maxWidth = (field.width - padStart - padEnd).coerceAtLeast(0)))
+
+        val width = constraints.constrainWidth(
+            if (constraints.hasBoundedWidth) constraints.maxWidth else sideWidth + field.width,
+        )
+        val contentHeight = maxOf(leading?.height ?: 0, field.height, builtin?.height ?: 0, trailing?.height ?: 0)
+        val height = constraints.constrainHeight(maxOf(contentHeight, minHeight.roundToPx()))
+
+        layout(width, height) {
+            var x = 0
+            leading?.let {
+                it.placeRelative(x, (height - it.height) / 2)
+                x += it.width
+            }
+            val fieldX = x
+            val fieldY = (height - field.height) / 2
+            field.placeRelative(fieldX, fieldY)
+            x += field.width
+            builtin?.let {
+                it.placeRelative(x, (height - it.height) / 2)
+                x += it.width
+            }
+            trailing?.let { it.placeRelative(x, (height - it.height) / 2) }
+
+            if (labelPlaceable != null) {
+                val labelX = fieldX + padStart
+                val expandedY = fieldY + padTop
+                val collapsedY = collapsedLabelTop?.roundToPx() ?: (expandedY - legacyFloatOffset.roundToPx())
+                val fraction = labelFraction()
+                labelPlaceable.placeRelative(labelX, (expandedY + (collapsedY - expandedY) * fraction).roundToInt())
+                // The cutout spans the collapsed label bounds (the label width scaled to the
+                // collapsed size) plus coui_textinput_label_cutout_padding on both sides.
+                val collapsedWidth = labelPlaceable.width * TextFieldDefaults.LabelFontSizeFloating.value / labelFontSize
+                val cutoutPadding = TextFieldDefaults.LabelCutoutPadding.toPx()
+                cutout.left = labelX - cutoutPadding
+                cutout.right = labelX + collapsedWidth + cutoutPadding
+            } else {
+                cutout.left = 0f
+                cutout.right = 0f
+            }
         }
     }
 }
 
+/** The slots of [TextFieldDecorationBox]. */
+private enum class DecorationSlot { Leading, Field, BuiltinTrailing, Trailing, Label }
+
 /**
- * Clear (fast delete) button: a 36dp circular touch target holding an 18dp filled circle
- * with a cross knocked out of it (ic_edit_text_delete: 22dp vector, 9dp-radius circle
- * tinted couiColorLabelSecondary; the cross is a cutout in COUI, drawn white here which
- * is equivalent on card / panel surfaces).
+ * Clear (fast delete) button: a 36dp circular touch target holding the 22dp ic_edit_text_delete
+ * icon, a 9dp-radius circle tinted couiColorLabelSecondary with the cross knocked out of it, so
+ * the surface behind shows through the cross. The cross arms are 1.6dp round-capped strokes whose
+ * cap centers sit 2.97dp from the center on each axis.
  */
 @Composable
 private fun TextFieldClearButton(
-    circleColor: Color,
+    color: Color,
     onClear: () -> Unit,
 ) {
     val currentOnClear by rememberUpdatedState(onClear)
@@ -1161,21 +1497,32 @@ private fun TextFieldClearButton(
             .semantics { contentDescription = "Clear text" },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.size(TextFieldDefaults.ClearButtonVisualSize)) {
-            drawCircle(color = circleColor)
-            val half = 4.1.dp.toPx()
-            val stroke = 1.6.dp.toPx()
+        Canvas(
+            modifier = Modifier
+                .size(TextFieldDefaults.ClearButtonVisualSize)
+                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
+        ) {
+            // ic_edit_text_delete: 22dp viewport, circle centered at (11, 11) with radius 9.
+            val s = size.width / 22f
+            drawCircle(color = color, radius = 9f * s)
+            val arm = 2.97f * s
+            val stroke = 1.6f * s
+            // BlendMode.Clear punches the cross out of the circle; the color only feeds the mask.
             drawLine(
-                color = Color.White,
-                start = Offset(center.x - half, center.y - half),
-                end = Offset(center.x + half, center.y + half),
+                color = color,
+                start = Offset(center.x - arm, center.y - arm),
+                end = Offset(center.x + arm, center.y + arm),
                 strokeWidth = stroke,
+                cap = StrokeCap.Round,
+                blendMode = BlendMode.Clear,
             )
             drawLine(
-                color = Color.White,
-                start = Offset(center.x - half, center.y + half),
-                end = Offset(center.x + half, center.y - half),
+                color = color,
+                start = Offset(center.x - arm, center.y + arm),
+                end = Offset(center.x + arm, center.y - arm),
                 strokeWidth = stroke,
+                cap = StrokeCap.Round,
+                blendMode = BlendMode.Clear,
             )
         }
     }
@@ -1184,21 +1531,29 @@ private fun TextFieldClearButton(
 /**
  * Password visibility toggle: a 36dp circular touch target holding a 28dp eye icon
  * (COUI coui_inputview_password_size) redrawn from the coui_btn_eye_on / coui_btn_eye_off
- * 34dp vectors, tinted couiColorLabelSecondary.
+ * 34dp vectors, tinted couiColorLabelSecondary (couiColorLabelQuaternary and not clickable when
+ * disabled, coui_btn_eye_*_disabled). Toggling draws the slash in or out over 300ms with the
+ * (0.3, 0, 0.1, 1) path interpolator, like the coui_btn_eye_off_anim / coui_btn_eye_on_anim
+ * transitions of coui_edittext_password_icon.
  */
 @Composable
 private fun TextFieldPasswordToggle(
     visible: Boolean,
+    enabled: Boolean,
     tint: Color,
     onToggle: () -> Unit,
 ) {
     val currentOnToggle by rememberUpdatedState(onToggle)
     val description = if (visible) "Hide password" else "Show password"
+    val slashProgress = animateFloatAsState(
+        if (visible) 0f else 1f,
+        animationSpec = tween(PasswordEyeAnimDuration, easing = CouiMoveEaseEasing),
+    )
     Box(
         modifier = Modifier
             .size(TextFieldDefaults.TrailingButtonTouchTarget)
             .clip(CircleShape)
-            .clickable { currentOnToggle() }
+            .clickable(enabled = enabled) { currentOnToggle() }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
@@ -1216,13 +1571,15 @@ private fun TextFieldPasswordToggle(
                 addOval(Rect(center = eyeCenter, radius = 5.02f * s))
                 addOval(Rect(center = eyeCenter, radius = 3.016f * s))
             }
-            if (visible) {
+            val progress = slashProgress.value
+            if (progress <= 0f) {
                 drawPath(eye, color = tint)
             } else {
                 // coui_btn_eye_off: the same eye cut along a 45-degree slash from (6.7,6.7)
-                // to (27.2,27.3) with a small gap, plus the 2dp rounded slash stroke.
+                // to (27.2,27.3) with a small gap, plus the 2dp rounded slash stroke. While
+                // animating, the slash (and the gap it cuts) grows from its start point.
                 val slashStart = Offset(6.7f * s, 6.73f * s)
-                val slashEnd = Offset(27.24f * s, 27.27f * s)
+                val slashEnd = slashStart + (Offset(27.24f * s, 27.27f * s) - slashStart) * progress
                 val normal = Offset(-0.7071f, 0.7071f)
                 val halfBand = 2.8f * s
                 val band = Path().apply {

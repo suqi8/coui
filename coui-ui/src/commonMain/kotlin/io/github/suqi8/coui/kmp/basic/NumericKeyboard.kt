@@ -35,19 +35,16 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerId
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalGraphicsContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -64,6 +61,8 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.pressSpring
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -92,11 +91,13 @@ enum class NumericKeyboardPressEffect {
  * A side key of a [NumericKeyboard], the bottom-left or bottom-right cell
  * (`COUINumericKeyboard.SideStyle`). It shows [icon] when set, otherwise [text].
  *
- * @param icon The icon, tinted with [NumericKeyboardColors.numberColor].
+ * @param icon The icon, drawn with its own colors unless [tintIcon] is set.
  * @param text The label, drawn bold.
  * @param contentDescription The accessibility description.
  * @param textColor The color of [text]; unspecified uses [NumericKeyboardColors.wordTextColor].
  * @param textSize The size of [text] (`coui_number_keyboard_finish_text_size`, a dp size).
+ * @param tintIcon Whether [icon] is tinted with [NumericKeyboardColors.numberColor]. COUI only
+ *   tints its built-in delete glyph (`mDeleteStyle`); a custom `SideStyle` drawable is drawn as is.
  */
 @Immutable
 data class NumericKeyboardSideKey(
@@ -105,6 +106,7 @@ data class NumericKeyboardSideKey(
     val contentDescription: String? = text,
     val textColor: Color = Color.Unspecified,
     val textSize: Dp = NumericKeyboardDefaults.SideTextSize,
+    val tintIcon: Boolean = false,
 )
 
 /**
@@ -161,8 +163,8 @@ fun rememberNumericKeyboardState(): NumericKeyboardState = remember { NumericKey
 
 /**
  * The COUI numeric keyboard (`COUINumericKeyboard`): digits 1-9 and 0 on round 68dp keys in a
- * 3 x 4 grid, with an optional side key in each bottom corner (by default a delete key on the
- * right).
+ * 3 x 4 grid, with an optional side key in each bottom corner. Both corners are empty by default,
+ * as in COUI; pass [NumericKeyboardDefaults.deleteKey] or [NumericKeyboardDefaults.finishKey].
  *
  * A key fires on release when the finger is still on it; sliding off cancels it, and so does a
  * scrolling parent taking the drag over (COUI's `ACTION_CANCEL`), so the keyboard can sit in a
@@ -197,7 +199,7 @@ fun NumericKeyboard(
     enabled: Boolean = true,
     hapticFeedbackEnabled: Boolean = true,
     leftKey: NumericKeyboardSideKey? = null,
-    rightKey: NumericKeyboardSideKey? = NumericKeyboardDefaults.deleteKey(),
+    rightKey: NumericKeyboardSideKey? = null,
     pressEffect: NumericKeyboardPressEffect = NumericKeyboardPressEffect.Ripple,
     keySize: Dp = NumericKeyboardDefaults.KeySize,
     colors: NumericKeyboardColors = NumericKeyboardDefaults.colors(),
@@ -206,7 +208,7 @@ fun NumericKeyboard(
 ) {
     val scope = rememberCoroutineScope()
     state.scope = scope
-    val haptic = LocalHapticFeedback.current
+    val haptic = rememberCouiHaptic()
     val currentHaptic by rememberUpdatedState(haptic)
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
     val currentOnNumber by rememberUpdatedState(onNumberClick)
@@ -214,6 +216,7 @@ fun NumericKeyboard(
     val currentOnRight by rememberUpdatedState(onRightKeyClick)
     val currentEffect by rememberUpdatedState(pressEffect)
     val currentCircleMaxAlpha by rememberUpdatedState(colors.circleMaxAlpha)
+    val currentKeyDp by rememberUpdatedState(keySize.value)
 
     val left = rememberSideKey(leftKey)
     val right = rememberSideKey(rightKey)
@@ -273,11 +276,19 @@ fun NumericKeyboard(
                             when {
                                 change.pressed && !change.previousPressed -> {
                                     val index = geometry.hit(change.position, left.visible, right.visible)
-                                    if (index >= 0) {
-                                        if (currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.KeyboardTap)
+                                    // onTouchEvent swallows touches on a key still entering or a
+                                    // side key fading out.
+                                    val blocked = index >= 0 &&
+                                        (
+                                            state.keys[index].enterAlpha.value < 1f ||
+                                                (index == SIDE_LEFT_INDEX && left.disappearing) ||
+                                                (index == SIDE_RIGHT_INDEX && right.disappearing)
+                                            )
+                                    if (index >= 0 && !blocked) {
+                                        if (currentHapticEnabled) currentHaptic(CouiHapticEffect.KeyboardTouch)
                                         val key = state.keys[index]
                                         key.pointer = id
-                                        pressKey(key, scope, currentEffect, currentCircleMaxAlpha)
+                                        pressKey(key, scope, currentEffect, currentCircleMaxAlpha, currentKeyDp)
                                         change.consume()
                                     }
                                 }
@@ -290,7 +301,7 @@ fun NumericKeyboard(
                                             dispatchKey(index, currentOnNumber, currentOnLeft, currentOnRight)
                                         }
                                         owned.pointer = null
-                                        releaseKey(owned, scope, currentEffect, currentCircleMaxAlpha)
+                                        releaseKey(owned, scope, currentEffect, currentCircleMaxAlpha, currentKeyDp)
                                         change.consume()
                                     }
                                 }
@@ -301,7 +312,7 @@ fun NumericKeyboard(
                                     if (owned >= 0 && geometry.hit(change.position, left.visible, right.visible) != owned) {
                                         val key = state.keys[owned]
                                         key.pointer = null
-                                        releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
+                                        releaseKey(key, scope, currentEffect, currentCircleMaxAlpha, currentKeyDp)
                                     }
                                 }
                             }
@@ -313,7 +324,7 @@ fun NumericKeyboard(
                             if (change.pressed && change.previousPressed && change.isConsumed) {
                                 state.keys.firstOrNull { it.pointer == change.id }?.let { key ->
                                     key.pointer = null
-                                    releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
+                                    releaseKey(key, scope, currentEffect, currentCircleMaxAlpha, currentKeyDp)
                                 }
                             }
                         }
@@ -323,7 +334,7 @@ fun NumericKeyboard(
                     state.keys.forEach { key ->
                         if (key.pointer != null) {
                             key.pointer = null
-                            releaseKey(key, scope, currentEffect, currentCircleMaxAlpha)
+                            releaseKey(key, scope, currentEffect, currentCircleMaxAlpha, currentKeyDp)
                         }
                     }
                 }
@@ -366,6 +377,13 @@ fun NumericKeyboard(
                                 colors = colors,
                                 textMeasurer = textMeasurer,
                             )
+                            // drawSide ends with drawInnerBorder(alpha 0) in pressLight: no hairline,
+                            // but the pressed highlight border still shows.
+                            val highlight = key.light.inner.value
+                            if (pressEffect == NumericKeyboardPressEffect.Light && highlight > 0f && side.key != null) {
+                                val circle = Path().apply { addOval(Rect(center, radius * scale)) }
+                                drawLockInnerBorder(circle, HighlightBorderColor, alpha = highlight, blendMode = BlendMode.Luminosity)
+                            }
                             continue
                         }
                         val alpha = key.enterAlpha.value.coerceIn(0f, 1f)
@@ -448,6 +466,7 @@ private class SideKeyHolder(initial: NumericKeyboardSideKey?) {
     var key: NumericKeyboardSideKey? by mutableStateOf(initial)
     val alpha = Animatable(if (initial != null) 1f else 0f)
     var initialized = false
+    var disappearing by mutableStateOf(false)
     val visible: Boolean get() = key != null && alpha.value > 0f
 }
 
@@ -461,11 +480,17 @@ private fun rememberSideKey(target: NumericKeyboardSideKey?): SideKeyHolder {
             return@LaunchedEffect
         }
         if (target != null) {
+            holder.disappearing = false
             holder.key = target
             holder.alpha.animateTo(1f, SideKeySpring)
         } else {
-            holder.alpha.animateTo(0f, SideKeySpring)
-            holder.key = null
+            holder.disappearing = true
+            try {
+                holder.alpha.animateTo(0f, SideKeySpring)
+                holder.key = null
+            } finally {
+                holder.disappearing = false
+            }
         }
     }
     return holder
@@ -528,7 +553,7 @@ private fun dispatchKey(index: Int, onNumber: (Int) -> Unit, onLeft: () -> Unit,
 }
 
 /** `initShowAnimator` / `executeLightEffectAnimator(true)`. */
-private fun pressKey(key: NumericKeyDotState, scope: CoroutineScope, effect: NumericKeyboardPressEffect, maxAlpha: Float) {
+private fun pressKey(key: NumericKeyDotState, scope: CoroutineScope, effect: NumericKeyboardPressEffect, maxAlpha: Float, keyDp: Float) {
     if (effect == NumericKeyboardPressEffect.Ripple) {
         key.showJob?.cancel()
         key.showJob = scope.launch {
@@ -542,13 +567,13 @@ private fun pressKey(key: NumericKeyDotState, scope: CoroutineScope, effect: Num
             }
         }
     } else {
-        scope.launch { key.press.animateTo(1f, pressSpring(KEY_DP, KEY_DP, pressed = true)) }
+        scope.launch { key.press.animateTo(1f, pressSpring(keyDp, keyDp, pressed = true)) }
         scope.launch { key.light.animate(true) }
     }
 }
 
 /** `initFadeAnimator` / `executeLightEffectAnimator(false)`. */
-private fun releaseKey(key: NumericKeyDotState, scope: CoroutineScope, effect: NumericKeyboardPressEffect, maxAlpha: Float) {
+private fun releaseKey(key: NumericKeyDotState, scope: CoroutineScope, effect: NumericKeyboardPressEffect, maxAlpha: Float, keyDp: Float) {
     if (effect == NumericKeyboardPressEffect.Ripple) {
         // showAnimator.end(): jump to the end of the show before fading.
         key.showJob?.cancel()
@@ -567,7 +592,7 @@ private fun releaseKey(key: NumericKeyDotState, scope: CoroutineScope, effect: N
             }
         }
     } else {
-        scope.launch { key.press.animateTo(0f, pressSpring(KEY_DP, KEY_DP, pressed = false)) }
+        scope.launch { key.press.animateTo(0f, pressSpring(keyDp, keyDp, pressed = false)) }
         scope.launch { key.light.animate(false) }
     }
 }
@@ -632,7 +657,8 @@ private fun DrawScope.drawSideKey(
         val w = intrinsic.width * scale
         val h = intrinsic.height * scale
         translate(center.x - w / 2f, center.y - h / 2f) {
-            with(painter) { draw(Size(w, h), alpha = sideAlpha, colorFilter = ColorFilter.tint(colors.numberColor)) }
+            val tint = if (key.tintIcon) ColorFilter.tint(colors.numberColor) else null
+            with(painter) { draw(Size(w, h), alpha = sideAlpha, colorFilter = tint) }
         }
     } else if (!key.text.isNullOrEmpty()) {
         val color = if (key.textColor != Color.Unspecified) key.textColor else colors.wordTextColor
@@ -693,27 +719,28 @@ object NumericKeyboardDefaults {
     }
 
     /** The delete side key (`mDeleteStyle`, `coui_number_keyboard_delete`). */
-    fun deleteKey(contentDescription: String = "Delete"): NumericKeyboardSideKey = NumericKeyboardSideKey(icon = DeleteIcon, contentDescription = contentDescription)
+    fun deleteKey(contentDescription: String = "Delete"): NumericKeyboardSideKey = NumericKeyboardSideKey(icon = DeleteIcon, contentDescription = contentDescription, tintIcon = true)
 
     /** The finish side key (`mFinishStyle`, `coui_numeric_keyboard_sure`). */
     fun finishKey(text: String = "Done"): NumericKeyboardSideKey = NumericKeyboardSideKey(text = text)
 
     /**
      * The Settings keyboard colors (`SettingsNumericKeyboardStyle` on
-     * `Widget.COUI.COUINumericKeyboard.Dark`, and `SettingsNumericKeyboardDarkStyle` on
-     * `.Dark.Dark`): digits #000000 / `coui_color_label_primary_dark` #E6FFFFFF on
+     * `Widget.COUI.COUINumericKeyboard.Dark`, with its `values-night` overrides in dark mode):
+     * digits `coui_numeric_keyboard_dark_number_color` #000000 / #FFFFFF on
      * `numberic_keyboard_setting_background_color` keys (`coui_color_surface` #FFFFFF, #8C3D3D3D
-     * in `values-night`), side keys without a fill / #4DD9D9D9, ripple #000000 / #FFFFFF at
-     * 6% / 12% (`coui_numeric_keyboard_dark_circle_max_alpha`), finish label #2AD181.
+     * in `values-night`), side keys without a fill (the style sets no `couiSideBackgroundColor`),
+     * ripple `coui_numeric_keyboard_dark_number_press_color` #000000 / #FFFFFF at 6% / 12%
+     * (`coui_numeric_keyboard_dark_circle_max_alpha`), finish label #2AD181.
      *
      * The keys are card-colored discs: place the keyboard on the page surface
-     * (`COUITheme.colorScheme.surface`), not on a card, or they do not show.
+     * (`COUITheme.colorScheme.backgroundWithCard`), not on a card, or they do not show.
      */
     @Composable
     fun colors(
-        numberColor: Color = if (isDark()) Color(0xE6FFFFFF) else Color.Black,
-        numberBackgroundColor: Color = if (isDark()) Color(0x8C3D3D3D) else COUITheme.colorScheme.surfaceContainer,
-        sideBackgroundColor: Color = if (isDark()) Color(0x4DD9D9D9) else Color.Transparent,
+        numberColor: Color = if (isDark()) Color.White else Color.Black,
+        numberBackgroundColor: Color = if (isDark()) Color(0x8C3D3D3D) else COUITheme.colorScheme.cardBackground,
+        sideBackgroundColor: Color = Color.Transparent,
         pressedColor: Color = if (isDark()) Color.White else Color.Black,
         circleMaxAlpha: Float = if (isDark()) 0.12f else 0.06f,
         wordTextColor: Color = Color(0xFF2AD181),
@@ -739,7 +766,7 @@ object NumericKeyboardDefaults {
     }
 
     @Composable
-    private fun isDark(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+    private fun isDark(): Boolean = COUITheme.colorScheme.isDark
 }
 
 /**
@@ -768,9 +795,6 @@ private val KeyboardNumbers = intArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, -1, 0, -1)
 
 private const val SIDE_LEFT_INDEX = 9
 private const val SIDE_RIGHT_INDEX = 11
-
-/** The key size in dp the press springs are resolved for. */
-private const val KEY_DP = 68f
 
 /** The normal circle disc: 70px of the 150px half-size of `coui_number_keyboard_normal_circle.png`. */
 private const val NORMAL_CIRCLE_FRACTION = 70f / 150f

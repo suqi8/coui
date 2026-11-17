@@ -4,6 +4,8 @@ package io.github.suqi8.coui.kmp.theme
 
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.LocalOverscrollFactory
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -28,9 +30,9 @@ fun COUITheme(
     val rawColors = controller.currentColors()
     val couiColors = remember { rawColors.copy() }.apply { updateColorsFrom(rawColors) }
     val couiTextStyles = remember { textStyles.copy() }.apply { updateTextStylesFrom(textStyles) }
-    val couiIndication = remember(couiColors.onBackground, couiColors.press, couiColors.hover, couiColors.focus) {
+    val couiIndication = remember(couiColors.labelPrimary, couiColors.press, couiColors.hover, couiColors.focus) {
         COUIIndication(
-            color = couiColors.onBackground,
+            color = couiColors.labelPrimary,
             pressColor = couiColors.press,
             hoverColor = couiColors.hover,
             focusColor = couiColors.focus,
@@ -40,9 +42,10 @@ fun COUITheme(
         LocalColors provides couiColors,
         LocalTextStyles provides couiTextStyles,
         LocalIndication provides couiIndication,
-        LocalContentColor provides couiColors.onBackground,
+        LocalContentColor provides couiColors.labelPrimary,
         LocalColorSchemeMode provides controller.colorSchemeMode,
         LocalOverscrollFactory provides COUIOverscrollFactory,
+        LocalTextSelectionColors provides rememberCOUITextSelectionColors(couiColors),
     ) {
         content()
     }
@@ -64,9 +67,9 @@ fun COUITheme(
 ) {
     val couiColors = remember { colors.copy() }.apply { updateColorsFrom(colors) }
     val couiTextStyles = remember { textStyles.copy() }.apply { updateTextStylesFrom(textStyles) }
-    val couiIndication = remember(couiColors.onBackground, couiColors.press, couiColors.hover, couiColors.focus) {
+    val couiIndication = remember(couiColors.labelPrimary, couiColors.press, couiColors.hover, couiColors.focus) {
         COUIIndication(
-            color = couiColors.onBackground,
+            color = couiColors.labelPrimary,
             pressColor = couiColors.press,
             hoverColor = couiColors.hover,
             focusColor = couiColors.focus,
@@ -77,9 +80,22 @@ fun COUITheme(
         LocalTextStyles provides couiTextStyles,
         LocalIndication provides couiIndication,
         LocalOverscrollFactory provides COUIOverscrollFactory,
+        LocalTextSelectionColors provides rememberCOUITextSelectionColors(couiColors),
     ) {
         content()
     }
+}
+
+/**
+ * The COUI text selection colors: the handles are tinted with couiColorPrimary
+ * (`coui_text_select_*_tint`) and the highlight is `android:textColorHighlight` (`?couiColorSecondary`,
+ * the theme color at 15% / 25%), [Colors.textColorHighlight].
+ */
+@Composable
+private fun rememberCOUITextSelectionColors(colors: Colors): TextSelectionColors {
+    val handle = colors.primary
+    val highlight = colors.textColorHighlight
+    return remember(handle, highlight) { TextSelectionColors(handleColor = handle, backgroundColor = highlight) }
 }
 
 object COUITheme {
@@ -94,6 +110,11 @@ object COUITheme {
     val colorSchemeMode: ColorSchemeMode?
         @Composable @ReadOnlyComposable
         get() = LocalColorSchemeMode.current
+
+    /** Whether the current color scheme is dark (COUI isCOUIDarkTheme), [Colors.isDark]. */
+    val isDark: Boolean
+        @Composable @ReadOnlyComposable
+        get() = LocalColors.current.isDark
 
     val isDynamicColor: Boolean
         @Composable @ReadOnlyComposable

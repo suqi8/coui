@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -48,8 +49,10 @@ val DateValue.dayOfWeek: Int
  *
  * As in COUITimePicker the date wheel does not wrap, the hour and minute wheels do, the wheels are
  * 150dp (date, 174dp outside Chinese and English) and 62dp wide and shrink proportionally when the
- * picker is narrower than their sum. In 12-hour mode scrolling the hour wheel onto 12 flips
- * AM/PM, and the two hairlines run edge to edge (they are inset 16dp in 24-hour mode).
+ * picker is narrower than the date column plus three time columns (the hidden AM/PM column counts
+ * in 24-hour mode too). The picker is at most [NumberPickerDefaults.PickersMaxWidth] wide. In
+ * 12-hour mode scrolling the hour wheel onto 12 flips AM/PM, and the two hairlines run edge to edge
+ * (they are inset 16dp in 24-hour mode).
  *
  * @param value The currently selected date and time.
  * @param onValueChange The callback invoked when the selected date or time changes.
@@ -57,8 +60,9 @@ val DateValue.dayOfWeek: Int
  * @param enabled Whether the [DateTimePicker] is enabled for user interaction.
  * @param is24Hour Whether the hour wheel uses the 24-hour format. When false, hours display as
  *   1..12 with an AM/PM wheel.
- * @param amPmFirst Whether the AM/PM wheel sits before the hour wheel (the COUITimePicker layout
- *   order) rather than after the minute wheel. Only used when [is24Hour] is false.
+ * @param amPmFirst Whether the AM/PM wheel sits before the hour wheel rather than after the minute
+ *   wheel. Only used when [is24Hour] is false. Defaults to the locale's order, as
+ *   COUITimePicker.reorderSpinners reads it from the best date-time pattern.
  * @param minuteFiveStep Whether the minute wheel steps by five minutes (COUITimePicker
  *   setMinuteStepToFive).
  * @param yearRange The years the date wheel covers; null keeps COUI's window of 50 years before
@@ -67,6 +71,10 @@ val DateValue.dayOfWeek: Int
  * @param todayLabel The display string of the date wheel row for today.
  * @param amLabel The display string for AM.
  * @param pmLabel The display string for PM.
+ * @param hourUnit The unit label drawn beside the selected hour (COUITimePicker setUnitVisible:
+ *   coui_hour_abbreviation); empty to hide.
+ * @param minuteUnit The unit label drawn beside the selected minute (coui_minute_abbreviation);
+ *   empty to hide.
  * @param dateColumnWidth The width of the date column.
  * @param timeColumnWidth The width of the hour, minute and AM/PM columns.
  * @param colors The [NumberPickerColors] for the wheels.
@@ -82,18 +90,20 @@ fun DateTimePicker(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     is24Hour: Boolean = true,
-    amPmFirst: Boolean = true,
+    amPmFirst: Boolean = TimePickerDefaults.localeAmPmFirst(),
     minuteFiveStep: Boolean = false,
     yearRange: IntRange? = null,
-    dateLabel: (DateValue) -> String = DateTimePickerDefaults.DateLabel,
-    todayLabel: String = DateTimePickerDefaults.TodayLabel,
-    amLabel: String = TimePickerDefaults.AmLabel,
-    pmLabel: String = TimePickerDefaults.PmLabel,
+    dateLabel: (DateValue) -> String = DateTimePickerDefaults.dateLabel(),
+    todayLabel: String = DateTimePickerDefaults.todayLabel(),
+    amLabel: String = TimePickerDefaults.amLabel(),
+    pmLabel: String = TimePickerDefaults.pmLabel(),
+    hourUnit: String = TimePickerDefaults.HourUnit,
+    minuteUnit: String = TimePickerDefaults.MinuteUnit,
     dateColumnWidth: Dp = DateTimePickerDefaults.dateColumnWidth(),
     timeColumnWidth: Dp = DateTimePickerDefaults.TimeColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    dividerColor: Color = COUITheme.colorScheme.dividerLine,
-    textStyle: TextStyle = COUITheme.textStyles.title3,
+    dividerColor: Color = COUITheme.colorScheme.divider,
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = DateTimePickerDefaults.InsideMargin,
 ) {
@@ -163,13 +173,15 @@ fun DateTimePicker(
 
     BoxWithConstraints(
         modifier = modifier
+            .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor, inset = if (is24Hour) NumberPickerDividerInset else 0.dp)
             .padding(insideMargin),
         contentAlignment = Alignment.Center,
     ) {
-        // COUITimePicker.measureChildConstrained: shrink every column when they do not fit.
-        val total = dateColumnWidth + timeColumnWidth * if (is24Hour) 2 else 3
+        // COUITimePicker.onMeasure: every column shrinks by size / (minute + hour + date + AM/PM),
+        // the AM/PM column counted even when it is hidden in 24-hour mode.
+        val total = dateColumnWidth + timeColumnWidth * 3
         val scale = if (maxWidth < total && total > 0.dp) maxWidth / total else 1f
         val timeWidth = timeColumnWidth * scale
 
@@ -212,6 +224,7 @@ fun DateTimePicker(
                 enabled = enabled,
                 range = if (is24Hour) 0..23 else 1..12,
                 label = if (is24Hour) TwoDigitMinuteLabel else PlainHourLabel,
+                unit = hourUnit,
                 wrapAround = true,
                 colors = colors,
                 textStyle = textStyle,
@@ -224,6 +237,7 @@ fun DateTimePicker(
                 enabled = enabled,
                 range = if (minuteFiveStep) 0..11 else 0..59,
                 label = minuteLabel,
+                unit = minuteUnit,
                 wrapAround = true,
                 colors = colors,
                 textStyle = textStyle,
@@ -251,15 +265,30 @@ object DateTimePickerDefaults {
     /** Padding around the wheel columns (COUI coui_number_picker_view_padding_vertical). */
     val InsideMargin = PaddingValues(vertical = 12.dp)
 
-    /** Default label of today's row (COUI coui_time_picker_today in English). */
-    val TodayLabel = "Today"
+    /** The label of today's row in the current locale (COUI coui_time_picker_today: "Today", "今天"). */
+    @Composable
+    fun todayLabel(): String = rememberPickerSymbols().today
 
     /**
-     * Default date label, as COUI's `DateUtils.formatDateTime` with abbreviated weekday and month
-     * and no year shows it in English: "Thu, Oct 23".
+     * The date label of the current locale, as COUITimePicker formats the date wheel: in Chinese
+     * the "MMMdd日 E" pattern ("10月23日 周四"), elsewhere `DateUtils.formatDateTime` with an
+     * abbreviated weekday and month and no year ("Thu, Oct 23").
      */
-    val DateLabel: (DateValue) -> String = { date ->
-        "${WeekdayAbbreviations[date.dayOfWeek - 1]}, ${MonthAbbreviations[date.month - 1]} ${date.day}"
+    @Composable
+    fun dateLabel(): (DateValue) -> String {
+        val chinese = isChineseLocale()
+        val symbols = rememberPickerSymbols()
+        val formatter = rememberDateFormatter(PickerDateFormat.WeekdayMonthDay)
+        return remember(chinese, symbols, formatter) {
+            if (chinese) {
+                { date: DateValue ->
+                    val weekday = symbols.shortWeekdays[date.dayOfWeek % 7]
+                    "${symbols.shortMonths[date.month - 1]}${date.day.toString().padStart(2, '0')}日 $weekday"
+                }
+            } else {
+                formatter
+            }
+        }
     }
 
     /**
@@ -271,12 +300,6 @@ object DateTimePickerDefaults {
         val language = Locale.current.language
         return if (language == "zh" || language == "en") DateColumnWidth else WideDateColumnWidth
     }
-
-    private val WeekdayAbbreviations = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    private val MonthAbbreviations = listOf(
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    )
 }
 
 private val TwoDigitMinuteLabel: (Int) -> String = { it.toString().padStart(2, '0') }

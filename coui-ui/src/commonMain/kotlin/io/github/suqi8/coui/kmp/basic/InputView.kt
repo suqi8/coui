@@ -8,16 +8,19 @@ import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +29,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -38,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.delay
 
 /**
  * An [InputView] component with COUI style — the ColorOS Settings "card input".
@@ -50,9 +58,11 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * *below* the card (10sp couiColorError, 4dp top padding), fades in over 217ms / out over 283ms
  * with the COUI ease curve, and the field plays the COUI error shake while it is shown.
  *
- * In the multi-line form ([singleLine] = false, mirroring COUICardMultiInputView) the counter
- * moves to the bottom-end corner of the card (12sp couiColorLabelTertiary) and its color
- * animates to the error color for 1s when the limit is hit.
+ * In the multi-line form ([singleLine] = false, mirroring COUICardMultiInputView) the input area
+ * has a fixed 152dp height (coui_card_multi_input_height) whatever the content, tapping its blank
+ * part focuses the field, and the counter sits at the bottom-end corner of the card (12sp
+ * couiColorLabelTertiary, 12dp above the card bottom) directly below the text. When the limit is
+ * hit the counter animates to the error color and back 1s later.
  *
  * When [maxCount] is greater than 0 the input is hard-limited to that many characters.
  *
@@ -69,13 +79,15 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param showClearButton Whether to show a clear button while the field is focused and not
  *   empty (COUIEditText quickDelete).
  * @param showPasswordToggle Whether to show the password eye toggle (COUIInputView
- *   couiEnablePassword). While the password is hidden the text is masked.
+ *   couiEnablePassword). The password starts visible (couiPasswordType OPEN, the COUIInputView
+ *   default); while it is hidden the text is masked.
  * @param errorMessage The error message displayed below the card. Empty hides the error line.
  * @param cornerRadius The corner radius of the card (COUI COUIInputListSelectedItemLayout on
  *   ColorOS 17: coui_round_corner_xl_radius_normal_16_1).
  * @param colors The [InputViewColors] applied to the card, title, counter and error line. Use
  *   [InputViewDefaults.inputViewColors] to customize.
- * @param textFieldColors The [TextFieldColors] applied to the inner [TextField].
+ * @param textFieldColors The [TextFieldColors] applied to the inner [TextField]. Defaults to
+ *   [InputViewDefaults.textFieldColors], whose hint uses couiColorHintNeutral.
  * @param textStyle The text style to be applied to the input text (COUI couiTextBodyL:
  *   15sp regular).
  * @param keyboardOptions The keyboard options to be applied to the input field.
@@ -104,7 +116,7 @@ fun InputView(
     errorMessage: String = "",
     cornerRadius: Dp = InputViewDefaults.CornerRadius,
     colors: InputViewColors = InputViewDefaults.inputViewColors(),
-    textFieldColors: TextFieldColors = TextFieldDefaults.textFieldColors(),
+    textFieldColors: TextFieldColors = InputViewDefaults.textFieldColors(),
     textStyle: TextStyle = InputViewDefaults.textStyle(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -129,20 +141,33 @@ fun InputView(
     if (isError && displayedError != errorMessage) displayedError = errorMessage
 
     val hasTitle = title.isNotEmpty()
-    // COUICardSingleInputView edit paddings: with title top 0
-    // (coui_input_edit_text_has_title_padding_top) / bottom 12
-    // (coui_input_preference_single_title_padding_bottom); without title 15/15
-    // (coui_input_edit_text_no_title_padding_top / _bottom). The multi card uses 13/13
-    // (coui_card_multi_edittext_padding).
-    val fieldTopPadding = when {
-        !singleLine -> InputViewDefaults.MultiFieldPadding
-        hasTitle -> 0.dp
-        else -> InputViewDefaults.FieldPaddingVertical
-    }
-    val fieldBottomPadding = when {
-        !singleLine -> if (countVisible) InputViewDefaults.MultiCountSpacing else InputViewDefaults.MultiFieldPadding
-        hasTitle -> InputViewDefaults.FieldPaddingBottomWithTitle
-        else -> InputViewDefaults.FieldPaddingVertical
+
+    val field: @Composable (Modifier) -> Unit = { fieldModifier ->
+        TextField(
+            value = value,
+            onValueChange = handleValueChange,
+            modifier = fieldModifier,
+            backgroundMode = TextFieldMode.None,
+            insideMargin = DpSize(0.dp, 0.dp),
+            colors = textFieldColors,
+            label = label,
+            enabled = enabled,
+            readOnly = readOnly,
+            isError = isError,
+            maxCount = if (countVisible && singleLine) maxCount else null,
+            showClearButton = showClearButton,
+            showPasswordToggle = showPasswordToggle,
+            initialPasswordVisible = true,
+            textStyle = textStyle,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            leadingIcon = leadingIcon,
+            trailingIcon = trailingIcon,
+            singleLine = singleLine,
+            maxLines = maxLines,
+            visualTransformation = visualTransformation,
+            interactionSource = interactionSource,
+        )
     }
 
     Column(modifier = modifier) {
@@ -161,38 +186,27 @@ fun InputView(
                         .defaultMinSize(minHeight = InputViewDefaults.TitleMinHeight),
                 )
             }
-            TextField(
-                value = value,
-                onValueChange = handleValueChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = fieldTopPadding, bottom = fieldBottomPadding),
-                backgroundMode = TextFieldMode.None,
-                insideMargin = DpSize(0.dp, 0.dp),
-                colors = textFieldColors,
-                label = label,
-                enabled = enabled,
-                readOnly = readOnly,
-                isError = isError,
-                maxCount = if (countVisible && singleLine) maxCount else null,
-                showClearButton = showClearButton,
-                showPasswordToggle = showPasswordToggle,
-                textStyle = textStyle,
-                keyboardOptions = keyboardOptions,
-                keyboardActions = keyboardActions,
-                leadingIcon = leadingIcon,
-                trailingIcon = trailingIcon,
-                singleLine = singleLine,
-                maxLines = maxLines,
-                visualTransformation = visualTransformation,
-                interactionSource = interactionSource,
-            )
-            if (countVisible && !singleLine) {
-                MultiInputViewCount(
-                    length = value.length.coerceAtMost(maxCount),
+            if (singleLine) {
+                // COUICardSingleInputView edit paddings: with title top 0
+                // (coui_input_edit_text_has_title_padding_top) / bottom 12
+                // (coui_input_preference_single_title_padding_bottom); without title 15/15
+                // (coui_input_edit_text_no_title_padding_top / _bottom).
+                field(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = if (hasTitle) 0.dp else InputViewDefaults.FieldPaddingVertical,
+                            bottom = if (hasTitle) InputViewDefaults.FieldPaddingBottomWithTitle else InputViewDefaults.FieldPaddingVertical,
+                        ),
+                )
+            } else {
+                MultiInputArea(
+                    enabled = enabled && !readOnly,
+                    countVisible = countVisible,
+                    length = value.length.coerceAtMost(maxCount.coerceAtLeast(0)),
                     maxCount = maxCount,
-                    atLimit = value.length >= maxCount,
                     colors = colors,
+                    field = field,
                 )
             }
         }
@@ -216,10 +230,70 @@ fun InputView(
 }
 
 /**
+ * The fixed-height input area of the multi-line card form (coui_multi_input_card_view.xml
+ * input_layout: [InputViewDefaults.MultiInputHeight]). The edittext_container pads 12dp at the
+ * bottom (coui_input_edit_count_margin_bottom); the field pads 13dp on top
+ * (coui_card_multi_edittext_padding) and, with the counter, exactly the counter height at the
+ * bottom (COUICardMultiInputView.handleWithCount), otherwise 13dp. Tapping the blank part of the
+ * area focuses the field and shows the keyboard, like the card's touch listener.
+ */
+@Composable
+private fun MultiInputArea(
+    enabled: Boolean,
+    countVisible: Boolean,
+    length: Int,
+    maxCount: Int,
+    colors: InputViewColors,
+    field: @Composable (Modifier) -> Unit,
+) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val currentEnabled by rememberUpdatedState(enabled)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(InputViewDefaults.MultiInputHeight)
+            .padding(bottom = InputViewDefaults.MultiCountMarginBottom),
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .pointerInput(focusRequester) {
+                    detectTapGestures {
+                        if (currentEnabled) {
+                            runCatching { focusRequester.requestFocus() }
+                            keyboardController?.show()
+                        }
+                    }
+                },
+        ) {
+            field(
+                Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .padding(
+                        top = InputViewDefaults.MultiFieldPadding,
+                        bottom = if (countVisible) 0.dp else InputViewDefaults.MultiFieldPadding,
+                    ),
+            )
+        }
+        if (countVisible) {
+            MultiInputViewCount(
+                length = length,
+                maxCount = maxCount,
+                atLimit = length >= maxCount,
+                colors = colors,
+            )
+        }
+    }
+}
+
+/**
  * The bottom-end "length/max" counter of the multi-line card form: 12sp couiColorLabelTertiary
- * (coui_multi_input_card_view.xml input_count, couiTextBodyXS), with a 12dp bottom margin
- * (coui_input_edit_count_margin_bottom). The color animates to the error color over 250ms
- * when the limit is reached (COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME).
+ * (coui_multi_input_card_view.xml input_count, couiTextBodyXS). When the limit is reached the
+ * color animates to the error color over 250ms and back 1s later
+ * (COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME / ERROR_COUNT_COLOR_DELAY_TIME).
  */
 @Composable
 private fun MultiInputViewCount(
@@ -228,14 +302,20 @@ private fun MultiInputViewCount(
     atLimit: Boolean,
     colors: InputViewColors,
 ) {
+    var errorHighlighted by remember { mutableStateOf(false) }
+    LaunchedEffect(length, atLimit) {
+        if (atLimit) {
+            errorHighlighted = true
+            delay(CountErrorColorDelay)
+        }
+        errorHighlighted = false
+    }
     val countColor by animateColorAsState(
-        targetValue = if (atLimit) colors.errorColor else colors.countColor,
+        targetValue = if (errorHighlighted) colors.errorColor else colors.countColor,
         animationSpec = tween(durationMillis = CountColorAnimDuration),
     )
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = InputViewDefaults.MultiCountMarginBottom),
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.CenterEnd,
     ) {
         Text(
@@ -287,8 +367,8 @@ object InputViewDefaults {
     /** The vertical padding of the multi-line field (COUI coui_card_multi_edittext_padding). */
     val MultiFieldPadding = 13.dp
 
-    /** The gap between the multi-line field and its counter. */
-    val MultiCountSpacing = 4.dp
+    /** The fixed height of the multi-line input area (COUI coui_card_multi_input_height). */
+    val MultiInputHeight = 152.dp
 
     /** The bottom margin of the multi-line counter (COUI coui_input_edit_count_margin_bottom). */
     val MultiCountMarginBottom = 12.dp
@@ -311,12 +391,12 @@ object InputViewDefaults {
     /**
      * The default text style of the input text (COUI Widget.COUI.Input / SingleInput / MultiInput
      * textAppearance couiTextBodyL: 15sp regular with coui_spacing_multiplier_body_l, the same
-     * multiplier as [io.github.suqi8.coui.kmp.theme.TextStyles.paragraph]).
+     * multiplier as [io.github.suqi8.coui.kmp.theme.TextStyles.bodyL]).
      */
     @Composable
     fun textStyle(): TextStyle {
-        val paragraph = COUITheme.textStyles.paragraph
-        return remember(paragraph) { paragraph.copy(fontSize = InputFontSize) }
+        val bodyL = COUITheme.textStyles.bodyL
+        return remember(bodyL) { bodyL.copy(fontSize = InputFontSize) }
     }
 
     /**
@@ -324,7 +404,20 @@ object InputViewDefaults {
      * (COUI COUIInputTitleStyle / couiTextAppearanceHeadline6: 16sp, sans-serif-medium).
      */
     @Composable
-    fun titleTextStyle(): TextStyle = COUITheme.textStyles.headline2.copy(fontWeight = FontWeight.Medium)
+    fun titleTextStyle(): TextStyle = COUITheme.textStyles.headlineXS.copy(fontWeight = FontWeight.Medium)
+
+    /**
+     * The default [TextFieldColors] of the inner field. Widget.COUI.Input and its SingleInput /
+     * MultiInput / InputPreference children set no android:textColorHint, so the hint falls back to
+     * the Theme.COUI textColorHint (couiColorHintNeutral) instead of the couiColorLabelSecondary of
+     * Widget.COUI.EditText.
+     *
+     * @param labelColor The color of the hint (COUI couiColorHintNeutral).
+     */
+    @Composable
+    fun textFieldColors(
+        labelColor: Color = COUITheme.colorScheme.labelTertiary,
+    ): TextFieldColors = TextFieldDefaults.textFieldColors(labelColor = labelColor)
 
     /**
      * Default colors used by the [InputView].
@@ -337,10 +430,10 @@ object InputViewDefaults {
      */
     @Composable
     fun inputViewColors(
-        cardColor: Color = COUITheme.colorScheme.surfaceContainer,
-        titleColor: Color = COUITheme.colorScheme.onSurface,
-        disabledTitleColor: Color = COUITheme.colorScheme.disabledOnSurface,
-        countColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        cardColor: Color = COUITheme.colorScheme.cardBackground,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledTitleColor: Color = COUITheme.colorScheme.disabledNeutral,
+        countColor: Color = COUITheme.colorScheme.labelTertiary,
         errorColor: Color = COUITheme.colorScheme.error,
     ): InputViewColors = remember(cardColor, titleColor, disabledTitleColor, countColor, errorColor) {
         InputViewColors(
@@ -388,3 +481,6 @@ private val ErrorDisappearDuration = 283
 
 /** COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME. */
 private val CountColorAnimDuration = 250
+
+/** COUICardMultiInputView ERROR_COUNT_COLOR_DELAY_TIME. */
+private val CountErrorColorDelay = 1000L

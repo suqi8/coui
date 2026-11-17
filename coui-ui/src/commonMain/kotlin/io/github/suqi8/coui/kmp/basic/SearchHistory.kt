@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -65,13 +66,14 @@ import kotlinx.coroutines.launch
  * Expanding shows up to [maxLinesExpanded] lines at once and fades the extra records in (400ms,
  * 100ms delay) while the expand button fades out (250ms); a fold button then closes the last
  * line, and folding fades the extra records out (300ms) before the panel shrinks back.
- * Clicking the clear button fades the whole panel out over 300ms before [onClear] is called.
- * The panel draws nothing while [items] is empty.
+ * Clicking the clear button calls [onClear] right away and fades the whole panel out over 300ms,
+ * keeping the cleared records on screen during the fade, so [onClear] can empty [items]
+ * immediately. The panel draws nothing while [items] is empty.
  *
  * @param title The title of the panel.
  * @param items The history records, in display order.
  * @param onItemClick Called with the clicked record.
- * @param onClear Called after the clear animation when the clear button is clicked.
+ * @param onClear Called when the clear button is clicked, as the clear animation starts.
  * @param modifier The modifier to be applied to the [SearchHistory].
  * @param expandable Whether folded records can be expanded (COUISearchHistoryView expandable).
  *   When `false` the panel never shows more than [maxLinesFolded] lines.
@@ -81,7 +83,8 @@ import kotlinx.coroutines.launch
  *   COUIFlowLayout maxRowUnfolded to 8).
  * @param clearContentDescription The accessibility label of the clear button.
  * @param colors The [SearchHistoryColors] of the panel.
- * @param insideMargin The padding around the panel content.
+ * @param insideMargin The padding around the panel content; by default 16dp at the sides, or 20dp
+ *   in windows at least 600dp wide.
  */
 @Composable
 fun SearchHistory(
@@ -95,12 +98,16 @@ fun SearchHistory(
     maxLinesExpanded: Int = SearchHistoryDefaults.MaxLinesExpanded,
     clearContentDescription: String? = null,
     colors: SearchHistoryColors = SearchHistoryDefaults.searchHistoryColors(),
-    insideMargin: PaddingValues = SearchHistoryDefaults.InsideMargin,
+    insideMargin: PaddingValues = SearchHistoryDefaults.insideMargin(),
 ) {
-    if (items.isEmpty()) return
     val scope = rememberCoroutineScope()
     val currentOnClear by rememberUpdatedState(onClear)
     val panelAlpha = remember { Animatable(1f) }
+    // The records frozen while the clear animation fades the panel out, so the caller can empty
+    // [items] from onClear right away (COUISearchHistoryView clears its views when the fade ends).
+    var clearingItems by remember { mutableStateOf<List<String>?>(null) }
+    val shownItems = clearingItems ?: items
+    if (shownItems.isEmpty()) return
 
     Column(
         modifier = modifier
@@ -131,18 +138,21 @@ fun SearchHistory(
                         indication = clearIndication,
                         role = Role.Button,
                     ) {
-                        if (panelAlpha.isRunning) return@clickable
+                        if (clearingItems != null) return@clickable
+                        // COUISearchHistoryView.setOnDeleteClickListener: start the 300ms fade
+                        // (doDeleteAnimation) and notify the listener at the same time.
+                        clearingItems = items
+                        currentOnClear()
                         scope.launch {
-                            // COUISearchHistoryView.doDeleteAnimation: alpha 1 -> 0, 300ms.
                             panelAlpha.animateTo(0f, tween(CLEAR_DURATION_MILLIS, easing = MoveEase))
-                            currentOnClear()
+                            clearingItems = null
                             panelAlpha.snapTo(1f)
                         }
                     },
             )
         }
         SearchHistoryFlow(
-            items = items,
+            items = shownItems,
             onItemClick = onItemClick,
             expandable = expandable,
             maxLinesFolded = maxLinesFolded,
@@ -424,11 +434,33 @@ object SearchHistoryDefaults {
     /** Lines shown while expanded (COUISearchHistoryView DEFAULT_MAX_ROW_UNFOLDED). */
     val MaxLinesExpanded: Int = 8
 
+    /** The side padding of the panel (COUI coui_component_search_history_padding_start / _end). */
+    val HorizontalPadding = 16.dp
+
+    /** The side padding in wide windows (COUI values-w600dp coui_component_search_history_padding_start / _end). */
+    val HorizontalPaddingWide = 20.dp
+
+    /** The window width from which [HorizontalPaddingWide] applies (the COUI values-w600dp qualifier). */
+    val WideWindowWidth = 600.dp
+
+    /** The top padding of the panel (COUI coui_component_search_history_padding_top). */
+    val TopPadding = 16.dp
+
+    /** The bottom padding of the panel (COUI coui_component_search_history_padding_bottom). */
+    val BottomPadding = 32.dp
+
     /**
-     * The padding around the panel (COUI coui_component_search_history_padding_start / _end
-     * 16dp, _top 16dp, _bottom 32dp).
+     * The padding around the panel: [HorizontalPadding] at the sides, or [HorizontalPaddingWide]
+     * once the window is [WideWindowWidth] wide, [TopPadding] above and [BottomPadding] below.
      */
-    val InsideMargin = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp)
+    @Composable
+    fun insideMargin(): PaddingValues {
+        val wide = LocalWindowInfo.current.containerDpSize.width >= WideWindowWidth
+        return remember(wide) {
+            val horizontal = if (wide) HorizontalPaddingWide else HorizontalPadding
+            PaddingValues(start = horizontal, top = TopPadding, end = horizontal, bottom = BottomPadding)
+        }
+    }
 
     /** The vertical padding of the title bar (COUI coui_component_search_history_title_margin_vertical). */
     val TitleVerticalPadding = 7.dp
@@ -468,11 +500,11 @@ object SearchHistoryDefaults {
 
     /** The title text style (COUI couiTextAppearanceButton: 14sp medium). */
     @Composable
-    fun titleTextStyle(): TextStyle = COUITheme.textStyles.subtitle
+    fun titleTextStyle(): TextStyle = COUITheme.textStyles.buttonM
 
     /** The record text style (COUI Widget.COUI.Chip textAppearance couiTextBodyXS: 12sp). */
     @Composable
-    fun chipTextStyle(): TextStyle = COUITheme.textStyles.footnote2
+    fun chipTextStyle(): TextStyle = COUITheme.textStyles.bodyXS
 
     /**
      * The default [SearchHistoryColors]: title couiColorPrimaryNeutral, clear icon and arrows
@@ -481,13 +513,13 @@ object SearchHistoryDefaults {
      */
     @Composable
     fun searchHistoryColors(
-        titleColor: Color = COUITheme.colorScheme.onBackground,
-        clearIconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        clearIconColor: Color = COUITheme.colorScheme.labelSecondary,
         clearPressColor: Color = COUITheme.colorScheme.press,
         chipColor: Color = COUITheme.colorScheme.container8,
-        chipContentColor: Color = COUITheme.colorScheme.onSurface,
+        chipContentColor: Color = COUITheme.colorScheme.labelPrimary,
         toggleButtonColor: Color = COUITheme.colorScheme.container8,
-        toggleIconColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        toggleIconColor: Color = COUITheme.colorScheme.labelSecondary,
     ): SearchHistoryColors = remember(
         titleColor,
         clearIconColor,

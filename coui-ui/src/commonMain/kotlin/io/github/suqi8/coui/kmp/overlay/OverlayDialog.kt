@@ -49,7 +49,14 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
  *   It also marks the window as blurred for a [io.github.suqi8.coui.kmp.layout.DialogButtonBar]
  *   inside, whose buttons then turn material (`COUIButtonBarLayout.setBlurBackgroundWindow`).
- * @param content The [Composable] content of the [OverlayDialog].
+ * @param customContent The custom view slot between the summary and [content] (COUI `customPanel`,
+ *   `COUIAlertDialogBuilder.setView`), padded by [DialogDefaults.CustomContentPaddingBottom] below.
+ *   Put custom views here rather than in [content]: with it the summary drops its bottom padding to
+ *   4dp and a title-only dialog skips the extra 16dp below the title, as COUI's
+ *   `initContentSpacing` does. Like the summary it shrinks and must scroll by itself when the panel
+ *   runs out of height, so [content] (the button bar) stays in view.
+ * @param content The [Composable] content of the [OverlayDialog], typically a
+ *   [io.github.suqi8.coui.kmp.layout.DialogButtonBar].
  */
 @Composable
 fun OverlayDialog(
@@ -72,6 +79,7 @@ fun OverlayDialog(
     largeScreen: Boolean? = null,
     cornerRadius: Dp? = null,
     materialStroke: Boolean = false,
+    customContent: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     DialogContentLayout(
@@ -107,6 +115,7 @@ fun OverlayDialog(
         cornerRadius = cornerRadius,
         backgroundModifier = backgroundModifier,
         materialStroke = materialStroke,
+        customContent = customContent,
         content = content,
     )
 }

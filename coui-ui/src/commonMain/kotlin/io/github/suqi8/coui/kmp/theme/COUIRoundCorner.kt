@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.theme
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.squircle.SquircleDefaults
+import kotlin.math.roundToInt
 
 /**
  * The COUI corner radius steps (`coui_round_corner_*` dimens, the `couiRoundCorner*` theme attributes).
@@ -80,6 +82,22 @@ object COUIRoundCorner {
 
     /** COUI coui_round_corner_xxxxl. */
     val XXXXL = 32.dp
+
+    /**
+     * `RoundCornerUtil.getRoundCornerForOS17`: maps a base step ([XS] .. [XXXXL], matched after rounding)
+     * to its [Large] radius; any other radius is returned unchanged.
+     */
+    fun largeRadiusFor(radius: Dp): Dp = when (radius.value.roundToInt()) {
+        4 -> Large.XS
+        8 -> Large.S
+        12 -> Large.M
+        16 -> Large.L
+        20 -> Large.XL
+        24 -> Large.XXL
+        28 -> Large.XXXL
+        32 -> Large.XXXXL
+        else -> radius
+    }
 
     /** The ColorOS 17 card list radii (COUI coui_round_corner_*_radius_normal_16_1). */
     object Normal {

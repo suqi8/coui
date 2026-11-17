@@ -7,7 +7,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
@@ -152,7 +151,7 @@ internal fun Modifier.materialStroke(
     if (!enabled) return this
     val shader = remember { if (isRuntimeShaderSupported()) RuntimeShader(ShadowEdgeShader.Source) else null }
         ?: return this
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val params = if (isDark) dark else light
     return this.drawWithCache {
         val maxRadius = min(size.width, size.height) / 2f

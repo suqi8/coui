@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -23,15 +24,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.interfaces.collectIsHeldDownAsState
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
+import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -40,6 +49,9 @@ import io.github.suqi8.coui.kmp.utils.PressFeedbackType
 import io.github.suqi8.coui.kmp.utils.TiltFeedback
 import io.github.suqi8.coui.kmp.utils.pressable
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * A [Card] component with COUI style.
@@ -51,6 +63,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param cornerRadius The corner radius of the [Card].
  * @param insideMargin The margin inside the [Card].
  * @param colors [CardColors] that will be used to resolve the color(s) used for the [Card].
+ * @param shadow The [CardShadow] drawn around the [Card] (COUI `COUIShadowCardView`), or `null`
+ *   (the default) for a flat card. See [CardDefaults.shadow].
  * @param content The [Composable] content of the [Card].
  */
 @Composable
@@ -60,6 +74,7 @@ fun Card(
     cornerRadius: Dp = CardDefaults.CornerRadius,
     insideMargin: PaddingValues = CardDefaults.InsideMargin,
     colors: CardColors = CardDefaults.defaultColors(),
+    shadow: CardShadow? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     BasicCard(
@@ -67,6 +82,7 @@ fun Card(
         contentColor = colors.contentColor,
         modifier = modifier,
         cornerRadius = cornerRadius,
+        shadow = shadow,
     ) {
         Column(
             modifier = Modifier.padding(insideMargin),
@@ -85,6 +101,8 @@ fun Card(
  * @param cornerRadius The corner radius of the [Card].
  * @param insideMargin The margin inside the [Card].
  * @param colors [CardColors] that will be used to resolve the color(s) used for the [Card].
+ * @param shadow The [CardShadow] drawn around the [Card] (COUI `COUIShadowCardView`), or `null`
+ *   (the default) for a flat card. The shadow follows the card's press scale.
  * @param pressFeedbackType The press feedback type of the [Card]. Defaults to
  *   [PressFeedbackType.Tint], which animates the fill towards [CardColors.pressedColor].
  *   [PressFeedbackType.Sink] scales the card by the COUI 17 area-based press scale.
@@ -100,6 +118,7 @@ fun Card(
     cornerRadius: Dp = CardDefaults.CornerRadius,
     insideMargin: PaddingValues = CardDefaults.InsideMargin,
     colors: CardColors = CardDefaults.defaultColors(),
+    shadow: CardShadow? = null,
     pressFeedbackType: PressFeedbackType = PressFeedbackType.Tint,
     showIndication: Boolean = false,
     holdDownState: Boolean = false,
@@ -192,6 +211,7 @@ fun Card(
                 delay = null,
             ),
         cornerRadius = cornerRadius,
+        shadow = shadow,
     ) {
         Column(
             modifier = Modifier
@@ -209,6 +229,7 @@ fun Card(
  * @param contentColor The content color of the [BasicCard].
  * @param modifier The modifier to be applied to the [BasicCard].
  * @param cornerRadius The corner radius of the [BasicCard].
+ * @param shadow The optional [CardShadow] drawn around the [BasicCard].
  * @param content The [Composable] content of the [BasicCard].
  */
 @Composable
@@ -217,8 +238,22 @@ private fun BasicCard(
     contentColor: Color,
     modifier: Modifier = Modifier,
     cornerRadius: Dp = CardDefaults.CornerRadius,
+    shadow: CardShadow? = null,
     content: @Composable () -> Unit,
 ) {
+    val shadowModifier = if (shadow != null && shadow.size > 0.dp) {
+        val squircleEnabled = isSquircleEnabled()
+        remember(shadow, cornerRadius, squircleEnabled) {
+            val shape = if (squircleEnabled) {
+                SquircleShape(cornerRadius, COUIRoundCorner.Normal.Weight)
+            } else {
+                RoundedCornerShape(cornerRadius)
+            }
+            Modifier.cardShadow(shadow, shape)
+        }
+    } else {
+        Modifier
+    }
     CompositionLocalProvider(
         LocalContentColor provides contentColor,
     ) {
@@ -227,6 +262,7 @@ private fun BasicCard(
                 .semantics(mergeDescendants = false) {
                     isTraversalGroup = true
                 }
+                .then(shadowModifier)
                 .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.Normal.Weight),
             propagateMinConstraints = true,
         ) {
@@ -311,13 +347,64 @@ object CardDefaults {
     val InsideMargin = PaddingValues(0.dp)
 
     /**
+     * The default shadow size of a shadowed [Card] (COUI `support_shadow_size_level_for_shadow_card`,
+     * the `couiShadowSize` the ColorOS clock gives its `COUIShadowCardView`).
+     */
+    val ShadowSize = 12.dp
+
+    /**
+     * The default shadow color. `COUIShadowCardView` hands it to the compat shadow renderer, which
+     * keeps only its RGB (ColorOS clock `alarm_snooze_fluid_shadow_bg` #1F000000, i.e. black).
+     */
+    val ShadowColor = Color.Black
+
+    /**
+     * The default shadow offset along [CardShadow.angle] (COUIShadowCardView `couiShadowOffset`
+     * falls back to 7px, 2dp at the 3.5x reference density).
+     */
+    val ShadowOffset = 2.dp
+
+    /**
+     * Creates a [CardShadow], after COUI `COUIShadowCardView`.
+     *
+     * @param size The shadow size (`couiShadowSize`, the compat elevation).
+     * @param color The shadow color; only its RGB is used (`couiShadowColor`).
+     * @param offset How far the shadow is shifted along [angle] (`couiShadowOffset`).
+     * @param angle The direction of [offset] in degrees, 0 pointing down and 90 to the right
+     *   (`couiShadowAngle`, MaterialShapeDrawable `shadowCompatRotation`).
+     * @param hideLeft Whether no shadow is drawn past the left edge (`couiHideLeftShadow`).
+     * @param hideTop Whether no shadow is drawn past the top edge (`couiHideTopShadow`).
+     * @param hideRight Whether no shadow is drawn past the right edge (`couiHideRightShadow`).
+     * @param hideBottom Whether no shadow is drawn past the bottom edge (`couiHideBottomShadow`).
+     */
+    fun shadow(
+        size: Dp = ShadowSize,
+        color: Color = ShadowColor,
+        offset: Dp = ShadowOffset,
+        angle: Int = 0,
+        hideLeft: Boolean = false,
+        hideTop: Boolean = false,
+        hideRight: Boolean = false,
+        hideBottom: Boolean = false,
+    ): CardShadow = CardShadow(
+        size = size,
+        color = color,
+        offset = offset,
+        angle = angle,
+        hideLeft = hideLeft,
+        hideTop = hideTop,
+        hideRight = hideRight,
+        hideBottom = hideBottom,
+    )
+
+    /**
      * The default colors width of the [Card].
      */
     @Composable
     fun defaultColors(
-        color: Color = COUITheme.colorScheme.surfaceContainer,
-        contentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
-        pressedColor: Color = COUITheme.colorScheme.surfaceContainerHigh,
+        color: Color = COUITheme.colorScheme.cardBackground,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
+        pressedColor: Color = COUITheme.colorScheme.cardPressed,
     ): CardColors = remember(color, contentColor, pressedColor) {
         CardColors(
             color = color,
@@ -340,6 +427,80 @@ data class CardColors(
     val contentColor: Color,
     val pressedColor: Color,
 )
+
+/**
+ * The shadow of a [Card], after COUI `COUIShadowCardView`: a `MaterialShapeDrawable` background in
+ * `SHADOW_COMPAT_MODE_ALWAYS` whose compat shadow is drawn by `ShadowRenderer`.
+ *
+ * The compat shadow spreads `ceil(0.75 x size)` past the outline as a 68/255 -> 20/255 -> 0 alpha
+ * ramp of the shadow RGB and is shifted by [offset] along [angle]. It is drawn here as a Gaussian
+ * drop shadow fitted to that ramp: blur radius 0.62 x [size] at alpha 136/255, which meets 68/255 at
+ * the outline and 20/255 half way out.
+ *
+ * @param size The shadow size (`couiShadowSize`); 0 draws no shadow, as in COUI.
+ * @param color The shadow color; its alpha is ignored, as `ShadowRenderer.setShadowColor` replaces it.
+ * @param offset How far the shadow is shifted along [angle] (`couiShadowOffset`).
+ * @param angle The direction of [offset] in degrees, 0 pointing down (`couiShadowAngle`).
+ * @param hideLeft Whether no shadow is drawn past the left edge (`couiHideLeftShadow`).
+ * @param hideTop Whether no shadow is drawn past the top edge (`couiHideTopShadow`).
+ * @param hideRight Whether no shadow is drawn past the right edge (`couiHideRightShadow`).
+ * @param hideBottom Whether no shadow is drawn past the bottom edge (`couiHideBottomShadow`).
+ */
+@Immutable
+data class CardShadow(
+    val size: Dp,
+    val color: Color,
+    val offset: Dp,
+    val angle: Int,
+    val hideLeft: Boolean,
+    val hideTop: Boolean,
+    val hideRight: Boolean,
+    val hideBottom: Boolean,
+)
+
+/**
+ * Draws [shadow] around [shape]. A hidden side clips the shadow at the card edge, the counterpart of
+ * the zero-length edge and corner treatments `COUIShadowCardView` installs on that side.
+ */
+private fun Modifier.cardShadow(shadow: CardShadow, shape: Shape): Modifier {
+    val radians = shadow.angle * PI / 180.0
+    val dropShadow = Shadow(
+        radius = shadow.size * CARD_SHADOW_RADIUS_PER_SIZE,
+        color = shadow.color.copy(alpha = 1f),
+        alpha = CARD_SHADOW_ALPHA,
+        offset = DpOffset(x = shadow.offset * sin(radians).toFloat(), y = shadow.offset * cos(radians).toFloat()),
+    )
+    val clipped = shadow.hideLeft || shadow.hideTop || shadow.hideRight || shadow.hideBottom
+    val clip = if (clipped) {
+        Modifier.drawWithContent {
+            clipRect(
+                left = if (shadow.hideLeft) 0f else -CARD_SHADOW_CLIP_REACH,
+                top = if (shadow.hideTop) 0f else -CARD_SHADOW_CLIP_REACH,
+                right = if (shadow.hideRight) size.width else size.width + CARD_SHADOW_CLIP_REACH,
+                bottom = if (shadow.hideBottom) size.height else size.height + CARD_SHADOW_CLIP_REACH,
+            ) {
+                this@drawWithContent.drawContent()
+            }
+        }
+    } else {
+        Modifier
+    }
+    return this
+        .then(clip)
+        .dropShadow(shape = shape, shadow = dropShadow)
+}
+
+/**
+ * The Gaussian blur radius per unit of [CardShadow.size]: `ShadowRenderer` ramps over
+ * `0.75 x size`, and a sigma of 0.476 times that ramp reproduces its 20/255 midpoint.
+ */
+private const val CARD_SHADOW_RADIUS_PER_SIZE = 0.62f
+
+/** Twice `ShadowRenderer.COLOR_ALPHA_START` (68/255): a Gaussian edge sits at half its alpha. */
+private const val CARD_SHADOW_ALPHA = 136f / 255f
+
+/** How far past an unhidden side the shadow clip reaches, in pixels. */
+private const val CARD_SHADOW_CLIP_REACH = 100_000f
 
 /** The COUI card press feedback spring (COUISpringForce response 0.3f / bounce 0f). */
 private val CardPressFeedbackSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)

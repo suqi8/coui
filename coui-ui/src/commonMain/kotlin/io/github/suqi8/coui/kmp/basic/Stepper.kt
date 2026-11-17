@@ -5,6 +5,7 @@ package io.github.suqi8.coui.kmp.basic
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.hoverable
@@ -31,6 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -49,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
+import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
@@ -214,9 +221,21 @@ private fun StepperButton(
                     currentEnabled
                 }
             }
+            .onKeyEvent { event ->
+                val confirm = event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter
+                if (confirm && event.type == KeyEventType.KeyUp && currentEnabled) {
+                    currentOnStep()
+                    true
+                } else {
+                    false
+                }
+            }
+            .focusable(enabled = enabled, interactionSource = interactionSource)
             // COUIStateEffectDrawable.enableScaleEffect -> COUIPressFeedbackHelper: press scale only.
             .couiPressScale(pressed = pressed, enabled = enabled)
             .size(StepperDefaults.ButtonSize)
+            // COUIStepperView: a TYPE_OUTER COUIStrokeDrawable around each circular button.
+            .couiFocusStroke(interactionSource = interactionSource, shape = CircleShape, enabled = enabled)
             .clip(CircleShape)
             .background(buttonColor)
             .hoverable(interactionSource, enabled)
@@ -324,7 +343,7 @@ object StepperDefaults {
 
     /** The default text style of the value indicator (COUIStepperViewTextDefStyle: 18sp, sans-serif-medium). */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.title4.copy(fontWeight = FontWeight.Medium)
+    fun textStyle(): TextStyle = COUITheme.textStyles.headlineS.copy(fontWeight = FontWeight.Medium)
 
     /**
      * The default colors for the [Stepper]: `couiColorContainer8` buttons, `couiColorPrimaryNeutral`
@@ -333,8 +352,8 @@ object StepperDefaults {
     @Composable
     fun stepperColors(
         buttonColor: Color = COUITheme.colorScheme.dialogButton,
-        contentColor: Color = COUITheme.colorScheme.onSurface,
-        disabledContentColor: Color = COUITheme.colorScheme.dividerLine,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledContentColor: Color = COUITheme.colorScheme.divider,
     ): StepperColors = remember(buttonColor, contentColor, disabledContentColor) {
         StepperColors(
             buttonColor = buttonColor,

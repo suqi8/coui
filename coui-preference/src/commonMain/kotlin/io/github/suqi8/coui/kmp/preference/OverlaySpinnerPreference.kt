@@ -47,7 +47,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param titleColor The color of the title of the [OverlaySpinnerPreference].
  * @param summary The summary of the [OverlaySpinnerPreference].
  * @param summaryColor The color of the summary of the [OverlaySpinnerPreference].
- * @param spinnerColors The [SpinnerColors] of the [OverlaySpinnerPreference].
+ * @param spinnerColors The [DropdownColors] of the [OverlaySpinnerPreference].
  * @param startAction The [Composable] content on the start side of the [OverlaySpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [OverlaySpinnerPreference].
  * @param insideMargin The [PaddingValues] to be applied inside the [OverlaySpinnerPreference].
@@ -204,14 +204,14 @@ fun OverlaySpinnerPreference(
     val actualEnabled = enabled && hasEntries
 
     val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceSecondary
+        COUITheme.colorScheme.labelSecondary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
 
     val handleClick = remember(actualEnabled) {
@@ -250,9 +250,9 @@ fun OverlaySpinnerPreference(
                     text = selectedValueText,
                     modifier = Modifier
                         .widthIn(max = 162.dp)
-                        .padding(start = 8.dp, end = 4.dp)
+                        .padding(end = 4.dp)
                         .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.footnote1.fontSize,
+                    fontSize = COUITheme.textStyles.bodyS.fontSize,
                     color = valueColor,
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,
@@ -451,14 +451,14 @@ fun OverlaySpinnerPreference(
     val actualEnabled = enabled && hasEntries
 
     val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceSecondary
+        COUITheme.colorScheme.labelSecondary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
 
     val handleClick = remember(actualEnabled) {
@@ -497,9 +497,9 @@ fun OverlaySpinnerPreference(
                     text = selectedValueText,
                     modifier = Modifier
                         .widthIn(max = 162.dp)
-                        .padding(start = 8.dp, end = 4.dp)
+                        .padding(end = 4.dp)
                         .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.footnote1.fontSize,
+                    fontSize = COUITheme.textStyles.bodyS.fontSize,
                     color = valueColor,
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,

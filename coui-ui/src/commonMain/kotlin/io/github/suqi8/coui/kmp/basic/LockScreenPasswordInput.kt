@@ -330,7 +330,7 @@ private fun PasswordField(
             insideMargin = DpSize(0.dp, LockScreenPasswordInputDefaults.FieldPaddingVertical),
             colors = TextFieldDefaults.textFieldColors(
                 labelColor = colors.hintColor,
-                iconColor = colors.iconColor,
+                iconColor = colors.eyeColor,
             ),
             label = label,
             enabled = enabled,
@@ -434,10 +434,11 @@ object LockScreenPasswordInputDefaults {
      * The default colors for [mode].
      *
      * - [LockScreenPasswordInputMode.Setting]: field `?couiColorCard` and button
-     *   `?couiColorCardBackground` (`surfaceContainer`), arrow `?couiColorLabelTertiary`
-     *   (`onSurfaceVariantActions`), active arrow `?couiColorPrimaryNeutral` (`onSurface`). The
+     *   `?couiColorCardBackground` (`cardBackground`), arrow `?couiColorLabelTertiary`
+     *   (`labelTertiary`), active arrow `?couiColorPrimaryNeutral` (`labelPrimary`), eye
+     *   toggle `?couiColorLabelSecondary` (`labelSecondary`, `coui_btn_eye_on / _off`). The
      *   field and the button are card-colored: place them on the page surface
-     *   (`COUITheme.colorScheme.surface`), not on a card.
+     *   (`COUITheme.colorScheme.backgroundWithCard`), not on a card.
      * - [LockScreenPasswordInputMode.Desktop]: transparent field and button, white text and eye
      *   (`coui_input_lock_screen_pwd_view_edittext_text_color_desktop`, `coui_btn_eye_*_desktop`),
      *   arrow `coui_color_label_tertiary_dark` #4DFFFFFF, active arrow #FFFFFF.
@@ -447,7 +448,7 @@ object LockScreenPasswordInputDefaults {
     @Composable
     fun colors(mode: LockScreenPasswordInputMode = LockScreenPasswordInputMode.Setting): LockScreenPasswordInputColors {
         val scheme = COUITheme.colorScheme
-        return remember(mode, scheme.surfaceContainer, scheme.onSurface, scheme.onSurfaceVariantActions, scheme.onSurfaceSecondary, scheme.error) {
+        return remember(mode, scheme.cardBackground, scheme.labelPrimary, scheme.labelTertiary, scheme.labelSecondary, scheme.error) {
             if (mode == LockScreenPasswordInputMode.Desktop) {
                 LockScreenPasswordInputColors(
                     fieldColor = Color.Transparent,
@@ -456,16 +457,18 @@ object LockScreenPasswordInputDefaults {
                     hintColor = DesktopTertiary,
                     iconColor = DesktopTertiary,
                     activeIconColor = Color.White,
+                    eyeColor = Color.White,
                     errorColor = scheme.error,
                 )
             } else {
                 LockScreenPasswordInputColors(
-                    fieldColor = scheme.surfaceContainer,
-                    buttonColor = scheme.surfaceContainer,
-                    textColor = scheme.onSurface,
-                    hintColor = scheme.onSurfaceSecondary,
-                    iconColor = scheme.onSurfaceVariantActions,
-                    activeIconColor = scheme.onSurface,
+                    fieldColor = scheme.cardBackground,
+                    buttonColor = scheme.cardBackground,
+                    textColor = scheme.labelPrimary,
+                    hintColor = scheme.labelSecondary,
+                    iconColor = scheme.labelTertiary,
+                    activeIconColor = scheme.labelPrimary,
+                    eyeColor = scheme.labelSecondary,
                     errorColor = scheme.error,
                 )
             }
@@ -480,8 +483,9 @@ object LockScreenPasswordInputDefaults {
  * @param buttonColor The fill of the next button.
  * @param textColor The password text.
  * @param hintColor The hint.
- * @param iconColor The inactive next arrow, also used for the eye toggle.
+ * @param iconColor The inactive next arrow.
  * @param activeIconColor The active next arrow (`*_next_src_allow`).
+ * @param eyeColor The password eye toggle (`coui_btn_eye_on / _off`, `_desktop` in desktop mode).
  * @param errorColor The error line.
  */
 @Immutable
@@ -492,6 +496,7 @@ data class LockScreenPasswordInputColors(
     val hintColor: Color,
     val iconColor: Color,
     val activeIconColor: Color,
+    val eyeColor: Color,
     val errorColor: Color,
 )
 

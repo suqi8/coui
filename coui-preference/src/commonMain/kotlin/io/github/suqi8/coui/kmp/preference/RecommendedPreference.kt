@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -108,7 +107,7 @@ fun RecommendedPreference(
             ) {
                 Text(
                     text = item.text,
-                    fontSize = COUITheme.textStyles.body2.fontSize,
+                    fontSize = COUITheme.textStyles.bodyM.fontSize,
                     fontWeight = FontWeight.Medium,
                     color = colors.itemColor,
                 )
@@ -168,17 +167,13 @@ object RecommendedPreferenceDefaults {
 
     /**
      * The default [RecommendedPreferenceColors]. [containerColor] follows COUI couiColorContainer4
-     * (#0A000000 light / #14FFFFFF dark), inferred from the background luminance.
+     * (COUIRecommendedPreference `recommendedCardBgColor` default; #0A000000 light / #1AFFFFFF dark).
      */
     @Composable
     fun recommendedPreferenceColors(
-        containerColor: Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) {
-            Color(0x14FFFFFF)
-        } else {
-            Color(0x0A000000)
-        },
-        titleColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
-        itemColor: Color = COUITheme.colorScheme.onSurface,
+        containerColor: Color = COUITheme.colorScheme.container4,
+        titleColor: Color = COUITheme.colorScheme.labelSecondary,
+        itemColor: Color = COUITheme.colorScheme.labelPrimary,
     ): RecommendedPreferenceColors = remember(containerColor, titleColor, itemColor) {
         RecommendedPreferenceColors(
             containerColor = containerColor,

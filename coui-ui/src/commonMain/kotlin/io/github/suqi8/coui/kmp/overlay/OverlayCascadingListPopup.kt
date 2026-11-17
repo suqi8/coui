@@ -17,6 +17,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.layout.CascadingListPopupLayout
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
 
@@ -48,9 +49,10 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
  *   scope where the popup is called; without one, or without runtime-shader support, the popup keeps
  *   [backgroundColor]. Pass false to opt out. (COUI itself leaves popup blur off unless an app calls
  *   `COUIPopupListWindow.setUseBackgroundBlur`.)
- * @param materialEffect Whether a blurred surface of both menus draws the COUI 17 material effects: the
- *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). An opaque
- *   surface never draws them.
+ * @param materialEffect Whether the surface of both menus draws the COUI 17 material effects: the
+ *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`). Drawn on the
+ *   blurred and the opaque surface alike (COUI only draws them once blurred). Both [materialBlur]
+ *   and [materialEffect] default to [LocalCOUIMaterialEffectEnabled].
  */
 @Composable
 fun OverlayCascadingListPopup(
@@ -69,8 +71,8 @@ fun OverlayCascadingListPopup(
     dropdownColors: DropdownColors = DropdownDefaults.dropdownColors(),
     collapseOnSelection: Boolean = true,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
 ) {
     CascadingListPopupLayout(
         show = show,

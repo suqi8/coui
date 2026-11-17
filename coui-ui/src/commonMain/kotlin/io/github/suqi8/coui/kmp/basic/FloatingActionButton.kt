@@ -26,16 +26,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -44,8 +47,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -60,11 +64,16 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
+import io.github.suqi8.coui.kmp.effect.SpotLightShader
+import io.github.suqi8.coui.kmp.effect.SpotLightState
+import io.github.suqi8.coui.kmp.effect.SpotLightType
 import io.github.suqi8.coui.kmp.effect.StrokeEffectParams
+import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.effect.splitFrameworkStroke
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
@@ -75,6 +84,8 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -91,16 +102,32 @@ import kotlin.math.min
  * - **Material**: with [material] on (the ColorOS 17 default, the system material switches), the
  *   `TYPE_FRAMEWORK_CIRCLE_2` edge lighting + inner shadow is drawn over the fill and the
  *   `COUIMaskEffectDrawable` press mask is turned off; when a [LocalMaterialBackdrop] provider is
- *   present the fill is replaced by the `TYPE_FRAMEWORK_FAB` backdrop blur. With [material] off the
- *   opaque fill takes the `couiColorPress` mask while pressed.
+ *   present the fill is replaced by the `TYPE_FRAMEWORK_FAB` backdrop blur. A touch lights the
+ *   `TYPE_OPAQUE_SMALL_1` spotlight under the finger, over the fill and the icon and clipped to the
+ *   button (`FloatingButtonWrapper`). With [material] off the opaque fill takes the `couiColorPress`
+ *   mask while pressed.
  * - **Disabled**: the fill turns to [disabledContainerColor], touches are ignored and the material
  *   switches to its disabled presets.
+ * - **Show / hide**: toggling [visible] plays `animationFloatingButtonEnlarge` /
+ *   `animationFloatingButtonShrink` (alpha 0 <-> 1, scale 0.6 <-> 1 over 350ms on
+ *   COUIMoveEaseInterpolator); once hidden the button leaves the layout (`View.GONE`). Drive it
+ *   from [rememberFloatingActionButtonScrollState] for the COUI hide-on-scroll behavior.
+ *
+ * The COUI color presets are in [FloatingActionButtonDefaults]: the theme primary (`Main`), the
+ * neutral [FloatingActionButtonDefaults.secondaryContainerColor] (`Secondary`) and the translucent
+ * [FloatingActionButtonDefaults.translateContainerColor] (`Translate`), each at the 56dp or the
+ * 48dp [FloatingActionButtonDefaults.TinySize] size. The `FloatingButton.Icon.*` styles carrying
+ * those presets also turn the shadow off (`fabNeedElevation = false`): pass `shadowElevation = 0.dp`
+ * with them.
  *
  * @param onClick The callback when the [FloatingActionButton] is clicked.
  * @param modifier The modifier to be applied to the [FloatingActionButton].
  * @param enabled Whether the [FloatingActionButton] is enabled.
- * @param material Whether the COUI 17 material (edge lighting and, with a backdrop provider, the
- *   backdrop blur) is drawn, as on ColorOS 17 with its system material switches on.
+ * @param visible Whether the [FloatingActionButton] is shown. Changes play the COUI enlarge / shrink
+ *   animation; a hidden button ignores touches.
+ * @param material Whether the COUI 17 material (edge lighting, touch spotlight and, with a backdrop
+ *   provider, the backdrop blur) is drawn, as on ColorOS 17 with its system material switches on.
+ *   Defaults to [LocalCOUIMaterialEffectEnabled].
  * @param hapticFeedbackEnabled Whether a touch down plays the press haptic (COUI `fabNeedVibrate`).
  * @param shape The shape of the [FloatingActionButton].
  * @param containerColor The color of the [FloatingActionButton].
@@ -121,7 +148,8 @@ fun FloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    material: Boolean = true,
+    visible: Boolean = true,
+    material: Boolean = LocalCOUIMaterialEffectEnabled.current,
     hapticFeedbackEnabled: Boolean = true,
     shape: Shape = CircleShape,
     containerColor: Color = COUITheme.colorScheme.primary,
@@ -134,9 +162,32 @@ fun FloatingActionButton(
     interactionSource: MutableInteractionSource? = null,
     content: @Composable () -> Unit,
 ) {
+    // animationFloatingButtonEnlarge / animationFloatingButtonShrink: 1 = shown, 0 = hidden.
+    val shown = remember { Animatable(if (visible) 1f else 0f) }
+    LaunchedEffect(visible) {
+        shown.animateTo(if (visible) 1f else 0f, tween(FAB_SHOW_HIDE_MILLIS, easing = FabCollapseEasing))
+    }
+    // Derived so that the running animation only redraws the layer instead of recomposing.
+    val gone by remember { derivedStateOf { shown.value == 0f && shown.targetValue == 0f } }
+    val atRest by remember { derivedStateOf { shown.value == 1f } }
+    if (!visible && gone) return
+    val showHideModifier = if (!atRest) {
+        Modifier.graphicsLayerWithOverflow(FabItemLayerOverflow) {
+            val progress = shown.value
+            alpha = progress
+            val scale = FAB_HIDDEN_SCALE + (1f - FAB_HIDDEN_SCALE) * progress
+            scaleX = scale
+            scaleY = scale
+        }
+    } else {
+        Modifier
+    }
+    // A hiding button keeps its colors but ignores touches.
+    val interactive = enabled && visible
+
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val themeFill = COUITheme.colorScheme.primary
 
     // The material layer needs runtime shaders; without them COUI keeps the plain mask.
@@ -188,9 +239,15 @@ fun FloatingActionButton(
         Modifier
     }
 
+    // FloatingButtonWrapper: the TYPE_OPAQUE_SMALL_1 touch spotlight, on while the material
+    // spotlight switch is on and the button is enabled (setSpotLightEnabled / setEnabled).
+    val spotLightActive = materialActive && enabled
+    val spotLight = rememberPopupSpotLight()
+    val spotLightShader = remember(materialActive) { if (materialActive) RuntimeShader(SpotLightShader.Source) else null }
+
     val haptic = rememberCouiHaptic()
     val currentHaptic by rememberUpdatedState(haptic)
-    val hapticModifier = if (enabled && hapticFeedbackEnabled) {
+    val hapticModifier = if (interactive && hapticFeedbackEnabled) {
         // COUIFloatingButton.animatePress: performHapticFeedback(302) on ACTION_DOWN.
         Modifier.pointerInput(Unit) {
             awaitEachGesture {
@@ -204,13 +261,25 @@ fun FloatingActionButton(
 
     Box(
         modifier = modifier
+            .then(showHideModifier)
             .onGloballyPositioned { centerYInWindow.floatValue = it.positionInWindow().y + it.size.height / 2f }
             // The wrapper carries the shadow, the material and the button, and the touch motion
             // scales and moves them all together.
-            .couiTouchMotion(interactionSource = interactionSource, enabled = enabled)
+            .couiTouchMotion(interactionSource = interactionSource, enabled = interactive)
+            // COUIFloatingButton's TYPE_OUTER COUIStrokeDrawable, a capsule around the main button.
+            .couiFocusStroke(interactionSource = interactionSource, shape = shape, enabled = interactive)
             .then(shadowModifier)
             .then(backdropModifier ?: Modifier)
             .clip(shape)
+            .then(
+                if (spotLightActive && spotLightShader != null) {
+                    Modifier
+                        .popupSpotLightInput(spotLight, enabled = true)
+                        .fabSpotLight(spotLightShader, spotLight, isDark)
+                } else {
+                    Modifier
+                },
+            )
             .background(fillColor)
             .then(if (materialActive) Modifier.fabMaterialStroke(isDark, enabled) else Modifier)
             .then(hapticModifier)
@@ -218,7 +287,7 @@ fun FloatingActionButton(
                 interactionSource = interactionSource,
                 // COUIFloatingButton.ensureBlurEffect turns the press mask off with the material.
                 indication = if (materialActive) null else LocalIndication.current,
-                enabled = enabled,
+                enabled = interactive,
                 role = Role.Button,
                 onClick = onClick,
             )
@@ -284,6 +353,28 @@ private fun Modifier.fabMaterialStroke(isDark: Boolean, enabled: Boolean): Modif
             drawContent()
         }
     }
+}
+
+/**
+ * The `TYPE_OPAQUE_SMALL_1` touch spotlight of `FloatingButtonWrapper.draw`: drawn after the
+ * button and its icon, clipped to the button outline (the oval `mDrawPath`; here the clip of the
+ * shape this modifier follows). Only reads animation state while drawing, so it allocates nothing
+ * per frame beyond the shader brush.
+ */
+private fun Modifier.fabSpotLight(shader: RuntimeShader, spotLight: SpotLightState, isDark: Boolean): Modifier = drawWithContent {
+    drawContent()
+    val glow = spotLight.progress.value
+    if (glow <= 0f) return@drawWithContent
+    val light = spotLight.position.value
+    val type = SpotLightType.OpaqueSmall1
+    SpotLightShader.setUniforms(
+        shader = shader,
+        lightX = light.x,
+        lightY = light.y,
+        radius = SpotLightShader.radius(glow, spotLight.extinguishing, type.endRadius),
+        intensity = type.endIntensity(isDark) * glow,
+    )
+    drawRect(brush = shader.asBrush(), blendMode = type.blendMode(isDark))
 }
 
 /** `COUIMaterialStrokeEffect.FRAMEWORK_CIRCLE_PARAMS_2[_DISABLED]_{LIGHT,DARK}`. */
@@ -355,10 +446,6 @@ object FloatingActionButtonDefaults {
      */
     val ExpandedRotation = 45f
 
-    /** The fixed press scale used before the COUI 17 touch motion. No longer read. */
-    @Deprecated("The button now presses with the COUI 17 touch motion, whose target depends on its size.")
-    val PressedScale = 0.92f
-
     /** The OPlus shadow elevation of the [FloatingActionButton] (COUI coui_float_btn_shadow_elevation). */
     val ShadowElevation = 60.dp
 
@@ -390,12 +477,110 @@ object FloatingActionButtonDefaults {
     @Composable
     fun disabledContainerColor(): Color {
         val scheme = COUITheme.colorScheme
-        val isDark = scheme.background.luminance() < 0.5f
-        return scheme.disabledPrimary.compositeOver(if (isDark) DisabledBaseDark else DisabledBaseLight)
+        return scheme.disable.compositeOver(if (scheme.isDark) DisabledBaseDark else DisabledBaseLight)
     }
 
     private val DisabledBaseLight = Color(0xFFFFFFFF)
     private val DisabledBaseDark = Color(0xFF4D4D4D)
+
+    /** The size of the tiny tier (COUI `FloatingButton.Icon.Tiny` `fabButtonSize`). */
+    val TinySize = 48.dp
+
+    /**
+     * How long a button hidden by [rememberFloatingActionButtonScrollState] waits before it shows
+     * itself again (COUIFloatingButton `DELAY_TIME_NO_ACTION_SLIDE_OUT`, `AutoDismissRunnable`).
+     */
+    val AutoShowDelayMillis = 5000L
+
+    /**
+     * The fill of the secondary preset (`FloatingButton.Icon.*.Secondary`,
+     * `coui_floating_button_secondary_button_color_selector`: `coui_button_neutral_color`
+     * #0F000000 / #4CFFFFFF).
+     */
+    @Composable
+    fun secondaryContainerColor(): Color = COUITheme.colorScheme.neutralButton
+
+    /**
+     * The disabled fill of the secondary preset: couiColorPressBackground (#14000000 /
+     * #26FFFFFF).
+     */
+    @Composable
+    fun secondaryDisabledContainerColor(): Color = COUITheme.colorScheme.pressBackground
+
+    /**
+     * The fill of the translucent preset laid over images (`FloatingButton.Icon.*.Translate`,
+     * `coui_floating_button_translate_button_color_selector`: #33FFFFFF in every state).
+     */
+    @Composable
+    fun translateContainerColor(): Color = COUITheme.colorScheme.transparentButton
+}
+
+/**
+ * The hide-on-scroll state of a [FloatingActionButton], after COUI
+ * `COUIFloatingButton.ScrollViewBehavior`: a scroll step of more than 10px towards the end of the
+ * content hides the button (`animationFloatingButtonSlideOut`, the shrink animation), a step of more
+ * than 10px back towards the start shows it, and a hidden button shows itself again
+ * [autoShowDelayMillis] after it was hidden (`AutoDismissRunnable`).
+ *
+ * Attach [nestedScrollConnection] to the scrolling container's parent with `Modifier.nestedScroll`
+ * and pass [visible] to the button.
+ */
+@Stable
+class FloatingActionButtonScrollState internal constructor(
+    private val scope: CoroutineScope,
+    private val autoShowDelayMillis: Long,
+) {
+    /** Whether the button should be shown. */
+    var visible: Boolean by mutableStateOf(true)
+        private set
+
+    private var autoShowJob: Job? = null
+
+    /** The connection that hides and shows the button while the content scrolls. */
+    val nestedScrollConnection: NestedScrollConnection = object : NestedScrollConnection {
+        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+            when {
+                available.y < -FAB_SCROLL_THRESHOLD_PX -> hide()
+                available.y > FAB_SCROLL_THRESHOLD_PX -> show()
+            }
+            return Offset.Zero
+        }
+    }
+
+    /** Shows the button (`COUIFloatingButton.show`). */
+    fun show() {
+        autoShowJob?.cancel()
+        autoShowJob = null
+        visible = true
+    }
+
+    /** Hides the button (`COUIFloatingButton.hide`), and schedules it to show again when enabled. */
+    fun hide() {
+        visible = false
+        autoShowJob?.cancel()
+        autoShowJob = if (autoShowDelayMillis > 0) {
+            scope.launch {
+                delay(autoShowDelayMillis)
+                visible = true
+            }
+        } else {
+            null
+        }
+    }
+}
+
+/**
+ * Creates and remembers a [FloatingActionButtonScrollState].
+ *
+ * @param autoShowDelayMillis How long a hidden button waits before it shows itself again; 0 or less
+ *   keeps it hidden until the content scrolls back (`setAutoSlideInDisable`).
+ */
+@Composable
+fun rememberFloatingActionButtonScrollState(
+    autoShowDelayMillis: Long = FloatingActionButtonDefaults.AutoShowDelayMillis,
+): FloatingActionButtonScrollState {
+    val scope = rememberCoroutineScope()
+    return remember(scope, autoShowDelayMillis) { FloatingActionButtonScrollState(scope, autoShowDelayMillis) }
 }
 
 /**
@@ -464,6 +649,9 @@ class FloatingActionButtonItem(
  * @param items The child actions, index 0 nearest to the main button.
  * @param modifier The modifier to be applied to the [ExpandableFloatingActionButton].
  * @param enabled Whether the main button is enabled.
+ * @param visible Whether the main button is shown, see [FloatingActionButton]. Hiding an expanded
+ *   menu also collapses it through [onExpandedChange] (`ScrollViewBehavior` closes the menu as it
+ *   slides the button out).
  * @param material Whether the buttons draw the COUI 17 material, see [FloatingActionButton].
  * @param hapticFeedbackEnabled Whether a touch down on a button plays the press haptic.
  * @param containerColor The fill of the main button.
@@ -479,7 +667,8 @@ fun ExpandableFloatingActionButton(
     items: List<FloatingActionButtonItem>,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    material: Boolean = true,
+    visible: Boolean = true,
+    material: Boolean = LocalCOUIMaterialEffectEnabled.current,
     hapticFeedbackEnabled: Boolean = true,
     containerColor: Color = COUITheme.colorScheme.primary,
     disabledContainerColor: Color = FloatingActionButtonDefaults.disabledContainerColor(),
@@ -504,6 +693,9 @@ fun ExpandableFloatingActionButton(
     )
     val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
     val currentExpanded by rememberUpdatedState(expanded)
+    LaunchedEffect(visible) {
+        if (!visible && currentExpanded) currentOnExpandedChange(false)
+    }
 
     Layout(
         content = {
@@ -520,20 +712,24 @@ fun ExpandableFloatingActionButton(
                     )
                 }
             }
-            FloatingActionButton(
-                onClick = { currentOnExpandedChange(!currentExpanded) },
-                enabled = enabled,
-                material = material,
-                hapticFeedbackEnabled = hapticFeedbackEnabled,
-                containerColor = containerColor,
-                disabledContainerColor = disabledContainerColor,
-                contentColor = contentColor,
-            ) {
-                Box(
-                    modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
-                    contentAlignment = Alignment.Center,
+            // Wrapped so the layout always has a main measurable, also once the button is hidden.
+            Box {
+                FloatingActionButton(
+                    onClick = { currentOnExpandedChange(!currentExpanded) },
+                    enabled = enabled,
+                    visible = visible,
+                    material = material,
+                    hapticFeedbackEnabled = hapticFeedbackEnabled,
+                    containerColor = containerColor,
+                    disabledContainerColor = disabledContainerColor,
+                    contentColor = contentColor,
                 ) {
-                    content()
+                    Box(
+                        modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        content()
+                    }
                 }
             }
         },
@@ -602,7 +798,7 @@ private fun ExpandableFabItem(
 
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val primary = COUITheme.colorScheme.primary
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val buttonColor = item.containerColor.takeOrElse { primary }
     val labelFill = item.labelContainerColor.takeOrElse { primary }
     val labelText = item.labelColor.takeOrElse { Color.White }
@@ -692,6 +888,15 @@ private const val FAB_ITEM_COLLAPSED_SCALE = 0.6f
 
 /** The label fill alpha when disabled. */
 private const val FAB_LABEL_DISABLED_ALPHA = 0.3f
+
+/** COUIFloatingButton `DEFAULT_ENLARGE_ANIMATION_DURATION`: the show / hide animation. */
+private const val FAB_SHOW_HIDE_MILLIS = 350
+
+/** `animationFloatingButtonShrink`: the scale of a hidden button. */
+private const val FAB_HIDDEN_SCALE = 0.6f
+
+/** `ScrollViewBehavior.behaviorAnimate`: a scroll step must exceed 10px to show or hide the button. */
+private const val FAB_SCROLL_THRESHOLD_PX = 10f
 
 /** `PathInterpolator(0.25, 0.1, 0.25, 1)`: expand, label and rotation curve. */
 private val FabExpandEasing = CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f)

@@ -143,6 +143,7 @@ fun Checkbox(
 
     // COUI crossfades layers instead of morphing colors.
     val ringColor = colors.uncheckedBackgroundColor(enabled)
+    val ringFillColor = colors.uncheckedFillColor(enabled)
     val fillColor = colors.checkedBackgroundColor(enabled)
     val markColor = colors.checkedForegroundColor(enabled)
     // Once no AVD runs, the indeterminate state shows its static drawable
@@ -187,6 +188,11 @@ fun Checkbox(
                 val ringSize = Size(RingSizeFraction * d, RingSizeFraction * d)
                 val ringCornerRadius = CornerRadius(RingCornerRadiusFraction * d)
                 val ringStroke = Stroke(width = RingStrokeWidthFraction * d)
+                // The shape checkbox fills the ring's interior (coui_shape_btn_check_off_*).
+                val ringHalfStroke = RingStrokeWidthFraction * d / 2f
+                val ringFillTopLeft = Offset(ringTopLeft.x + ringHalfStroke, ringTopLeft.y + ringHalfStroke)
+                val ringFillSize = Size(ringSize.width - 2f * ringHalfStroke, ringSize.height - 2f * ringHalfStroke)
+                val ringFillCornerRadius = CornerRadius(RingCornerRadiusFraction * d - ringHalfStroke)
 
                 val checkCache = CheckmarkCache(
                     startPoint = Offset(CheckStartPoint.x * d, CheckStartPoint.y * d),
@@ -218,6 +224,14 @@ fun Checkbox(
                     scale(scale = popScale.value) {
                         val fillFraction = fillFractionState.value
                         if (fillFraction < 1f) {
+                            if (ringFillColor.alpha > 0f) {
+                                drawRoundRect(
+                                    color = ringFillColor,
+                                    topLeft = ringFillTopLeft,
+                                    size = ringFillSize,
+                                    cornerRadius = ringFillCornerRadius,
+                                )
+                            }
                             drawRoundRect(
                                 color = ringColor,
                                 topLeft = ringTopLeft,
@@ -309,58 +323,111 @@ object CheckboxDefaults {
      * - The unchecked ring is couiColorLabelTertiary #42000000 / #4DFFFFFF, and
      *   couiColorQuarternaryNeutral #14000000 / #26FFFFFF when disabled.
      * - The checked fill is couiColorPrimary, at 30% (`fillAlpha` 0.3) when disabled.
+     * - The unchecked box has no fill.
      */
     @Composable
     fun checkboxColors(
         checkedForegroundColor: Color = COUITheme.colorScheme.onPrimary,
-        uncheckedForegroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
         disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
-        disabledUncheckedForegroundColor: Color = COUITheme.colorScheme.quarternaryNeutral,
         checkedBackgroundColor: Color = COUITheme.colorScheme.primary,
-        uncheckedBackgroundColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disabledPrimary,
+        uncheckedBackgroundColor: Color = COUITheme.colorScheme.labelTertiary,
+        disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disable,
         disabledUncheckedBackgroundColor: Color = COUITheme.colorScheme.quarternaryNeutral,
+        uncheckedFillColor: Color = Color.Transparent,
+        disabledUncheckedFillColor: Color = Color.Transparent,
     ): CheckboxColors = remember(
         checkedForegroundColor,
-        uncheckedForegroundColor,
         disabledCheckedForegroundColor,
-        disabledUncheckedForegroundColor,
         checkedBackgroundColor,
         uncheckedBackgroundColor,
         disabledCheckedBackgroundColor,
         disabledUncheckedBackgroundColor,
+        uncheckedFillColor,
+        disabledUncheckedFillColor,
     ) {
         CheckboxColors(
             checkedForegroundColor = checkedForegroundColor,
-            uncheckedForegroundColor = uncheckedForegroundColor,
             disabledCheckedForegroundColor = disabledCheckedForegroundColor,
-            disabledUncheckedForegroundColor = disabledUncheckedForegroundColor,
             checkedBackgroundColor = checkedBackgroundColor,
             uncheckedBackgroundColor = uncheckedBackgroundColor,
             disabledCheckedBackgroundColor = disabledCheckedBackgroundColor,
             disabledUncheckedBackgroundColor = disabledUncheckedBackgroundColor,
+            uncheckedFillColor = uncheckedFillColor,
+            disabledUncheckedFillColor = disabledUncheckedFillColor,
         )
     }
+
+    /**
+     * The colors of the COUI shape checkbox, laid over images and colored backdrops
+     * (`Widget.COUI.CompoundButton.COUICheckBox.Shape`, theme attribute `couiShapeCheckBoxStyle`,
+     * drawable `coui_shape_checkbox_state`). Only the unchecked state differs from
+     * [checkboxColors]; the same in light and dark themes:
+     *
+     * - `coui_shape_btn_check_off_normal`: a black 40% fill inside a white 40% ring.
+     * - `coui_shape_btn_check_off_disabled`: a black 8% fill inside a
+     *   `coui_color_disabled_neutral_dark` (#4DFFFFFF, white 30%) ring.
+     * - The checked and indeterminate states reuse `coui_btn_check_on_*` / `coui_btn_part_check_on_*`.
+     */
+    @Composable
+    fun shapeCheckboxColors(
+        checkedForegroundColor: Color = COUITheme.colorScheme.onPrimary,
+        disabledCheckedForegroundColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
+        checkedBackgroundColor: Color = COUITheme.colorScheme.primary,
+        uncheckedBackgroundColor: Color = Color.White.copy(alpha = ShapeRingAlpha),
+        disabledCheckedBackgroundColor: Color = COUITheme.colorScheme.disable,
+        disabledUncheckedBackgroundColor: Color = Color.White.copy(alpha = ShapeDisabledRingAlpha),
+        uncheckedFillColor: Color = Color.Black.copy(alpha = ShapeFillAlpha),
+        disabledUncheckedFillColor: Color = Color.Black.copy(alpha = ShapeDisabledFillAlpha),
+    ): CheckboxColors = checkboxColors(
+        checkedForegroundColor = checkedForegroundColor,
+        disabledCheckedForegroundColor = disabledCheckedForegroundColor,
+        checkedBackgroundColor = checkedBackgroundColor,
+        uncheckedBackgroundColor = uncheckedBackgroundColor,
+        disabledCheckedBackgroundColor = disabledCheckedBackgroundColor,
+        disabledUncheckedBackgroundColor = disabledUncheckedBackgroundColor,
+        uncheckedFillColor = uncheckedFillColor,
+        disabledUncheckedFillColor = disabledUncheckedFillColor,
+    )
+
+    /** The ring alpha of the shape checkbox (`coui_shape_btn_check_off_normal` `strokeAlpha` 0.4). */
+    private val ShapeRingAlpha = 0.4f
+
+    /** The disabled ring alpha of the shape checkbox (`coui_color_disabled_neutral_dark` #4DFFFFFF). */
+    private val ShapeDisabledRingAlpha = 0x4D / 255f
+
+    /** The fill alpha of the shape checkbox (`coui_shape_btn_check_off_normal` `fillAlpha` 0.4). */
+    private val ShapeFillAlpha = 0.4f
+
+    /** The disabled fill alpha of the shape checkbox (`coui_shape_btn_check_off_disabled` `fillAlpha` 0.08). */
+    private val ShapeDisabledFillAlpha = 0.08f
 }
 
+/**
+ * The colors of a [Checkbox].
+ *
+ * The unchecked state is a ring ([uncheckedBackgroundColor]) around an optional fill
+ * ([uncheckedFillColor], transparent except for [CheckboxDefaults.shapeCheckboxColors]); the
+ * checked and indeterminate states are a filled box ([checkedBackgroundColor]) with the mark
+ * ([checkedForegroundColor]).
+ */
 @Immutable
 data class CheckboxColors(
     private val checkedForegroundColor: Color,
-    private val uncheckedForegroundColor: Color,
     private val disabledCheckedForegroundColor: Color,
-    private val disabledUncheckedForegroundColor: Color,
     private val checkedBackgroundColor: Color,
     private val uncheckedBackgroundColor: Color,
     private val disabledCheckedBackgroundColor: Color,
     private val disabledUncheckedBackgroundColor: Color,
+    private val uncheckedFillColor: Color = Color.Transparent,
+    private val disabledUncheckedFillColor: Color = Color.Transparent,
 ) {
     internal fun checkedForegroundColor(enabled: Boolean): Color = if (enabled) checkedForegroundColor else disabledCheckedForegroundColor
-
-    internal fun uncheckedForegroundColor(enabled: Boolean): Color = if (enabled) uncheckedForegroundColor else disabledUncheckedForegroundColor
 
     internal fun checkedBackgroundColor(enabled: Boolean): Color = if (enabled) checkedBackgroundColor else disabledCheckedBackgroundColor
 
     internal fun uncheckedBackgroundColor(enabled: Boolean): Color = if (enabled) uncheckedBackgroundColor else disabledUncheckedBackgroundColor
+
+    internal fun uncheckedFillColor(enabled: Boolean): Color = if (enabled) uncheckedFillColor else disabledUncheckedFillColor
 }
 
 // COUI checkbox geometry, expressed as fractions of the 24dp drawable viewport (coui_btn_check_*.xml).

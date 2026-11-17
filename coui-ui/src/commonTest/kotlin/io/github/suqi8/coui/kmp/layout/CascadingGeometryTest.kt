@@ -49,6 +49,18 @@ class CascadingGeometryTest {
     }
 
     @Test
+    fun compactCollapseClosesOntoTheRowWhereTheShrunkMainMenuDrawsIt() {
+        val g = geometry(compact = true, popupAnchor = IntRect(1000, 300, 1100, 380))
+        // SmallScreenAnimationController.onSubMenuProgressUpdate: the start is re-read from the
+        // anchor row of the main menu scaled about its top at the same progress.
+        val depth = (anchorRow.top - main.top).toFloat()
+        assertEquals(depth, g.anchorDepth)
+        assertEquals(g.subStartTranslationY, g.collapseStartTranslationY(0f), 0.001f)
+        assertEquals(g.subStartTranslationY - (1f - g.mainScale) * depth, g.collapseStartTranslationY(1f), 0.001f)
+        assertEquals(g.subStartTranslationY - (1f - g.mainScale) * depth / 2f, g.collapseStartTranslationY(0.5f), 0.001f)
+    }
+
+    @Test
     fun compactMainMenuMovesUpToKeepTheGap() {
         // main.top + 12dp gap lies below the sub top, so the main menu moves up.
         val g = geometry(compact = true, popupAnchor = IntRect(780, 300, 820, 380))

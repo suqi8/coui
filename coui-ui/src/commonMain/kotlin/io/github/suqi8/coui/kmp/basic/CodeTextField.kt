@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +48,7 @@ import io.github.suqi8.coui.kmp.squircle.addLegacySquircleRect
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 /**
  * A [CodeTextField] component with COUI style.
@@ -59,8 +61,8 @@ import kotlinx.coroutines.launch
  * cells from left to right. A multi-character insertion (paste) replaces the whole code and is
  * distributed into the cells. A blinking cursor is shown in the active empty cell while focused.
  *
- * On narrow layouts the cells shrink proportionally below the 360dp reference width and the gap
- * between cells adapts within COUI's min/max bounds.
+ * On windows narrower than 360dp the cells shrink proportionally, and the gap between cells
+ * adapts to the available width (minus COUI's 16dp side margins) within COUI's 4..16dp bounds.
  *
  * @param value The code to be displayed in the cells. Characters beyond [cellCount] are ignored.
  * @param onValueChange The callback to be called when the code changes. Whitespace is stripped
@@ -173,8 +175,10 @@ fun CodeTextField(
 
 /**
  * Lays out the code cells centered in the available width. Mirrors
- * COUICodeInputView.setCodeItemWidth: cells scale down proportionally below the 360dp reference
- * width and the gap between adjacent cells adapts within the COUI min/max bounds.
+ * COUICodeInputView.setCodeItemWidth: cells scale by `min(screenWidthDp, 360) / 360` (the
+ * window width, not the component width), and each cell gets a per-side margin of
+ * `round((w - n * cellW - 2 * 16dp) / (2n - 2))` clamped to 2..8dp (getCellMarginHorizontal),
+ * i.e. a 4..16dp gap between adjacent cells.
  */
 @Composable
 private fun CodeCellRow(
@@ -188,17 +192,26 @@ private fun CodeCellRow(
     colors: CodeTextFieldColors,
     textStyle: TextStyle,
 ) {
+    val windowWidth = LocalWindowInfo.current.containerDpSize.width
+    val density = LocalDensity.current
     BoxWithConstraints {
         val bounded = maxWidth != Dp.Infinity
-        val scale = if (bounded) (maxWidth / CodeTextFieldDefaults.ReferenceWidth).coerceAtMost(1f) else 1f
+        val scale = if (windowWidth > 0.dp) {
+            (windowWidth.coerceAtMost(CodeTextFieldDefaults.ReferenceWidth) / CodeTextFieldDefaults.ReferenceWidth)
+        } else {
+            1f
+        }
         val scaledCellSize = DpSize(cellSize.width * scale, cellSize.height * scale)
         val spacing = if (bounded && cellCount > 1) {
-            // COUI getCellMarginHorizontal: per-side margin = (w - n * cellW) / (2n - 2), which
-            // equals an even (w - n * cellW) / (n - 1) gap between adjacent cells.
-            ((maxWidth - scaledCellSize.width * cellCount) / (cellCount - 1))
-                .coerceIn(CodeTextFieldDefaults.MinCellSpacing, CodeTextFieldDefaults.MaxCellSpacing)
+            with(density) {
+                val free = maxWidth.toPx() - scaledCellSize.width.toPx() * cellCount -
+                    CodeTextFieldDefaults.ContainerMarginHorizontal.toPx() * 2
+                val perSide = (free / (cellCount * 2 - 2)).roundToInt().toFloat()
+                    .coerceIn((CodeTextFieldDefaults.MinCellSpacing / 2).toPx(), (CodeTextFieldDefaults.MaxCellSpacing / 2).toPx())
+                (perSide * 2).toDp()
+            }
         } else {
-            CodeTextFieldDefaults.MaxCellSpacing
+            CodeTextFieldDefaults.DefaultCellSpacing
         }
         val activeIndex = code.length.coerceAtMost(cellCount - 1)
         Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
@@ -362,6 +375,18 @@ object CodeTextFieldDefaults {
     /** The maximum gap between adjacent cells (2 x COUI coui_code_input_cell_max_margin_horizontal). */
     val MaxCellSpacing = 16.dp
 
+    /**
+     * The gap between adjacent cells when the available width is unbounded
+     * (2 x COUI coui_code_input_cell_margin_horizontal).
+     */
+    val DefaultCellSpacing = 8.dp
+
+    /**
+     * The horizontal margin COUI reserves on each side of the cell row when it adapts the cell gap
+     * (COUI coui_code_input_layout_margin_start, subtracted twice in getCellMarginHorizontal).
+     */
+    val ContainerMarginHorizontal = 16.dp
+
     /** The stroke width of the active-cell highlight (COUI coui_code_input_cell_stroke_width). */
     val CellStrokeWidth = 1.6.dp
 
@@ -371,7 +396,10 @@ object CodeTextFieldDefaults {
     /** The width of the blinking cursor (COUI coui_text_cursor_width). */
     val CursorWidth = 2.dp
 
-    /** The reference width below which cells scale down (COUICodeInputView DEFAULT_SCREEN_WIDTH_DP). */
+    /**
+     * The reference window width below which cells scale down (COUICodeInputView.setCodeItemWidth:
+     * `min(screenWidthDp, 360) / 360`).
+     */
     val ReferenceWidth = 360.dp
 
     /**
@@ -381,7 +409,7 @@ object CodeTextFieldDefaults {
      */
     @Composable
     fun textStyle(): TextStyle {
-        val main = COUITheme.textStyles.main
+        val main = COUITheme.textStyles.bodyXL
         val fontSize = with(LocalDensity.current) { CellTextSize.toSp() }
         return remember(main, fontSize) { main.copy(fontSize = fontSize, fontWeight = FontWeight.Normal) }
     }
@@ -398,10 +426,10 @@ object CodeTextFieldDefaults {
      */
     @Composable
     fun codeTextFieldColors(
-        cellBackgroundColor: Color = COUITheme.colorScheme.surfaceContainer,
-        textColor: Color = COUITheme.colorScheme.onSurface,
+        cellBackgroundColor: Color = COUITheme.colorScheme.cardBackground,
+        textColor: Color = COUITheme.colorScheme.labelPrimary,
         focusedStrokeColor: Color = COUITheme.colorScheme.primary,
-        securityCircleColor: Color = COUITheme.colorScheme.onSurface.copy(alpha = 0.847f),
+        securityCircleColor: Color = COUITheme.colorScheme.labelPrimary.copy(alpha = 0.847f),
         cursorColor: Color = COUITheme.colorScheme.primary,
     ): CodeTextFieldColors = remember(cellBackgroundColor, textColor, focusedStrokeColor, securityCircleColor, cursorColor) {
         CodeTextFieldColors(

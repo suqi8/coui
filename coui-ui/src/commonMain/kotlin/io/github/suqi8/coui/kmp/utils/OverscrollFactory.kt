@@ -28,13 +28,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.sign
 
 /**
- * A COUI implementation of [OverscrollFactory] that creates [OverscrollEffect] instances
- * with the same spring-based overscroll physics as [overScrollVertical] and [overScrollHorizontal].
+ * A COUI implementation of [OverscrollFactory] that creates [COUIOverscrollEffect] instances,
+ * the COUI 17 scroll-view overscroll shared with [overScrollVertical] and [overScrollHorizontal].
  *
  * Provide this as [androidx.compose.foundation.LocalOverscrollFactory] in
  * [io.github.suqi8.coui.kmp.theme.COUITheme] to automatically apply the COUI overscroll
@@ -49,53 +48,60 @@ object COUIOverscrollFactory : OverscrollFactory {
 }
 
 /**
- * A COUI [OverscrollEffect] implementing spring-based overscroll physics identical to
- * [overScrollVertical] and [overScrollHorizontal].
+ * A COUI [OverscrollEffect] with the overscroll of the COUI 17 scroll views (`COUIRecyclerView`,
+ * `COUINestedScrollView`), shared with [overScrollVertical] and [overScrollHorizontal]:
  *
- * Uses the same damping formula, spring parameters, and PullToRefresh coordination as the
- * modifier-based implementation. Both X and Y axes are handled independently.
+ * - a drag past the edge moves the content by `0.4 * (1 - |overscroll| / window size)` of the
+ *   finger (`COUIPhysicalAnimationUtil.calcRealOverScrollDist`);
+ * - a release while overscrolled springs back on the `SpringOverScroller` RK4 spring, tension
+ *   multiple 2.15 vertically and 3.2 horizontally;
+ * - a fling that runs into the edge carries its leftover speed past it on the same spring, its
+ *   overshoot saturating at 37.31% of the window (`calcOverFlingDecelerateDist`);
+ * - with [edgeHapticEnabled] (the default, like `couiRecyclerViewEnableVibrator` /
+ *   `couiScrollViewEnableVibrator`) both a release while overscrolled and a fling hitting the edge
+ *   play the scroll-edge vibration (`performHapticFeedback(307)`).
+ *
+ * The X and Y axes are handled independently. While a [io.github.suqi8.coui.kmp.basic.PullToRefresh]
+ * is active the vertical axis is left to it.
+ *
+ * @param edgeHapticEnabled Whether to play the scroll-edge vibration.
  */
-class COUIOverscrollEffect : OverscrollEffect {
+class COUIOverscrollEffect(
+    private val edgeHapticEnabled: Boolean = true,
+) : OverscrollEffect {
     private val offsetThreshold = 1f
 
     // Placement pixel-snaps via round(), so only re-place when the whole-pixel value changes.
     private var lastPlacedOffsetX = 0f
-    internal var offsetX = 0f
-        private set(value) {
-            if (field != value) {
-                field = value
-                val rounded = round(value)
-                if (rounded != lastPlacedOffsetX) {
-                    lastPlacedOffsetX = rounded
-                    invalidateNodePlacement?.invoke()
-                }
-            }
-        }
-
     private var lastPlacedOffsetY = 0f
-    internal var offsetY = 0f
-        private set(value) {
-            if (field != value) {
-                field = value
-                val rounded = round(value)
-                if (rounded != lastPlacedOffsetY) {
-                    lastPlacedOffsetY = rounded
-                    invalidateNodePlacement?.invoke()
-                }
-            }
+
+    private val axisX = COUIOverScrollAxis(HorizontalSpringBackTensionMultiple) { value ->
+        val rounded = round(value)
+        if (rounded != lastPlacedOffsetX) {
+            lastPlacedOffsetX = rounded
+            invalidateNodePlacement?.invoke()
         }
+    }
+    private val axisY = COUIOverScrollAxis(VerticalSpringBackTensionMultiple) { value ->
+        val rounded = round(value)
+        if (rounded != lastPlacedOffsetY) {
+            lastPlacedOffsetY = rounded
+            invalidateNodePlacement?.invoke()
+        }
+    }
+
+    internal val offsetX: Float
+        get() = axisX.offset
+
+    internal val offsetY: Float
+        get() = axisY.offset
 
     // Injected by COUIOverscrollEffectNode when attached
     internal var invalidateNodePlacement: (() -> Unit)? = null
 
-    private var rawTouchAccumulationX = 0f
-    private var rawTouchAccumulationY = 0f
-
     internal var scrollRangeV = 0f
     internal var scrollRangeH = 0f
 
-    private val springEngineX = SpringEngine()
-    private val springEngineY = SpringEngine()
     private var animationJobX: Job? = null
     private var animationJobY: Job? = null
 
@@ -103,6 +109,7 @@ class COUIOverscrollEffect : OverscrollEffect {
     internal var launchAnimation: ((suspend CoroutineScope.() -> Unit) -> Job)? = null
     internal var getPullToRefreshState: (() -> PullToRefreshState?)? = null
     internal var getOverScrollState: (() -> OverScrollState?)? = null
+    internal var performEdgeHaptic: (() -> Unit)? = null
 
     override val isInProgress: Boolean
         get() = abs(offsetX) > offsetThreshold || abs(offsetY) > offsetThreshold
@@ -115,110 +122,28 @@ class COUIOverscrollEffect : OverscrollEffect {
     }
 
     internal fun resetAll() {
-        offsetX = 0f
-        offsetY = 0f
-        rawTouchAccumulationX = 0f
-        rawTouchAccumulationY = 0f
+        axisX.reset()
+        axisY.reset()
         getOverScrollState?.invoke()?.let { state ->
             if (state.isOverScrollActive) state.isOverScrollActive = false
         }
     }
 
-    private fun resetStateX() {
-        offsetX = 0f
-        rawTouchAccumulationX = 0f
+    // Reclaims a stale offset once the child can scroll again towards it (e.g. pagination); otherwise applyToFling swallows the next fling.
+    private fun unwindStaleOffset(axis: COUIOverScrollAxis, consumedDelta: Float, range: Float) {
+        if (abs(axis.offset) <= offsetThreshold || consumedDelta == 0f) return
+        if (sign(consumedDelta) != sign(axis.offset)) return
+        axis.dragBack(-consumedDelta, range)
     }
 
-    private fun resetStateY() {
-        offsetY = 0f
-        rawTouchAccumulationY = 0f
-    }
-
-    private fun applyDragX(delta: Float) {
-        if (delta == 0f || scrollRangeH == 0f) return
-        rawTouchAccumulationX += delta
-        rawTouchAccumulationX = rawTouchAccumulationX.coerceIn(-scrollRangeH, scrollRangeH)
-        val normalized = min(abs(rawTouchAccumulationX) / scrollRangeH, 1.0f)
-        offsetX = sign(rawTouchAccumulationX) * SpringMath.obtainDampingDistance(normalized, scrollRangeH)
-    }
-
-    private fun applyDragY(delta: Float) {
-        if (delta == 0f || scrollRangeV == 0f) return
-        rawTouchAccumulationY += delta
-        rawTouchAccumulationY = rawTouchAccumulationY.coerceIn(-scrollRangeV, scrollRangeV)
-        val normalized = min(abs(rawTouchAccumulationY) / scrollRangeV, 1.0f)
-        offsetY = sign(rawTouchAccumulationY) * SpringMath.obtainDampingDistance(normalized, scrollRangeV)
-    }
-
-    // Inverse of the damping curve: re-derive raw accumulation from offset when a drag takes over a spring.
-    private fun syncRawAccumulationFromOffsetX() {
-        rawTouchAccumulationX = sign(offsetX) * SpringMath.obtainTouchDistance(offsetX, scrollRangeH)
-    }
-
-    private fun syncRawAccumulationFromOffsetY() {
-        rawTouchAccumulationY = sign(offsetY) * SpringMath.obtainTouchDistance(offsetY, scrollRangeV)
-    }
-
-    // Reclaims a stale offset once the child can scroll again in the accumulated direction (e.g. pagination); otherwise applyToFling swallows the next fling.
-    private fun unwindStaleOffsetX(consumedDelta: Float) {
-        if (abs(offsetX) <= offsetThreshold || consumedDelta == 0f) return
-        if (rawTouchAccumulationX == 0f) syncRawAccumulationFromOffsetX()
-        if (sign(consumedDelta) != sign(rawTouchAccumulationX)) return
-        if (abs(rawTouchAccumulationX) <= abs(consumedDelta)) {
-            resetStateX()
-        } else {
-            applyDragX(-consumedDelta)
+    private fun startSpringBack(axis: COUIOverScrollAxis, velocity: Float, overFling: Boolean, screenSize: Float): Job? {
+        if (!overFling && abs(axis.offset) <= offsetThreshold) {
+            axis.reset()
+            return null
         }
-    }
-
-    private fun unwindStaleOffsetY(consumedDelta: Float) {
-        if (abs(offsetY) <= offsetThreshold || consumedDelta == 0f) return
-        if (rawTouchAccumulationY == 0f) syncRawAccumulationFromOffsetY()
-        if (sign(consumedDelta) != sign(rawTouchAccumulationY)) return
-        if (abs(rawTouchAccumulationY) <= abs(consumedDelta)) {
-            resetStateY()
-        } else {
-            applyDragY(-consumedDelta)
-        }
-    }
-
-    private fun startSpringAnimationX(initialVelocity: Float = 0f) {
-        if (abs(offsetX) <= offsetThreshold && initialVelocity == 0f) {
-            resetStateX()
-            return
-        }
-        animationJobX?.cancel()
-        animationJobX = launchAnimation?.invoke {
-            springEngineX.runSettleAnimation(
-                startValue = offsetX,
-                initialVelocity = initialVelocity,
-                onFrame = { currentPos ->
-                    offsetX = currentPos
-                },
-                onSettle = {
-                    if (abs(offsetX) <= offsetThreshold) resetStateX()
-                },
-            )
-        }
-    }
-
-    private fun startSpringAnimationY(initialVelocity: Float = 0f) {
-        if (abs(offsetY) <= offsetThreshold && initialVelocity == 0f) {
-            resetStateY()
-            return
-        }
-        animationJobY?.cancel()
-        animationJobY = launchAnimation?.invoke {
-            springEngineY.runSettleAnimation(
-                startValue = offsetY,
-                initialVelocity = initialVelocity,
-                onFrame = { currentPos ->
-                    offsetY = currentPos
-                },
-                onSettle = {
-                    if (abs(offsetY) <= offsetThreshold) resetStateY()
-                },
-            )
+        return launchAnimation?.invoke {
+            axis.springBack(velocity = velocity, overFling = overFling, screenSize = screenSize)
+            updateOverScrollState()
         }
     }
 
@@ -238,79 +163,50 @@ class COUIOverscrollEffect : OverscrollEffect {
         if (source != NestedScrollSource.UserInput) {
             val consumed = performScroll(delta)
             // A running spring settles to zero on its own; only reclaim when it was interrupted.
-            if (animationJobY?.isActive != true) unwindStaleOffsetY(consumed.y)
-            if (animationJobX?.isActive != true) unwindStaleOffsetX(consumed.x)
+            if (animationJobY?.isActive != true) unwindStaleOffset(axisY, consumed.y, scrollRangeV)
+            if (animationJobX?.isActive != true) unwindStaleOffset(axisX, consumed.x, scrollRangeH)
             updateOverScrollState()
             return consumed
         }
 
         val bypassY = shouldBypassForPullToRefreshY()
 
-        // Resync raw accumulation, then cancel running springs the drag is taking over.
-        if (!bypassY) {
-            if (animationJobY?.isActive == true) syncRawAccumulationFromOffsetY()
-            animationJobY?.cancel()
-        }
-        if (animationJobX?.isActive == true) syncRawAccumulationFromOffsetX()
+        // A drag takes over a running spring from where it is.
+        if (!bypassY) animationJobY?.cancel()
         animationJobX?.cancel()
 
-        // Y-axis pre-scroll: consume from overscroll first when scrolling back toward center
+        // Pre-scroll: a drag back towards the content first undoes the overscroll.
         var performScrollDeltaY = delta.y
         var extraConsumedY = 0f
-        if (!bypassY && abs(offsetY) > offsetThreshold && delta.y != 0f && sign(delta.y) != sign(rawTouchAccumulationY)) {
-            val canConsumeY = if (abs(rawTouchAccumulationY) <= abs(delta.y)) {
-                -rawTouchAccumulationY
-            } else {
-                delta.y
-            }
-            if (abs(rawTouchAccumulationY) <= abs(delta.y)) {
-                resetStateY()
-                performScrollDeltaY = delta.y - canConsumeY
-                extraConsumedY = canConsumeY
-            } else {
-                applyDragY(canConsumeY)
-                performScrollDeltaY = 0f
-                extraConsumedY = delta.y
-            }
+        if (!bypassY && abs(axisY.offset) > offsetThreshold && delta.y != 0f && sign(delta.y) != sign(axisY.offset)) {
+            extraConsumedY = axisY.dragBack(delta.y, scrollRangeV)
+            performScrollDeltaY = delta.y - extraConsumedY
         }
-
-        // X-axis pre-scroll: consume from overscroll first when scrolling back toward center
         var performScrollDeltaX = delta.x
         var extraConsumedX = 0f
-        if (abs(offsetX) > offsetThreshold && delta.x != 0f && sign(delta.x) != sign(rawTouchAccumulationX)) {
-            val canConsumeX = if (abs(rawTouchAccumulationX) <= abs(delta.x)) {
-                -rawTouchAccumulationX
-            } else {
-                delta.x
-            }
-            if (abs(rawTouchAccumulationX) <= abs(delta.x)) {
-                resetStateX()
-                performScrollDeltaX = delta.x - canConsumeX
-                extraConsumedX = canConsumeX
-            } else {
-                applyDragX(canConsumeX)
-                performScrollDeltaX = 0f
-                extraConsumedX = delta.x
-            }
+        if (abs(axisX.offset) > offsetThreshold && delta.x != 0f && sign(delta.x) != sign(axisX.offset)) {
+            extraConsumedX = axisX.dragBack(delta.x, scrollRangeH)
+            performScrollDeltaX = delta.x - extraConsumedX
         }
 
-        // Post-scroll: call performScroll, apply any unconsumed remainder to overscroll
+        // Post-scroll: whatever the content cannot take pulls it past the edge.
         val adjustedDelta = Offset(performScrollDeltaX, performScrollDeltaY)
         val scrollConsumed = performScroll(adjustedDelta)
         val scrollRemaining = adjustedDelta - scrollConsumed
 
-        if (!bypassY || animationJobY?.isActive != true) unwindStaleOffsetY(scrollConsumed.y)
-        unwindStaleOffsetX(scrollConsumed.x)
+        if (!bypassY || animationJobY?.isActive != true) unwindStaleOffset(axisY, scrollConsumed.y, scrollRangeV)
+        unwindStaleOffset(axisX, scrollConsumed.x, scrollRangeH)
 
-        if (scrollRemaining.y != 0f && !bypassY) applyDragY(scrollRemaining.y)
-        if (scrollRemaining.x != 0f) applyDragX(scrollRemaining.x)
+        val absorbY = scrollRemaining.y != 0f && !bypassY
+        if (absorbY) axisY.drag(scrollRemaining.y, scrollRangeV)
+        if (scrollRemaining.x != 0f) axisX.drag(scrollRemaining.x, scrollRangeH)
 
         updateOverScrollState()
 
         // Total consumed = overscroll reduction + scroll consumed + overscroll-absorbed remainder
         return Offset(
-            x = extraConsumedX + scrollConsumed.x + (if (scrollRemaining.x != 0f) scrollRemaining.x else 0f),
-            y = extraConsumedY + scrollConsumed.y + (if (scrollRemaining.y != 0f && !bypassY) scrollRemaining.y else 0f),
+            x = extraConsumedX + scrollConsumed.x + scrollRemaining.x,
+            y = extraConsumedY + scrollConsumed.y + (if (absorbY) scrollRemaining.y else 0f),
         )
     }
 
@@ -325,42 +221,44 @@ class COUIOverscrollEffect : OverscrollEffect {
         animationJobY?.cancel()
         animationJobX?.cancel()
 
+        // COUIRecyclerView.dispatchTouchEvent: a release while overscrolled springs back from rest
+        // (performSpringBack) and vibrates.
+        val releasedOverScrolled = (isActiveY && !bypassY) || isActiveX
+        if (releasedOverScrolled && edgeHapticEnabled) performEdgeHaptic?.invoke()
+
         var performVelocity = velocity
-
-        // Y-axis: when overscrolled, spring absorbs velocity before scroll
-        if (!bypassY && isActiveY && velocity.y != 0f) {
-            if (sign(velocity.y) == sign(offsetY)) {
-                // Same direction fling: spring absorbs all velocity, scroll gets nothing
-                startSpringAnimationY(velocity.y)
-                performVelocity = Velocity(performVelocity.x, 0f)
-            } else {
-                // Opposite direction fling: spring starts with full velocity, scroll gets attenuated
-                startSpringAnimationY(velocity.y)
-                performVelocity = Velocity(performVelocity.x, velocity.y / 2.13333f)
-            }
+        if (!bypassY && isActiveY) {
+            animationJobY = startSpringBack(axisY, velocity = 0f, overFling = false, screenSize = scrollRangeV)
+            // A fling back towards the content scrolls it (performOverScrollingReverseFling); one
+            // further out is dropped.
+            if (sign(velocity.y) == sign(offsetY)) performVelocity = Velocity(performVelocity.x, 0f)
         }
-
-        // X-axis: same logic
-        if (isActiveX && velocity.x != 0f) {
-            if (sign(velocity.x) == sign(offsetX)) {
-                startSpringAnimationX(velocity.x)
-                performVelocity = Velocity(0f, performVelocity.y)
-            } else {
-                startSpringAnimationX(velocity.x)
-                performVelocity = Velocity(velocity.x / 2.13333f, performVelocity.y)
-            }
+        if (isActiveX) {
+            animationJobX = startSpringBack(axisX, velocity = 0f, overFling = false, screenSize = scrollRangeH)
+            if (sign(velocity.x) == sign(offsetX)) performVelocity = Velocity(0f, performVelocity.y)
         }
 
         val consumed = performFling(performVelocity)
         val remaining = performVelocity - consumed
 
-        // Post-fling: always restart spring with attenuated remaining velocity (mirrors onPostFling)
-        if (!bypassY) {
-            startSpringAnimationY(remaining.y / 1.53333f)
+        // COUINestedScrollView.onOverScrolled: a fling reaching the edge carries on past it.
+        var hitEdge = false
+        if (!bypassY && !isActiveY && abs(remaining.y) > MIN_OVER_FLING_VELOCITY) {
+            animationJobY = startSpringBack(axisY, velocity = remaining.y, overFling = true, screenSize = scrollRangeV)
+            hitEdge = true
         }
-        startSpringAnimationX(remaining.x / 1.53333f)
+        if (!isActiveX && abs(remaining.x) > MIN_OVER_FLING_VELOCITY) {
+            animationJobX = startSpringBack(axisX, velocity = remaining.x, overFling = true, screenSize = scrollRangeH)
+            hitEdge = true
+        }
+        if (hitEdge && !releasedOverScrolled && edgeHapticEnabled) performEdgeHaptic?.invoke()
 
         updateOverScrollState()
+    }
+
+    private companion object {
+        /** Leftover fling speeds below this (px/s) stop at the edge. */
+        const val MIN_OVER_FLING_VELOCITY = 1f
     }
 }
 
@@ -377,6 +275,7 @@ private class COUIOverscrollEffectNode(
         effect.getPullToRefreshState = { currentValueOf(LocalPullToRefreshState) }
         effect.getOverScrollState = { currentValueOf(LocalOverScrollState) }
         effect.invalidateNodePlacement = { invalidatePlacement() }
+        effect.performEdgeHaptic = { if (isAttached) performScrollEdgeHaptic() }
     }
 
     override fun onDetach() {
@@ -385,6 +284,7 @@ private class COUIOverscrollEffectNode(
         effect.getPullToRefreshState = null
         effect.getOverScrollState = null
         effect.invalidateNodePlacement = null
+        effect.performEdgeHaptic = null
         effect.resetAll()
     }
 

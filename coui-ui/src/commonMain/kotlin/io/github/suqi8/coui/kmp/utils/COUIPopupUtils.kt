@@ -357,7 +357,7 @@ class COUIPopupUtils {
                         enter = dialogState.dimEnterTransition ?: DialogDimEnter,
                         exit = dialogState.dimExitTransition ?: DialogDimExit,
                     ) {
-                        val baseColor = COUITheme.colorScheme.windowDimming
+                        val baseColor = COUITheme.colorScheme.mask
                         val dimAlphaState = dialogState.dimAlpha
 
                         Box(
@@ -485,7 +485,7 @@ class COUIPopupUtils {
                                         }
                                     }
                                 }
-                                .background(COUITheme.colorScheme.windowDimming),
+                                .background(COUITheme.colorScheme.mask),
                         )
                     }
                 } else {

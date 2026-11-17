@@ -98,9 +98,9 @@ fun WindowDropdownMenu(
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
     val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
 
     val handleClick = remember(actualEnabled) {

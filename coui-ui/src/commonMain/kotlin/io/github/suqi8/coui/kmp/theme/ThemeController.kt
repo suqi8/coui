@@ -211,6 +211,9 @@ internal fun monetSystemColors(dark: Boolean): Colors = colorsFromSeed(seed = Co
  *   effective [colorSpec] will fall back to [ThemeColorSpec.Spec2021].
  * @param isDark Whether the system is in dark mode. This is used when the [colorSchemeMode] is
  *   set to a System or MonetSystem mode and the dark mode is not explicitly specified.
+ * @param themeColor A COUI theme color family (for example [COUIThemeColors.Green]) applied over
+ *   [lightColors] and [darkColors] with [withThemeColor] in the System, Light and Dark modes, so the
+ *   primary color and every slot that depends on it change together. Monet modes ignore it.
  */
 @Stable
 class ThemeController(
@@ -221,6 +224,7 @@ class ThemeController(
     colorSpec: ThemeColorSpec = ThemeColorSpec.Spec2021,
     paletteStyle: ThemePaletteStyle = ThemePaletteStyle.TonalSpot,
     isDark: Boolean? = null,
+    themeColor: COUIThemeColor? = null,
 ) {
     val colorSchemeMode: ColorSchemeMode by mutableStateOf(colorSchemeMode)
     val lightColors: Colors by mutableStateOf(lightColors)
@@ -229,17 +233,24 @@ class ThemeController(
     val colorSpec: ThemeColorSpec by mutableStateOf(colorSpec)
     val paletteStyle: ThemePaletteStyle by mutableStateOf(paletteStyle)
     val isDark: Boolean? by mutableStateOf(isDark)
+    val themeColor: COUIThemeColor? by mutableStateOf(themeColor)
+
+    @Composable
+    private fun themed(colors: Colors): Colors {
+        val family = themeColor ?: return colors
+        return remember(colors, family) { colors.withThemeColor(family) }
+    }
 
     @Composable
     fun currentColors(): Colors = when (colorSchemeMode) {
         ColorSchemeMode.System -> {
             val dark = isDark ?: isSystemInDarkTheme()
-            if (dark) darkColors else lightColors
+            themed(if (dark) darkColors else lightColors)
         }
 
-        ColorSchemeMode.Light -> lightColors
+        ColorSchemeMode.Light -> themed(lightColors)
 
-        ColorSchemeMode.Dark -> darkColors
+        ColorSchemeMode.Dark -> themed(darkColors)
 
         ColorSchemeMode.MonetSystem -> {
             val dark = isDark ?: isSystemInDarkTheme()

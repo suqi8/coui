@@ -39,7 +39,6 @@ import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TextField
 import io.github.suqi8.coui.kmp.basic.TextFieldColors
-import io.github.suqi8.coui.kmp.basic.TextFieldDefaults
 import io.github.suqi8.coui.kmp.basic.TextFieldMode
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -51,7 +50,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * 16dp inside the card, around a `COUICardListItemInputView`. That input view puts the optional
  * [title] above the field (couiTextAppearanceHeadline6, 10dp top / 4dp bottom padding, 22dp min
  * height) and draws the field as a `COUIScrolledEditText` in `Widget.COUI.InputPreference`
- * (couiTextBodyL, single line, no delete icon) whose underline only appears while focused
+ * (couiTextBodyL, single line, quick delete through the external delete button, hint in the theme
+ * textColorHint couiColorHintNeutral) whose underline only appears while focused
  * (`couiJustShowFocusLine`, default true). `onBindViewHolder` switches the field to
  * MODE_BACKGROUND_NO_LINE on the last row of a card group, so the tail and single rows never draw
  * a line.
@@ -73,12 +73,15 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param maxCount The maximum number of characters. When not null a "count/max" counter is shown
  *   at the end of the field and longer input is truncated.
  * @param showClearButton Whether to show the clear button while the field is focused and not
- *   empty. COUI turns it off for the preference field (`setShowDeleteIcon(false)`).
+ *   empty. On by default: Widget.COUI.InputPreference inherits `quickDelete = true` from
+ *   Widget.COUI.Input, and since `setShowDeleteIcon(false)` hides the in-field icon,
+ *   COUIInputView shows its external delete button instead (initDeleteButton / updateDeleteButton).
  * @param showPasswordToggle Whether to show the password eye toggle.
  * @param errorMessage The error text below the field. Empty hides the error line. COUI draws no list
  *   divider below a row in error state (`COUIInputPreference.drawDivider`), so skip that divider too.
  * @param colors The [InputPreferenceColors] of the title and the error line.
- * @param textFieldColors The [TextFieldColors] of the field.
+ * @param textFieldColors The [TextFieldColors] of the field. Defaults to
+ *   [InputViewDefaults.textFieldColors], whose hint uses couiColorHintNeutral.
  * @param textStyle The text style of the input text.
  * @param keyboardOptions The keyboard options of the field.
  * @param keyboardActions The keyboard actions of the field.
@@ -100,11 +103,11 @@ fun InputPreference(
     readOnly: Boolean = false,
     justShowFocusLine: Boolean = true,
     maxCount: Int? = null,
-    showClearButton: Boolean = false,
+    showClearButton: Boolean = true,
     showPasswordToggle: Boolean = false,
     errorMessage: String = "",
     colors: InputPreferenceColors = InputPreferenceDefaults.inputPreferenceColors(),
-    textFieldColors: TextFieldColors = TextFieldDefaults.textFieldColors(),
+    textFieldColors: TextFieldColors = InputViewDefaults.textFieldColors(),
     textStyle: TextStyle = InputViewDefaults.textStyle(),
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -167,6 +170,8 @@ fun InputPreference(
                 .then(if (hasTitle) Modifier.trimTop(fieldPadding) else Modifier),
             backgroundMode = backgroundMode,
             insideMargin = DpSize(0.dp, fieldPadding),
+            // Widget.COUI.Input resets the EditText minHeight to 0.
+            minHeight = 0.dp,
             colors = textFieldColors,
             label = hint,
             justShowFocusLine = justShowFocusLine,
@@ -176,6 +181,7 @@ fun InputPreference(
             maxCount = maxCount,
             showClearButton = showClearButton,
             showPasswordToggle = showPasswordToggle,
+            initialPasswordVisible = true,
             textStyle = textStyle,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -253,8 +259,8 @@ object InputPreferenceDefaults {
      */
     @Composable
     fun inputPreferenceColors(
-        titleColor: Color = COUITheme.colorScheme.onSurface,
-        disabledTitleColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledTitleColor: Color = COUITheme.colorScheme.disabledNeutral,
         errorColor: Color = COUITheme.colorScheme.error,
     ): InputPreferenceColors = remember(titleColor, disabledTitleColor, errorColor) {
         InputPreferenceColors(

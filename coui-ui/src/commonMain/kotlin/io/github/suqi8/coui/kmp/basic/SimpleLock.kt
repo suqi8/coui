@@ -29,15 +29,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
@@ -152,14 +151,14 @@ fun SimpleLock(
     val count = type.count
     val target = filledCount.coerceIn(0, count)
     val scope = rememberCoroutineScope()
-    val haptic = LocalHapticFeedback.current
+    val haptic = rememberCouiHaptic()
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
 
     val currentHaptic by rememberUpdatedState(haptic)
     LaunchedEffect(state) {
         // Only requests made while composed: re-entering the composition must not vibrate again.
         snapshotFlow { state.hapticRequest }.drop(1).collect {
-            if (currentHapticEnabled) currentHaptic.performHapticFeedback(HapticFeedbackType.Reject)
+            if (currentHapticEnabled) currentHaptic(CouiHapticEffect.ShortTripleVibrate)
         }
     }
 
@@ -199,7 +198,11 @@ fun SimpleLock(
         for (index in 0 until count) {
             val cx = start + index * (dotSize + padding) + radius + state.shakeX
             val center = Offset(cx, radius)
-            drawCircle(colors.outlinedColor, radius, center)
+            val dot = state.dots[index]
+            // drawPreviousState: a settled filled dot is drawn alone, without the empty dot below
+            // (visible when the filled color is translucent).
+            val settled = !state.failing && dot.fill >= 1f && dot.scale == 1f && dot.glowAlpha <= 0f
+            if (!settled) drawCircle(colors.outlinedColor, radius, center)
             if (state.failing) {
                 if (index < state.failCount) {
                     val fall = max(0f, state.fallY - delays[index])
@@ -208,7 +211,6 @@ fun SimpleLock(
                 }
                 continue
             }
-            val dot = state.dots[index]
             val fill = dot.fill.coerceIn(0f, 1f)
             if (fill > 0f) {
                 val scale = dot.scale.coerceIn(0f, MAX_DOT_SCALE)
@@ -311,7 +313,7 @@ object SimpleLockDefaults {
     ): SimpleLockColors = remember(filledColor, outlinedColor) { SimpleLockColors(filledColor, outlinedColor) }
 
     @Composable
-    private fun isDark(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+    private fun isDark(): Boolean = COUITheme.colorScheme.isDark
 }
 
 /**
@@ -342,18 +344,23 @@ private val FallDelayFour = floatArrayOf(0f, 38.5f, 91f, 63f)
 private val FallDelaySix = floatArrayOf(0f, 38.5f, 91f, 63f, 38.5f, 70f)
 
 /**
- * `coui_simple_lock_glow_effect_drawable.png` against the fraction of its radius: the opaque dot
- * to 17%, then a halo of 43% at 20%, 25% at 27%, 15% at 33%, 5% at 43% gone by 55%.
+ * `coui_simple_lock_glow_effect_drawable.png` (180px, its 90px half-size mapped to the glow
+ * radius) against the fraction of its radius, read per pixel: the opaque dot to 15.5%, then a
+ * halo of 43% at 17%, 25% at 23%, 15% at 29%, 5.5% at 39%, gone by 54%.
  */
 private val GlowStops = arrayOf(
     0f to Color.White,
-    0.167f to Color.White,
-    0.2f to Color.White.copy(alpha = 0.435f),
-    0.267f to Color.White.copy(alpha = 0.247f),
-    0.333f to Color.White.copy(alpha = 0.149f),
-    0.433f to Color.White.copy(alpha = 0.055f),
-    0.5f to Color.White.copy(alpha = 0.031f),
-    0.55f to Color.Transparent,
+    0.155f to Color.White,
+    0.172f to Color.White.copy(alpha = 0.435f),
+    0.21f to Color.White.copy(alpha = 0.306f),
+    0.233f to Color.White.copy(alpha = 0.247f),
+    0.26f to Color.White.copy(alpha = 0.196f),
+    0.294f to Color.White.copy(alpha = 0.149f),
+    0.35f to Color.White.copy(alpha = 0.082f),
+    0.39f to Color.White.copy(alpha = 0.055f),
+    0.433f to Color.White.copy(alpha = 0.031f),
+    0.49f to Color.White.copy(alpha = 0.012f),
+    0.54f to Color.Transparent,
     1f to Color.Transparent,
 )
 

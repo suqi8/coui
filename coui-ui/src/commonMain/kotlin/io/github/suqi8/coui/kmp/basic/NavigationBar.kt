@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -37,17 +38,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +68,12 @@ import kotlin.math.roundToInt
  * down by its own height over 200ms (`COUIOutEaseInterpolator`) while its layout height shrinks to
  * nothing (the negative bottom margin of `mHideTranslateAnimation`); showing reverses it over 250ms
  * (`COUIInEaseInterpolator`).
+ *
+ * The layout follows the window, as COUI's resource qualifiers do: on windows at least
+ * [NavigationBarDefaults.WideLayoutBreakpoint] wide the [NavigationBarDisplayMode.IconAndText]
+ * items put the icon beside a 14dp label, 8dp apart (`COUINavigationItemView.leftToRight`), and the
+ * row keeps [NavigationBarDefaults.HorizontalPaddingWide] from the edges, as it does on any
+ * landscape window.
  *
  * @param modifier The modifier to be applied to the [NavigationBar].
  * @param visible Whether the bar is shown. Changes animate with the COUI show / hide translation.
@@ -109,6 +117,15 @@ fun NavigationBar(
     // COUINavigationView is a BottomNavigationView: tooltips anchored to its items use the
     // navigation spacing, measured from the top of the bar.
     val tooltipContainer = rememberTooltipAnchorContainer(TooltipAnchorType.Navigation)
+    // The resource qualifiers COUI reads from the window: values-w600dp (is_big_layout, 44dp edge
+    // padding, 14dp labels) and values-land (44dp edge padding on narrower landscape windows).
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val wideLayout = windowSize.width >= NavigationBarDefaults.WideLayoutBreakpoint
+    val horizontalPadding = if (wideLayout || windowSize.width > windowSize.height) {
+        NavigationBarDefaults.HorizontalPaddingWide
+    } else {
+        NavigationBarDefaults.HorizontalPadding
+    }
     Column(
         modifier = modifier
             .tooltipAnchorContainer(tooltipContainer)
@@ -127,15 +144,16 @@ fun NavigationBar(
             HorizontalDivider()
         }
         Row(
-            // COUINavigationMenuView.onMeasure: 12dp edge padding, items divide the rest equally.
+            // COUINavigationMenuView.onMeasure: the edge padding, items divide the rest equally.
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = NavigationBarDefaults.HorizontalPadding),
+                .padding(horizontal = horizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             CompositionLocalProvider(
                 LocalNavigationBarDisplayMode provides mode,
                 LocalTooltipAnchorContainer provides tooltipContainer,
+                LocalNavigationBarWideLayout provides wideLayout,
             ) {
                 content()
             }
@@ -192,16 +210,16 @@ fun RowScope.NavigationBarItem(
 
     // COUI coui_navigation_tab_color selector: no pressed entry, switches instantly (not animated).
     val labelColor = when {
-        !enabled -> colorScheme.disabledOnSurface
-        selected -> colorScheme.onSurfaceContainer
-        else -> colorScheme.onSurfaceSecondary
+        !enabled -> colorScheme.disabledNeutral
+        selected -> colorScheme.labelPrimary
+        else -> colorScheme.labelSecondary
     }
     // COUI tab icon selector: selected variant shown for state_selected OR state_pressed,
     // cross-faded over 180ms.
     val iconTargetTint = when {
-        !enabled -> colorScheme.disabledOnSurface
-        selected || isPressed -> colorScheme.onSurfaceContainer
-        else -> colorScheme.onSurfaceSecondary
+        !enabled -> colorScheme.disabledNeutral
+        selected || isPressed -> colorScheme.labelPrimary
+        else -> colorScheme.labelSecondary
     }
     val iconTint by animateColorAsState(
         targetValue = iconTargetTint,
@@ -212,9 +230,12 @@ fun RowScope.NavigationBarItem(
     // have no press mask, ripple or selection motion.
     val fontWeight = FontWeight.Medium
     val mode = LocalNavigationBarDisplayMode.current
+    val wideLayout = LocalNavigationBarWideLayout.current
     // coui_navigation_item_text_size / _large_text_size are dp: the labels ignore the font scale.
     val density = LocalDensity.current
-    val labelFontSize = with(density) { NavigationBarDefaults.LabelFontSize.toSp() }
+    val labelFontSize = with(density) {
+        (if (wideLayout) NavigationBarDefaults.LabelFontSizeWide else NavigationBarDefaults.LabelFontSize).toSp()
+    }
     val textFontSize = with(density) { NavigationBarDefaults.TextFontSize.toSp() }
 
     Box(
@@ -232,7 +253,32 @@ fun RowScope.NavigationBarItem(
             .padding(horizontal = NavigationBarDefaults.ItemHorizontalPadding),
     ) {
         when (mode) {
-            NavigationBarDisplayMode.IconAndText -> {
+            NavigationBarDisplayMode.IconAndText -> if (wideLayout) {
+                // COUINavigationItemView.leftToRight() (is_big_layout): the icon and the label side
+                // by side, coui_navigation_enlarge_icon_horizontal_margin apart, centred as a group
+                // in both directions; the label takes what is left when the group does not fit.
+                Row(
+                    modifier = Modifier.align(Alignment.Center),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    NavigationBarItemIcon(
+                        icon = icon,
+                        tint = iconTint,
+                        label = label,
+                        badge = badge.takeIf { enabled },
+                    )
+                    Spacer(modifier = Modifier.width(NavigationBarDefaults.IconLabelSpacingWide))
+                    Text(
+                        modifier = Modifier.weight(1f, fill = false),
+                        text = label,
+                        color = labelColor,
+                        fontSize = labelFontSize,
+                        fontWeight = fontWeight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            } else {
                 // COUINavigationItemView.topToBottom(): icon pinned to the top, label to the bottom.
                 NavigationBarItemIcon(
                     icon = icon,
@@ -382,6 +428,24 @@ object NavigationBarDefaults {
     /** The horizontal padding of the item row (COUI coui_tool_navigation_edge_item_padding). */
     val HorizontalPadding = 12.dp
 
+    /**
+     * The horizontal padding of the item row on windows at least [WideLayoutBreakpoint] wide or in
+     * landscape (coui_tool_navigation_edge_item_padding in values-w600dp and values-land).
+     */
+    val HorizontalPaddingWide = 44.dp
+
+    /**
+     * From this window width the items put the icon beside the label (`COUINavigationItemView`
+     * `leftToRight`, `is_big_layout` in values-w600dp) and the label takes [LabelFontSizeWide].
+     */
+    val WideLayoutBreakpoint = 600.dp
+
+    /** The gap between icon and label in the wide layout (coui_navigation_enlarge_icon_horizontal_margin). */
+    val IconLabelSpacingWide = 8.dp
+
+    /** The label text size in the wide layout (coui_navigation_item_text_size in values-w600dp), in dp. */
+    val LabelFontSizeWide = 14.dp
+
     /** The horizontal padding inside each item cell (COUI coui_navigation_item_half_gap). */
     val ItemHorizontalPadding = 2.dp
 
@@ -429,7 +493,7 @@ object NavigationBarDefaults {
      * scheme and `#1E1E1E` in the dark one.
      */
     @Composable
-    fun color(): Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) BarColorDark else BarColorLight
+    fun color(): Color = COUITheme.colorScheme.bar
 }
 
 /**
@@ -456,6 +520,9 @@ enum class NavigationBarDisplayMode {
  */
 val LocalNavigationBarDisplayMode = compositionLocalOf { NavigationBarDisplayMode.IconAndText }
 
+/** Whether the [NavigationBar] lays its items out side by side (`is_big_layout`). */
+private val LocalNavigationBarWideLayout = staticCompositionLocalOf { false }
+
 /**
  * The data class for [NavigationBar].
  *
@@ -467,10 +534,6 @@ data class NavigationItem(
     val label: String,
     val icon: ImageVector,
 )
-
-// ?couiColorBar.
-internal val BarColorLight = Color(0xFFFAFAFA)
-internal val BarColorDark = Color(0xFF1E1E1E)
 
 /** COUIInEaseInterpolator, the show translation. */
 private val NavigationBarShowEasing = CubicBezierEasing(0f, 0f, 0.1f, 1f)

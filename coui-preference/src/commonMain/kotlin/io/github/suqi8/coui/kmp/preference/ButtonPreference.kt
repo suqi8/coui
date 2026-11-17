@@ -3,12 +3,9 @@
 package io.github.suqi8.coui.kmp.preference
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.preference.internal.EndActionsSlot
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -87,15 +85,7 @@ fun ButtonPreference(
         summaryColor = summaryColor,
         startAction = startAction,
         endActions = {
-            Row(
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .align(Alignment.CenterVertically)
-                    .weight(1f, fill = false),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                endActions()
-            }
+            EndActionsSlot(endSpacing = 8.dp) { endActions() }
             ButtonPreferenceEndAction(
                 buttonText = buttonText,
                 onButtonClick = onButtonClick,
@@ -136,7 +126,7 @@ private fun ButtonPreferenceEndAction(
     ) {
         Text(
             text = buttonText,
-            fontSize = COUITheme.textStyles.body2.fontSize,
+            fontSize = COUITheme.textStyles.bodyM.fontSize,
             fontWeight = FontWeight.Medium,
         )
     }
@@ -162,7 +152,7 @@ object ButtonPreferenceDefaults {
     @Composable
     fun buttonColors(
         color: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        disabledColor: Color = COUITheme.colorScheme.disable,
         contentColor: Color = COUITheme.colorScheme.onPrimary,
         disabledContentColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): ButtonColors = ButtonDefaults.buttonColors(

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -36,11 +37,9 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +56,8 @@ import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -89,6 +90,12 @@ import kotlin.math.roundToInt
  * @param onKeySelected Called with the newly selected key while touching the bar, including
  *   [AlphabetIndexBarDefaults.CollectKey] for the star.
  * @param modifier The modifier to be applied to the [AlphabetIndexBar].
+ * @param selectedKey The key to highlight while the bar is not touched, typically the section of
+ *   the first visible list item, or `null` to leave the highlight to touches alone. Like
+ *   COUITouchSearchView.updateMoveTouchBarText it moves the highlight without a haptic or the
+ *   bubble, follows a key hidden behind a dot to the row that holds it, and is ignored while a
+ *   finger is on the bar; after the finger lifts the touched key stays highlighted until
+ *   [selectedKey] changes.
  * @param keys The index keys, top to bottom (COUI normal_touchsearch_keys without the star).
  * @param availableKeys The keys that can be selected, or `null` for all of them.
  * @param showCollectKey Whether the favorites star leads the keys (COUI couiFirstIsCharacter false).
@@ -99,6 +106,7 @@ import kotlin.math.roundToInt
 fun AlphabetIndexBar(
     onKeySelected: (key: String) -> Unit,
     modifier: Modifier = Modifier,
+    selectedKey: String? = null,
     keys: List<String> = AlphabetIndexBarDefaults.Keys,
     availableKeys: Set<String>? = null,
     showCollectKey: Boolean = true,
@@ -112,12 +120,18 @@ fun AlphabetIndexBar(
         BooleanArray(allKeys.size) { availableKeys == null || allKeys[it] in availableKeys }
     }
     val currentOnKeySelected by rememberUpdatedState(onKeySelected)
-    val hapticFeedback = LocalHapticFeedback.current
+    // COUITouchSearchView.performFeedback: GRANULAR_SHORT_VIBRATE_SYNC (308), falling back to 302.
+    val haptic by rememberUpdatedState(rememberCouiHaptic())
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
     val scope = rememberCoroutineScope()
     val textMeasurer = rememberTextMeasurer(cacheSize = allKeys.size + 2)
-    val state = remember { IndexBarState() }
+    val state = remember { IndexBarState(selectedKey) }
     val starPainter = rememberVectorPainter(CollectStarIcon)
+
+    // COUITouchSearchView.updateMoveTouchBarText: ignored while touching.
+    LaunchedEffect(selectedKey) {
+        if (!state.inTouch) state.externalKey = selectedKey
+    }
 
     Layout(
         modifier = modifier
@@ -136,7 +150,7 @@ fun AlphabetIndexBar(
                     if (key == state.displayKey) return
                     state.displayKey = key
                     if (hit.rowIndex != state.selectedRow && currentHapticEnabled) {
-                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptic(CouiHapticEffect.Strength)
                     }
                     state.selectedRow = hit.rowIndex
                     val row = rows.rows[hit.rowIndex]
@@ -151,20 +165,28 @@ fun AlphabetIndexBar(
                     down.consume()
                     // The rows only depend on the height, so build them once per gesture.
                     val rows = buildIndexRows(allKeys.size, showCollectKey, size.height.toFloat(), this)
+                    // Touches take over from selectedKey: start from the row it highlights.
+                    state.selectedRow = state.highlightedRow(rows, allKeys, hasValue)
+                    state.externalKey = null
+                    state.inTouch = true
                     state.resetForTouch(scope)
-                    handle(rows, down.position.y, isMove = false)
-                    while (true) {
-                        val event = awaitPointerEvent()
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) {
+                    try {
+                        handle(rows, down.position.y, isMove = false)
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                            if (!change.pressed) {
+                                change.consume()
+                                break
+                            }
                             change.consume()
-                            break
+                            handle(rows, change.position.y, isMove = true)
                         }
-                        change.consume()
-                        handle(rows, change.position.y, isMove = true)
+                    } finally {
+                        state.inTouch = false
+                        state.displayKey = ""
+                        state.hideBubbleLater(scope)
                     }
-                    state.displayKey = ""
-                    state.hideBubbleLater(scope)
                 }
             }
             .drawWithCache {
@@ -182,7 +204,7 @@ fun AlphabetIndexBar(
                 val starFilter = ColorFilter.tint(colors.keyColor)
                 val selectedStarFilter = ColorFilter.tint(colors.selectedKeyColor)
                 onDrawBehind {
-                    val selected = state.selectedRow
+                    val selected = state.highlightedRow(rows, allKeys, hasValue)
                     rows.rows.forEachIndexed { index, row ->
                         val isSelected = index == selected
                         val centerY = (row.top + row.bottom) / 2f
@@ -245,7 +267,7 @@ private fun IndexBubble(
     // COUITouchSearchView sizes the bubble key with COUIChangeTextUtil.getSuitableFontSize level 4:
     // the font scale is capped at 1.35 so large fonts stay inside the 48dp bubble.
     val fontScale = LocalDensity.current.fontScale
-    val baseStyle = COUITheme.textStyles.title3
+    val baseStyle = COUITheme.textStyles.headlineM
     val textStyle = remember(baseStyle, fontScale) {
         baseStyle.copy(fontSize = baseStyle.fontSize * (min(fontScale, BUBBLE_MAX_FONT_SCALE) / fontScale))
     }
@@ -274,8 +296,24 @@ private fun IndexBubble(
 
 /** The touch and bubble state of an [AlphabetIndexBar]. */
 @Stable
-private class IndexBarState {
+private class IndexBarState(initialExternalKey: String?) {
     var selectedRow by mutableIntStateOf(-1)
+
+    /** The selectedKey to highlight, or `null` once a touch has taken over. */
+    var externalKey by mutableStateOf(initialExternalKey)
+
+    /** COUITouchSearchView mInTouching. */
+    var inTouch = false
+
+    /**
+     * The highlighted row: [externalKey] located like COUITouchSearchView.updateMoveTouchBarText
+     * (getWillDisplayY, then getKeyIndices / getKeyIndicesWithDots), or the last touched row.
+     */
+    fun highlightedRow(rows: IndexRows, allKeys: List<String>, hasValue: BooleanArray): Int {
+        val key = externalKey ?: return selectedRow
+        val y = rows.displayY(key, allKeys) ?: return selectedRow
+        return rows.select(y, hasValue)?.rowIndex ?: selectedRow
+    }
     var bubbleText by mutableStateOf("")
     var bubbleIsCollect by mutableStateOf(false)
     var bubbleCenterY by mutableFloatStateOf(0f)
@@ -333,6 +371,25 @@ private class IndexRow(
 private class IndexHit(val rowIndex: Int, val originalIndex: Int)
 
 private class IndexRows(val rows: List<IndexRow>, val compressed: Boolean, val fullHeight: Float) {
+    /**
+     * COUITouchSearchView.getWillDisplayY: the center of [key]'s row, or for a key hidden behind a
+     * dot, its slot within the dot; `null` when the key is not drawn.
+     */
+    fun displayY(key: String, allKeys: List<String>): Float? {
+        rows.forEach { row ->
+            if (row.isDot) {
+                val count = row.hidden.size
+                val step = (row.bottom - row.top) / count.coerceAtLeast(1)
+                for (j in 0 until count) {
+                    if (allKeys[row.hidden[j]] == key) return min(row.top + step * (j + 1), row.bottom)
+                }
+            } else if (allKeys[row.originalIndex] == key) {
+                return (row.top + row.bottom) / 2f
+            }
+        }
+        return null
+    }
+
     /** COUITouchSearchView.getKeyIndices / getKeyIndicesWithDots. */
     fun select(y: Float, hasValue: BooleanArray): IndexHit? {
         if (rows.isEmpty()) return null
@@ -541,11 +598,11 @@ object AlphabetIndexBarDefaults {
      */
     @Composable
     fun alphabetIndexBarColors(
-        keyColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        keyColor: Color = COUITheme.colorScheme.labelSecondary,
         selectedKeyColor: Color = COUITheme.colorScheme.primaryTextOnPopup,
         dotColor: Color = COUITheme.colorScheme.dragHandle,
         bubbleColor: Color = COUITheme.colorScheme.backgroundTop,
-        bubbleContentColor: Color = COUITheme.colorScheme.onBackground,
+        bubbleContentColor: Color = COUITheme.colorScheme.labelPrimary,
     ): AlphabetIndexBarColors = remember(keyColor, selectedKeyColor, dotColor, bubbleColor, bubbleContentColor) {
         AlphabetIndexBarColors(
             keyColor = keyColor,

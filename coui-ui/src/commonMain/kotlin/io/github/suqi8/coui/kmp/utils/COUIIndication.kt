@@ -9,9 +9,15 @@ import androidx.compose.foundation.Indication
 import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
+import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -44,14 +50,104 @@ private val StateLayerSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.
 private val PressMinVisibleProgress = 0.7f
 
 /**
+ * An interaction for the slide-to-select gesture of a list: the finger, pressed on one item, slides
+ * onto another, which becomes the touch target (`COUITouchListView` calls
+ * `COUIMaskEffectDrawable.setTouchSelectEntered` / `setTouchSelectExited`, touch type
+ * `TOUCH_TYPE_SELECTED`). [COUIIndication] shows or clears the press layer of such an item at once,
+ * without the spring (`COUIMaskEffectDrawable.onViewStateChanged`, touch type 1).
+ *
+ * @see Enter
+ * @see Exit
+ */
+interface COUITouchSelectInteraction : Interaction {
+    /** The sliding finger entered the item. */
+    class Enter : COUITouchSelectInteraction
+
+    /**
+     * The sliding finger left the item, or the gesture ended.
+     *
+     * @property enter The [Enter] interaction this one ends.
+     */
+    class Exit(
+        val enter: Enter,
+    ) : COUITouchSelectInteraction
+}
+
+/**
+ * An interaction reporting the selected state of a container item. [COUIIndication] draws a
+ * selected item with its focus layer, as `COUIMaskEffectDrawable` does for `state_selected` on a
+ * container mask (`mMaskType == 1`, `mEnableSelectedState` on by default).
+ *
+ * Emit it with [SelectedInteractionEffect], or emit [Select] / [Unselect] directly.
+ *
+ * @see Select
+ * @see Unselect
+ */
+interface COUISelectInteraction : Interaction {
+    /** The item became selected. */
+    class Select : COUISelectInteraction
+
+    /**
+     * The item stopped being selected.
+     *
+     * @property select The [Select] interaction this one ends.
+     */
+    class Unselect(
+        val select: Select,
+    ) : COUISelectInteraction
+}
+
+/**
+ * Emits [COUISelectInteraction]s into [interactionSource] that follow [selected], so a
+ * [COUIIndication] on the same source draws its focus layer while the item is selected. The
+ * selection is withdrawn when this effect leaves the composition.
+ *
+ * @param selected Whether the item is selected.
+ * @param interactionSource The interaction source the item's indication reads.
+ */
+@Composable
+fun SelectedInteractionEffect(
+    selected: Boolean,
+    interactionSource: MutableInteractionSource,
+) {
+    val holder = remember(interactionSource) { SelectInteractionHolder() }
+    LaunchedEffect(selected, interactionSource) {
+        val previous = holder.select
+        if (selected && previous == null) {
+            val select = COUISelectInteraction.Select()
+            holder.select = select
+            interactionSource.emit(select)
+        } else if (!selected && previous != null) {
+            holder.select = null
+            interactionSource.emit(COUISelectInteraction.Unselect(previous))
+        }
+    }
+    DisposableEffect(interactionSource) {
+        onDispose {
+            val previous = holder.select ?: return@onDispose
+            holder.select = null
+            interactionSource.tryEmit(COUISelectInteraction.Unselect(previous))
+        }
+    }
+}
+
+/** The [COUISelectInteraction.Select] a [SelectedInteractionEffect] has emitted and not yet ended. */
+private class SelectInteractionHolder {
+    var select: COUISelectInteraction.Select? = null
+}
+
+/**
  * COUI default [Indication]: the rectangular state layers of `COUIMaskEffectDrawable`.
  *
  * Hover, focus and press are three independent layers, each driven by its own response 0.3 /
  * bounce 0 spring and drawn in that order over the content. A release that comes before the press
  * layer reached 70% of its progress first carries it on to 70% so quick taps stay visible.
  *
+ * The focus layer also shows while a [COUISelectInteraction] reports the item selected, and a
+ * [COUITouchSelectInteraction] shows or clears the press layer without animation.
+ *
  * Colors left [Color.Unspecified] fall back to the COUI light or dark values, picked by the
- * luminance of [color] — the content color (e.g. `onBackground`), which is bright in dark theme.
+ * luminance of [color] — the content color (e.g. `labelPrimary`), which is bright in dark theme.
  * [COUITheme][io.github.suqi8.coui.kmp.theme.COUITheme] passes the `press`, `hover` and `focus`
  * slots of its color scheme.
  *
@@ -104,6 +200,8 @@ class COUIIndication(
         private var isPressed = false
         private var isHovered = false
         private var isFocused = false
+        private var isSelected = false
+        private var isTouchSelected = false
         private var isHoldDown = false
         private val pressProgress = Animatable(0f)
         private val hoverProgress = Animatable(0f)
@@ -117,9 +215,18 @@ class COUIIndication(
             return coroutineScope.launch { layer.animateTo(target, StateLayerSpring) }
         }
 
+        private fun updateFocus() {
+            focusJob = animateLayer(focusJob, focusProgress, if (isFocused || isSelected) 1f else 0f)
+        }
+
+        private fun snapPress(target: Float) {
+            pressJob?.cancel()
+            pressJob = coroutineScope.launch { pressProgress.snapTo(target) }
+        }
+
         private fun updatePress() {
             // Hold-down keeps the press layer visible after the press is released.
-            val active = isPressed || isHoldDown
+            val active = isPressed || isHoldDown || isTouchSelected
             pressJob?.cancel()
             pressJob = coroutineScope.launch {
                 if (active) {
@@ -175,12 +282,34 @@ class COUIIndication(
 
                         is FocusInteraction.Focus -> if (!isFocused) {
                             isFocused = true
-                            focusJob = animateLayer(focusJob, focusProgress, 1f)
+                            updateFocus()
                         }
 
                         is FocusInteraction.Unfocus -> if (isFocused) {
                             isFocused = false
-                            focusJob = animateLayer(focusJob, focusProgress, 0f)
+                            updateFocus()
+                        }
+
+                        is COUISelectInteraction.Select -> if (!isSelected) {
+                            isSelected = true
+                            updateFocus()
+                        }
+
+                        is COUISelectInteraction.Unselect -> if (isSelected) {
+                            isSelected = false
+                            updateFocus()
+                        }
+
+                        // COUIMaskEffectDrawable: a touch-select enter / exit moves the press
+                        // layer without animation.
+                        is COUITouchSelectInteraction.Enter -> if (!isTouchSelected) {
+                            isTouchSelected = true
+                            snapPress(1f)
+                        }
+
+                        is COUITouchSelectInteraction.Exit -> if (isTouchSelected) {
+                            isTouchSelected = false
+                            if (isPressed || isHoldDown) updatePress() else snapPress(0f)
                         }
                     }
                 }

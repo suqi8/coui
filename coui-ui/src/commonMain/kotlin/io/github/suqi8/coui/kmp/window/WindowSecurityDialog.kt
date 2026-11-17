@@ -28,8 +28,9 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  *
  * @param show Whether the [WindowSecurityDialog] is shown.
  * @param onConfirm Invoked when the confirm button is clicked, with the current checkbox state.
- * @param onCancel Invoked when the cancel button is clicked, the user taps outside, or presses
- *   the back button.
+ * @param onCancel Invoked when the cancel button is clicked or the user presses the back button.
+ *   A tap outside the panel does nothing, as COUI makes the dialog non-cancelable once a selection
+ *   listener is set (`COUISecurityAlertDialogBuilder.configureDefaultPredictiveBack`).
  * @param modifier The modifier to be applied to the [WindowSecurityDialog].
  * @param title The title of the dialog.
  * @param summary The summary (message) of the dialog.
@@ -38,6 +39,8 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param onLinkClick Invoked when the statement link is clicked.
  * @param checkboxText The label of the checkbox row. Hidden when null.
  * @param initialChecked The initial checkbox state, re-applied each time the dialog is shown.
+ * @param onCheckedChange Invoked each time the checkbox is toggled, like the
+ *   `onSelected(0, isChecked)` report of `COUISecurityAlertDialogBuilder`.
  * @param confirmText The label of the confirm (positive) button.
  * @param cancelText The label of the cancel (negative) button.
  * @param titleColor The color of the title.
@@ -46,6 +49,14 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param colors The [SecurityDialogColors] of the statement, link and checkbox texts.
  * @param enableWindowDim Whether to enable window dimming when the dialog is shown.
  * @param onDismissFinished The callback when the [WindowSecurityDialog] is completely dismissed.
+ * @param backgroundModifier A [Modifier] applied inside the panel's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred window background
+ *   (`COUIAlertDialogBuilder.setBlurBackgroundDrawable`) and pass a transparent [backgroundColor]
+ *   alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
+ *   The cancel / confirm buttons then turn material too
+ *   (`COUIButtonBarLayout.setBlurBackgroundWindow`).
  */
 @Composable
 fun WindowSecurityDialog(
@@ -53,6 +64,7 @@ fun WindowSecurityDialog(
     onConfirm: (dontRemind: Boolean) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     summary: String? = null,
     statement: String? = null,
@@ -60,6 +72,7 @@ fun WindowSecurityDialog(
     onLinkClick: (() -> Unit)? = null,
     checkboxText: String? = SecurityDialogDefaults.CheckboxText,
     initialChecked: Boolean = false,
+    onCheckedChange: ((checked: Boolean) -> Unit)? = null,
     confirmText: String = SecurityDialogDefaults.ConfirmText,
     cancelText: String = SecurityDialogDefaults.CancelText,
     titleColor: Color = DialogDefaults.titleColor(),
@@ -68,6 +81,7 @@ fun WindowSecurityDialog(
     colors: SecurityDialogColors = SecurityDialogDefaults.securityDialogColors(),
     enableWindowDim: Boolean = true,
     onDismissFinished: (() -> Unit)? = null,
+    materialStroke: Boolean = false,
 ) {
     val statusBarsPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val captionBarPadding = WindowInsets.captionBar.asPaddingValues().calculateTopPadding()
@@ -94,6 +108,7 @@ fun WindowSecurityDialog(
         onConfirm = onConfirm,
         onCancel = onCancel,
         modifier = modifier,
+        backgroundModifier = backgroundModifier,
         title = title,
         summary = summary,
         statement = statement,
@@ -101,6 +116,7 @@ fun WindowSecurityDialog(
         onLinkClick = onLinkClick,
         checkboxText = checkboxText,
         initialChecked = initialChecked,
+        onCheckedChange = onCheckedChange,
         confirmText = confirmText,
         cancelText = cancelText,
         titleColor = titleColor,
@@ -110,5 +126,6 @@ fun WindowSecurityDialog(
         enableWindowDim = enableWindowDim,
         onDismissFinished = onDismissFinished,
         topInset = safeTopInset,
+        materialStroke = materialStroke,
     )
 }

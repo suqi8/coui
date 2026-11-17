@@ -409,6 +409,8 @@ internal class TouchMotionState {
  *   handler in the Main pass has seen it, and a gesture for which this returns `true` never reaches
  *   the animator (no press scale, rubber band or deformation, not even for a frame). `null` keeps
  *   the Main-pass behaviour.
+ * @param state The animator state. Hoist it when another element follows this one's motion (a
+ *   cascading sub menu following its main menu, `ParentInfluenceUnit`).
  */
 @Composable
 internal fun Modifier.couiTouchMotion(
@@ -416,8 +418,8 @@ internal fun Modifier.couiTouchMotion(
     enabled: Boolean = true,
     pressScaleEnabled: Boolean = true,
     touchSuppressed: (() -> Boolean)? = null,
+    state: TouchMotionState = remember { TouchMotionState() },
 ): Modifier {
-    val state = remember { TouchMotionState() }
     val currentTouchSuppressed by rememberUpdatedState(touchSuppressed)
     val scope = rememberCoroutineScope()
     val sourcePressed = interactionSource?.collectIsPressedAsState()?.value ?: false

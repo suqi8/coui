@@ -62,8 +62,25 @@ class PopupSurfaceTest {
         waitForIdle()
         for (surface in listOf(optedOut, unsupported, noProvider)) {
             assertEquals(opaque, surface?.color)
-            assertFalse(surface?.materialEffect == true, "no material effects on an opaque surface")
+            assertTrue(surface?.materialEffect == true, "the material effects stay on an opaque surface")
         }
+    }
+
+    @Test
+    fun materialEffectCanBeTurnedOff() = runComposeUiTest {
+        var blurred: PopupSurface? = null
+        var opaqueSurface: PopupSurface? = null
+        setContent {
+            COUITheme {
+                CompositionLocalProvider(LocalPopupMaterialBlur provides MaterialBlurProvider { _, _ -> Modifier }) {
+                    blurred = rememberPopupSurface(true, opaque, materialEffect = false, backgroundModifier = Modifier)
+                }
+                opaqueSurface = rememberPopupSurface(false, opaque, materialEffect = false, backgroundModifier = Modifier)
+            }
+        }
+        waitForIdle()
+        assertFalse(blurred?.materialEffect == true)
+        assertFalse(opaqueSurface?.materialEffect == true)
     }
 
     @Test

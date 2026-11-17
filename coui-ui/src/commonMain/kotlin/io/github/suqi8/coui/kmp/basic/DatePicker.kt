@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -47,17 +48,26 @@ data class DateValue(
  * Three scroll wheels (year / month / day) arranged like the COUI date picker:
  * the columns are centered as a group, the day range follows the selected
  * year and month (leap years included), and the day is clamped when a shorter
- * month is selected. All columns wrap around, matching COUIDatePicker. Two hairlines frame
- * the selected row at the center ± 24dp, inset 16dp from both sides, and holding a row above
- * or below the center steps the year and day every 100ms and the month every 200ms. The
- * wheels follow the locale's date field order ([fieldOrder]), as COUIDatePicker.reorderSpinners
- * does with the best "yyyyMMMMdd" pattern.
+ * month is selected. The date is kept within [minDate] .. [maxDate]: as in
+ * COUIDatePicker.updateSpinners, while the selection sits in the first or last year (or month)
+ * the month (or day) wheel only offers the reachable values and stops wrapping unless it still
+ * covers the whole year (or month). Two hairlines frame the selected row at the center ± 24dp,
+ * inset 16dp from both sides, and holding a row above or below the center steps the year and day
+ * every 100ms and the month every 200ms. The wheels follow the locale's date field order
+ * ([fieldOrder]), as COUIDatePicker.reorderSpinners does with the best "yyyyMMMMdd" pattern, and
+ * the picker is at most [NumberPickerDefaults.PickersMaxWidth] wide.
+ *
+ * With [yearIgnorable] the year wheel gets a placeholder row after the last year (COUIDatePicker
+ * couiYearIgnorable); selecting it reports [DatePickerDefaults.IgnoredYear] as the year, and the
+ * day wheel then allows 29 February.
  *
  * @param value The currently selected date. Out-of-range fields are coerced.
  * @param onValueChange The callback invoked when the selected date changes.
  * @param modifier The modifier to be applied to the [DatePicker].
  * @param enabled Whether the [DatePicker] is enabled for user interaction.
- * @param yearRange The selectable year range.
+ * @param yearIgnorable Whether the year can be left out (see above).
+ * @param minDate The earliest selectable date (COUI default 1900-01-01).
+ * @param maxDate The latest selectable date (COUI default 2100-12-31).
  * @param yearLabel Converts a year to its display string.
  * @param monthLabel Converts a month (1..12) to its display string.
  * @param dayLabel Converts a day of month to its display string.
@@ -77,55 +87,87 @@ fun DatePicker(
     onValueChange: (DateValue) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    yearRange: IntRange = DatePickerDefaults.YearRange,
-    yearLabel: (Int) -> String = DatePickerDefaults.YearLabel,
-    monthLabel: (Int) -> String = DatePickerDefaults.MonthLabel,
-    dayLabel: (Int) -> String = DatePickerDefaults.DayLabel,
+    yearIgnorable: Boolean = false,
+    minDate: DateValue = DatePickerDefaults.MinDate,
+    maxDate: DateValue = DatePickerDefaults.MaxDate,
+    yearLabel: (Int) -> String = DatePickerDefaults.yearLabel(),
+    monthLabel: (Int) -> String = DatePickerDefaults.monthLabel(),
+    dayLabel: (Int) -> String = DatePickerDefaults.dayLabel(),
     fieldOrder: DateFieldOrder = DatePickerDefaults.localeFieldOrder(),
     yearColumnWidth: Dp = DatePickerDefaults.YearColumnWidth,
     monthColumnWidth: Dp = DatePickerDefaults.MonthColumnWidth,
     dayColumnWidth: Dp = DatePickerDefaults.DayColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    dividerColor: Color = COUITheme.colorScheme.dividerLine,
-    textStyle: TextStyle = COUITheme.textStyles.title3,
+    dividerColor: Color = COUITheme.colorScheme.divider,
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = DatePickerDefaults.InsideMargin,
 ) {
-    require(yearRange.first <= yearRange.last) {
-        "yearRange must not be empty"
-    }
+    val minEpoch = epochDayOf(minDate.normalized())
+    val maxEpoch = epochDayOf(maxDate.normalized())
+    require(minEpoch <= maxEpoch) { "minDate must not be after maxDate" }
+    val min = dateOfEpochDay(minEpoch)
+    val max = dateOfEpochDay(maxEpoch)
 
-    val coercedYear = value.year.coerceIn(yearRange)
-    val coercedMonth = value.month.coerceIn(1, 12)
-    val daysOfMonth = daysInMonth(coercedYear, coercedMonth)
-    val coercedDay = value.day.coerceIn(1, daysOfMonth)
+    val yearIgnored = yearIgnorable && value.year == DatePickerDefaults.IgnoredYear
+    val date = if (yearIgnored) {
+        DateValue(DatePickerDefaults.IgnoredYear, value.month, value.day).normalized()
+    } else {
+        // The year is pulled near the bounds first so the epoch-day math cannot overflow.
+        val near = value.copy(year = value.year.coerceIn(min.year - 1, max.year + 1))
+        dateOfEpochDay(epochDayOf(near.normalized()).coerceIn(minEpoch, maxEpoch))
+    }
+    val daysOfMonth = daysInMonth(dayCountYear(date.year), date.month)
+
+    // COUIDatePicker.updateSpinners: the first / last year and month narrow the next wheel, which
+    // only keeps wrapping while it still offers every value.
+    val inMinYear = date.year == min.year
+    val inMaxYear = date.year == max.year
+    val monthRange = (if (inMinYear) min.month else 1)..(if (inMaxYear) max.month else 12)
+    val inMinMonth = inMinYear && date.month == min.month
+    val inMaxMonth = inMaxYear && date.month == max.month
+    val dayRange = (if (inMinMonth) min.day else 1)..(if (inMaxMonth) max.day else daysOfMonth)
+    val monthWraps = monthRange.first == 1 && monthRange.last == 12
+    val dayWraps = dayRange.first == 1 && dayRange.last == daysOfMonth
 
     // Latest state readable from the remember-cached per-column callbacks below.
-    val currentValue by rememberUpdatedState(DateValue(coercedYear, coercedMonth, coercedDay))
+    val currentValue by rememberUpdatedState(date)
     val currentOnValueChange by rememberUpdatedState(onValueChange)
+    val currentMinEpoch by rememberUpdatedState(minEpoch)
+    val currentMaxEpoch by rememberUpdatedState(maxEpoch)
 
+    // COUIDatePicker.setDate: a changed field is clamped back into minDate .. maxDate.
+    val emit = remember {
+        { target: DateValue ->
+            val clamped = if (target.year == DatePickerDefaults.IgnoredYear) {
+                target
+            } else {
+                dateOfEpochDay(epochDayOf(target).coerceIn(currentMinEpoch, currentMaxEpoch))
+            }
+            currentOnValueChange(clamped)
+        }
+    }
     val onYearChange = remember {
         { newYear: Int ->
-            val date = currentValue
-            val day = date.day.coerceAtMost(daysInMonth(newYear, date.month))
-            currentOnValueChange(DateValue(newYear, date.month, day))
+            val current = currentValue
+            val day = current.day.coerceAtMost(daysInMonth(dayCountYear(newYear), current.month))
+            emit(DateValue(newYear, current.month, day))
         }
     }
     val onMonthChange = remember {
         { newMonth: Int ->
-            val date = currentValue
-            val day = date.day.coerceAtMost(daysInMonth(date.year, newMonth))
-            currentOnValueChange(DateValue(date.year, newMonth, day))
+            val current = currentValue
+            val day = current.day.coerceAtMost(daysInMonth(dayCountYear(current.year), newMonth))
+            emit(DateValue(current.year, newMonth, day))
         }
     }
     val onDayChange = remember {
-        { newDay: Int ->
-            currentOnValueChange(currentValue.copy(day = newDay))
-        }
+        { newDay: Int -> emit(currentValue.copy(day = newDay)) }
     }
 
     Row(
         modifier = modifier
+            .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
@@ -136,13 +178,14 @@ fun DatePicker(
             key(field) {
                 when (field) {
                     DateField.Year -> NumberPicker(
-                        value = coercedYear,
+                        value = date.year,
                         onValueChange = onYearChange,
                         modifier = Modifier.width(yearColumnWidth),
                         enabled = enabled,
-                        range = yearRange,
+                        range = min.year..max.year,
                         label = yearLabel,
                         wrapAround = true,
+                        ignorable = yearIgnorable,
                         longPressStepInterval = DatePickerDefaults.YearStepInterval,
                         colors = colors,
                         textStyle = textStyle,
@@ -150,13 +193,13 @@ fun DatePicker(
                     )
 
                     DateField.Month -> NumberPicker(
-                        value = coercedMonth,
+                        value = date.month,
                         onValueChange = onMonthChange,
                         modifier = Modifier.width(monthColumnWidth),
                         enabled = enabled,
-                        range = 1..12,
+                        range = monthRange,
                         label = monthLabel,
-                        wrapAround = true,
+                        wrapAround = monthWraps,
                         longPressStepInterval = DatePickerDefaults.MonthStepInterval,
                         colors = colors,
                         textStyle = textStyle,
@@ -164,13 +207,13 @@ fun DatePicker(
                     )
 
                     DateField.Day -> NumberPicker(
-                        value = coercedDay,
+                        value = date.day,
                         onValueChange = onDayChange,
                         modifier = Modifier.width(dayColumnWidth),
                         enabled = enabled,
-                        range = 1..daysOfMonth,
+                        range = dayRange,
                         label = dayLabel,
-                        wrapAround = true,
+                        wrapAround = dayWraps,
                         longPressStepInterval = DatePickerDefaults.DayStepInterval,
                         colors = colors,
                         textStyle = textStyle,
@@ -187,8 +230,14 @@ fun DatePicker(
  */
 object DatePickerDefaults {
 
-    /** Default selectable year range (COUI: 1900..2100). */
-    val YearRange: IntRange = 1900..2100
+    /** The earliest selectable date (COUIDatePicker beginYear 1900, January 1). */
+    val MinDate: DateValue = DateValue(1900, 1, 1)
+
+    /** The latest selectable date (COUIDatePicker endYear 2100, December 31). */
+    val MaxDate: DateValue = DateValue(2100, 12, 31)
+
+    /** The year of a date whose year was left out on an ignorable wheel (COUIDatePicker.IGNORED_YEAR). */
+    val IgnoredYear: Int = NumberPickerDefaults.IgnoredValue
 
     /** Width of the year column (COUI coui_datepicker_width_year). */
     val YearColumnWidth = 76.dp
@@ -223,19 +272,40 @@ object DatePickerDefaults {
         return remember(locale) { DateFieldOrder.fromPattern(platformDatePattern()) }
     }
 
-    /** Default year label: the plain year number. */
-    val YearLabel: (Int) -> String = { it.toString() }
+    /**
+     * The default year label of the current locale (COUIDatePicker.Format "YEAR"): the year
+     * followed by coui_year ("2026年") in Chinese, the plain number otherwise.
+     */
+    @Composable
+    fun yearLabel(): (Int) -> String {
+        val chinese = isChineseLocale()
+        return remember(chinese) { if (chinese) ChineseYearLabel else PlainNumberLabel }
+    }
 
-    /** Default month label: abbreviated English month names, as COUI shows in English. */
-    val MonthLabel: (Int) -> String = { MonthAbbreviations[it - 1] }
+    /**
+     * The default month label of the current locale (COUIDatePicker.Format "MONTH"): the
+     * abbreviated month name, "Jan" in English and "1月" in Chinese.
+     */
+    @Composable
+    fun monthLabel(): (Int) -> String {
+        val symbols = rememberPickerSymbols()
+        return remember(symbols) { { month: Int -> symbols.shortMonths[(month - 1).coerceIn(0, 11)] } }
+    }
 
-    /** Default day label: zero-padded two digits, as COUI shows in English. */
-    val DayLabel: (Int) -> String = { it.toString().padStart(2, '0') }
+    /**
+     * The default day label of the current locale (COUIDatePicker.Format "DAY"): the day followed
+     * by coui_day ("5日") in Chinese, two zero-padded digits otherwise.
+     */
+    @Composable
+    fun dayLabel(): (Int) -> String {
+        val chinese = isChineseLocale()
+        return remember(chinese) { if (chinese) ChineseDayLabel else TwoDigitDayLabel }
+    }
 
-    private val MonthAbbreviations = listOf(
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    )
+    private val PlainNumberLabel: (Int) -> String = { it.toString() }
+    private val ChineseYearLabel: (Int) -> String = { "${it}年" }
+    private val TwoDigitDayLabel: (Int) -> String = { it.toString().padStart(2, '0') }
+    private val ChineseDayLabel: (Int) -> String = { "${it}日" }
 }
 
 /** One wheel of a [DatePicker]. */
@@ -287,6 +357,18 @@ enum class DateFieldOrder(val fields: List<DateField>) {
 }
 
 private fun isLeapYear(year: Int): Boolean = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
+
+/** This date with the month kept in 1..12 and the day in its month. */
+private fun DateValue.normalized(): DateValue {
+    val safeMonth = month.coerceIn(1, 12)
+    return DateValue(year, safeMonth, day.coerceIn(1, daysInMonth(dayCountYear(year), safeMonth)))
+}
+
+/**
+ * The year whose month lengths apply: an ignored year counts as 2020, a leap year, as
+ * COUIDatePicker.IncompleteDate does, so 29 February stays selectable.
+ */
+private fun dayCountYear(year: Int): Int = if (year == DatePickerDefaults.IgnoredYear) 2020 else year
 
 internal fun daysInMonth(year: Int, month: Int): Int = when (month) {
     1, 3, 5, 7, 8, 10, 12 -> 31

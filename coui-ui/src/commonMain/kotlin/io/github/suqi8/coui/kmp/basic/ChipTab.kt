@@ -49,7 +49,6 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -65,6 +64,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
 import io.github.suqi8.coui.kmp.effect.ShadowEdgePresets
@@ -127,7 +127,8 @@ import kotlin.math.roundToInt
  * @param modifier The modifier to be applied to the [ChipTab].
  * @param enabled Whether the [ChipTab] is enabled. A disabled chip tab keeps its capsule and greys
  *   its label and icon (`COUIChipTab` checked / unchecked disabled text and icon tints).
- * @param materialEffect Whether the COUI 17 material is drawn, see above.
+ * @param materialEffect Whether the COUI 17 material is drawn, see above. Defaults to
+ *   [LocalCOUIMaterialEffectEnabled].
  * @param materialType Which `COUIChipTab.MaterialEffectType` presets the backdrop takes.
  * @param icon The optional leading icon, laid out in a [ChipTabDefaults.IconSize] box.
  *   [LocalContentColor] carries the label color, the `checkedChipIconTint` /
@@ -148,7 +149,7 @@ fun ChipTab(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     materialType: ChipTabMaterialType = ChipTabMaterialType.Default,
     icon: (@Composable () -> Unit)? = null,
     cornerRadius: Dp = ChipTabDefaults.CornerRadius,
@@ -208,7 +209,8 @@ fun ChipTab(
  * @param icon The icon, laid out in an [iconSize] box and tinted through [LocalContentColor].
  * @param modifier The modifier to be applied to the [ChipTab].
  * @param enabled Whether the [ChipTab] is enabled.
- * @param materialEffect Whether the COUI 17 material is drawn.
+ * @param materialEffect Whether the COUI 17 material is drawn. Defaults to
+ *   [LocalCOUIMaterialEffectEnabled].
  * @param materialType Which `COUIChipTab.MaterialEffectType` presets the backdrop takes.
  * @param size The diameter of the [ChipTab].
  * @param iconSize The size of the icon box. `COUIChipTab` keeps the 16dp `chipIconSize`;
@@ -223,7 +225,7 @@ fun ChipTab(
     icon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     materialType: ChipTabMaterialType = ChipTabMaterialType.Default,
     size: Dp = ChipTabDefaults.IconOnlySize,
     iconSize: Dp = ChipTabDefaults.IconSize,
@@ -275,7 +277,8 @@ fun ChipTab(
  * @param onTabSelected The callback when an unselected chip is clicked.
  * @param modifier The modifier to be applied to the [ChipTabRow].
  * @param enabled Whether the chips are enabled.
- * @param materialEffect Whether the chips draw the COUI 17 material, see [ChipTab].
+ * @param materialEffect Whether the chips draw the COUI 17 material, see [ChipTab]. Defaults to
+ *   [LocalCOUIMaterialEffectEnabled].
  * @param materialType Which `COUIChipTab.MaterialEffectType` presets the chips take.
  * @param colors The [ChipTabColors] of the chips.
  * @param horizontalPadding The inset of the scrolling chips. [Dp.Unspecified] uses the
@@ -293,7 +296,7 @@ fun ChipTabRow(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     materialType: ChipTabMaterialType = ChipTabMaterialType.Default,
     colors: ChipTabColors = ChipTabDefaults.chipTabColors(),
     horizontalPadding: Dp = Dp.Unspecified,
@@ -505,7 +508,7 @@ object ChipTabDefaults {
 
     /** The label style (Widget.COUI.Chip.ChipTab textAppearance couiTextButtonM: 14sp medium). */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.subtitle
+    fun textStyle(): TextStyle = COUITheme.textStyles.buttonM
 
     /**
      * The default [ChipTabColors], the colors `COUIChipTabDrawable.updateCachedThemeColors` and
@@ -520,12 +523,12 @@ object ChipTabDefaults {
      */
     @Composable
     fun chipTabColors(
-        containerColor: Color = if (isDarkScheme()) Color(0x1AFFFFFF) else Color(0x0A000000),
+        containerColor: Color = COUITheme.colorScheme.container4,
         selectedContainerColor: Color = COUITheme.colorScheme.surfaceContainerHighest,
         selectedHighlightColor: Color = Color(0x40FFFFFF),
         selectedStrokeColor: Color = if (isDarkScheme()) Color(0x0AFFFFFF) else Color(0x0A000000),
-        contentColor: Color = COUITheme.colorScheme.onSurface,
-        disabledContentColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledContentColor: Color = COUITheme.colorScheme.labelTertiary,
     ): ChipTabColors = remember(
         containerColor,
         selectedContainerColor,
@@ -917,7 +920,7 @@ private class ChipTabShaders(
 )
 
 @Composable
-private fun isDarkScheme(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+private fun isDarkScheme(): Boolean = COUITheme.colorScheme.isDark
 
 private fun Color.scaleAlpha(fraction: Float): Color = copy(alpha = alpha * fraction)
 

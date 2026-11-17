@@ -36,7 +36,6 @@ import io.github.suqi8.coui.kmp.basic.RefreshState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.sign
 
@@ -67,7 +66,12 @@ fun Modifier.overScrollHorizontal(
 )
 
 /**
- * Overscroll effect when scrolling to the boundary.
+ * Overscroll effect when scrolling to the boundary, with the physics of the COUI 17 scroll views
+ * (see [COUIOverscrollEffect]): a drag past the edge moves the content by
+ * `0.4 * (1 - |overscroll| / window size)` of the finger, a release springs it back on the
+ * `SpringOverScroller` RK4 spring (tension multiple 2.15 vertically, 3.2 horizontally), and a fling
+ * that runs into the edge carries on past it, its overshoot saturating at 37.31% of the window.
+ * Unlike [COUIOverscrollEffect] it plays no edge vibration; add [scrollEndHaptic] for that.
  *
  * @param isVertical Whether the overscroll effect is vertical or horizontal.
  * @param nestedScrollToParent Whether to dispatch nested scroll events to parent.
@@ -135,25 +139,29 @@ private class OverscrollNode(
         get() = currentValueOf(LocalPullToRefreshState)
 
     private val dispatcher = NestedScrollDispatcher()
-    private val springEngine = SpringEngine()
     private var animationJob: Job? = null
     private val offsetThreshold = 1f
 
+    // Placement pixel-snaps via round(), so only re-place when the whole-pixel value changes.
     private var lastPlacedOffset = 0f
-    var offset = 0f
-        private set(value) {
-            if (field != value) {
-                field = value
-                // Placement pixel-snaps via round(), so only re-place when the whole-pixel value changes.
-                val rounded = round(value)
-                if (rounded != lastPlacedOffset) {
-                    lastPlacedOffset = rounded
-                    if (isAttached) invalidatePlacement()
-                }
-            }
-        }
 
-    private var rawTouchAccumulation = 0f
+    private fun onOffsetChanged(value: Float) {
+        val rounded = round(value)
+        if (rounded != lastPlacedOffset) {
+            lastPlacedOffset = rounded
+            if (isAttached) invalidatePlacement()
+        }
+    }
+
+    private val verticalAxis = COUIOverScrollAxis(VerticalSpringBackTensionMultiple, ::onOffsetChanged)
+    private val horizontalAxis = COUIOverScrollAxis(HorizontalSpringBackTensionMultiple, ::onOffsetChanged)
+
+    private val axis: COUIOverScrollAxis
+        get() = if (isVertical) verticalAxis else horizontalAxis
+
+    val offset: Float
+        get() = axis.offset
+
     private var scrollRange: Float = 0f
     private var cachedScrollRangeDensity: Density? = null
     private var cachedScrollRangeWindowInfo: WindowInfo? = null
@@ -176,12 +184,15 @@ private class OverscrollNode(
         var rangeChanged = false
         if (this.isVertical != isVertical) {
             rangeChanged = true
+            animationJob?.cancel()
+            resetState()
         }
 
         this.isVertical = isVertical
         this.nestedScrollToParent = nestedScrollToParent
 
         if (rangeChanged && isAttached) {
+            cachedScrollRangeDensity = null
             updateScrollRange()
         }
     }
@@ -202,31 +213,35 @@ private class OverscrollNode(
     }
 
     private fun resetState() {
-        offset = 0f
-        rawTouchAccumulation = 0f
+        verticalAxis.reset()
+        horizontalAxis.reset()
         if (isAttached) {
             overScrollState.isOverScrollActive = false
         }
     }
 
-    private fun startSpringAnimation(initialVelocity: Float = 0f) {
-        if (abs(offset) <= offsetThreshold && initialVelocity == 0f) {
+    private fun updateOverScrollState() {
+        if (!isAttached) return
+        val isActive = abs(offset) > offsetThreshold
+        if (overScrollState.isOverScrollActive != isActive) {
+            overScrollState.isOverScrollActive = isActive
+        }
+    }
+
+    /**
+     * Springs the content back to the edge, from rest or, with [overFling], carrying a fling that
+     * reached the edge at [velocity] px/s past it.
+     */
+    private fun startSpringBack(velocity: Float, overFling: Boolean) {
+        animationJob?.cancel()
+        if (!overFling && abs(offset) <= offsetThreshold) {
             resetState()
             return
         }
-
-        animationJob?.cancel()
+        val springAxis = axis
         animationJob = coroutineScope.launch {
-            springEngine.runSettleAnimation(
-                startValue = offset,
-                initialVelocity = initialVelocity,
-                onFrame = { currentPos ->
-                    offset = currentPos
-                },
-                onSettle = {
-                    if (abs(offset) <= offsetThreshold) resetState()
-                },
-            )
+            springAxis.springBack(velocity = velocity, overFling = overFling, screenSize = scrollRange)
+            updateOverScrollState()
         }
     }
 
@@ -235,31 +250,11 @@ private class OverscrollNode(
         return pullToRefreshState != null && pullToRefreshState?.refreshState != RefreshState.Idle && isVertical
     }
 
-    private fun applyDrag(delta: Float) {
-        if (delta == 0f) return
-        rawTouchAccumulation += delta
-        rawTouchAccumulation = rawTouchAccumulation.coerceIn(-scrollRange, scrollRange)
-
-        val normalized = min(abs(rawTouchAccumulation) / scrollRange, 1.0f)
-        val dampedDist = SpringMath.obtainDampingDistance(normalized, scrollRange)
-        offset = sign(rawTouchAccumulation) * dampedDist
-    }
-
-    /** Inverse of the damping curve: re-derive [rawTouchAccumulation] from [offset] when a drag takes over a spring. */
-    private fun syncRawAccumulationFromOffset() {
-        rawTouchAccumulation = sign(offset) * SpringMath.obtainTouchDistance(offset, scrollRange)
-    }
-
-    /** Reclaims a stale offset once the child can scroll again in the accumulated direction (e.g. pagination); otherwise [onPreFling] swallows the next fling. */
+    /** Reclaims a stale offset once the child can scroll again towards it (e.g. pagination); otherwise [onPreFling] swallows the next fling. */
     private fun unwindStaleOffset(consumedDelta: Float) {
         if (abs(offset) <= offsetThreshold || consumedDelta == 0f) return
-        if (rawTouchAccumulation == 0f) syncRawAccumulationFromOffset()
-        if (sign(consumedDelta) != sign(rawTouchAccumulation)) return
-        if (abs(rawTouchAccumulation) <= abs(consumedDelta)) {
-            resetState()
-        } else {
-            applyDrag(-consumedDelta)
-        }
+        if (sign(consumedDelta) != sign(offset)) return
+        axis.dragBack(-consumedDelta, scrollRange)
     }
 
     override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
@@ -279,17 +274,13 @@ private class OverscrollNode(
 
     override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
         if (!isAttached) return Offset.Zero
-        val isActive = abs(offset) > offsetThreshold
-        if (overScrollState.isOverScrollActive != isActive) {
-            overScrollState.isOverScrollActive = isActive
-        }
+        updateOverScrollState()
 
         if (shouldBypassForPullToRefresh() || source != NestedScrollSource.UserInput) {
             return dispatcher.dispatchPreScroll(available, source)
         }
 
-        // Resync raw accumulation when a drag takes over a running spring.
-        if (animationJob?.isActive == true) syncRawAccumulationFromOffset()
+        // A drag takes over a running spring from where it is.
         animationJob?.cancel()
 
         val parentConsumed = if (nestedScrollToParent) {
@@ -301,40 +292,23 @@ private class OverscrollNode(
         val realAvailable = available - parentConsumed
         val delta = if (isVertical) realAvailable.y else realAvailable.x
 
-        if (abs(offset) <= offsetThreshold || sign(delta) == sign(rawTouchAccumulation)) {
+        if (abs(offset) <= offsetThreshold || delta == 0f || sign(delta) == sign(offset)) {
             return parentConsumed
         }
 
-        if (sign(delta) != sign(rawTouchAccumulation)) { // opposite direction
-            val actualConsumed = if (abs(rawTouchAccumulation) <= abs(delta)) {
-                -rawTouchAccumulation // can be fully consumed
-            } else {
-                delta
-            }
-
-            if (abs(rawTouchAccumulation) <= abs(delta)) {
-                resetState() // reset directly after complete consumption
-            } else {
-                applyDrag(actualConsumed)
-            }
-
-            return if (isVertical) {
-                Offset(parentConsumed.x, actualConsumed + parentConsumed.y)
-            } else {
-                Offset(actualConsumed + parentConsumed.x, parentConsumed.y)
-            }
+        // A drag back towards the content first undoes the overscroll.
+        val consumed = axis.dragBack(delta, scrollRange)
+        updateOverScrollState()
+        return if (isVertical) {
+            Offset(parentConsumed.x, consumed + parentConsumed.y)
+        } else {
+            Offset(consumed + parentConsumed.x, parentConsumed.y)
         }
-
-        applyDrag(delta)
-        return if (isVertical) Offset(parentConsumed.x, available.y) else Offset(available.x, parentConsumed.y)
     }
 
     override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
         if (!isAttached) return Offset.Zero
-        val isActive = abs(offset) > offsetThreshold
-        if (overScrollState.isOverScrollActive != isActive) {
-            overScrollState.isOverScrollActive = isActive
-        }
+        updateOverScrollState()
 
         if (shouldBypassForPullToRefresh() || source != NestedScrollSource.UserInput) {
             // A running spring settles to zero on its own; only reclaim when it was interrupted.
@@ -356,16 +330,14 @@ private class OverscrollNode(
         val realAvailable = available - parentConsumed
         val delta = if (isVertical) realAvailable.y else realAvailable.x
 
-        applyDrag(delta)
+        axis.drag(delta, scrollRange)
+        updateOverScrollState()
         return if (isVertical) Offset(parentConsumed.x, available.y) else Offset(available.x, parentConsumed.y)
     }
 
     override suspend fun onPreFling(available: Velocity): Velocity {
         if (!isAttached) return Velocity.Zero
-        val isActive = abs(offset) > offsetThreshold
-        if (overScrollState.isOverScrollActive != isActive) {
-            overScrollState.isOverScrollActive = isActive
-        }
+        updateOverScrollState()
 
         if (shouldBypassForPullToRefresh() && !overScrollState.isOverScrollActive) {
             return dispatcher.dispatchPreFling(available)
@@ -383,21 +355,14 @@ private class OverscrollNode(
         val velocity = if (isVertical) realAvailable.y else realAvailable.x
 
         if (abs(offset) > offsetThreshold) {
+            // COUIRecyclerView: a release while overscrolled springs back from rest.
+            startSpringBack(velocity = 0f, overFling = false)
             if (sign(velocity) != sign(offset)) {
-                startSpringAnimation(velocity)
-                // Optimize speed and feel to prevent violent throwing
-                return parentConsumed + if (isVertical) {
-                    Velocity(
-                        0f,
-                        realAvailable.y / 2.13333f,
-                    )
-                } else {
-                    Velocity(realAvailable.x / 2.13333f, 0f)
-                }
-            } else {
-                startSpringAnimation(velocity)
-                return parentConsumed + if (isVertical) Velocity(0f, realAvailable.y) else Velocity(realAvailable.x, 0f)
+                // A fling back towards the content scrolls it (performOverScrollingReverseFling).
+                return parentConsumed
             }
+            // A fling further out is dropped.
+            return parentConsumed + if (isVertical) Velocity(0f, realAvailable.y) else Velocity(realAvailable.x, 0f)
         }
 
         return parentConsumed
@@ -405,16 +370,11 @@ private class OverscrollNode(
 
     override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
         if (!isAttached) return Velocity.Zero
-        val isActive = abs(offset) > offsetThreshold
-        if (overScrollState.isOverScrollActive != isActive) {
-            overScrollState.isOverScrollActive = isActive
-        }
+        updateOverScrollState()
 
         if (shouldBypassForPullToRefresh() && !overScrollState.isOverScrollActive) {
             return dispatcher.dispatchPostFling(consumed, available)
         }
-
-        animationJob?.cancel()
 
         val parentConsumed = if (nestedScrollToParent) {
             dispatcher.dispatchPostFling(consumed, available)
@@ -423,10 +383,25 @@ private class OverscrollNode(
         }
 
         val realAvailable = available - parentConsumed
-        val velocity = (if (isVertical) realAvailable.y else realAvailable.x) / 1.53333f // attenuation speed
-        startSpringAnimation(velocity)
+        val velocity = if (isVertical) realAvailable.y else realAvailable.x
+
+        if (animationJob?.isActive == true) return parentConsumed
+        if (abs(offset) > offsetThreshold) {
+            startSpringBack(velocity = 0f, overFling = false)
+        } else if (abs(velocity) > MIN_OVER_FLING_VELOCITY) {
+            // COUINestedScrollView.onOverScrolled: a fling reaching the edge carries on past it.
+            startSpringBack(velocity = velocity, overFling = true)
+        } else {
+            resetState()
+            return parentConsumed
+        }
 
         return parentConsumed + if (isVertical) Velocity(0f, velocity) else Velocity(velocity, 0f)
+    }
+
+    private companion object {
+        /** Leftover fling speeds below this (px/s) stop at the edge. */
+        const val MIN_OVER_FLING_VELOCITY = 1f
     }
 }
 

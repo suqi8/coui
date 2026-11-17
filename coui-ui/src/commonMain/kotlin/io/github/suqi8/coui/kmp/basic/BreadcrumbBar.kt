@@ -63,7 +63,7 @@ data class BreadcrumbItem(
 )
 
 /**
- * A horizontal breadcrumb navigation bar with Miuix style. Displays a trail of path segments as
+ * A horizontal breadcrumb navigation bar. Displays a trail of path segments as
  * capsule-shaped items separated by arrow icons. When the content overflows the available width, it
  * scrolls horizontally instead of collapsing — matching the file-manager convention on mobile
  * devices.
@@ -225,7 +225,7 @@ private fun BreadcrumbSegment(
         Text(
             text = text,
             color = textColor,
-            fontSize = COUITheme.textStyles.body2.fontSize,
+            fontSize = COUITheme.textStyles.bodyM.fontSize,
             fontWeight = if (highlighted) FontWeight.Medium else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -284,11 +284,11 @@ object BreadcrumbBarDefaults {
      */
     @Composable
     fun breadcrumbBarColors(
-        color: Color = COUITheme.colorScheme.onBackground.copy(alpha = 0.55f),
+        color: Color = COUITheme.colorScheme.labelPrimary.copy(alpha = 0.55f),
         highlightColor: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
-        separatorColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
-        backgroundColor: Color = COUITheme.colorScheme.onBackground.copy(alpha = 0.1f),
+        disabledColor: Color = COUITheme.colorScheme.disabledNeutral,
+        separatorColor: Color = COUITheme.colorScheme.labelTertiary,
+        backgroundColor: Color = COUITheme.colorScheme.labelPrimary.copy(alpha = 0.1f),
         highlightBackgroundColor: Color = COUITheme.colorScheme.primary.copy(alpha = 0.2f),
         disabledBackgroundColor: Color = COUITheme.colorScheme.disabledSecondaryVariant,
     ): BreadcrumbBarColors = remember(

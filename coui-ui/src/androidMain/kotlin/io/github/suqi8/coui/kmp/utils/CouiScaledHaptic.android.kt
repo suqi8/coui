@@ -44,8 +44,18 @@ private class ScaledHapticComposer(
         // VibrateUtils only vibrates while Settings.System "haptic_feedback_enabled" is on.
         if (Settings.System.getInt(context.contentResolver, Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) == 0) return
         val primitive = when (effect) {
-            CouiHapticEffect.Switch -> VibrationEffect.Composition.PRIMITIVE_CLICK
-            CouiHapticEffect.Strength, CouiHapticEffect.ScrollEdge -> VibrationEffect.Composition.PRIMITIVE_TICK
+            CouiHapticEffect.Switch,
+            CouiHapticEffect.KeyboardTouch,
+            CouiHapticEffect.LongVibrate,
+            CouiHapticEffect.ShortTripleVibrate,
+            CouiHapticEffect.EdgeShort,
+            CouiHapticEffect.EdgeSqueeze,
+            -> VibrationEffect.Composition.PRIMITIVE_CLICK
+
+            CouiHapticEffect.Strength,
+            CouiHapticEffect.ScrollEdge,
+            CouiHapticEffect.SteppingShort,
+            -> VibrationEffect.Composition.PRIMITIVE_TICK
         }
         vibrator.vibrate(
             VibrationEffect.startComposition()

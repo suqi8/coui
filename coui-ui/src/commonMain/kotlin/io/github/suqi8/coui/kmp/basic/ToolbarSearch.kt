@@ -71,6 +71,13 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
     /** `mToolbarIconScaleEnd`: the scale the toolbar children shrink to (out) or grow from (back). */
     internal var toolbarScaleEnd by mutableFloatStateOf(ExpandToolbarEndScale)
 
+    /**
+     * Whether the bar fades in over the toolbar instead of growing out of its icon: COUI
+     * `showInToolBar` / `hideInToolBar` without `isBlurEnable()`, reported by the bar's flat
+     * (non-material) [InputField].
+     */
+    internal var fade by mutableStateOf(false)
+
     /** The toolbar search icon's bounds in root pixels, [Rect.Zero] until measured. */
     internal var entryBoundsInRoot by mutableStateOf(Rect.Zero)
 
@@ -125,16 +132,20 @@ class ToolbarSearchState(initiallyExpanded: Boolean = false) {
     }
 
     internal suspend fun animateTo(expanded: Boolean) = coroutineScope {
+        // Without the material, mFadeInFadeOutAnimation alone drives the bar (children alpha p) and
+        // the toolbar children (alpha and scale 1 - p), on the icon expansion's spring and scales
+        // (initFadeInData / initFadeOutData).
+        val fadeOnly = fade
         if (expanded) {
             // setExpandData + configureToolbarIconSpringForExpand.
             toolbarScaleEnd = ExpandToolbarEndScale
             launch { iconExpandProgress.animateTo(1f, ExpandSpring) }
-            launch { toolbarProgress.animateTo(1f, ExpandToolbarSpring) }
+            launch { toolbarProgress.animateTo(1f, if (fadeOnly) ExpandSpring else ExpandToolbarSpring) }
         } else {
             // setCollapseData + configureToolbarIconSpringForCollapse.
             toolbarScaleEnd = CollapseToolbarInitScale
             launch { iconExpandProgress.animateTo(0f, CollapseSpring) }
-            launch { toolbarProgress.animateTo(0f, CollapseToolbarSpring) }
+            launch { toolbarProgress.animateTo(0f, if (fadeOnly) CollapseSpring else CollapseToolbarSpring) }
         }
     }
 
@@ -194,7 +205,8 @@ fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
         val scale = state.toolbarScale()
         scaleX = scale
         scaleY = scale
-        alpha = if (state.barVisible) 0f else state.toolbarAlpha()
+        // The fade path leaves the icon to fade with the other toolbar children.
+        alpha = if (state.barVisible && !state.fade) 0f else state.toolbarAlpha()
     }
 
 /**
@@ -218,7 +230,10 @@ fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graph
  * shows nothing while the bar is folded away. Inside, a [SearchBar] with an [InputField] and a
  * [CancelButton] runs the COUI 17 icon expansion: the capsule starts as a circle on the icon,
  * slides home and widens while its text fades in and it blurs most half way, and the cancel button
- * flies out of the icon from 0.6 scale, merging with the capsule like a metaball.
+ * flies out of the icon from 0.6 scale, merging with the capsule like a metaball. A flat capsule
+ * (`InputField(material = false)`) skips that expansion, as COUI does without blur
+ * (`mFadeInFadeOutAnimation`): the whole bar fades in in place while every toolbar child, the search
+ * icon included, fades and shrinks on the same spring.
  *
  * @param state the [ToolbarSearchState] shared with the [ToolbarSearchAnchor].
  * @param modifier the [Modifier] to be applied to the search bar.
@@ -238,6 +253,7 @@ fun ToolbarFloatingSearchBar(
             progress = { state.iconExpandProgress.value },
             sourceCenterX = { state.entryCenterXPx },
             interactive = { state.expanded },
+            onFadeChange = { state.fade = it },
         )
     }
     var barOrigin by remember { mutableStateOf(Offset.Zero) }

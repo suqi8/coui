@@ -4,15 +4,12 @@ package io.github.suqi8.coui.kmp.preference
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -24,6 +21,7 @@ import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.Switch
 import io.github.suqi8.coui.kmp.basic.SwitchColors
 import io.github.suqi8.coui.kmp.basic.SwitchDefaults
+import io.github.suqi8.coui.kmp.preference.internal.EndActionsSlot
 import io.github.suqi8.coui.kmp.preference.internal.forwardPressTo
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
@@ -81,14 +79,8 @@ fun SwitchPreference(
         summaryColor = summaryColor,
         startAction = startAction,
         endActions = {
-            Row(
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .align(Alignment.CenterVertically)
-                    .weight(1f, fill = false),
-            ) {
-                endActions()
-            }
+            // COUI coui_preference_widget_switch: the switch keeps 16dp to the title, BasicComponent's gap.
+            EndActionsSlot(endSpacing = 8.dp) { endActions() }
             SwitchPreferenceEndActions(
                 rowInteractionSource = rowInteractionSource,
                 checked = checked,

@@ -18,19 +18,27 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -74,6 +82,15 @@ enum class InstallLoadStyle {
 
     /** `bigRoundButton`: 220 x 44dp, accent-filled when idle. */
     Large,
+
+    /**
+     * `LOAD_STYLE_CIRCLE`: a 33dp icon button without a label or a progress fill. A 30dp rounded
+     * square (7dp corners) holds a download arrow: accent on the tinted fill when idle, a white
+     * pause icon on the accent fill while loading, and a white arrow on the accent fill when
+     * paused or failed. The new icon cross-fades in over 340ms, and a press shrinks the square to
+     * 90% in 200ms.
+     */
+    Circle,
 }
 
 /**
@@ -90,7 +107,8 @@ enum class InstallLoadStyle {
  * ease curve. This feedback is specific to this control: it uses neither the COUI 17 material nor
  * the generic press-scale springs.
  *
- * @param text The label of the [InstallLoadProgress].
+ * @param text The label of the [InstallLoadProgress]; the content description of the
+ *   [InstallLoadStyle.Circle] style, which draws no label.
  * @param onClick The callback when the [InstallLoadProgress] is clicked.
  * @param modifier The modifier to be applied to the [InstallLoadProgress]. A size set here overrides
  *   the [style] size.
@@ -114,7 +132,7 @@ fun InstallLoadProgress(
     enabled: Boolean = true,
     style: InstallLoadStyle = InstallLoadStyle.Small,
     colors: InstallLoadProgressColors = InstallLoadProgressDefaults.installLoadProgressColors(),
-    textStyle: TextStyle = COUITheme.textStyles.subtitle,
+    textStyle: TextStyle = COUITheme.textStyles.buttonM,
     interactionSource: MutableInteractionSource? = null,
 ) {
     val source = interactionSource ?: remember { MutableInteractionSource() }
@@ -139,6 +157,20 @@ fun InstallLoadProgress(
     val isZh = Locale.current.language.equals("zh", ignoreCase = true)
     val width = InstallLoadProgressDefaults.width(style, isZh)
     val height = InstallLoadProgressDefaults.height(style)
+
+    if (style == InstallLoadStyle.Circle) {
+        InstallLoadCircle(
+            text = text,
+            onClick = onClick,
+            modifier = modifier,
+            state = state,
+            enabled = enabled,
+            colors = colors,
+            source = source,
+            pressFraction = { pressFraction.value },
+        )
+        return
+    }
 
     Box(
         modifier = modifier
@@ -214,6 +246,109 @@ fun InstallLoadProgress(
 }
 
 /**
+ * The [InstallLoadStyle.Circle] button (`onDrawCircle`): the rounded square clipped from
+ * `mRoundRectPath` filled with the state color, and the state icon cross-faded in
+ * (`CIRCLE_IN_ALPHA_HOLDER` / `CIRCLE_OUT_ALPHA_HOLDER`).
+ */
+@Composable
+private fun InstallLoadCircle(
+    text: String,
+    onClick: () -> Unit,
+    state: InstallLoadState,
+    enabled: Boolean,
+    colors: InstallLoadProgressColors,
+    source: MutableInteractionSource,
+    pressFraction: () -> Float,
+    modifier: Modifier = Modifier,
+) {
+    val icon = if (state == InstallLoadState.Loading) CircleIcon.Pause else CircleIcon.Arrow
+    var previousIcon by remember { mutableStateOf(icon) }
+    val iconFade = remember { Animatable(1f) }
+    LaunchedEffect(icon) {
+        if (icon == previousIcon) return@LaunchedEffect
+        iconFade.snapTo(0f)
+        iconFade.animateTo(1f, tween(ReleaseDurationMillis, easing = MoveEase))
+        previousIcon = icon
+    }
+    // onDrawCircle: the accent fill except when idle, which uses the tinted fill.
+    val accentFill = state != InstallLoadState.Idle
+    val arrowPath = remember { circleIconPath(CircleArrowPathData) }
+    val pausePath = remember { circleIconPath(CirclePausePathData) }
+    val squircleEnabled = isSquircleEnabled()
+
+    Canvas(
+        modifier = modifier
+            .size(InstallLoadProgressDefaults.CircleSize)
+            .semantics { contentDescription = text }
+            .clickable(
+                interactionSource = source,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
+    ) {
+        val fraction = pressFraction()
+        val brightness = 1f - (1f - InstallLoadProgressDefaults.PressedBrightness) * fraction
+        // getDefaultSize(16.5dp, 1.5dp): a 15dp half side, pressed to 90%.
+        val halfSide = InstallLoadProgressDefaults.CircleRadius.toPx() * (1f - (1f - CirclePressedScale) * fraction)
+        val fill = colors.fillColor(if (accentFill) colors.progressColor else colors.trackColor, enabled, brightness)
+        drawSquircleRect(
+            color = fill,
+            cornerRadius = InstallLoadProgressDefaults.CircleCornerRadius.toPx(),
+            topLeft = Offset(center.x - halfSide, center.y - halfSide),
+            size = Size(halfSide * 2f, halfSide * 2f),
+            weight = COUIRoundCorner.UnspecifiedWeight,
+            squircleEnabled = squircleEnabled,
+        )
+        val iconColor = if (accentFill) colors.onProgressContentColor else colors.contentColor
+        val fade = iconFade.value
+        if (fade < 1f) {
+            drawCircleIcon(if (previousIcon == CircleIcon.Pause) pausePath else arrowPath, iconColor, 1f - fade)
+        }
+        drawCircleIcon(if (icon == CircleIcon.Pause) pausePath else arrowPath, iconColor, fade)
+    }
+}
+
+private enum class CircleIcon { Arrow, Pause }
+
+/** Draws a 36 x 42 viewport icon as a 12 x 14dp glyph centered in the button. */
+private fun DrawScope.drawCircleIcon(path: Path, color: Color, alpha: Float) {
+    if (alpha <= 0f) return
+    val width = CircleIconWidth.toPx()
+    val height = CircleIconHeight.toPx()
+    translate(left = center.x - width / 2f, top = center.y - height / 2f) {
+        scale(scaleX = width / CircleIconViewportWidth, scaleY = height / CircleIconViewportHeight, pivot = Offset.Zero) {
+            drawPath(path = path, color = color, alpha = alpha)
+        }
+    }
+}
+
+private fun circleIconPath(pathData: String): Path = PathParser().parsePathString(pathData).toPath().apply {
+    fillType = PathFillType.EvenOdd
+}
+
+/** coui_install_load_progress_circle_load / _reload: the download arrow. */
+private val CircleArrowPathData =
+    "M 20 34.2 L 31.6 22.5 C 32.4 21.7 33.6 21.7 34.4 22.5 C 35.2 23.3 35.2 24.5 34.4 25.3 L 20.8 39.1 " +
+        "C 19.2 40.7 16.7 40.7 15.1 39.1 L 1.6 25.5 C 0.8 24.7 0.8 23.5 1.6 22.7 C 2.4 21.9 3.6 21.9 4.4 22.7 " +
+        "L 16 34.2 L 16 4 C 16 2.9 16.9 2 18 2 C 19.1 2 20 2.9 20 4 L 20 34.2 Z"
+
+/** coui_install_load_progress_circle_pause: two bars. */
+private val CirclePausePathData =
+    "M 12 8 L 12 34 C 12 35.1 11.1 36 10 36 C 8.9 36 8 35.1 8 34 L 8 8 C 8 6.9 8.9 6 10 6 C 11.1 6 12 6.9 12 8 Z " +
+        "M 28 8 L 28 34 C 28 35.1 27.1 36 26 36 C 24.9 36 24 35.1 24 34 L 24 8 C 24 6.9 24.9 6 26 6 C 27.1 6 28 6.9 28 8 Z"
+
+/** The circle icons' vector size (12 x 14dp) and viewport (36 x 42). */
+private val CircleIconWidth = 12.dp
+private val CircleIconHeight = 14.dp
+private val CircleIconViewportWidth = 36f
+private val CircleIconViewportHeight = 42f
+
+/** COUIInstallLoadProgress: the pressed circle radius is `mDefaultCircleRadius * 0.9`. */
+private val CirclePressedScale = 0.9f
+
+/**
  * Draws the button capsule inset by [inset] on each side. COUIInstallLoadProgress adds a smooth round
  * rect of radius h / 2 without a weight, which ColorOS 17 draws as the soft capsule.
  */
@@ -277,6 +412,18 @@ object InstallLoadProgressDefaults {
     /** The height of the [InstallLoadStyle.Large] style (COUI coui_install_download_progress_height_large). */
     val LargeHeight = 44.dp
 
+    /** The size of the [InstallLoadStyle.Circle] style (COUI coui_install_download_progress_circle_width / _height). */
+    val CircleSize = 33.dp
+
+    /**
+     * The half side of the [InstallLoadStyle.Circle] square: coui_install_download_progress_default_circle_radius
+     * (16.5dp) less 1.5dp (`getDefaultSize`).
+     */
+    val CircleRadius = 15.dp
+
+    /** The corner radius of the [InstallLoadStyle.Circle] square (COUI coui_install_download_progress_circle_round_border_radius). */
+    val CircleCornerRadius = 7.dp
+
     /** The horizontal padding of the label (Widget.COUI.COUILoadProgress couiInstallPadding). */
     val TextPadding = 6.dp
 
@@ -287,12 +434,14 @@ object InstallLoadProgressDefaults {
     fun width(style: InstallLoadStyle, isChineseLocale: Boolean): Dp = when (style) {
         InstallLoadStyle.Small -> if (isChineseLocale) SmallWidth else SmallWidth + SmallForeignLanguageExtraWidth
         InstallLoadStyle.Large -> LargeWidth
+        InstallLoadStyle.Circle -> CircleSize
     }
 
     /** The height of [style]. */
     fun height(style: InstallLoadStyle): Dp = when (style) {
         InstallLoadStyle.Small -> SmallHeight
         InstallLoadStyle.Large -> LargeHeight
+        InstallLoadStyle.Circle -> CircleSize
     }
 
     /**
@@ -303,7 +452,7 @@ object InstallLoadProgressDefaults {
     @Composable
     fun installLoadProgressColors(
         progressColor: Color = COUITheme.colorScheme.primary,
-        trackColor: Color = COUITheme.colorScheme.tertiaryContainer,
+        trackColor: Color = COUITheme.colorScheme.secondary,
         disabledColor: Color = COUITheme.colorScheme.secondaryVariant,
         contentColor: Color = COUITheme.colorScheme.primary,
         onProgressContentColor: Color = COUITheme.colorScheme.onPrimary,

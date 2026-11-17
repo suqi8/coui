@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.NonRestartableComposable
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -43,11 +45,12 @@ data class TimeValue(
  * Hour and minute scroll wheels arranged like the COUI time picker
  * (COUITimeLimitPicker). In 12-hour mode an AM/PM wheel is added; COUI places
  * it before the hour wheel for locales whose time pattern starts with the
- * day period (e.g. Chinese) and after the minute wheel otherwise, which is
- * controlled here by [amPmFirst]. Optional unit labels (e.g. "h" / "min")
+ * day period (e.g. Chinese) and after the minute wheel otherwise, which
+ * [amPmFirst] follows by default. Optional unit labels (e.g. "h" / "min")
  * are drawn after the selected value on its baseline, matching the COUI unit
  * text. Two hairlines frame the selected row at the center ± 24dp, inset 16dp
- * from both sides, and the AM/PM wheel uses an 18dp unselected text size.
+ * from both sides, the AM/PM wheel uses an 18dp unselected text size, and the
+ * picker is at most [NumberPickerDefaults.PickersMaxWidth] wide.
  *
  * @param value The currently selected time. The hour is always in 24-hour form.
  * @param onValueChange The callback invoked when the selected time changes.
@@ -56,11 +59,13 @@ data class TimeValue(
  * @param is24Hour Whether the hour wheel uses the 24-hour format. When false,
  *   hours display as 1..12 with an AM/PM wheel.
  * @param amPmFirst Whether the AM/PM wheel is placed before the hour wheel
- *   (only used when [is24Hour] is false).
+ *   (only used when [is24Hour] is false). Defaults to the locale's order.
  * @param amLabel The display string for AM on the AM/PM wheel.
  * @param pmLabel The display string for PM on the AM/PM wheel.
  * @param hourUnit The unit label drawn beside the selected hour; empty to hide.
  * @param minuteUnit The unit label drawn beside the selected minute; empty to hide.
+ * @param visibleItemCount The number of visible rows of every wheel (COUITimeLimitPicker
+ *   setRowNumber). Must be odd and at least 3.
  * @param hourColumnWidth The width of the hour column.
  * @param minuteColumnWidth The width of the minute column.
  * @param amPmColumnWidth The width of the AM/PM column.
@@ -77,17 +82,18 @@ fun TimePicker(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     is24Hour: Boolean = true,
-    amPmFirst: Boolean = false,
-    amLabel: String = TimePickerDefaults.AmLabel,
-    pmLabel: String = TimePickerDefaults.PmLabel,
+    amPmFirst: Boolean = TimePickerDefaults.localeAmPmFirst(),
+    amLabel: String = TimePickerDefaults.amLabel(),
+    pmLabel: String = TimePickerDefaults.pmLabel(),
     hourUnit: String = TimePickerDefaults.HourUnit,
     minuteUnit: String = TimePickerDefaults.MinuteUnit,
+    visibleItemCount: Int = 3,
     hourColumnWidth: Dp = TimePickerDefaults.HourColumnWidth,
     minuteColumnWidth: Dp = TimePickerDefaults.MinuteColumnWidth,
     amPmColumnWidth: Dp = TimePickerDefaults.AmPmColumnWidth,
     colors: NumberPickerColors = NumberPickerDefaults.colors(),
-    dividerColor: Color = COUITheme.colorScheme.dividerLine,
-    textStyle: TextStyle = COUITheme.textStyles.title3,
+    dividerColor: Color = COUITheme.colorScheme.divider,
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
     insideMargin: PaddingValues = TimePickerDefaults.InsideMargin,
 ) {
@@ -141,6 +147,7 @@ fun TimePicker(
 
     Row(
         modifier = modifier
+            .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
@@ -153,6 +160,7 @@ fun TimePicker(
                 onValueChange = onAmPmChange,
                 enabled = enabled,
                 label = amPmLabel,
+                visibleItemCount = visibleItemCount,
                 columnWidth = amPmColumnWidth,
                 colors = colors,
                 textStyle = textStyle,
@@ -167,6 +175,7 @@ fun TimePicker(
             range = hourRange,
             label = hourLabel,
             unit = hourUnit,
+            visibleItemCount = visibleItemCount,
             wrapAround = true,
             colors = colors,
             textStyle = textStyle,
@@ -180,6 +189,7 @@ fun TimePicker(
             range = 0..59,
             label = TwoDigitLabel,
             unit = minuteUnit,
+            visibleItemCount = visibleItemCount,
             wrapAround = true,
             longPressStepInterval = TimePickerDefaults.MinuteStepInterval,
             colors = colors,
@@ -192,6 +202,7 @@ fun TimePicker(
                 onValueChange = onAmPmChange,
                 enabled = enabled,
                 label = amPmLabel,
+                visibleItemCount = visibleItemCount,
                 columnWidth = amPmColumnWidth,
                 colors = colors,
                 textStyle = textStyle,
@@ -208,6 +219,7 @@ private fun AmPmWheel(
     onValueChange: (Int) -> Unit,
     enabled: Boolean,
     label: (Int) -> String,
+    visibleItemCount: Int,
     columnWidth: Dp,
     colors: NumberPickerColors,
     textStyle: TextStyle,
@@ -220,6 +232,7 @@ private fun AmPmWheel(
         enabled = enabled,
         range = 0..1,
         label = label,
+        visibleItemCount = visibleItemCount,
         wrapAround = false,
         colors = colors,
         textStyle = textStyle,
@@ -251,11 +264,23 @@ object TimePickerDefaults {
     /** Auto-repeat interval of the minute wheel while a side row is held (COUITimeLimitPicker). */
     val MinuteStepInterval: Long = 100L
 
-    /** Default AM label, as COUI shows in English. */
-    val AmLabel = "AM"
+    /** The AM label of the current locale (COUI coui_time_picker_ampm: "AM", "上午" in Chinese). */
+    @Composable
+    fun amLabel(): String = rememberPickerSymbols().am
 
-    /** Default PM label, as COUI shows in English. */
-    val PmLabel = "PM"
+    /** The PM label of the current locale (COUI coui_time_picker_ampm: "PM", "下午" in Chinese). */
+    @Composable
+    fun pmLabel(): String = rememberPickerSymbols().pm
+
+    /**
+     * Whether the current locale puts AM/PM before the hour, read from its best "hm" time pattern
+     * as COUITimeLimitPicker.reorderSpinners does (true for Chinese, false for English).
+     */
+    @Composable
+    fun localeAmPmFirst(): Boolean {
+        val locale = Locale.current
+        return remember(locale) { amPmBeforeHour(platformTimePattern()) }
+    }
 
     /** Default hour unit label (hidden). */
     val HourUnit = ""

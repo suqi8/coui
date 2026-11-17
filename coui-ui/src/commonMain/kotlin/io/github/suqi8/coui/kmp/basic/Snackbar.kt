@@ -55,7 +55,6 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -461,7 +460,7 @@ fun Snackbar(
             else -> RoundedCornerShape(radius)
         }
     }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
 
     Surface(
         modifier = modifier
@@ -691,7 +690,7 @@ object SnackbarDefaults {
 
     /** The default text style of the message and action label (COUI couiTextAppearanceButton: 14sp, sans-serif-medium). */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.body2.copy(fontWeight = FontWeight.Medium)
+    fun textStyle(): TextStyle = COUITheme.textStyles.bodyM.copy(fontWeight = FontWeight.Medium)
 
     /**
      * The default [SnackbarColors]. Container and content follow COUI couiColorBackgroundTop /
@@ -701,9 +700,9 @@ object SnackbarDefaults {
     @Composable
     fun snackbarColors(
         containerColor: Color = COUITheme.colorScheme.backgroundTop,
-        contentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
         actionContentColor: Color = COUITheme.colorScheme.primaryTextOnPopup,
-        dismissActionContentColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+        dismissActionContentColor: Color = COUITheme.colorScheme.labelTertiary,
     ): SnackbarColors = remember(containerColor, contentColor, actionContentColor, dismissActionContentColor) {
         SnackbarColors(
             containerColor = containerColor,
@@ -834,7 +833,8 @@ enum class NotificationSnackbarIconType {
  * [SnackbarDuration.Long]); see the [SnackbarData] overload.
  *
  * @param title The title (COUI content text).
- * @param actionLabel The label of the action button, or null for no button.
+ * @param actionLabel The label of the action button. COUI requires one (`COUINotificationSnackBar.make`
+ *   rejects an empty button text).
  * @param onActionClick Called when the action button is clicked.
  * @param onDismiss Called when the close button is clicked or the card is swiped away.
  * @param modifier The modifier to be applied to the [NotificationSnackbar].
@@ -849,7 +849,7 @@ enum class NotificationSnackbarIconType {
 @Composable
 fun NotificationSnackbar(
     title: String,
-    actionLabel: String?,
+    actionLabel: String,
     onActionClick: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -873,7 +873,7 @@ fun NotificationSnackbar(
     val shape = remember(cornerRadius, squircleEnabled) {
         if (squircleEnabled) SquircleShape(cornerRadius, COUIRoundCorner.UnspecifiedWeight) else RoundedCornerShape(cornerRadius)
     }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
 
     val swipeModifier = if (swipeToDismiss) {
         Modifier.pointerInput(Unit) {
@@ -1016,7 +1016,7 @@ fun NotificationSnackbar(
                 Text(
                     text = title,
                     color = colors.titleColor,
-                    style = COUITheme.textStyles.subtitle,
+                    style = COUITheme.textStyles.buttonM,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -1024,14 +1024,14 @@ fun NotificationSnackbar(
                     Text(
                         text = subtitle,
                         color = colors.subtitleColor,
-                        style = COUITheme.textStyles.footnote2,
+                        style = COUITheme.textStyles.bodyXS,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 2.dp),
                     )
                 }
             }
-            if (!actionLabel.isNullOrEmpty()) {
+            if (actionLabel.isNotEmpty()) {
                 TextButton(
                     text = actionLabel,
                     onClick = onActionClick,
@@ -1075,7 +1075,9 @@ fun NotificationSnackbar(
  * }
  * ```
  *
- * @param data The [SnackbarData] of the snack bar.
+ * @param data The [SnackbarData] of the snack bar. Set its [SnackbarVisuals.actionLabel]: COUI
+ *   requires the button text (`COUINotificationSnackBar.make` throws without one); without it the
+ *   card is drawn with no button.
  * @param modifier The modifier to be applied to the [NotificationSnackbar].
  * @param subtitle The optional subtitle.
  * @param icon The optional leading image.
@@ -1102,7 +1104,7 @@ fun NotificationSnackbar(
     val currentData by rememberUpdatedState(data)
     NotificationSnackbar(
         title = data.visuals.message,
-        actionLabel = data.visuals.actionLabel,
+        actionLabel = data.visuals.actionLabel.orEmpty(),
         onActionClick = { scope.launch { currentData.performAction() } },
         onDismiss = { scope.launch { currentData.dismiss() } },
         modifier = modifier,
@@ -1142,9 +1144,9 @@ data class NotificationSnackbarColors(
 @Composable
 fun SnackbarDefaults.notificationSnackbarColors(
     containerColor: Color = COUITheme.colorScheme.backgroundTop,
-    titleColor: Color = COUITheme.colorScheme.onSurfaceContainer,
-    subtitleColor: Color = COUITheme.colorScheme.onSurfaceVariantSummary,
-    closeIconColor: Color = COUITheme.colorScheme.onSurfaceVariantActions,
+    titleColor: Color = COUITheme.colorScheme.labelPrimary,
+    subtitleColor: Color = COUITheme.colorScheme.labelSecondaryVariant,
+    closeIconColor: Color = COUITheme.colorScheme.labelTertiary,
     actionColors: TextButtonColors = ButtonDefaults.textButtonColors(),
 ): NotificationSnackbarColors = remember(containerColor, titleColor, subtitleColor, closeIconColor, actionColors) {
     NotificationSnackbarColors(

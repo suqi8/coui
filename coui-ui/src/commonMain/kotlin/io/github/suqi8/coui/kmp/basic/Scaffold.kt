@@ -84,7 +84,7 @@ fun Scaffold(
     floatingToolbarPosition: ToolbarPosition = ToolbarPosition.BottomCenter,
     snackbarHost: @Composable () -> Unit = {},
     popupHost: @Composable () -> Unit = { COUIPopupHost() },
-    containerColor: Color = COUITheme.colorScheme.surface,
+    containerColor: Color = COUITheme.colorScheme.backgroundWithCard,
     contentWindowInsets: WindowInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout),
     content: @Composable (PaddingValues) -> Unit,
 ) {

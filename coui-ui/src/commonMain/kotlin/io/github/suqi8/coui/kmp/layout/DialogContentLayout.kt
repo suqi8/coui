@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -56,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.NavigationEventTransitionState
 import androidx.navigationevent.compose.NavigationBackHandler
@@ -105,6 +108,13 @@ import kotlinx.coroutines.launch
  * @param topInset Optional top inset override. If null, calculated from window insets.
  * @param backgroundModifier Applied inside the panel's corner clip, below the content.
  * @param materialStroke Whether to draw the COUI 17 material stroke of a blurred panel.
+ * @param customContent The COUI `customPanel` / `listPanel` slot between the message and
+ *   [content]. Its presence drives the COUI content spacing (`COUIAlertDialogBuilder.initContentSpacing`).
+ * @param customContentPaddingBottom The bottom padding of [customContent]; the center layouts pad
+ *   their `customPanel` by `coui_alert_dialog_customer_layout_padding_bottom`, the assignment
+ *   layouts do not.
+ * @param summaryMaxHeight The max height of the message scroll view, see [DialogContent].
+ * @param dismissOnClickOutside Whether a tap outside the panel invokes [onDismissRequest].
  * @param content The content of the dialog.
  */
 @Suppress("ktlint:compose:modifier-not-used-at-root")
@@ -131,6 +141,10 @@ internal fun DialogContentLayout(
     cornerRadius: Dp? = null,
     topInset: Dp? = null,
     materialStroke: Boolean = false,
+    customContent: (@Composable () -> Unit)? = null,
+    customContentPaddingBottom: Dp = DialogDefaults.CustomContentPaddingBottom,
+    summaryMaxHeight: Dp = Dp.Unspecified,
+    dismissOnClickOutside: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val animationProgress = remember { Animatable(0f, visibilityThreshold = 0.0001f) }
@@ -226,7 +240,7 @@ internal fun DialogContentLayout(
         }
 
         if (enableWindowDim) {
-            val baseColor = COUITheme.colorScheme.windowDimming
+            val baseColor = COUITheme.colorScheme.mask
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -266,6 +280,13 @@ internal fun DialogContentLayout(
             }
         }
 
+        val wrappedCustomContent: (@Composable () -> Unit)? = if (customContent != null) {
+            {
+                DialogSlotLocals(requestDismiss = requestDismiss, materialStroke = materialStroke, content = customContent)
+            }
+        } else {
+            null
+        }
         DialogContent(
             title = title,
             titleColor = titleColor,
@@ -286,22 +307,35 @@ internal fun DialogContentLayout(
             topInset = topInset,
             backgroundModifier = backgroundModifier,
             materialStroke = materialStroke,
+            customContent = wrappedCustomContent,
+            customContentPaddingBottom = customContentPaddingBottom,
+            summaryMaxHeight = summaryMaxHeight,
+            dismissOnClickOutside = dismissOnClickOutside,
             content = {
-                CompositionLocalProvider(
-                    LocalDismissState provides requestDismiss,
-                    // COUIButtonBarLayout.setBlurBackgroundWindow: the buttons follow the panel blur.
-                    LocalDialogMaterial provides materialStroke,
-                    // The page backdrop lies behind the panel; buttons on it keep their fill.
-                    LocalMaterialBackdrop provides null,
-                    // A menu opened on the panel would blur the page beneath it, not the panel.
-                    LocalPopupMaterialBlur provides null,
-                    LocalCardListPosition provides CardListPosition.None,
-                ) {
-                    content()
-                }
+                DialogSlotLocals(requestDismiss = requestDismiss, materialStroke = materialStroke, content = content)
             },
         )
     }
+}
+
+/** The composition locals every dialog slot sees. */
+@Composable
+private fun DialogSlotLocals(
+    requestDismiss: () -> Unit,
+    materialStroke: Boolean,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalDismissState provides requestDismiss,
+        // COUIButtonBarLayout.setBlurBackgroundWindow: the buttons follow the panel blur.
+        LocalDialogMaterial provides materialStroke,
+        // The page backdrop lies behind the panel; buttons on it keep their fill.
+        LocalMaterialBackdrop provides null,
+        // A menu opened on the panel would blur the page beneath it, not the panel.
+        LocalPopupMaterialBlur provides null,
+        LocalCardListPosition provides CardListPosition.None,
+        content = content,
+    )
 }
 
 @Suppress("ktlint:compose:modifier-not-used-at-root")
@@ -326,6 +360,10 @@ internal fun DialogContent(
     cornerRadius: Dp? = null,
     topInset: Dp? = null,
     materialStroke: Boolean = false,
+    customContent: (@Composable () -> Unit)? = null,
+    customContentPaddingBottom: Dp = DialogDefaults.CustomContentPaddingBottom,
+    summaryMaxHeight: Dp = Dp.Unspecified,
+    dismissOnClickOutside: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val resolvedCornerRadius = cornerRadius ?: DialogDefaults.CornerRadius
@@ -421,17 +459,23 @@ internal fun DialogContent(
                 },
             )
             .fillMaxSize()
-            .pointerInput(Unit) {
+            .pointerInput(dismissOnClickOutside) {
                 detectTapGestures(
-                    onTap = { currentOnDismiss?.invoke() },
+                    onTap = { if (dismissOnClickOutside) currentOnDismiss?.invoke() },
                 )
             }
-            .semantics {
-                onClick(label = "Dismiss") {
-                    currentOnDismiss?.invoke()
-                    true
-                }
-            }
+            .then(
+                if (dismissOnClickOutside) {
+                    Modifier.semantics {
+                        onClick(label = "Dismiss") {
+                            currentOnDismiss?.invoke()
+                            true
+                        }
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .padding(horizontal = outsideMargin.width)
             .padding(
                 top = calculatedTopInset,
@@ -443,73 +487,170 @@ internal fun DialogContent(
         ) {
             val summaryMultiline = remember { mutableStateOf(false) }
             title?.let {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = insideMargin.width)
-                        .padding(top = insideMargin.height, bottom = TitleMarginBottom),
+                DialogTitle(
                     text = it,
-                    // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp). Its
-                    // sans-serif-semibold family is overridden by the inherited
-                    // android:textFontWeight 550.
-                    style = COUITheme.textStyles.title4,
-                    fontWeight = TitleFontWeight,
-                    textAlign = TextAlign.Center,
                     color = titleColor,
+                    modifier = Modifier
+                        .padding(horizontal = insideMargin.width)
+                        .padding(
+                            top = insideMargin.height,
+                            // COUIAlertDialogBuilder.initContentSpacing: a dialog with no message,
+                            // custom view or list adds coui_alert_dialog_scroll_padding_bottom_message
+                            // below the title.
+                            bottom = if (summary == null && customContent == null) {
+                                TitleMarginBottom + MessagePaddingBottom
+                            } else {
+                                TitleMarginBottom
+                            },
+                        ),
                 )
             }
             summary?.let {
-                Text(
+                // COUI keeps the message in a COUIMaxHeightNestedScrollView inside the weighted
+                // contentPanel, so a long message scrolls while the button bar stays in view.
+                Box(
                     modifier = Modifier
+                        .weight(1f, fill = false)
+                        .then(
+                            if (summaryMaxHeight.isSpecified) Modifier.heightIn(max = summaryMaxHeight) else Modifier,
+                        )
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = insideMargin.width)
+                            // COUIAlertDialogMessageScrollViewStyle: 0dp above, 16dp below; 4dp below
+                            // once a custom view or a list follows (initContentSpacing). With no
+                            // title the message takes the title's top margin instead.
+                            .padding(
+                                top = if (title == null) insideMargin.height else MessagePaddingTop,
+                                bottom = if (customContent != null) {
+                                    MessagePaddingBottomWithCustomContent
+                                } else {
+                                    MessagePaddingBottom
+                                },
+                            ),
+                        text = it,
+                        // COUIAlertDialogMessageStyle: couiTextBodyS (13sp).
+                        style = COUITheme.textStyles.bodyS,
+                        // COUIAlertDialogMessageView centers a single-line message and start-aligns
+                        // once it wraps.
+                        textAlign = if (summaryMultiline.value) TextAlign.Start else TextAlign.Center,
+                        color = summaryColor,
+                        onTextLayout = { summaryMultiline.value = it.lineCount > 1 },
+                    )
+                }
+            }
+            customContent?.let {
+                // COUI customPanel / listPanel: weighted like the contentPanel, so a tall custom
+                // view shrinks before the button bar does.
+                Box(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
                         .fillMaxWidth()
-                        .padding(horizontal = insideMargin.width)
-                        // COUIAlertDialogMessageScrollViewStyle: 0dp above, 16dp below. With no
-                        // title the message takes the title's top margin instead.
-                        .padding(
-                            top = if (title == null) insideMargin.height else MessagePaddingTop,
-                            bottom = MessagePaddingBottom,
-                        ),
-                    text = it,
-                    // COUIAlertDialogMessageStyle: couiTextBodyS (13sp).
-                    style = COUITheme.textStyles.footnote1,
-                    // COUIAlertDialogMessageView centers a single-line message and start-aligns
-                    // once it wraps.
-                    textAlign = if (summaryMultiline.value) TextAlign.Start else TextAlign.Center,
-                    color = summaryColor,
-                    onTextLayout = { summaryMultiline.value = it.lineCount > 1 },
-                )
+                        .padding(bottom = customContentPaddingBottom),
+                ) {
+                    it()
+                }
             }
             content()
         }
     }
 }
 
+/**
+ * The COUI dialog title (`COUIDialogTitle` inside the `alert_title_scroll_view`
+ * `COUIMaxHeightScrollView`): centered `couiTextHeadlineS` text that scrolls once it outgrows
+ * [DialogDefaults.titleMaxHeight].
+ */
+@Composable
+internal fun DialogTitle(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(max = DialogDefaults.titleMaxHeight())
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = text,
+            // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp). Its
+            // sans-serif-semibold family is overridden by the inherited
+            // android:textFontWeight 550.
+            style = COUITheme.textStyles.headlineS,
+            fontWeight = TitleFontWeight,
+            textAlign = TextAlign.Center,
+            color = color,
+        )
+    }
+}
+
 object DialogDefaults {
     /**
-     * Window-size threshold above which the dialog is centered (instead of bottom-aligned)
-     * and uses scale-in transitions. Roughly aligns with the Window Size Class
-     * compact -> expanded boundary (840 dp width / 480 dp height).
+     * Whether the window takes the large-screen presentation, in which COUI centers the dialog with
+     * the center-dialog transitions. `COUIAlertDialogBuilder.isForceCenterStyleInLargeScreen` checks
+     * `COUIResponsiveUtils.isLargePadWindow`: the window is `WindowTotalSizeClass.Expanded` in
+     * either orientation, that is at least 840dp wide and 480dp tall, and not a portrait window
+     * narrower than 960dp once it is 900dp or taller (`ExpandedPortrait`). COUI also excludes
+     * foldable devices, which cannot be detected here.
      */
     @Composable
     internal fun isLargeScreen(): Boolean {
         val windowInfo = LocalWindowInfo.current
         val windowWidth = windowInfo.containerDpSize.width
         val windowHeight = windowInfo.containerDpSize.height
-        return windowHeight >= 480.dp && windowWidth >= 840.dp
+        return isExpandedWindow(windowWidth, windowHeight) || isExpandedWindow(windowHeight, windowWidth)
     }
+
+    /**
+     * `WindowTotalSizeClass.fromWidthAndHeight(width, height) == Expanded`, after the COUI
+     * responsive breakpoints (`Breakpoints`: 840dp expanded width, 480 / 900dp medium / expanded
+     * height, 960dp expanded maximum width).
+     */
+    private fun isExpandedWindow(width: Dp, height: Dp): Boolean {
+        if (width < 840.dp || height < 480.dp) return false
+        return height < 900.dp || !(height > width && width < 960.dp)
+    }
+
+    /**
+     * The max height of the dialog title before it scrolls. COUI
+     * `coui_alert_dialog_builder_title_scroll_max_height`: 80dp, 120dp from `values-h300dp`, 160dp
+     * from `values-h560dp`.
+     */
+    @Composable
+    internal fun titleMaxHeight(): Dp {
+        val windowHeight = LocalWindowInfo.current.containerDpSize.height
+        return when {
+            windowHeight >= 560.dp -> 160.dp
+            windowHeight >= 300.dp -> 120.dp
+            else -> 80.dp
+        }
+    }
+
+    /**
+     * The bottom padding of a custom view in the center layouts. COUI
+     * `coui_alert_dialog_customer_layout_padding_bottom` on the `customPanel` of
+     * `coui_center_alert_dialog_layout`.
+     */
+    val CustomContentPaddingBottom = 8.dp
 
     /**
      * The default color of the title.
      */
     @Composable
-    fun titleColor() = COUITheme.colorScheme.onBackground
+    fun titleColor() = COUITheme.colorScheme.labelPrimary
 
     /**
      * The default color of the summary. COUI 17 `COUIAlertDialogMessageStyle` uses
      * `?couiColorLabelSecondary`.
      */
     @Composable
-    fun summaryColor() = COUITheme.colorScheme.onSurfaceSecondary
+    fun summaryColor() = COUITheme.colorScheme.labelSecondary
 
     /**
      * The default background color of the dialog (`?couiColorSurface`, the opaque fill
@@ -518,7 +659,7 @@ object DialogDefaults {
      * paints the panel through `backgroundModifier`.
      */
     @Composable
-    fun backgroundColor() = COUITheme.colorScheme.background
+    fun backgroundColor() = COUITheme.colorScheme.surface
 
     /**
      * The default corner radius of the dialog panel. COUI 17 `COUIAlertDialogMaxLinearLayout`
@@ -529,10 +670,12 @@ object DialogDefaults {
     val CornerRadius = 45.dp
 
     /**
-     * The default upper bound on dialog content width. Keeps dialogs from stretching across
-     * tablet / desktop windows. COUI `coui_dialog_max_width`.
+     * The default upper bound on the visible panel width. COUI `COUIAlertDialogLayoutStyle` caps
+     * the `parentPanel` at `coui_dialog_max_width` (392dp), a width that includes the
+     * `coui_dialog_layout_margin_horizontal` (16dp) side insets of its background, leaving 360dp for
+     * the panel itself.
      */
-    val MaxWidth = 392.dp
+    val MaxWidth = 360.dp
 
     /**
      * The upper bound on the panel height. COUI `COUIAlertDialogLayoutStyle` caps the panel at
@@ -607,6 +750,12 @@ private val MessagePaddingTop = 0.dp
 
 /** COUI coui_alert_dialog_scroll_padding_bottom_message_tallDialog (the message scroll view style). */
 private val MessagePaddingBottom = 16.dp
+
+/**
+ * COUI coui_alert_dialog_scroll_padding_bottom_message_has_title_in_assignment, the message bottom
+ * padding `COUIAlertDialogBuilder.initContentSpacing` sets once a custom view or a list follows.
+ */
+private val MessagePaddingBottomWithCustomContent = 4.dp
 
 /**
  * The gap between a bottom-aligned dialog and the bottom screen edge, after

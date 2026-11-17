@@ -23,8 +23,9 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  *
  * @param show Whether the [OverlaySecurityDialog] is shown.
  * @param onConfirm Invoked when the confirm button is clicked, with the current checkbox state.
- * @param onCancel Invoked when the cancel button is clicked, the user taps outside, or presses
- *   the back button.
+ * @param onCancel Invoked when the cancel button is clicked or the user presses the back button.
+ *   A tap outside the panel does nothing, as COUI makes the dialog non-cancelable once a selection
+ *   listener is set (`COUISecurityAlertDialogBuilder.configureDefaultPredictiveBack`).
  * @param modifier The modifier to be applied to the [OverlaySecurityDialog].
  * @param title The title of the dialog.
  * @param summary The summary (message) of the dialog.
@@ -33,6 +34,8 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  * @param onLinkClick Invoked when the statement link is clicked.
  * @param checkboxText The label of the checkbox row. Hidden when null.
  * @param initialChecked The initial checkbox state, re-applied each time the dialog is shown.
+ * @param onCheckedChange Invoked each time the checkbox is toggled, like the
+ *   `onSelected(0, isChecked)` report of `COUISecurityAlertDialogBuilder`.
  * @param confirmText The label of the confirm (positive) button.
  * @param cancelText The label of the cancel (negative) button.
  * @param titleColor The color of the title.
@@ -42,6 +45,15 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  * @param enableWindowDim Whether to enable window dimming when the dialog is shown.
  * @param onDismissFinished The callback when the [OverlaySecurityDialog] is completely dismissed.
  * @param renderInRootScaffold Whether to render the dialog in the root (outermost) Scaffold.
+ * @param backgroundModifier A [Modifier] applied inside the panel's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred window background
+ *   (`COUIAlertDialogBuilder.setBlurBackgroundDrawable`), e.g. with coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark))`, and pass a
+ *   transparent [backgroundColor] alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
+ *   The cancel / confirm buttons then turn material too
+ *   (`COUIButtonBarLayout.setBlurBackgroundWindow`).
  */
 @Composable
 fun OverlaySecurityDialog(
@@ -49,6 +61,7 @@ fun OverlaySecurityDialog(
     onConfirm: (dontRemind: Boolean) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     summary: String? = null,
     statement: String? = null,
@@ -56,6 +69,7 @@ fun OverlaySecurityDialog(
     onLinkClick: (() -> Unit)? = null,
     checkboxText: String? = SecurityDialogDefaults.CheckboxText,
     initialChecked: Boolean = false,
+    onCheckedChange: ((checked: Boolean) -> Unit)? = null,
     confirmText: String = SecurityDialogDefaults.ConfirmText,
     cancelText: String = SecurityDialogDefaults.CancelText,
     titleColor: Color = DialogDefaults.titleColor(),
@@ -65,6 +79,7 @@ fun OverlaySecurityDialog(
     enableWindowDim: Boolean = true,
     onDismissFinished: (() -> Unit)? = null,
     renderInRootScaffold: Boolean = true,
+    materialStroke: Boolean = false,
 ) {
     SecurityDialogContentLayout(
         show = show,
@@ -85,6 +100,7 @@ fun OverlaySecurityDialog(
         onConfirm = onConfirm,
         onCancel = onCancel,
         modifier = modifier,
+        backgroundModifier = backgroundModifier,
         title = title,
         summary = summary,
         statement = statement,
@@ -92,6 +108,7 @@ fun OverlaySecurityDialog(
         onLinkClick = onLinkClick,
         checkboxText = checkboxText,
         initialChecked = initialChecked,
+        onCheckedChange = onCheckedChange,
         confirmText = confirmText,
         cancelText = cancelText,
         titleColor = titleColor,
@@ -100,5 +117,6 @@ fun OverlaySecurityDialog(
         colors = colors,
         enableWindowDim = enableWindowDim,
         onDismissFinished = onDismissFinished,
+        materialStroke = materialStroke,
     )
 }

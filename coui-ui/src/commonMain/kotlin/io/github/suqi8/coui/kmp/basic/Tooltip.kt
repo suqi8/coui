@@ -64,7 +64,6 @@ import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.addPathNodes
@@ -194,14 +193,6 @@ sealed interface TooltipScope {
 
     /** The anchor layout coordinates, or null before the anchor is placed. */
     fun obtainAnchorBounds(): LayoutCoordinates?
-}
-
-/** The scope of the legacy Miuix tooltip, which carries no COUI placement. */
-internal class TooltipScopeImpl(
-    override val positioning: TooltipAnchorPosition,
-    private val anchorBounds: () -> LayoutCoordinates?,
-) : TooltipScope {
-    override fun obtainAnchorBounds(): LayoutCoordinates? = anchorBounds()
 }
 
 /**
@@ -762,8 +753,7 @@ private fun Modifier.tooltipAnchorSemantics(
  * content is clipped to the bubble and receives the max width / max height the placement allows.
  *
  * Inside a [TooltipBox] the bubble sizes itself the COUI way (narrowing next to the anchor, shrinking
- * and scrolling when neither side fits) and draws the arrow; inside the deprecated Miuix tooltip box
- * it draws no arrow.
+ * and scrolling when neither side fits) and draws the arrow.
  *
  * @param modifier the modifier applied to the bubble window.
  * @param style the [TooltipStyle] whose window inset, width and colours apply.
@@ -810,7 +800,7 @@ fun TooltipScope.TooltipBubble(
         )
     }
     val showing = couiScope?.state?.transition?.targetState ?: true
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
 
     val shadow = if (showing) {
         Modifier.dropShadow(shape = shape, shadow = if (isDark) TooltipShadowDark else TooltipShadowLight)
@@ -995,7 +985,7 @@ fun TooltipScope.Tooltip(
         Text(
             text = text,
             color = colors.contentColor,
-            style = COUITheme.textStyles.footnote1,
+            style = COUITheme.textStyles.bodyS,
         )
     }
 }
@@ -1257,9 +1247,9 @@ fun TooltipScope.ImageTooltip(
 @Composable
 private fun ColumnScope.TooltipTitleAndBody(title: String?, text: String, colors: TooltipColors) {
     if (title != null) {
-        Text(text = title, color = colors.titleColor, style = COUITheme.textStyles.headline1)
+        Text(text = title, color = colors.titleColor, style = COUITheme.textStyles.headlineXS)
     }
-    Text(text = text, color = colors.contentColor, style = COUITheme.textStyles.footnote1)
+    Text(text = text, color = colors.contentColor, style = COUITheme.textStyles.bodyS)
 }
 
 /**
@@ -1281,7 +1271,7 @@ private fun ColumnScope.TooltipDismissButton(
     Text(
         text = text,
         color = color,
-        style = COUITheme.textStyles.subtitle,
+        style = COUITheme.textStyles.buttonM,
         maxLines = 2,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier
@@ -1532,9 +1522,9 @@ object TooltipDefaults {
         contentColor: Color = if (style == TooltipStyle.Default && mode == TooltipMode.Tooltips) {
             COUITheme.colorScheme.onPrimary
         } else {
-            COUITheme.colorScheme.onSurfaceSecondary
+            COUITheme.colorScheme.labelSecondary
         },
-        titleColor: Color = COUITheme.colorScheme.onSurface,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
         actionColor: Color = COUITheme.colorScheme.primary,
     ): TooltipColors = remember(containerColor, contentColor, titleColor, actionColor) {
         TooltipColors(
@@ -1544,99 +1534,4 @@ object TooltipDefaults {
             actionColor = actionColor,
         )
     }
-
-    // region Deprecated Miuix tooltip defaults
-
-    /** The spacing between a legacy tooltip and its anchor. */
-    @Deprecated("Used by the deprecated Miuix tooltip only.")
-    val SpacingBetweenTooltipAndAnchor = 8.dp
-
-    /** The size of the legacy caret. */
-    @Deprecated("COUI tooltips draw an arrow; see TooltipBox(showArrow).")
-    val caretSize = DpSize(16.dp, 8.dp)
-
-    /** The maximum width of a legacy plain tooltip. */
-    @Deprecated("Use MaxWidth.", ReplaceWith("TooltipDefaults.MaxWidth"))
-    val PlainTooltipMaxWidth = 200.dp
-
-    /** The corner radius of a legacy plain tooltip. */
-    @Deprecated("Use CornerRadius.", ReplaceWith("TooltipDefaults.CornerRadius"))
-    val PlainTooltipCornerRadius = 17.dp
-
-    /** The margin inside a legacy plain tooltip. */
-    @Deprecated("Used by the deprecated Miuix tooltip only.")
-    val PlainTooltipInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-
-    /** The container color of a legacy plain tooltip (inverse surface). */
-    @Deprecated("Use tooltipColors().")
-    val plainTooltipContainerColor: Color
-        @Composable get() = COUITheme.colorScheme.onSecondaryVariant
-
-    /** The content color of a legacy plain tooltip. */
-    @Deprecated("Use tooltipColors().")
-    val plainTooltipContentColor: Color
-        @Composable get() = COUITheme.colorScheme.secondaryVariant
-
-    /** The maximum width of a legacy rich tooltip. */
-    @Deprecated("Use MaxWidth.", ReplaceWith("TooltipDefaults.MaxWidth"))
-    val RichTooltipMaxWidth = 320.dp
-
-    /** The corner radius of a legacy rich tooltip. */
-    @Deprecated("Use CornerRadius.", ReplaceWith("TooltipDefaults.CornerRadius"))
-    val RichTooltipCornerRadius = 17.dp
-
-    /** The margin inside a legacy rich tooltip. */
-    @Deprecated("Used by the deprecated Miuix tooltip only.")
-    val RichTooltipInsideMargin = PaddingValues(all = 16.dp)
-
-    /** The corner radius of a legacy rich tooltip action button. */
-    @Deprecated("Used by the deprecated Miuix tooltip only.")
-    val RichTooltipActionCornerRadius = 8.dp
-
-    /** The margin inside a legacy rich tooltip action button. */
-    @Deprecated("Used by the deprecated Miuix tooltip only.")
-    val RichTooltipActionInsideMargin = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-
-    /** Returns the legacy caret shape. */
-    @Deprecated("COUI tooltips draw an arrow; see TooltipBox(showArrow).")
-    fun caretShape(): Shape = LegacyTooltipCaretShape
-
-    /** The colours of a legacy rich tooltip. */
-    @Suppress("DEPRECATION")
-    @Deprecated("Use tooltipColors(style = TooltipStyle.Icon).")
-    @Composable
-    fun richTooltipColors(
-        containerColor: Color = COUITheme.colorScheme.surfaceContainer,
-        contentColor: Color = COUITheme.colorScheme.onSurfaceContainerVariant,
-        titleContentColor: Color = COUITheme.colorScheme.onSurfaceContainer,
-        actionContentColor: Color = COUITheme.colorScheme.primary,
-    ): RichTooltipColors = remember(containerColor, contentColor, titleContentColor, actionContentColor) {
-        RichTooltipColors(
-            containerColor = containerColor,
-            contentColor = contentColor,
-            titleContentColor = titleContentColor,
-            actionContentColor = actionContentColor,
-        )
-    }
-
-    /**
-     * Returns the legacy position provider for the deprecated Miuix [TooltipBox].
-     *
-     * @param positioning the preferred [TooltipAnchorPosition].
-     * @param spacingBetweenTooltipAndAnchor the spacing between the tooltip and the anchor.
-     */
-    @Suppress("DEPRECATION")
-    @Deprecated("The COUI TooltipBox(state, tooltip, placement = …) positions the tooltip itself.")
-    @Composable
-    fun rememberTooltipPositionProvider(
-        positioning: TooltipAnchorPosition = TooltipAnchorPosition.Below,
-        spacingBetweenTooltipAndAnchor: Dp = SpacingBetweenTooltipAndAnchor,
-    ): PopupPositionProvider {
-        val spacingPx = with(LocalDensity.current) { spacingBetweenTooltipAndAnchor.roundToPx() }
-        return remember(positioning, spacingPx) {
-            LegacyTooltipPositionProvider(positioning, spacingPx)
-        }
-    }
-
-    // endregion
 }

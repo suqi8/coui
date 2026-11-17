@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.layout.DialogDefaults
 import io.github.suqi8.coui.kmp.layout.LoadingDialogContentLayout
 import io.github.suqi8.coui.kmp.layout.LoadingDialogDefaults
@@ -30,11 +31,24 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  *   by the user.
  * @param onDismissFinished The callback when the [OverlayLoadingDialog] is completely dismissed.
  * @param renderInRootScaffold Whether to render the dialog in the root (outermost) Scaffold.
+ * @param backgroundModifier A [Modifier] applied inside the card's corner clip, under the content
+ *   and over [backgroundColor]. Use it to paint the COUI 17 blurred window background
+ *   (`COUIRotatingDialogBuilder.setBlurBackgroundWindow`), e.g. with coui-blur's
+ *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.dialog(isDark))`, and pass a
+ *   transparent [backgroundColor] alongside it.
+ * @param materialStroke Whether to draw the COUI 17 material stroke (edge lighting + inner shadow)
+ *   `COUIAlertDialogRootLayout` adds once the window background is blurred. Needs runtime shaders.
+ * @param title The optional title above the spinner (`COUIRotatingDialogBuilder.setDialogTitle`).
+ * @param titleColor The color of [title].
+ * @param cancelAction The optional cancel button (`COUIRotatingDialogBuilder.setCancelButton`).
+ *   With it the dialog takes the cancelable form (`COUIAlertDialog.Rotating.Cancelable`): a wider
+ *   card without the minimum height, the message closer to a one-button bar.
  */
 @Composable
 fun OverlayLoadingDialog(
     show: Boolean,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     text: String? = null,
     textColor: Color = LoadingDialogDefaults.textColor(),
     spinnerColor: Color = LoadingDialogDefaults.spinnerColor(),
@@ -43,6 +57,10 @@ fun OverlayLoadingDialog(
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     renderInRootScaffold: Boolean = true,
+    materialStroke: Boolean = false,
+    title: String? = null,
+    titleColor: Color = DialogDefaults.titleColor(),
+    cancelAction: DialogButtonBarAction? = null,
 ) {
     LoadingDialogContentLayout(
         show = show,
@@ -61,6 +79,7 @@ fun OverlayLoadingDialog(
             }
         },
         modifier = modifier,
+        backgroundModifier = backgroundModifier,
         text = text,
         textColor = textColor,
         spinnerColor = spinnerColor,
@@ -68,5 +87,9 @@ fun OverlayLoadingDialog(
         enableWindowDim = enableWindowDim,
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
+        materialStroke = materialStroke,
+        title = title,
+        titleColor = titleColor,
+        cancelAction = cancelAction,
     )
 }

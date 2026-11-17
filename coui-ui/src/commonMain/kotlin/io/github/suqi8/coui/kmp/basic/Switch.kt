@@ -66,6 +66,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.TouchMotion
+import io.github.suqi8.coui.kmp.effect.couiFocusStroke
+import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.squircleClip
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -133,7 +135,10 @@ fun Switch(
         }
     }
 
-    // COUISwitch StateEffectAnimator press / hover layers (response 0.3, bounce 0).
+    // COUISwitch StateEffectAnimator press / hover layers (response 0.3, bounce 0). COUI 17 keeps
+    // its TYPE_SWITCH touch spotlight (and the thumb fade and rim glow tied to it) switched off:
+    // updateShouldDrawSpotlight() always sets mShouldDrawSpotlight = false, so the press mask on
+    // the track below is the only press feedback.
     val pressed = enabled && (motion.isPressed || isSourcePressed)
     LaunchedEffect(pressed) {
         motion.pressProgress.animateTo(if (pressed) 1f else 0f, SwitchMotion.StateEffectSpring)
@@ -240,6 +245,8 @@ fun Switch(
         modifier = modifier
             .wrapContentSize(Alignment.Center)
             .size(SwitchDefaults.TrackWidth, SwitchDefaults.TrackHeight)
+            // COUISwitch.drawFocusStroke: a TYPE_OUTER ring around the track outline, outside the clip.
+            .couiFocusStroke(interactionSource = interactionSource, shape = SwitchTrackShape, enabled = interactive)
             // COUISwitch clips the track to its outline, setSmoothRoundRect(rect, height / 2) without a
             // weight: the COUI 17 soft capsule.
             .squircleClip(COUIRoundCorner.Full, weight = COUIRoundCorner.UnspecifiedWeight)
@@ -431,6 +438,9 @@ private suspend fun PointerInputScope.detectSwitchDrag(
     }
 }
 
+/** The track outline, the soft capsule the track is clipped to. */
+private val SwitchTrackShape = SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.UnspecifiedWeight)
+
 /** COUI 17 switch motion constants (`COUISwitchParams` defaults, `COUISwitch`). */
 internal object SwitchMotion {
     /** `minimumVisibleChange` 0.1 px over the 70 px reference travel. */
@@ -537,12 +547,12 @@ object SwitchDefaults {
     @Composable
     fun switchColors(
         checkedThumbColor: Color = if (isDynamicColor) LocalColors.current.onPrimary else COUITheme.colorScheme.onPrimary,
-        uncheckedThumbColor: Color = if (isDynamicColor) LocalColors.current.onPrimary else COUITheme.colorScheme.onSecondary,
+        uncheckedThumbColor: Color = if (isDynamicColor) LocalColors.current.onPrimary else COUITheme.colorScheme.labelOnColor,
         disabledCheckedThumbColor: Color = COUITheme.colorScheme.disabledSliderThumb,
         disabledUncheckedThumbColor: Color = COUITheme.colorScheme.disabledSliderThumb,
         checkedTrackColor: Color = COUITheme.colorScheme.primary,
         uncheckedTrackColor: Color = COUITheme.colorScheme.dragHandle,
-        disabledCheckedTrackColor: Color = COUITheme.colorScheme.disabledPrimary,
+        disabledCheckedTrackColor: Color = COUITheme.colorScheme.disable,
         disabledUncheckedTrackColor: Color = COUITheme.colorScheme.secondaryContainer,
     ): SwitchColors = remember(
         checkedThumbColor,

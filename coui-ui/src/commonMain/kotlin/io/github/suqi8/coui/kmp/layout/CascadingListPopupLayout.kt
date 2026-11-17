@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
@@ -48,6 +49,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -79,16 +81,20 @@ import io.github.suqi8.coui.kmp.basic.PopupGravityPath
 import io.github.suqi8.coui.kmp.basic.PopupListRole
 import io.github.suqi8.coui.kmp.basic.PopupListVerticalPadding
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
+import io.github.suqi8.coui.kmp.basic.PopupRelayTarget
+import io.github.suqi8.coui.kmp.basic.PopupSpotLight
 import io.github.suqi8.coui.kmp.basic.consumePopupTouches
 import io.github.suqi8.coui.kmp.basic.popupDropShadow
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.popupMaterialEffect
-import io.github.suqi8.coui.kmp.basic.popupSpotLightInput
+import io.github.suqi8.coui.kmp.basic.popupPanelLightInput
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
-import io.github.suqi8.coui.kmp.basic.rememberPopupSpotLight
+import io.github.suqi8.coui.kmp.basic.rememberPopupPanelLight
 import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
+import io.github.suqi8.coui.kmp.effect.TouchMotionState
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
@@ -96,6 +102,7 @@ import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -103,7 +110,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -140,6 +146,9 @@ private const val DEFAULT_MAIN_CONTENT_ALPHA = 0.7f
 /** How long a drag inside the main menu waits before closing the sub menu (`COUIPopupMenuRootView.MAIN_AREA_DISMISS_DELAY_MS`). */
 private const val MAIN_AREA_DISMISS_DELAY_MILLIS = 500L
 
+/** A blurred sub menu below this alpha is hidden (`BasePopupMenuAnimationController.SUB_MENU_BLUR_VISIBILITY_MIN_ALPHA`). */
+private const val SUB_MENU_BLUR_VISIBILITY_MIN_ALPHA = 0.1f
+
 /**
  * The sub menu transition (`MenuTransitionUnit` / `SubMenuTransitionUnit`:
  * `COUISpringForce` bounce 0, response 0.35, in both directions).
@@ -167,6 +176,7 @@ private val SubMenuSpring: SpringSpec<Float> = spring(
  * @property clipTopStart The compact sub menu's initial clip top (its list inset).
  * @property clipHeightStart The compact sub menu's initial clip height (the anchor row).
  * @property subPivot The pivot of the larger window's sub menu scale, as fractions of its size.
+ * @property anchorDepth How far the anchor row's top sits below the main menu's top (compact).
  */
 @Immutable
 internal data class SubmenuGeometry(
@@ -180,7 +190,20 @@ internal data class SubmenuGeometry(
     val clipTopStart: Float,
     val clipHeightStart: Float,
     val subPivot: TransformOrigin,
-)
+    val anchorDepth: Float = 0f,
+) {
+    /**
+     * The compact sub menu's translation start while it closes at [progress]
+     * (`SmallScreenAnimationController.onSubMenuProgressUpdate`, run while the progress falls): the
+     * anchor row is re-read where it is drawn this frame — the main menu scaled about its top by the
+     * `MenuTransitionUnit` at the same progress, its translation removed — so the band closes onto
+     * the row's current place instead of its unscaled one.
+     */
+    fun collapseStartTranslationY(progress: Float): Float {
+        val mainScaleNow = 1f + (mainScale - 1f) * progress.coerceIn(0f, 1f)
+        return subStartTranslationY - (1f - mainScaleNow) * anchorDepth
+    }
+}
 
 /**
  * Resolves the [SubmenuGeometry] of a sub menu of [subSize] opened from [anchorRow] in a main menu
@@ -242,6 +265,7 @@ internal fun computeSubmenuGeometry(
             clipTopStart = listInset.toFloat(),
             clipHeightStart = min(anchorRow.height, main.bottom - anchorRow.top).toFloat(),
             subPivot = TransformOrigin.Center,
+            anchorDepth = (anchorRow.top - main.top).toFloat(),
         )
     }
     // Larger windows: the main menu shrinks about its centre and the sub menu opens beside it.
@@ -305,8 +329,8 @@ internal fun CascadingListPopupLayout(
     minWidth: Dp = ListPopupDefaults.MinWidth,
     collapseOnSelection: Boolean = true,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
 ) {
     // Resolved at the call site, where dialogs and sheets can switch the popup blur off.
     val surface = rememberPopupSurface(
@@ -341,6 +365,12 @@ internal fun CascadingListPopupLayout(
             internalVisible.value = true
             backEnterProgress.snapTo(0f)
             backExpandProgress.snapTo(0f)
+            if (displayedItem != null) {
+                // startMainMenuEnter with a sub menu still up (reopened mid-dismiss): force-hide it.
+                subProgress.snapTo(0f)
+                expandedItem = null
+                displayedItem = null
+            }
             if (enableWindowDim) launch { dimProgress.animateTo(1f, ListPopupDefaults.DimEnterAnimationSpec) }
             snapshotFlow { mainSize to hostMeasured }.first { (size, ready) -> size != IntSize.Zero && ready }
             launch { pathProgress.animateTo(1f, ListPopupDefaults.PathEnterAnimationSpec) }
@@ -376,16 +406,27 @@ internal fun CascadingListPopupLayout(
     LaunchedEffect(expandedItem) {
         val item = expandedItem
         if (item != null) {
+            if (displayedItem != null && displayedItem !== item) {
+                // dispatchMainMenuMixedItemClick: another sub menu is up, hide it without animation.
+                subProgress.snapTo(0f)
+            }
             displayedItem = item
             backExpandProgress.snapTo(0f)
             gestureRelay.subEntered = false
+            gestureRelay.subInteractive = true
             subProgress.animateTo(1f, SubMenuSpring)
             // onSubMenuEntered: from now on the main menu's finger may steer the sub menu.
             gestureRelay.subEntered = true
         } else if (displayedItem != null) {
+            // onSubMenuStartToExit: the sub menu stops taking touches, its press mask fades
+            // (clearSharedMask(true)) and a relayed finger is let go.
             gestureRelay.subEntered = false
+            gestureRelay.subInteractive = false
+            gestureRelay.subHost?.let { host -> host.scope?.let(host::cancel) }
+            gestureRelay.subPanel?.cancel()
             subProgress.animateTo(0f, SubMenuSpring)
             displayedItem = null
+            gestureRelay.subInteractive = true
             backExpandProgress.snapTo(0f)
         }
     }
@@ -468,12 +509,40 @@ internal fun CascadingListPopupLayout(
             LocalCardListPosition provides CardListPosition.None,
             LocalPopupGestureRelay provides gestureRelay,
         ) {
-            val dimColor = COUITheme.colorScheme.windowDimming
+            val dimColor = COUITheme.colorScheme.mask
             val surfaceColor = surface.color
             val shape = remember { RoundedCornerShape(CascadingPopupCornerRadius) }
             val squircleEnabled = isSquircleEnabled()
             val touchSlop = LocalViewConfiguration.current.touchSlop
-            val subSpotLight = rememberPopupSpotLight()
+            // Per-show state, composed inside the host: a spring launched here is cancelled when
+            // the host leaves at the end of the exit, so state kept outside it would freeze
+            // mid-spring and greet the next show with a displaced menu or a lit spotlight.
+            // The main menu's touch motion, which an open sub menu follows (ParentInfluenceUnit).
+            val mainTouchMotion = remember { TouchMotionState() }
+            // The sub menu's own touch motion, also driven by a relayed finger.
+            val subTouchMotion = remember { TouchMotionState() }
+            val mainSpotLight = rememberPopupPanelLight()
+            val subSpotLight = rememberPopupPanelLight()
+            val subRequested = expandedItem != null
+            LaunchedEffect(subRequested) {
+                if (subRequested) {
+                    // onSubMenuStartToEnter: the main menu's light goes out and stays dark.
+                    mainSpotLight.extinguish()
+                } else {
+                    // onSubMenuStartToExit: a closing sub menu drops its light and its touches.
+                    subSpotLight.extinguish()
+                }
+            }
+            // The sub panel as the relayed finger sees it (forwardTouchInsideSubMenuBounds): its
+            // spotlight and its touch motion get the synthetic DOWN / MOVE / UP / CANCEL.
+            val panelScope = rememberCoroutineScope()
+            val subPanel = remember(subSpotLight, subTouchMotion, panelScope, density) {
+                CascadeSubPanel(geometryHolder, subSpotLight, subTouchMotion, panelScope, density) { surface.materialEffect }
+            }
+            DisposableEffect(gestureRelay, subPanel) {
+                gestureRelay.subPanel = subPanel
+                onDispose { if (gestureRelay.subPanel === subPanel) gestureRelay.subPanel = null }
+            }
 
             val enterScale = { scaleProgress.value * (1f - backEnterProgress.value) }
             val enterAlpha = { alphaProgress.value * (1f - backEnterProgress.value) }
@@ -496,6 +565,15 @@ internal fun CascadingListPopupLayout(
                             hostPositionInWindow = IntOffset(pos.x.toInt(), pos.y.toInt())
                             hostMeasured = true
                         }
+                        // COUIPopupMenuRootView.handleMainAreaDelayedDismissOnTouch and the main
+                        // root's click while a sub menu is up; observes, consumes nothing.
+                        .mainAreaDismiss(
+                            geometryHolder = geometryHolder,
+                            touchSlop = touchSlop,
+                            active = { expandedItem != null },
+                            entered = { gestureRelay.subEntered },
+                            onCollapse = requestCollapse,
+                        )
                         .pointerInput(Unit) {
                             detectTapGestures(onTap = {
                                 if (expandedItem != null) expandedItem = null else currentOnDismiss()
@@ -529,8 +607,11 @@ internal fun CascadingListPopupLayout(
                             modifier = Modifier
                                 .layoutId(SLOT_MAIN)
                                 .graphicsLayer {
+                                    // Read the progress before anything that may return early, so
+                                    // this block always re-runs with the MenuTransitionUnit.
+                                    val progress = sub().coerceIn(0f, 1f)
                                     val geometry = geometryHolder.submenu
-                                    val p = if (geometry != null) sub().coerceIn(0f, 1f) else 0f
+                                    val p = if (geometry != null) progress else 0f
                                     val scale = lerp(1f, geometry?.mainScale ?: 1f, p)
                                     scaleX = scale
                                     scaleY = scale
@@ -543,22 +624,26 @@ internal fun CascadingListPopupLayout(
                                     interactionSource = null,
                                     enabled = displayedItem == null,
                                     pressScaleEnabled = false,
+                                    state = mainTouchMotion,
                                 )
                                 .popupDropShadow(shape)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
                                 .then(surface.backgroundModifier)
-                                // COUI turns the main menu spotlight off while a sub menu is open.
+                                // COUI turns the main menu spotlight off while a sub menu is open
+                                // (setSpotLightTouchEnabled(false) until onSubMenuExited).
                                 .popupMaterialEffect(
                                     enabled = surface.materialEffect,
-                                    spotLightSuppressed = { displayedItem != null },
+                                    spotLight = mainSpotLight,
+                                    spotLightSuppressed = { expandedItem != null || displayedItem != null },
                                 )
                                 .consumePopupTouches()
                                 .onGloballyPositioned { geometryHolder.mainCoordinates = it },
                         ) {
                             Box(
                                 modifier = Modifier.graphicsLayer {
+                                    val progress = sub().coerceIn(0f, 1f)
                                     val geometry = geometryHolder.submenu
-                                    val p = if (geometry != null) sub().coerceIn(0f, 1f) else 0f
+                                    val p = if (geometry != null) progress else 0f
                                     alpha = lerp(1f, geometry?.mainContentAlpha ?: 1f, p)
                                 },
                             ) {
@@ -567,7 +652,11 @@ internal fun CascadingListPopupLayout(
                                     expandedItem = expandedItem,
                                     holdExpandedRow = !compact,
                                     dropdownColors = dropdownColors,
-                                    onExpand = { expandedItem = it },
+                                    onExpand = { item ->
+                                        // mTransferredPressProgress: the press the compact header inherits.
+                                        gestureRelay.transferredPress = gestureRelay.mainHost?.mask?.press ?: 0f
+                                        expandedItem = item
+                                    },
                                     onLeafSelected = { item ->
                                         item.onClick?.invoke()
                                         if (collapseOnSelection) currentOnDismiss()
@@ -586,15 +675,12 @@ internal fun CascadingListPopupLayout(
                                     },
                                 )
                             }
-                            if (expandedItem != null || displayedItem != null) {
-                                // While the sub menu is open the main menu stops taking rows:
-                                // a tap collapses the sub menu, and a drag that wanders the main
-                                // menu collapses it after 500ms (COUIPopupMenuRootView).
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .mainAreaCollapse(touchSlop = touchSlop, onCollapse = requestCollapse),
-                                )
+                            if (expandedItem != null) {
+                                // From onSubMenuStartToEnter until onSubMenuStartToExit the main
+                                // list takes no new touches (allowListViewDispatchTouchEvent(false))
+                                // and the main root is a click target that closes the sub menu;
+                                // mainAreaDismiss on the root runs that click.
+                                Box(modifier = Modifier.matchParentSize().blockPopupTouches())
                             }
                         }
 
@@ -606,22 +692,57 @@ internal fun CascadingListPopupLayout(
                                     modifier = Modifier
                                         .layoutId(SLOT_SUB)
                                         .graphicsLayer {
-                                            val geometry = geometryHolder.submenu ?: return@graphicsLayer
                                             val p = sub().coerceIn(0f, 1f)
+                                            val geometry = geometryHolder.submenu ?: return@graphicsLayer
+                                            // ParentInfluenceUnit: the sub menu takes on the main
+                                            // menu's touch motion (updateFromParent), which springs
+                                            // home once the sub menu opens (resetTouchOnly(true)).
+                                            // Units add their translations and scale deltas
+                                            // (TouchMotionCollector.put).
+                                            val parentTranslationX = mainTouchMotion.translationX.value
+                                            val parentTranslationY = mainTouchMotion.translationY.value
+                                            val parentScaleX = mainTouchMotion.scaleX.value
+                                            val parentScaleY = mainTouchMotion.scaleY.value
+                                            translationX = parentTranslationX
                                             if (geometry.compact) {
-                                                val travel = lerp(geometry.subStartTranslationY, 0f, p)
-                                                val minTravel = geometryHolder.availableTopOffset
-                                                translationY = max(minTravel, travel)
+                                                // SubMenuTransitionUnit: lerp(startY, 0, p). Opening
+                                                // starts from the anchor row's unscaled place;
+                                                // closing re-reads it every frame where the
+                                                // shrunken main menu draws it.
+                                                val start = if (expandedItem == null) {
+                                                    geometry.collapseStartTranslationY(p)
+                                                } else {
+                                                    geometry.subStartTranslationY
+                                                }
+                                                val travel = lerp(start, 0f, p) + parentTranslationY
+                                                // clampSubMenuTranslationY applies to the summed sink.
+                                                translationY = max(geometryHolder.availableTopOffset, travel)
+                                                scaleX = parentScaleX
+                                                scaleY = parentScaleY
                                             } else {
                                                 // The fade sits on the surface below, so the
                                                 // shadow is not cut off by an offscreen layer.
-                                                scaleX = p
-                                                scaleY = p
+                                                translationY = parentTranslationY
+                                                scaleX = (p + parentScaleX - 1f).coerceAtLeast(0f)
+                                                scaleY = (p + parentScaleY - 1f).coerceAtLeast(0f)
                                                 transformOrigin = geometry.subPivot
                                             }
                                         }
-                                        .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
-                                        .popupSpotLightInput(subSpotLight, enabled = surface.materialEffect)
+                                        .onGloballyPositioned { geometryHolder.subMotionCoordinates = it }
+                                        // The sub menu's touch motion stops (and springs home) once
+                                        // it starts to leave (startSubMenuExit → resetTouchOnly).
+                                        .couiTouchMotion(
+                                            interactionSource = null,
+                                            enabled = expandedItem != null,
+                                            pressScaleEnabled = false,
+                                            state = subTouchMotion,
+                                        )
+                                        .onGloballyPositioned { geometryHolder.subPanelCoordinates = it }
+                                        .popupPanelLightInput(
+                                            spotLight = subSpotLight,
+                                            enabled = surface.materialEffect,
+                                            suppressed = { expandedItem == null },
+                                        )
                                         .consumePopupTouches(),
                                 ) {
                                     // The surface follows the RoundFrameLayout override outline: on
@@ -631,6 +752,20 @@ internal fun CascadingListPopupLayout(
                                     // alpha (setOverrideOutline(..., progress)); a full sub menu
                                     // fades its shadow by the same progress, outside the layer
                                     // that fades the surface and rows.
+                                    val subAlpha = {
+                                        val geometry = geometryHolder.submenu
+                                        val p = sub().coerceIn(0f, 1f)
+                                        when {
+                                            geometry == null -> 1f
+
+                                            geometry.compact -> 1f
+
+                                            // applySubMenuVisibilityForBlurAlpha: INVISIBLE at ≤ 10%.
+                                            surface.blurred && p <= SUB_MENU_BLUR_VISIBILITY_MIN_ALPHA -> 0f
+
+                                            else -> p
+                                        }
+                                    }
                                     Box(
                                         modifier = Modifier
                                             .matchParentSize()
@@ -638,28 +773,48 @@ internal fun CascadingListPopupLayout(
                                             .popupDropShadow(
                                                 shape = shape,
                                                 alpha = {
-                                                    if (geometryHolder.submenu != null) sub().coerceIn(0f, 1f) else 1f
+                                                    val geometry = geometryHolder.submenu
+                                                    if (geometry == null) {
+                                                        1f
+                                                    } else if (geometry.compact) {
+                                                        sub().coerceIn(0f, 1f)
+                                                    } else {
+                                                        subAlpha()
+                                                    }
                                                 },
                                             ),
                                     )
-                                    Box(
-                                        modifier = Modifier.graphicsLayer {
-                                            val geometry = geometryHolder.submenu
-                                            alpha = if (geometry != null && !geometry.compact) sub().coerceIn(0f, 1f) else 1f
-                                        },
-                                    ) {
+                                    Box(modifier = Modifier.graphicsLayer { alpha = subAlpha() }) {
+                                        // The background (fill, blur) takes the override
+                                        // outline's bounds (setOverrideOutline → background
+                                        // setBounds), so it shrinks with the band.
                                         Box(
                                             modifier = Modifier
                                                 .matchParentSize()
                                                 .cascadeBand(geometryHolder, sub)
                                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
-                                                .then(surface.backgroundModifier)
-                                                .popupMaterialEffect(enabled = surface.materialEffect, spotLight = subSpotLight, trackTouches = false),
+                                                .then(surface.backgroundModifier),
+                                        )
+                                        // The shadow-edge drawable and the spotlight keep the
+                                        // whole panel's bounds (RoundFrameLayout.onSizeChanged
+                                        // setBounds(0, 0, w, h)) and are only clipped by the
+                                        // outline, so the band's own edges carry no stroke: the
+                                        // panel's stroke sits outside a shrunken band.
+                                        Box(
+                                            modifier = Modifier
+                                                .matchParentSize()
+                                                .cascadeContentClip(geometryHolder, sub, squircleEnabled)
+                                                .popupMaterialEffect(
+                                                    enabled = surface.materialEffect,
+                                                    spotLight = subSpotLight,
+                                                    trackTouches = false,
+                                                ),
                                         )
                                         Box(modifier = Modifier.cascadeContentClip(geometryHolder, sub, squircleEnabled)) {
                                             CascadingSubList(
                                                 parent = shown,
                                                 showHeader = compact,
+                                                headerActive = expandedItem != null,
                                                 dropdownColors = dropdownColors,
                                                 onHeaderClick = requestCollapse,
                                                 onLeafSelected = { item ->
@@ -709,6 +864,15 @@ internal fun CascadingListPopupLayout(
                     )
                     geometryHolder.gravityPath = popupGravityPathFor(parentBounds, mainOffset, measuredMain, density.density)
 
+                    // The band only depends on the main menu and the anchor row, so it is known
+                    // before the sub menu is measured: its surface must never be measured at the
+                    // full panel size for a frame (the opening frame would flash a full panel).
+                    val anchorLocal = displayedItem?.let { anchorRows[it] }
+                    geometryHolder.setBand(
+                        compact = compact,
+                        clipTop = PopupListVerticalPadding.roundToPx().toFloat(),
+                        clipHeight = anchorLocal?.let { min(it.height, measuredMain.height - it.top) }?.toFloat() ?: 0f,
+                    )
                     // COUI caps the sub menu so the main menu keeps a 12dp strip on view.
                     val subMeasurable = measurables.firstOrNull { it.layoutId == SLOT_SUB }
                     val subPlaceable = subMeasurable?.measure(
@@ -716,7 +880,6 @@ internal fun CascadingListPopupLayout(
                             maxHeight = (availableHeight - SubMenuMinGapToTop.roundToPx()).coerceAtLeast(0),
                         ),
                     )
-                    val anchorLocal = displayedItem?.let { anchorRows[it] }
                     geometryHolder.submenu = if (subPlaceable != null && anchorLocal != null) {
                         computeSubmenuGeometry(
                             main = mainRect,
@@ -733,6 +896,14 @@ internal fun CascadingListPopupLayout(
                         ).also { geometryHolder.availableTopOffset = (windowBounds.top - it.subRect.top).toFloat() }
                     } else {
                         null
+                    }
+                    geometryHolder.subRectLocal = geometryHolder.submenu?.subRect?.let { r ->
+                        Rect(
+                            (r.left - host.x).toFloat(),
+                            (r.top - host.y).toFloat(),
+                            (r.right - host.x).toFloat(),
+                            (r.bottom - host.y).toFloat(),
+                        )
                     }
 
                     layout(constraints.maxWidth, constraints.maxHeight) {
@@ -751,29 +922,75 @@ internal fun CascadingListPopupLayout(
 private const val SLOT_MAIN = "main"
 private const val SLOT_SUB = "sub"
 
-/** Geometry shared between the cascade's measure pass and its layer / draw blocks. */
+/** Geometry shared between the cascade's measure pass and its layer / draw / input blocks. */
 private class CascadeGeometryHolder {
     var mainCoordinates: LayoutCoordinates? = null
     var mainRectLocal: Rect? = null
     var gravityPath: PopupGravityPath = PopupGravityPath.None
-    var submenu: SubmenuGeometry? = null
+
+    /**
+     * Snapshot state: the layer blocks of both menus read it, and a block that last ran before the
+     * sub menu existed must re-run once the measure pass has computed it (otherwise the main menu
+     * never shrinks and snaps back when the sub menu leaves).
+     */
+    var submenu: SubmenuGeometry? by mutableStateOf(null)
+
+    /** The sub menu's resting rect in the host's space (`PopupMenuDomain.mSubMenu`). */
+    var subRectLocal: Rect? = null
+
+    /** The sub panel where its spotlight reads touches (inside its touch-motion layer). */
+    var subPanelCoordinates: LayoutCoordinates? = null
+
+    /** The sub panel where its touch motion reads touches (outside its touch-motion layer). */
+    var subMotionCoordinates: LayoutCoordinates? = null
 
     /** `clampSubMenuTranslationY`: the sub menu never travels above the available top. */
     var availableTopOffset: Float = Float.NEGATIVE_INFINITY
-}
 
-/** The visible band of a compact sub menu at [progress], as (top, height) in its own pixels. */
-private fun subMenuBand(geometry: SubmenuGeometry?, progress: Float, height: Float): Pair<Float, Float> {
-    if (geometry == null || !geometry.compact) return 0f to height
-    val p = progress.coerceIn(0f, 1f)
-    val top = lerp(geometry.clipTopStart, 0f, p)
-    val bandHeight = lerp(geometry.clipHeightStart, height, p).coerceAtMost(height - top)
-    return top to bandHeight.coerceAtLeast(0f)
+    // The compact band's start (configSubMenuAnimationPropertiesForSubMenuEnter), set by the
+    // measure pass before it measures the sub menu.
+    private var bandCompact = false
+    private var bandClipTop = 0f
+    private var bandClipHeight = 0f
+
+    fun setBand(compact: Boolean, clipTop: Float, clipHeight: Float) {
+        bandCompact = compact
+        bandClipTop = clipTop
+        bandClipHeight = clipHeight
+    }
+
+    /** The top of the compact sub menu's band at [progress], in its own pixels (0 elsewhere). */
+    fun bandTop(progress: Float): Float {
+        if (!bandCompact) return 0f
+        return lerp(bandClipTop, 0f, progress.coerceIn(0f, 1f))
+    }
+
+    /** The height of the compact sub menu's band at [progress] in a panel [height] tall. */
+    fun bandHeight(progress: Float, height: Float): Float {
+        if (!bandCompact) return height
+        val top = bandTop(progress)
+        return lerp(bandClipHeight, height, progress.coerceIn(0f, 1f)).coerceIn(0f, (height - top).coerceAtLeast(0f))
+    }
+
+    /** Whether ([x], [y]) in the host's space lies on the main menu and not on the sub menu. */
+    fun isInMainOnly(x: Float, y: Float): Boolean = isInMain(x, y) && !isInSub(x, y)
+
+    fun isInMain(x: Float, y: Float): Boolean {
+        val main = mainRectLocal ?: return false
+        return x >= main.left && x <= main.right && y >= main.top && y <= main.bottom
+    }
+
+    private fun isInSub(x: Float, y: Float): Boolean {
+        val sub = subRectLocal ?: return false
+        return x >= sub.left && x <= sub.right && y >= sub.top && y <= sub.bottom
+    }
 }
 
 /** Sizes and places the sub menu surface on its band (`RoundFrameLayout.setOverrideOutline`). */
 private fun Modifier.cascadeBand(geometryHolder: CascadeGeometryHolder, progress: () -> Float): Modifier = layout { measurable, constraints ->
-    val (top, height) = subMenuBand(geometryHolder.submenu, progress(), constraints.maxHeight.toFloat())
+    val p = progress()
+    val top = geometryHolder.bandTop(p)
+    val height = geometryHolder.bandHeight(p, constraints.maxHeight.toFloat())
     val placeable = measurable.measure(Constraints.fixed(constraints.maxWidth, height.toInt()))
     layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(0, top.toInt()) }
 }
@@ -787,45 +1004,157 @@ private fun Modifier.cascadeContentClip(
     val path = Path()
     val cornerRadius = CascadingPopupCornerRadius.toPx()
     onDrawWithContent {
-        val (top, height) = subMenuBand(geometryHolder.submenu, progress(), size.height)
+        val p = progress()
+        val top = geometryHolder.bandTop(p)
+        val height = geometryHolder.bandHeight(p, size.height)
         if (height <= 0f) return@onDrawWithContent
         path.rewind()
-        path.addSquircleRect(Rect(0f, top, size.width, top + height), cornerRadius, PopupCornerWeight, squircleEnabled)
+        path.addSquircleRect(size.width, height, cornerRadius, PopupCornerWeight, squircleEnabled)
+        path.translate(Offset(0f, top))
         clipPath(path) { this@onDrawWithContent.drawContent() }
     }
 }
 
 /**
- * Collapses the sub menu from a touch on the shrunken main menu: a tap collapses at once
- * (`mCancelSubMenuEnterAndStartExit`), a drag past the touch slop collapses after
- * [MAIN_AREA_DISMISS_DELAY_MILLIS] unless the finger lifts first (`mMainAreaDismissRunnable`).
+ * The sub panel as a relayed finger reaches it (`COUIPopupMenuRootView`
+ * `forwardTouchInsideSubMenuBounds`): the synthetic events land in the sub `RoundFrameLayout`,
+ * whose spotlight (`COUISpotLightEffectDrawable.onTouchEvent`) and touch motion
+ * (`makeSubMenuAnimator`) react as to a real finger.
  */
-private fun Modifier.mainAreaCollapse(touchSlop: Float, onCollapse: () -> Unit): Modifier = pointerInput(Unit) {
+private class CascadeSubPanel(
+    private val geometryHolder: CascadeGeometryHolder,
+    private val spotLight: PopupSpotLight,
+    private val touchMotion: TouchMotionState,
+    private val scope: CoroutineScope,
+    private val density: Density,
+    private val lightEnabled: () -> Boolean,
+) : PopupRelayTarget {
+    private val tracker = VelocityTracker()
+    private var tracking = false
+
+    private fun lightPoint(window: Offset): Offset? = geometryHolder.subPanelCoordinates?.takeIf { it.isAttached }?.windowToLocal(window)
+
+    private fun motionPoint(window: Offset): Offset? = geometryHolder.subMotionCoordinates?.takeIf { it.isAttached }?.windowToLocal(window)
+
+    override fun down(windowPosition: Offset, uptimeMillis: Long) {
+        if (lightEnabled()) lightPoint(windowPosition)?.let(spotLight::onDown)
+        val point = motionPoint(windowPosition) ?: return
+        tracking = true
+        tracker.resetTracking()
+        tracker.addPosition(uptimeMillis, point)
+        touchMotion.touching = true
+        with(touchMotion) { density.down(point) }
+    }
+
+    override fun move(windowPosition: Offset, uptimeMillis: Long) {
+        if (lightEnabled()) lightPoint(windowPosition)?.let(spotLight::onMove)
+        if (!tracking) return
+        val point = motionPoint(windowPosition) ?: return
+        tracker.addPosition(uptimeMillis, point)
+        with(touchMotion) { density.move(point, scope) }
+    }
+
+    override fun up(windowPosition: Offset, uptimeMillis: Long) {
+        if (lightEnabled()) lightPoint(windowPosition)?.let(spotLight::onUp)
+        if (!tracking) return
+        motionPoint(windowPosition)?.let { tracker.addPosition(uptimeMillis, it) }
+        val velocity = tracker.calculateVelocity()
+        release(velocity.x, velocity.y)
+    }
+
+    override fun cancel() {
+        spotLight.extinguish()
+        if (tracking) release(0f, 0f)
+    }
+
+    private fun release(velocityX: Float, velocityY: Float) {
+        tracking = false
+        touchMotion.touching = false
+        with(touchMotion) { density.release(velocityX, velocityY, scope) }
+    }
+}
+
+/** Makes a node hit-testable so the touches it covers never reach the siblings below it. */
+private fun Modifier.blockPopupTouches(): Modifier = pointerInput(Unit) {
+    awaitPointerEventScope {
+        while (true) awaitPointerEvent(PointerEventPass.Initial)
+    }
+}
+
+/**
+ * `COUIPopupMenuRootView` while a sub menu is up, at the root so it sees every gesture (one that
+ * starts on the sub menu included):
+ * - The main root's click (`mCancelSubMenuEnterAndStartExit`, set from `onSubMenuStartToEnter`): a
+ *   gesture that goes down on the main menu outside the sub menu and lifts still on the main menu
+ *   closes the sub menu at once.
+ * - `handleMainAreaDelayedDismissOnTouch`, once the sub menu has entered: a finger that goes down on
+ *   the main menu (outside the sub menu) and moves past the touch slop, or that slides onto it from
+ *   elsewhere, closes the sub menu after [MAIN_AREA_DISMISS_DELAY_MILLIS] unless it leaves the main
+ *   menu or lifts first.
+ *
+ * A gesture already running when the sub menu opened (the long press that opened it) is left alone:
+ * its finger keeps drag-selecting on the main menu (a deliberate deviation, see `ListPopup.kt`).
+ * Observes in the initial pass and consumes nothing.
+ */
+private fun Modifier.mainAreaDismiss(
+    geometryHolder: CascadeGeometryHolder,
+    touchSlop: Float,
+    active: () -> Boolean,
+    entered: () -> Boolean,
+    onCollapse: () -> Unit,
+): Modifier = pointerInput(Unit) {
     coroutineScope {
         awaitPointerEventScope {
             while (true) {
                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                down.consume()
-                var moved = false
+                if (!active()) {
+                    do {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                    } while (event.changes.any { it.pressed })
+                    continue
+                }
+                var click = geometryHolder.isInMainOnly(down.position.x, down.position.y)
+                var tracking = click && entered()
+                var origin = down.position
                 var pending: Job? = null
-                while (true) {
-                    val event = awaitPointerEvent(PointerEventPass.Initial)
-                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                    change.consume()
-                    if (!change.pressed) {
-                        pending?.cancel()
-                        if (!moved) onCollapse()
-                        break
-                    }
-                    val delta = change.position - down.position
-                    if (!moved && (abs(delta.x) > touchSlop || abs(delta.y) > touchSlop)) {
-                        moved = true
+                fun post() {
+                    if (pending == null) {
                         pending = launch {
                             delay(MAIN_AREA_DISMISS_DELAY_MILLIS)
-                            onCollapse()
+                            if (entered()) onCollapse()
                         }
                     }
                 }
+                fun cancelPending() {
+                    pending?.cancel()
+                    pending = null
+                }
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    val position = change.position
+                    if (!change.pressed) {
+                        cancelPending()
+                        if (click && active() && geometryHolder.isInMain(position.x, position.y)) onCollapse()
+                        break
+                    }
+                    if (click && !geometryHolder.isInMain(position.x, position.y)) click = false
+                    if (!entered()) continue
+                    val inside = geometryHolder.isInMainOnly(position.x, position.y)
+                    if (tracking) {
+                        if (!inside) {
+                            cancelPending()
+                            tracking = false
+                        } else if ((position - origin).getDistance() > touchSlop) {
+                            post()
+                        }
+                    } else if (inside) {
+                        tracking = true
+                        origin = position
+                        post()
+                    }
+                }
+                cancelPending()
             }
         }
     }
@@ -866,6 +1195,8 @@ private fun CascadingMainColumn(
     onAnchorRow: (DropdownItem, LayoutCoordinates) -> Unit,
 ) {
     val showGroupDividers = entries.sumOf { it.items.size } >= GROUP_MIN_ITEMS
+    // MixedPopupListAdapter.setItemList raises the icon flag over the whole list, horizontal items included.
+    val reserveIconSlot = remember(entries) { entries.any { entry -> entry.items.any { it.icon != null } } }
     ListPopupColumn {
         val lastEntryIdx = entries.lastIndex
         entries.forEachIndexed { entryIndex, entry ->
@@ -900,6 +1231,7 @@ private fun CascadingMainColumn(
                         submenuExpanded = expandedItem === item,
                         submenuHeader = false,
                         held = holdExpandedRow && expandedItem === item,
+                        reserveIconSlot = reserveIconSlot,
                         onClick = { if (children != null) onExpand(item) else onLeafSelected(item) },
                         onLongClick = if (children != null) ({ onExpand(item) }) else null,
                         modifier = Modifier.onGloballyPositioned { onAnchorRow(item, it) },
@@ -914,20 +1246,21 @@ private fun CascadingMainColumn(
 }
 
 /**
- * The sub menu list. On a compact window it starts with a copy of the parent item
- * (`PopupListItem.groupState` 2: medium title, tinted indicator) whose tap collapses the sub menu
- * (`performSubMenuHeader`); larger windows list the children only.
+ * The sub menu list. On a compact window it starts with a copy of the parent item whose tap
+ * collapses the sub menu (`performSubMenuHeader`), shown with a medium title and a tinted indicator
+ * while [headerActive] (`PopupListItem.groupState` 2); larger windows list the children only.
  */
 @Composable
 private fun CascadingSubList(
     parent: DropdownItem,
     showHeader: Boolean,
+    headerActive: Boolean,
     dropdownColors: DropdownColors,
     onHeaderClick: () -> Unit,
     onLeafSelected: (DropdownItem) -> Unit,
 ) {
     CompositionLocalProvider(LocalPopupListRole provides PopupListRole.Sub) {
-        CascadingSubColumn(parent, showHeader, dropdownColors, onHeaderClick, onLeafSelected)
+        CascadingSubColumn(parent, showHeader, headerActive, dropdownColors, onHeaderClick, onLeafSelected)
     }
 }
 
@@ -935,11 +1268,17 @@ private fun CascadingSubList(
 private fun CascadingSubColumn(
     parent: DropdownItem,
     showHeader: Boolean,
+    headerActive: Boolean,
     dropdownColors: DropdownColors,
     onHeaderClick: () -> Unit,
     onLeafSelected: (DropdownItem) -> Unit,
 ) {
     val children = parent.children.orEmpty()
+    // The sub menu's own adapter list (the header copy of the parent on a compact window, then the
+    // children) decides its icon flag, independently of the main menu.
+    val reserveIconSlot = remember(parent, showHeader) {
+        (showHeader && parent.icon != null) || children.any { it.icon != null }
+    }
     ListPopupColumn {
         if (showHeader) {
             PopupDropdownRow(
@@ -948,9 +1287,13 @@ private fun CascadingSubColumn(
                 dropdownColors = dropdownColors,
                 enabled = parent.enabled,
                 hasSubmenu = true,
-                submenuExpanded = true,
-                submenuHeader = true,
+                // PopupListItem.groupState 2 only from onSubMenuStartToEnter to
+                // onSubMenuStartToExit: the collapse runs with the plain title and indicator, so
+                // the band closes onto an identical main row.
+                submenuExpanded = headerActive,
+                submenuHeader = headerActive,
                 pressHandoff = true,
+                reserveIconSlot = reserveIconSlot,
                 onClick = onHeaderClick,
                 onLongClick = onHeaderClick,
             )
@@ -965,6 +1308,7 @@ private fun CascadingSubColumn(
                     hasSubmenu = false,
                     submenuExpanded = false,
                     submenuHeader = false,
+                    reserveIconSlot = reserveIconSlot,
                     onClick = { onLeafSelected(child) },
                 )
             }

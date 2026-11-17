@@ -40,6 +40,32 @@ class SpotLightTypeTest {
     }
 
     @Test
+    fun capsule2MatchesTheSegmentButtonPreset() {
+        // CAPSULE_PARAMS_2_LIGHT: OVERLAY 1.0, ditherN 1.0, noise 0.3.
+        // CAPSULE_PARAMS_2_DARK: PLUS 0.15, ditherN 0, noise 0.1.
+        val type = SpotLightType.Capsule2
+        assertEquals(1f, type.endIntensity(isDark = false))
+        assertEquals(BlendMode.Overlay, type.blendMode(isDark = false))
+        assertEquals(0.3f, type.noise(isDark = false))
+        assertEquals(1f, type.dither(isDark = false))
+        assertEquals(0.15f, type.endIntensity(isDark = true))
+        assertEquals(BlendMode.Plus, type.blendMode(isDark = true))
+        assertEquals(0.1f, type.noise(isDark = true))
+        assertEquals(0f, type.dither(isDark = true))
+        assertEquals(500f, type.endRadius)
+    }
+
+    @Test
+    fun otherPresetsKeepTheSharedGrainAndNoDither() {
+        for (type in SpotLightType.entries.filter { it != SpotLightType.Capsule2 }) {
+            for (isDark in listOf(false, true)) {
+                assertEquals(SpotLightShader.Noise, type.noise(isDark))
+                assertEquals(0f, type.dither(isDark))
+            }
+        }
+    }
+
+    @Test
     fun theButtonTypesUseTheirPresets() {
         assertEquals(SpotLightType.OpaqueMedium1, ContentButtonMaterialType.Primary.spotLight)
         assertEquals(SpotLightType.OpaqueMedium2, ContentButtonMaterialType.Secondary.spotLight)

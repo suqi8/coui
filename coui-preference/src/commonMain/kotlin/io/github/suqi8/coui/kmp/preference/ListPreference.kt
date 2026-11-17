@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
@@ -170,6 +171,7 @@ fun ListPreference(
             title = dialogTitle,
             onDismissRequest = { setExpanded(false) },
             onDismissFinished = { isHoldDown.value = false },
+            insideMargin = ListPreferenceDefaults.PanelInsideMargin,
             renderInRootScaffold = renderInRootScaffold,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -228,24 +230,28 @@ internal fun RowScope.PreferenceValueEndActions(
     enabled: Boolean,
 ) {
     val actionColor = if (enabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     val valueColor = if (enabled) {
-        COUITheme.colorScheme.onSurfaceSecondary
+        COUITheme.colorScheme.labelSecondary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     if (!valueText.isNullOrBlank()) {
         Text(
             text = valueText,
             modifier = Modifier
-                .padding(start = 8.dp, end = 4.dp)
+                // BasicComponent keeps 16dp to the title (support_preference_title_margin_end_in_right);
+                // the popup indicator keeps support_preference_image_margin_start 4dp.
+                .padding(end = 4.dp)
                 .weight(1f, fill = false),
-            fontSize = COUITheme.textStyles.footnote1.fontSize,
+            fontSize = COUITheme.textStyles.bodyS.fontSize,
             color = valueColor,
             textAlign = TextAlign.End,
+            // TextAppearance.COUI.List.Assignment.End: maxLines 2, ellipsize end.
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -305,7 +311,7 @@ internal fun SelectPanelItem(
             ) {
                 Text(
                     text = text,
-                    fontSize = COUITheme.textStyles.headline2.fontSize,
+                    fontSize = COUITheme.textStyles.headlineXS.fontSize,
                     fontWeight = FontWeight.Medium,
                     color = colors.itemTextColor(enabled),
                 )
@@ -313,7 +319,7 @@ internal fun SelectPanelItem(
                     Text(
                         text = it,
                         modifier = Modifier.padding(top = ListPreferenceDefaults.PanelItemSummarySpacing),
-                        fontSize = COUITheme.textStyles.body2.fontSize,
+                        fontSize = COUITheme.textStyles.bodyM.fontSize,
                         color = colors.itemSummaryColor(enabled),
                     )
                 }
@@ -355,6 +361,12 @@ internal fun SelectedCheckIndicator(
 
 object ListPreferenceDefaults {
 
+    /**
+     * The horizontal margin of the selection panel content. The bottom sheet itself has no
+     * horizontal inset (COUI panels), so the rows keep the 24dp side margin they had before.
+     */
+    val PanelInsideMargin = DpSize(24.dp, 0.dp)
+
     /** The minimum height of a panel row (COUI coui_delete_alert_dialog_button_height). */
     val PanelItemMinHeight = 48.dp
 
@@ -390,12 +402,12 @@ object ListPreferenceDefaults {
      */
     @Composable
     fun listPreferenceColors(
-        itemTextColor: Color = COUITheme.colorScheme.onSurface,
-        disabledItemTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
-        itemSummaryColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
-        disabledItemSummaryColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        itemTextColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledItemTextColor: Color = COUITheme.colorScheme.disabledNeutral,
+        itemSummaryColor: Color = COUITheme.colorScheme.labelSecondary,
+        disabledItemSummaryColor: Color = COUITheme.colorScheme.disabledNeutral,
         selectedIndicatorColor: Color = COUITheme.colorScheme.primary,
-        disabledSelectedIndicatorColor: Color = COUITheme.colorScheme.disabledPrimary,
+        disabledSelectedIndicatorColor: Color = COUITheme.colorScheme.disable,
     ): ListPreferenceColors = remember(
         itemTextColor,
         disabledItemTextColor,

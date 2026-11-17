@@ -6,11 +6,14 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,12 +41,17 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChangedIgnoreConsumed
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
@@ -70,6 +78,7 @@ import io.github.suqi8.coui.kmp.effect.SpotLightState
 import io.github.suqi8.coui.kmp.effect.SpotLightType
 import io.github.suqi8.coui.kmp.effect.StrokeEffectParams
 import io.github.suqi8.coui.kmp.effect.TouchMotion
+import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.effect.pressSpring
@@ -82,6 +91,7 @@ import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
@@ -135,6 +145,10 @@ import kotlin.math.roundToInt
  * @param dragAnimationEnabled Whether the whole control follows the `COUIViewTouchAnimator` touch
  *   motion (`setDragAnimationEnabled`).
  * @param hapticFeedbackEnabled Whether dragging the indicator onto another segment ticks.
+ * @param responsiveWidthEnabled Whether a fixed width is capped to the COUI responsive grid
+ *   (`setResponsiveWidthEnabled`, on by default): 4 grid columns of the window on small screens
+ *   (the full grid), 6 on medium and 8 on large ones (`getResponsiveWidth`). A capped control is
+ *   centred in the fixed width it was given.
  * @param height The height of the [SegmentButton], at least [SegmentButtonDefaults.MinHeight].
  * @param padding The inset of the indicator from the track edge (`setSegmentPadding`).
  * @param colors The [SegmentButtonColors] of the [SegmentButton].
@@ -150,6 +164,7 @@ fun SegmentButton(
     materialEffect: Boolean = false,
     dragAnimationEnabled: Boolean = true,
     hapticFeedbackEnabled: Boolean = true,
+    responsiveWidthEnabled: Boolean = true,
     height: Dp = SegmentButtonDefaults.Height,
     padding: Dp = SegmentButtonDefaults.Padding,
     colors: SegmentButtonColors = SegmentButtonDefaults.segmentButtonColors(),
@@ -160,7 +175,7 @@ fun SegmentButton(
     val haptic = rememberCouiHaptic()
     val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val squircleEnabled = isSquircleEnabled()
 
     // selectSegmentAt from outside: the indicator follows the hoisted selection. A touch moves
@@ -206,9 +221,23 @@ fun SegmentButton(
     val trackColor = if (backdropModifier != null) Color.Transparent else colors.backgroundColor
     val trackStroke = if (isDark) TrackStrokeDark else TrackStrokeLight
     val indicatorStroke = if (isDark) IndicatorStrokeDark else IndicatorStrokeLight
-    val spotType = SpotLightType.OpaqueMedium2
+    val spotType = SpotLightType.Capsule2
     val spotIntensity = spotType.endIntensity(isDark)
     val spotBlend = spotType.blendMode(isDark)
+    val spotNoise = spotType.noise(isDark)
+    val spotDither = spotType.dither(isDark)
+    // getResponsiveWidth: 8 grid columns on large screens, 6 on medium, 4 on small (small margin).
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val responsiveWidth = if (responsiveWidthEnabled && windowSize.width > 0.dp) {
+        val columns = when (COUILayoutGrid.screenTier(windowSize.width, windowSize.height)) {
+            COUILayoutGrid.ScreenTier.Large -> 8
+            COUILayoutGrid.ScreenTier.Medium -> 6
+            COUILayoutGrid.ScreenTier.Small -> 4
+        }
+        COUILayoutGrid.gridWidth(columns, windowSize.width, windowSize.height, COUILayoutGrid.MarginType.Small)
+    } else {
+        null
+    }
 
     Layout(
         content = {
@@ -217,6 +246,7 @@ fun SegmentButton(
                     targetValue = if (index == selectedIndex) colors.selectedTextColor else colors.unselectedTextColor,
                     animationSpec = tween(TextColorDurationMillis, easing = MoveEase),
                 )
+                val itemInteractionSource = remember { MutableInteractionSource() }
                 Box(
                     modifier = Modifier
                         .semantics {
@@ -228,7 +258,19 @@ fun SegmentButton(
                                 true
                             }
                         }
+                        // dispatchKeyEvent: DPAD_CENTER / ENTER released on a focused segment selects it.
+                        .onKeyEvent { event ->
+                            val confirm = event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.DirectionCenter
+                            if (confirm && event.type == KeyEventType.KeyUp && enabled && index != selectedIndex) {
+                                currentOnSelectedIndexChange(index)
+                            }
+                            false
+                        }
+                        .focusable(enabled = enabled, interactionSource = itemInteractionSource)
                         .couiPressScale(pressed = state.pressed[index] == true, enabled = enabled)
+                        // initStateEffectBackground: a TYPE_INNER COUIStrokeDrawable on each segment,
+                        // a capsule of the segment bounds.
+                        .couiFocusStroke(interactionSource = itemInteractionSource, shape = CircleShape, enabled = enabled, inner = true)
                         .padding(horizontal = SegmentButtonDefaults.SegmentPaddingHorizontal),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -419,6 +461,8 @@ fun SegmentButton(
                                 lightY = light.y,
                                 radius = SpotLightShader.radius(glow, spotlight.extinguishing),
                                 intensity = spotIntensity * glow,
+                                noise = spotNoise,
+                                dither = spotDither,
                             )
                             clipPath(trackPath) {
                                 drawRect(brush = shaders.spotLight.asBrush(), blendMode = spotBlend)
@@ -439,7 +483,14 @@ fun SegmentButton(
         val width: Int
         val widths: IntArray
         if (fixedWidth || naturalTotal > constraints.maxWidth || naturalTotal < constraints.minWidth) {
-            width = if (fixedWidth) constraints.maxWidth else naturalTotal.coerceIn(constraints.minWidth, constraints.maxWidth)
+            width = when {
+                // onMeasure (EXACTLY): size = min(getResponsiveWidth(), size).
+                fixedWidth && responsiveWidth != null -> min(constraints.maxWidth, responsiveWidth.roundToPx())
+
+                fixedWidth -> constraints.maxWidth
+
+                else -> naturalTotal.coerceIn(constraints.minWidth, constraints.maxWidth)
+            }
             widths = distributeSegmentWidths(natural, (width - 2 * paddingPx).coerceAtLeast(0))
         } else {
             width = naturalTotal
@@ -907,7 +958,7 @@ object SegmentButtonDefaults {
 
     /** The label style: `couiTextButtonM`, 14sp sans-serif-medium. */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.subtitle
+    fun textStyle(): TextStyle = COUITheme.textStyles.buttonM
 
     /**
      * The default [SegmentButtonColors]:
@@ -921,8 +972,8 @@ object SegmentButtonDefaults {
     fun segmentButtonColors(
         backgroundColor: Color = if (isDarkScheme()) BackgroundDark else BackgroundLight,
         indicatorColor: Color = if (isDarkScheme()) IndicatorDark else IndicatorLight,
-        selectedTextColor: Color = COUITheme.colorScheme.onSurface,
-        unselectedTextColor: Color = COUITheme.colorScheme.onSurface,
+        selectedTextColor: Color = COUITheme.colorScheme.labelPrimary,
+        unselectedTextColor: Color = COUITheme.colorScheme.labelPrimary,
         indicatorShadowColor: Color = if (isDarkScheme()) ShadowDark else ShadowLight,
         indicatorShadowEndColor: Color = ShadowEnd,
     ): SegmentButtonColors = remember(
@@ -977,7 +1028,7 @@ object SegmentButtonDefaults {
     )
 
     @Composable
-    private fun isDarkScheme(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+    private fun isDarkScheme(): Boolean = COUITheme.colorScheme.isDark
 }
 
 /**

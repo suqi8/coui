@@ -726,4 +726,74 @@ internal object ShadowEdgePresets {
 
     /** `CONTENT_CAPSULE_PARAMS_6_DISABLED_DARK`. */
     val ContentCapsule6DisabledDark = StrokeEffectParams(0.045f, 3f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_7` (`TYPE_FRAMEWORK_CAPSULE_7`, both schemes): the immersive
+     * top-bar capsule (`ToolbarMaterialEffectResolver.getCapsuleStrokeEffectType(1)`).
+     */
+    val Capsule7 = StrokeEffectParams(0.5f, 2.5f, 0f, 0.05f, 1f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_8_LIGHT` (`TYPE_FRAMEWORK_CAPSULE_8`): the default top-bar capsule
+     * inside a blurred window (`getCapsuleStrokeEffectTypeInWindow(0 / 2)`).
+     */
+    val Capsule8Light = StrokeEffectParams(0.8f, 1.8f, 0f, 0.1f, 0f, 1f)
+
+    /** `FRAMEWORK_CAPSULE_PARAMS_8_DARK`. */
+    val Capsule8Dark = StrokeEffectParams(0.15f, 1.8f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_9` (`TYPE_FRAMEWORK_CAPSULE_9`, both schemes): the immersive
+     * top-bar capsule inside a blurred window (`getCapsuleStrokeEffectTypeInWindow(1)`).
+     */
+    val Capsule9 = StrokeEffectParams(0.18f, 2.5f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_11_LIGHT` (`TYPE_FRAMEWORK_CAPSULE_11`): the drawable-material
+     * segment button background (`COUISegmentButtonLayout.setStrokeEffectType(null)`, drawn only
+     * once `mDrawMaterialEffect` is set).
+     */
+    val Capsule11Light = StrokeEffectParams(0.45f, 2.5f, 0f, 0.15f, 0f, 1f)
+
+    /** `FRAMEWORK_CAPSULE_PARAMS_11_DARK`. */
+    val Capsule11Dark = StrokeEffectParams(0.1f, 2.5f, 0f, 0.03f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_12_LIGHT` (`TYPE_FRAMEWORK_CAPSULE_12`): the drawable-material
+     * floating navigation bar (`BaseBottomFloatingMenuView`, `mIsDrawableMaterialEffect`).
+     */
+    val Capsule12Light = StrokeEffectParams(0.8f, 2f, 0f, 0.1f, 0f, 1f)
+
+    /** `FRAMEWORK_CAPSULE_PARAMS_12_DARK`. */
+    val Capsule12Dark = StrokeEffectParams(0.15f, 2f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CAPSULE_PARAMS_13_LIGHT` (`TYPE_FRAMEWORK_CAPSULE_13`): the drawable-material
+     * floating toolbar menu (`COUIBottomFloatingToolbarMenuView`, `mIsDrawableMaterialEffect`).
+     */
+    val Capsule13Light = StrokeEffectParams(0.8f, 2.3f, 0f, 0.1f, 0f, 1f)
+
+    /** `FRAMEWORK_CAPSULE_PARAMS_13_DARK`. */
+    val Capsule13Dark = StrokeEffectParams(0.15f, 2.3f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CIRCLE_PARAMS_3` (`TYPE_FRAMEWORK_CIRCLE_3`, both schemes): the immersive top-bar
+     * circle (`getCircleStrokeEffectType(1)`).
+     */
+    val Circle3 = StrokeEffectParams(0.5f, 2f, 0f, 0.01f, 1f, 1.15f)
+
+    /**
+     * `FRAMEWORK_CIRCLE_PARAMS_4_LIGHT` (`TYPE_FRAMEWORK_CIRCLE_4`): the default top-bar circle
+     * inside a blurred window (`getCircleStrokeEffectTypeInWindow(0 / 2)`).
+     */
+    val Circle4Light = StrokeEffectParams(0.8f, 1.8f, 0f, 0.1f, 0f, 1f)
+
+    /** `FRAMEWORK_CIRCLE_PARAMS_4_DARK`. */
+    val Circle4Dark = StrokeEffectParams(0.15f, 1.8f, 0f, 0.01f, 0f, 1f)
+
+    /**
+     * `FRAMEWORK_CIRCLE_PARAMS_5` (`TYPE_FRAMEWORK_CIRCLE_5`, both schemes): the immersive top-bar
+     * circle inside a blurred window (`getCircleStrokeEffectTypeInWindow(1)`).
+     */
+    val Circle5 = StrokeEffectParams(0.28f, 2.5f, 0f, 0.01f, 0f, 1f)
 }

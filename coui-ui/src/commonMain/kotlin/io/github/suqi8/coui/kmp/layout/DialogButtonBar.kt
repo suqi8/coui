@@ -15,7 +15,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -109,7 +108,7 @@ fun DialogButtonBar(
         DialogButtonBarDefaults.neutralButtonColors()
     },
     recommendedColors: TextButtonColors = DialogButtonBarDefaults.recommendedButtonColors(),
-    textStyle: TextStyle = COUITheme.textStyles.button,
+    textStyle: TextStyle = COUITheme.textStyles.buttonL,
 ) {
     if (negative == null && positive == null && neutral == null) return
 
@@ -369,8 +368,9 @@ private fun BarButton(
         Text(
             text = action.text,
             style = textStyle,
-            // The bar measures label wrapping itself and grows the button for multi-line labels.
-            maxLines = Int.MAX_VALUE,
+            // COUIAlertDialogBottomButtonSecondary android:maxLines = 2; the bar measures label
+            // wrapping itself and grows the button for multi-line labels.
+            maxLines = DialogButtonBarDefaults.LabelMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
     }
@@ -424,6 +424,12 @@ object DialogButtonBarDefaults {
     val StackedButtonMinHeightMultiline = 56.dp
 
     /**
+     * The max number of lines of a bar button label before it ellipsizes. COUI
+     * `COUIAlertDialogBottomButtonSecondary` `android:maxLines`.
+     */
+    val LabelMaxLines = 2
+
+    /**
      * The default [TextButtonColors] of the negative and positive buttons. COUI
      * `Widget.COUI.Button.Large.ButtonNew.Secondary`: `?couiColorContainer8` fill (also the
      * disabled fill) and `coui_btn_secondary_text_color` (`?couiColorLabelPrimary`) labels.
@@ -432,8 +438,8 @@ object DialogButtonBarDefaults {
     fun buttonColors(
         color: Color = COUITheme.colorScheme.dialogButton,
         disabledColor: Color = COUITheme.colorScheme.dialogButton,
-        textColor: Color = COUITheme.colorScheme.onSecondaryVariant,
-        disabledTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        textColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledTextColor: Color = COUITheme.colorScheme.disabledNeutral,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
         TextButtonColors(
             color = color,
@@ -453,8 +459,8 @@ object DialogButtonBarDefaults {
     fun materialButtonColors(
         color: Color = if (isDarkTheme()) MaterialFillDark else MaterialFillLight,
         disabledColor: Color = COUITheme.colorScheme.dialogButton,
-        textColor: Color = COUITheme.colorScheme.onSecondaryVariant,
-        disabledTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        textColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledTextColor: Color = COUITheme.colorScheme.disabledNeutral,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
         TextButtonColors(
             color = color,
@@ -493,7 +499,7 @@ object DialogButtonBarDefaults {
     @Composable
     fun recommendedButtonColors(
         color: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        disabledColor: Color = COUITheme.colorScheme.disable,
         textColor: Color = COUITheme.colorScheme.onPrimary,
         disabledTextColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
@@ -512,7 +518,7 @@ object DialogButtonBarDefaults {
     private val MaterialFillDark = Color(0x33FFFFFF)
 
     @Composable
-    private fun isDarkTheme(): Boolean = COUITheme.colorScheme.background.luminance() < 0.5f
+    private fun isDarkTheme(): Boolean = COUITheme.colorScheme.isDark
 
     /**
      * The default [TextButtonColors] of the neutral button. COUI

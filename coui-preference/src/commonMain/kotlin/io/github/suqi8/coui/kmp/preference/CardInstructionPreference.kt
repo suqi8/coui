@@ -162,7 +162,7 @@ private fun CardInstructionPageContent(
                             Text(
                                 text = title,
                                 modifier = Modifier.padding(top = CardInstructionPreferenceDefaults.IllustrationTitleTopMargin),
-                                style = COUITheme.textStyles.body2,
+                                style = COUITheme.textStyles.bodyM,
                                 color = colors.summaryColor,
                                 textAlign = TextAlign.Center,
                             )
@@ -195,7 +195,7 @@ private fun CardInstructionPageContent(
                 Text(
                     text = title,
                     modifier = Modifier.fillMaxWidth(),
-                    style = COUITheme.textStyles.headline2,
+                    style = COUITheme.textStyles.headlineXS,
                     color = colors.titleColor,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
@@ -214,7 +214,7 @@ private fun CardInstructionPageContent(
                             },
                         )
                         .wrapContentWidth(),
-                    style = COUITheme.textStyles.footnote2,
+                    style = COUITheme.textStyles.bodyXS,
                     color = colors.summaryColor,
                     textAlign = TextAlign.Start,
                 )
@@ -302,11 +302,11 @@ object CardInstructionPreferenceDefaults {
      */
     @Composable
     fun cardInstructionPreferenceColors(
-        containerColor: Color = COUITheme.colorScheme.surfaceContainer,
-        titleColor: Color = COUITheme.colorScheme.onSurface,
-        summaryColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
-        dotColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        selectedDotColor: Color = COUITheme.colorScheme.onSurface,
+        containerColor: Color = COUITheme.colorScheme.cardBackground,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        summaryColor: Color = COUITheme.colorScheme.labelSecondary,
+        dotColor: Color = COUITheme.colorScheme.labelTertiary,
+        selectedDotColor: Color = COUITheme.colorScheme.labelPrimary,
     ): CardInstructionPreferenceColors = remember(containerColor, titleColor, summaryColor, dotColor, selectedDotColor) {
         CardInstructionPreferenceColors(
             containerColor = containerColor,

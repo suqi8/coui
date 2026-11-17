@@ -8,19 +8,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.luminance
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
  * What a popup surface paints: its fill, the modifier drawn inside its clip under the rows, and
  * whether the material effects (shadow edge, spotlight) go on top.
+ *
+ * @property blurred Whether the default popup material blur draws (`RoundFrameLayout`
+ *   `getUseBackgroundBlur`), which hides a fading sub menu below 10% alpha.
  */
 @Immutable
 internal class PopupSurface(
     val color: Color,
     val backgroundModifier: Modifier,
     val materialEffect: Boolean,
+    val blurred: Boolean = false,
 )
 
 /**
@@ -32,9 +35,13 @@ internal class PopupSurface(
  * Must be called where the popup is called, not inside its host: the provider is scoped to the call
  * site so dialogs and sheets can turn it off for menus opened over them.
  *
- * The material effects only make sense on a blurred surface (`RoundFrameLayout.initMaterialEffects`
- * runs once the blur is on), so [materialEffect] is honoured when the default blur draws or the
- * caller paints its own blur through a translucent [backgroundColor] and [backgroundModifier].
+ * [materialEffect] (the shadow-edge stroke and the touch spotlight of `RoundFrameLayout`) is honoured
+ * on every surface, blurred or not. COUI only starts them once the blur is on
+ * (`RoundFrameLayout.onAttachedToWindow` → `initMaterialEffects`); this library draws them on the
+ * opaque fallback too, with the same parameters, so a menu opened where no blur is available (inside
+ * a dialog or sheet, without a [LocalPopupMaterialBlur] provider, or with `materialBlur = false`)
+ * still lights up. Both are additive white light (source-over stroke, overlay spotlight), so they
+ * show on the blurred and the dark surfaces and fade out against a pure white light-scheme fill.
  */
 @Composable
 internal fun rememberPopupSurface(
@@ -44,7 +51,7 @@ internal fun rememberPopupSurface(
     backgroundModifier: Modifier = Modifier,
 ): PopupSurface {
     val provider = if (materialBlur) LocalPopupMaterialBlur.current else null
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val blur = remember(provider, isDark) {
         provider?.materialBlur(ListPopupDefaults.materialBlurSpec(isDark), RectangleShape)
     }
@@ -52,7 +59,8 @@ internal fun rememberPopupSurface(
         PopupSurface(
             color = if (blur != null) Color.Transparent else backgroundColor,
             backgroundModifier = if (blur != null) blur.then(backgroundModifier) else backgroundModifier,
-            materialEffect = materialEffect && (blur != null || backgroundColor.alpha < 1f),
+            materialEffect = materialEffect,
+            blurred = blur != null,
         )
     }
 }

@@ -164,6 +164,7 @@ fun MultiSelectListPreference(
             title = dialogTitle,
             onDismissRequest = { setExpanded(false) },
             onDismissFinished = { isHoldDown.value = false },
+            insideMargin = ListPreferenceDefaults.PanelInsideMargin,
             renderInRootScaffold = renderInRootScaffold,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -220,7 +221,7 @@ fun MultiSelectListPreference(
                         modifier = Modifier
                             .width(1.dp)
                             .height(20.dp)
-                            .background(COUITheme.colorScheme.dividerLine),
+                            .background(COUITheme.colorScheme.divider),
                     )
                     TextButton(
                         text = confirmButtonText,

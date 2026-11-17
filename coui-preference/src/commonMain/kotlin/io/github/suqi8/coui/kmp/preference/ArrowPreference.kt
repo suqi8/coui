@@ -116,8 +116,8 @@ object ArrowPreferenceDefaults {
      */
     @Composable
     fun endActionColors(): EndActionColors {
-        val color = COUITheme.colorScheme.onSurfaceVariantActions
-        val disabledColor = COUITheme.colorScheme.disabledOnSecondaryVariant
+        val color = COUITheme.colorScheme.labelTertiary
+        val disabledColor = COUITheme.colorScheme.disabledNeutral
         return remember(color, disabledColor) {
             EndActionColors(
                 color = color,

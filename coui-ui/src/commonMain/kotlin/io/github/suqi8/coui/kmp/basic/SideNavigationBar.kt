@@ -198,7 +198,7 @@ fun SideNavigationBar(
     parentChildHierarchy: Boolean = false,
     editMode: Boolean = false,
     editModeMask: Boolean = true,
-    drawerColor: Color = COUITheme.colorScheme.surface,
+    drawerColor: Color = COUITheme.colorScheme.backgroundWithCard,
     maskColor: Color = SideNavigationBarDefaults.maskColor,
     dividerColor: Color = DividerDefaults.DividerColor,
     content: @Composable () -> Unit,
@@ -313,7 +313,7 @@ object SideNavigationBarDefaults {
 
     /** `coui_color_mask` (#33000000 light, #99000000 dark): the window dimming color. */
     val maskColor: Color
-        @Composable get() = COUITheme.colorScheme.windowDimming
+        @Composable get() = COUITheme.colorScheme.mask
 
     /**
      * The drawer mode of a bar [width] x [height]: docked when the screen tier weight (small 1,

@@ -28,12 +28,16 @@ import kotlin.math.max
  *   until it has been measured.
  * @property interactive whether the bar takes touches. A collapsing bar sits behind the toolbar
  *   children in COUI (`updateLayerInToolBar(false)`), so its capsule and buttons stay still.
+ * @property onFadeChange told by the [InputField] whether its capsule goes without the glass
+ *   material: `showInToolBar` / `hideInToolBar` only run the icon expansion when `isBlurEnable()`,
+ *   and otherwise fade the whole bar in over the toolbar (`mFadeInFadeOutAnimation`).
  */
 @Stable
 internal class SearchBarIconExpand(
     val progress: () -> Float,
     val sourceCenterX: () -> Float,
     val interactive: () -> Boolean,
+    val onFadeChange: (Boolean) -> Unit,
 )
 
 internal val LocalSearchBarIconExpand = staticCompositionLocalOf<SearchBarIconExpand?> { null }
@@ -64,6 +68,9 @@ internal class SearchBarGeometry {
 
     /** The action slot's origin within the row. */
     var actionSlotOrigin = Offset.Zero
+
+    /** The width the action slot claims in the row this frame, in pixels; written while measuring. */
+    var actionSlotWidth = 0
 
     /** The action button's untransformed bounds within the row. */
     val actionRect: Rect get() = actionLocalRect.translate(actionSlotOrigin)

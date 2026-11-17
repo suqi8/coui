@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.isSupported
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
@@ -72,7 +71,7 @@ object COUIMaterialEffect {
      *
      * @param interactionSource The interaction source driving the press state.
      * @param cornerRadius The corner radius; half the height for a circle or capsule.
-     * @param enabled Whether the material is drawn.
+     * @param enabled Whether the material is drawn. Defaults to [LocalCOUIMaterialEffectEnabled].
      * @param motionEnabled Whether the touch motion runs. Pass `false` for a disabled button.
      * @param spotLightSuppressed Read when a touch would light or move the spotlight; while it
      *   returns `true` the spotlight stays dark. A gesture handler running later in the same pass
@@ -87,7 +86,7 @@ object COUIMaterialEffect {
     fun Modifier.materialPanel(
         interactionSource: MutableInteractionSource,
         cornerRadius: Dp = 20.dp,
-        enabled: Boolean = true,
+        enabled: Boolean = LocalCOUIMaterialEffectEnabled.current,
         motionEnabled: Boolean = true,
         spotLightSuppressed: () -> Boolean = { false },
         touchMotionSuppressed: (() -> Boolean)? = null,
@@ -95,7 +94,9 @@ object COUIMaterialEffect {
         if (!enabled) return this
         val currentSpotLightSuppressed by rememberUpdatedState(spotLightSuppressed)
 
-        val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+        val isDark = COUITheme.colorScheme.isDark
+        // ?couiColorBar, the non-blur fallback (ToolbarMaterialEffectResolver.getToolbarBackgroundColor).
+        val fallbackFill = COUITheme.colorScheme.bar
         val pressed by interactionSource.collectIsPressedAsState()
         val hovered by interactionSource.collectIsHoveredAsState()
 
@@ -133,7 +134,6 @@ object COUIMaterialEffect {
         val blendSupported = remember { BlendMode.ColorDodge.isSupported() && BlendMode.Luminosity.isSupported() }
         val pressMaskColor = if (isDark) PressMaskDark else PressMaskLight
         val hoverMaskColor = if (isDark) HoverMaskDark else HoverMaskLight
-        val fallbackFill = if (isDark) BarFallbackDark else BarFallbackLight
 
         return this
             // The touch motion moves the whole button (shadow, material, edge and icon) together.
@@ -365,7 +365,7 @@ object COUIMaterialEffect {
         } ?: return this
         // The edge-light pass of a framework stroke (non-drawable types, see FrameworkEdgeBlendMode).
         val edgePass = remember { RuntimeShader(ShadowEdgeShader.Source) }
-        val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+        val isDark = COUITheme.colorScheme.isDark
         val spotlight = remember { SpotLightState() }
         val scope = rememberCoroutineScope()
         val stroke = type.stroke(isDark, enabled)
@@ -463,10 +463,6 @@ object COUIMaterialEffect {
     private val FilterDark1 = Color(0xCC262626)
     private val FilterDark2 = Color(0xB37F7F7F)
 
-    // ?couiColorBar, the non-blur fallback (ToolbarMaterialEffectResolver.getToolbarBackgroundColor).
-    private val BarFallbackLight = Color(0xFFFAFAFA)
-    private val BarFallbackDark = Color(0xFF1E1E1E)
-
     // coui_color_press.
     private val PressMaskLight = Color(0x1F000000)
     private val PressMaskDark = Color(0x33FFFFFF)
@@ -474,6 +470,75 @@ object COUIMaterialEffect {
     // coui_color_hover.
     internal val HoverMaskLight = Color(0x14000000)
     internal val HoverMaskDark = Color(0x26FFFFFF)
+}
+
+/**
+ * The top-bar material presets (`COUIToolbar.setMaterialEffectType`, `supportMaterialType`) and the
+ * stroke presets `ToolbarMaterialEffectResolver` picks for them. `COUIMaterialEffect.materialPanel`
+ * draws [Default].
+ */
+internal enum class TopBarMaterialLevel {
+    /** Preset 0: `TYPE_FRAMEWORK_TOP_BAR` fill, `CAPSULE_1` / `CIRCLE_1` stroke. */
+    Default,
+
+    /** Preset 1 (immersive): `TYPE_FRAMEWORK_TOP_BAR1` fill, `CAPSULE_7` / `CIRCLE_3` stroke. */
+    Immersive,
+
+    /** Preset 2: `TYPE_FRAMEWORK_TOP_BAR_BLUR` fill, `CAPSULE_1` / `CIRCLE_1` stroke. */
+    DefaultBlur,
+    ;
+
+    /** `ToolbarMaterialEffectResolver.getCapsuleStrokeEffectType` / `getCircleStrokeEffectType`. */
+    fun stroke(isCapsule: Boolean, isDark: Boolean): StrokeEffectParams = when {
+        this == Immersive -> if (isCapsule) ShadowEdgePresets.Capsule7 else ShadowEdgePresets.Circle3
+        isCapsule -> if (isDark) ShadowEdgePresets.CapsuleDark else ShadowEdgePresets.CapsuleLight
+        else -> if (isDark) ShadowEdgePresets.CircleDark else ShadowEdgePresets.CircleLight
+    }
+
+    /**
+     * `ToolbarMaterialEffectResolver.getCapsuleStrokeEffectTypeInWindow` /
+     * `getCircleStrokeEffectTypeInWindow`: the AGSL `COUIShadowEdgeDrawable` stroke
+     * `ToolbarMaterialEffectDelegate.applyBlurWindowBackground` draws, source-over, when the button
+     * sits in a blurred window. `CAPSULE_9` / `CIRCLE_5` for [Immersive], `CAPSULE_8` / `CIRCLE_4`
+     * otherwise.
+     */
+    fun strokeInWindow(isCapsule: Boolean, isDark: Boolean): StrokeEffectParams = when {
+        this == Immersive -> if (isCapsule) ShadowEdgePresets.Capsule9 else ShadowEdgePresets.Circle5
+        isCapsule -> if (isDark) ShadowEdgePresets.Capsule8Dark else ShadowEdgePresets.Capsule8Light
+        else -> if (isDark) ShadowEdgePresets.Circle4Dark else ShadowEdgePresets.Circle4Light
+    }
+
+    /**
+     * The opaque fill `applyBlurWindowBackground` lays under [strokeInWindow]
+     * (`BLUR_WINDOW_VIEW_BG_COLOR_LIGHT` `#FFF0F0F0`, `_DARK` `#FF333333`, `_IMMERSIVE` `#26FFFFFF`).
+     */
+    fun windowFill(isDark: Boolean): Color = when {
+        this == Immersive -> WindowFillImmersive
+        isDark -> WindowFillDark
+        else -> WindowFillLight
+    }
+
+    private companion object {
+        val WindowFillLight = Color(0xFFF0F0F0)
+        val WindowFillDark = Color(0xFF333333)
+        val WindowFillImmersive = Color(0x26FFFFFF)
+    }
+}
+
+/**
+ * The drawable-material panel strokes of the bottom bars and the segment button, drawn by the AGSL
+ * `COUIShadowEdgeDrawable` only after the widget's drawable-material setter is called
+ * (`mIsDrawableMaterialEffect` / `mDrawMaterialEffect` start `false`).
+ */
+internal object DrawableMaterialStrokes {
+    /** `BaseBottomFloatingMenuView` (floating navigation bar): `TYPE_FRAMEWORK_CAPSULE_12`. */
+    fun navigationBar(isDark: Boolean): StrokeEffectParams = if (isDark) ShadowEdgePresets.Capsule12Dark else ShadowEdgePresets.Capsule12Light
+
+    /** `COUIBottomFloatingToolbarMenuView` (floating toolbar): `TYPE_FRAMEWORK_CAPSULE_13`. */
+    fun toolbar(isDark: Boolean): StrokeEffectParams = if (isDark) ShadowEdgePresets.Capsule13Dark else ShadowEdgePresets.Capsule13Light
+
+    /** `COUISegmentButtonLayout` background: `TYPE_FRAMEWORK_CAPSULE_11`. */
+    fun segmentButton(isDark: Boolean): StrokeEffectParams = if (isDark) ShadowEdgePresets.Capsule11Dark else ShadowEdgePresets.Capsule11Light
 }
 
 /**

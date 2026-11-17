@@ -90,7 +90,9 @@ internal object SpotLightShader {
     """.trimIndent()
 
     // The parameters below are shared by every [SpotLightType] this library uses
-    // (`COUISpotLightEffect` static initializer); only the end intensity and blend mode differ.
+    // (`COUISpotLightEffect` static initializer); the end intensity and blend mode differ per type,
+    // and `TYPE_CAPSULE_2` also overrides the grain ([SpotLightType.noise]) and dither
+    // ([SpotLightType.dither]).
 
     /** Start radius (100px). */
     val StartRadius = 100f
@@ -110,6 +112,9 @@ internal object SpotLightShader {
     /** Grain amount. */
     val Noise = 0.08f
 
+    /** Dither amount (`ditherN`, in 1/255 steps); 0 disables the dither pass. */
+    val Dither = 0f
+
     /**
      * Light radius at glow [progress]. While extinguishing, `COUISpotLightEffect` adds
      * `2 * endRadius * (1 - progress)` so the light spreads out as it fades.
@@ -125,18 +130,23 @@ internal object SpotLightShader {
         lightY: Float,
         radius: Float,
         intensity: Float,
+        noise: Float = Noise,
+        dither: Float = Dither,
     ) {
         shader.setFloatUniform("u_lightPosAndHeight", lightX, lightY, radius, intensity)
         shader.setFloatUniform("u_lightColorAndAmbient", 1f, 1f, 1f, Ambient)
-        shader.setFloatUniform("u_lightingParams", Diffuse, LightHeight, Noise, 0f)
+        // `SpotLightShader.java:70`: (diffuse, lightHeight, noiseExp, ditherN).
+        shader.setFloatUniform("u_lightingParams", Diffuse, LightHeight, noise, dither)
     }
 }
 
 /**
  * The `COUISpotLightEffect.SpotLightType` presets this library draws. All of them share the
- * [SpotLightShader] radii, light height, ambient / diffuse strength and noise; they differ in the
- * end intensity and the blend mode, per light / dark theme (`COUISpotLightEffect` static
- * initializer, `SpotLightParams(blendMode, startIntensity, endIntensity, ...)`).
+ * [SpotLightShader] start radius, light height and ambient / diffuse strength; they differ in the
+ * end intensity and the blend mode, per light / dark theme, and a few override the end radius,
+ * grain and dither (`COUISpotLightEffect` static initializer,
+ * `SpotLightParams(blendMode, startIntensity, endIntensity, startRadius, endRadius, lightHeight,
+ * ambient, diffuse, ditherN, noise)`).
  */
 internal enum class SpotLightType(
     private val lightIntensity: Float,
@@ -145,7 +155,17 @@ internal enum class SpotLightType(
     private val darkBlendMode: BlendMode,
     /** The radius the light grows to, in pixels. */
     val endRadius: Float = 500f,
+    private val lightNoise: Float = SpotLightShader.Noise,
+    private val darkNoise: Float = SpotLightShader.Noise,
+    private val lightDither: Float = SpotLightShader.Dither,
+    private val darkDither: Float = SpotLightShader.Dither,
 ) {
+    /**
+     * `TYPE_OPAQUE_SMALL_1`: the floating action button (`FloatingButtonWrapper.init`). 0.6 light,
+     * 0.5 dark, both OVERLAY.
+     */
+    OpaqueSmall1(0.6f, BlendMode.Overlay, 0.5f, BlendMode.Overlay),
+
     /** `TYPE_OPAQUE_SMALL_2`: the top-bar buttons. 1.0 OVERLAY light, 0.15 PLUS dark. */
     OpaqueSmall2(1f, BlendMode.Overlay, 0.15f, BlendMode.Plus),
 
@@ -160,6 +180,23 @@ internal enum class SpotLightType(
 
     /** `TYPE_TRANSLUCENT_LARGE_1`: the blurred popup menu. 0.6 light, 0.1 dark, both OVERLAY, 800px reach. */
     TranslucentLarge1(0.6f, BlendMode.Overlay, 0.1f, BlendMode.Overlay, endRadius = 800f),
+
+    /**
+     * `TYPE_CAPSULE_2`: the segment button's default (`COUISegmentButtonLayout.initSpotLight` ->
+     * `setSpotLightEffectType(null)`). `CAPSULE_PARAMS_2_LIGHT` is 1.0 OVERLAY with grain 0.3 and
+     * dither 1.0; `CAPSULE_PARAMS_2_DARK` is 0.15 PLUS with grain 0.1 and no dither. Pass [noise]
+     * and [dither] to [SpotLightShader.setUniforms].
+     */
+    Capsule2(
+        1f,
+        BlendMode.Overlay,
+        0.15f,
+        BlendMode.Plus,
+        lightNoise = 0.3f,
+        darkNoise = 0.1f,
+        lightDither = 1f,
+        darkDither = 0f,
+    ),
     ;
 
     /** The intensity the light glows up to. */
@@ -167,6 +204,12 @@ internal enum class SpotLightType(
 
     /** The blend mode the light is drawn with over the content beneath it. */
     fun blendMode(isDark: Boolean): BlendMode = if (isDark) darkBlendMode else lightBlendMode
+
+    /** The grain amount (`SpotLightParams.mNoise`) for the shader's `noise_exp`. */
+    fun noise(isDark: Boolean): Float = if (isDark) darkNoise else lightNoise
+
+    /** The dither amount (`SpotLightParams.mDitherN`) for the shader's `ditherN`. */
+    fun dither(isDark: Boolean): Float = if (isDark) darkDither else lightDither
 }
 
 /** `COUISpotLightEffect` glow / follow / extinguish, driven by the pointer. */

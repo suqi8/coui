@@ -215,8 +215,8 @@ object PageIndicatorDefaults {
      */
     @Composable
     fun colors(
-        dotColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        traceColor: Color = COUITheme.colorScheme.onSurfaceContainer,
+        dotColor: Color = COUITheme.colorScheme.labelTertiary,
+        traceColor: Color = COUITheme.colorScheme.labelPrimary,
     ): PageIndicatorColors = remember(dotColor, traceColor) {
         PageIndicatorColors(dotColor = dotColor, traceColor = traceColor)
     }

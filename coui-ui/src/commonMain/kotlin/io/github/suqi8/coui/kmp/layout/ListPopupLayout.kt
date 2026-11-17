@@ -47,6 +47,7 @@ import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
@@ -69,8 +70,10 @@ import kotlinx.coroutines.launch
  * @param popupModifier The modifier to be applied to the popup content area.
  * @param popupPositionProvider The [PopupPositionProvider] for positioning.
  * @param alignment The alignment of the popup.
- * @param enableWindowDim Whether to render and animate the window-dim layer. The outside-tap
- *   dismiss gesture is preserved regardless of this flag.
+ * @param enableWindowDim Whether to render and animate the window-dim layer. Off by default:
+ *   COUI 17 `COUIPopupListWindow` clears its background (`setBackgroundDrawable(null)`) and never
+ *   dims what lies behind the menu. The outside-tap dismiss gesture is preserved regardless of
+ *   this flag.
  * @param onDismissRequest The callback when the popup is dismissed.
  * @param onDismissFinished Invoked when the hide animation completes; not invoked if the hide
  *   is cancelled mid-flight (e.g., by [show] toggling back to true).
@@ -83,9 +86,11 @@ import kotlinx.coroutines.launch
  * @param backgroundColor The popup surface fill when it is not blurred (couiColorBackgroundTop).
  * @param backgroundModifier A [Modifier] applied inside the popup surface clip, under the rows.
  * @param materialBlur Whether to blur with the COUI 17 popup material from
- *   [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] (see [rememberPopupSurface]).
- * @param materialEffect Whether to draw the material effects of a blurred COUI 17 popup: the
- *   shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
+ *   [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] (see [rememberPopupSurface]). Defaults
+ *   to [LocalCOUIMaterialEffectEnabled].
+ * @param materialEffect Whether to draw the material effects of a COUI 17 popup, blurred or not:
+ *   the shadow-edge stroke and the touch spotlight (`RoundFrameLayout.initMaterialEffects`).
+ *   Defaults to [LocalCOUIMaterialEffectEnabled].
  * @param content The content of the popup.
  */
 @Composable
@@ -96,15 +101,15 @@ internal fun ListPopupLayout(
     backgroundModifier: Modifier = Modifier,
     popupPositionProvider: PopupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
     alignment: PopupPositionProvider.Align = PopupPositionProvider.Align.Start,
-    enableWindowDim: Boolean = true,
+    enableWindowDim: Boolean = false,
     onDismissRequest: (() -> Unit)? = null,
     onDismissFinished: (() -> Unit)? = null,
     maxHeight: Dp? = null,
     minWidth: Dp = ListPopupDefaults.MinWidth,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     content: @Composable () -> Unit,
 ) {
     // Resolved at the call site, where dialogs and sheets can switch the popup blur off.
@@ -263,7 +268,7 @@ internal fun ListPopupLayout(
                         .graphicsLayer {
                             alpha = dimProgress.value * (1f - backProgress.value)
                         }
-                        .background(COUITheme.colorScheme.windowDimming),
+                        .background(COUITheme.colorScheme.mask),
                 )
             }
             Box(

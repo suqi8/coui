@@ -15,56 +15,15 @@ import androidx.compose.ui.graphics.Color
  *
  * @param primary The primary color. Cases: Switch, Button, Slider.
  * @param onPrimary The color of the text on primary color. Cases: Switch, Button, Slider.
- * @param primaryVariant The variant color of the primary color.Cases:Card
- * @param onPrimaryVariant The color of the text on primary variant color.
- * @param disabledPrimary The disabled primary color of the switch.
- * @param disabledOnPrimary The color of the switch on disabled primary color.
- * @param disabledPrimaryButton The disabled primary color of the button.
  * @param disabledOnPrimaryButton The color of the button on disabled primary color (COUI coui_button_main_disable_text
  *   #8AFFFFFF / #29FFFFFF, also the disabled checkbox tick and radio centre).
- * @param disabledPrimarySlider The disabled progress color of the slider (COUI couiColorDisable, the disabled state of
- *   coui_seekbar_progress_selector).
- * @param primaryContainer The container color of the primary color.
- * @param onPrimaryContainer The color of the text on primary container color.
- * @param secondary The secondary color.
- * @param onSecondary The color of the text on secondary color.
  * @param secondaryVariant The variant color of the secondary color.
- * @param onSecondaryVariant The color of the text on secondary variant color.
- * @param disabledSecondary The disabled secondary color.
- * @param disabledOnSecondary The color of the text on disabled secondary color.
  * @param disabledSecondaryVariant The disabled secondary color.
- * @param disabledOnSecondaryVariant The color of the text on disabled secondary variant color.
  * @param secondaryContainer The container color of the secondary color.
- * @param onSecondaryContainer The color of the text on secondary container color.
- * @param secondaryContainerVariant The variant color of the secondary container color.
- * @param onSecondaryContainerVariant The color of the text on secondary container variant color.
- * @param tertiaryContainer The container color of the tertiary color.
- * @param onTertiaryContainer The color of the text on tertiary container color.
- * @param tertiaryContainerVariant The variant color of the tertiary container color.
- * @param background The background color.
- * @param onBackground The color of the text on background color.
- * @param onBackgroundVariant The color of the text on background variant color.
- * @param surface The surface color.
- * @param onSurface The color of the text on surface color.
- * @param surfaceVariant The variant color of the surface color.
- * @param onSurfaceSecondary The color of the text on surface secondary color.
- * @param onSurfaceVariantSummary The color of the summary on surface variant color.
- * @param onSurfaceVariantActions The color of the actions on surface variant color.
- * @param disabledOnSurface The color of the text on disabled surface color.
+ * @param secondary The translucent theme tint (COUI couiColorSecondary, coui_color_secondary_blue
+ *   #260080FF / #401A8CFF). Cases: Dropdown, ProgressIndicator, InstallLoadProgress.
  * @param outline The outline color.
- * @param dividerLine The divider line color.
- * @param surfaceContainer The container color of the surface color.
- * @param onSurfaceContainer The color of the text on surface container color.
- * @param onSurfaceContainerVariant The color of the text on surface container variant color.
- * @param surfaceContainerHigh The container color of the surface color.
- * @param onSurfaceContainerHigh The color of the text on surface container high color.
  * @param surfaceContainerHighest The container color of the surface color.
- * @param onSurfaceContainerHighest The color of the text on surface container highest color.
- * @param windowDimming The color of the window dimming. Cases: Dialog, Dropdown, Spinner, BottomSheet.
- * @param sliderKeyPoint The off-progress key points of the slider (COUI couiColorLabelTertiary via
- *   coui_seekbar_inactive_mark_selector).
- * @param sliderKeyPointForeground The key points drawn on the slider progress (COUI couiColorLabelOnColor via
- *   coui_seekbar_active_mark_selector).
  * @param sliderBackground The track color of the slider (COUI couiColorContainer12 via coui_seekbar_background_selector).
  * @param dialogButton The fill of the dialog bar buttons (COUI couiColorContainer8). Cases: Dialog, BottomSheet.
  * @param dragHandle The color of the bottom sheet drag handle (COUI couiColorControls).
@@ -89,8 +48,6 @@ import androidx.compose.ui.graphics.Color
  * @param disabledSliderKeyPoint The off-progress key points of a disabled slider (COUI
  *   coui_seekbar_inactive_mark_disable_color). Cases: Slider.
  * @param sliderThumbShadow The drop shadow of the slider thumb (COUI coui_seekbar_thumb_shadow_color). Cases: Slider.
- * @param textFieldError The border, underline and selection tint of a text field in error state (COUI
- *   couiColorErrorTextBg, the COUIEditText couiEditTextErrorColor default). Cases: TextField.
  * @param disabledTextFieldBorder The border / underline of a disabled text field (COUI
  *   coui_textinput_stroke_color_disabled via couiDisabledStrokeColor). Cases: TextField.
  * @param quarternaryNeutral The faintest neutral (COUI couiColorQuarternaryNeutral #14000000 / #26FFFFFF).
@@ -101,61 +58,90 @@ import androidx.compose.ui.graphics.Color
  *   #42000000 / #29FFFFFF). Cases: Chip.
  * @param focusOutline The keyboard focus outline (COUI couiColorFocusOutline, coui_color_focus_outline_blue
  *   #660080FF / #665C9DFF). Cases: Chip.
+ * @param primaryText Theme-colored text and icons (COUI couiColorPrimaryText, coui_color_primary_text_blue
+ *   #0080FF / #5C9DFF; also couiColorOnSecondary).
+ * @param labelTheme Theme-colored labels (COUI couiColorLabelTheme, coui_color_label_theme_blue #0080FF / #1A8CFF).
+ * @param link Link text (COUI couiColorLink = ?couiColorLabelTheme).
+ * @param disable The disabled theme color (COUI couiColorDisable, coui_color_disable_blue #4D0080FF / #4D1A8CFF).
+ * @param containerTheme The opaque theme container (COUI couiColorContainerTheme, coui_color_container_theme_blue
+ *   #0080FF / #1A8CFF).
+ * @param containerThemeHalftone The translucent theme container (COUI couiColorContainerThemeHalftone,
+ *   coui_color_container_theme_halftone_blue #260080FF / #401A8CFF).
+ * @param textColorHighlight The text selection highlight (COUI android:textColorHighlight = ?couiColorSecondary,
+ *   coui_color_secondary_blue #260080FF / #401A8CFF; Theme.COUI.Orange / Red / Yellow override it).
+ * @param errorDisabled The disabled error color (COUI couiColorErrorDisabled, coui_color_error_disabled
+ *   #4DDB382C / #4DFF6C61).
+ * @param errorTextBg The error underline / selection tint of inputs (COUI couiColorErrorTextBg,
+ *   coui_color_error_text_bg #4DE82A18 / #EA3939).
+ * @param success The success color (COUI couiColorSuccess, coui_color_success #00BD13 / #24B232).
+ * @param tips The tips color (COUI couiColorTips, coui_color_tips #0080FF / #1A8CFF).
+ * @param additional The additional accent (COUI couiColorAdditional, coui_color_additional_blue #0080FF / #1A8CFF).
+ * @param assist The assist accent (COUI couiColorAssist, coui_color_assist_blue #5C93E5).
+ * @param background The page background (COUI couiColorBackground, coui_color_background #FFFFFF / #000000).
+ * @param surface Panels floating over the page: dialogs, bottom sheets and popups (COUI couiColorSurface,
+ *   coui_color_surface #FFFFFF / #1E1E1E).
+ * @param backgroundElevated The elevated page background (COUI couiColorBackgroundElevated,
+ *   coui_color_background_elevated #FFFFFF / #1E1E1E).
+ * @param backgroundElevatedWithCard The elevated page background behind cards (COUI
+ *   couiColorBackgroundElevatedWithCard, coui_color_background_elevatedWithCard #F0F1F2 / #1E1E1E).
+ * @param backgroundWithCard The page background behind cards (COUI couiColorBackgroundWithCard,
+ *   coui_color_background_with_card #F0F1F2 / #000000). Cases: Scaffold and other page backgrounds.
+ * @param surfaceTop The topmost panel (COUI couiColorSurfaceTop, coui_color_surface_top #FFFFFF / #333333).
+ * @param surfaceWithCard The panel background behind cards (COUI couiColorSurfaceWithCard,
+ *   coui_color_surface_with_card #F0F1F2 / #1E1E1E).
+ * @param bar Bars (COUI couiColorBar, coui_color_bar #FAFAFA / #1E1E1E).
+ * @param bottomBar Bottom bars (COUI couiColorBottomBar, coui_color_bottom_bar #FAFAFA; values-night #1E1E1E).
+ * @param card Cards (COUI couiColorCard, coui_color_card #FFFFFF / #1AFFFFFF).
+ * @param cardBackground Card backgrounds (COUI couiColorCardBackground, coui_color_card_background
+ *   #FFFFFF / #1AFFFFFF).
+ * @param cardPressed Pressed cards (COUI couiColorCardPressed, coui_color_card_pressed #E6E6E6 / #33FFFFFF).
+ * @param labelPrimary Primary labels (COUI couiColorLabelPrimary, coui_color_label_primary #E6000000 / #E6FFFFFF).
+ * @param labelPrimaryVariant (COUI couiColorLabelPrimaryVariant, coui_color_label_primary_variant
+ *   #B8000000 / #B8FFFFFF).
+ * @param labelSecondary Secondary labels (COUI couiColorLabelSecondary, coui_color_label_secondary
+ *   #8A000000 / #8AFFFFFF).
+ * @param labelSecondaryVariant (COUI couiColorLabelSecondaryVariant, coui_color_label_secondary_variant
+ *   #66000000 / #66FFFFFF).
+ * @param labelTertiary Tertiary labels (COUI couiColorLabelTertiary, coui_color_label_tertiary #42000000 / #4DFFFFFF).
+ * @param labelQuaternary Quaternary labels (COUI couiColorLabelQuaternary, coui_color_label_quaternary
+ *   #14000000 / #26FFFFFF).
+ * @param labelOnColor Labels on colored fills (COUI couiColorLabelOnColor, coui_color_label_on_color #FFFFFF).
+ * @param disabledNeutral Disabled neutral content (COUI couiColorDisabledNeutral, coui_color_disabled_neutral
+ *   #42000000 / #4DFFFFFF).
+ * @param hintNeutral Hint text (COUI couiColorHintNeutral, coui_color_hint_neutral #42000000 / #4DFFFFFF).
+ * @param container4 (COUI couiColorContainer4, coui_color_container4 #0A000000 / #1AFFFFFF).
+ * @param container12 (COUI couiColorContainer12, coui_color_container12 #1F000000 / #33FFFFFF).
+ * @param container16 (COUI couiColorContainer16, coui_color_container16 #29000000 / #40FFFFFF).
+ * @param containerSolid (COUI couiColorContainerSolid, coui_color_container_solid #EBEBEB / #262626).
+ * @param fillSolid (COUI couiColorFillSolid, coui_color_fill_solid #EBEBEB / #262626).
+ * @param fillThin (COUI couiColorFillThin, coui_color_fill_thin #0A000000 / #14FFFFFF).
+ * @param controls Control fills such as drag handles (COUI couiColorControls, coui_color_controls
+ *   #29000000 / #40FFFFFF).
+ * @param divider Dividers (COUI couiColorDivider, coui_color_divider #1F000000 / #33FFFFFF).
+ * @param mask Window dimming (COUI couiColorMask, coui_color_mask #33000000 / #99000000).
+ * @param pressBackground (COUI couiColorPressBackground, coui_color_press_background #14000000 / #26FFFFFF).
+ * @param ripplePressBackground (COUI couiColorRipplePressBackground, coui_color_ripple_press_background
+ *   #99B4B4B4 / #80FFFFFF).
+ * @param red COUI couiColorRed (coui_color_red). The ten hue groups each carry the hue, its `*Variant`
+ *   (couiColor<Hue>Variant, coui_color_<hue>_variant) and its `container*` tint (couiColorContainer<Hue>,
+ *   coui_color_container_<hue>), with the `_dark` values in the dark scheme.
+ * @param neutralButton Neutral button fill (COUI coui_button_neutral_color #0F000000 / #4CFFFFFF).
+ * @param isDark Whether this is a dark scheme (COUI isCOUIDarkTheme). Set by [lightColorScheme],
+ *   [darkColorScheme] and the dynamic color schemes.
  */
 @Stable
 class Colors(
     primary: Color,
     onPrimary: Color,
-    primaryVariant: Color,
-    onPrimaryVariant: Color,
     error: Color,
     onError: Color,
-    errorContainer: Color,
-    onErrorContainer: Color,
-    disabledPrimary: Color,
-    disabledOnPrimary: Color,
-    disabledPrimaryButton: Color,
     disabledOnPrimaryButton: Color,
-    disabledPrimarySlider: Color,
-    primaryContainer: Color,
-    onPrimaryContainer: Color,
-    secondary: Color,
-    onSecondary: Color,
     secondaryVariant: Color,
-    onSecondaryVariant: Color,
-    disabledSecondary: Color,
-    disabledOnSecondary: Color,
     disabledSecondaryVariant: Color,
-    disabledOnSecondaryVariant: Color,
     secondaryContainer: Color,
-    onSecondaryContainer: Color,
-    secondaryContainerVariant: Color,
-    onSecondaryContainerVariant: Color,
-    tertiaryContainer: Color,
-    onTertiaryContainer: Color,
-    tertiaryContainerVariant: Color,
-    background: Color,
-    onBackground: Color,
-    onBackgroundVariant: Color,
-    surface: Color,
-    onSurface: Color,
-    surfaceVariant: Color,
-    onSurfaceSecondary: Color,
-    onSurfaceVariantSummary: Color,
-    onSurfaceVariantActions: Color,
-    disabledOnSurface: Color,
-    surfaceContainer: Color,
-    onSurfaceContainer: Color,
-    onSurfaceContainerVariant: Color,
-    surfaceContainerHigh: Color,
-    onSurfaceContainerHigh: Color,
+    secondary: Color,
     surfaceContainerHighest: Color,
-    onSurfaceContainerHighest: Color,
     outline: Color,
-    dividerLine: Color,
-    windowDimming: Color,
-    sliderKeyPoint: Color,
-    sliderKeyPointForeground: Color,
     sliderBackground: Color,
     dialogButton: Color,
     dragHandle: Color,
@@ -175,116 +161,110 @@ class Colors(
     disabledSliderThumb: Color,
     disabledSliderKeyPoint: Color,
     sliderThumbShadow: Color,
-    textFieldError: Color,
     disabledTextFieldBorder: Color,
     quarternaryNeutral: Color = Color(0x14000000),
     container8: Color = Color(0x14000000),
     disabledChipText: Color = Color(0x42000000),
     focusOutline: Color = Color(0x660080FF),
+    primaryText: Color = Color(0xFF0080FF),
+    labelTheme: Color = Color(0xFF0080FF),
+    link: Color = Color(0xFF0080FF),
+    disable: Color = Color(0x4D0080FF),
+    containerTheme: Color = Color(0xFF0080FF),
+    containerThemeHalftone: Color = Color(0x260080FF),
+    textColorHighlight: Color = Color(0x260080FF),
+    errorDisabled: Color = Color(0x4DDB382C),
+    errorTextBg: Color = Color(0x4DE82A18),
+    success: Color = Color(0xFF00BD13),
+    tips: Color = Color(0xFF0080FF),
+    additional: Color = Color(0xFF0080FF),
+    assist: Color = Color(0xFF5C93E5),
+    background: Color = Color(0xFFFFFFFF),
+    surface: Color = Color(0xFFFFFFFF),
+    backgroundElevated: Color = Color(0xFFFFFFFF),
+    backgroundElevatedWithCard: Color = Color(0xFFF0F1F2),
+    backgroundWithCard: Color = Color(0xFFF0F1F2),
+    surfaceTop: Color = Color(0xFFFFFFFF),
+    surfaceWithCard: Color = Color(0xFFF0F1F2),
+    bar: Color = Color(0xFFFAFAFA),
+    bottomBar: Color = Color(0xFFFAFAFA),
+    card: Color = Color(0xFFFFFFFF),
+    cardBackground: Color = Color(0xFFFFFFFF),
+    cardPressed: Color = Color(0xFFE6E6E6),
+    labelPrimary: Color = Color(0xE6000000),
+    labelPrimaryVariant: Color = Color(0xB8000000),
+    labelSecondary: Color = Color(0x8A000000),
+    labelSecondaryVariant: Color = Color(0x66000000),
+    labelTertiary: Color = Color(0x42000000),
+    labelQuaternary: Color = Color(0x14000000),
+    labelOnColor: Color = Color(0xFFFFFFFF),
+    disabledNeutral: Color = Color(0x42000000),
+    hintNeutral: Color = Color(0x42000000),
+    container4: Color = Color(0x0A000000),
+    container12: Color = Color(0x1F000000),
+    container16: Color = Color(0x29000000),
+    containerSolid: Color = Color(0xFFEBEBEB),
+    fillSolid: Color = Color(0xFFEBEBEB),
+    fillThin: Color = Color(0x0A000000),
+    controls: Color = Color(0x29000000),
+    divider: Color = Color(0x1F000000),
+    mask: Color = Color(0x33000000),
+    pressBackground: Color = Color(0x14000000),
+    ripplePressBackground: Color = Color(0x99B4B4B4),
+    red: Color = Color(0xFFEB3B2F),
+    redVariant: Color = Color(0xFFE56E65),
+    containerRed: Color = Color(0xFFEEDADC),
+    orange: Color = Color(0xFFFF7700),
+    orangeVariant: Color = Color(0xFFE58F45),
+    containerOrange: Color = Color(0xFFFAE7D6),
+    yellow: Color = Color(0xFFFFB200),
+    yellowVariant: Color = Color(0xFFE5AF2E),
+    containerYellow: Color = Color(0xFFF6E7C6),
+    green: Color = Color(0xFF00BD13),
+    greenVariant: Color = Color(0xFF4BBD57),
+    containerGreen: Color = Color(0xFFBADECA),
+    mint: Color = Color(0xFF00CC88),
+    mintVariant: Color = Color(0xFF39BD91),
+    containerMint: Color = Color(0xFFBADEDB),
+    cyan: Color = Color(0xFF1DBACC),
+    cyanVariant: Color = Color(0xFF39AFBD),
+    containerCyan: Color = Color(0xFFBEDADD),
+    azure: Color = Color(0xFF00A1FF),
+    azureVariant: Color = Color(0xFF45ABE5),
+    containerAzure: Color = Color(0xFFCEE5EB),
+    blue: Color = Color(0xFF0080FF),
+    blueVariant: Color = Color(0xFF5C93E5),
+    containerBlue: Color = Color(0xFFC9DAE4),
+    violet: Color = Color(0xFF5A47FF),
+    violetVariant: Color = Color(0xFF7E73E5),
+    containerViolet: Color = Color(0xFFD6D5EE),
+    purple: Color = Color(0xFFA723FF),
+    purpleVariant: Color = Color(0xFFB873E5),
+    containerPurple: Color = Color(0xFFE0D6EB),
+    neutralButton: Color = Color(0x0F000000),
+    isDark: Boolean = false,
 ) {
     var primary by mutableStateOf(primary, structuralEqualityPolicy())
         internal set
     var onPrimary by mutableStateOf(onPrimary, structuralEqualityPolicy())
         internal set
-    var primaryVariant by mutableStateOf(primaryVariant, structuralEqualityPolicy())
-        internal set
-    var onPrimaryVariant by mutableStateOf(onPrimaryVariant, structuralEqualityPolicy())
-        internal set
     var error by mutableStateOf(error, structuralEqualityPolicy())
         internal set
     var onError by mutableStateOf(onError, structuralEqualityPolicy())
         internal set
-    var errorContainer by mutableStateOf(errorContainer, structuralEqualityPolicy())
-        internal set
-    var onErrorContainer by mutableStateOf(onErrorContainer, structuralEqualityPolicy())
-        internal set
-    var disabledPrimary by mutableStateOf(disabledPrimary, structuralEqualityPolicy())
-        internal set
-    var disabledOnPrimary by mutableStateOf(disabledOnPrimary, structuralEqualityPolicy())
-        internal set
-    var disabledPrimaryButton by mutableStateOf(disabledPrimaryButton, structuralEqualityPolicy())
-        internal set
     var disabledOnPrimaryButton by mutableStateOf(disabledOnPrimaryButton, structuralEqualityPolicy())
-        internal set
-    var disabledPrimarySlider by mutableStateOf(disabledPrimarySlider, structuralEqualityPolicy())
-        internal set
-    var primaryContainer by mutableStateOf(primaryContainer, structuralEqualityPolicy())
-        internal set
-    var onPrimaryContainer by mutableStateOf(onPrimaryContainer, structuralEqualityPolicy())
-        internal set
-    var secondary by mutableStateOf(secondary, structuralEqualityPolicy())
-        internal set
-    var onSecondary by mutableStateOf(onSecondary, structuralEqualityPolicy())
         internal set
     var secondaryVariant by mutableStateOf(secondaryVariant, structuralEqualityPolicy())
         internal set
-    var onSecondaryVariant by mutableStateOf(onSecondaryVariant, structuralEqualityPolicy())
-        internal set
-    var disabledSecondary by mutableStateOf(disabledSecondary, structuralEqualityPolicy())
-        internal set
-    var disabledOnSecondary by mutableStateOf(disabledOnSecondary, structuralEqualityPolicy())
-        internal set
     var disabledSecondaryVariant by mutableStateOf(disabledSecondaryVariant, structuralEqualityPolicy())
-        internal set
-    var disabledOnSecondaryVariant by mutableStateOf(disabledOnSecondaryVariant, structuralEqualityPolicy())
         internal set
     var secondaryContainer by mutableStateOf(secondaryContainer, structuralEqualityPolicy())
         internal set
-    var onSecondaryContainer by mutableStateOf(onSecondaryContainer, structuralEqualityPolicy())
-        internal set
-    var secondaryContainerVariant by mutableStateOf(secondaryContainerVariant, structuralEqualityPolicy())
-        internal set
-    var onSecondaryContainerVariant by mutableStateOf(onSecondaryContainerVariant, structuralEqualityPolicy())
-        internal set
-    var tertiaryContainer by mutableStateOf(tertiaryContainer, structuralEqualityPolicy())
-        internal set
-    var onTertiaryContainer by mutableStateOf(onTertiaryContainer, structuralEqualityPolicy())
-        internal set
-    var tertiaryContainerVariant by mutableStateOf(tertiaryContainerVariant, structuralEqualityPolicy())
-        internal set
-    var background by mutableStateOf(background, structuralEqualityPolicy())
-        internal set
-    var onBackground by mutableStateOf(onBackground, structuralEqualityPolicy())
-        internal set
-    var onBackgroundVariant by mutableStateOf(onBackgroundVariant, structuralEqualityPolicy())
-        internal set
-    var surface by mutableStateOf(surface, structuralEqualityPolicy())
-        internal set
-    var onSurface by mutableStateOf(onSurface, structuralEqualityPolicy())
-        internal set
-    var surfaceVariant by mutableStateOf(surfaceVariant, structuralEqualityPolicy())
-        internal set
-    var onSurfaceSecondary by mutableStateOf(onSurfaceSecondary, structuralEqualityPolicy())
-        internal set
-    var onSurfaceVariantSummary by mutableStateOf(onSurfaceVariantSummary, structuralEqualityPolicy())
-        internal set
-    var onSurfaceVariantActions by mutableStateOf(onSurfaceVariantActions, structuralEqualityPolicy())
-        internal set
-    var disabledOnSurface by mutableStateOf(disabledOnSurface, structuralEqualityPolicy())
-        internal set
-    var surfaceContainer by mutableStateOf(surfaceContainer, structuralEqualityPolicy())
-        internal set
-    var onSurfaceContainer by mutableStateOf(onSurfaceContainer, structuralEqualityPolicy())
-        internal set
-    var onSurfaceContainerVariant by mutableStateOf(onSurfaceContainerVariant, structuralEqualityPolicy())
-        internal set
-    var surfaceContainerHigh by mutableStateOf(surfaceContainerHigh, structuralEqualityPolicy())
-        internal set
-    var onSurfaceContainerHigh by mutableStateOf(onSurfaceContainerHigh, structuralEqualityPolicy())
+    var secondary by mutableStateOf(secondary, structuralEqualityPolicy())
         internal set
     var surfaceContainerHighest by mutableStateOf(surfaceContainerHighest, structuralEqualityPolicy())
         internal set
-    var onSurfaceContainerHighest by mutableStateOf(onSurfaceContainerHighest, structuralEqualityPolicy())
-        internal set
     var outline by mutableStateOf(outline, structuralEqualityPolicy())
-        internal set
-    var dividerLine by mutableStateOf(dividerLine, structuralEqualityPolicy())
-        internal set
-    var windowDimming by mutableStateOf(windowDimming, structuralEqualityPolicy())
-        internal set
-    var sliderKeyPoint by mutableStateOf(sliderKeyPoint, structuralEqualityPolicy())
-        internal set
-    var sliderKeyPointForeground by mutableStateOf(sliderKeyPointForeground, structuralEqualityPolicy())
         internal set
     var sliderBackground by mutableStateOf(sliderBackground, structuralEqualityPolicy())
         internal set
@@ -324,8 +304,6 @@ class Colors(
         internal set
     var sliderThumbShadow by mutableStateOf(sliderThumbShadow, structuralEqualityPolicy())
         internal set
-    var textFieldError by mutableStateOf(textFieldError, structuralEqualityPolicy())
-        internal set
     var disabledTextFieldBorder by mutableStateOf(disabledTextFieldBorder, structuralEqualityPolicy())
         internal set
     var quarternaryNeutral by mutableStateOf(quarternaryNeutral, structuralEqualityPolicy())
@@ -336,60 +314,173 @@ class Colors(
         internal set
     var focusOutline by mutableStateOf(focusOutline, structuralEqualityPolicy())
         internal set
+    var primaryText by mutableStateOf(primaryText, structuralEqualityPolicy())
+        internal set
+    var labelTheme by mutableStateOf(labelTheme, structuralEqualityPolicy())
+        internal set
+    var link by mutableStateOf(link, structuralEqualityPolicy())
+        internal set
+    var disable by mutableStateOf(disable, structuralEqualityPolicy())
+        internal set
+    var containerTheme by mutableStateOf(containerTheme, structuralEqualityPolicy())
+        internal set
+    var containerThemeHalftone by mutableStateOf(containerThemeHalftone, structuralEqualityPolicy())
+        internal set
+    var textColorHighlight by mutableStateOf(textColorHighlight, structuralEqualityPolicy())
+        internal set
+    var errorDisabled by mutableStateOf(errorDisabled, structuralEqualityPolicy())
+        internal set
+    var errorTextBg by mutableStateOf(errorTextBg, structuralEqualityPolicy())
+        internal set
+    var success by mutableStateOf(success, structuralEqualityPolicy())
+        internal set
+    var tips by mutableStateOf(tips, structuralEqualityPolicy())
+        internal set
+    var additional by mutableStateOf(additional, structuralEqualityPolicy())
+        internal set
+    var assist by mutableStateOf(assist, structuralEqualityPolicy())
+        internal set
+    var background by mutableStateOf(background, structuralEqualityPolicy())
+        internal set
+    var surface by mutableStateOf(surface, structuralEqualityPolicy())
+        internal set
+    var backgroundElevated by mutableStateOf(backgroundElevated, structuralEqualityPolicy())
+        internal set
+    var backgroundElevatedWithCard by mutableStateOf(backgroundElevatedWithCard, structuralEqualityPolicy())
+        internal set
+    var backgroundWithCard by mutableStateOf(backgroundWithCard, structuralEqualityPolicy())
+        internal set
+    var surfaceTop by mutableStateOf(surfaceTop, structuralEqualityPolicy())
+        internal set
+    var surfaceWithCard by mutableStateOf(surfaceWithCard, structuralEqualityPolicy())
+        internal set
+    var bar by mutableStateOf(bar, structuralEqualityPolicy())
+        internal set
+    var bottomBar by mutableStateOf(bottomBar, structuralEqualityPolicy())
+        internal set
+    var card by mutableStateOf(card, structuralEqualityPolicy())
+        internal set
+    var cardBackground by mutableStateOf(cardBackground, structuralEqualityPolicy())
+        internal set
+    var cardPressed by mutableStateOf(cardPressed, structuralEqualityPolicy())
+        internal set
+    var labelPrimary by mutableStateOf(labelPrimary, structuralEqualityPolicy())
+        internal set
+    var labelPrimaryVariant by mutableStateOf(labelPrimaryVariant, structuralEqualityPolicy())
+        internal set
+    var labelSecondary by mutableStateOf(labelSecondary, structuralEqualityPolicy())
+        internal set
+    var labelSecondaryVariant by mutableStateOf(labelSecondaryVariant, structuralEqualityPolicy())
+        internal set
+    var labelTertiary by mutableStateOf(labelTertiary, structuralEqualityPolicy())
+        internal set
+    var labelQuaternary by mutableStateOf(labelQuaternary, structuralEqualityPolicy())
+        internal set
+    var labelOnColor by mutableStateOf(labelOnColor, structuralEqualityPolicy())
+        internal set
+    var disabledNeutral by mutableStateOf(disabledNeutral, structuralEqualityPolicy())
+        internal set
+    var hintNeutral by mutableStateOf(hintNeutral, structuralEqualityPolicy())
+        internal set
+    var container4 by mutableStateOf(container4, structuralEqualityPolicy())
+        internal set
+    var container12 by mutableStateOf(container12, structuralEqualityPolicy())
+        internal set
+    var container16 by mutableStateOf(container16, structuralEqualityPolicy())
+        internal set
+    var containerSolid by mutableStateOf(containerSolid, structuralEqualityPolicy())
+        internal set
+    var fillSolid by mutableStateOf(fillSolid, structuralEqualityPolicy())
+        internal set
+    var fillThin by mutableStateOf(fillThin, structuralEqualityPolicy())
+        internal set
+    var controls by mutableStateOf(controls, structuralEqualityPolicy())
+        internal set
+    var divider by mutableStateOf(divider, structuralEqualityPolicy())
+        internal set
+    var mask by mutableStateOf(mask, structuralEqualityPolicy())
+        internal set
+    var pressBackground by mutableStateOf(pressBackground, structuralEqualityPolicy())
+        internal set
+    var ripplePressBackground by mutableStateOf(ripplePressBackground, structuralEqualityPolicy())
+        internal set
+    var red by mutableStateOf(red, structuralEqualityPolicy())
+        internal set
+    var redVariant by mutableStateOf(redVariant, structuralEqualityPolicy())
+        internal set
+    var containerRed by mutableStateOf(containerRed, structuralEqualityPolicy())
+        internal set
+    var orange by mutableStateOf(orange, structuralEqualityPolicy())
+        internal set
+    var orangeVariant by mutableStateOf(orangeVariant, structuralEqualityPolicy())
+        internal set
+    var containerOrange by mutableStateOf(containerOrange, structuralEqualityPolicy())
+        internal set
+    var yellow by mutableStateOf(yellow, structuralEqualityPolicy())
+        internal set
+    var yellowVariant by mutableStateOf(yellowVariant, structuralEqualityPolicy())
+        internal set
+    var containerYellow by mutableStateOf(containerYellow, structuralEqualityPolicy())
+        internal set
+    var green by mutableStateOf(green, structuralEqualityPolicy())
+        internal set
+    var greenVariant by mutableStateOf(greenVariant, structuralEqualityPolicy())
+        internal set
+    var containerGreen by mutableStateOf(containerGreen, structuralEqualityPolicy())
+        internal set
+    var mint by mutableStateOf(mint, structuralEqualityPolicy())
+        internal set
+    var mintVariant by mutableStateOf(mintVariant, structuralEqualityPolicy())
+        internal set
+    var containerMint by mutableStateOf(containerMint, structuralEqualityPolicy())
+        internal set
+    var cyan by mutableStateOf(cyan, structuralEqualityPolicy())
+        internal set
+    var cyanVariant by mutableStateOf(cyanVariant, structuralEqualityPolicy())
+        internal set
+    var containerCyan by mutableStateOf(containerCyan, structuralEqualityPolicy())
+        internal set
+    var azure by mutableStateOf(azure, structuralEqualityPolicy())
+        internal set
+    var azureVariant by mutableStateOf(azureVariant, structuralEqualityPolicy())
+        internal set
+    var containerAzure by mutableStateOf(containerAzure, structuralEqualityPolicy())
+        internal set
+    var blue by mutableStateOf(blue, structuralEqualityPolicy())
+        internal set
+    var blueVariant by mutableStateOf(blueVariant, structuralEqualityPolicy())
+        internal set
+    var containerBlue by mutableStateOf(containerBlue, structuralEqualityPolicy())
+        internal set
+    var violet by mutableStateOf(violet, structuralEqualityPolicy())
+        internal set
+    var violetVariant by mutableStateOf(violetVariant, structuralEqualityPolicy())
+        internal set
+    var containerViolet by mutableStateOf(containerViolet, structuralEqualityPolicy())
+        internal set
+    var purple by mutableStateOf(purple, structuralEqualityPolicy())
+        internal set
+    var purpleVariant by mutableStateOf(purpleVariant, structuralEqualityPolicy())
+        internal set
+    var containerPurple by mutableStateOf(containerPurple, structuralEqualityPolicy())
+        internal set
+    var neutralButton by mutableStateOf(neutralButton, structuralEqualityPolicy())
+        internal set
+    var isDark by mutableStateOf(isDark, structuralEqualityPolicy())
+        internal set
 
     fun copy(
         primary: Color = this.primary,
         onPrimary: Color = this.onPrimary,
-        primaryVariant: Color = this.primaryVariant,
-        onPrimaryVariant: Color = this.onPrimaryVariant,
         error: Color = this.error,
         onError: Color = this.onError,
-        errorContainer: Color = this.errorContainer,
-        onErrorContainer: Color = this.onErrorContainer,
-        disabledPrimary: Color = this.disabledPrimary,
-        disabledOnPrimary: Color = this.disabledOnPrimary,
-        disabledPrimaryButton: Color = this.disabledPrimaryButton,
         disabledOnPrimaryButton: Color = this.disabledOnPrimaryButton,
-        disabledPrimarySlider: Color = this.disabledPrimarySlider,
-        primaryContainer: Color = this.primaryContainer,
-        onPrimaryContainer: Color = this.onPrimaryContainer,
-        secondary: Color = this.secondary,
-        onSecondary: Color = this.onSecondary,
         secondaryVariant: Color = this.secondaryVariant,
-        onSecondaryVariant: Color = this.onSecondaryVariant,
-        disabledSecondary: Color = this.disabledSecondary,
-        disabledOnSecondary: Color = this.disabledOnSecondary,
         disabledSecondaryVariant: Color = this.disabledSecondaryVariant,
-        disabledOnSecondaryVariant: Color = this.disabledOnSecondaryVariant,
         secondaryContainer: Color = this.secondaryContainer,
-        onSecondaryContainer: Color = this.onSecondaryContainer,
-        secondaryContainerVariant: Color = this.secondaryContainerVariant,
-        onSecondaryContainerVariant: Color = this.onSecondaryContainerVariant,
-        tertiaryContainer: Color = this.tertiaryContainer,
-        onTertiaryContainer: Color = this.onTertiaryContainer,
-        tertiaryContainerVariant: Color = this.tertiaryContainerVariant,
-        background: Color = this.background,
-        onBackground: Color = this.onBackground,
-        onBackgroundVariant: Color = this.onBackgroundVariant,
-        surface: Color = this.surface,
-        onSurface: Color = this.onSurface,
-        surfaceVariant: Color = this.surfaceVariant,
-        onSurfaceSecondary: Color = this.onSurfaceSecondary,
-        onSurfaceVariantSummary: Color = this.onSurfaceVariantSummary,
-        onSurfaceVariantActions: Color = this.onSurfaceVariantActions,
-        disabledOnSurface: Color = this.disabledOnSurface,
-        surfaceContainer: Color = this.surfaceContainer,
-        onSurfaceContainer: Color = this.onSurfaceContainer,
-        onSurfaceContainerVariant: Color = this.onSurfaceContainerVariant,
-        surfaceContainerHigh: Color = this.surfaceContainerHigh,
-        onSurfaceContainerHigh: Color = this.onSurfaceContainerHigh,
+        secondary: Color = this.secondary,
         surfaceContainerHighest: Color = this.surfaceContainerHighest,
-        onSurfaceContainerHighest: Color = this.onSurfaceContainerHighest,
         outline: Color = this.outline,
-        dividerLine: Color = this.dividerLine,
-        windowDimming: Color = this.windowDimming,
-        sliderKeyPoint: Color = this.sliderKeyPoint,
-        sliderKeyPointForeground: Color = this.sliderKeyPointForeground,
         sliderBackground: Color = this.sliderBackground,
         dialogButton: Color = this.dialogButton,
         dragHandle: Color = this.dragHandle,
@@ -409,65 +500,100 @@ class Colors(
         disabledSliderThumb: Color = this.disabledSliderThumb,
         disabledSliderKeyPoint: Color = this.disabledSliderKeyPoint,
         sliderThumbShadow: Color = this.sliderThumbShadow,
-        textFieldError: Color = this.textFieldError,
         disabledTextFieldBorder: Color = this.disabledTextFieldBorder,
         quarternaryNeutral: Color = this.quarternaryNeutral,
         container8: Color = this.container8,
         disabledChipText: Color = this.disabledChipText,
         focusOutline: Color = this.focusOutline,
+        primaryText: Color = this.primaryText,
+        labelTheme: Color = this.labelTheme,
+        link: Color = this.link,
+        disable: Color = this.disable,
+        containerTheme: Color = this.containerTheme,
+        containerThemeHalftone: Color = this.containerThemeHalftone,
+        textColorHighlight: Color = this.textColorHighlight,
+        errorDisabled: Color = this.errorDisabled,
+        errorTextBg: Color = this.errorTextBg,
+        success: Color = this.success,
+        tips: Color = this.tips,
+        additional: Color = this.additional,
+        assist: Color = this.assist,
+        background: Color = this.background,
+        surface: Color = this.surface,
+        backgroundElevated: Color = this.backgroundElevated,
+        backgroundElevatedWithCard: Color = this.backgroundElevatedWithCard,
+        backgroundWithCard: Color = this.backgroundWithCard,
+        surfaceTop: Color = this.surfaceTop,
+        surfaceWithCard: Color = this.surfaceWithCard,
+        bar: Color = this.bar,
+        bottomBar: Color = this.bottomBar,
+        card: Color = this.card,
+        cardBackground: Color = this.cardBackground,
+        cardPressed: Color = this.cardPressed,
+        labelPrimary: Color = this.labelPrimary,
+        labelPrimaryVariant: Color = this.labelPrimaryVariant,
+        labelSecondary: Color = this.labelSecondary,
+        labelSecondaryVariant: Color = this.labelSecondaryVariant,
+        labelTertiary: Color = this.labelTertiary,
+        labelQuaternary: Color = this.labelQuaternary,
+        labelOnColor: Color = this.labelOnColor,
+        disabledNeutral: Color = this.disabledNeutral,
+        hintNeutral: Color = this.hintNeutral,
+        container4: Color = this.container4,
+        container12: Color = this.container12,
+        container16: Color = this.container16,
+        containerSolid: Color = this.containerSolid,
+        fillSolid: Color = this.fillSolid,
+        fillThin: Color = this.fillThin,
+        controls: Color = this.controls,
+        divider: Color = this.divider,
+        mask: Color = this.mask,
+        pressBackground: Color = this.pressBackground,
+        ripplePressBackground: Color = this.ripplePressBackground,
+        red: Color = this.red,
+        redVariant: Color = this.redVariant,
+        containerRed: Color = this.containerRed,
+        orange: Color = this.orange,
+        orangeVariant: Color = this.orangeVariant,
+        containerOrange: Color = this.containerOrange,
+        yellow: Color = this.yellow,
+        yellowVariant: Color = this.yellowVariant,
+        containerYellow: Color = this.containerYellow,
+        green: Color = this.green,
+        greenVariant: Color = this.greenVariant,
+        containerGreen: Color = this.containerGreen,
+        mint: Color = this.mint,
+        mintVariant: Color = this.mintVariant,
+        containerMint: Color = this.containerMint,
+        cyan: Color = this.cyan,
+        cyanVariant: Color = this.cyanVariant,
+        containerCyan: Color = this.containerCyan,
+        azure: Color = this.azure,
+        azureVariant: Color = this.azureVariant,
+        containerAzure: Color = this.containerAzure,
+        blue: Color = this.blue,
+        blueVariant: Color = this.blueVariant,
+        containerBlue: Color = this.containerBlue,
+        violet: Color = this.violet,
+        violetVariant: Color = this.violetVariant,
+        containerViolet: Color = this.containerViolet,
+        purple: Color = this.purple,
+        purpleVariant: Color = this.purpleVariant,
+        containerPurple: Color = this.containerPurple,
+        neutralButton: Color = this.neutralButton,
+        isDark: Boolean = this.isDark,
     ): Colors = Colors(
         primary,
         onPrimary,
-        primaryVariant,
-        onPrimaryVariant,
         error,
         onError,
-        errorContainer,
-        onErrorContainer,
-        disabledPrimary,
-        disabledOnPrimary,
-        disabledPrimaryButton,
         disabledOnPrimaryButton,
-        disabledPrimarySlider,
-        primaryContainer,
-        onPrimaryContainer,
-        secondary,
-        onSecondary,
         secondaryVariant,
-        onSecondaryVariant,
-        disabledSecondary,
-        disabledOnSecondary,
         disabledSecondaryVariant,
-        disabledOnSecondaryVariant,
         secondaryContainer,
-        onSecondaryContainer,
-        secondaryContainerVariant,
-        onSecondaryContainerVariant,
-        tertiaryContainer,
-        onTertiaryContainer,
-        tertiaryContainerVariant,
-        background,
-        onBackground,
-        onBackgroundVariant,
-        surface,
-        onSurface,
-        surfaceVariant,
-        onSurfaceSecondary,
-        onSurfaceVariantSummary,
-        onSurfaceVariantActions,
-        disabledOnSurface,
-        surfaceContainer,
-        onSurfaceContainer,
-        onSurfaceContainerVariant,
-        surfaceContainerHigh,
-        onSurfaceContainerHigh,
+        secondary,
         surfaceContainerHighest,
-        onSurfaceContainerHighest,
         outline,
-        dividerLine,
-        windowDimming,
-        sliderKeyPoint,
-        sliderKeyPointForeground,
         sliderBackground,
         dialogButton,
         dragHandle,
@@ -487,12 +613,88 @@ class Colors(
         disabledSliderThumb,
         disabledSliderKeyPoint,
         sliderThumbShadow,
-        textFieldError,
         disabledTextFieldBorder,
         quarternaryNeutral,
         container8,
         disabledChipText,
         focusOutline,
+        primaryText = primaryText,
+        labelTheme = labelTheme,
+        link = link,
+        disable = disable,
+        containerTheme = containerTheme,
+        containerThemeHalftone = containerThemeHalftone,
+        textColorHighlight = textColorHighlight,
+        errorDisabled = errorDisabled,
+        errorTextBg = errorTextBg,
+        success = success,
+        tips = tips,
+        additional = additional,
+        assist = assist,
+        background = background,
+        surface = surface,
+        backgroundElevated = backgroundElevated,
+        backgroundElevatedWithCard = backgroundElevatedWithCard,
+        backgroundWithCard = backgroundWithCard,
+        surfaceTop = surfaceTop,
+        surfaceWithCard = surfaceWithCard,
+        bar = bar,
+        bottomBar = bottomBar,
+        card = card,
+        cardBackground = cardBackground,
+        cardPressed = cardPressed,
+        labelPrimary = labelPrimary,
+        labelPrimaryVariant = labelPrimaryVariant,
+        labelSecondary = labelSecondary,
+        labelSecondaryVariant = labelSecondaryVariant,
+        labelTertiary = labelTertiary,
+        labelQuaternary = labelQuaternary,
+        labelOnColor = labelOnColor,
+        disabledNeutral = disabledNeutral,
+        hintNeutral = hintNeutral,
+        container4 = container4,
+        container12 = container12,
+        container16 = container16,
+        containerSolid = containerSolid,
+        fillSolid = fillSolid,
+        fillThin = fillThin,
+        controls = controls,
+        divider = divider,
+        mask = mask,
+        pressBackground = pressBackground,
+        ripplePressBackground = ripplePressBackground,
+        red = red,
+        redVariant = redVariant,
+        containerRed = containerRed,
+        orange = orange,
+        orangeVariant = orangeVariant,
+        containerOrange = containerOrange,
+        yellow = yellow,
+        yellowVariant = yellowVariant,
+        containerYellow = containerYellow,
+        green = green,
+        greenVariant = greenVariant,
+        containerGreen = containerGreen,
+        mint = mint,
+        mintVariant = mintVariant,
+        containerMint = containerMint,
+        cyan = cyan,
+        cyanVariant = cyanVariant,
+        containerCyan = containerCyan,
+        azure = azure,
+        azureVariant = azureVariant,
+        containerAzure = containerAzure,
+        blue = blue,
+        blueVariant = blueVariant,
+        containerBlue = containerBlue,
+        violet = violet,
+        violetVariant = violetVariant,
+        containerViolet = containerViolet,
+        purple = purple,
+        purpleVariant = purpleVariant,
+        containerPurple = containerPurple,
+        neutralButton = neutralButton,
+        isDark = isDark,
     )
 }
 
@@ -500,56 +702,15 @@ class Colors(
 fun lightColorScheme(
     primary: Color = Color(0xFF0080FF),
     onPrimary: Color = Color.White,
-    primaryVariant: Color = Color(0xFF0080FF),
-    onPrimaryVariant: Color = Color(0xFFAECDFF),
     error: Color = Color(0xFFDB382C),
     onError: Color = Color(0xFFFFFFFF),
-    errorContainer: Color = Color(0x26EB3B2F),
-    onErrorContainer: Color = Color(0xFFDB382C),
-    disabledPrimary: Color = Color(0x4D0080FF),
-    disabledOnPrimary: Color = Color.White,
-    disabledPrimaryButton: Color = Color(0x4D0080FF),
     disabledOnPrimaryButton: Color = Color(0x8AFFFFFF),
-    disabledPrimarySlider: Color = Color(0x4D0080FF),
-    primaryContainer: Color = Color(0xFF0080FF),
-    onPrimaryContainer: Color = Color.White,
-    secondary: Color = Color(0xFFE5E5E5),
-    onSecondary: Color = Color.White,
     secondaryVariant: Color = Color(0x14000000),
-    onSecondaryVariant: Color = Color(0xE6000000),
-    disabledSecondary: Color = Color(0xFFF2F2F2),
-    disabledOnSecondary: Color = Color(0x42000000),
     disabledSecondaryVariant: Color = Color(0x14000000),
-    disabledOnSecondaryVariant: Color = Color(0x42000000),
     secondaryContainer: Color = Color(0x14000000),
-    onSecondaryContainer: Color = Color(0x66000000),
-    secondaryContainerVariant: Color = Color(0x14000000),
-    onSecondaryContainerVariant: Color = Color(0x66000000),
-    tertiaryContainer: Color = Color(0x260080FF),
-    onTertiaryContainer: Color = Color(0xFF0080FF),
-    tertiaryContainerVariant: Color = Color(0x260080FF),
-    background: Color = Color.White,
-    onBackground: Color = Color(0xE6000000),
-    onBackgroundVariant: Color = Color(0x8A000000),
-    surface: Color = Color(0xFFF0F1F2),
-    onSurface: Color = Color(0xE6000000),
-    surfaceVariant: Color = Color.White,
-    onSurfaceSecondary: Color = Color(0x8A000000),
-    onSurfaceVariantSummary: Color = Color(0x66000000),
-    onSurfaceVariantActions: Color = Color(0x42000000),
-    disabledOnSurface: Color = Color(0x42000000),
-    surfaceContainer: Color = Color.White,
-    onSurfaceContainer: Color = Color(0xE6000000),
-    onSurfaceContainerVariant: Color = Color(0x66000000),
-    surfaceContainerHigh: Color = Color(0xFFE6E6E6),
-    onSurfaceContainerHigh: Color = Color(0x42000000),
+    secondary: Color = Color(0x260080FF),
     surfaceContainerHighest: Color = Color.White,
-    onSurfaceContainerHighest: Color = Color(0xE6000000),
     outline: Color = Color(0x26000000),
-    dividerLine: Color = Color(0x1F000000),
-    windowDimming: Color = Color.Black.copy(alpha = 0.2F),
-    sliderKeyPoint: Color = Color(0x42000000),
-    sliderKeyPointForeground: Color = Color.White,
     sliderBackground: Color = Color(0x1F000000),
     dialogButton: Color = Color(0x14000000),
     dragHandle: Color = Color(0x29000000),
@@ -569,65 +730,99 @@ fun lightColorScheme(
     disabledSliderThumb: Color = Color(0x8AFFFFFF),
     disabledSliderKeyPoint: Color = Color(0x42000000),
     sliderThumbShadow: Color = Color(0x1A000000),
-    textFieldError: Color = Color(0x4DE82A18),
     disabledTextFieldBorder: Color = Color(0x19000000),
     quarternaryNeutral: Color = Color(0x14000000),
     container8: Color = Color(0x14000000),
     disabledChipText: Color = Color(0x42000000),
     focusOutline: Color = Color(0x660080FF),
+    primaryText: Color = Color(0xFF0080FF),
+    labelTheme: Color = Color(0xFF0080FF),
+    link: Color = Color(0xFF0080FF),
+    disable: Color = Color(0x4D0080FF),
+    containerTheme: Color = Color(0xFF0080FF),
+    containerThemeHalftone: Color = Color(0x260080FF),
+    textColorHighlight: Color = Color(0x260080FF),
+    errorDisabled: Color = Color(0x4DDB382C),
+    errorTextBg: Color = Color(0x4DE82A18),
+    success: Color = Color(0xFF00BD13),
+    tips: Color = Color(0xFF0080FF),
+    additional: Color = Color(0xFF0080FF),
+    assist: Color = Color(0xFF5C93E5),
+    background: Color = Color(0xFFFFFFFF),
+    surface: Color = Color(0xFFFFFFFF),
+    backgroundElevated: Color = Color(0xFFFFFFFF),
+    backgroundElevatedWithCard: Color = Color(0xFFF0F1F2),
+    backgroundWithCard: Color = Color(0xFFF0F1F2),
+    surfaceTop: Color = Color(0xFFFFFFFF),
+    surfaceWithCard: Color = Color(0xFFF0F1F2),
+    bar: Color = Color(0xFFFAFAFA),
+    bottomBar: Color = Color(0xFFFAFAFA),
+    card: Color = Color(0xFFFFFFFF),
+    cardBackground: Color = Color(0xFFFFFFFF),
+    cardPressed: Color = Color(0xFFE6E6E6),
+    labelPrimary: Color = Color(0xE6000000),
+    labelPrimaryVariant: Color = Color(0xB8000000),
+    labelSecondary: Color = Color(0x8A000000),
+    labelSecondaryVariant: Color = Color(0x66000000),
+    labelTertiary: Color = Color(0x42000000),
+    labelQuaternary: Color = Color(0x14000000),
+    labelOnColor: Color = Color(0xFFFFFFFF),
+    disabledNeutral: Color = Color(0x42000000),
+    hintNeutral: Color = Color(0x42000000),
+    container4: Color = Color(0x0A000000),
+    container12: Color = Color(0x1F000000),
+    container16: Color = Color(0x29000000),
+    containerSolid: Color = Color(0xFFEBEBEB),
+    fillSolid: Color = Color(0xFFEBEBEB),
+    fillThin: Color = Color(0x0A000000),
+    controls: Color = Color(0x29000000),
+    divider: Color = Color(0x1F000000),
+    mask: Color = Color(0x33000000),
+    pressBackground: Color = Color(0x14000000),
+    ripplePressBackground: Color = Color(0x99B4B4B4),
+    red: Color = Color(0xFFEB3B2F),
+    redVariant: Color = Color(0xFFE56E65),
+    containerRed: Color = Color(0xFFEEDADC),
+    orange: Color = Color(0xFFFF7700),
+    orangeVariant: Color = Color(0xFFE58F45),
+    containerOrange: Color = Color(0xFFFAE7D6),
+    yellow: Color = Color(0xFFFFB200),
+    yellowVariant: Color = Color(0xFFE5AF2E),
+    containerYellow: Color = Color(0xFFF6E7C6),
+    green: Color = Color(0xFF00BD13),
+    greenVariant: Color = Color(0xFF4BBD57),
+    containerGreen: Color = Color(0xFFBADECA),
+    mint: Color = Color(0xFF00CC88),
+    mintVariant: Color = Color(0xFF39BD91),
+    containerMint: Color = Color(0xFFBADEDB),
+    cyan: Color = Color(0xFF1DBACC),
+    cyanVariant: Color = Color(0xFF39AFBD),
+    containerCyan: Color = Color(0xFFBEDADD),
+    azure: Color = Color(0xFF00A1FF),
+    azureVariant: Color = Color(0xFF45ABE5),
+    containerAzure: Color = Color(0xFFCEE5EB),
+    blue: Color = Color(0xFF0080FF),
+    blueVariant: Color = Color(0xFF5C93E5),
+    containerBlue: Color = Color(0xFFC9DAE4),
+    violet: Color = Color(0xFF5A47FF),
+    violetVariant: Color = Color(0xFF7E73E5),
+    containerViolet: Color = Color(0xFFD6D5EE),
+    purple: Color = Color(0xFFA723FF),
+    purpleVariant: Color = Color(0xFFB873E5),
+    containerPurple: Color = Color(0xFFE0D6EB),
+    neutralButton: Color = Color(0x0F000000),
 ): Colors = Colors(
     primary,
     onPrimary,
-    primaryVariant,
-    onPrimaryVariant,
     error,
     onError,
-    errorContainer,
-    onErrorContainer,
-    disabledPrimary,
-    disabledOnPrimary,
-    disabledPrimaryButton,
     disabledOnPrimaryButton,
-    disabledPrimarySlider,
-    primaryContainer,
-    onPrimaryContainer,
-    secondary,
-    onSecondary,
     secondaryVariant,
-    onSecondaryVariant,
-    disabledSecondary,
-    disabledOnSecondary,
     disabledSecondaryVariant,
-    disabledOnSecondaryVariant,
     secondaryContainer,
-    onSecondaryContainer,
-    secondaryContainerVariant,
-    onSecondaryContainerVariant,
-    tertiaryContainer,
-    onTertiaryContainer,
-    tertiaryContainerVariant,
-    background,
-    onBackground,
-    onBackgroundVariant,
-    surface,
-    onSurface,
-    surfaceVariant,
-    onSurfaceSecondary,
-    onSurfaceVariantSummary,
-    onSurfaceVariantActions,
-    disabledOnSurface,
-    surfaceContainer,
-    onSurfaceContainer,
-    onSurfaceContainerVariant,
-    surfaceContainerHigh,
-    onSurfaceContainerHigh,
+    secondary,
     surfaceContainerHighest,
-    onSurfaceContainerHighest,
     outline,
-    dividerLine,
-    windowDimming,
-    sliderKeyPoint,
-    sliderKeyPointForeground,
     sliderBackground,
     dialogButton,
     dragHandle,
@@ -647,74 +842,109 @@ fun lightColorScheme(
     disabledSliderThumb,
     disabledSliderKeyPoint,
     sliderThumbShadow,
-    textFieldError,
     disabledTextFieldBorder,
     quarternaryNeutral,
     container8,
     disabledChipText,
     focusOutline,
+    primaryText = primaryText,
+    labelTheme = labelTheme,
+    link = link,
+    disable = disable,
+    containerTheme = containerTheme,
+    containerThemeHalftone = containerThemeHalftone,
+    textColorHighlight = textColorHighlight,
+    errorDisabled = errorDisabled,
+    errorTextBg = errorTextBg,
+    success = success,
+    tips = tips,
+    additional = additional,
+    assist = assist,
+    background = background,
+    surface = surface,
+    backgroundElevated = backgroundElevated,
+    backgroundElevatedWithCard = backgroundElevatedWithCard,
+    backgroundWithCard = backgroundWithCard,
+    surfaceTop = surfaceTop,
+    surfaceWithCard = surfaceWithCard,
+    bar = bar,
+    bottomBar = bottomBar,
+    card = card,
+    cardBackground = cardBackground,
+    cardPressed = cardPressed,
+    labelPrimary = labelPrimary,
+    labelPrimaryVariant = labelPrimaryVariant,
+    labelSecondary = labelSecondary,
+    labelSecondaryVariant = labelSecondaryVariant,
+    labelTertiary = labelTertiary,
+    labelQuaternary = labelQuaternary,
+    labelOnColor = labelOnColor,
+    disabledNeutral = disabledNeutral,
+    hintNeutral = hintNeutral,
+    container4 = container4,
+    container12 = container12,
+    container16 = container16,
+    containerSolid = containerSolid,
+    fillSolid = fillSolid,
+    fillThin = fillThin,
+    controls = controls,
+    divider = divider,
+    mask = mask,
+    pressBackground = pressBackground,
+    ripplePressBackground = ripplePressBackground,
+    red = red,
+    redVariant = redVariant,
+    containerRed = containerRed,
+    orange = orange,
+    orangeVariant = orangeVariant,
+    containerOrange = containerOrange,
+    yellow = yellow,
+    yellowVariant = yellowVariant,
+    containerYellow = containerYellow,
+    green = green,
+    greenVariant = greenVariant,
+    containerGreen = containerGreen,
+    mint = mint,
+    mintVariant = mintVariant,
+    containerMint = containerMint,
+    cyan = cyan,
+    cyanVariant = cyanVariant,
+    containerCyan = containerCyan,
+    azure = azure,
+    azureVariant = azureVariant,
+    containerAzure = containerAzure,
+    blue = blue,
+    blueVariant = blueVariant,
+    containerBlue = containerBlue,
+    violet = violet,
+    violetVariant = violetVariant,
+    containerViolet = containerViolet,
+    purple = purple,
+    purpleVariant = purpleVariant,
+    containerPurple = containerPurple,
+    neutralButton = neutralButton,
+    isDark = false,
 )
 
 /** COUI dark scheme. COUI: coui_color_blue_dark #1A8CFF; pure black page surface, translucent white cards. */
 fun darkColorScheme(
     primary: Color = Color(0xFF1A8CFF),
     onPrimary: Color = Color.White,
-    primaryVariant: Color = Color(0xFF1A8CFF),
-    onPrimaryVariant: Color = Color(0xFF99C7F1),
     error: Color = Color(0xFFFF6C61),
     onError: Color = Color.White,
-    errorContainer: Color = Color(0x40EB493D),
-    onErrorContainer: Color = Color(0xFFFF6C61),
-    disabledPrimary: Color = Color(0x4D1A8CFF),
-    disabledOnPrimary: Color = Color(0xFF404040),
-    disabledPrimaryButton: Color = Color(0x4D1A8CFF),
     disabledOnPrimaryButton: Color = Color(0x29FFFFFF),
-    disabledPrimarySlider: Color = Color(0x4D1A8CFF),
-    primaryContainer: Color = Color(0xFF1A8CFF),
-    onPrimaryContainer: Color = Color.White,
-    secondary: Color = Color(0xFF757575),
-    onSecondary: Color = Color.White,
     secondaryVariant: Color = Color(0x26FFFFFF),
-    onSecondaryVariant: Color = Color(0xE6FFFFFF),
-    disabledSecondary: Color = Color(0x4D757575),
-    disabledOnSecondary: Color = Color(0x4DFFFFFF),
     disabledSecondaryVariant: Color = Color(0x1AFFFFFF),
-    disabledOnSecondaryVariant: Color = Color(0x4DFFFFFF),
     secondaryContainer: Color = Color(0x26FFFFFF),
-    onSecondaryContainer: Color = Color(0x66FFFFFF),
-    secondaryContainerVariant: Color = Color(0x26FFFFFF),
-    onSecondaryContainerVariant: Color = Color(0x66FFFFFF),
-    tertiaryContainer: Color = Color(0x401A8CFF),
-    onTertiaryContainer: Color = Color(0xFF5C9DFF),
-    tertiaryContainerVariant: Color = Color(0x401A8CFF),
-    background: Color = Color(0xFF1E1E1E),
-    onBackground: Color = Color(0xE6FFFFFF),
-    onBackgroundVariant: Color = Color(0x8AFFFFFF),
-    surface: Color = Color.Black,
-    onSurface: Color = Color(0xE6FFFFFF),
-    surfaceVariant: Color = Color(0x1AFFFFFF),
-    onSurfaceSecondary: Color = Color(0x8AFFFFFF),
-    onSurfaceVariantSummary: Color = Color(0x66FFFFFF),
-    onSurfaceVariantActions: Color = Color(0x4DFFFFFF),
-    disabledOnSurface: Color = Color(0x4DFFFFFF),
-    surfaceContainer: Color = Color(0x1AFFFFFF),
-    onSurfaceContainer: Color = Color(0xE6FFFFFF),
-    onSurfaceContainerVariant: Color = Color(0x66FFFFFF),
-    surfaceContainerHigh: Color = Color(0x33FFFFFF),
-    onSurfaceContainerHigh: Color = Color(0x4DFFFFFF),
+    secondary: Color = Color(0x401A8CFF),
     surfaceContainerHighest: Color = Color(0xFF1E1E1E),
-    onSurfaceContainerHighest: Color = Color(0xE6FFFFFF),
     outline: Color = Color(0x26FFFFFF),
-    dividerLine: Color = Color(0x33FFFFFF),
-    windowDimming: Color = Color.Black.copy(alpha = 0.6F),
-    sliderKeyPoint: Color = Color(0x4DFFFFFF),
-    sliderKeyPointForeground: Color = Color.White,
     sliderBackground: Color = Color(0x33FFFFFF),
     dialogButton: Color = Color(0x1AFFFFFF),
     dragHandle: Color = Color(0x40FFFFFF),
     secondaryButton: Color = Color(0xFF353535),
     disabledSecondaryButton: Color = Color(0x1AFFFFFF),
-    disabledOnSecondaryButton: Color = Color(0x29FFFFFF),
+    disabledOnSecondaryButton: Color = Color(0x28FFFFFF),
     transparentButton: Color = Color(0x33FFFFFF),
     onTransparentButton: Color = Color(0xFFFFFFFF),
     disabledOnTransparentButton: Color = Color(0x4DFFFFFF),
@@ -728,65 +958,99 @@ fun darkColorScheme(
     disabledSliderThumb: Color = Color(0x29FFFFFF),
     disabledSliderKeyPoint: Color = Color(0x29FFFFFF),
     sliderThumbShadow: Color = Color(0x40000000),
-    textFieldError: Color = Color(0xFFEA3939),
     disabledTextFieldBorder: Color = Color(0x19FFFFFF),
     quarternaryNeutral: Color = Color(0x26FFFFFF),
     container8: Color = Color(0x1AFFFFFF),
     disabledChipText: Color = Color(0x29FFFFFF),
     focusOutline: Color = Color(0x665C9DFF),
+    primaryText: Color = Color(0xFF5C9DFF),
+    labelTheme: Color = Color(0xFF1A8CFF),
+    link: Color = Color(0xFF1A8CFF),
+    disable: Color = Color(0x4D1A8CFF),
+    containerTheme: Color = Color(0xFF1A8CFF),
+    containerThemeHalftone: Color = Color(0x401A8CFF),
+    textColorHighlight: Color = Color(0x401A8CFF),
+    errorDisabled: Color = Color(0x4DFF6C61),
+    errorTextBg: Color = Color(0xFFEA3939),
+    success: Color = Color(0xFF24B232),
+    tips: Color = Color(0xFF1A8CFF),
+    additional: Color = Color(0xFF1A8CFF),
+    assist: Color = Color(0xFF5C93E5),
+    background: Color = Color(0xFF000000),
+    surface: Color = Color(0xFF1E1E1E),
+    backgroundElevated: Color = Color(0xFF1E1E1E),
+    backgroundElevatedWithCard: Color = Color(0xFF1E1E1E),
+    backgroundWithCard: Color = Color(0xFF000000),
+    surfaceTop: Color = Color(0xFF333333),
+    surfaceWithCard: Color = Color(0xFF1E1E1E),
+    bar: Color = Color(0xFF1E1E1E),
+    bottomBar: Color = Color(0xFF1E1E1E),
+    card: Color = Color(0x1AFFFFFF),
+    cardBackground: Color = Color(0x1AFFFFFF),
+    cardPressed: Color = Color(0x33FFFFFF),
+    labelPrimary: Color = Color(0xE6FFFFFF),
+    labelPrimaryVariant: Color = Color(0xB8FFFFFF),
+    labelSecondary: Color = Color(0x8AFFFFFF),
+    labelSecondaryVariant: Color = Color(0x66FFFFFF),
+    labelTertiary: Color = Color(0x4DFFFFFF),
+    labelQuaternary: Color = Color(0x26FFFFFF),
+    labelOnColor: Color = Color(0xFFFFFFFF),
+    disabledNeutral: Color = Color(0x4DFFFFFF),
+    hintNeutral: Color = Color(0x4DFFFFFF),
+    container4: Color = Color(0x1AFFFFFF),
+    container12: Color = Color(0x33FFFFFF),
+    container16: Color = Color(0x40FFFFFF),
+    containerSolid: Color = Color(0xFF262626),
+    fillSolid: Color = Color(0xFF262626),
+    fillThin: Color = Color(0x14FFFFFF),
+    controls: Color = Color(0x40FFFFFF),
+    divider: Color = Color(0x33FFFFFF),
+    mask: Color = Color(0x99000000),
+    pressBackground: Color = Color(0x26FFFFFF),
+    ripplePressBackground: Color = Color(0x80FFFFFF),
+    red: Color = Color(0xFFEB493D),
+    redVariant: Color = Color(0xFFCC615A),
+    containerRed: Color = Color(0xFF3A3030),
+    orange: Color = Color(0xFFF08222),
+    orangeVariant: Color = Color(0xFFCC7F3D),
+    containerOrange: Color = Color(0xFF39332C),
+    yellow: Color = Color(0xFFE5A100),
+    yellowVariant: Color = Color(0xFFC29427),
+    containerYellow: Color = Color(0xFF373530),
+    green: Color = Color(0xFF24B232),
+    greenVariant: Color = Color(0xFF43A84E),
+    containerGreen: Color = Color(0xFF353E36),
+    mint: Color = Color(0xFF1AB883),
+    mintVariant: Color = Color(0xFF32A881),
+    containerMint: Color = Color(0xFF394342),
+    cyan: Color = Color(0xFF25A9B8),
+    cyanVariant: Color = Color(0xFF329DA8),
+    containerCyan: Color = Color(0xFF343E3D),
+    azure: Color = Color(0xFF209DE5),
+    azureVariant: Color = Color(0xFF3D98CC),
+    containerAzure: Color = Color(0xFF373F42),
+    blue: Color = Color(0xFF1A8CFF),
+    blueVariant: Color = Color(0xFF5C93E5),
+    containerBlue: Color = Color(0xFF323739),
+    violet: Color = Color(0xFF7161FF),
+    violetVariant: Color = Color(0xFF7E73E5),
+    containerViolet: Color = Color(0xFF3A3A43),
+    purple: Color = Color(0xFFAC33FF),
+    purpleVariant: Color = Color(0xFFA466CC),
+    containerPurple: Color = Color(0xFF3A3540),
+    neutralButton: Color = Color(0x4CFFFFFF),
 ): Colors = Colors(
     primary,
     onPrimary,
-    primaryVariant,
-    onPrimaryVariant,
     error,
     onError,
-    errorContainer,
-    onErrorContainer,
-    disabledPrimary,
-    disabledOnPrimary,
-    disabledPrimaryButton,
     disabledOnPrimaryButton,
-    disabledPrimarySlider,
-    primaryContainer,
-    onPrimaryContainer,
-    secondary,
-    onSecondary,
     secondaryVariant,
-    onSecondaryVariant,
-    disabledSecondary,
-    disabledOnSecondary,
     disabledSecondaryVariant,
-    disabledOnSecondaryVariant,
     secondaryContainer,
-    onSecondaryContainer,
-    secondaryContainerVariant,
-    onSecondaryContainerVariant,
-    tertiaryContainer,
-    onTertiaryContainer,
-    tertiaryContainerVariant,
-    background,
-    onBackground,
-    onBackgroundVariant,
-    surface,
-    onSurface,
-    surfaceVariant,
-    onSurfaceSecondary,
-    onSurfaceVariantSummary,
-    onSurfaceVariantActions,
-    disabledOnSurface,
-    surfaceContainer,
-    onSurfaceContainer,
-    onSurfaceContainerVariant,
-    surfaceContainerHigh,
-    onSurfaceContainerHigh,
+    secondary,
     surfaceContainerHighest,
-    onSurfaceContainerHighest,
     outline,
-    dividerLine,
-    windowDimming,
-    sliderKeyPoint,
-    sliderKeyPointForeground,
     sliderBackground,
     dialogButton,
     dragHandle,
@@ -806,68 +1070,103 @@ fun darkColorScheme(
     disabledSliderThumb,
     disabledSliderKeyPoint,
     sliderThumbShadow,
-    textFieldError,
     disabledTextFieldBorder,
     quarternaryNeutral,
     container8,
     disabledChipText,
     focusOutline,
+    primaryText = primaryText,
+    labelTheme = labelTheme,
+    link = link,
+    disable = disable,
+    containerTheme = containerTheme,
+    containerThemeHalftone = containerThemeHalftone,
+    textColorHighlight = textColorHighlight,
+    errorDisabled = errorDisabled,
+    errorTextBg = errorTextBg,
+    success = success,
+    tips = tips,
+    additional = additional,
+    assist = assist,
+    background = background,
+    surface = surface,
+    backgroundElevated = backgroundElevated,
+    backgroundElevatedWithCard = backgroundElevatedWithCard,
+    backgroundWithCard = backgroundWithCard,
+    surfaceTop = surfaceTop,
+    surfaceWithCard = surfaceWithCard,
+    bar = bar,
+    bottomBar = bottomBar,
+    card = card,
+    cardBackground = cardBackground,
+    cardPressed = cardPressed,
+    labelPrimary = labelPrimary,
+    labelPrimaryVariant = labelPrimaryVariant,
+    labelSecondary = labelSecondary,
+    labelSecondaryVariant = labelSecondaryVariant,
+    labelTertiary = labelTertiary,
+    labelQuaternary = labelQuaternary,
+    labelOnColor = labelOnColor,
+    disabledNeutral = disabledNeutral,
+    hintNeutral = hintNeutral,
+    container4 = container4,
+    container12 = container12,
+    container16 = container16,
+    containerSolid = containerSolid,
+    fillSolid = fillSolid,
+    fillThin = fillThin,
+    controls = controls,
+    divider = divider,
+    mask = mask,
+    pressBackground = pressBackground,
+    ripplePressBackground = ripplePressBackground,
+    red = red,
+    redVariant = redVariant,
+    containerRed = containerRed,
+    orange = orange,
+    orangeVariant = orangeVariant,
+    containerOrange = containerOrange,
+    yellow = yellow,
+    yellowVariant = yellowVariant,
+    containerYellow = containerYellow,
+    green = green,
+    greenVariant = greenVariant,
+    containerGreen = containerGreen,
+    mint = mint,
+    mintVariant = mintVariant,
+    containerMint = containerMint,
+    cyan = cyan,
+    cyanVariant = cyanVariant,
+    containerCyan = containerCyan,
+    azure = azure,
+    azureVariant = azureVariant,
+    containerAzure = containerAzure,
+    blue = blue,
+    blueVariant = blueVariant,
+    containerBlue = containerBlue,
+    violet = violet,
+    violetVariant = violetVariant,
+    containerViolet = containerViolet,
+    purple = purple,
+    purpleVariant = purpleVariant,
+    containerPurple = containerPurple,
+    neutralButton = neutralButton,
+    isDark = true,
 )
 
 @Stable
 internal fun Colors.updateColorsFrom(other: Colors) {
     primary = other.primary
     onPrimary = other.onPrimary
-    primaryVariant = other.primaryVariant
-    onPrimaryVariant = other.onPrimaryVariant
     error = other.error
     onError = other.onError
-    errorContainer = other.errorContainer
-    onErrorContainer = other.onErrorContainer
-    disabledPrimary = other.disabledPrimary
-    disabledOnPrimary = other.disabledOnPrimary
-    disabledPrimaryButton = other.disabledPrimaryButton
     disabledOnPrimaryButton = other.disabledOnPrimaryButton
-    disabledPrimarySlider = other.disabledPrimarySlider
-    primaryContainer = other.primaryContainer
-    onPrimaryContainer = other.onPrimaryContainer
-    secondary = other.secondary
-    onSecondary = other.onSecondary
     secondaryVariant = other.secondaryVariant
-    onSecondaryVariant = other.onSecondaryVariant
-    disabledSecondary = other.disabledSecondary
-    disabledOnSecondary = other.disabledOnSecondary
     disabledSecondaryVariant = other.disabledSecondaryVariant
-    disabledOnSecondaryVariant = other.disabledOnSecondaryVariant
     secondaryContainer = other.secondaryContainer
-    onSecondaryContainer = other.onSecondaryContainer
-    secondaryContainerVariant = other.secondaryContainerVariant
-    onSecondaryContainerVariant = other.onSecondaryContainerVariant
-    tertiaryContainer = other.tertiaryContainer
-    onTertiaryContainer = other.onTertiaryContainer
-    tertiaryContainerVariant = other.tertiaryContainerVariant
-    background = other.background
-    onBackground = other.onBackground
-    onBackgroundVariant = other.onBackgroundVariant
-    surface = other.surface
-    onSurface = other.onSurface
-    surfaceVariant = other.surfaceVariant
-    onSurfaceSecondary = other.onSurfaceSecondary
-    onSurfaceVariantSummary = other.onSurfaceVariantSummary
-    onSurfaceVariantActions = other.onSurfaceVariantActions
-    disabledOnSurface = other.disabledOnSurface
-    surfaceContainer = other.surfaceContainer
-    onSurfaceContainer = other.onSurfaceContainer
-    onSurfaceContainerVariant = other.onSurfaceContainerVariant
-    surfaceContainerHigh = other.surfaceContainerHigh
-    onSurfaceContainerHigh = other.onSurfaceContainerHigh
+    secondary = other.secondary
     surfaceContainerHighest = other.surfaceContainerHighest
-    onSurfaceContainerHighest = other.onSurfaceContainerHighest
     outline = other.outline
-    dividerLine = other.dividerLine
-    windowDimming = other.windowDimming
-    sliderKeyPoint = other.sliderKeyPoint
-    sliderKeyPointForeground = other.sliderKeyPointForeground
     sliderBackground = other.sliderBackground
     dialogButton = other.dialogButton
     dragHandle = other.dragHandle
@@ -887,12 +1186,88 @@ internal fun Colors.updateColorsFrom(other: Colors) {
     disabledSliderThumb = other.disabledSliderThumb
     disabledSliderKeyPoint = other.disabledSliderKeyPoint
     sliderThumbShadow = other.sliderThumbShadow
-    textFieldError = other.textFieldError
     disabledTextFieldBorder = other.disabledTextFieldBorder
     quarternaryNeutral = other.quarternaryNeutral
     container8 = other.container8
     disabledChipText = other.disabledChipText
     focusOutline = other.focusOutline
+    primaryText = other.primaryText
+    labelTheme = other.labelTheme
+    link = other.link
+    disable = other.disable
+    containerTheme = other.containerTheme
+    containerThemeHalftone = other.containerThemeHalftone
+    textColorHighlight = other.textColorHighlight
+    errorDisabled = other.errorDisabled
+    errorTextBg = other.errorTextBg
+    success = other.success
+    tips = other.tips
+    additional = other.additional
+    assist = other.assist
+    background = other.background
+    surface = other.surface
+    backgroundElevated = other.backgroundElevated
+    backgroundElevatedWithCard = other.backgroundElevatedWithCard
+    backgroundWithCard = other.backgroundWithCard
+    surfaceTop = other.surfaceTop
+    surfaceWithCard = other.surfaceWithCard
+    bar = other.bar
+    bottomBar = other.bottomBar
+    card = other.card
+    cardBackground = other.cardBackground
+    cardPressed = other.cardPressed
+    labelPrimary = other.labelPrimary
+    labelPrimaryVariant = other.labelPrimaryVariant
+    labelSecondary = other.labelSecondary
+    labelSecondaryVariant = other.labelSecondaryVariant
+    labelTertiary = other.labelTertiary
+    labelQuaternary = other.labelQuaternary
+    labelOnColor = other.labelOnColor
+    disabledNeutral = other.disabledNeutral
+    hintNeutral = other.hintNeutral
+    container4 = other.container4
+    container12 = other.container12
+    container16 = other.container16
+    containerSolid = other.containerSolid
+    fillSolid = other.fillSolid
+    fillThin = other.fillThin
+    controls = other.controls
+    divider = other.divider
+    mask = other.mask
+    pressBackground = other.pressBackground
+    ripplePressBackground = other.ripplePressBackground
+    red = other.red
+    redVariant = other.redVariant
+    containerRed = other.containerRed
+    orange = other.orange
+    orangeVariant = other.orangeVariant
+    containerOrange = other.containerOrange
+    yellow = other.yellow
+    yellowVariant = other.yellowVariant
+    containerYellow = other.containerYellow
+    green = other.green
+    greenVariant = other.greenVariant
+    containerGreen = other.containerGreen
+    mint = other.mint
+    mintVariant = other.mintVariant
+    containerMint = other.containerMint
+    cyan = other.cyan
+    cyanVariant = other.cyanVariant
+    containerCyan = other.containerCyan
+    azure = other.azure
+    azureVariant = other.azureVariant
+    containerAzure = other.containerAzure
+    blue = other.blue
+    blueVariant = other.blueVariant
+    containerBlue = other.containerBlue
+    violet = other.violet
+    violetVariant = other.violetVariant
+    containerViolet = other.containerViolet
+    purple = other.purple
+    purpleVariant = other.purpleVariant
+    containerPurple = other.containerPurple
+    neutralButton = other.neutralButton
+    isDark = other.isDark
 }
 
 internal val LocalColors = staticCompositionLocalOf { lightColorScheme() }

@@ -103,8 +103,8 @@ fun SliderPreference(
     reverseDirection: Boolean = false,
     sliderHeight: Dp = SliderDefaults.MinHeight,
     sliderColors: SliderColors = SliderDefaults.sliderColors(),
-    hapticEffect: SliderDefaults.SliderHapticEffect = SliderDefaults.DefaultHapticEffect,
-    showKeyPoints: Boolean = false,
+    hapticEffect: SliderDefaults.SliderHapticEffect = SliderDefaults.SliderHapticEffect.Step,
+    showKeyPoints: Boolean = true,
     keyPoints: List<Float>? = null,
     magnetThreshold: Float = 0.02f,
     material: Boolean = true,
@@ -137,8 +137,8 @@ fun SliderPreference(
                     if (valueText != null) {
                         Text(
                             text = valueText,
-                            fontSize = COUITheme.textStyles.footnote1.fontSize,
-                            color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
+                            fontSize = COUITheme.textStyles.bodyS.fontSize,
+                            color = if (enabled) COUITheme.colorScheme.labelSecondary else COUITheme.colorScheme.disabledNeutral,
                         )
                     }
                     endActions?.invoke(this)
@@ -271,8 +271,8 @@ fun RangeSliderPreference(
                     if (valueText != null) {
                         Text(
                             text = valueText,
-                            fontSize = COUITheme.textStyles.footnote1.fontSize,
-                            color = if (enabled) COUITheme.colorScheme.onSurfaceSecondary else COUITheme.colorScheme.disabledOnSecondaryVariant,
+                            fontSize = COUITheme.textStyles.bodyS.fontSize,
+                            color = if (enabled) COUITheme.colorScheme.labelSecondary else COUITheme.colorScheme.disabledNeutral,
                         )
                     }
                     endActions?.invoke(this)

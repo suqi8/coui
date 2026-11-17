@@ -59,7 +59,7 @@ fun MarqueeText(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     color: Color = Color.Unspecified,
-    style: TextStyle = LocalTextStyles.current.main,
+    style: TextStyle = LocalTextStyles.current.bodyXL,
     velocity: Dp = MarqueeTextDefaults.Velocity,
     initialDelayMillis: Int = MarqueeTextDefaults.InitialDelayMillis,
     spacing: Dp = MarqueeTextDefaults.Spacing,

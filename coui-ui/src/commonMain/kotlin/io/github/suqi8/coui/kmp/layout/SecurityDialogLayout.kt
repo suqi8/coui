@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.layout
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,8 +45,10 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param show Whether the dialog is currently shown.
  * @param popupHost A composable that provides the dialog container (e.g., DialogLayout or Dialog).
  * @param onConfirm Invoked when the confirm button is clicked, with the current checkbox state.
- * @param onCancel Invoked when the cancel button is clicked, the user taps outside, or presses
- *   back (COUI reports the back key as the negative selection).
+ * @param onCancel Invoked when the cancel button is clicked or the user presses back (COUI
+ *   reports the back key as the negative selection). A tap outside the panel does nothing:
+ *   `COUISecurityAlertDialogBuilder.configureDefaultPredictiveBack` makes the dialog
+ *   non-cancelable once a selection listener is set.
  * @param modifier The modifier to be applied to the dialog content.
  * @param title The title of the dialog.
  * @param summary The summary (message) of the dialog.
@@ -54,6 +57,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param onLinkClick Invoked when the statement link is clicked.
  * @param checkboxText The label of the checkbox row. Hidden when null.
  * @param initialChecked The initial checkbox state, re-applied each time the dialog is shown.
+ * @param onCheckedChange Invoked each time the checkbox is toggled, like the
+ *   `onSelected(0, isChecked)` report of `COUISecurityAlertDialogBuilder`.
  * @param confirmText The label of the confirm (positive) button.
  * @param cancelText The label of the cancel (negative) button.
  * @param titleColor The color of the title.
@@ -63,6 +68,9 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param enableWindowDim Whether to enable window dimming.
  * @param onDismissFinished Invoked when the hide animation completes.
  * @param topInset Optional top inset override forwarded to [DialogContentLayout].
+ * @param backgroundModifier Applied inside the panel's corner clip, below the content.
+ * @param materialStroke Whether to draw the COUI 17 material stroke of a blurred panel; the
+ *   button bar then turns material too.
  */
 @Composable
 internal fun SecurityDialogContentLayout(
@@ -71,6 +79,7 @@ internal fun SecurityDialogContentLayout(
     onConfirm: (dontRemind: Boolean) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    backgroundModifier: Modifier = Modifier,
     title: String? = null,
     summary: String? = null,
     statement: String? = null,
@@ -78,6 +87,7 @@ internal fun SecurityDialogContentLayout(
     onLinkClick: (() -> Unit)? = null,
     checkboxText: String? = SecurityDialogDefaults.CheckboxText,
     initialChecked: Boolean = false,
+    onCheckedChange: ((checked: Boolean) -> Unit)? = null,
     confirmText: String = SecurityDialogDefaults.ConfirmText,
     cancelText: String = SecurityDialogDefaults.CancelText,
     titleColor: Color = Color.Unspecified,
@@ -87,12 +97,14 @@ internal fun SecurityDialogContentLayout(
     enableWindowDim: Boolean = true,
     onDismissFinished: (() -> Unit)? = null,
     topInset: Dp? = null,
+    materialStroke: Boolean = false,
 ) {
     val checked = remember { mutableStateOf(initialChecked) }
     val currentInitialChecked by rememberUpdatedState(initialChecked)
     val currentOnConfirm by rememberUpdatedState(onConfirm)
     val currentOnCancel by rememberUpdatedState(onCancel)
     val currentOnLinkClick by rememberUpdatedState(onLinkClick)
+    val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
 
     LaunchedEffect(show) {
         // COUI re-applies the initial checkbox state on each show.
@@ -110,12 +122,60 @@ internal fun SecurityDialogContentLayout(
         insideMargin = DialogDefaults.insideMargin,
         popupHost = popupHost,
         modifier = modifier,
+        backgroundModifier = backgroundModifier,
         title = title,
         summary = summary,
         enableWindowDim = enableWindowDim,
         onDismissRequest = requestCancel,
         onDismissFinished = onDismissFinished,
         topInset = topInset,
+        materialStroke = materialStroke,
+        // coui_bottom_assignment_alert_dialog_layout: the customPanel carries no bottom padding.
+        customContentPaddingBottom = 0.dp,
+        dismissOnClickOutside = false,
+        customContent = {
+            SecurityDialogCustomContent(
+                statement = statement,
+                statementLinkText = statementLinkText,
+                onLinkClick = { currentOnLinkClick?.invoke() },
+                checkboxText = checkboxText,
+                checked = checked.value,
+                onCheckedChange = {
+                    checked.value = it
+                    currentOnCheckedChange?.invoke(it)
+                },
+                colors = colors,
+            )
+        },
+    ) {
+        DialogButtonBar(
+            negative = DialogButtonBarAction(text = cancelText, onClick = requestCancel),
+            positive = remember(confirmText) {
+                DialogButtonBarAction(text = confirmText, onClick = { currentOnConfirm(checked.value) })
+            },
+        )
+    }
+}
+
+/**
+ * The `coui_security_alert_dialog_statement_or_checkbox` custom view: an 8dp / 16dp padded column
+ * holding the statement and the checkbox row.
+ */
+@Composable
+private fun SecurityDialogCustomContent(
+    statement: String?,
+    statementLinkText: String?,
+    onLinkClick: () -> Unit,
+    checkboxText: String?,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    colors: SecurityDialogColors,
+) {
+    val currentOnLinkClick by rememberUpdatedState(onLinkClick)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = CustomContentPaddingTop, bottom = CustomContentPaddingBottom),
     ) {
         if (statement != null) {
             val linkColor = colors.linkColor
@@ -134,7 +194,7 @@ internal fun SecurityDialogContentLayout(
                         )
                         withLink(
                             LinkAnnotation.Clickable(tag = "statement-link", styles = linkStyles) {
-                                currentOnLinkClick?.invoke()
+                                currentOnLinkClick()
                             },
                         ) {
                             append(link)
@@ -164,12 +224,12 @@ internal fun SecurityDialogContentLayout(
                     .fillMaxWidth()
                     .padding(start = CheckboxRowMarginStart, end = DialogDefaults.insideMargin.width)
                     .toggleable(
-                        value = checked.value,
+                        value = checked,
                         interactionSource = null,
                         indication = null,
                         role = Role.Checkbox,
                         onValueChange = {
-                            checked.value = it
+                            onCheckedChange(it)
                             currentHapticFeedback.performHapticFeedback(
                                 if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
                             )
@@ -178,7 +238,7 @@ internal fun SecurityDialogContentLayout(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Checkbox(
-                    state = ToggleableState(checked.value),
+                    state = ToggleableState(checked),
                     onClick = null,
                 )
                 Text(
@@ -189,20 +249,12 @@ internal fun SecurityDialogContentLayout(
                 )
             }
         }
-        DialogButtonBar(
-            negative = DialogButtonBarAction(text = cancelText, onClick = requestCancel),
-            positive = remember(confirmText) {
-                DialogButtonBarAction(text = confirmText, onClick = { currentOnConfirm(checked.value) })
-            },
-            // COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the bar.
-            modifier = Modifier.padding(top = ButtonBarMarginTop),
-        )
     }
 }
 
 object SecurityDialogDefaults {
     /** The default checkbox label. COUI `coui_security_alertdialog_checkbox_msg`. */
-    val CheckboxText = "Don't remind me again"
+    val CheckboxText = "Don't ask me again"
 
     /** The default confirm (positive) button label. */
     val ConfirmText = "OK"
@@ -216,9 +268,9 @@ object SecurityDialogDefaults {
      */
     @Composable
     fun securityDialogColors(
-        statementColor: Color = COUITheme.colorScheme.onBackgroundVariant,
+        statementColor: Color = COUITheme.colorScheme.labelSecondary,
         linkColor: Color = COUITheme.colorScheme.primary,
-        checkboxTextColor: Color = COUITheme.colorScheme.onBackgroundVariant,
+        checkboxTextColor: Color = COUITheme.colorScheme.labelSecondary,
     ): SecurityDialogColors = remember(statementColor, linkColor, checkboxTextColor) {
         SecurityDialogColors(
             statementColor = statementColor,
@@ -256,5 +308,8 @@ private val CheckboxRowMarginStart = 20.dp
 /** COUI coui_checkbox_margin_between_text_drawable. */
 private val CheckboxTextGap = 8.dp
 
-/** COUI coui_alert_dialog_customer_layout_padding_bottom, the gap above the button bar. */
-private val ButtonBarMarginTop = 8.dp
+/** COUI coui_security_alert_dialog_statement_or_checkbox android:paddingTop. */
+private val CustomContentPaddingTop = 8.dp
+
+/** COUI coui_security_alert_dialog_statement_or_checkbox android:paddingBottom, the gap above the bar. */
+private val CustomContentPaddingBottom = 16.dp

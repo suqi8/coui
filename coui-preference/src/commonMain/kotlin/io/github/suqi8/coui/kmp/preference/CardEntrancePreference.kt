@@ -209,14 +209,14 @@ private fun SmallEntranceCard(
                 Text(
                     text = item.title,
                     modifier = Modifier.padding(top = CardEntrancePreferenceDefaults.SmallTitleTopMargin),
-                    style = COUITheme.textStyles.headline2,
+                    style = COUITheme.textStyles.headlineXS,
                     color = colors.titleColor(item.enabled),
                 )
                 item.summary?.let { summary ->
                     Text(
                         text = summary,
                         modifier = Modifier.padding(top = CardEntrancePreferenceDefaults.SmallSummaryTopMargin),
-                        style = COUITheme.textStyles.footnote2,
+                        style = COUITheme.textStyles.bodyXS,
                         color = colors.summaryColor(item.enabled, item.statusOn),
                     )
                 }
@@ -246,14 +246,14 @@ private fun LargeEntranceCard(
             Column {
                 Text(
                     text = item.title,
-                    style = COUITheme.textStyles.headline2,
+                    style = COUITheme.textStyles.headlineXS,
                     color = colors.titleColor(item.enabled),
                 )
                 item.summary?.let { summary ->
                     Text(
                         text = summary,
                         modifier = Modifier.padding(top = CardEntrancePreferenceDefaults.LargeSummaryTopMargin),
-                        style = COUITheme.textStyles.footnote2,
+                        style = COUITheme.textStyles.bodyXS,
                         color = colors.summaryColor(item.enabled, item.statusOn),
                     )
                 }
@@ -311,11 +311,11 @@ object CardEntrancePreferenceDefaults {
      */
     @Composable
     fun cardEntrancePreferenceColors(
-        containerColor: Color = COUITheme.colorScheme.surfaceContainer,
-        titleColor: Color = COUITheme.colorScheme.onSurface,
-        summaryColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        containerColor: Color = COUITheme.colorScheme.cardBackground,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        summaryColor: Color = COUITheme.colorScheme.labelSecondary,
         statusOnSummaryColor: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledOnSecondaryVariant,
+        disabledColor: Color = COUITheme.colorScheme.disabledNeutral,
     ): CardEntrancePreferenceColors = remember(containerColor, titleColor, summaryColor, statusOnSummaryColor, disabledColor) {
         CardEntrancePreferenceColors(
             containerColor = containerColor,

@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -61,6 +62,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.suqi8.coui.kmp.squircle.addLegacySquircleRect
+import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -92,6 +95,23 @@ data class SwipeAction(
     val contentDescription: String? = label,
 )
 
+/** How the actions behind a [SwipeActionItem] are drawn (COUISlideView.setMenuItemStyle). */
+enum class SwipeActionMenuStyle {
+    /**
+     * MENU_ITEM_NORMAL_RECT_STYLE: one fill runs from the content edge to the end of the row and
+     * the actions sit side by side; past the full menu they spread apart.
+     */
+    Rect,
+
+    /**
+     * MENU_ITEM_ROUND_RECT_STYLE: every action is its own rounded rectangle, separated by
+     * [SwipeActionItemDefaults.RoundRectActionGap] and inset by
+     * [SwipeActionItemDefaults.RoundRectStartMargin] / [SwipeActionItemDefaults.RoundRectEndMargin];
+     * the menu stays packed while over-sliding.
+     */
+    RoundRect,
+}
+
 /**
  * The state of a [SwipeActionItem]: how far its menu is revealed, and the delete animation.
  *
@@ -114,7 +134,10 @@ class SwipeActionItemState {
     var isDeleting by mutableStateOf(false)
         internal set
 
-    /** The width of all actions together (COUISlideView mHolderWidth), written by the measure pass. */
+    /**
+     * The width of the whole menu (COUISlideView mHolderWidth): all actions together, plus the
+     * gaps and margins of [SwipeActionMenuStyle.RoundRect]. Written by the measure pass.
+     */
     internal var menuWidth = 0f
 
     /** The item width, written by the measure pass. */
@@ -213,16 +236,18 @@ fun rememberSwipeActionItemState(): SwipeActionItemState = remember { SwipeActio
  * A [SwipeActionItem] component with COUI style.
  *
  * A list row that slides sideways to reveal a menu of actions behind it, mirroring ColorOS's
- * COUISlideView in its default rectangular menu style (MENU_ITEM_NORMAL_RECT_STYLE). Dragging
- * towards the start reveals the actions at the end edge; past the full menu the drag is damped
- * and the actions spread apart proportionally. On release the row settles open or closed on a
+ * COUISlideView. Dragging towards the start reveals the actions at the end edge; past the full
+ * menu the drag is damped and, in [SwipeActionMenuStyle.Rect], the actions spread apart
+ * proportionally. [SwipeActionMenuStyle.RoundRect] draws every action as its own rounded
+ * rectangle instead and keeps the menu packed. On release the row settles open or closed on a
  * damping-1 / stiffness-200 spring, choosing by fling direction (beyond 1000 px/s) or by
  * whether more than half of the menu is showing. Tapping the content while the menu is open
  * closes it.
  *
  * With [onDelete], the end-most action is the built-in delete action (a trash icon on
  * couiColorError, COUISlideView.setDeleteEnable). Clicking it plays COUISlideDeleteAnimation:
- * the red fill grows across the row while the content slides out (330ms) and the row height
+ * the red fill (in [SwipeActionMenuStyle.RoundRect] without own action colors, the rounded
+ * rectangle) grows across the row while the content slides out (330ms) and the row height
  * collapses to zero (400ms, 10ms later), both on the (0.3, 0, 0.1, 1) curve; [onDelete] is
  * called when the collapse ends, at which point the caller removes the row. [fastDeleteEnabled]
  * also deletes on an over-slide past the menu by 48dp, or by 30dp with a fast fling.
@@ -238,6 +263,7 @@ fun rememberSwipeActionItemState(): SwipeActionItemState = remember { SwipeActio
  * @param fastDeleteEnabled Whether over-sliding deletes the row (COUISlideView.enableFastDelete).
  *   Only takes effect with [onDelete].
  * @param deleteContentDescription The accessibility label of the delete action.
+ * @param menuStyle How the actions are drawn (COUISlideView.setMenuItemStyle).
  * @param actionMinWidth The minimum width of each action (COUI coui_slideview_menuitem_width).
  * @param colors The [SwipeActionItemColors] of the menu.
  * @param textStyle The text style of the action labels.
@@ -254,6 +280,7 @@ fun SwipeActionItem(
     onDelete: (() -> Unit)? = null,
     fastDeleteEnabled: Boolean = false,
     deleteContentDescription: String? = null,
+    menuStyle: SwipeActionMenuStyle = SwipeActionMenuStyle.Rect,
     actionMinWidth: Dp = SwipeActionItemDefaults.ActionMinWidth,
     colors: SwipeActionItemColors = SwipeActionItemDefaults.swipeActionItemColors(),
     textStyle: TextStyle = SwipeActionItemDefaults.textStyle(),
@@ -278,6 +305,8 @@ fun SwipeActionItem(
     val actionCount = menuActions.size
     // The slot widths, written by the measure pass and read by the draw pass of the same frame.
     val slotWidths = remember(actionCount) { FloatArray(actionCount) }
+    val roundRect = menuStyle == SwipeActionMenuStyle.RoundRect
+    val actionPath = remember { Path() }
 
     val startDelete: (Boolean) -> Unit = { isFast ->
         if (!state.isDeleting) {
@@ -316,14 +345,34 @@ fun SwipeActionItem(
                 val reveal = state.revealOffset
                 if (reveal <= 0f || actionCount == 0) return@drawBehind
                 val width = size.width
+                val menu = state.menuWidth
+                if (roundRect) {
+                    val startMargin = SwipeActionItemDefaults.RoundRectStartMargin.roundToPx().toFloat()
+                    val actionGap = SwipeActionItemDefaults.RoundRectActionGap.roundToPx().toFloat()
+                    // COUISlideView caps couiRoundCornerM at half of the row height.
+                    val radius = min(size.height / 2f, SwipeActionItemDefaults.RoundRectCornerRadius.roundToPx().toFloat())
+                    if (state.isDeleting && !hasOwnColors) {
+                        // drawItemBackground with mSlideDeleteInRoundMode / mSlideDelete: a single
+                        // rounded fill from the start margin to the end margin follows the content.
+                        val left = width - reveal + startMargin
+                        val right = width - SwipeActionItemDefaults.RoundRectEndMargin.roundToPx()
+                        drawRoundRectMirrored(actionPath, colors.containerColor, left, right, radius, isRtl)
+                    } else {
+                        for (v in 0 until actionCount) {
+                            val start = startMargin + v * actionGap +
+                                slotStart(v, actionCount, slotWidths, reveal, width, menu, state, spreads = false)
+                            drawRoundRectMirrored(actionPath, actionColors[v], start, start + slotWidths[v], radius, isRtl)
+                        }
+                    }
+                    return@drawBehind
+                }
                 // COUISlideView.drawItemBackground: one fill from the content edge to the end.
                 drawRectMirrored(colors.containerColor, width - reveal, width, isRtl)
                 if (hasOwnColors) {
-                    val menu = state.menuWidth
                     val spread = if (state.isDeleting) 0f else (reveal - menu).coerceAtLeast(0f)
                     val gap = (spread / (actionCount + 1f)).roundToInt().toFloat()
                     for (v in 0 until actionCount) {
-                        val start = slotStart(v, actionCount, slotWidths, reveal, width, menu, state)
+                        val start = slotStart(v, actionCount, slotWidths, reveal, width, menu, state, spreads = true)
                         val end = start + slotWidths[v]
                         // COUISlideView widens each colored slot by half of the spread gap, the
                         // start-most one by a whole gap, and the end-most one to the edge.
@@ -371,6 +420,12 @@ fun SwipeActionItem(
             slotWidths[v] = placeable.width.toFloat()
             menu += placeable.width
         }
+        // COUISlideView.itemWidthChange: the round rect menu adds its gaps and both margins.
+        val startMargin = if (roundRect) SwipeActionItemDefaults.RoundRectStartMargin.roundToPx() else 0
+        val actionGap = if (roundRect) SwipeActionItemDefaults.RoundRectActionGap.roundToPx() else 0
+        if (roundRect && actionCount > 0) {
+            menu += (actionCount - 1) * actionGap + startMargin + SwipeActionItemDefaults.RoundRectEndMargin.roundToPx()
+        }
         state.menuWidth = menu
         state.itemWidth = width.toFloat()
         val overlayPlaceable = measurables[actionCount + 1].measure(Constraints.fixed(width, contentHeight))
@@ -378,7 +433,8 @@ fun SwipeActionItem(
         layout(width, constraints.constrainHeight(height)) {
             val reveal = state.revealOffset
             actionPlaceables.forEachIndexed { v, placeable ->
-                val x = slotStart(v, actionCount, slotWidths, reveal, width.toFloat(), menu, state)
+                val x = startMargin + v * actionGap +
+                    slotStart(v, actionCount, slotWidths, reveal, width.toFloat(), menu, state, spreads = !roundRect)
                 placeable.placeRelative(x.roundToInt(), 0)
             }
             contentPlaceable.placeRelative(-reveal.roundToInt(), 0)
@@ -390,9 +446,14 @@ fun SwipeActionItem(
 /**
  * The left edge (in LTR coordinates) of the action at visual index [v], following
  * COUISlideView.drawItemBackground. COUI index `c = count - 1 - v` and `k = count - c = v + 1`:
- * - while dragging past the menu the actions spread by `k * over / (count + 1)`;
+ * - while dragging past the menu the actions spread by `k * over / (count + 1)` when [spreads]
+ *   (the round rect style passes false: COUISlideView zeroes that term with mIsMenuRoundStyle);
  * - during the delete started from the menu the actions stay where the full menu put them;
- * - during a fast delete the spread frozen at release keeps growing as the content leaves.
+ * - during a fast delete the spread frozen at release keeps growing as the content leaves, in
+ *   both styles.
+ *
+ * The round rect style adds its start margin and gaps on top of the returned value, like
+ * COUISlideView offsetting each icon by `(count - 1 - c) * gap + startMargin`.
  */
 private fun slotStart(
     v: Int,
@@ -402,6 +463,7 @@ private fun slotStart(
     width: Float,
     menu: Float,
     state: SwipeActionItemState,
+    spreads: Boolean,
 ): Float {
     var before = 0f
     for (i in 0 until v) before += widths[i]
@@ -416,7 +478,9 @@ private fun slotStart(
 
         state.isDeleting -> width - min(reveal, menu)
 
-        else -> width - reveal + k * (reveal - menu).coerceAtLeast(0f) / (count + 1f)
+        spreads -> width - reveal + k * (reveal - menu).coerceAtLeast(0f) / (count + 1f)
+
+        else -> width - reveal
     }
     return base + before
 }
@@ -426,6 +490,26 @@ private fun DrawScope.drawRectMirrored(color: Color, left: Float, right: Float, 
     val r = if (isRtl) size.width - left else right
     if (r <= l) return
     drawRect(color = color, topLeft = Offset(l, 0f), size = Size(r - l, size.height))
+}
+
+/**
+ * Fills one round rect action of the full item height, drawn like COUISlideView with
+ * `COUIShapePath.getRoundRectPath` ([addLegacySquircleRect]); [path] is reused across frames.
+ */
+private fun DrawScope.drawRoundRectMirrored(
+    path: Path,
+    color: Color,
+    left: Float,
+    right: Float,
+    radius: Float,
+    isRtl: Boolean,
+) {
+    val l = if (isRtl) size.width - right else left
+    val r = if (isRtl) size.width - left else right
+    if (r <= l) return
+    path.reset()
+    path.addLegacySquircleRect(width = r - l, height = size.height, cornerRadius = radius, left = l)
+    drawPath(path = path, color = color)
 }
 
 /**
@@ -570,9 +654,30 @@ object SwipeActionItemDefaults {
     /** The over-slide that deletes with a fast fling (COUI coui_slideview_quick_delete). */
     val FastDeleteQuickSlop = 30.dp
 
+    /**
+     * The corner radius of each [SwipeActionMenuStyle.RoundRect] action: COUISlideView reads the
+     * couiRoundCornerM theme attribute (coui_round_corner_m) and caps it at half of the row height.
+     */
+    val RoundRectCornerRadius = COUIRoundCorner.M
+
+    /** The gap between two [SwipeActionMenuStyle.RoundRect] actions (COUI coui_slide_view_menuitem_gap_size). */
+    val RoundRectActionGap = 4.dp
+
+    /**
+     * The space between the content edge and the first [SwipeActionMenuStyle.RoundRect] action
+     * (COUI coui_slide_view_menuitem_start_margin).
+     */
+    val RoundRectStartMargin = 8.dp
+
+    /**
+     * The space between the last [SwipeActionMenuStyle.RoundRect] action and the end of the row
+     * (COUI coui_slide_view_menuitem_end_margin).
+     */
+    val RoundRectEndMargin = 12.dp
+
     /** The text style of the labels (COUI coui_slide_view_text_size 15sp). */
     @Composable
-    fun textStyle(): TextStyle = COUITheme.textStyles.body1.copy(fontSize = 15.sp)
+    fun textStyle(): TextStyle = COUITheme.textStyles.bodyXL.copy(fontSize = 15.sp)
 
     /**
      * The default [SwipeActionItemColors]: the menu fill is COUISlideView's default

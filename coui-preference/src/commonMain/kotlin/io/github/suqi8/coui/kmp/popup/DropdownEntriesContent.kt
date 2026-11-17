@@ -5,6 +5,7 @@ package io.github.suqi8.coui.kmp.popup
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
@@ -19,6 +20,10 @@ import io.github.suqi8.coui.kmp.basic.DropdownImpl
  * items. Groups are separated by a [DropdownGroupDivider] — but, like COUI 17
  * `COUIPopupListWindow.setItemListInternal`, only when the menu holds at least
  * [POPUP_GROUP_MIN_ITEMS] items; a shorter menu shows its groups back to back.
+ *
+ * As soon as any item of the menu has an icon, every vertical row keeps the leading icon slot so
+ * the titles line up (`MixedPopupListAdapter.setItemList` raises its icon flag over the whole list,
+ * horizontal items included).
  */
 @Composable
 internal fun DropdownEntriesPopupContent(
@@ -28,6 +33,7 @@ internal fun DropdownEntriesPopupContent(
 ) {
     val lastEntryIdx = entries.lastIndex
     val showGroupDividers = entries.sumOf { it.items.size } >= POPUP_GROUP_MIN_ITEMS
+    val reserveIconSlot = remember(entries) { entries.any { entry -> entry.items.any { it.icon != null } } }
     entries.forEachIndexed { entryIdx, entry ->
         if (entry.horizontal) {
             key(entryIdx, "horizontal") {
@@ -60,6 +66,7 @@ internal fun DropdownEntriesPopupContent(
                     index = itemIdx,
                     dropdownColors = dropdownColors,
                     enabled = entry.enabled && option.enabled,
+                    reserveIconSlot = reserveIconSlot,
                     onSelectedIndexChange = { idx -> onItemClick(entryIdx, idx) },
                 )
             }

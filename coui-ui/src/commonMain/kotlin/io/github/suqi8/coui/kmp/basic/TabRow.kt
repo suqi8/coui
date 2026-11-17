@@ -76,7 +76,6 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -276,7 +275,7 @@ fun TabRow(
     val windowInfo = LocalWindowInfo.current
     val performHaptic = rememberCouiHaptic()
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = COUITheme.textStyles.body2
+    val labelStyle = COUITheme.textStyles.bodyM
     // COUITabLayout: sans-serif-medium for the selected tab, sans-serif for the others.
     val normalStyle = remember(labelStyle) { labelStyle.copy(fontWeight = FontWeight.Normal) }
     val selectedStyle = remember(labelStyle) { labelStyle.copy(fontWeight = FontWeight.Medium) }
@@ -1180,14 +1179,14 @@ private fun SegmentButtonRow(
     modifier: Modifier = Modifier,
 ) {
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
-    val isDarkTheme = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDarkTheme = COUITheme.colorScheme.isDark
     val shadowColor = if (isDarkTheme) IndicatorShadowDark else IndicatorShadowLight
     val shadowPenumbraColor = remember(shadowColor) { shadowColor.copy(alpha = shadowColor.alpha * 0.5f) }
     val containerColor = colors.backgroundColor(false)
     val indicatorColor = colors.backgroundColor(true)
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer()
-    val labelFontSize = COUITheme.textStyles.body2.fontSize
+    val labelFontSize = COUITheme.textStyles.bodyM.fontSize
     // COUI measures segments with the selected appearance (couiTextButtonM: 14sp, medium).
     val measureStyle = remember(labelFontSize) { TextStyle(fontSize = labelFontSize, fontWeight = FontWeight.Medium) }
     val resolvedListState = listState ?: rememberLazyListState()
@@ -1616,15 +1615,15 @@ object TabRowDefaults {
      */
     @Composable
     fun underlineColors(
-        trackColor: Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) {
+        trackColor: Color = if (COUITheme.colorScheme.isDark) {
             TabTrackDark
         } else {
             TabTrackLight
         },
-        indicatorColor: Color = COUITheme.colorScheme.onSurface,
-        contentColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
-        selectedContentColor: Color = COUITheme.colorScheme.onSurface,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        indicatorColor: Color = COUITheme.colorScheme.labelPrimary,
+        contentColor: Color = COUITheme.colorScheme.labelSecondary,
+        selectedContentColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledContentColor: Color = COUITheme.colorScheme.disabledNeutral,
         disabledIndicatorColor: Color = TabIndicatorDisabled,
     ): TabRowColors = remember(
         trackColor,
@@ -1651,18 +1650,18 @@ object TabRowDefaults {
      */
     @Composable
     fun tabRowColors(
-        backgroundColor: Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) {
+        backgroundColor: Color = if (COUITheme.colorScheme.isDark) {
             SegmentContainerDark
         } else {
             SegmentContainerLight
         },
-        contentColor: Color = COUITheme.colorScheme.onSurface,
-        selectedBackgroundColor: Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) {
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
+        selectedBackgroundColor: Color = if (COUITheme.colorScheme.isDark) {
             SegmentIndicatorDark
         } else {
             SegmentIndicatorLight
         },
-        selectedContentColor: Color = COUITheme.colorScheme.onSurface,
+        selectedContentColor: Color = COUITheme.colorScheme.labelPrimary,
     ): TabRowColors = remember(backgroundColor, contentColor, selectedBackgroundColor, selectedContentColor) {
         TabRowColors(
             backgroundColor = backgroundColor,

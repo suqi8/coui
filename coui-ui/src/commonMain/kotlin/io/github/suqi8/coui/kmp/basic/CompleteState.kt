@@ -44,6 +44,9 @@ import kotlin.math.sin
 
 /** The result a [CompleteState] reports, selecting its animation (COUICompleteStateView.completeType). */
 enum class CompleteStateType {
+    /** No animation; the 100dp slot stays empty (COMPLETE_TYPE_DEFAULT, completeType 0, COUI's default). */
+    None,
+
     /** A check mark drawn inside a green ring (complete_page_success_anim.json, completeType 1). */
     Success,
 
@@ -68,7 +71,8 @@ enum class CompleteStateType {
  * @param title The title below the animation (COUI couiTextHeadlineM, couiColorLabelPrimary).
  * @param modifier The modifier to be applied to the [CompleteState].
  * @param subtitle The optional subtitle below the title (COUI couiTextBodyXS, couiColorLabelSecondary).
- * @param type The [CompleteStateType] selecting the animation.
+ * @param type The [CompleteStateType] selecting the animation. Defaults to
+ *   [CompleteStateType.None], like COUICompleteStateView's completeType 0.
  * @param animate Whether to play the animation. When false the last frame is shown statically.
  * @param replayKey Changing this value replays the animation.
  * @param animationSize The size of the animation (COUI complete_anim 100dp).
@@ -81,13 +85,13 @@ fun CompleteState(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    type: CompleteStateType = CompleteStateType.Success,
+    type: CompleteStateType = CompleteStateType.None,
     animate: Boolean = true,
     replayKey: Any? = null,
     animationSize: Dp = CompleteStateDefaults.AnimationSize,
     colors: CompleteStateColors = CompleteStateDefaults.completeStateColors(),
-    titleStyle: TextStyle = COUITheme.textStyles.title3,
-    subtitleStyle: TextStyle = COUITheme.textStyles.footnote2,
+    titleStyle: TextStyle = COUITheme.textStyles.headlineM,
+    subtitleStyle: TextStyle = COUITheme.textStyles.bodyXS,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -139,6 +143,7 @@ private fun CompleteStateAnimation(
     modifier: Modifier = Modifier,
 ) {
     val lastFrame = when (type) {
+        CompleteStateType.None -> 0f
         CompleteStateType.Success -> SUCCESS_LAST_FRAME
         CompleteStateType.Failed -> FAIL_LAST_FRAME
         CompleteStateType.Waiting -> WAIT_LAST_FRAME
@@ -164,6 +169,7 @@ private fun CompleteStateAnimation(
                 val f = frame.value
                 scale(size.width / COMPOSITION_SIZE, size.height / COMPOSITION_SIZE, pivot = Offset.Zero) {
                     when (type) {
+                        CompleteStateType.None -> Unit
                         CompleteStateType.Success -> drawSuccess(f, colors.successColor, checkMeasure, checkSegment)
                         CompleteStateType.Failed -> drawFailed(f, colors.failedColor)
                         CompleteStateType.Waiting -> drawWaiting(f, colors.waitingColor)
@@ -358,8 +364,8 @@ object CompleteStateDefaults {
         successColor: Color = SuccessColor,
         failedColor: Color = FailedColor,
         waitingColor: Color = SuccessColor,
-        titleColor: Color = COUITheme.colorScheme.onBackground,
-        subtitleColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        titleColor: Color = COUITheme.colorScheme.labelPrimary,
+        subtitleColor: Color = COUITheme.colorScheme.labelSecondary,
     ): CompleteStateColors = remember(successColor, failedColor, waitingColor, titleColor, subtitleColor) {
         CompleteStateColors(
             successColor = successColor,

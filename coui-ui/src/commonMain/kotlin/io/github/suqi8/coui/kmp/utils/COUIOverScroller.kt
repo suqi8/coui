@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.utils
 
+import androidx.compose.runtime.withFrameNanos
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.cosh
 import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sinh
 import kotlin.math.sqrt
@@ -28,9 +32,146 @@ internal object COUIPhysicalAnimation {
      * 37.31% of [screenSize].
      */
     fun calcOverFlingDecelerateDist(edge: Int, over: Int, screenSize: Int): Int {
-        val limit = screenSize * 0.3731f
+        val limit = screenSize * OVERFLING_MAX_DISTANCE_SCREEN_FACTOR
         val overShoot = over * limit
         return edge + (overShoot.toDouble() / sqrt(over.toDouble() * over + (limit * limit).toDouble())).toInt()
+    }
+
+    /**
+     * The share of a drag that moves a view already [overScroll] px past its edge, the float form of
+     * [calcRealOverScrollDist]: `0.4 * (1 - |overScroll| / maxOverScroll)`.
+     */
+    fun overScrollDragFactor(overScroll: Float, maxOverScroll: Float): Float {
+        if (maxOverScroll <= 0f) return 0f
+        return (1f - min(abs(overScroll) / maxOverScroll, 1f)) * OVERSCROLL_DRAG_RATIO
+    }
+
+    /** The float form of [calcOverFlingDecelerateDist] measured from the edge. */
+    fun overFlingDisplayDistance(over: Float, screenSize: Float): Float {
+        if (over == 0f || screenSize <= 0f) return 0f
+        val limit = screenSize * OVERFLING_MAX_DISTANCE_SCREEN_FACTOR
+        return over * limit / sqrt(over * over + limit * limit)
+    }
+
+    /** `calcRealOverScrollDist`: `delta / 5 * 2`. */
+    private const val OVERSCROLL_DRAG_RATIO = 0.4f
+
+    /** `OVERFLING_MAX_DISTANCE_SCREEN_FACTOR`. */
+    private const val OVERFLING_MAX_DISTANCE_SCREEN_FACTOR = 0.3731f
+}
+
+/**
+ * `COUIRecyclerView` / `COUINestedScrollView` / `COUIScrollView`
+ * `VERTICAL_SPRING_BACK_TENSION_MULTIPLE`: the spring-back of vertical scroll views.
+ */
+internal val VerticalSpringBackTensionMultiple = 2.15f
+
+/**
+ * `COUIRecyclerView` / `COUIHorizontalScrollView` `HORIZONTAL_SPRING_BACK_TENSION_MULTIPLE`: the
+ * spring-back of horizontal scroll views.
+ */
+internal val HorizontalSpringBackTensionMultiple = 3.2f
+
+/**
+ * One axis of the overscroll of the COUI 17 scroll views (`COUIRecyclerView`,
+ * `COUINestedScrollView`):
+ *
+ * - a drag past the edge moves the content by `0.4 * (1 - |overscroll| / screen size)` of the
+ *   finger (`COUIPhysicalAnimationUtil.calcRealOverScrollDist`);
+ * - on release the content springs back on the `SpringOverScroller` RK4 spring (friction 12.19,
+ *   tension 16 times [springBackTensionMultiple], both in origami units);
+ * - a fling that runs into the edge carries its speed past it on the same spring, shown through
+ *   `calcOverFlingDecelerateDist` so the overshoot saturates at 37.31% of the screen.
+ *
+ * [offset] is the displayed overscroll in px, positive past the start edge. [onOffsetChanged] is
+ * called whenever it changes.
+ */
+internal class COUIOverScrollAxis(
+    springBackTensionMultiple: Float,
+    private val onOffsetChanged: (Float) -> Unit,
+) {
+    private val scroller = COUIReboundOverScroller(springBackTensionMultiple = springBackTensionMultiple)
+
+    var offset = 0f
+        private set(value) {
+            if (field != value) {
+                field = value
+                onOffsetChanged(value)
+            }
+        }
+
+    fun reset() {
+        offset = 0f
+    }
+
+    /** A drag of [delta] px past the edge, damped by [COUIPhysicalAnimation.overScrollDragFactor]. */
+    fun drag(delta: Float, range: Float) {
+        if (delta == 0f || range <= 0f) return
+        offset += delta * COUIPhysicalAnimation.overScrollDragFactor(offset, range)
+    }
+
+    /**
+     * A drag of [delta] px back towards the content, damped like [drag]. Returns the part of
+     * [delta] the overscroll used up; the rest is left for the content once the edge is reached.
+     */
+    fun dragBack(delta: Float, range: Float): Float {
+        if (delta == 0f || range <= 0f) return 0f
+        val factor = COUIPhysicalAnimation.overScrollDragFactor(offset, range).coerceAtLeast(MIN_DRAG_FACTOR)
+        val damped = delta * factor
+        if (abs(damped) >= abs(offset)) {
+            val used = -offset / factor
+            offset = 0f
+            return used
+        }
+        offset += damped
+        return delta
+    }
+
+    /**
+     * `SpringOverScroller.springBack` (no [velocity]) or `notifyVerticalEdgeReached` (a fling
+     * reaching the edge at [velocity] px/s): runs the RK4 spring until the content rests at the
+     * edge. With [overFling] the spring starts at the edge and its position is shown through
+     * [COUIPhysicalAnimation.overFlingDisplayDistance] of [screenSize], as `onOverScrolled` does
+     * while flinging.
+     */
+    suspend fun springBack(velocity: Float, overFling: Boolean, screenSize: Float) {
+        val start = if (overFling) 0f else offset
+        var startPx = start.roundToInt()
+        if (startPx == 0) {
+            startPx = when {
+                velocity > 0f -> 1
+                velocity < 0f -> -1
+                else -> 0
+            }
+        }
+        if (startPx == 0) {
+            offset = 0f
+            return
+        }
+        scroller.notifyEdgeReached(start = startPx, edge = 0, min = 0, max = 0)
+        scroller.velocity = velocity.toDouble()
+        var lastFrameNanos = -1L
+        var running = true
+        while (running && currentCoroutineContext().isActive) {
+            running = withFrameNanos { frameTimeNanos ->
+                if (lastFrameNanos < 0L) {
+                    lastFrameNanos = frameTimeNanos
+                    return@withFrameNanos true
+                }
+                val deltaSec = (frameTimeNanos - lastFrameNanos) / 1_000_000_000f
+                lastFrameNanos = frameTimeNanos
+                val stillRunning = scroller.update(frameTimeNanos / 1_000_000L, deltaSec)
+                val position = scroller.position.toFloat()
+                offset = if (overFling) COUIPhysicalAnimation.overFlingDisplayDistance(position, screenSize) else position
+                stillRunning
+            }
+        }
+        if (!running) offset = 0f
+    }
+
+    private companion object {
+        /** Keeps a drag back from an overscroll that reached the whole screen from stalling. */
+        const val MIN_DRAG_FACTOR = 0.004f
     }
 }
 

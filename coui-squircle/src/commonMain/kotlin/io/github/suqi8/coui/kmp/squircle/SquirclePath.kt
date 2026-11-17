@@ -62,18 +62,6 @@ object SquircleDefaults {
 
     /** Inclusive upper bound for the weight. */
     val WeightMax = 8f
-
-    /** Former corner-tile multiplier of the cubic squircle model; no longer used by any API. */
-    @Deprecated("Squircle corners are superellipses tangent at the corner radius; use Weight.")
-    val Extension = 1.2819f
-
-    /** Former lower bound for [Extension]; no longer used by any API. */
-    @Deprecated("Squircle corners are superellipses tangent at the corner radius; use WeightMin.")
-    val ExtensionMin = 1f
-
-    /** Former upper bound for [Extension]; no longer used by any API. */
-    @Deprecated("Squircle corners are superellipses tangent at the corner radius; use WeightMax.")
-    val ExtensionMax = 2f
 }
 
 /**

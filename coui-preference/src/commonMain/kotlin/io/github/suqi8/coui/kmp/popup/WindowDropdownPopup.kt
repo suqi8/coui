@@ -12,7 +12,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -24,6 +23,7 @@ import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.basic.TextButton
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.window.WindowDialog
 import io.github.suqi8.coui.kmp.window.WindowListPopup
@@ -46,8 +46,8 @@ fun WindowDropdownPopup(
     collapseOnSelection: Boolean = true,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
 ) {
     val entries = remember(entry) { listOf(entry) }
     WindowDropdownPopup(
@@ -74,7 +74,7 @@ fun WindowDropdownPopup(
  * [backgroundModifier], [backgroundColor], [materialBlur] and [materialEffect] reach the popup
  * surface. The popup is blurred with the COUI 17 popup material by default when a
  * [io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur] provider is in scope; `materialBlur =
- * false` keeps the opaque [backgroundColor].
+ * false` keeps the opaque [backgroundColor]. Both flags default to [LocalCOUIMaterialEffectEnabled].
  */
 @Composable
 fun WindowDropdownPopup(
@@ -88,8 +88,8 @@ fun WindowDropdownPopup(
     collapseOnSelection: Boolean = entries.size <= 1,
     preciseClickState: PreciseClickState? = null,
     backgroundColor: Color = ListPopupDefaults.backgroundColor(),
-    materialBlur: Boolean = true,
-    materialEffect: Boolean = true,
+    materialBlur: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
 ) {
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
@@ -188,7 +188,8 @@ fun WindowDropdownDialog(
         onDismissRequest = onDismiss,
         onDismissFinished = onDismissFinished,
         insideMargin = DpSize(0.dp, 24.dp),
-        content = {
+        // The list is the dialog's list panel: the weighted slot shrinks it before the button.
+        customContent = {
             val dismiss = LocalDismissState.current
             val currentDismiss by rememberUpdatedState(dismiss)
             val onItemClicked: (Int, Int) -> Unit = remember {
@@ -202,40 +203,24 @@ fun WindowDropdownDialog(
                     }
                 }
             }
-            Layout(
-                content = {
-                    LazyColumn {
-                        dropdownEntriesDialogItems(
-                            entries = entries,
-                            dropdownColors = dropdownColors,
-                            onItemClick = onItemClicked,
-                        )
-                    }
-                    TextButton(
-                        modifier = Modifier
-                            .padding(start = 24.dp, top = 12.dp, end = 24.dp)
-                            .fillMaxWidth(),
-                        text = dialogButtonString,
-                        minHeight = 50.dp,
-                        onClick = { dismiss?.invoke() },
-                    )
-                },
-            ) { measurables, constraints ->
-                if (measurables.size != 2) {
-                    layout(0, 0) { }
-                } else {
-                    val button = measurables[1].measure(constraints)
-                    val lazyList = measurables[0].measure(
-                        constraints.copy(
-                            maxHeight = constraints.maxHeight - button.height,
-                        ),
-                    )
-                    layout(constraints.maxWidth, lazyList.height + button.height) {
-                        lazyList.place(0, 0)
-                        button.place(0, lazyList.height)
-                    }
-                }
+            LazyColumn {
+                dropdownEntriesDialogItems(
+                    entries = entries,
+                    dropdownColors = dropdownColors,
+                    onItemClick = onItemClicked,
+                )
             }
+        },
+        content = {
+            val dismiss = LocalDismissState.current
+            TextButton(
+                modifier = Modifier
+                    .padding(start = 24.dp, top = DropdownDialogButtonTopPadding, end = 24.dp)
+                    .fillMaxWidth(),
+                text = dialogButtonString,
+                minHeight = 50.dp,
+                onClick = { dismiss?.invoke() },
+            )
         },
     )
 }

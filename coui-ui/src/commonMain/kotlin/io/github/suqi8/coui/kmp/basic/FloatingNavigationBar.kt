@@ -52,7 +52,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
@@ -86,6 +85,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropProvider
 import io.github.suqi8.coui.kmp.effect.MaterialBackdropSpec
@@ -154,7 +154,8 @@ import kotlin.math.roundToInt
  * @param expansionVisible Whether [expansion] is shown beside the capsule.
  * @param materialEffect Whether the COUI 17 material is drawn on the capsule: the edge lighting and
  *   inner shadow, the touch spotlight, the hide blur, the metaball merge with [expansion] and, with
- *   a [LocalMaterialBackdrop] provider, the backdrop blur.
+ *   a [LocalMaterialBackdrop] provider, the backdrop blur. Defaults to
+ *   [LocalCOUIMaterialEffectEnabled].
  * @param showDivider Whether to draw a thin divider ring around the capsule (not part of COUI 17).
  * @param defaultWindowInsetsPadding Whether to keep the capsule above the navigation and caption bars.
  * @param color The capsule fill. Defaults to COUI's opaque `?couiColorBar`; replaced by the backdrop
@@ -180,7 +181,7 @@ fun FloatingNavigationBar(
     backgroundModifier: Modifier = Modifier,
     visible: Boolean = true,
     expansionVisible: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     showDivider: Boolean = false,
     defaultWindowInsetsPadding: Boolean = true,
     color: Color = FloatingNavigationBarDefaults.color(),
@@ -192,7 +193,7 @@ fun FloatingNavigationBar(
     content: @Composable () -> Unit,
 ) {
     val state = remember { FloatingNavigationBarState() }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val expansionActive = expansion != null && expansionVisible
     // BaseBottomFloatingMenuView: with the material the backdrop blur is the fill and the
     // background turns transparent; without a backdrop the opaque fill stays.
@@ -443,9 +444,9 @@ internal fun FloatingNavigationBarCapsule(
         state.reorderPending = false
         state.reorderProgress.animateTo(1f, ReorderSpring)
     }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
-    val dividerColor = COUITheme.colorScheme.dividerLine
+    val dividerColor = COUITheme.colorScheme.divider
     val shadowOverflow = if (shadowElevation > 0.dp) floatingNavigationBarShadow(shadowElevation).layerOverflow() else 0.dp
 
     // doMenuViewShowOrHideAnim, melt-ball (COUI 17) springs.
@@ -939,7 +940,11 @@ object FloatingNavigationBarDefaults {
     /**
      * The blur radius of the drop shadow: the COUI 17 caustic shadow
      * (`ShadowUtils.SHADOW_CAUSTIC_DOWN`, elevation 24dp, alpha 45, light 320dp above at 1600dp).
-     * The caustic light layer is not reproduced.
+     * The caustic light layer (`BaseBottomFloatingMenuView.setCausticShadowEffect`:
+     * `coui_caustic_color_2` #42FFFFFF, `_level4` layout offsets 0/0/0/4.9dp, sdf width 10.4dp) is
+     * not reproduced: COUI only hands these values to the Oplus `RenderNode.setOutlineCausticShadow*`
+     * natives (`OplusMaterialUtil`), and the light itself is drawn inside the vendor `libhwui`; no
+     * shader for it ships in the app or the framework jar.
      */
     val ShadowElevation = 24.dp
 
@@ -1023,7 +1028,7 @@ object FloatingNavigationBarDefaults {
      * `#FAFAFA` in the light scheme and `#1E1E1E` in the dark one.
      */
     @Composable
-    fun color(): Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) BarColorDark else BarColorLight
+    fun color(): Color = COUITheme.colorScheme.bar
 
     /**
      * The COUI 17 bottom-bar material, `COUIMaterialBlurEffect.TYPE_FRAMEWORK_BOTTOM_BAR`: a 25px
@@ -1047,9 +1052,9 @@ object FloatingNavigationBarDefaults {
      */
     @Composable
     fun itemColors(
-        selectedColor: Color = COUITheme.colorScheme.onSurfaceContainer,
-        unselectedColor: Color = COUITheme.colorScheme.onSurfaceContainer.copy(alpha = LABEL_PRIMARY_VARIANT_ALPHA),
-        disabledColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        selectedColor: Color = COUITheme.colorScheme.labelPrimary,
+        unselectedColor: Color = COUITheme.colorScheme.labelPrimary.copy(alpha = LABEL_PRIMARY_VARIANT_ALPHA),
+        disabledColor: Color = COUITheme.colorScheme.disabledNeutral,
     ): FloatingNavigationBarColors = remember(selectedColor, unselectedColor, disabledColor) {
         FloatingNavigationBarColors(
             selectedColor = selectedColor,

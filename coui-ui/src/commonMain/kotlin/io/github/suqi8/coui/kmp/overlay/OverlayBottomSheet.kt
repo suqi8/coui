@@ -16,8 +16,11 @@ import io.github.suqi8.coui.kmp.layout.BottomSheetDefaults
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
 
 /**
- * A bottom sheet that slides up from the bottom of the screen.
- * The height adapts to the content size, but will not cover the status bar area.
+ * A COUI panel (`COUIBottomSheetDialog`). On windows narrower than
+ * [BottomSheetDefaults.LargeScreenWidthThreshold] it slides up from the bottom edge; from that width
+ * on it floats centered (all corners rounded, scale + fade entrance). The height adapts to the
+ * content size, but will not cover the status bar area. The whole panel can be dragged; scrollable
+ * content drags it once scrolled to the top.
  *
  * @param show Whether the [OverlayBottomSheet] is shown.
  * @param modifier The modifier to be applied to the [OverlayBottomSheet].
@@ -26,15 +29,30 @@ import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.DialogLayout
  * @param endAction Optional [Composable] to display on the end side of the title (e.g. a submit button).
  * @param backgroundColor The background color of the [OverlayBottomSheet].
  * @param enableWindowDim Whether to dim the window behind the [OverlayBottomSheet].
- * @param cornerRadius The corner radius of the top corners of the [OverlayBottomSheet].
- * @param sheetMaxWidth The maximum width of the [OverlayBottomSheet].
+ * @param cornerRadius The corner radius of the [OverlayBottomSheet].
+ * @param sheetMaxWidth The maximum width of the [OverlayBottomSheet], on top of the COUI grid width
+ *   and the [BottomSheetDefaults.PanelMaxWidth] cap.
  * @param onDismissRequest Will called when the user tries to dismiss the Dialog by clicking outside or pressing the back button.
  * @param onDismissFinished The callback when the [OverlayBottomSheet] is completely dismissed.
  * @param outsideMargin The margin outside the [OverlayBottomSheet].
- * @param insideMargin The margin inside the [OverlayBottomSheet].
+ * @param insideMargin The margin inside the [OverlayBottomSheet]. COUI panels have none; the content
+ *   sets its own margins.
  * @param defaultWindowInsetsPadding Whether to apply default window insets padding.
  * @param dragHandleColor The color of the drag handle at the top.
- * @param allowDismiss Whether to allow dismissing the sheet via drag or back gesture.
+ * @param showDragHandle Whether to show the drag handle. Hidden by default, as COUI only shows it on
+ *   handle panels; a 10dp gap is kept at the top either way.
+ * @param handlePanel Whether this is a COUI handle panel (`couiIsHandlePanel`): it shows the drag
+ *   handle, fills the maximum height and rests half-expanded (portrait) or collapsed to the peek
+ *   height (landscape), settling between collapsed, half-expanded and expanded after a drag. It stays
+ *   bottom-anchored on large screens.
+ * @param showInMaxHeight Whether the panel takes the maximum height instead of wrapping its content
+ *   (`setIsShowInMaxHeight`). The content then fills the space below the title.
+ * @param allowDismiss Whether to allow dismissing the sheet via drag, back gesture or outside taps.
+ * @param dismissOnClickOutside Whether tapping outside the panel dismisses it
+ *   (`setCanceledOnTouchOutside`). Only applies while [allowDismiss] is true.
+ * @param draggable Whether the panel follows drag gestures (`setDraggable`).
+ * @param enablePullUp Whether the panel can be pulled up to 28dp above its resting position with
+ *   resistance (`setCanPullUp`).
  * @param enableNestedScroll Whether to enable nested scrolling for the content.
  * @param renderInRootScaffold Whether to render the bottom sheet in the root (outermost) Scaffold.
  *   When true (default), the bottom sheet covers the full screen. When false, it renders within the
@@ -65,7 +83,13 @@ fun OverlayBottomSheet(
     insideMargin: DpSize = BottomSheetDefaults.insideMargin,
     defaultWindowInsetsPadding: Boolean = true,
     dragHandleColor: Color = BottomSheetDefaults.dragHandleColor(),
+    showDragHandle: Boolean = false,
+    handlePanel: Boolean = false,
+    showInMaxHeight: Boolean = false,
     allowDismiss: Boolean = true,
+    dismissOnClickOutside: Boolean = true,
+    draggable: Boolean = true,
+    enablePullUp: Boolean = true,
     enableNestedScroll: Boolean = true,
     renderInRootScaffold: Boolean = true,
     materialStroke: Boolean = false,
@@ -101,7 +125,13 @@ fun OverlayBottomSheet(
         onDismissRequest = onDismissRequest,
         onDismissFinished = onDismissFinished,
         defaultWindowInsetsPadding = defaultWindowInsetsPadding,
+        showDragHandle = showDragHandle,
+        handlePanel = handlePanel,
+        showInMaxHeight = showInMaxHeight,
         allowDismiss = allowDismiss,
+        dismissOnClickOutside = dismissOnClickOutside,
+        draggable = draggable,
+        enablePullUp = enablePullUp,
         enableNestedScroll = enableNestedScroll,
         backgroundModifier = backgroundModifier,
         materialStroke = materialStroke,

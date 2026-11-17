@@ -10,7 +10,6 @@ import io.github.suqi8.coui.kmp.blur.BlurColors
 import io.github.suqi8.coui.kmp.blur.buildRampBlendColorsEffect
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.pow
@@ -299,12 +298,8 @@ internal fun progressiveSharpLoopRadius(radius: Float, exp: Int): Float {
     return (2f * effSigma - 1f).coerceIn(0f, PROGRESSIVE_BLUR_MAX_TAP.toFloat())
 }
 
-/** Linear-raw position of the sharp band's onset (`pow(smoothstep(raw), curve) = 2/3`). */
-private fun progressiveSharpRawThreshold(curve: Float): Float {
-    val ssThr = (2.0 / 3.0).pow(1.0 / curve.coerceIn(0.05f, 20f))
-    // Analytic smoothstep inverse: t = 0.5 − sin(asin(1 − 2y) / 3).
-    return (0.5 - sin(asin(1.0 - 2.0 * ssThr) / 3.0)).toFloat()
-}
+/** Linear-raw position of the sharp band's onset (`pow(raw, curve) = 2/3`). */
+private fun progressiveSharpRawThreshold(curve: Float): Float = (2.0 / 3.0).pow(1.0 / curve.coerceIn(0.05f, 20f)).toFloat()
 
 /**
  * Full effect for the full-resolution sharp overlay: an optional variable-radius loop blur
@@ -411,7 +406,7 @@ internal fun createProgressiveSharpOverlayEffect(
 
 /**
  * Component-space bounding box of the region where [createProgressiveSharpOverlayEffect]'s mask is
- * non-zero (`pow(smoothstep(raw), curve) > 2/3`, inverted analytically to a threshold line on the
+ * non-zero (`pow(raw, curve) > 2/3`, inverted analytically to a threshold line on the
  * gradient projection, clipped to the component rect with a [margin] against rounding and the
  * overlay loop blur's tap reach). The sharp overlay records and draws only this sub-rect instead
  * of the whole component. Null = the band lies entirely outside the component and the overlay

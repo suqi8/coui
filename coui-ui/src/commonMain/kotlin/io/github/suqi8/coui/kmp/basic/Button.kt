@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -27,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -38,7 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.contentButtonMaterial
 import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
@@ -46,6 +49,7 @@ import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
+import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -73,16 +77,17 @@ import kotlin.coroutines.cancellation.CancellationException
  * @param insideMargin The margin inside the [Button].
  * @param material The COUI 17 material layer (edge lighting, inner shadow and touch spotlight)
  *   drawn over the fill. [ButtonMaterial.Auto] (the default) picks the preset matching [colors],
- *   as every `ButtonNew` style follows the system material switch; [ButtonMaterial.None] opts
- *   out. While the layer is drawn the press tint is off (`COUIButton.applyBlurEffect` disables the
- *   mask's pressed state).
+ *   as every `ButtonNew` style follows the system material switch, and draws none while
+ *   [LocalCOUIMaterialEffectEnabled] is `false`; [ButtonMaterial.None] opts out. While the layer is
+ *   drawn the press tint is off (`COUIButton.applyBlurEffect` disables the mask's pressed state).
  * @param materialBackdrop Whether the [material] layer may replace the fill with the COUI 17
  *   backdrop blur (`COUIButton` `isBlurEffectEnabled`). It is only drawn when a
  *   [LocalMaterialBackdrop] provider is present and runtime shaders are available: the solid fill
  *   is then skipped and the content behind the button is blurred and tinted with the preset of
  *   its type (primary 10px with the fill at alpha 229/230, secondary 25px with white at
  *   80% / 20%, transparent 25px overlay + luminosity). Without a provider the button keeps its
- *   opaque fill, which is exactly COUI's non-blur fallback. Pass `false` to keep the fill
+ *   opaque fill, which is exactly COUI's non-blur fallback. Defaults to
+ *   [LocalCOUIMaterialEffectEnabled]; pass `false` to keep the fill
  *   (`useMaterialEffect = forceDisable`).
  * @param interactionSource The [MutableInteractionSource] to be used for the [Button].
  * @param indication The [Indication] to be used for the [Button]. Defaults to `null` because
@@ -101,7 +106,7 @@ fun Button(
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
     material: ButtonMaterial = ButtonMaterial.Auto,
-    materialBackdrop: Boolean = true,
+    materialBackdrop: Boolean = LocalCOUIMaterialEffectEnabled.current,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
     content: @Composable RowScope.() -> Unit,
@@ -188,9 +193,17 @@ internal fun CouiButton(
     LaunchedEffect(enabled, isHovered) {
         hoverProgress.animateTo(if (enabled && isHovered) 1f else 0f, PressTintSpring)
     }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val pressTint = if (isDark) PressedTintDark else PressedTintLight
     val hoverTint = if (isDark) HoveredTintDark else HoveredTintLight
+    // The background outline, shared by the backdrop blur and the focus ring.
+    val shape = remember(cornerRadius) {
+        if (cornerRadius == Dp.Unspecified) {
+            SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.CapsuleWeight)
+        } else {
+            SquircleShape(cornerRadius, COUIRoundCorner.Large.Weight)
+        }
+    }
     // COUIButton.onDraw skips the solid fill while the view blur is on: the filtered backdrop is
     // the fill. The drawable variants never blur, and without a provider COUI's non-blur path
     // keeps the opaque fill.
@@ -201,13 +214,6 @@ internal fun CouiButton(
         null
     }
     val backdropModifier = if (backdropProvider != null && backdropSpec != null) {
-        val shape = remember(cornerRadius) {
-            if (cornerRadius == Dp.Unspecified) {
-                SquircleShape(COUIRoundCorner.Full, COUIRoundCorner.CapsuleWeight)
-            } else {
-                SquircleShape(cornerRadius, COUIRoundCorner.Large.Weight)
-            }
-        }
         remember(backdropProvider, backdropSpec, shape) { backdropProvider.materialBackdrop(backdropSpec, shape) }
     } else {
         Modifier
@@ -238,6 +244,8 @@ internal fun CouiButton(
                     enabled = enabled,
                     pressScaleEnabled = pressScaleEnabled,
                 )
+                // COUIButton layers a TYPE_OUTER COUIStrokeDrawable around its background outline.
+                .couiFocusStroke(interactionSource = interactionSource, shape = shape, enabled = enabled)
                 // Inside the touch-motion layer so the blurred backdrop scales and deforms with
                 // the button, and inside the surface's offscreen layer: the framework edge light
                 // is overlaid on what lies beneath it in this layer, so it needs the backdrop there.
@@ -308,10 +316,10 @@ fun TextButton(
     minHeight: Dp = ButtonDefaults.MinHeight,
     colors: TextButtonColors = ButtonDefaults.textButtonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
-    textStyle: TextStyle = COUITheme.textStyles.button,
+    textStyle: TextStyle = COUITheme.textStyles.buttonL,
     maxLines: Int = 1,
     material: ButtonMaterial = ButtonMaterial.Auto,
-    materialBackdrop: Boolean = true,
+    materialBackdrop: Boolean = LocalCOUIMaterialEffectEnabled.current,
     interactionSource: MutableInteractionSource? = null,
     indication: Indication? = null,
 ) {
@@ -348,6 +356,92 @@ fun TextButton(
 }
 
 /**
+ * A text button with a description line, the COUI desc-type button (`COUIButton.setDescType` /
+ * `isDescType` + `descText`, drawn by `DescButtonTextSpan`).
+ *
+ * The label (16sp, `coui_btn_desc_text_size`) sits above the description (10sp,
+ * `coui_btn_desc_sub_text_size`) with no gap (`coui_btn_desc_top_margin` 0dp); both use the label
+ * color and font, are centred on their own and ellipsized to the button width. The button keeps
+ * the 44dp min height (`coui_btn_desc_height_min`) with 12dp / 4dp padding
+ * (`coui_btn_desc_padding_horizontal` / `_vertical`) and no min width (`setIsDescTypeStyle`).
+ * Give it a width from [ButtonDefaults] (for instance [ButtonDefaults.MediumWidth], the
+ * `SingleButtonWrap` DescMedium tier) or let it wrap its text.
+ *
+ * @param text The label of the button.
+ * @param descText The description drawn under the label.
+ * @param onClick The callback when the button is clicked.
+ * @param modifier The modifier to be applied to the button.
+ * @param enabled Whether the button is enabled.
+ * @param pressScaleEnabled Whether the button shrinks while pressed, see [Button].
+ * @param cornerRadius The corner radius of the button; the height-derived capsule by default.
+ * @param minWidth The minimum width of the button.
+ * @param minHeight The minimum height of the button.
+ * @param colors The [TextButtonColors] of the button.
+ * @param insideMargin The margin inside the button.
+ * @param material The COUI 17 material layer drawn over the fill, see [Button].
+ * @param materialBackdrop Whether the material may replace the fill with the backdrop blur, see
+ *   [Button].
+ * @param interactionSource The [MutableInteractionSource] to be used for the button.
+ */
+@Composable
+fun DescTextButton(
+    text: String,
+    descText: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    pressScaleEnabled: Boolean = true,
+    cornerRadius: Dp = ButtonDefaults.CornerRadius,
+    minWidth: Dp = ButtonDefaults.MinWidthDesc,
+    minHeight: Dp = ButtonDefaults.MinHeight,
+    colors: TextButtonColors = ButtonDefaults.textButtonColors(),
+    insideMargin: PaddingValues = ButtonDefaults.InsideMarginDesc,
+    material: ButtonMaterial = ButtonMaterial.Auto,
+    materialBackdrop: Boolean = LocalCOUIMaterialEffectEnabled.current,
+    interactionSource: MutableInteractionSource? = null,
+) {
+    val mappedColors = remember(colors) {
+        ButtonColors(
+            color = colors.color,
+            disabledColor = colors.disabledColor,
+            contentColor = colors.textColor,
+            disabledContentColor = colors.disabledTextColor,
+        )
+    }
+    val labelStyle = ButtonDefaults.textStyleDesc()
+    val descStyle = ButtonDefaults.textStyleDescSub()
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        pressScaleEnabled = pressScaleEnabled,
+        cornerRadius = cornerRadius,
+        minWidth = minWidth,
+        minHeight = minHeight,
+        colors = mappedColors,
+        insideMargin = insideMargin,
+        material = material,
+        materialBackdrop = materialBackdrop,
+        interactionSource = interactionSource,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = text,
+                style = labelStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = descText,
+                style = descStyle,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
  * The COUI 17 material layer of a [Button], matching the `COUIButton` `buttonType` it is drawn
  * for. Only the edge lighting + inner shadow (`COUIMaterialStrokeEffect` `CONTENT_CAPSULE_*`) and
  * the touch spotlight (`COUISpotLightEffect`) are drawn; they need runtime shaders (Android 13+
@@ -358,7 +452,8 @@ enum class ButtonMaterial {
      * The preset matching the button's fill, the COUI 17 default (`useMaterialEffect` is
      * `followSystem` for every `ButtonNew` style): [Primary] for a [COUITheme] primary fill,
      * [Transparent] for the transparent-button fill, none for a fully transparent (borderless)
-     * fill, and [Secondary] for everything else.
+     * fill, and [Secondary] for everything else. None either while
+     * [LocalCOUIMaterialEffectEnabled] is `false`.
      */
     Auto,
 
@@ -388,6 +483,9 @@ private fun ButtonMaterial.toContentType(colors: ButtonColors): ContentButtonMat
     ButtonMaterial.Auto -> {
         val scheme = COUITheme.colorScheme
         when {
+            // followSystem: the app-wide material switch is off.
+            !LocalCOUIMaterialEffectEnabled.current -> null
+
             // Borderless buttons have no buttonType (UNKNOWN) and never draw the material.
             colors.color.alpha == 0f -> null
 
@@ -401,19 +499,6 @@ private fun ButtonMaterial.toContentType(colors: ButtonColors): ContentButtonMat
 }
 
 object ButtonDefaults {
-
-    /**
-     * The legacy COUI 16 press end scale. Retained for source compatibility only and no longer
-     * used by [Button], whose COUI 17 target scale is derived from its size (see
-     * [io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.pressTargetScale]).
-     */
-    val PressedScale = 0.92f
-
-    /**
-     * The legacy COUIButton `brightness` attribute value. Retained for source compatibility only
-     * and no longer used by [Button].
-     */
-    val PressedBrightness = 0.8f
 
     /**
      * The default min width applied for all buttons (COUI `coui_btn_large_width_min`, 132dp). Note
@@ -466,7 +551,64 @@ object ButtonDefaults {
      * sans-serif-medium).
      */
     @Composable
-    fun textStyleSmall(): TextStyle = COUITheme.textStyles.button.copy(fontSize = 14.sp)
+    fun textStyleSmall(): TextStyle = COUITheme.textStyles.buttonL.copy(fontSize = 14.sp)
+
+    /**
+     * The fixed width of the medium single-button tier (`SingleButtonWrap` Medium and
+     * DescMedium, COUI `coui_medium_btn_width`).
+     */
+    val MediumWidth = 152.dp
+
+    /**
+     * The fixed width of the large single-button tier on medium and large screens
+     * (`SingleButtonWrap` Large / TextLarge / SingleCentralLarge / DescLarge, COUI
+     * `coui_larger_btn_width`). See [largeWidth] for the small-screen widths.
+     */
+    val LargeWidth = 174.dp
+
+    /**
+     * The width of the large single-button tier on small screens at least
+     * [SingleLargeWindowWidth] wide (COUI `coui_single_larger_btn_width`).
+     */
+    val SingleLargeWidth = 296.dp
+
+    /** The narrowest small-screen window that gets [SingleLargeWidth] (COUI `coui_single_larger_window_screen`). */
+    val SingleLargeWindowWidth = 360.dp
+
+    /** The min width of the desc-type button: none (`COUIButton.setIsDescTypeStyle` sets `minWidth` 0). */
+    val MinWidthDesc = 0.dp
+
+    /**
+     * The inside margin of the desc-type button (COUI `coui_btn_desc_padding_horizontal` 12dp /
+     * `coui_btn_desc_padding_vertical` 4dp).
+     */
+    val InsideMarginDesc = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+
+    /**
+     * The width of a large single button (`SingleButtonWrap.getLargeButtonWidth`):
+     * [LargeWidth] unless the window is a COUI small screen (narrower than 600dp); there
+     * [SingleLargeWidth] for windows at least [SingleLargeWindowWidth] wide, and
+     * [Dp.Unspecified] below, meaning the button should fill the available width
+     * (`Modifier.fillMaxWidth()`).
+     */
+    @Composable
+    fun largeWidth(): Dp {
+        val window = LocalWindowInfo.current.containerDpSize
+        val small = COUILayoutGrid.screenTier(window.width, window.height) == COUILayoutGrid.ScreenTier.Small
+        return when {
+            !small -> LargeWidth
+            window.width >= SingleLargeWindowWidth -> SingleLargeWidth
+            else -> Dp.Unspecified
+        }
+    }
+
+    /** The label style of the desc-type button (COUI `coui_btn_desc_text_size`, 16sp, medium). */
+    @Composable
+    fun textStyleDesc(): TextStyle = COUITheme.textStyles.buttonL
+
+    /** The description style of the desc-type button (COUI `coui_btn_desc_sub_text_size`, 10sp, medium). */
+    @Composable
+    fun textStyleDescSub(): TextStyle = COUITheme.textStyles.buttonL.copy(fontSize = 10.sp)
 
     /**
      * The default [ButtonColors] for all buttons: the COUI 17 secondary button
@@ -476,7 +618,7 @@ object ButtonDefaults {
     fun buttonColors(
         color: Color = COUITheme.colorScheme.secondaryButton,
         disabledColor: Color = COUITheme.colorScheme.disabledSecondaryButton,
-        contentColor: Color = COUITheme.colorScheme.onSecondaryVariant,
+        contentColor: Color = COUITheme.colorScheme.labelPrimary,
         disabledContentColor: Color = COUITheme.colorScheme.disabledOnSecondaryButton,
     ): ButtonColors = remember(color, disabledColor, contentColor, disabledContentColor) {
         ButtonColors(
@@ -493,7 +635,7 @@ object ButtonDefaults {
     @Composable
     fun buttonColorsPrimary(
         color: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        disabledColor: Color = COUITheme.colorScheme.disable,
         contentColor: Color = COUITheme.colorScheme.onPrimary,
         disabledContentColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): ButtonColors = remember(color, disabledColor, contentColor, disabledContentColor) {
@@ -532,7 +674,7 @@ object ButtonDefaults {
     fun textButtonColors(
         color: Color = COUITheme.colorScheme.secondaryButton,
         disabledColor: Color = COUITheme.colorScheme.disabledSecondaryButton,
-        textColor: Color = COUITheme.colorScheme.onSecondaryVariant,
+        textColor: Color = COUITheme.colorScheme.labelPrimary,
         disabledTextColor: Color = COUITheme.colorScheme.disabledOnSecondaryButton,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
         TextButtonColors(
@@ -549,7 +691,7 @@ object ButtonDefaults {
     @Composable
     fun textButtonColorsPrimary(
         color: Color = COUITheme.colorScheme.primary,
-        disabledColor: Color = COUITheme.colorScheme.disabledPrimaryButton,
+        disabledColor: Color = COUITheme.colorScheme.disable,
         textColor: Color = COUITheme.colorScheme.onPrimary,
         disabledTextColor: Color = COUITheme.colorScheme.disabledOnPrimaryButton,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
@@ -587,7 +729,7 @@ object ButtonDefaults {
         color: Color = Color.Transparent,
         disabledColor: Color = Color.Transparent,
         textColor: Color = COUITheme.colorScheme.primary,
-        disabledTextColor: Color = COUITheme.colorScheme.disabledPrimary,
+        disabledTextColor: Color = COUITheme.colorScheme.disable,
     ): TextButtonColors = remember(color, disabledColor, textColor, disabledTextColor) {
         TextButtonColors(
             color = color,

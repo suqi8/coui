@@ -5,7 +5,6 @@ package io.github.suqi8.coui.kmp.preference
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -151,14 +150,14 @@ fun WindowDropdownPreference(
     val actualEnabled = enabled && itemsNotEmpty
 
     val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceSecondary
+        COUITheme.colorScheme.labelSecondary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
 
     val handleClick = remember(actualEnabled) {
@@ -189,13 +188,14 @@ fun WindowDropdownPreference(
                     Text(
                         text = text,
                         modifier = Modifier
-                            .widthIn(max = 162.dp)
-                            .padding(start = 8.dp, end = 4.dp)
+                            .padding(end = 4.dp)
                             .align(Alignment.CenterVertically)
                             .weight(1f, fill = false),
-                        fontSize = COUITheme.textStyles.footnote1.fontSize,
+                        fontSize = COUITheme.textStyles.bodyS.fontSize,
                         color = valueColor,
                         textAlign = TextAlign.End,
+                        // TextAppearance.COUI.List.Assignment.End: maxLines 2.
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -264,14 +264,14 @@ fun WindowDropdownPreference(
     val actualEnabled = enabled && hasEntries
 
     val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceVariantActions
+        COUITheme.colorScheme.labelTertiary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
     val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.onSurfaceSecondary
+        COUITheme.colorScheme.labelSecondary
     } else {
-        COUITheme.colorScheme.disabledOnSecondaryVariant
+        COUITheme.colorScheme.disabledNeutral
     }
 
     val handleClick = remember(actualEnabled) {
@@ -308,11 +308,10 @@ fun WindowDropdownPreference(
                 Text(
                     text = selectedValueText,
                     modifier = Modifier
-                        .widthIn(max = 162.dp)
-                        .padding(start = 8.dp, end = 4.dp)
+                        .padding(end = 4.dp)
                         .align(Alignment.CenterVertically)
                         .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.footnote1.fontSize,
+                    fontSize = COUITheme.textStyles.bodyS.fontSize,
                     color = valueColor,
                     textAlign = TextAlign.End,
                     overflow = TextOverflow.Ellipsis,

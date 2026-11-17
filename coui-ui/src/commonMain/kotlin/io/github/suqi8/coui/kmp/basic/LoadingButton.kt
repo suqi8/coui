@@ -13,10 +13,11 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -27,11 +28,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
@@ -45,7 +50,8 @@ import io.github.suqi8.coui.kmp.theme.LocalContentColor
  * cycle), and clicks are swallowed so the action cannot be triggered again.
  *
  * When [loadingText] is provided, the loading state shows that label followed by three animated
- * dot glyphs instead of the plain dot indicator (COUIButton isShowLoadingText / loadingText).
+ * dot glyphs instead of the plain dot indicator (COUIButton isShowLoadingText / loadingText), and
+ * falls back to the plain dots when the text and its dots do not fit the button's label area.
  *
  * @param text The text of the [LoadingButton] when it is not loading.
  * @param onClick The callback when the [LoadingButton] is clicked. Not invoked while [isLoading].
@@ -82,7 +88,7 @@ fun LoadingButton(
     minHeight: Dp = ButtonDefaults.MinHeight,
     colors: TextButtonColors = ButtonDefaults.textButtonColors(),
     insideMargin: PaddingValues = ButtonDefaults.InsideMargin,
-    textStyle: TextStyle = COUITheme.textStyles.button,
+    textStyle: TextStyle = COUITheme.textStyles.buttonL,
     material: ButtonMaterial = ButtonMaterial.Auto,
     materialBackdrop: Boolean = true,
     interactionSource: MutableInteractionSource? = null,
@@ -115,21 +121,44 @@ fun LoadingButton(
         interactionSource = interactionSource,
         indication = indication,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            // COUILoadingButton clears the label while loading; keep it measured at alpha 0 so
-            // the button does not resize when the state toggles.
-            Text(
-                text = text,
-                modifier = Modifier.graphicsLayer { alpha = if (isLoading) 0f else 1f },
-                style = textStyle,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (isLoading) {
-                if (loadingText != null) {
-                    LoadingTextWithDots(loadingText, textStyle)
-                } else {
+        val layoutDirection = LocalLayoutDirection.current
+        // The label area of the button when it is not wider than its label: the min width minus
+        // the horizontal margins.
+        val minInnerWidth = minWidth - insideMargin.calculateStartPadding(layoutDirection) -
+            insideMargin.calculateEndPadding(layoutDirection)
+        Layout(
+            content = {
+                // COUILoadingButton clears the label while loading; keep it measured at alpha 0
+                // so the button does not resize when the state toggles.
+                Text(
+                    text = text,
+                    modifier = Modifier.graphicsLayer { alpha = if (isLoading) 0f else 1f },
+                    style = textStyle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (isLoading) {
                     LoadingDots()
+                    if (loadingText != null) LoadingTextWithDots(loadingText, textStyle)
+                }
+            },
+        ) { measurables, constraints ->
+            val label = measurables[0].measure(constraints.copy(minWidth = 0))
+            val dots = measurables.getOrNull(1)?.measure(Constraints())
+            val loadingLabel = measurables.getOrNull(2)?.measure(Constraints())
+            // COUILoadingButton.onDraw: when the loading text and its dots are wider than the
+            // button minus its padding, the plain dot indicator is drawn instead.
+            val innerWidth = maxOf(label.width, minInnerWidth.roundToPx()).coerceAtMost(constraints.maxWidth)
+            val loading = when {
+                loadingLabel != null && loadingLabel.width <= innerWidth -> loadingLabel
+                else -> dots
+            }
+            val width = constraints.constrainWidth(maxOf(label.width, loading?.width ?: 0))
+            val height = constraints.constrainHeight(maxOf(label.height, loading?.height ?: 0))
+            layout(width, height) {
+                label.placeRelative((width - label.width) / 2, (height - label.height) / 2)
+                if (loading != null) {
+                    loading.placeRelative((width - loading.width) / 2, (height - loading.height) / 2)
                 }
             }
         }

@@ -20,11 +20,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -39,7 +42,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
@@ -48,10 +50,15 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -73,8 +80,12 @@ import kotlinx.coroutines.launch
  * COUIDateMonthView does). Days of the adjacent months fill the first and last rows and can be
  * tapped too. The selected day is a filled primary circle that grows from 80% while fading in
  * (280ms), the previously selected day of the same month fades out (150ms), and today is ringed
- * in the primary color. Tapping the month-year label rotates the arrow and swaps the grid for a
- * [DatePicker] wheel (COUICalendarYearView hosts a COUIDatePicker), cross-fading 280ms in / 150ms out.
+ * in the primary color. Tapping the month-year label rotates the arrow, turns the label primary,
+ * fades the month buttons out (150ms) and, 120ms later, swaps the grid for a [DatePicker] wheel
+ * bounded by [minDate] .. [maxDate] (COUICalendarYearView hosts a COUIDatePicker), cross-fading
+ * 280ms in / 150ms out; collapsing fades the buttons back in over 280ms. The picker is at most
+ * 724dp wide (calendar_picker_max_width), and every day cell is exposed to accessibility services
+ * as a clickable node (COUIDateMonthView's ExploreByTouchHelper).
  *
  * @param value The selected date. Dates outside [minDate] .. [maxDate] are clamped.
  * @param onValueChange The callback invoked when a day is tapped or the wheel moves.
@@ -101,13 +112,13 @@ fun CalendarPicker(
     maxDate: DateValue = CalendarPickerDefaults.MaxDate,
     today: DateValue? = CalendarPickerDefaults.today(),
     firstDayOfWeek: Int = CalendarPickerDefaults.FirstDayOfWeek,
-    monthYearLabel: (year: Int, month: Int) -> String = CalendarPickerDefaults.MonthYearLabel,
-    weekdayLabel: (dayOfWeek: Int) -> String = CalendarPickerDefaults.WeekdayLabel,
+    monthYearLabel: (year: Int, month: Int) -> String = CalendarPickerDefaults.monthYearLabel(),
+    weekdayLabel: (dayOfWeek: Int) -> String = CalendarPickerDefaults.weekdayLabel(),
     dayLabel: (Int) -> String = CalendarPickerDefaults.DayLabel,
     colors: CalendarPickerColors = CalendarPickerDefaults.calendarPickerColors(),
-    headerTextStyle: TextStyle = COUITheme.textStyles.headline2,
-    weekdayTextStyle: TextStyle = COUITheme.textStyles.subtitle,
-    dayTextStyle: TextStyle = COUITheme.textStyles.headline2,
+    headerTextStyle: TextStyle = COUITheme.textStyles.headlineXS,
+    weekdayTextStyle: TextStyle = COUITheme.textStyles.buttonM,
+    dayTextStyle: TextStyle = COUITheme.textStyles.headlineXS,
     insideMargin: PaddingValues = CalendarPickerDefaults.InsideMargin,
 ) {
     val minEpoch = civilToEpochDay(minDate.year, minDate.month, minDate.day)
@@ -147,12 +158,17 @@ fun CalendarPicker(
 
     // While the wheel is shown the header follows the wheel, not the hidden pager.
     val displayedMonth = if (expanded) monthIndex(selected.year, selected.month) else firstMonthIndex + pagerState.currentPage
-    Column(modifier = modifier.padding(insideMargin)) {
+    val dateDescription = rememberDateFormatter(PickerDateFormat.FullDate)
+    Column(
+        modifier = modifier
+            .widthIn(max = CalendarPickerDefaults.MaxWidth)
+            .padding(insideMargin),
+    ) {
         CalendarPickerHeader(
             label = monthYearLabel(displayedMonth / 12, displayedMonth % 12 + 1),
             expanded = expanded,
-            canGoBack = !expanded && pagerState.currentPage > 0,
-            canGoForward = !expanded && pagerState.currentPage < pageCount - 1,
+            canGoBack = pagerState.currentPage > 0,
+            canGoForward = pagerState.currentPage < pageCount - 1,
             // From the target page, so repeated taps during the scroll keep stepping.
             onBack = {
                 scope.launch {
@@ -180,9 +196,11 @@ fun CalendarPicker(
         AnimatedContent(
             targetState = expanded,
             transitionSpec = {
-                // coui_calendar_picker_fade_in_material / _fade_out_material.
-                fadeIn(tween(FADE_IN_DURATION_MILLIS, easing = LinearEasing)) togetherWith
-                    fadeOut(tween(FADE_OUT_DURATION_MILLIS, easing = CalendarFadeOutEasing))
+                // coui_calendar_picker_fade_in_material / _fade_out_material; expanding swaps the
+                // ViewAnimator child 120ms after the tap (COUICalendarPickerDelegate postDelayed).
+                val delay = if (targetState) EXPAND_SWAP_DELAY_MILLIS else 0
+                fadeIn(tween(FADE_IN_DURATION_MILLIS, delayMillis = delay, easing = LinearEasing)) togetherWith
+                    fadeOut(tween(FADE_OUT_DURATION_MILLIS, delayMillis = delay, easing = CalendarFadeOutEasing))
             },
             contentAlignment = Alignment.Center,
         ) { showWheel ->
@@ -193,15 +211,14 @@ fun CalendarPicker(
                         .height(CalendarPickerDefaults.MonthHeight),
                     contentAlignment = Alignment.Center,
                 ) {
-                    // COUICalendarYearView: a COUIDatePicker pulled up by layout_marginTop -36dp.
+                    // COUICalendarYearView: a COUIDatePicker pulled up by layout_marginTop -36dp,
+                    // bounded by the calendar's min / max date (COUICalendarPickerDelegate).
                     DatePicker(
                         value = selected,
-                        onValueChange = { date ->
-                            val epoch = civilToEpochDay(date.year, date.month, date.day).coerceIn(currentMinEpoch, currentMaxEpoch)
-                            currentOnValueChange(epochDayToCivil(epoch))
-                        },
+                        onValueChange = currentOnValueChange,
                         modifier = Modifier.offset(y = CalendarPickerDefaults.YearViewOffset),
-                        yearRange = minDate.year..maxDate.year,
+                        minDate = epochDayToCivil(minEpoch),
+                        maxDate = epochDayToCivil(maxEpoch),
                     )
                 }
             } else {
@@ -211,21 +228,33 @@ fun CalendarPicker(
                     key = { it },
                 ) { page ->
                     val month = firstMonthIndex + page
-                    CalendarMonth(
-                        year = month / 12,
-                        month = month % 12 + 1,
-                        selected = selected,
-                        today = today,
-                        minEpoch = minEpoch,
-                        maxEpoch = maxEpoch,
-                        firstDayOfWeek = firstDayOfWeek,
-                        weekdayLabel = weekdayLabel,
-                        dayLabel = dayLabel,
-                        colors = colors,
-                        weekdayTextStyle = weekdayTextStyle,
-                        dayTextStyle = dayTextStyle,
-                        onDaySelected = onDaySelected,
-                    )
+                    Box {
+                        CalendarMonth(
+                            year = month / 12,
+                            month = month % 12 + 1,
+                            selected = selected,
+                            today = today,
+                            minEpoch = minEpoch,
+                            maxEpoch = maxEpoch,
+                            firstDayOfWeek = firstDayOfWeek,
+                            weekdayLabel = weekdayLabel,
+                            dayLabel = dayLabel,
+                            colors = colors,
+                            weekdayTextStyle = weekdayTextStyle,
+                            dayTextStyle = dayTextStyle,
+                            onDaySelected = onDaySelected,
+                        )
+                        CalendarMonthSemantics(
+                            year = month / 12,
+                            month = month % 12 + 1,
+                            selectedDate = selected,
+                            minEpoch = minEpoch,
+                            maxEpoch = maxEpoch,
+                            firstDayOfWeek = firstDayOfWeek,
+                            dateDescription = dateDescription,
+                            onDaySelected = onDaySelected,
+                        )
+                    }
                 }
             }
         }
@@ -253,9 +282,21 @@ private fun CalendarPickerHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
+        // COUICalendarPickerDelegate.b: the month buttons fade out over 150ms when the wheel opens
+        // and back in over 280ms when it closes.
+        val buttonsAlpha by animateFloatAsState(
+            targetValue = if (expanded) 0f else 1f,
+            animationSpec = if (expanded) {
+                tween(FADE_OUT_DURATION_MILLIS, easing = CalendarFadeOutEasing)
+            } else {
+                tween(FADE_IN_DURATION_MILLIS, easing = CalendarPageEasing)
+            },
+        )
         CalendarChevronButton(
             forward = false,
             visible = canGoBack,
+            enabled = !expanded,
+            fade = { buttonsAlpha },
             color = colors.headerColor,
             onClick = onBack,
         )
@@ -274,9 +315,10 @@ private fun CalendarPickerHeader(
                 .clickable(role = Role.Button, onClick = onToggleExpanded),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // COUICalendarPickerDelegate.b: couiColorPrimary while the wheel is open.
             Text(
                 text = label,
-                color = colors.headerColor,
+                color = if (expanded) colors.expandedHeaderColor else colors.headerColor,
                 style = textStyle,
                 maxLines = 2,
             )
@@ -293,26 +335,33 @@ private fun CalendarPickerHeader(
         CalendarChevronButton(
             forward = true,
             visible = canGoForward,
+            enabled = !expanded,
+            fade = { buttonsAlpha },
             color = colors.headerColor,
             onClick = onForward,
         )
     }
 }
 
-/** The 24dp coui_ic_chevron_start / _end button with 4dp padding; invisible at the first / last page. */
+/**
+ * The 24dp coui_ic_chevron_start / _end button with 4dp padding; invisible at the first / last
+ * page, faded by [fade] while the wheel is open.
+ */
 @Composable
 private fun CalendarChevronButton(
     forward: Boolean,
     visible: Boolean,
+    enabled: Boolean,
+    fade: () -> Float,
     color: Color,
     onClick: () -> Unit,
 ) {
     val mirrored = forward != (LocalLayoutDirection.current == LayoutDirection.Rtl)
     Box(
         modifier = Modifier
-            .alpha(if (visible) 1f else 0f)
+            .graphicsLayer { alpha = if (visible) fade() else 0f }
             .clip(CircleShape)
-            .clickable(enabled = visible, role = Role.Button, onClick = onClick)
+            .clickable(enabled = visible && enabled, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = if (forward) "Next month" else "Previous month" }
             .padding(CalendarPickerDefaults.ChevronPadding)
             .size(CalendarPickerDefaults.ChevronSize),
@@ -487,6 +536,70 @@ private fun CalendarMonth(
     }
 }
 
+/**
+ * Exposes every day cell of a [CalendarMonth] page to accessibility services, like
+ * COUIDateMonthView's ExploreByTouchHelper virtual views: one node per cell, described by its full
+ * date and clickable when in range. The nodes carry no pointer input, so touches still reach the
+ * drawn grid below.
+ */
+@Composable
+private fun CalendarMonthSemantics(
+    year: Int,
+    month: Int,
+    selectedDate: DateValue,
+    minEpoch: Long,
+    maxEpoch: Long,
+    firstDayOfWeek: Int,
+    dateDescription: (DateValue) -> String,
+    onDaySelected: (DateValue) -> Unit,
+) {
+    val daysOfMonth = daysInMonth(year, month)
+    val leading = (dayOfWeek(year, month, 1) - firstDayOfWeek).mod(7)
+    val sixRows = leading + daysOfMonth > 35
+    val firstEpoch = civilToEpochDay(year, month, 1)
+    val selectedEpoch = civilToEpochDay(selectedDate.year, selectedDate.month, selectedDate.day)
+    val rowHeight = CalendarPickerDefaults.DayHeight + if (sixRows) 0.dp else CalendarPickerDefaults.FiveRowExtraHeight
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = CalendarPickerDefaults.MonthPaddingHorizontal)
+            .padding(top = CalendarPickerDefaults.WeekdayHeight),
+    ) {
+        repeat(if (sixRows) 6 else 5) { row ->
+            // Row starts at the start edge, so it mirrors in RTL like the drawn grid.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(rowHeight),
+            ) {
+                repeat(7) { column ->
+                    val epoch = firstEpoch + row * 7 + column - leading
+                    val inRange = epoch in minEpoch..maxEpoch
+                    Spacer(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .semantics {
+                                val date = epochDayToCivil(epoch)
+                                contentDescription = dateDescription(date)
+                                selected = epoch == selectedEpoch
+                                role = Role.Button
+                                if (inRange) {
+                                    onClick {
+                                        onDaySelected(date)
+                                        true
+                                    }
+                                } else {
+                                    disabled()
+                                }
+                            },
+                    )
+                }
+            }
+        }
+    }
+}
+
 /** Remembers the last selected day and the day whose circle is fading out. */
 private class SelectionHolder(var day: Int?) {
     var fadingDay: Int? = null
@@ -556,42 +669,56 @@ object CalendarPickerDefaults {
     @Composable
     fun today(): DateValue = remember { platformToday() }
 
-    /** Default header label: the English "MMMMy" pattern, e.g. "October 2026". */
-    val MonthYearLabel: (Int, Int) -> String = { year, month -> "${MonthNames[month - 1]} $year" }
+    /** Maximum width of the picker (calendar_picker_max_width, applied in COUICalendarPicker.onMeasure). */
+    val MaxWidth = 724.dp
 
-    /** Default weekday label: the shortest English names (DateUtils.LENGTH_SHORTEST), S M T W T F S. */
-    val WeekdayLabel: (Int) -> String = { ShortestWeekdays[it - 1] }
+    /**
+     * The header label of the current locale: the best "MMMMy" pattern (COUICalendarPickerDelegate),
+     * e.g. "October 2026" or "2026年10月".
+     */
+    @Composable
+    fun monthYearLabel(): (year: Int, month: Int) -> String {
+        val formatter = rememberDateFormatter(PickerDateFormat.MonthYear)
+        return remember(formatter) { { year: Int, month: Int -> formatter(DateValue(year, month, 1)) } }
+    }
+
+    /**
+     * The weekday label of the current locale: the shortest names
+     * (`DateUtils.getDayOfWeekString(day, LENGTH_SHORTEST)`, COUIDateMonthView), e.g. S M T W T F S
+     * or 日 一 二 三 四 五 六.
+     */
+    @Composable
+    fun weekdayLabel(): (dayOfWeek: Int) -> String {
+        val symbols = rememberPickerSymbols()
+        return remember(symbols) { { dayOfWeek: Int -> symbols.shortestWeekdays[(dayOfWeek - 1).coerceIn(0, 6)] } }
+    }
 
     /** Default day label: the plain day number. */
     val DayLabel: (Int) -> String = { it.toString() }
 
-    private val MonthNames = listOf(
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
-    )
-
-    private val ShortestWeekdays = listOf("S", "M", "T", "W", "T", "F", "S")
-
     /**
-     * The default [CalendarPickerColors]: couiColorPrimaryNeutral header and days,
-     * couiColorSecondNeutral collapsed arrow (couiColorPrimary when expanded), couiColorHintNeutral
-     * weekdays, couiColorDisabledNeutral adjacent / out-of-range days, couiColorPrimary selection
-     * and today ring, couiColorOnPrimary selected text and the press highlight.
+     * The default [CalendarPickerColors]: couiColorPrimaryNeutral header and days (the header turns
+     * couiColorPrimary while the wheel is open), couiColorSecondNeutral collapsed arrow
+     * (couiColorPrimary when expanded), couiColorHintNeutral weekdays, couiColorDisabledNeutral
+     * adjacent / out-of-range days, couiColorPrimary selection and today ring, couiColorOnPrimary
+     * selected text and the press highlight.
      */
     @Composable
     fun calendarPickerColors(
-        headerColor: Color = COUITheme.colorScheme.onSurface,
-        arrowColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        headerColor: Color = COUITheme.colorScheme.labelPrimary,
+        expandedHeaderColor: Color = COUITheme.colorScheme.primary,
+        arrowColor: Color = COUITheme.colorScheme.labelSecondary,
         expandedArrowColor: Color = COUITheme.colorScheme.primary,
-        weekdayColor: Color = COUITheme.colorScheme.onSurfaceContainerHigh,
-        dayColor: Color = COUITheme.colorScheme.onSurface,
-        disabledDayColor: Color = COUITheme.colorScheme.disabledOnSurface,
+        weekdayColor: Color = COUITheme.colorScheme.labelTertiary,
+        dayColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledDayColor: Color = COUITheme.colorScheme.disabledNeutral,
         selectedColor: Color = COUITheme.colorScheme.primary,
         onSelectedColor: Color = COUITheme.colorScheme.onPrimary,
         todayColor: Color = COUITheme.colorScheme.primary,
         pressedColor: Color = COUITheme.colorScheme.press,
     ): CalendarPickerColors = remember(
         headerColor,
+        expandedHeaderColor,
         arrowColor,
         expandedArrowColor,
         weekdayColor,
@@ -604,6 +731,7 @@ object CalendarPickerDefaults {
     ) {
         CalendarPickerColors(
             headerColor = headerColor,
+            expandedHeaderColor = expandedHeaderColor,
             arrowColor = arrowColor,
             expandedArrowColor = expandedArrowColor,
             weekdayColor = weekdayColor,
@@ -621,6 +749,7 @@ object CalendarPickerDefaults {
  * Colors used by a [CalendarPicker].
  *
  * @param headerColor The color of the month-year label and the chevrons.
+ * @param expandedHeaderColor The color of the month-year label while the wheel is open.
  * @param arrowColor The color of the collapsed expand arrow.
  * @param expandedArrowColor The color of the expanded arrow.
  * @param weekdayColor The color of the weekday labels.
@@ -634,6 +763,7 @@ object CalendarPickerDefaults {
 @Immutable
 data class CalendarPickerColors(
     val headerColor: Color,
+    val expandedHeaderColor: Color,
     val arrowColor: Color,
     val expandedArrowColor: Color,
     val weekdayColor: Color,
@@ -653,6 +783,9 @@ private const val FADE_IN_DURATION_MILLIS = 280
 
 /** coui_calendar_picker_fade_out_material duration. */
 private const val FADE_OUT_DURATION_MILLIS = 150
+
+/** COUICalendarPickerDelegate: the wheel replaces the grid 120ms after the label is tapped. */
+private const val EXPAND_SWAP_DELAY_MILLIS = 120
 
 /** COUIDateMonthView selection animator duration. */
 private const val SELECT_DURATION_MILLIS = 280

@@ -4,7 +4,6 @@ package io.github.suqi8.coui.kmp.utils
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -26,17 +25,23 @@ private const val POST_FLING_CONSUMED_VELOCITY_THRESHOLD = 25.0f
  * A [NestedScrollConnection] that provides haptic feedback when a scrollable container
  * is flung to its start or end boundaries.
  *
- * @param hapticFeedback The [HapticFeedback] instance to perform feedback.
- * @param hapticFeedbackType The type of haptic feedback to perform.
+ * @param hapticFeedbackType The type of haptic feedback to perform, or null for the COUI
+ *   scroll-edge vibration.
  */
 private class ScrollEndHapticNode(
-    private var hapticFeedbackType: HapticFeedbackType,
+    private var hapticFeedbackType: HapticFeedbackType?,
 ) : DelegatingNode(),
     CompositionLocalConsumerModifierNode,
     NestedScrollConnection {
 
-    private val hapticFeedback: HapticFeedback
-        get() = currentValueOf(LocalHapticFeedback)
+    private fun performHaptic() {
+        val type = hapticFeedbackType
+        if (type == null) {
+            performScrollEdgeHaptic()
+        } else {
+            currentValueOf(LocalHapticFeedback).performHapticFeedback(type)
+        }
+    }
 
     private enum class ScrollEndHapticState {
         /** Not scrolled to the boundary. */
@@ -69,7 +74,7 @@ private class ScrollEndHapticNode(
         // Flinging beyond the top boundary.
         if (available.y > POST_FLING_AVAILABLE_VELOCITY_THRESHOLD && !consumed.y.filter(POST_FLING_CONSUMED_VELOCITY_THRESHOLD)) {
             if (scrollEndHapticState != ScrollEndHapticState.TopBoundaryHit) {
-                hapticFeedback.performHapticFeedback(hapticFeedbackType)
+                performHaptic()
                 scrollEndHapticState = ScrollEndHapticState.TopBoundaryHit
             }
         }
@@ -79,7 +84,7 @@ private class ScrollEndHapticNode(
             )
         ) {
             if (scrollEndHapticState != ScrollEndHapticState.BottomBoundaryHit) {
-                hapticFeedback.performHapticFeedback(hapticFeedbackType)
+                performHaptic()
                 scrollEndHapticState = ScrollEndHapticState.BottomBoundaryHit
             }
         }
@@ -95,13 +100,13 @@ private class ScrollEndHapticNode(
         scrollEndHapticState = ScrollEndHapticState.Idle
     }
 
-    fun update(hapticFeedbackType: HapticFeedbackType) {
+    fun update(hapticFeedbackType: HapticFeedbackType?) {
         this.hapticFeedbackType = hapticFeedbackType
     }
 }
 
 private data class ScrollEndHapticElement(
-    private val hapticFeedbackType: HapticFeedbackType,
+    private val hapticFeedbackType: HapticFeedbackType?,
 ) : ModifierNodeElement<ScrollEndHapticNode>() {
     override fun create() = ScrollEndHapticNode(hapticFeedbackType)
 
@@ -118,8 +123,15 @@ private data class ScrollEndHapticElement(
 /**
  * Applies a haptic feedback effect when a scrollable container is flung to its boundaries.
  *
- * @param hapticFeedbackType The type of haptic feedback to perform.
+ * By default it plays the COUI scroll-edge vibration (`performHapticFeedback(307)`,
+ * `EDGE_LIST_VIBRATE`) that `COUINestedScrollView` plays when a fling runs into an edge, falling
+ * back to the closest standard haptic off ColorOS. Scrollables using the default
+ * [COUIOverscrollEffect] already vibrate at the edge; this modifier is for containers using
+ * [overScrollVertical] / [overScrollHorizontal] or no COUI overscroll.
+ *
+ * @param hapticFeedbackType A standard haptic to play instead, or null (the default) for the
+ *   COUI scroll-edge vibration.
  */
 fun Modifier.scrollEndHaptic(
-    hapticFeedbackType: HapticFeedbackType = HapticFeedbackType.TextHandleMove,
+    hapticFeedbackType: HapticFeedbackType? = null,
 ): Modifier = this.then(ScrollEndHapticElement(hapticFeedbackType))

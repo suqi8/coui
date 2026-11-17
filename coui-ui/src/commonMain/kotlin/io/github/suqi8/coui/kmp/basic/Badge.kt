@@ -6,6 +6,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -22,10 +23,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
@@ -49,10 +52,14 @@ import kotlin.math.cos
  * (COUIMoveEaseInterpolator) while the old and new numbers crossfade over 150ms on the framework
  * default accelerate-decelerate curve.
  *
+ * Toggling [visible] scales the badge from / to nothing over 520ms on COUIMoveEaseInterpolator
+ * (COUIHintRedDot.executeScaleAnim); once hidden the badge takes no space (`View.GONE`).
+ *
  * Use [BadgeBox] to anchor a badge at the top end corner of an icon.
  *
  * @param modifier The modifier to be applied to the [Badge].
  * @param count The number shown in the [Badge]; values <= 0 show a plain dot.
+ * @param visible Whether the [Badge] is shown. Changes play the COUI show / hide scale animation.
  * @param stroke Whether to draw a white outline around the [Badge]
  *   (POINT_ONLY_MODE_STROKE / POINT_NUM_MODE_STROKE), for badges on colored surfaces.
  * @param colors The [BadgeColors] of the [Badge].
@@ -66,17 +73,133 @@ import kotlin.math.cos
 fun Badge(
     modifier: Modifier = Modifier,
     count: Int = 0,
+    visible: Boolean = true,
     stroke: Boolean = false,
     colors: BadgeColors = BadgeDefaults.badgeColors(),
     dotDiameter: Dp = BadgeDefaults.DotDiameter,
     height: Dp = BadgeDefaults.Height,
     navigation: Boolean = false,
 ) {
-    if (count <= 0) {
-        DotBadge(stroke = stroke, colors = colors, dotDiameter = dotDiameter, modifier = modifier)
-    } else {
-        CountBadge(count = count, stroke = stroke, colors = colors, height = height, navigation = navigation, modifier = modifier)
+    BadgeScaleVisibility(visible = visible) { scaleModifier ->
+        if (count <= 0) {
+            DotBadge(stroke = stroke, colors = colors, dotDiameter = dotDiameter, modifier = modifier.then(scaleModifier))
+        } else {
+            CapsuleBadge(
+                label = count.toString(),
+                ellipsis = count >= OverflowCount,
+                targetWidth = if (navigation) naviBadgeWidth(count) else badgeWidth(count, height),
+                stroke = stroke,
+                colors = colors,
+                height = height,
+                modifier = modifier.then(scaleModifier),
+            )
+        }
     }
+}
+
+/**
+ * A text [Badge], mirroring `COUIHintRedDot.setPointText(String)` in the number capsule modes.
+ *
+ * A numeric [text] behaves like the count badge. Any other text picks the capsule width by its
+ * measured width (COUIHintRedDotHelper.getBgWidth(String)): narrower than "10" takes the 16dp
+ * width, narrower than "100" 20dp, narrower than "1000" 26dp; anything wider falls back to the 20dp
+ * capsule with the three-dot ellipsis (COUIHintRedDotHelper.drawText). Keep the text short, like
+ * "N" or "Hot".
+ *
+ * @param text The text shown in the [Badge].
+ * @param modifier The modifier to be applied to the [Badge].
+ * @param visible Whether the [Badge] is shown. Changes play the COUI show / hide scale animation.
+ * @param stroke Whether to draw a white outline around the [Badge] (POINT_NUM_MODE_STROKE).
+ * @param colors The [BadgeColors] of the [Badge].
+ * @param height The height of the capsule.
+ * @param navigation Whether the capsule takes the bottom-navigation widths
+ *   (`POINT_NAVI_WITH_NUM`, COUIHintRedDotHelper.getNaviBgWidth(String)): 12dp under the width of
+ *   "10", 20dp under "100", 26dp under "1000" and 20dp otherwise.
+ */
+@Composable
+fun Badge(
+    text: String,
+    modifier: Modifier = Modifier,
+    visible: Boolean = true,
+    stroke: Boolean = false,
+    colors: BadgeColors = BadgeDefaults.badgeColors(),
+    height: Dp = BadgeDefaults.Height,
+    navigation: Boolean = false,
+) {
+    val numeric = remember(text) { text.takeIf { it.isNotEmpty() && it.all(Char::isDigit) }?.toIntOrNull() }
+    val density = LocalDensity.current
+    val textStyle = TextStyle(fontSize = with(density) { BadgeDefaults.TextSize.toSp() }, fontWeight = FontWeight.Medium)
+    val measurer = rememberTextMeasurer()
+    // COUIHintRedDotHelper compares the text width with the widths of "10", "100" and "1000".
+    val tier = remember(text, numeric, textStyle, measurer) {
+        if (numeric != null || text.isEmpty()) {
+            -1
+        } else {
+            val width = measurer.measure(text, textStyle).size.width
+            when {
+                width < measurer.measure("10", textStyle).size.width -> 0
+                width < measurer.measure("100", textStyle).size.width -> 1
+                width < measurer.measure("1000", textStyle).size.width -> 2
+                else -> 3
+            }
+        }
+    }
+    val width = when {
+        numeric != null -> if (navigation) naviBadgeWidth(numeric) else badgeWidth(numeric, height)
+
+        text.isEmpty() -> if (navigation) BadgeDefaults.NaviSmallWidth else badgeWidth(0, height)
+
+        navigation -> when (tier) {
+            0 -> BadgeDefaults.NaviSmallWidth
+            2 -> BadgeDefaults.LargeWidth
+            else -> BadgeDefaults.MediumWidth
+        }
+
+        else -> when (tier) {
+            0 -> maxOf(BadgeDefaults.SmallWidth, height)
+            2 -> maxOf(BadgeDefaults.LargeWidth, height)
+            else -> maxOf(BadgeDefaults.MediumWidth, height)
+        }
+    }
+    BadgeScaleVisibility(visible = visible) { scaleModifier ->
+        CapsuleBadge(
+            label = text,
+            ellipsis = if (numeric != null) numeric >= OverflowCount else tier == 3,
+            targetWidth = width,
+            stroke = stroke,
+            colors = colors,
+            height = height,
+            modifier = modifier.then(scaleModifier),
+        )
+    }
+}
+
+/**
+ * The COUIHintRedDot.executeScaleAnim show / hide animation: the badge scales 0 -> 1 or 1 -> 0
+ * over [BadgeDefaults.ScaleAnimDurationMillis] on COUIMoveEaseInterpolator, and is removed from
+ * the layout once hidden.
+ */
+@Composable
+private fun BadgeScaleVisibility(
+    visible: Boolean,
+    content: @Composable (scaleModifier: Modifier) -> Unit,
+) {
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = BadgeDefaults.ScaleAnimDurationMillis, easing = WidthAnimEasing),
+        label = "badgeScale",
+    )
+    if (!visible && scale == 0f) return
+    content(
+        if (scale == 1f) {
+            Modifier
+        } else {
+            Modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+        },
+    )
 }
 
 /**
@@ -144,18 +267,22 @@ private fun DotBadge(
     )
 }
 
-/** The number capsule form (COUIHintRedDotHelper.drawPointWithNumber / drawPointWithStroke). */
+/**
+ * The number / text capsule form (COUIHintRedDotHelper.drawPointWithNumber / drawPointWithStroke),
+ * showing [label], or the three-dot ellipsis when [ellipsis] is set.
+ */
 @Composable
-private fun CountBadge(
-    count: Int,
+private fun CapsuleBadge(
+    label: String,
+    ellipsis: Boolean,
+    targetWidth: Dp,
     stroke: Boolean,
     colors: BadgeColors,
     height: Dp,
-    navigation: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val width by animateDpAsState(
-        targetValue = if (navigation) naviBadgeWidth(count) else badgeWidth(count, height),
+        targetValue = targetWidth,
         animationSpec = tween(durationMillis = WidthAnimDurationMillis, easing = WidthAnimEasing),
         label = "badgeWidth",
     )
@@ -183,15 +310,15 @@ private fun CountBadge(
         contentAlignment = Alignment.Center,
     ) {
         Crossfade(
-            targetState = count,
+            targetState = if (ellipsis) null else label,
             modifier = Modifier.matchParentSize(),
             animationSpec = tween(durationMillis = CountFadeDurationMillis, easing = CountFadeEasing),
             label = "badgeCount",
-        ) { targetCount ->
+        ) { targetLabel ->
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (targetCount < OverflowCount) {
+                if (targetLabel != null) {
                     Text(
-                        text = targetCount.toString(),
+                        text = targetLabel,
                         color = colors.contentColor,
                         fontSize = fontSize,
                         fontWeight = FontWeight.Medium,
@@ -294,7 +421,7 @@ object BadgeDefaults {
 
     /**
      * The duration of the COUI badge show / hide scale animation
-     * (COUIHintRedDot RED_POINT_ANIM_DURATION), for hosts animating badge visibility.
+     * (COUIHintRedDot RED_POINT_ANIM_DURATION), played when the `visible` flag of [Badge] changes.
      */
     val ScaleAnimDurationMillis = 520
 
@@ -304,7 +431,7 @@ object BadgeDefaults {
      */
     @Composable
     fun badgeColors(
-        containerColor: Color = if (COUITheme.colorScheme.background.luminance() < 0.5f) BadgeRedDark else BadgeRedLight,
+        containerColor: Color = COUITheme.colorScheme.red,
         contentColor: Color = Color.White,
         strokeColor: Color = Color.White,
     ): BadgeColors = remember(containerColor, contentColor, strokeColor) {
@@ -322,12 +449,6 @@ data class BadgeColors(
     val contentColor: Color,
     val strokeColor: Color,
 )
-
-/** couiColorAdditionalRed in light themes (coui_color_additional_red #EB3B2F). */
-private val BadgeRedLight = Color(0xFFEB3B2F)
-
-/** couiColorAdditionalRed in dark themes (coui_color_additional_red_dark #EB493D). */
-private val BadgeRedDark = Color(0xFFEB493D)
 
 /** Counts at or above this render the ellipsis instead of digits (COUIHintRedDotHelper). */
 private val OverflowCount = 1000

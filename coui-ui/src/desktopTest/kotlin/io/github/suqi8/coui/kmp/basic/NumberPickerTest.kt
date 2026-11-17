@@ -93,6 +93,7 @@ class NumberPickerTest {
                     onValueChange = { value = it },
                     modifier = Modifier.width(80.dp).testTag("picker"),
                     range = 0..10,
+                    wrapAround = false,
                 )
             }
         }

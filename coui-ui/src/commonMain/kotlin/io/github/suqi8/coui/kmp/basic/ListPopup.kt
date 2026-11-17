@@ -36,21 +36,14 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -84,7 +77,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -256,8 +248,10 @@ internal class PopupSharedMask {
     var exiting: Boolean by mutableStateOf(false)
         private set
 
-    private var from: MaskGeometry? = null
-    private var to: MaskGeometry? = null
+    // Snapshot state, so the draw pass that last saw the mask resting (no travel to read) still
+    // hears a new target: a press that is already full changes nothing else it reads.
+    private var from: MaskGeometry? by mutableStateOf(null)
+    private var to: MaskGeometry? by mutableStateOf(null)
     private var pressJob: Job? = null
     private var travelJob: Job? = null
 
@@ -308,21 +302,56 @@ internal class PopupSharedMask {
     }
 
     /**
-     * Shows the mask fully pressed on [row] and lets it fade out at once: the press a compact sub
-     * menu header inherits from the row that opened it (`COUITouchRecyclerView`
-     * `beginSharedMaskPressHandoffThenAnimate(progress, 0)`).
+     * Shows the mask on [row] at [progress] and animates it out from there: the press a compact sub
+     * menu header inherits from the row that opened it (`COUIPopupListWindow.configSubRecyclerView`
+     * hands `mTransferredPressProgress` to `beginSharedMaskPressHandoffThenAnimate(progress, 0)`,
+     * which runs `animatePressFromProgress(progress, 0)` without the minimum-visible step of a tap).
      */
-    fun flash(row: PopupListItemHandle, geometry: MaskGeometry, scope: CoroutineScope) {
+    fun flash(row: PopupListItemHandle, geometry: MaskGeometry, progress: Float, scope: CoroutineScope) {
         travelJob?.cancel()
         pressJob?.cancel()
         from = null
         to = geometry
         travel = 1f
-        target = row
-        exiting = false
-        press = 1f
+        target = null
+        exiting = true
+        press = progress.coerceIn(0f, 1f)
         pressVelocity = 0f
-        exit(scope)
+        pressJob = scope.launch {
+            animatePress(0f)
+            if (exiting) {
+                exiting = false
+                from = null
+                to = null
+                travel = 1f
+            }
+        }
+    }
+
+    /**
+     * Writes the mask outline of this frame into [path] (`rebuildSharedMaskSmoothPath` on reused
+     * objects) and returns its press progress, or 0 when nothing is drawn. Lerps the travel in place
+     * so drawing allocates nothing.
+     */
+    fun buildPath(path: Path, squircleEnabled: Boolean): Float {
+        val progress = press.coerceIn(0f, 1f)
+        if (progress <= 0f) return 0f
+        val end = to ?: return 0f
+        val start = from
+        val travelNow = travel
+        val t = if (start == null) 1f else travelNow.coerceIn(0f, 1f)
+        fun mix(a: Float, b: Float) = a + (b - a) * t
+        val left = if (start == null) end.left else mix(start.left, end.left)
+        val top = if (start == null) end.top else mix(start.top, end.top)
+        val right = if (start == null) end.right else mix(start.right, end.right)
+        val bottom = if (start == null) end.bottom else mix(start.bottom, end.bottom)
+        if (right <= left || bottom <= top) return 0f
+        val radius = if (start == null) end.radius else mix(start.radius, end.radius)
+        val weight = if (start == null) end.weight else mix(start.weight, end.weight)
+        path.rewind()
+        path.addSquircleRect(right - left, bottom - top, radius, weight, squircleEnabled)
+        path.translate(Offset(left, top))
+        return progress
     }
 
     /** Re-reads the geometry of the resting row after a layout pass, e.g. when the list scrolls. */
@@ -492,8 +521,12 @@ internal class PopupListGestureHost {
     /** The row whose mask is locked on (`setHoverStateLocked`), e.g. the anchor of an open sub menu. */
     private var heldItem: PopupListItemHandle? = null
 
-    /** A row waiting for its first placement to receive a press handoff. */
+    /** A row waiting for its first placement to receive a press handoff, and the progress handed. */
     private var pendingHandoff: PopupListItemHandle? = null
+    private var pendingHandoffProgress: Float = 0f
+
+    /** The outline the shared mask is drawn with, rebuilt in place every frame. */
+    internal val maskPath = Path()
 
     /** True while the list has no scroll range (COUITouchRecyclerView: neither direction can scroll). */
     var isDynamicSelection: Boolean = true
@@ -524,7 +557,7 @@ internal class PopupListGestureHost {
         val scope = scope
         if (handoff != null && scope != null && handoff in rows && handoff.bottom > handoff.top) {
             pendingHandoff = null
-            mask.flash(handoff, geometryOf(handoff), scope)
+            mask.flash(handoff, geometryOf(handoff), pendingHandoffProgress, scope)
         }
     }
 
@@ -543,9 +576,11 @@ internal class PopupListGestureHost {
         mask.exit(scope)
     }
 
-    /** Hands a full press to [handle] once it is placed, then lets it fade. */
-    fun handoff(handle: PopupListItemHandle) {
+    /** Hands a press at [progress] to [handle] once it is placed, then lets it fade. */
+    fun handoff(handle: PopupListItemHandle, progress: Float) {
+        if (progress <= 0f) return
         pendingHandoff = handle
+        pendingHandoffProgress = progress
     }
 
     fun register(handle: PopupListItemHandle) {
@@ -668,11 +703,43 @@ internal val LocalPopupListRole = staticCompositionLocalOf { PopupListRole.Stand
  */
 @Stable
 internal class PopupGestureRelay {
+    /** The main list's host, set while the main menu is composed. */
+    var mainHost: PopupListGestureHost? = null
+
     /** The sub list's host, set while a sub menu is composed. */
     var subHost: PopupListGestureHost? = null
 
     /** Whether the sub menu has finished entering (`mSubMenuEntered`). */
     var subEntered: Boolean = false
+
+    /**
+     * Whether the sub menu takes touches: false from the start of its exit
+     * (`RoundFrameLayout.setAllowDispatchEvent(false)` in `onSubMenuStartToExit`).
+     */
+    var subInteractive: Boolean = true
+
+    /**
+     * The main list's press progress when the sub menu was asked for, handed to the compact sub
+     * menu's header (`COUIPopupListWindow.mTransferredPressProgress`).
+     */
+    var transferredPress: Float = 0f
+
+    /**
+     * The sub menu panel itself (its spotlight and touch motion), which the relayed finger drives
+     * as COUI forwards the events to the sub `RoundFrameLayout.dispatchTouchEvent`.
+     */
+    var subPanel: PopupRelayTarget? = null
+}
+
+/**
+ * A panel that receives a relayed gesture in window coordinates (`COUIPopupMenuRootView`
+ * `forwardTouchInsideSubMenuBounds` / `cancelSubMenuGestureOutsideBounds`).
+ */
+internal interface PopupRelayTarget {
+    fun down(windowPosition: Offset, uptimeMillis: Long)
+    fun move(windowPosition: Offset, uptimeMillis: Long)
+    fun up(windowPosition: Offset, uptimeMillis: Long)
+    fun cancel()
 }
 
 internal val LocalPopupGestureRelay = staticCompositionLocalOf<PopupGestureRelay?> { null }
@@ -810,8 +877,9 @@ internal fun Modifier.popupListItem(
         if (held) host.hold(handle)
         onDispose { if (held) host.release(handle) }
     }
+    val relay = LocalPopupGestureRelay.current
     LaunchedEffect(host, handle, pressHandoff) {
-        if (pressHandoff) host.handoff(handle)
+        if (pressHandoff) host.handoff(handle, relay?.transferredPress ?: 1f)
     }
 
     val parentData = remember(handle) { PopupListItemParentData(handle) }
@@ -909,6 +977,12 @@ internal fun ListPopupColumn(
         DisposableEffect(relay, host) {
             relay.subHost = host
             onDispose { if (relay.subHost === host) relay.subHost = null }
+        }
+    }
+    if (relay != null && role == PopupListRole.Main) {
+        DisposableEffect(relay, host) {
+            relay.mainHost = host
+            onDispose { if (relay.mainHost === host) relay.mainHost = null }
         }
     }
 
@@ -1042,6 +1116,7 @@ internal fun ListPopupColumn(
                 .popupListGestures(
                     host = host,
                     relay = if (role == PopupListRole.Main) relay else null,
+                    subRelay = if (role == PopupListRole.Sub) relay else null,
                     scope = coroutineScope,
                     touchSlop = touchSlop,
                     performHaptic = performHaptic,
@@ -1049,7 +1124,8 @@ internal fun ListPopupColumn(
                 )
                 .drawWithContent {
                     drawContent()
-                    drawPopupSharedMask(host.mask, maskColor, squircleEnabled)
+                    val progress = host.mask.buildPath(host.maskPath, squircleEnabled)
+                    if (progress > 0f) drawPath(path = host.maskPath, color = maskColor, alpha = progress)
                 },
             measurePolicy = measurePolicy,
         )
@@ -1074,14 +1150,22 @@ internal fun ListPopupColumn(
 private fun Modifier.popupListGestures(
     host: PopupListGestureHost,
     relay: PopupGestureRelay?,
+    subRelay: PopupGestureRelay?,
     scope: CoroutineScope,
     touchSlop: Float,
     performHaptic: (CouiHapticEffect) -> Unit,
     performLongPressHaptic: () -> Unit,
-): Modifier = pointerInput(host, relay) {
+): Modifier = pointerInput(host, relay, subRelay) {
     awaitPointerEventScope {
         while (true) {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            if (subRelay?.subInteractive == false) {
+                // A sub menu that is leaving takes no touches (setAllowDispatchEvent(false)).
+                do {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                } while (event.changes.any { it.pressed })
+                continue
+            }
             val downY = down.position.y
             val downRow = host.onDown(down.position.x, downY, scope)
             var tracking = downRow != null
@@ -1100,13 +1184,21 @@ private fun Modifier.popupListGestures(
                 if (event.changes.size > 1) {
                     // A second pointer cancels the selection, as COUI does on ACTION_POINTER_DOWN.
                     host.cancel(scope)
-                    relayed?.cancel(relayed.scope ?: scope)
+                    if (relayed != null) {
+                        relayed.cancel(relayed.scope ?: scope)
+                        relay?.subPanel?.cancel()
+                    }
                     tracking = false
                     break
                 }
 
                 if (change.changedToUpIgnoreConsumed()) {
-                    if (relayed != null) relayed.onUp(relayed.scope ?: scope) else host.onUp(scope)
+                    if (relayed != null) {
+                        relay?.subPanel?.up(relayWindowPoint(host, change.position), change.uptimeMillis)
+                        relayed.onUp(relayed.scope ?: scope)
+                    } else {
+                        host.onUp(scope)
+                    }
                     change.consume()
                     tracking = false
                     break
@@ -1119,7 +1211,7 @@ private fun Modifier.popupListGestures(
                     // list's touch while a sub menu is open (onSubMenuStartToEnter), so a held finger
                     // never ends up with a menu that ignores it.
                     val wasRelayed = relayed != null
-                    relayed = relaySubMenuMove(relay, host, relayed, change.position, scope, performHaptic)
+                    relayed = relaySubMenuMove(relay, host, relayed, change.position, change.uptimeMillis, scope, performHaptic)
                     if (relayed != null) {
                         if (!wasRelayed) host.yield(scope)
                         continue
@@ -1200,30 +1292,47 @@ private fun relaySubMenuMove(
     host: PopupListGestureHost,
     relayed: PopupListGestureHost?,
     position: Offset,
+    uptimeMillis: Long,
     scope: CoroutineScope,
     performHaptic: (CouiHapticEffect) -> Unit,
 ): PopupListGestureHost? {
-    val sub = relay?.subHost?.takeIf { relay.subEntered }
+    val sub = relay?.subHost?.takeIf { relay.subEntered && relay.subInteractive }
     val from = host.coordinates
     val to = sub?.coordinates
     if (sub == null || from == null || to == null || !from.isAttached || !to.isAttached) {
-        relayed?.cancel(relayed.scope ?: scope)
+        if (relayed != null) {
+            relayed.cancel(relayed.scope ?: scope)
+            relay?.subPanel?.cancel()
+        }
         return null
     }
     // The sub list's mask animates in the sub list's own scope, which outlives this gesture.
     val subScope = sub.scope ?: scope
-    val local = to.windowToLocal(from.localToWindow(position))
+    val window = from.localToWindow(position)
+    val local = to.windowToLocal(window)
     if (!sub.isInsideList(local.x, local.y)) {
-        // cancelSubMenuGestureOutsideBounds.
-        relayed?.cancel(subScope)
+        // cancelSubMenuGestureOutsideBounds: a synthetic ACTION_CANCEL to the whole sub panel.
+        if (relayed != null) {
+            relayed.cancel(subScope)
+            relay.subPanel?.cancel()
+        }
         return null
     }
     if (relayed !== sub) {
-        // The synthetic ACTION_DOWN attaches the mask without a haptic, like a real DOWN.
+        // The synthetic ACTION_DOWN reaches the sub panel (spotlight, touch motion) and attaches
+        // the mask without a haptic, like a real DOWN.
+        relay.subPanel?.down(window, uptimeMillis)
         return if (sub.onDown(local.x, local.y, subScope) != null) sub else null
     }
+    relay.subPanel?.move(window, uptimeMillis)
     if (sub.onMoveTo(local.x, local.y, subScope)) performHaptic(CouiHapticEffect.Switch)
     return sub
+}
+
+/** A point of the main list in window coordinates, for the relayed sub panel. */
+private fun relayWindowPoint(host: PopupListGestureHost, position: Offset): Offset {
+    val from = host.coordinates ?: return position
+    return if (from.isAttached) from.localToWindow(position) else position
 }
 
 /**
@@ -1238,22 +1347,6 @@ internal fun Modifier.consumePopupTouches(): Modifier = pointerInput(Unit) {
             event.changes.forEach { if (it.changedToDownIgnoreConsumed()) it.consume() }
         }
     }
-}
-
-/** Draws the shared press mask over the rows (COUITouchRecyclerView.dispatchDraw → drawSharedMask). */
-private fun DrawScope.drawPopupSharedMask(
-    mask: PopupSharedMask,
-    color: Color,
-    squircleEnabled: Boolean,
-) {
-    val progress = mask.press.coerceIn(0f, 1f)
-    if (progress <= 0f) return
-    val geometry = mask.current() ?: return
-    val rect = Rect(geometry.left, geometry.top, geometry.right, geometry.bottom)
-    if (rect.isEmpty) return
-    val path = Path()
-    path.addSquircleRect(rect, geometry.radius, geometry.weight, squircleEnabled)
-    drawPath(path = path, color = color, alpha = progress)
 }
 
 @Stable
@@ -1768,7 +1861,7 @@ internal data class PopupShadowSpec(
  */
 @Composable
 internal fun Modifier.popupDropShadow(shape: Shape, alpha: () -> Float = { 1f }): Modifier {
-    val spec = if (COUITheme.colorScheme.background.luminance() < 0.5f) PopupShadowSpec.Dark else PopupShadowSpec.Light
+    val spec = if (COUITheme.colorScheme.isDark) PopupShadowSpec.Dark else PopupShadowSpec.Light
     val centerY = remember { mutableFloatStateOf(Float.NaN) }
     return this
         .onGloballyPositioned { coordinates ->
@@ -2039,8 +2132,9 @@ internal fun popupGravityPathFor(
  * @param backgroundModifier A [Modifier] applied inside the surface clip, under the content and over
  *   [backgroundColor]. Use it to paint the COUI 17 blurred background, e.g. with coui-blur's
  *   `Modifier.couiMaterialBlur(backdrop, MaterialBlurDefaults.popup(isDark))`.
- * @param materialEffect Whether to draw the material effects COUI adds to a blurred popup
- *   (`RoundFrameLayout.initMaterialEffects`): the shadow-edge stroke and the touch spotlight.
+ * @param materialEffect Whether to draw the material effects of a COUI 17 popup surface
+ *   (`RoundFrameLayout.initMaterialEffects`): the shadow-edge stroke and the touch spotlight, on a
+ *   blurred or an opaque [backgroundColor].
  * @param content The content of the popup.
  */
 @Composable
@@ -2084,8 +2178,9 @@ fun ListPopupContent(
             .graphicsLayer { alpha = alphaProgress().coerceIn(0f, 1f) }
             .squircleSurface(color = backgroundColor, cornerRadius = PopupCornerRadius, weight = PopupCornerWeight)
             .then(backgroundModifier)
-            .popupMaterialEffect(enabled = materialEffect)
+            .popupMaterialEffect(enabled = materialEffect, spotLight = rememberPopupPanelLight())
             .consumePopupTouches(),
+
     ) {
         content()
     }

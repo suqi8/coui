@@ -104,7 +104,7 @@ fun AppInfoPreference(
             modifier = Modifier.padding(
                 top = if (icon != null) AppInfoPreferenceDefaults.NameTopMargin else AppInfoPreferenceDefaults.IconTopMargin,
             ),
-            style = COUITheme.textStyles.title3,
+            style = COUITheme.textStyles.headlineM,
             color = colors.nameColor,
             textAlign = TextAlign.Center,
         )
@@ -144,7 +144,7 @@ private fun AppInfoVersion(
             } else {
                 Modifier
             },
-            style = COUITheme.textStyles.footnote2,
+            style = COUITheme.textStyles.bodyXS,
             color = colors.versionColor,
         )
         if (showPopup && copyText != null && onCopyClick != null) {
@@ -195,7 +195,7 @@ private fun AppInfoCopyPopup(
         ) {
             Text(
                 text = copyText,
-                style = COUITheme.textStyles.body2,
+                style = COUITheme.textStyles.bodyM,
                 color = colors.copyPopupContentColor,
                 maxLines = 1,
             )
@@ -268,10 +268,10 @@ object AppInfoPreferenceDefaults {
      */
     @Composable
     fun appInfoPreferenceColors(
-        nameColor: Color = COUITheme.colorScheme.onSurface,
-        versionColor: Color = COUITheme.colorScheme.onSurfaceSecondary,
+        nameColor: Color = COUITheme.colorScheme.labelPrimary,
+        versionColor: Color = COUITheme.colorScheme.labelSecondary,
         copyPopupColor: Color = COUITheme.colorScheme.backgroundTop,
-        copyPopupContentColor: Color = COUITheme.colorScheme.onSurface,
+        copyPopupContentColor: Color = COUITheme.colorScheme.labelPrimary,
     ): AppInfoPreferenceColors = remember(nameColor, versionColor, copyPopupColor, copyPopupContentColor) {
         AppInfoPreferenceColors(
             nameColor = nameColor,

@@ -42,7 +42,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
+import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.ShadowEdgeShader
 import io.github.suqi8.coui.kmp.effect.SpotLightShader
@@ -104,7 +104,7 @@ import kotlin.math.roundToInt
  *   `hideEndAccessoryView`).
  * @param materialEffect Whether the COUI 17 material is drawn on the capsule: the edge lighting, the
  *   touch spotlight, the metaball merge with the accessories and, with a [LocalMaterialBackdrop]
- *   provider, the backdrop blur.
+ *   provider, the backdrop blur. Defaults to [LocalCOUIMaterialEffectEnabled].
  * @param showDivider Whether to draw a thin divider ring around the capsule (not part of COUI 17).
  * @param defaultWindowInsetsPadding Whether to keep the bar above the navigation and caption bars.
  * @param color The capsule fill. Defaults to COUI's opaque `?couiColorBar`; replaced by the backdrop
@@ -125,7 +125,7 @@ fun FloatingAccessoryNavigationBar(
     backgroundModifier: Modifier = Modifier,
     startAccessoryVisible: Boolean = true,
     endAccessoryVisible: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     showDivider: Boolean = false,
     defaultWindowInsetsPadding: Boolean = true,
     color: Color = FloatingNavigationBarDefaults.color(),
@@ -138,7 +138,7 @@ fun FloatingAccessoryNavigationBar(
 ) {
     val menuState = remember { FloatingNavigationBarState() }
     val state = remember { FloatingAccessoryBarState(menuState) }
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val startActive = startAccessory != null && startAccessoryVisible
     val endActive = endAccessory != null && endAccessoryVisible
     // BaseBottomFloatingMenuView: with the material the backdrop blur is the fill.
@@ -402,6 +402,7 @@ private fun AccessorySlot(
  * @param modifier The modifier applied to the accessory.
  * @param enabled Whether the accessory reacts to touches.
  * @param materialEffect Whether the COUI 17 material, spotlight and full icon-change effect are drawn.
+ *   Defaults to [LocalCOUIMaterialEffectEnabled].
  * @param color The fill without a backdrop (`setAccessoryBackgroundColor`).
  * @param iconTint The tint of [icon]; [Color.Unspecified] draws it untinted.
  * @param shadowElevation The blur radius of the drop shadow; 0 disables it.
@@ -413,12 +414,12 @@ fun FloatingNavigationBarAccessory(
     contentDescription: String?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    materialEffect: Boolean = true,
+    materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
     color: Color = FloatingNavigationBarDefaults.color(),
     iconTint: Color = FloatingAccessoryNavigationBarDefaults.iconTint(),
     shadowElevation: Dp = FloatingNavigationBarDefaults.ShadowElevation,
 ) {
-    val isDark = COUITheme.colorScheme.background.luminance() < 0.5f
+    val isDark = COUITheme.colorScheme.isDark
     val interactionSource = remember { MutableInteractionSource() }
     val scope = rememberCoroutineScope()
     val backdropProvider = if (materialEffect) LocalMaterialBackdrop.current else null
@@ -551,7 +552,7 @@ object FloatingAccessoryNavigationBarDefaults {
      * selected navigation item, `?couiColorLabelPrimary`.
      */
     @Composable
-    fun iconTint(): Color = COUITheme.colorScheme.onSurfaceContainer
+    fun iconTint(): Color = COUITheme.colorScheme.labelPrimary
 }
 
 /** The melt-ball springs (`HIGH_END_TRANSLATION_X_SPRING` / `HIGH_END_SCALE_SPRING`: response 0.55, bounce 0.35). */

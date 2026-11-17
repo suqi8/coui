@@ -11,10 +11,13 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.provider.Settings
 import android.text.format.DateFormat
+import android.text.format.DateUtils
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import io.github.suqi8.coui.kmp.ui.R
+import java.text.DateFormatSymbols
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
@@ -101,4 +104,49 @@ internal actual fun platformToday(): DateValue {
         month = calendar.get(Calendar.MONTH) + 1,
         day = calendar.get(Calendar.DAY_OF_MONTH),
     )
+}
+
+internal actual fun platformTimePattern(): String = DateFormat.getBestDateTimePattern(Locale.getDefault(), "hm")
+
+@Suppress("DEPRECATION")
+internal actual fun platformPickerSymbols(): PickerSymbols {
+    val locale = Locale.getDefault()
+    // DateUtils.formatDateTime(FORMAT_ABBREV_MONTH | FORMAT_NO_MONTH_DAY | FORMAT_NO_YEAR) resolves
+    // the "MMM" skeleton, which COUIDatePicker uses for the month wheel.
+    val monthFormat = SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, "MMM"), locale)
+    val weekdayFormat = SimpleDateFormat("EEE", locale)
+    val calendar = Calendar.getInstance(locale)
+    val months = List(12) { month ->
+        calendar.clear()
+        calendar.set(2001, month, 1)
+        monthFormat.format(calendar.time)
+    }
+    // 2001-01-07 was a Sunday.
+    val weekdays = List(7) { offset ->
+        calendar.clear()
+        calendar.set(2001, Calendar.JANUARY, 7 + offset)
+        weekdayFormat.format(calendar.time)
+    }
+    val shortest = List(7) { DateUtils.getDayOfWeekString(Calendar.SUNDAY + it, DateUtils.LENGTH_SHORTEST) }
+    val amPm = DateFormatSymbols.getInstance(locale).amPmStrings
+    val now = System.currentTimeMillis()
+    return PickerSymbols(
+        shortMonths = months,
+        shortWeekdays = weekdays,
+        shortestWeekdays = shortest,
+        am = amPm[0],
+        pm = amPm[1],
+        today = DateUtils.getRelativeTimeSpanString(now, now, DateUtils.DAY_IN_MILLIS).toString(),
+    )
+}
+
+internal actual fun platformDateFormatter(format: PickerDateFormat): (DateValue) -> String {
+    val locale = Locale.getDefault()
+    val formatter = SimpleDateFormat(DateFormat.getBestDateTimePattern(locale, format.skeleton), locale)
+    val calendar = Calendar.getInstance(locale)
+    return { date ->
+        calendar.clear()
+        calendar.set(date.year, date.month - 1, date.day)
+        formatter.format(calendar.time)
+    }
 }
