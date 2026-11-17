@@ -32,6 +32,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_follow_system_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_light
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_multi_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_show_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_single_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_preference_sync_items
@@ -50,6 +51,7 @@ import org.jetbrains.compose.resources.stringResource
 private val ListTypes = listOf("ListPreference", "MultiSelectListPreference")
 private val ListCounts = listOf(3, 5, 8)
 
+/** The demo page of `ListPreference`, listed in its category and found by the search. */
 internal val ListPreferenceDemo = Demo(
     id = "list_preference",
     apiName = "ListPreference",
@@ -144,7 +146,7 @@ internal val ListPreferenceDemo = Demo(
             }
         }
     },
-    keywords = listOf("设置", "多选", "list", "列表", "单选"),
+    searchTerms = Res.string.demo_list_preference_search_terms,
     isNew = true,
 )
 

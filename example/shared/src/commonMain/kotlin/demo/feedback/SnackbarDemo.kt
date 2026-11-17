@@ -74,6 +74,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_notific
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_notification_subtitle
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_notification_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_result
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_show_again
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_snackbar_title
@@ -89,6 +90,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Snackbar`, listed in its category and found by the search. */
 internal val SnackbarDemo = Demo(
     id = "snackbar",
     apiName = "Snackbar",
@@ -109,7 +111,8 @@ internal val SnackbarDemo = Demo(
             NotificationSnackbarContent()
         }
     },
-    keywords = listOf("toast", "提示", "SnackbarHost", "NotificationSnackbar", "消息"),
+    keywords = listOf("SnackbarHost", "NotificationSnackbar"),
+    searchTerms = Res.string.demo_snackbar_search_terms,
 )
 
 private val SnackbarMessages: List<StringResource> = listOf(

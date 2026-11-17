@@ -63,6 +63,8 @@
     <string name="design_text_group_headline">Headline</string>
     <string name="design_text_group_body">Body</string>
     <string name="design_text_group_button">Button</string>
+    <!-- A CJK glyph sample shown in every language; values-zh has no override on purpose. -->
+    <string name="design_text_sample_cjk">天地玄黄 宇宙洪荒</string>
     <string name="design_text_group_footnote">Footnote</string>
 
     <!-- Settings -->

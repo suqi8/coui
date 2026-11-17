@@ -48,24 +48,27 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * One searchable demo, with its title and category name resolved in the current language.
+ * One searchable demo, with its title, category name and search aliases resolved in the current
+ * language.
  */
 @Immutable
 private class SearchEntry(
     val demo: Demo,
     val title: String,
     val categoryTitle: String,
+    val searchTerms: List<String>,
 ) {
     fun matches(query: String): Boolean = title.contains(query, ignoreCase = true) ||
         demo.apiName.contains(query, ignoreCase = true) ||
         demo.id.replace('_', ' ').contains(query, ignoreCase = true) ||
         categoryTitle.contains(query, ignoreCase = true) ||
-        demo.keywords.any { it.contains(query, ignoreCase = true) }
+        demo.keywords.any { it.contains(query, ignoreCase = true) } ||
+        searchTerms.any { it.contains(query, ignoreCase = true) }
 }
 
 /**
  * The component search page: an expanded search bar with a cancel button, opened from the
- * components home. Matches localized names, API names, categories and keywords.
+ * components home. Matches localized names, API names, categories, keywords and search aliases.
  */
 @Composable
 fun SearchPage(modifier: Modifier = Modifier) {
@@ -75,7 +78,14 @@ fun SearchPage(modifier: Modifier = Modifier) {
     // Resolved once per page with getString, not one stringResource per demo in composition.
     val index by produceState(initialValue = emptyList<SearchEntry>()) {
         value = DemoCatalog.all.map { demo ->
-            SearchEntry(demo, getString(demo.title), getString(demo.category.title))
+            SearchEntry(
+                demo = demo,
+                title = getString(demo.title),
+                categoryTitle = getString(demo.category.title),
+                searchTerms = demo.searchTerms?.let { res ->
+                    getString(res).split(',').map { it.trim() }.filter { it.isNotEmpty() }
+                }.orEmpty(),
+            )
         }
     }
     val trimmed = query.trim()

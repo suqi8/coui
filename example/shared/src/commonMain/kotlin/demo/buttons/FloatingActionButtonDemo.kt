@@ -68,6 +68,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_none
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_position_end_overlay
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_scan
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_shadow
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_size_tiny
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_action_button_title
@@ -85,13 +86,15 @@ import org.jetbrains.compose.resources.stringResource
 import ui.AppPageList
 import ui.AppPageScaffold
 
+/** The demo page of `FloatingActionButton`, listed in its category and found by the search. */
 internal val FloatingActionButtonDemo = Demo(
     id = "floating_action_button",
     apiName = "FloatingActionButton",
     title = Res.string.demo_floating_action_button_title,
     category = DemoCategory.Buttons,
     page = DemoPage.FullScreen { onBack -> FloatingActionButtonPage(onBack = onBack) },
-    keywords = listOf("fab", "ExpandableFloatingActionButton", "speed dial", "悬浮", "展开"),
+    keywords = listOf("ExpandableFloatingActionButton"),
+    searchTerms = Res.string.demo_floating_action_button_search_terms,
 )
 
 /** The [FabPosition] choices of the position parameter, in dropdown order. */

@@ -85,6 +85,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_it
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_item_red_dot
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_item_state_icon
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_limit_height
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_sort_added
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_sort_captured
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_menu_state_collapsed
@@ -105,6 +106,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_title
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayDropdownMenu`, listed in its category and found by the search. */
 internal val DropdownMenuDemo = Demo(
     id = "dropdown_menu",
     apiName = "OverlayDropdownMenu",
@@ -179,7 +181,8 @@ internal val DropdownMenuDemo = Demo(
             }
         }
     },
-    keywords = listOf("menu", "菜单", "IconDropdownMenu", "WindowDropdownMenu", "图标菜单"),
+    keywords = listOf("IconDropdownMenu", "WindowDropdownMenu"),
+    searchTerms = Res.string.demo_dropdown_menu_search_terms,
 )
 
 /**

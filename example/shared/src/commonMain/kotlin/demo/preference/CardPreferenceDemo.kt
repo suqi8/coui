@@ -74,6 +74,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_pages
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_permissions
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_right_edge
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_show_copy
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_status_on
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_preference_title
@@ -89,6 +90,7 @@ private val CardTypes = listOf("AppInfoPreference", "CardInstructionPreference",
 private val InstructionPageCounts = listOf("1", "2", "3")
 private val EntranceCounts = listOf("1", "2", "3", "4", "5")
 
+/** The demo page of `AppInfoPreference`, listed in its category and found by the search. */
 internal val CardPreferenceDemo = Demo(
     id = "card_preference",
     apiName = "AppInfoPreference",
@@ -208,7 +210,7 @@ internal val CardPreferenceDemo = Demo(
             )
         }
     },
-    keywords = listOf("设置", "card", "卡片", "app info", "关于", "instruction", "entrance"),
+    searchTerms = Res.string.demo_card_preference_search_terms,
 )
 
 /**

@@ -48,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_n
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_notification_history
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_restore
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_screen_time
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_variant_default
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_history_wallpaper
@@ -58,13 +59,15 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `SearchHistory`, listed in its category and found by the search. */
 internal val SearchHistoryDemo = Demo(
     id = "search_history",
     apiName = "SearchHistory",
     title = Res.string.demo_search_history_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { searchHistoryPage() },
-    keywords = listOf("历史记录", "最近搜索", "COUISearchHistoryView"),
+    keywords = listOf("COUISearchHistoryView"),
+    searchTerms = Res.string.demo_search_history_search_terms,
 )
 
 /** The sample search records, in display order. */

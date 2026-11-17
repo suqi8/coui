@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_group_but
 import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_group_footnote
 import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_group_headline
 import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_group_title
+import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_sample_cjk
 import io.github.suqi8.coui.kmp.shared.generated.resources.design_text_styles
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import lazyfont.LazyText
@@ -53,10 +54,12 @@ private data class TextStyleEntry(
     val description: String,
 )
 
-private const val SAMPLE_TEXT_CN = "天地玄黄 宇宙洪荒"
 private const val SAMPLE_TEXT_EN = "The Quick Brown Fox Jumps"
 private const val SAMPLE_TEXT_NUM = "0123456789 !@#$%&"
 
+/**
+ * The type scale reference: each COUI text style with CJK, Latin and numeric samples.
+ */
 @Composable
 fun TextStylePage(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
@@ -146,7 +149,7 @@ private fun TextStyleItem(entry: TextStyleEntry) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         LazyText(
-            text = SAMPLE_TEXT_CN,
+            text = stringResource(Res.string.design_text_sample_cjk),
             style = entry.style,
             color = COUITheme.colorScheme.labelPrimary,
         )

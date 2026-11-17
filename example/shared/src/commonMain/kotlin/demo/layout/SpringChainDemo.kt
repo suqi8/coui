@@ -57,6 +57,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_mai
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_max_rows
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_reset
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_row
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_target
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_target_grid
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spring_chain_target_list
@@ -69,6 +70,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `springChain`, listed in its category and found by the search. */
 internal val SpringChainDemo = Demo(
     id = "spring_chain",
     apiName = "springChain",
@@ -83,7 +85,7 @@ internal val SpringChainDemo = Demo(
             SpringChainSample(grid = true, modifier = Modifier.padding(16.dp))
         }
     },
-    keywords = listOf("动画", "spring", "弹簧", "回弹", "overscroll"),
+    searchTerms = Res.string.demo_spring_chain_search_terms,
 )
 
 private const val GRID_COLUMNS = 4

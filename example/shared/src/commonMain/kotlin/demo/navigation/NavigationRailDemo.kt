@@ -35,6 +35,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_show_divider
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_header
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_hint
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_variant_current
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -42,13 +43,14 @@ import org.jetbrains.compose.resources.stringResource
 import ui.AppPageList
 import ui.AppPageScaffold
 
+/** The demo page of `NavigationRail`, listed in its category and found by the search. */
 internal val NavigationRailDemo = Demo(
     id = "navigation_rail",
     apiName = "NavigationRail",
     title = Res.string.demo_navigation_rail_title,
     category = DemoCategory.Navigation,
     page = DemoPage.FullScreen { onBack -> NavigationRailDemoPage(onBack = onBack) },
-    keywords = listOf("rail", "侧边", "tablet", "平板"),
+    searchTerms = Res.string.demo_navigation_rail_search_terms,
 )
 
 private val NavigationRailDemoModes = NavigationRailDisplayMode.entries

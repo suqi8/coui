@@ -122,4 +122,11 @@
     <string name="demo_page_indicator_animated">Animated</string>
     <string name="demo_page_indicator_dot_click">Tap dots to jump</string>
     <string name="demo_page_indicator_color_theme">Theme colour</string>
+    <string name="demo_badge_search_terms">dot, count</string>
+    <string name="demo_banner_search_terms">carousel, pager</string>
+    <string name="demo_basic_component_search_terms">list, row, item</string>
+    <string name="demo_card_search_terms">shadow, press</string>
+    <string name="demo_marquee_text_search_terms">marquee, scroll</string>
+    <string name="demo_page_indicator_search_terms">dots, pager</string>
+    <string name="demo_tag_view_search_terms">tag, label</string>
 </resources>

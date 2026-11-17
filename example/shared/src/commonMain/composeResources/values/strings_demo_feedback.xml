@@ -123,4 +123,12 @@
     <string name="demo_complete_state_animate">Animate</string>
     <string name="demo_complete_state_replay">Replay the animation</string>
     <string name="demo_complete_state_variant_types">Types</string>
+    <string name="demo_comp_progress_indicator_search_terms">loading</string>
+    <string name="demo_complete_state_search_terms">success, result</string>
+    <string name="demo_custom_snackbar_search_terms">toast, snackbar</string>
+    <string name="demo_empty_state_search_terms">empty, placeholder</string>
+    <string name="demo_install_load_progress_search_terms">download, install</string>
+    <string name="demo_progress_indicator_search_terms">loading</string>
+    <string name="demo_pull_to_refresh_search_terms">refresh</string>
+    <string name="demo_snackbar_search_terms">toast</string>
 </resources>

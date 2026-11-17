@@ -55,6 +55,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preferenc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_long_button_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_recommended_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_scan
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_sign_in
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_sign_in_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_preference_title
@@ -103,6 +104,7 @@ private val RecommendedSamples: List<StringResource> = listOf(
     Res.string.sample_storage,
 )
 
+/** The demo page of `ButtonPreference`, listed in its category and found by the search. */
 internal val ButtonPreferenceDemo = Demo(
     id = "button_preference",
     apiName = "ButtonPreference",
@@ -224,7 +226,7 @@ internal val ButtonPreferenceDemo = Demo(
             RecommendedExample(modifier = Modifier.padding(horizontal = 16.dp))
         }
     },
-    keywords = listOf("设置", "button", "按钮", "推荐", "recommended"),
+    searchTerms = Res.string.demo_button_preference_search_terms,
 )
 
 /**

@@ -156,4 +156,17 @@
     <string name="demo_navigation3_transition_swipe_edge_summary">返回动画朝手指滑入的边缘方向播放</string>
     <string name="demo_navigation3_transition_push">打开测试页面</string>
     <string name="demo_navigation3_transition_push_summary">观察转场效果，然后滑动返回</string>
+    <string name="demo_alphabet_index_bar_search_terms">索引, 通讯录, index, contacts</string>
+    <string name="demo_breadcrumb_bar_search_terms">路径, 文件, path, file</string>
+    <string name="demo_chip_tab_search_terms">胶囊, 筛选, tab, chip</string>
+    <string name="demo_floating_accessory_navigation_bar_search_terms">底栏, 附件, accessory</string>
+    <string name="demo_floating_edit_toolbar_search_terms">工具栏, 编辑, toolbar, edit</string>
+    <string name="demo_floating_navigation_bar_search_terms">底栏, 胶囊, tab, capsule</string>
+    <string name="demo_floating_toolbar_search_terms">工具栏, toolbar</string>
+    <string name="demo_navigation3_transition_search_terms">转场, 动画, navigation3, transition, back stack</string>
+    <string name="demo_navigation_bar_search_terms">底栏, tab, bottom bar, tab bar</string>
+    <string name="demo_navigation_rail_search_terms">侧边, 平板, rail, tablet</string>
+    <string name="demo_side_navigation_bar_search_terms">抽屉, 侧边栏, sidebar, drawer</string>
+    <string name="demo_tab_row_search_terms">选项卡, 分段, tab, segment</string>
+    <string name="demo_top_app_bar_search_terms">标题栏, 大标题, toolbar, appbar</string>
 </resources>

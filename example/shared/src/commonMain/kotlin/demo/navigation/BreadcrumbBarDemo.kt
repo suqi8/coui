@@ -36,12 +36,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_c
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_depth
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_full_path
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_internal_storage
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_variant_card
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_breadcrumb_bar_variant_page
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `BreadcrumbBar`, listed in its category and found by the search. */
 internal val BreadcrumbBarDemo = Demo(
     id = "breadcrumb_bar",
     apiName = "BreadcrumbBar",
@@ -130,7 +132,7 @@ internal val BreadcrumbBarDemo = Demo(
             )
         }
     },
-    keywords = listOf("path", "路径", "file", "文件"),
+    searchTerms = Res.string.demo_breadcrumb_bar_search_terms,
 )
 
 private val BreadcrumbDepthOptions = listOf("1", "2", "3", "4", "5")

@@ -48,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_hold
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_hold_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_max
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_min
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_variant_badge
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_stepper_variant_rows
@@ -56,13 +57,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_settings
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Stepper`, listed in its category and found by the search. */
 internal val StepperDemo = Demo(
     id = "stepper",
     apiName = "Stepper",
     title = Res.string.demo_stepper_title,
     category = DemoCategory.Buttons,
     page = DemoPage.Variants { stepperPage() },
-    keywords = listOf("计数", "counter", "number", "plus", "minus"),
+    searchTerms = Res.string.demo_stepper_search_terms,
 )
 
 /** The minimum value choices, the COUI default first. */

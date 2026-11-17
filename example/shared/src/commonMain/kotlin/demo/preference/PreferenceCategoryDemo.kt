@@ -71,6 +71,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_categ
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_note_title_icon
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_paired
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_refresh
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_searching
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_show_badge
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_preference_category_show_loading_text
@@ -104,6 +105,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val CategoryTypes = listOf("PreferenceCategory", "LoadingPreferenceCategory")
 
+/** The demo page of `PreferenceCategory`, listed in its category and found by the search. */
 internal val PreferenceCategoryDemo = Demo(
     id = "preference_category",
     apiName = "PreferenceCategory",
@@ -207,7 +209,7 @@ internal val PreferenceCategoryDemo = Demo(
             LoadingCategoryExample()
         }
     },
-    keywords = listOf("分组", "header", "category", "标题", "loading"),
+    searchTerms = Res.string.demo_preference_category_search_terms,
     isNew = true,
 )
 

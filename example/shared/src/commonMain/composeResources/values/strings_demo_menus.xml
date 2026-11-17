@@ -161,4 +161,11 @@
     <string name="demo_top_tips_backup_text">Connect to Wi-Fi to continue backing up your photos</string>
     <string name="demo_top_tips_marquee_text">Marquee tips scroll a message that is too long to fit on a single line</string>
     <string name="demo_top_tips_variant_examples">Examples</string>
+    <string name="demo_context_menu_search_terms">long press, right click</string>
+    <string name="demo_dropdown_menu_search_terms">menu</string>
+    <string name="demo_list_popup_search_terms">popup</string>
+    <string name="demo_navigation_popup_menu_search_terms">more</string>
+    <string name="demo_spinner_search_terms">dropdown</string>
+    <string name="demo_tooltip_search_terms">tips</string>
+    <string name="demo_top_tips_search_terms">tips, banner</string>
 </resources>

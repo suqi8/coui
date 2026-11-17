@@ -52,6 +52,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_max_1
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_no_decoration
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_password
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_rectangle
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_state_based
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_variant_card
@@ -60,13 +61,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_text_field_varia
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_input_hint
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TextField`, listed in its category and found by the search. */
 internal val TextFieldDemo = Demo(
     id = "text_field",
     apiName = "TextField",
     title = Res.string.demo_text_field_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { textFieldPage() },
-    keywords = listOf("edittext", "输入框", "文本框", "COUIEditText"),
+    keywords = listOf("COUIEditText"),
+    searchTerms = Res.string.demo_text_field_search_terms,
 )
 
 /** The character limit of the "max count" fields. */

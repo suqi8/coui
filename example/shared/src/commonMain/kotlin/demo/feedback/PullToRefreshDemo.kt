@@ -42,6 +42,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_per_refresh
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_refresh_now
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_reset
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_text_done
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_text_pull
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pull_to_refresh_text_refreshing
@@ -55,13 +56,14 @@ import org.jetbrains.compose.resources.stringResource
 import ui.AppPageList
 import ui.AppPageScaffold
 
+/** The demo page of `PullToRefresh`, listed in its category and found by the search. */
 internal val PullToRefreshDemo = Demo(
     id = "pull_to_refresh",
     apiName = "PullToRefresh",
     title = Res.string.demo_pull_to_refresh_title,
     category = DemoCategory.Feedback,
     page = DemoPage.FullScreen { onBack -> PullToRefreshPage(onBack = onBack) },
-    keywords = listOf("refresh", "刷新", "下拉"),
+    searchTerms = Res.string.demo_pull_to_refresh_search_terms,
 )
 
 private val ListTopShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)

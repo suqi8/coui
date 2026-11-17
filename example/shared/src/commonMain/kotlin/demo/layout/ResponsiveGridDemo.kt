@@ -62,6 +62,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_parent_child_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_percent_mode
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_percent_type
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_vertical_gap
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_responsive_grid_wider_summary
@@ -75,6 +76,7 @@ import io.github.suqi8.coui.kmp.utils.percentWidth
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `ResponsiveGrid`, listed in its category and found by the search. */
 internal val ResponsiveGridDemo = Demo(
     id = "responsive_grid",
     apiName = "ResponsiveGrid",
@@ -132,7 +134,8 @@ internal val ResponsiveGridDemo = Demo(
             }
         }
     },
-    keywords = listOf("grid", "栅格", "网格", "percentWidth", "百分比宽度"),
+    keywords = listOf("percentWidth"),
+    searchTerms = Res.string.demo_responsive_grid_search_terms,
 )
 
 private const val MODE_GRID = 0

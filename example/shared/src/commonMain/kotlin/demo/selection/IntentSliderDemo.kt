@@ -63,6 +63,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_ov
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_pause
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_play
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_playback_state
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_secondary_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_show_thumb
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_intent_slider_state_format
@@ -79,13 +80,14 @@ import org.jetbrains.compose.resources.stringResource
 import utils.rememberMaterialBackdropProvider
 import kotlin.math.roundToInt
 
+/** The demo page of `IntentSlider`, listed in its category and found by the search. */
 internal val IntentSliderDemo = Demo(
     id = "intent_slider",
     apiName = "IntentSlider",
     title = Res.string.demo_intent_slider_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { intentSliderPage() },
-    keywords = listOf("seekbar", "进度条", "media", "播放"),
+    searchTerms = Res.string.demo_intent_slider_search_terms,
 )
 
 private fun LazyListScope.intentSliderPage() {

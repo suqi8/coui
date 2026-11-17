@@ -51,6 +51,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_press_effect
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_press_effect_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_right_key
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_variant_lock_screen
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_numeric_keyboard_variant_settings
@@ -59,19 +60,21 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `NumericKeyboard`, listed in its category and found by the search. */
 internal val NumericKeyboardDemo = Demo(
     id = "numeric_keyboard",
     apiName = "NumericKeyboard",
     title = Res.string.demo_numeric_keyboard_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { numericKeyboardPage() },
-    keywords = listOf("keypad", "数字键盘", "COUINumericKeyboard"),
+    keywords = listOf("COUINumericKeyboard"),
+    searchTerms = Res.string.demo_numeric_keyboard_search_terms,
 )
 
 /** The longest number the settings keyboard samples accept. */
 private const val MAX_DIGITS = 12
 
-/** The sample lock screen wallpaper. */
+/** The sample lock screen wallpaper; fixed artwork, not a theme colour. */
 internal val LockScreenWallpaper = Brush.verticalGradient(listOf(Color(0xFF243B55), Color(0xFF141E30)))
 
 private fun LazyListScope.numericKeyboardPage() {

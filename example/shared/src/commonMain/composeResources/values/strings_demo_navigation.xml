@@ -156,4 +156,17 @@
     <string name="demo_navigation3_transition_swipe_edge_summary">The pop animation runs in the direction of the edge the finger swiped from</string>
     <string name="demo_navigation3_transition_push">Push a test page</string>
     <string name="demo_navigation3_transition_push_summary">Watch the transition, then swipe back</string>
+    <string name="demo_alphabet_index_bar_search_terms">index, contacts</string>
+    <string name="demo_breadcrumb_bar_search_terms">path, file</string>
+    <string name="demo_chip_tab_search_terms">tab, chip</string>
+    <string name="demo_floating_accessory_navigation_bar_search_terms">accessory</string>
+    <string name="demo_floating_edit_toolbar_search_terms">toolbar, edit</string>
+    <string name="demo_floating_navigation_bar_search_terms">tab, capsule</string>
+    <string name="demo_floating_toolbar_search_terms">toolbar</string>
+    <string name="demo_navigation3_transition_search_terms">navigation3, transition, back stack</string>
+    <string name="demo_navigation_bar_search_terms">tab, bottom bar, tab bar</string>
+    <string name="demo_navigation_rail_search_terms">rail, tablet</string>
+    <string name="demo_side_navigation_bar_search_terms">sidebar, drawer</string>
+    <string name="demo_tab_row_search_terms">tab, segment</string>
+    <string name="demo_top_app_bar_search_terms">toolbar, appbar</string>
 </resources>

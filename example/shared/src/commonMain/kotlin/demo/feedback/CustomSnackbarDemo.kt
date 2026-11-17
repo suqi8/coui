@@ -46,6 +46,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_dismissed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_host_message
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_press_feedback
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_showing
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_custom_snackbar_title
@@ -56,6 +57,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `CustomSnackbar`, listed in its category and found by the search. */
 internal val CustomSnackbarDemo = Demo(
     id = "custom_snackbar",
     apiName = "CustomSnackbar",
@@ -67,7 +69,7 @@ internal val CustomSnackbarDemo = Demo(
             CustomSnackbarHostContent()
         }
     },
-    keywords = listOf("toast", "snackbar", "消息条"),
+    searchTerms = Res.string.demo_custom_snackbar_search_terms,
 )
 
 /** The auto-dismiss choices; null keeps the snackbar until it is slid away. */

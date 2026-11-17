@@ -27,6 +27,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_tran
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_push
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_push_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_swipe_edge
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_swipe_edge_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation3_transition_title
@@ -103,5 +104,6 @@ internal val Navigation3TransitionDemo = Demo(
             }
         }
     },
-    keywords = listOf("navigation3", "transition", "转场", "动画", "NavDisplay", "back stack"),
+    keywords = listOf("NavDisplay"),
+    searchTerms = Res.string.demo_navigation3_transition_search_terms,
 )

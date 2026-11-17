@@ -122,4 +122,11 @@
     <string name="demo_page_indicator_animated">动画过渡</string>
     <string name="demo_page_indicator_dot_click">点按圆点跳转</string>
     <string name="demo_page_indicator_color_theme">主题色</string>
+    <string name="demo_badge_search_terms">红点, 数字, dot, count</string>
+    <string name="demo_banner_search_terms">轮播, carousel, pager</string>
+    <string name="demo_basic_component_search_terms">列表, 列表项, list, row, item</string>
+    <string name="demo_card_search_terms">阴影, 按压, shadow, press</string>
+    <string name="demo_marquee_text_search_terms">滚动, 跑马灯, marquee, scroll</string>
+    <string name="demo_page_indicator_search_terms">指示点, dots, pager</string>
+    <string name="demo_tag_view_search_terms">标记, tag, label</string>
 </resources>

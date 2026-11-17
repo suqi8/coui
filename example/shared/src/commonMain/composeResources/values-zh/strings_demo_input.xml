@@ -171,4 +171,15 @@
     <string name="demo_lock_pattern_view_display_mode">显示模式</string>
     <string name="demo_lock_pattern_view_display_mode_summary">以所选模式显示 L 图案</string>
     <string name="demo_lock_pattern_view_clear">清除图案</string>
+    <string name="demo_code_text_field_search_terms">验证码, otp</string>
+    <string name="demo_input_view_search_terms">输入框</string>
+    <string name="demo_lock_pattern_view_search_terms">手势, 图案密码, pattern</string>
+    <string name="demo_lock_screen_password_input_search_terms">密码, pin</string>
+    <string name="demo_numeric_keyboard_search_terms">数字键盘, keypad</string>
+    <string name="demo_search_bar_search_terms">搜索, search</string>
+    <string name="demo_search_history_search_terms">历史记录, 最近搜索</string>
+    <string name="demo_simple_lock_search_terms">密码圆点, pin</string>
+    <string name="demo_tab_with_search_layout_search_terms">标签, 搜索</string>
+    <string name="demo_text_field_search_terms">输入框, 文本框, edittext</string>
+    <string name="demo_toolbar_search_search_terms">搜索, search</string>
 </resources>

@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_disabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_enabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_style
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_value_format
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_state
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_state_checked
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_state_indeterminate
@@ -56,13 +57,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_variant
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Checkbox`, listed in its category and found by the search. */
 internal val CheckboxDemo = Demo(
     id = "checkbox",
     apiName = "Checkbox",
     title = Res.string.demo_checkbox_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { checkboxPage() },
-    keywords = listOf("多选", "勾选", "tri-state", "indeterminate"),
+    searchTerms = Res.string.demo_checkbox_search_terms,
 )
 
 /** The checkbox states in the order a tri-state checkbox cycles through them. */

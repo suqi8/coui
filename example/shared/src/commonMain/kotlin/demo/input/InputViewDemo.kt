@@ -48,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_nickn
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_nickname_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_password_error
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_password_hint
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_signature_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_view_variant_multi
@@ -58,13 +59,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_password
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `InputView`, listed in its category and found by the search. */
 internal val InputViewDemo = Demo(
     id = "input_view",
     apiName = "InputView",
     title = Res.string.demo_input_view_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { inputViewPage() },
-    keywords = listOf("输入框", "COUICardSingleInputView", "COUICardMultiInputView"),
+    keywords = listOf("COUICardSingleInputView", "COUICardMultiInputView"),
+    searchTerms = Res.string.demo_input_view_search_terms,
 )
 
 /** The minimum password length of the password sample. */

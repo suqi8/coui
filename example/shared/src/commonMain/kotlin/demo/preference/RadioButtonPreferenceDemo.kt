@@ -23,6 +23,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_end
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_position
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_selected_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_start
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_preference_variant_disabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_preference_variant_single
@@ -32,6 +33,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val RadioCounts = listOf("2", "3", "4", "5")
 
+/** The demo page of `RadioButtonPreference`, listed in its category and found by the search. */
 internal val RadioButtonPreferenceDemo = Demo(
     id = "radio_button_preference",
     apiName = "RadioButtonPreference",
@@ -108,7 +110,7 @@ internal val RadioButtonPreferenceDemo = Demo(
             }
         }
     },
-    keywords = listOf("设置", "radio", "单选"),
+    searchTerms = Res.string.demo_radio_button_preference_search_terms,
 )
 
 /**

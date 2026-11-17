@@ -33,6 +33,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preferenc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_range
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_range_key_points
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_reverse
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_show_key_points
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_show_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_preference_steps
@@ -43,6 +44,7 @@ import org.jetbrains.compose.resources.stringResource
 private val SliderTypes = listOf("SliderPreference", "RangeSliderPreference")
 private val SliderSteps = listOf(0, 4, 9)
 
+/** The demo page of `SliderPreference`, listed in its category and found by the search. */
 internal val SliderPreferenceDemo = Demo(
     id = "slider_preference",
     apiName = "SliderPreference",
@@ -126,7 +128,7 @@ internal val SliderPreferenceDemo = Demo(
             RangeSliderRows()
         }
     },
-    keywords = listOf("设置", "slider", "滑块", "seekbar", "range"),
+    searchTerms = Res.string.demo_slider_preference_search_terms,
 )
 
 /**

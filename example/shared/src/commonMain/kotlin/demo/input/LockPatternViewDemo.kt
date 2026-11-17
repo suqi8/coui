@@ -54,6 +54,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_vie
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_fingerprint_ok
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_release
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_replay
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_show_path
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_stealth
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_pattern_view_stealth_summary
@@ -65,13 +66,15 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `LockPatternView`, listed in its category and found by the search. */
 internal val LockPatternViewDemo = Demo(
     id = "lock_pattern_view",
     apiName = "LockPatternView",
     title = Res.string.demo_lock_pattern_view_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { lockPatternViewPage() },
-    keywords = listOf("pattern", "手势", "图案密码", "COUILockPatternView"),
+    keywords = listOf("COUILockPatternView"),
+    searchTerms = Res.string.demo_lock_pattern_view_search_terms,
 )
 
 /** The correct pattern of the samples: an "L", 1-4-7-8-9. */

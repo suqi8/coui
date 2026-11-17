@@ -290,4 +290,13 @@
     <string name="demo_bottom_sheet_open_overlay_summary">带 COUI 17 模糊，面板内含行为开关</string>
     <string name="demo_bottom_sheet_open_window">Window 底部面板</string>
     <string name="demo_bottom_sheet_open_window_summary">绘制在独立窗口中</string>
+    <string name="demo_bottom_sheet_search_terms">面板, 半屏, panel, sheet</string>
+    <string name="demo_dialog_search_terms">弹窗, alert</string>
+    <string name="demo_full_page_statement_search_terms">隐私, 协议, privacy, agreement</string>
+    <string name="demo_guide_dialog_search_terms">引导, 新手, 弹窗, onboarding, tips</string>
+    <string name="demo_input_dialog_search_terms">输入, 重命名, 弹窗, edit, rename</string>
+    <string name="demo_list_dialog_search_terms">单选, 多选, 弹窗, choice</string>
+    <string name="demo_progress_dialog_search_terms">加载, 弹窗, loading, spinner</string>
+    <string name="demo_security_dialog_search_terms">权限, 隐私, 弹窗, permission, privacy</string>
+    <string name="demo_statement_dialog_search_terms">隐私, 协议, 弹窗, agreement, privacy</string>
 </resources>

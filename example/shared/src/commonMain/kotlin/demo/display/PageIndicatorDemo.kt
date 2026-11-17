@@ -48,19 +48,21 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_c
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_dot_click
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_page
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_position
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_variant_many
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_variant_pager
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `PageIndicator`, listed in its category and found by the search. */
 internal val PageIndicatorDemo = Demo(
     id = "page_indicator",
     apiName = "PageIndicator",
     title = Res.string.demo_page_indicator_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { pageIndicatorPage() },
-    keywords = listOf("dots", "指示点", "pager"),
+    searchTerms = Res.string.demo_page_indicator_search_terms,
 )
 
 /** The page count of the many-pages variant. */

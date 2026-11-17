@@ -57,6 +57,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_navig
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_navigation_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_outer
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_scan
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_suggestion
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_type
@@ -66,13 +67,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_varia
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_search_bar_voice
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `SearchBar`, listed in its category and found by the search. */
 internal val SearchBarDemo = Demo(
     id = "search_bar",
     apiName = "SearchBar",
     title = Res.string.demo_search_bar_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { searchBarPage() },
-    keywords = listOf("搜索", "search", "InputField", "CancelButton", "COUISearchBar"),
+    keywords = listOf("InputField", "CancelButton", "COUISearchBar"),
+    searchTerms = Res.string.demo_search_bar_search_terms,
 )
 
 /** The number of suggestions the expanded bars list. */

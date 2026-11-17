@@ -55,6 +55,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_key_point
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_material_off
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_material_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_reverse
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_sections
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_show_key_points
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slider_start_from_middle
@@ -64,13 +65,15 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `Slider`, listed in its category and found by the search. */
 internal val SliderDemo = Demo(
     id = "slider",
     apiName = "Slider",
     title = Res.string.demo_slider_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { sliderPage() },
-    keywords = listOf("seekbar", "拖动条", "RangeSlider", "VerticalSlider", "范围"),
+    keywords = listOf("RangeSlider", "VerticalSlider"),
+    searchTerms = Res.string.demo_slider_search_terms,
 )
 
 /** The components of the playground, by API name. */

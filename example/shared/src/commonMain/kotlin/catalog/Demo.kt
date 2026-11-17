@@ -112,7 +112,9 @@ enum class DemoCategory(
  * @property title The localized component name.
  * @property category The category the demo is listed under.
  * @property page The page content.
- * @property keywords Extra search terms in either language, e.g. aliases.
+ * @property keywords Language-neutral search terms, such as related API names.
+ * @property searchTerms Localized search aliases as a comma-separated string resource, so
+ *   natural-language terms live with the translations rather than in code.
  * @property isNew Whether the component is new in COUI 17; shown as a badge.
  */
 @Stable
@@ -123,6 +125,7 @@ class Demo(
     val category: DemoCategory,
     val page: DemoPage,
     val keywords: List<String> = emptyList(),
+    val searchTerms: StringResource? = null,
     val isNew: Boolean = false,
 )
 

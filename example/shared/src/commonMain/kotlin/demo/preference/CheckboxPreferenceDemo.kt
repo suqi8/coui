@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_prefere
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_preference_at_start
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_preference_category_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_preference_choose_albums
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_checkbox_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pref_both_disabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pref_component
@@ -52,6 +53,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val CheckboxTypes = listOf("CheckboxPreference", "CheckboxWithDividerPreference")
 
+/** The demo page of `CheckboxPreference`, listed in its category and found by the search. */
 internal val CheckboxPreferenceDemo = Demo(
     id = "checkbox_preference",
     apiName = "CheckboxPreference",
@@ -122,7 +124,7 @@ internal val CheckboxPreferenceDemo = Demo(
             CheckboxCategoryGroup()
         }
     },
-    keywords = listOf("设置", "checkbox", "复选", "多选"),
+    searchTerms = Res.string.demo_checkbox_preference_search_terms,
 )
 
 /**

@@ -30,6 +30,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_limited_range_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_monday
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_saturday
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_show_today
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_show_today_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_sunday
@@ -37,13 +38,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_calendar_picker_variant_limited
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `CalendarPicker`, listed in its category and found by the search. */
 internal val CalendarPickerDemo = Demo(
     id = "calendar_picker",
     apiName = "CalendarPicker",
     title = Res.string.demo_calendar_picker_title,
     category = DemoCategory.Pickers,
     page = DemoPage.Variants { calendarPickerPage() },
-    keywords = listOf("日历", "calendar", "date"),
+    searchTerms = Res.string.demo_calendar_picker_search_terms,
 )
 
 /** The first days of the week offered by the playground (1 = Sunday .. 7 = Saturday). */

@@ -51,6 +51,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_label_l
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_label_long
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_label_new
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_label_outlined
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_shape
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_shape_capsule
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_shape_corner
@@ -64,13 +65,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tag_view_variant
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TagView`, listed in its category and found by the search. */
 internal val TagViewDemo = Demo(
     id = "tag_view",
     apiName = "TagView",
     title = Res.string.demo_tag_view_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { tagViewPage() },
-    keywords = listOf("tag", "label", "标记"),
+    searchTerms = Res.string.demo_tag_view_search_terms,
 )
 
 private const val STYLE_FILLED = 0

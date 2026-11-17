@@ -29,6 +29,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_start
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_every_day
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_never
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_only_option
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_tap_for_details
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_mark_preference_variant_group
@@ -47,6 +48,7 @@ private val MarkTypes = listOf("MarkPreference", "MarkWithDividerPreference")
 private val MarkCounts = listOf("2", "3", "4", "5")
 private val WifiNetworks = listOf("Home-5G", "Office-2.4G", "Guest-WiFi")
 
+/** The demo page of `MarkPreference`, listed in its category and found by the search. */
 internal val MarkPreferenceDemo = Demo(
     id = "mark_preference",
     apiName = "MarkPreference",
@@ -145,7 +147,7 @@ internal val MarkPreferenceDemo = Demo(
             NetworkRows()
         }
     },
-    keywords = listOf("设置", "勾选", "mark", "check", "单选"),
+    searchTerms = Res.string.demo_mark_preference_search_terms,
     isNew = true,
 )
 

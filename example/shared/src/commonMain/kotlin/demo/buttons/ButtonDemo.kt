@@ -75,6 +75,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_later
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_later_desc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_material_label
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_press_scale
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_submit
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_button_transparent
@@ -101,13 +102,15 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Button`, listed in its category and found by the search. */
 internal val ButtonDemo = Demo(
     id = "button",
     apiName = "Button",
     title = Res.string.demo_button_title,
     category = DemoCategory.Buttons,
     page = DemoPage.Variants { buttonPage() },
-    keywords = listOf("TextButton", "DescTextButton", "按钮"),
+    keywords = listOf("TextButton", "DescTextButton"),
+    searchTerms = Res.string.demo_button_search_terms,
 )
 
 private const val TYPE_SECONDARY = 0

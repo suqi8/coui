@@ -32,6 +32,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_count
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_disabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_enabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_code_text_field_completed
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_code_text_field_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_code_text_field_security
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_code_text_field_security_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_code_text_field_title
@@ -41,13 +42,15 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `CodeTextField`, listed in its category and found by the search. */
 internal val CodeTextFieldDemo = Demo(
     id = "code_text_field",
     apiName = "CodeTextField",
     title = Res.string.demo_code_text_field_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { codeTextFieldPage() },
-    keywords = listOf("otp", "验证码", "COUICodeInputView"),
+    keywords = listOf("COUICodeInputView"),
+    searchTerms = Res.string.demo_code_text_field_search_terms,
 )
 
 /** The cell counts offered by the playground. */

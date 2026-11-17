@@ -45,6 +45,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_form_numbe
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_form_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_navigation
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_navigation_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_stroke
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_stroke_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_badge_text_hot
@@ -56,13 +57,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_settings
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Badge`, listed in its category and found by the search. */
 internal val BadgeDemo = Demo(
     id = "badge",
     apiName = "Badge",
     title = Res.string.demo_badge_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { badgePage() },
-    keywords = listOf("红点", "dot", "BadgeBox", "count", "数字"),
+    keywords = listOf("BadgeBox"),
+    searchTerms = Res.string.demo_badge_search_terms,
 )
 
 /** The playground count choices: one, two and three digits, and the 1000+ ellipsis. */

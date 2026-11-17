@@ -290,4 +290,13 @@
     <string name="demo_bottom_sheet_open_overlay_summary">With the COUI 17 blur and behaviour switches inside</string>
     <string name="demo_bottom_sheet_open_window">Window bottom sheet</string>
     <string name="demo_bottom_sheet_open_window_summary">Rendered in its own window</string>
+    <string name="demo_bottom_sheet_search_terms">panel, sheet</string>
+    <string name="demo_dialog_search_terms">alert</string>
+    <string name="demo_full_page_statement_search_terms">privacy, agreement</string>
+    <string name="demo_guide_dialog_search_terms">onboarding, tips</string>
+    <string name="demo_input_dialog_search_terms">edit, rename</string>
+    <string name="demo_list_dialog_search_terms">choice</string>
+    <string name="demo_progress_dialog_search_terms">loading, spinner</string>
+    <string name="demo_security_dialog_search_terms">permission, privacy</string>
+    <string name="demo_statement_dialog_search_terms">agreement, privacy</string>
 </resources>

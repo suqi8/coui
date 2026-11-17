@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_ig
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_ignored
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_leading_zero
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_range
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_show_unit
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_unit_minute
@@ -50,13 +51,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_number_picker_wr
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `NumberPicker`, listed in its category and found by the search. */
 internal val NumberPickerDemo = Demo(
     id = "number_picker",
     apiName = "NumberPicker",
     title = Res.string.demo_number_picker_title,
     category = DemoCategory.Pickers,
     page = DemoPage.Variants { numberPickerPage() },
-    keywords = listOf("滚轮", "wheel", "spinner"),
+    searchTerms = Res.string.demo_number_picker_search_terms,
 )
 
 /** The ranges offered by the playground; the short one shows that wrapping needs enough rows. */

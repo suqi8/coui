@@ -36,6 +36,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_search
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_show_divider
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_end
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_end_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_start
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_variant_plain
@@ -49,6 +50,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_settings
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `FloatingAccessoryNavigationBar`, listed in its category and found by the search. */
 internal val FloatingAccessoryNavigationBarDemo = Demo(
     id = "floating_accessory_navigation_bar",
     apiName = "FloatingAccessoryNavigationBar",
@@ -165,7 +167,7 @@ internal val FloatingAccessoryNavigationBarDemo = Demo(
             }
         }
     },
-    keywords = listOf("底栏", "accessory", "附件"),
+    searchTerms = Res.string.demo_floating_accessory_navigation_bar_search_terms,
 )
 
 private val AccessoryDemoIcons: List<ImageVector> = listOf(

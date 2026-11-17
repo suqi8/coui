@@ -52,6 +52,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_end_icon
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_red_dot
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_red_dot_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_selectable
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_selected_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_basic_component_start
@@ -72,13 +73,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `BasicComponent`, listed in its category and found by the search. */
 internal val BasicComponentDemo = Demo(
     id = "basic_component",
     apiName = "BasicComponent",
     title = Res.string.demo_basic_component_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { basicComponentPage() },
-    keywords = listOf("list", "列表", "row", "item", "列表项"),
+    searchTerms = Res.string.demo_basic_component_search_terms,
 )
 
 /** The end red dot choices of the playground: hidden, a plain dot and two numbers. */

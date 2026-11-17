@@ -161,4 +161,11 @@
     <string name="demo_top_tips_backup_text">连接 WLAN 后可继续备份照片</string>
     <string name="demo_top_tips_marquee_text">跑马灯提示会滚动显示一行放不下的长消息</string>
     <string name="demo_top_tips_variant_examples">示例</string>
+    <string name="demo_context_menu_search_terms">长按, 菜单, 右键, long press, right click</string>
+    <string name="demo_dropdown_menu_search_terms">菜单, 图标菜单, menu</string>
+    <string name="demo_list_popup_search_terms">菜单, 弹出菜单, popup</string>
+    <string name="demo_navigation_popup_menu_search_terms">菜单, 更多, more</string>
+    <string name="demo_spinner_search_terms">选择器, 下拉, dropdown</string>
+    <string name="demo_tooltip_search_terms">提示, 气泡, tips</string>
+    <string name="demo_top_tips_search_terms">提示, 通知, tips, banner</string>
 </resources>

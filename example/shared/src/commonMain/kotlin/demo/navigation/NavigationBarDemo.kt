@@ -37,6 +37,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_badges
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_bar_blur
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_bar_blur_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_bar_title
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
@@ -44,13 +45,14 @@ import ui.AppPageList
 import ui.AppPageScaffold
 import utils.LocalPageBackdrop
 
+/** The demo page of `NavigationBar`, listed in its category and found by the search. */
 internal val NavigationBarDemo = Demo(
     id = "navigation_bar",
     apiName = "NavigationBar",
     title = Res.string.demo_navigation_bar_title,
     category = DemoCategory.Navigation,
     page = DemoPage.FullScreen { onBack -> NavigationBarDemoPage(onBack = onBack) },
-    keywords = listOf("tab", "底栏", "bottom bar", "tab bar"),
+    searchTerms = Res.string.demo_navigation_bar_search_terms,
 )
 
 private val NavigationBarDemoModes = NavigationBarDisplayMode.entries

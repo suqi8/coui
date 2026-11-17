@@ -141,4 +141,10 @@
     <string name="demo_spring_chain_accumulate">Accumulate steps</string>
     <string name="demo_spring_chain_accumulate_summary">Rows further from the edge move further, so the list fans out</string>
     <string name="demo_spring_chain_reset">Restore defaults</string>
+    <string name="demo_expandable_group_search_terms">expand, collapse, accordion</string>
+    <string name="demo_list_detail_layout_search_terms">split, master-detail</string>
+    <string name="demo_responsive_grid_search_terms">grid</string>
+    <string name="demo_side_pane_layout_search_terms">sidebar, drawer</string>
+    <string name="demo_spring_chain_search_terms">spring, overscroll</string>
+    <string name="demo_swipe_action_item_search_terms">swipe, slide</string>
 </resources>

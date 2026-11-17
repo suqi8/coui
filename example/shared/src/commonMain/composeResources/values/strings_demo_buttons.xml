@@ -114,4 +114,10 @@
     <string name="demo_segment_button_haptic">Haptic feedback</string>
     <string name="demo_segment_button_responsive_width">Responsive width</string>
     <string name="demo_segment_button_responsive_width_summary">Cap a fixed width to the COUI layout grid</string>
+    <string name="demo_button_search_terms">button</string>
+    <string name="demo_floating_action_button_search_terms">fab, speed dial</string>
+    <string name="demo_loading_button_search_terms">loading, progress</string>
+    <string name="demo_segment_button_search_terms">segmented, tabs</string>
+    <string name="demo_stepper_search_terms">counter, number, plus, minus</string>
+    <string name="demo_two_text_button_search_terms">onboarding, crossfade</string>
 </resources>

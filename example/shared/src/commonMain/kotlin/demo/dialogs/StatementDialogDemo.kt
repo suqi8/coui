@@ -67,6 +67,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_privacy_location_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_privacy_suggestions
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_privacy_suggestions_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_statement_dialog_type_individual
@@ -80,6 +81,7 @@ import io.github.suqi8.coui.kmp.window.WindowIndividualStatementDialog
 import io.github.suqi8.coui.kmp.window.WindowUserStatementDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `UserStatementDialog`, listed in its category and found by the search. */
 internal val StatementDialogDemo = Demo(
     id = "statement_dialog",
     apiName = "UserStatementDialog",
@@ -93,7 +95,8 @@ internal val StatementDialogDemo = Demo(
             StatementDialogsVariant()
         }
     },
-    keywords = listOf("IndividualStatementDialog", "agreement", "隐私", "privacy", "协议", "弹窗"),
+    keywords = listOf("IndividualStatementDialog"),
+    searchTerms = Res.string.demo_statement_dialog_search_terms,
     isNew = true,
 )
 

@@ -71,6 +71,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_ite
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_row_invoice
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_row_lunch
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_row_report
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_summary_delete_only
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_summary_over_slide
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_swipe_action_item_summary_own_colors
@@ -84,6 +85,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `SwipeActionItem`, listed in its category and found by the search. */
 internal val SwipeActionItemDemo = Demo(
     id = "swipe_action_item",
     apiName = "SwipeActionItem",
@@ -98,7 +100,7 @@ internal val SwipeActionItemDemo = Demo(
             RoundRectMenuSample()
         }
     },
-    keywords = listOf("侧滑", "滑动删除", "swipe", "slide"),
+    searchTerms = Res.string.demo_swipe_action_item_search_terms,
 )
 
 private const val CONTENT_TEXT = 0

@@ -265,4 +265,19 @@
     <string name="demo_dropdown_preference_variant_options">浮层与窗口</string>
     <string name="demo_dropdown_preference_variant_grouped">分组</string>
     <string name="demo_dropdown_preference_variant_states">不可用状态</string>
+    <string name="demo_arrow_preference_search_terms">设置, 箭头, 跳转, arrow</string>
+    <string name="demo_button_preference_search_terms">设置, 按钮, 推荐, button, recommended</string>
+    <string name="demo_card_preference_search_terms">设置, 卡片, 关于, card, app info, instruction, entrance</string>
+    <string name="demo_checkbox_preference_search_terms">设置, 复选, 多选, checkbox</string>
+    <string name="demo_dropdown_preference_search_terms">设置, 下拉, 菜单, dropdown, popup</string>
+    <string name="demo_input_preference_search_terms">设置, 输入, 步进, input, edit, stepper</string>
+    <string name="demo_list_preference_search_terms">设置, 多选, 列表, 单选, list</string>
+    <string name="demo_mark_preference_search_terms">设置, 勾选, 单选, mark, check</string>
+    <string name="demo_pager_preference_search_terms">设置, 页眉, 页脚, 链接, footer, header, link</string>
+    <string name="demo_preference_category_search_terms">分组, 标题, header, category, loading</string>
+    <string name="demo_radio_button_preference_search_terms">设置, 单选, radio</string>
+    <string name="demo_slide_select_preference_search_terms">设置, 滑动选择, 切换, slide</string>
+    <string name="demo_slider_preference_search_terms">设置, 滑块, slider, seekbar, range</string>
+    <string name="demo_status_preference_search_terms">设置, 加载, 状态, 下载, 安装, status, install</string>
+    <string name="demo_switch_preference_search_terms">设置, 开关, switch, toggle</string>
 </resources>

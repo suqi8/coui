@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_closabl
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_long_icon_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_marquee
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_marquee_text
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_show_action
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_show_again
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_tips_text
@@ -54,6 +55,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_long_text
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TopTips`, listed in its category and found by the search. */
 internal val TopTipsDemo = Demo(
     id = "top_tips",
     apiName = "TopTips",
@@ -65,7 +67,7 @@ internal val TopTipsDemo = Demo(
             TopTipsExamples()
         }
     },
-    keywords = listOf("提示", "tips", "banner", "通知"),
+    searchTerms = Res.string.demo_top_tips_search_terms,
 )
 
 @Composable

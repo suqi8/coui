@@ -45,6 +45,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_req
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_result
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_result_none
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_save
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_title
@@ -52,6 +53,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_dialog_var
 import io.github.suqi8.coui.kmp.window.WindowInputDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayInputDialog`, listed in its category and found by the search. */
 internal val InputDialogDemo = Demo(
     id = "input_dialog",
     apiName = "OverlayInputDialog",
@@ -65,7 +67,7 @@ internal val InputDialogDemo = Demo(
             InputDialogsVariant()
         }
     },
-    keywords = listOf("edit", "rename", "输入", "重命名", "弹窗"),
+    searchTerms = Res.string.demo_input_dialog_search_terms,
     isNew = true,
 )
 

@@ -38,8 +38,12 @@ enum class ColorMode(val isMonet: Boolean) {
     }
 }
 
+/** The [ColorMode] the app theme was built with. */
 val LocalColorMode = compositionLocalOf { ColorMode.System }
 
+/**
+ * The app theme: builds the COUI theme for [colorMode], seeding the Monet modes with [keyColor].
+ */
 @Composable
 fun AppTheme(
     colorMode: ColorMode = ColorMode.System,
@@ -70,12 +74,16 @@ fun AppTheme(
     }
 }
 
+/**
+ * Whether the app currently renders dark, resolving the system modes against the system setting.
+ */
 @Composable
 fun isInDarkTheme(): Boolean = LocalColorMode.current.isDark(isSystemInDarkTheme())
 
 /**
  * The key colours offered for the Monet modes. Index 0 of the settings list is "default" (no key
- * colour), so entry `i` here is settings index `i + 1`.
+ * colour), so entry `i` here is settings index `i + 1`. They are seed inputs for the generated
+ * scheme, not UI colours.
  */
 val KeyColors: List<Color> = listOf(
     Color(0xFF3482FF),
@@ -87,4 +95,5 @@ val KeyColors: List<Color> = listOf(
     Color(0xFF00BCD4),
 )
 
+/** The key colour for a settings index; index 0 means no key colour. */
 fun keyColorFor(index: Int): Color? = if (index <= 0) null else KeyColors.getOrNull(index - 1)

@@ -53,6 +53,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_resu
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_result_selected
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_save_image
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_save_image_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_share_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_dialog_summary
@@ -83,6 +84,7 @@ import io.github.suqi8.coui.kmp.window.WindowMultiChoiceDialog
 import io.github.suqi8.coui.kmp.window.WindowSingleChoiceDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayListDialog`, listed in its category and found by the search. */
 internal val ListDialogDemo = Demo(
     id = "list_dialog",
     apiName = "OverlayListDialog",
@@ -102,7 +104,8 @@ internal val ListDialogDemo = Demo(
             MultiChoiceDialogVariant()
         }
     },
-    keywords = listOf("OverlaySingleChoiceDialog", "OverlayMultiChoiceDialog", "choice", "单选", "多选", "弹窗"),
+    keywords = listOf("OverlaySingleChoiceDialog", "OverlayMultiChoiceDialog"),
+    searchTerms = Res.string.demo_list_dialog_search_terms,
     isNew = true,
 )
 

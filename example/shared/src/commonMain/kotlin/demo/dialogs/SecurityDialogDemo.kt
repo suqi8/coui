@@ -44,6 +44,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_result_confirmed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_result_link
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_result_none
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_statement
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_statement_link
@@ -54,6 +55,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_security_dialog_
 import io.github.suqi8.coui.kmp.window.WindowSecurityDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlaySecurityDialog`, listed in its category and found by the search. */
 internal val SecurityDialogDemo = Demo(
     id = "security_dialog",
     apiName = "OverlaySecurityDialog",
@@ -67,7 +69,7 @@ internal val SecurityDialogDemo = Demo(
             SecurityDialogsVariant()
         }
     },
-    keywords = listOf("permission", "privacy", "权限", "隐私", "弹窗"),
+    searchTerms = Res.string.demo_security_dialog_search_terms,
 )
 
 // The last action of a security dialog, kept as a code so its text follows the language.

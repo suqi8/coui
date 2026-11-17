@@ -58,6 +58,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_icon_tit
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_image_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_image_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_no_arrow_text
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_show_arrow
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tooltip_show_dismiss
@@ -72,6 +73,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Tooltip`, listed in its category and found by the search. */
 internal val TooltipDemo = Demo(
     id = "tooltip",
     apiName = "Tooltip",
@@ -86,7 +88,8 @@ internal val TooltipDemo = Demo(
             TooltipPlacementContent()
         }
     },
-    keywords = listOf("tips", "提示", "TooltipBox", "IconTooltip", "ImageTooltip", "气泡"),
+    keywords = listOf("TooltipBox", "IconTooltip", "ImageTooltip"),
+    searchTerms = Res.string.demo_tooltip_search_terms,
 )
 
 private val TooltipPlacements = listOf(

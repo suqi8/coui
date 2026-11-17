@@ -27,6 +27,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_pre
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_never
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_no_selection
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_screen_timeout
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_show_selection
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_standard
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_tap_next
@@ -36,6 +37,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_pre
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_slide_select_preference_variant_examples
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `SlideSelectPreference`, listed in its category and found by the search. */
 internal val SlideSelectPreferenceDemo = Demo(
     id = "slide_select_preference",
     apiName = "SlideSelectPreference",
@@ -92,7 +94,7 @@ internal val SlideSelectPreferenceDemo = Demo(
             SlideSelectExamples()
         }
     },
-    keywords = listOf("设置", "slide", "滑动选择", "切换"),
+    searchTerms = Res.string.demo_slide_select_preference_search_terms,
     isNew = true,
 )
 

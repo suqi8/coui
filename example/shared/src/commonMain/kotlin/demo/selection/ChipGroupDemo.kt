@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_famil
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_location
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_lock_screen
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_none
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_security
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_selection_required
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_selection_required_summary
@@ -69,13 +70,14 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `ChipGroup`, listed in its category and found by the search. */
 internal val ChipGroupDemo = Demo(
     id = "chip_group",
     apiName = "ChipGroup",
     title = Res.string.demo_chip_group_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { chipGroupPage() },
-    keywords = listOf("标签组", "筛选", "flow"),
+    searchTerms = Res.string.demo_chip_group_search_terms,
     isNew = true,
 )
 

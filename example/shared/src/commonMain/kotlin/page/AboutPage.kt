@@ -74,6 +74,9 @@ private val HeroHeight = 240.dp
 private val HeroCornerRadius = 24.dp
 private val HeroLogoTop = 66.dp
 private val HeroButtonGap = 32.dp
+
+// The hero text sits on the fixed gradient artwork, so it keeps the ColorOS white text colours
+// (about_phone_text_color, about_phone_model_build_number_color) instead of theme colours.
 private val HeroTextColor = Color.White
 private val HeroBuildNumberColor = Color(0xD9FFFFFF)
 

@@ -42,8 +42,10 @@ class NavTransitionSettings {
     var popDirectionFollowsSwipeEdge by mutableStateOf(false)
 }
 
+/** The app-wide [AppSettings], provided by `App`. */
 val LocalAppSettings = staticCompositionLocalOf<AppSettings> { error("No AppSettings provided!") }
 
+/** The [NavTransitionSettings] applied by the root `NavDisplay`, provided by `App`. */
 val LocalNavTransitionSettings = staticCompositionLocalOf<NavTransitionSettings> {
     error("No NavTransitionSettings provided!")
 }

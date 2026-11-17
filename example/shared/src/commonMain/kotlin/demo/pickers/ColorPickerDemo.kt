@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_com
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_gray_column
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_hue_columns
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_rows
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_show_preview
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_show_preview_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_color_picker_title
@@ -51,19 +52,21 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.math.round
 import kotlin.math.roundToInt
 
+/** The demo page of `ColorPicker`, listed in its category and found by the search. */
 internal val ColorPickerDemo = Demo(
     id = "color_picker",
     apiName = "ColorPicker",
     title = Res.string.demo_color_picker_title,
     category = DemoCategory.Pickers,
     page = DemoPage.Variants { colorPickerPage() },
-    keywords = listOf("颜色", "palette", "取色", "ColorPalette", "ColorSwatchPicker"),
+    keywords = listOf("ColorPalette", "ColorSwatchPicker"),
+    searchTerms = Res.string.demo_color_picker_search_terms,
 )
 
 /** The pickers of the playground, by API name. */
 private val ColorPickerTypes = listOf("ColorPicker", "ColorPalette", "ColorSwatchPicker")
 
-/** The sample swatches of the swatch picker. */
+/** The sample swatches of the swatch picker; sample data, not UI colours. */
 private val SwatchColors = listOf(
     Color(0xFF0080FF),
     Color(0xFF00BD13),

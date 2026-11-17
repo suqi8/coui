@@ -141,4 +141,10 @@
     <string name="demo_spring_chain_accumulate">累加步进</string>
     <string name="demo_spring_chain_accumulate_summary">离边缘越远的行位移越大，列表呈扇形展开</string>
     <string name="demo_spring_chain_reset">恢复默认值</string>
+    <string name="demo_expandable_group_search_terms">折叠, 展开, 分组, expand, collapse, accordion</string>
+    <string name="demo_list_detail_layout_search_terms">双栏, 平板, 列表, 详情, split, master-detail</string>
+    <string name="demo_responsive_grid_search_terms">栅格, 网格, 百分比宽度, grid</string>
+    <string name="demo_side_pane_layout_search_terms">双栏, 侧边栏, sidebar, drawer</string>
+    <string name="demo_spring_chain_search_terms">动画, 弹簧, 回弹, spring, overscroll</string>
+    <string name="demo_swipe_action_item_search_terms">侧滑, 滑动删除, swipe, slide</string>
 </resources>

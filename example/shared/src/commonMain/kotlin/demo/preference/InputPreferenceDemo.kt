@@ -50,6 +50,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_password_toggle
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_range
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_read_only
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_show_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_signature
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_input_preference_signature_message
@@ -64,6 +65,7 @@ private val InputTypes = listOf("InputPreference", "EditTextPreference", "Steppe
 private val StepperRanges = listOf(0 to 10, 1 to 99, 50 to 200)
 private val StepperSteps = listOf(1, 5, 10)
 
+/** The demo page of `InputPreference`, listed in its category and found by the search. */
 internal val InputPreferenceDemo = Demo(
     id = "input_preference",
     apiName = "InputPreference",
@@ -187,7 +189,7 @@ internal val InputPreferenceDemo = Demo(
             StepperRows()
         }
     },
-    keywords = listOf("设置", "输入", "input", "edit", "stepper", "步进"),
+    searchTerms = Res.string.demo_input_preference_search_terms,
 )
 
 /**

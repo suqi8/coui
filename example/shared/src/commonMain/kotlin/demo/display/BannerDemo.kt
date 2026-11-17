@@ -48,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_page_them
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_page_wallpapers
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_peek
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_scale_pages
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_show_indicator
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_banner_type_auto
@@ -58,13 +59,14 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Banner`, listed in its category and found by the search. */
 internal val BannerDemo = Demo(
     id = "banner",
     apiName = "Banner",
     title = Res.string.demo_banner_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { bannerPage() },
-    keywords = listOf("轮播", "carousel", "pager"),
+    searchTerms = Res.string.demo_banner_search_terms,
 )
 
 /** The page titles of the sample banner. */

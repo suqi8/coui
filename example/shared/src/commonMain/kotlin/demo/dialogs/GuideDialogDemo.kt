@@ -46,6 +46,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_pag
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_result_finished
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_result_none
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_result_skipped
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_single_description
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_guide_dialog_single_title
@@ -57,6 +58,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.window.WindowGuideDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayGuideDialog`, listed in its category and found by the search. */
 internal val GuideDialogDemo = Demo(
     id = "guide_dialog",
     apiName = "OverlayGuideDialog",
@@ -70,7 +72,7 @@ internal val GuideDialogDemo = Demo(
             GuideDialogsVariant()
         }
     },
-    keywords = listOf("onboarding", "tips", "引导", "新手", "弹窗"),
+    searchTerms = Res.string.demo_guide_dialog_search_terms,
 )
 
 /** The page counts the playground offers; numbers stay literals. */

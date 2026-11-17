@@ -45,6 +45,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_d
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_label_long
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_loading_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_loading_text_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_sign_in
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_signing_in
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_title
@@ -52,13 +53,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_loading_button_v
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `LoadingButton`, listed in its category and found by the search. */
 internal val LoadingButtonDemo = Demo(
     id = "loading_button",
     apiName = "LoadingButton",
     title = Res.string.demo_loading_button_title,
     category = DemoCategory.Buttons,
     page = DemoPage.Variants { loadingButtonPage() },
-    keywords = listOf("loading", "progress", "加载"),
+    searchTerms = Res.string.demo_loading_button_search_terms,
 )
 
 /** How long a demo button stays loading after a click. */

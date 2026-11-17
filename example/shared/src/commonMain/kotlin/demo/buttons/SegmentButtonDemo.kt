@@ -60,6 +60,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_n
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_recent
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_responsive_width
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_responsive_width_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_shared
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_segment_button_variant_backdrop
@@ -72,13 +73,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_photos
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `SegmentButton`, listed in its category and found by the search. */
 internal val SegmentButtonDemo = Demo(
     id = "segment_button",
     apiName = "SegmentButton",
     title = Res.string.demo_segment_button_title,
     category = DemoCategory.Buttons,
     page = DemoPage.Variants { segmentButtonPage() },
-    keywords = listOf("segmented", "分段", "tabs", "切换"),
+    searchTerms = Res.string.demo_segment_button_search_terms,
 )
 
 /** The segment count choices of the playground. */

@@ -265,4 +265,19 @@
     <string name="demo_dropdown_preference_variant_options">Overlay and window</string>
     <string name="demo_dropdown_preference_variant_grouped">Grouped</string>
     <string name="demo_dropdown_preference_variant_states">Disabled state</string>
+    <string name="demo_arrow_preference_search_terms">arrow</string>
+    <string name="demo_button_preference_search_terms">button, recommended</string>
+    <string name="demo_card_preference_search_terms">card, app info, instruction, entrance</string>
+    <string name="demo_checkbox_preference_search_terms">checkbox</string>
+    <string name="demo_dropdown_preference_search_terms">dropdown, popup</string>
+    <string name="demo_input_preference_search_terms">input, edit, stepper</string>
+    <string name="demo_list_preference_search_terms">list</string>
+    <string name="demo_mark_preference_search_terms">mark, check</string>
+    <string name="demo_pager_preference_search_terms">footer, header, link</string>
+    <string name="demo_preference_category_search_terms">header, category, loading</string>
+    <string name="demo_radio_button_preference_search_terms">radio</string>
+    <string name="demo_slide_select_preference_search_terms">slide</string>
+    <string name="demo_slider_preference_search_terms">slider, seekbar, range</string>
+    <string name="demo_status_preference_search_terms">status, install</string>
+    <string name="demo_switch_preference_search_terms">switch, toggle</string>
 </resources>

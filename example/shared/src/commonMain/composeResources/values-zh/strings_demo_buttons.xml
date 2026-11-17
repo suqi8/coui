@@ -114,4 +114,10 @@
     <string name="demo_segment_button_haptic">振动反馈</string>
     <string name="demo_segment_button_responsive_width">响应式宽度</string>
     <string name="demo_segment_button_responsive_width_summary">固定宽度时按 COUI 栅格限制最大宽度</string>
+    <string name="demo_button_search_terms">按钮</string>
+    <string name="demo_floating_action_button_search_terms">悬浮, 展开, fab, speed dial</string>
+    <string name="demo_loading_button_search_terms">加载, loading, progress</string>
+    <string name="demo_segment_button_search_terms">分段, 切换, segmented, tabs</string>
+    <string name="demo_stepper_search_terms">计数, counter, number, plus, minus</string>
+    <string name="demo_two_text_button_search_terms">引导, onboarding, crossfade</string>
 </resources>

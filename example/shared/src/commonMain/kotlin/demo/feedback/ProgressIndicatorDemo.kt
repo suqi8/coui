@@ -55,6 +55,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_small
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_animate
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_indeterminate
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_kind
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_state
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_states_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicator_title
@@ -66,6 +67,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_indicat
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `ProgressIndicator`, listed in its category and found by the search. */
 internal val ProgressIndicatorDemo = Demo(
     id = "progress_indicator",
     apiName = "ProgressIndicator",
@@ -86,15 +88,8 @@ internal val ProgressIndicatorDemo = Demo(
             CircularStatesContent()
         }
     },
-    keywords = listOf(
-        "loading",
-        "进度条",
-        "加载",
-        "LinearProgressIndicator",
-        "CircularProgressIndicator",
-        "InfiniteProgressIndicator",
-        "RotatingProgressIndicator",
-    ),
+    keywords = listOf("LinearProgressIndicator", "CircularProgressIndicator", "InfiniteProgressIndicator", "RotatingProgressIndicator"),
+    searchTerms = Res.string.demo_progress_indicator_search_terms,
 )
 
 /** The fixed progress values the variants show; null is indeterminate. */

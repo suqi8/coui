@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_acti
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_entry
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_search_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_search_slot
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_style_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_subtitle
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_top_app_bar_title
@@ -50,13 +51,15 @@ import ui.AppPageList
 import ui.AppPageScaffold
 import ui.AppPageTopBarStyle
 
+/** The demo page of `TopAppBar`, listed in its category and found by the search. */
 internal val TopAppBarDemo = Demo(
     id = "top_app_bar",
     apiName = "TopAppBar",
     title = Res.string.demo_top_app_bar_title,
     category = DemoCategory.Navigation,
     page = DemoPage.FullScreen { onBack -> TopAppBarDemoPage(onBack = onBack) },
-    keywords = listOf("toolbar", "标题栏", "appbar", "SmallTopAppBar", "TopAppBarSearchSlot", "大标题"),
+    keywords = listOf("SmallTopAppBar", "TopAppBarSearchSlot"),
+    searchTerms = Res.string.demo_top_app_bar_search_terms,
 )
 
 private val TopAppBarDemoStyles = AppPageTopBarStyle.entries

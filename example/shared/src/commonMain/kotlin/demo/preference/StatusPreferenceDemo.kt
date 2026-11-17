@@ -50,6 +50,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preferenc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_install
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_resume
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_scheduled
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_show_status
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_state
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_status_preference_status_icon
@@ -68,6 +69,7 @@ private val StatusTypes = listOf("StatusSwitchingPreference", "LoadInstallProgre
 private val InstallStates = InstallLoadState.entries.map { it.name }
 private val ProgressSteps = listOf("0%", "25%", "50%", "75%", "100%")
 
+/** The demo page of `StatusSwitchingPreference`, listed in its category and found by the search. */
 internal val StatusPreferenceDemo = Demo(
     id = "status_preference",
     apiName = "StatusSwitchingPreference",
@@ -174,7 +176,7 @@ internal val StatusPreferenceDemo = Demo(
             ActivityDialogRows()
         }
     },
-    keywords = listOf("设置", "加载", "status", "状态", "install", "下载", "安装"),
+    searchTerms = Res.string.demo_status_preference_search_terms,
 )
 
 /**

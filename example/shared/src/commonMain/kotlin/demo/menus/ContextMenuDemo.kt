@@ -51,6 +51,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_hin
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_last_action
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_none
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_rename
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_show_delete
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_context_menu_variant_disabled
@@ -62,6 +63,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_menus_host_windo
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayContextMenu`, listed in its category and found by the search. */
 internal val ContextMenuDemo = Demo(
     id = "context_menu",
     apiName = "OverlayContextMenu",
@@ -104,7 +106,8 @@ internal val ContextMenuDemo = Demo(
             }
         }
     },
-    keywords = listOf("长按", "菜单", "long press", "right click", "WindowContextMenu", "右键"),
+    keywords = listOf("WindowContextMenu"),
+    searchTerms = Res.string.demo_context_menu_search_terms,
 )
 
 /**

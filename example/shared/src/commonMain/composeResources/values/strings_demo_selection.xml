@@ -110,4 +110,11 @@
     <string name="demo_chip_group_lock_screen">Lock screen</string>
     <string name="demo_chip_group_family_space">Family space</string>
     <string name="demo_chip_group_about_phone">About phone</string>
+    <string name="demo_checkbox_search_terms">tri-state, indeterminate</string>
+    <string name="demo_chip_search_terms">tag, filter</string>
+    <string name="demo_chip_group_search_terms">flow</string>
+    <string name="demo_intent_slider_search_terms">seekbar, media</string>
+    <string name="demo_radio_button_search_terms">radio</string>
+    <string name="demo_slider_search_terms">seekbar</string>
+    <string name="demo_switch_search_terms">toggle</string>
 </resources>

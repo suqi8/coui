@@ -56,6 +56,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_long_press
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_long_press_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_long_pressed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_press_feedback
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_shadow
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_shadow_angle
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_card_shadow_card
@@ -75,13 +76,14 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import utils.panelBlur
 
+/** The demo page of `Card`, listed in its category and found by the search. */
 internal val CardDemo = Demo(
     id = "card",
     apiName = "Card",
     title = Res.string.demo_card_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { cardPage() },
-    keywords = listOf("shadow", "阴影", "press", "按压"),
+    searchTerms = Res.string.demo_card_search_terms,
 )
 
 /** The shadow choices of the playground: none, the default, top edge hidden and a 45 degree angle. */

@@ -21,6 +21,12 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
+/**
+ * The pager state of the main shell. [selectedPage] follows a tab tap immediately while the pager
+ * animates, so the bar highlights the target tab before the pages finish scrolling.
+ *
+ * @property pagerState The pager showing the tab pages.
+ */
 @Stable
 class MainPagerState(
     val pagerState: PagerState,
@@ -84,6 +90,9 @@ class MainPagerState(
     }
 }
 
+/**
+ * Remembers a [MainPagerState] for [pagerState].
+ */
 @Composable
 fun rememberMainPagerState(
     pagerState: PagerState,

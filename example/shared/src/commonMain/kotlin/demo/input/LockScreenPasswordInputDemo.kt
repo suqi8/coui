@@ -54,6 +54,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_pass
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_length_limit_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_min_length
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_play_press
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_show_error
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lock_screen_password_input_variant_desktop
@@ -64,19 +65,21 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `LockScreenPasswordInput`, listed in its category and found by the search. */
 internal val LockScreenPasswordInputDemo = Demo(
     id = "lock_screen_password_input",
     apiName = "LockScreenPasswordInput",
     title = Res.string.demo_lock_screen_password_input_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { lockScreenPasswordInputPage() },
-    keywords = listOf("pin", "密码", "COUILockScreenPwdInputView"),
+    keywords = listOf("COUILockScreenPwdInputView"),
+    searchTerms = Res.string.demo_lock_screen_password_input_search_terms,
 )
 
 /** The correct password of the samples. */
 private const val SAMPLE_PASSWORD = "123456"
 
-/** The sample wallpaper behind the desktop (lock screen) mode. */
+/** The sample wallpaper behind the desktop (lock screen) mode; fixed artwork, not a theme colour. */
 private val DesktopWallpaper = Brush.linearGradient(listOf(Color(0xFF5B247A), Color(0xFF1BCEDF)))
 
 private fun LazyListScope.lockScreenPasswordInputPage() {

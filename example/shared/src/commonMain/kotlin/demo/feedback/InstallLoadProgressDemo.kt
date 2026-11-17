@@ -45,6 +45,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_pro
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_get
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_interactive_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_resume
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_state
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_install_load_progress_variant_interactive
@@ -53,6 +54,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `InstallLoadProgress`, listed in its category and found by the search. */
 internal val InstallLoadProgressDemo = Demo(
     id = "install_load_progress",
     apiName = "InstallLoadProgress",
@@ -89,7 +91,7 @@ internal val InstallLoadProgressDemo = Demo(
             }
         }
     },
-    keywords = listOf("download", "下载", "安装", "install"),
+    searchTerms = Res.string.demo_install_load_progress_search_terms,
 )
 
 /** The button label COUI apps show for [state] at [progress]. */

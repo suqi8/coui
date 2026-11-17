@@ -58,6 +58,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_nearby
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_popular
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_recommended
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_reset
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_show_count
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_show_red_dot
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_title
@@ -73,13 +74,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_wallpaper
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Chip`, listed in its category and found by the search. */
 internal val ChipDemo = Demo(
     id = "chip",
     apiName = "Chip",
     title = Res.string.demo_chip_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { chipPage() },
-    keywords = listOf("SuggestionChip", "IconChip", "标签", "筛选"),
+    keywords = listOf("SuggestionChip", "IconChip"),
+    searchTerms = Res.string.demo_chip_search_terms,
 )
 
 /** The chip components of the playground, by API name. */

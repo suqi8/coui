@@ -75,6 +75,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_ope
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_pull_up
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_pull_up_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_rows
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_short_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_bottom_sheet_slider
@@ -94,6 +95,7 @@ import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 import io.github.suqi8.coui.kmp.window.WindowBottomSheet
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayBottomSheet`, listed in its category and found by the search. */
 internal val BottomSheetDemo = Demo(
     id = "bottom_sheet",
     apiName = "OverlayBottomSheet",
@@ -107,7 +109,8 @@ internal val BottomSheetDemo = Demo(
             BottomSheetsVariant()
         }
     },
-    keywords = listOf("panel", "WindowBottomSheet", "sheet", "面板", "半屏"),
+    keywords = listOf("WindowBottomSheet"),
+    searchTerms = Res.string.demo_bottom_sheet_search_terms,
 )
 
 /** The content row counts the playground offers; numbers stay literals. */

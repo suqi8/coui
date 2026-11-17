@@ -38,6 +38,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_navigation_bar_expansion
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_navigation_bar_expansion_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_navigation_bar_large_icon
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_navigation_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_navigation_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_badges
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -45,13 +46,14 @@ import org.jetbrains.compose.resources.stringResource
 import ui.AppPageList
 import ui.AppPageScaffold
 
+/** The demo page of `FloatingNavigationBar`, listed in its category and found by the search. */
 internal val FloatingNavigationBarDemo = Demo(
     id = "floating_navigation_bar",
     apiName = "FloatingNavigationBar",
     title = Res.string.demo_floating_navigation_bar_title,
     category = DemoCategory.Navigation,
     page = DemoPage.FullScreen { onBack -> FloatingNavigationBarDemoPage(onBack = onBack) },
-    keywords = listOf("tab", "底栏", "capsule", "胶囊"),
+    searchTerms = Res.string.demo_floating_navigation_bar_search_terms,
     isNew = true,
 )
 

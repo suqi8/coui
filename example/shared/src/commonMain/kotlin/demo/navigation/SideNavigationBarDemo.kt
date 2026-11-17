@@ -58,6 +58,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_page_wallpapers
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_parent_child
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_parent_child_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_navigation_bar_toggle
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_home
@@ -67,6 +68,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `SideNavigationBar`, listed in its category and found by the search. */
 internal val SideNavigationBarDemo = Demo(
     id = "side_navigation_bar",
     apiName = "SideNavigationBar",
@@ -125,7 +127,7 @@ internal val SideNavigationBarDemo = Demo(
             }
         }
     },
-    keywords = listOf("sidebar", "drawer", "抽屉", "侧边栏"),
+    searchTerms = Res.string.demo_side_navigation_bar_search_terms,
 )
 
 private val SideNavigationDemoHeights: List<Dp> = listOf(320.dp, 420.dp, 560.dp)

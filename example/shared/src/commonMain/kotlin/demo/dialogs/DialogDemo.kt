@@ -57,6 +57,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_recommend
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_recommended_message
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_recommended_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_recommended_title
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_stacked_message
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dialog_stacked_title
@@ -76,6 +77,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_long_text
 import io.github.suqi8.coui.kmp.window.WindowDialog
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayDialog`, listed in its category and found by the search. */
 internal val DialogDemo = Demo(
     id = "dialog",
     apiName = "OverlayDialog",
@@ -95,7 +97,8 @@ internal val DialogDemo = Demo(
             LongMessageDialogVariant()
         }
     },
-    keywords = listOf("alert", "WindowDialog", "DialogButtonBar", "弹窗"),
+    keywords = listOf("WindowDialog", "DialogButtonBar"),
+    searchTerms = Res.string.demo_dialog_search_terms,
 )
 
 /** The button counts the playground offers; numbers stay literals. */

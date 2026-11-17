@@ -41,6 +41,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_share
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_disabled_item
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_favorite
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_variant_compact
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_edit_toolbar_variant_wide
@@ -49,6 +50,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_image
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_image_background_summary
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `FloatingEditToolbar`, listed in its category and found by the search. */
 internal val FloatingEditToolbarDemo = Demo(
     id = "floating_edit_toolbar",
     apiName = "FloatingEditToolbar",
@@ -130,7 +132,7 @@ internal val FloatingEditToolbarDemo = Demo(
             }
         }
     },
-    keywords = listOf("toolbar", "工具栏", "edit", "编辑"),
+    searchTerms = Res.string.demo_floating_edit_toolbar_search_terms,
 )
 
 private val EditToolbarCountOptions = listOf("1", "2", "3", "4")

@@ -58,6 +58,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_mater
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_material_effect
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_new_folder
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_opaque_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_sort
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_popup_sort_by
@@ -84,6 +85,7 @@ import io.github.suqi8.coui.kmp.window.WindowCascadingListPopup
 import io.github.suqi8.coui.kmp.window.WindowListPopup
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayListPopup`, listed in its category and found by the search. */
 internal val ListPopupDemo = Demo(
     id = "list_popup",
     apiName = "OverlayListPopup",
@@ -98,7 +100,8 @@ internal val ListPopupDemo = Demo(
             OpaquePopupContent()
         }
     },
-    keywords = listOf("popup", "菜单", "ListPopup", "CascadingListPopup", "弹出菜单"),
+    keywords = listOf("ListPopup", "CascadingListPopup"),
+    searchTerms = Res.string.demo_list_popup_search_terms,
 )
 
 private val ListPopupIcons = listOf(

@@ -13,6 +13,9 @@ import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.extended.Back
 import io.github.suqi8.coui.kmp.theme.COUITheme.colorScheme
 
+/**
+ * The top bar back button; the arrow mirrors in right-to-left layouts.
+ */
 @Composable
 fun BackNavigationIcon(
     onClick: () -> Unit,

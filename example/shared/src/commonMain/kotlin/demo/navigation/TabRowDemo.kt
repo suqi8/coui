@@ -61,6 +61,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_photo
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_popular
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_portrait
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_recommended
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_style_tiny
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_technology
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_title
@@ -83,6 +84,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TabRow`, listed in its category and found by the search. */
 internal val TabRowDemo = Demo(
     id = "tab_row",
     apiName = "TabRow",
@@ -300,7 +302,7 @@ internal val TabRowDemo = Demo(
             )
         }
     },
-    keywords = listOf("tab", "选项卡", "segment", "分段"),
+    searchTerms = Res.string.demo_tab_row_search_terms,
 )
 
 private val TabRowPreviewPadding = PaddingValues(vertical = 16.dp)

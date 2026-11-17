@@ -42,6 +42,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_count
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_material
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_search
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_with_search_layout_search_enabled
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_with_search_layout_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_with_search_layout_tab_all
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_with_search_layout_tabs_enabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_with_search_layout_title
@@ -56,13 +57,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_photos
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_videos
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TabWithSearchLayout`, listed in its category and found by the search. */
 internal val TabWithSearchLayoutDemo = Demo(
     id = "tab_with_search_layout",
     apiName = "TabWithSearchLayout",
     title = Res.string.demo_tab_with_search_layout_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { tabWithSearchLayoutPage() },
-    keywords = listOf("标签", "搜索", "COUITabWithSearchLayout"),
+    keywords = listOf("COUITabWithSearchLayout"),
+    searchTerms = Res.string.demo_tab_with_search_layout_search_terms,
 )
 
 /** The simulated layout widths of the playground; [Dp.Unspecified] fills the card. */

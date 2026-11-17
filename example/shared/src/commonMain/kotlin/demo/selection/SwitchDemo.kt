@@ -32,17 +32,19 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_off
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_on
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_value_format
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_loading_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_variant_states
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `Switch`, listed in its category and found by the search. */
 internal val SwitchDemo = Demo(
     id = "switch",
     apiName = "Switch",
     title = Res.string.demo_switch_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { switchPage() },
-    keywords = listOf("toggle", "开关"),
+    searchTerms = Res.string.demo_switch_search_terms,
 )
 
 private fun LazyListScope.switchPage() {

@@ -40,6 +40,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_ena
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_fading_edge
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_initial_delay
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_long
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_short
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_spacing
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_title
@@ -48,13 +49,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_marquee_text_vel
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `MarqueeText`, listed in its category and found by the search. */
 internal val MarqueeTextDemo = Demo(
     id = "marquee_text",
     apiName = "MarqueeText",
     title = Res.string.demo_marquee_text_title,
     category = DemoCategory.Display,
     page = DemoPage.Variants { marqueeTextPage() },
-    keywords = listOf("marquee", "scroll", "滚动", "跑马灯"),
+    searchTerms = Res.string.demo_marquee_text_search_terms,
 )
 
 private fun LazyListScope.marqueeTextPage() {

@@ -7,6 +7,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 import navigation3.Navigator
 
+/** The app navigator that pushes and pops [navigation3.Route]s on the root back stack. */
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("No navigator found!") }
 
 /** Whether the window is wide enough for the rail and split-pane layouts. */

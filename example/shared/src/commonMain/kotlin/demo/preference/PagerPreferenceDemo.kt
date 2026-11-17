@@ -48,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_location_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_network_settings
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_privacy_policy
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_text_with_link
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_pager_preference_user_agreement
@@ -64,6 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val PagerTypes = listOf("PagerHeaderPreference", "PagerFooterPreference", "SpannablePreference", "LinkText")
 
+/** The demo page of `PagerHeaderPreference`, listed in its category and found by the search. */
 internal val PagerPreferenceDemo = Demo(
     id = "pager_preference",
     apiName = "PagerHeaderPreference",
@@ -154,7 +156,7 @@ internal val PagerPreferenceDemo = Demo(
             BottomPreference()
         }
     },
-    keywords = listOf("设置", "footer", "header", "页眉", "页脚", "link", "链接"),
+    searchTerms = Res.string.demo_pager_preference_search_terms,
 )
 
 /**

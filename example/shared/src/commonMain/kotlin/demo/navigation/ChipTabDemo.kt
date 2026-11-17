@@ -52,6 +52,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_leading
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_material_type
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_no_material
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_others
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_starred
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_variant_backdrop
@@ -66,6 +67,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_videos
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `ChipTab`, listed in its category and found by the search. */
 internal val ChipTabDemo = Demo(
     id = "chip_tab",
     apiName = "ChipTab",
@@ -210,7 +212,7 @@ internal val ChipTabDemo = Demo(
             }
         }
     },
-    keywords = listOf("tab", "chip", "胶囊", "筛选"),
+    searchTerms = Res.string.demo_chip_tab_search_terms,
 )
 
 private val ChipTabDemoTabs: List<StringResource> = listOf(

@@ -68,6 +68,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_item_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_items_count
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_none
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_toolbar_variant_items
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -76,13 +77,15 @@ import org.jetbrains.compose.resources.stringResource
 import ui.AppPageList
 import ui.AppPageScaffold
 
+/** The demo page of `FloatingToolbar`, listed in its category and found by the search. */
 internal val FloatingToolbarDemo = Demo(
     id = "floating_toolbar",
     apiName = "FloatingToolbar",
     title = Res.string.demo_floating_toolbar_title,
     category = DemoCategory.Navigation,
     page = DemoPage.FullScreen { onBack -> FloatingToolbarDemoPage(onBack = onBack) },
-    keywords = listOf("toolbar", "工具栏", "ToolbarPosition"),
+    keywords = listOf("ToolbarPosition"),
+    searchTerms = Res.string.demo_floating_toolbar_search_terms,
     isNew = true,
 )
 

@@ -44,6 +44,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_b
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_height
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_list_row
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_partial_keys
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_variant_following
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_alphabet_index_bar_variant_heights
@@ -51,6 +52,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `AlphabetIndexBar`, listed in its category and found by the search. */
 internal val AlphabetIndexBarDemo = Demo(
     id = "alphabet_index_bar",
     apiName = "AlphabetIndexBar",
@@ -142,7 +144,7 @@ internal val AlphabetIndexBarDemo = Demo(
             FollowingListSample()
         }
     },
-    keywords = listOf("index", "索引", "contacts", "通讯录"),
+    searchTerms = Res.string.demo_alphabet_index_bar_search_terms,
 )
 
 private val IndexDemoAvailableKeys = setOf(

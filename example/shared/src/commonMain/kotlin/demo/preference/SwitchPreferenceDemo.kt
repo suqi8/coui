@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preferenc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_expand
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_expand_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_expanded_row
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_switch_preference_wifi_connected
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_bluetooth
@@ -54,6 +55,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val SwitchTypes = listOf("SwitchPreference", "SwitchLoadingPreference", "SwitchWithDividerPreference")
 
+/** The demo page of `SwitchPreference`, listed in its category and found by the search. */
 internal val SwitchPreferenceDemo = Demo(
     id = "switch_preference",
     apiName = "SwitchPreference",
@@ -128,7 +130,7 @@ internal val SwitchPreferenceDemo = Demo(
             SwitchWithDividerRows()
         }
     },
-    keywords = listOf("设置", "switch", "开关", "toggle"),
+    searchTerms = Res.string.demo_switch_preference_search_terms,
 )
 
 /**

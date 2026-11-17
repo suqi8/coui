@@ -110,4 +110,11 @@
     <string name="demo_chip_group_lock_screen">锁屏</string>
     <string name="demo_chip_group_family_space">家庭空间</string>
     <string name="demo_chip_group_about_phone">关于手机</string>
+    <string name="demo_checkbox_search_terms">多选, 勾选, tri-state, indeterminate</string>
+    <string name="demo_chip_search_terms">标签, 筛选</string>
+    <string name="demo_chip_group_search_terms">标签组, 筛选, flow</string>
+    <string name="demo_intent_slider_search_terms">进度条, 播放, seekbar, media</string>
+    <string name="demo_radio_button_search_terms">单选, radio</string>
+    <string name="demo_slider_search_terms">拖动条, 范围, seekbar</string>
+    <string name="demo_switch_search_terms">开关, toggle</string>
 </resources>

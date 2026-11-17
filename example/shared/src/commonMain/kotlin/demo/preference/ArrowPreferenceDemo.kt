@@ -40,6 +40,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_confirm
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_disabled
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_clickable
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_hold_down
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_variant_basic
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_arrow_preference_variant_dialog
@@ -54,6 +55,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import utils.panelBlur
 
+/** The demo page of `ArrowPreference`, listed in its category and found by the search. */
 internal val ArrowPreferenceDemo = Demo(
     id = "arrow_preference",
     apiName = "ArrowPreference",
@@ -129,7 +131,7 @@ internal val ArrowPreferenceDemo = Demo(
             VolumeDialogRow()
         }
     },
-    keywords = listOf("设置", "arrow", "箭头", "跳转"),
+    searchTerms = Res.string.demo_arrow_preference_search_terms,
 )
 
 /**

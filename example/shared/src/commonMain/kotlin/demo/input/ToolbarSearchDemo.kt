@@ -53,6 +53,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_e
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_material_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_no_result
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_results
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_toolbar_search_top_bar
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_item
@@ -62,13 +63,15 @@ import ui.AppPageList
 import ui.AppPageScaffold
 import ui.AppPageTopBarStyle
 
+/** The demo page of `ToolbarSearch`, listed in its category and found by the search. */
 internal val ToolbarSearchDemo = Demo(
     id = "toolbar_search",
     apiName = "ToolbarSearch",
     title = Res.string.demo_toolbar_search_title,
     category = DemoCategory.Input,
     page = DemoPage.FullScreen { onBack -> ToolbarSearchPage(onBack = onBack) },
-    keywords = listOf("搜索", "search", "ToolbarFloatingSearchBar", "showInToolBar"),
+    keywords = listOf("ToolbarFloatingSearchBar", "showInToolBar"),
+    searchTerms = Res.string.demo_toolbar_search_search_terms,
     isNew = true,
 )
 

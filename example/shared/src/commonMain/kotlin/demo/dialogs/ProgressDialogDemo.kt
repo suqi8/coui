@@ -43,6 +43,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_open_progress
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_open_progress_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_please_wait
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_show
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_size_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_progress_dialog_speed
@@ -56,6 +57,7 @@ import io.github.suqi8.coui.kmp.window.WindowProgressDialog
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayProgressDialog`, listed in its category and found by the search. */
 internal val ProgressDialogDemo = Demo(
     id = "progress_dialog",
     apiName = "OverlayProgressDialog",
@@ -72,7 +74,8 @@ internal val ProgressDialogDemo = Demo(
             LoadingDialogsVariant()
         }
     },
-    keywords = listOf("loading", "OverlayLoadingDialog", "spinner", "加载", "弹窗"),
+    keywords = listOf("OverlayLoadingDialog"),
+    searchTerms = Res.string.demo_progress_dialog_search_terms,
     isNew = true,
 )
 

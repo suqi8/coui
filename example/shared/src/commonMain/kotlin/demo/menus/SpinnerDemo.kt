@@ -50,6 +50,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_display
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_display_dialog
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_display_popup
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_grouped
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_show_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_state_collapsed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_spinner_state_expanded
@@ -64,6 +65,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_title
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlaySpinnerPreference`, listed in its category and found by the search. */
 internal val SpinnerDemo = Demo(
     id = "spinner",
     apiName = "OverlaySpinnerPreference",
@@ -87,7 +89,8 @@ internal val SpinnerDemo = Demo(
             SpinnerHostPair(dialog = false, grouped = false, enabled = false)
         }
     },
-    keywords = listOf("WindowSpinnerPreference", "dropdown", "选择器", "下拉"),
+    keywords = listOf("WindowSpinnerPreference"),
+    searchTerms = Res.string.demo_spinner_search_terms,
 )
 
 /** The sample colour swatches of the options; sample data, not UI colours. */

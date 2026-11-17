@@ -47,19 +47,22 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_desc
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_fail
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_glow
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_glow_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_variant_four
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_simple_lock_variant_six
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `SimpleLock`, listed in its category and found by the search. */
 internal val SimpleLockDemo = Demo(
     id = "simple_lock",
     apiName = "SimpleLock",
     title = Res.string.demo_simple_lock_title,
     category = DemoCategory.Input,
     page = DemoPage.Variants { simpleLockPage() },
-    keywords = listOf("pin", "密码圆点", "COUISimpleLock"),
+    keywords = listOf("COUISimpleLock"),
+    searchTerms = Res.string.demo_simple_lock_search_terms,
 )
 
 private fun LazyListScope.simpleLockPage() {

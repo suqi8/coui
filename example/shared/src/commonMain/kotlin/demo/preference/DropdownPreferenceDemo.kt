@@ -33,6 +33,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_prefere
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_grouped
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_long_option
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_overlay
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_show_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_dropdown_preference_variant_grouped
@@ -44,6 +45,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val DropdownCounts = listOf(2, 4, 8, 12)
 
+/** The demo page of `OverlayDropdownPreference`, listed in its category and found by the search. */
 internal val DropdownPreferenceDemo = Demo(
     id = "dropdown_preference",
     apiName = "OverlayDropdownPreference",
@@ -173,7 +175,7 @@ internal val DropdownPreferenceDemo = Demo(
             }
         }
     },
-    keywords = listOf("设置", "下拉", "dropdown", "popup", "菜单"),
+    searchTerms = Res.string.demo_dropdown_preference_search_terms,
 )
 
 /**

@@ -171,4 +171,15 @@
     <string name="demo_lock_pattern_view_display_mode">Display mode</string>
     <string name="demo_lock_pattern_view_display_mode_summary">Shows the L pattern in the chosen mode</string>
     <string name="demo_lock_pattern_view_clear">Clear pattern</string>
+    <string name="demo_code_text_field_search_terms">otp</string>
+    <string name="demo_input_view_search_terms">input, text box</string>
+    <string name="demo_lock_pattern_view_search_terms">pattern</string>
+    <string name="demo_lock_screen_password_input_search_terms">pin</string>
+    <string name="demo_numeric_keyboard_search_terms">keypad</string>
+    <string name="demo_search_bar_search_terms">search</string>
+    <string name="demo_search_history_search_terms">history, recent searches</string>
+    <string name="demo_simple_lock_search_terms">pin</string>
+    <string name="demo_tab_with_search_layout_search_terms">tabs, search</string>
+    <string name="demo_text_field_search_terms">edittext</string>
+    <string name="demo_toolbar_search_search_terms">search</string>
 </resources>

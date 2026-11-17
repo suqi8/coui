@@ -38,6 +38,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_d
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_failed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_order
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_replay
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_success
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_complete_state_type
@@ -47,6 +48,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_long_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_long_title
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `CompleteState`, listed in its category and found by the search. */
 internal val CompleteStateDemo = Demo(
     id = "complete_state",
     apiName = "CompleteState",
@@ -58,7 +60,7 @@ internal val CompleteStateDemo = Demo(
             CompleteStateTypesContent()
         }
     },
-    keywords = listOf("success", "完成", "成功", "失败", "result"),
+    searchTerms = Res.string.demo_complete_state_search_terms,
 )
 
 private const val SAMPLE_ORDER_NUMBER = "2026103000001"

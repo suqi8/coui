@@ -41,6 +41,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_no_c
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_no_results
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_refresh
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_refreshed
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_show_action
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_show_illustration
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_empty_state_subtitle
@@ -53,6 +54,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_long_title
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `EmptyState`, listed in its category and found by the search. */
 internal val EmptyStateDemo = Demo(
     id = "empty_state",
     apiName = "EmptyState",
@@ -89,7 +91,7 @@ internal val EmptyStateDemo = Demo(
             )
         }
     },
-    keywords = listOf("empty", "缺省页", "空页面", "placeholder"),
+    searchTerms = Res.string.demo_empty_state_search_terms,
 )
 
 @Composable

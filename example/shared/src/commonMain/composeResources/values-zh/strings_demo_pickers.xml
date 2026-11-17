@@ -66,4 +66,9 @@
     <string name="demo_color_picker_rows">行数</string>
     <string name="demo_color_picker_hue_columns">色相列数</string>
     <string name="demo_color_picker_gray_column">灰色列</string>
+    <string name="demo_calendar_picker_search_terms">日历, calendar, date</string>
+    <string name="demo_color_picker_search_terms">颜色, 取色, palette</string>
+    <string name="demo_date_time_picker_search_terms">日期, 时间, date, time</string>
+    <string name="demo_lunar_date_picker_search_terms">农历, 阴历, lunar, chinese calendar</string>
+    <string name="demo_number_picker_search_terms">滚轮, wheel, spinner</string>
 </resources>

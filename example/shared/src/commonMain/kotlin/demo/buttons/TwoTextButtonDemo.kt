@@ -57,6 +57,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_get_started
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_page
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_progress_hint
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_two_text_button_variant_onboarding
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -64,13 +65,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `TwoTextButton`, listed in its category and found by the search. */
 internal val TwoTextButtonDemo = Demo(
     id = "two_text_button",
     apiName = "TwoTextButton",
     title = Res.string.demo_two_text_button_title,
     category = DemoCategory.Buttons,
     page = DemoPage.Variants { twoTextButtonPage() },
-    keywords = listOf("onboarding", "引导", "crossfade"),
+    searchTerms = Res.string.demo_two_text_button_search_terms,
 )
 
 /** The page count of the onboarding variant. */

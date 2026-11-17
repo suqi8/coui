@@ -34,11 +34,13 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_loading
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_long_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_style
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_comp_progress_indicator_long_text
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_comp_progress_indicator_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_comp_progress_indicator_show_text
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_comp_progress_indicator_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_comp_progress_indicator_variant_all
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `CompProgressIndicator`, listed in its category and found by the search. */
 internal val CompProgressIndicatorDemo = Demo(
     id = "comp_progress_indicator",
     apiName = "CompProgressIndicator",
@@ -61,7 +63,7 @@ internal val CompProgressIndicatorDemo = Demo(
             }
         }
     },
-    keywords = listOf("进度", "loading", "加载"),
+    searchTerms = Res.string.demo_comp_progress_indicator_search_terms,
 )
 
 /** The types that lay out a text label beside or below the spinner. */

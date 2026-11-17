@@ -38,12 +38,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statem
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_disagree
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_height
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_long_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_secondary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_statement_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_full_page_statement_width_auto
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `FullPageStatement`, listed in its category and found by the search. */
 internal val FullPageStatementDemo = Demo(
     id = "full_page_statement",
     apiName = "FullPageStatement",
@@ -54,7 +56,7 @@ internal val FullPageStatementDemo = Demo(
             FullPageStatementPlayground()
         }
     },
-    keywords = listOf("隐私", "privacy", "agreement", "协议"),
+    searchTerms = Res.string.demo_full_page_statement_search_terms,
 )
 
 /** The fixed primary button widths of the playground after "auto"; numbers stay literals. */

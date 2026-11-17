@@ -63,6 +63,9 @@ private data class ColorBlockData(
     val textColor: Color,
 )
 
+/**
+ * The colour reference: every theme colour slot of the current, light, dark and dynamic schemes.
+ */
 @Composable
 fun ColorPage(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
@@ -102,6 +105,9 @@ private fun LazyListScope.colorSection(
     }
 }
 
+/**
+ * The colour slots of [colors] as labelled swatches, two per row.
+ */
 @Composable
 fun ColorsPreview(
     colors: Colors,

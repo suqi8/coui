@@ -37,6 +37,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_horizontal
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_orientation
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_selected_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_vertical
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_show_labels
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_radio_button_variant_states
@@ -44,13 +45,14 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.sample_option
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `RadioButton`, listed in its category and found by the search. */
 internal val RadioButtonDemo = Demo(
     id = "radio_button",
     apiName = "RadioButton",
     title = Res.string.demo_radio_button_title,
     category = DemoCategory.Selection,
     page = DemoPage.Variants { radioButtonPage() },
-    keywords = listOf("单选", "radio"),
+    searchTerms = Res.string.demo_radio_button_search_terms,
 )
 
 /** The option counts offered by the playground. */

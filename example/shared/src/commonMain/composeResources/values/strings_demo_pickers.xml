@@ -66,4 +66,9 @@
     <string name="demo_color_picker_rows">Rows</string>
     <string name="demo_color_picker_hue_columns">Hue columns</string>
     <string name="demo_color_picker_gray_column">Grey column</string>
+    <string name="demo_calendar_picker_search_terms">calendar, date</string>
+    <string name="demo_color_picker_search_terms">palette</string>
+    <string name="demo_date_time_picker_search_terms">date, time</string>
+    <string name="demo_lunar_date_picker_search_terms">lunar, chinese calendar</string>
+    <string name="demo_number_picker_search_terms">wheel, spinner</string>
 </resources>

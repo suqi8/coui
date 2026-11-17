@@ -46,6 +46,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_more_settings
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_network
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_network_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_variant_arrow
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_expandable_group_variant_groups
@@ -59,6 +60,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `ExpandableGroup`, listed in its category and found by the search. */
 internal val ExpandableGroupDemo = Demo(
     id = "expandable_group",
     apiName = "ExpandableGroup",
@@ -105,7 +107,7 @@ internal val ExpandableGroupDemo = Demo(
             )
         }
     },
-    keywords = listOf("折叠", "展开", "分组", "expand", "collapse", "accordion"),
+    searchTerms = Res.string.demo_expandable_group_search_terms,
 )
 
 private fun LazyListScope.expandableGroupPlayground() {

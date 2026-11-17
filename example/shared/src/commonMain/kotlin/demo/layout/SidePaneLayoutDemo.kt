@@ -56,6 +56,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_pane_closed
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_pane_open
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_pane_width
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_show_toggle_icon
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_split
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_side_pane_layout_title
@@ -68,6 +69,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `SidePaneLayout`, listed in its category and found by the search. */
 internal val SidePaneLayoutDemo = Demo(
     id = "side_pane_layout",
     apiName = "SidePaneLayout",
@@ -93,7 +95,7 @@ internal val SidePaneLayoutDemo = Demo(
             }
         }
     },
-    keywords = listOf("双栏", "侧边栏", "sidebar", "drawer"),
+    searchTerms = Res.string.demo_side_pane_layout_search_terms,
 )
 
 private val PreviewHeight = 420.dp

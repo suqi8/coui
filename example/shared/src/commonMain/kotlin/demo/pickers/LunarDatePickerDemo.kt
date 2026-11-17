@@ -35,17 +35,19 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picke
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_jump_leap_month
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_jump_leap_month_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_jump_today
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_solar_format
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_lunar_date_picker_title
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `LunarDatePicker`, listed in its category and found by the search. */
 internal val LunarDatePickerDemo = Demo(
     id = "lunar_date_picker",
     apiName = "LunarDatePicker",
     title = Res.string.demo_lunar_date_picker_title,
     category = DemoCategory.Pickers,
     page = DemoPage.Variants { lunarDatePickerPage() },
-    keywords = listOf("农历", "阴历", "lunar", "chinese calendar"),
+    searchTerms = Res.string.demo_lunar_date_picker_search_terms,
 )
 
 /** 2025-07-25 is the first day of the leap sixth lunar month. */

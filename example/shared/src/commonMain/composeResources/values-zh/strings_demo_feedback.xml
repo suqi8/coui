@@ -123,4 +123,12 @@
     <string name="demo_complete_state_animate">播放动画</string>
     <string name="demo_complete_state_replay">重新播放动画</string>
     <string name="demo_complete_state_variant_types">类型</string>
+    <string name="demo_comp_progress_indicator_search_terms">进度, 加载, loading</string>
+    <string name="demo_complete_state_search_terms">完成, 成功, 失败, success, result</string>
+    <string name="demo_custom_snackbar_search_terms">消息条, toast, snackbar</string>
+    <string name="demo_empty_state_search_terms">缺省页, 空页面, empty, placeholder</string>
+    <string name="demo_install_load_progress_search_terms">下载, 安装, download, install</string>
+    <string name="demo_progress_indicator_search_terms">进度条, 加载, loading</string>
+    <string name="demo_pull_to_refresh_search_terms">刷新, 下拉, refresh</string>
+    <string name="demo_snackbar_search_terms">提示, 消息, toast</string>
 </resources>

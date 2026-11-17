@@ -58,6 +58,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layo
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_max_list_width
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_min_list_width
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_none
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_selected
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_show_empty_detail
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_list_detail_layout_show_empty_detail_summary
@@ -77,6 +78,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+/** The demo page of `ListDetailLayout`, listed in its category and found by the search. */
 internal val ListDetailLayoutDemo = Demo(
     id = "list_detail_layout",
     apiName = "ListDetailLayout",
@@ -95,7 +97,7 @@ internal val ListDetailLayoutDemo = Demo(
             )
         }
     },
-    keywords = listOf("双栏", "平板", "列表", "详情", "split", "master-detail"),
+    searchTerms = Res.string.demo_list_detail_layout_search_terms,
 )
 
 private const val NO_SELECTION = -1

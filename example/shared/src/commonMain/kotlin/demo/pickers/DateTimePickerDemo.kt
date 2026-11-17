@@ -39,6 +39,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_limited_range_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_minute_five_step
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_no_year
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_show_units
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_unit_hour
@@ -53,13 +54,15 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_date_time_picker_year_ignorable_summary
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `DateTimePicker`, listed in its category and found by the search. */
 internal val DateTimePickerDemo = Demo(
     id = "date_time_picker",
     apiName = "DateTimePicker",
     title = Res.string.demo_date_time_picker_title,
     category = DemoCategory.Pickers,
     page = DemoPage.Variants { dateTimePickerPage() },
-    keywords = listOf("date", "time", "日期", "时间", "DatePicker", "TimePicker"),
+    keywords = listOf("DatePicker", "TimePicker"),
+    searchTerms = Res.string.demo_date_time_picker_search_terms,
 )
 
 /** The pickers of the playground, by API name. */

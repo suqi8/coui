@@ -56,6 +56,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_limit_height
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_material_blur
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_menu_count
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_search_terms
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_variant_overlay
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_popup_menu_variant_window
@@ -70,6 +71,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.window.WindowNavigationPopupMenu
 import org.jetbrains.compose.resources.stringResource
 
+/** The demo page of `OverlayNavigationPopupMenu`, listed in its category and found by the search. */
 internal val NavigationPopupMenuDemo = Demo(
     id = "navigation_popup_menu",
     apiName = "OverlayNavigationPopupMenu",
@@ -84,7 +86,8 @@ internal val NavigationPopupMenuDemo = Demo(
             NavigationPopupMenuContent(window = true, menuCount = 3)
         }
     },
-    keywords = listOf("菜单", "more", "更多", "WindowNavigationPopupMenu"),
+    keywords = listOf("WindowNavigationPopupMenu"),
+    searchTerms = Res.string.demo_navigation_popup_menu_search_terms,
 )
 
 /** The two bar destinations followed by the ones only reachable through the menu. */
