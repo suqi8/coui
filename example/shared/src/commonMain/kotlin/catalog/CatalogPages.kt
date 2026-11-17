@@ -2,14 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 package catalog
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +27,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import app.LocalInDetailPane
 import app.LocalNavigator
 import demo.framework.LocalDemoSnackbarHostState
@@ -28,7 +40,6 @@ import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.InputField
 import io.github.suqi8.coui.kmp.basic.ListDetailLayout
 import io.github.suqi8.coui.kmp.basic.ListDetailLayoutDefaults
-import io.github.suqi8.coui.kmp.basic.SearchBar
 import io.github.suqi8.coui.kmp.basic.SnackbarHostState
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
@@ -50,6 +61,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import navigation3.Route
 import org.jetbrains.compose.resources.stringResource
 import ui.AppPage
+import ui.AppPageList
+import ui.AppPageScaffold
 import ui.AppPageTopBarStyle
 
 /**
@@ -69,36 +82,89 @@ fun ComponentsTab(modifier: Modifier = Modifier) {
 
 /**
  * The components home page, laid out like the ColorOS settings home: a large title with a search
- * capsule, then the categories in grouped cards and the lab entry at the end.
+ * capsule, then the categories in grouped cards and the lab entry at the end. Tapping the capsule
+ * searches in place: the top bar gives way to a pinned search field with a cancel button and the
+ * list shows the matching demos.
  */
 @Composable
 fun CatalogHomePage(modifier: Modifier = Modifier) {
     val navigator = LocalNavigator.current
-    AppPage(
+    val background = COUITheme.colorScheme.backgroundWithCard
+    var searching by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val index = rememberDemoSearchIndex()
+    val results = rememberDemoSearchResults(query, index)
+    val listState = rememberLazyListState()
+    val stopSearch = {
+        searching = false
+        query = ""
+    }
+    SearchBackHandler(enabled = searching, onBack = stopSearch)
+    LaunchedEffect(searching) { listState.scrollToItem(0) }
+
+    AppPageScaffold(
         title = stringResource(Res.string.app_tab_components),
         modifier = modifier,
         topBarStyle = AppPageTopBarStyle.SettingsHome,
-        topBarBottomContent = { CatalogSearchEntry(onClick = { navigator.push(Route.Search) }) },
-    ) {
-        DemoGroup.entries.forEach { group ->
-            item(key = "group_${group.name}") {
-                PreferenceCategory(title = stringResource(group.title))
-                Card(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    CardListGroup {
-                        DemoCategory.entries.filter { it.group == group }.forEach { category ->
-                            item(key = category.id) {
-                                CategoryRow(
-                                    category = category,
-                                    onClick = { navigator.push(Route.Category(category.id)) },
-                                )
+        topBarBottomContent = { CatalogSearchEntry(onActivate = { searching = true }) },
+        topBarContainer = { topBar ->
+            AnimatedContent(
+                targetState = searching,
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { -it / 4 }) togetherWith fadeOut() using SizeTransform(clip = false)
+                },
+            ) { active ->
+                if (active) {
+                    CatalogSearchBar(
+                        query = query,
+                        onQueryChange = { query = it },
+                        onCancel = stopSearch,
+                        modifier = Modifier.background(background),
+                    )
+                } else {
+                    topBar()
+                }
+            }
+        },
+    ) { scope ->
+        AppPageList(scope = scope, listState = listState) {
+            if (searching) {
+                demoSearchResults(query = query, results = results, onOpen = { navigator.push(Route.Demo(it.id)) })
+            } else {
+                DemoGroup.entries.forEach { group ->
+                    item(key = "group_${group.name}") {
+                        PreferenceCategory(title = stringResource(group.title))
+                        Card(modifier = Modifier.padding(horizontal = 16.dp)) {
+                            CardListGroup {
+                                DemoCategory.entries.filter { it.group == group }.forEach { category ->
+                                    item(key = category.id) {
+                                        CategoryRow(
+                                            category = category,
+                                            onClick = { navigator.push(Route.Category(category.id)) },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                labEntry(onClick = { navigator.push(Route.Lab) })
             }
         }
-        labEntry(onClick = { navigator.push(Route.Lab) })
     }
+}
+
+/**
+ * Sends the system back gesture to [onBack] while [enabled], so back leaves the search first.
+ */
+@Composable
+private fun SearchBackHandler(enabled: Boolean, onBack: () -> Unit) {
+    val state = rememberNavigationEventState(NavigationEventInfo.None)
+    NavigationBackHandler(
+        state = state,
+        isBackEnabled = enabled,
+        onBackCompleted = onBack,
+    )
 }
 
 /**
@@ -212,11 +278,11 @@ private fun WideCatalog() {
 }
 
 /**
- * The search capsule of the components home; tapping it opens the search page, as the ColorOS
- * settings search does, instead of expanding in place.
+ * The search capsule of the components home, in the top bar below the title; focusing it starts
+ * the in-place search.
  */
 @Composable
-private fun CatalogSearchEntry(onClick: () -> Unit) {
+private fun CatalogSearchEntry(onActivate: () -> Unit) {
     val hints = listOf(
         stringResource(Res.string.catalog_search_hint),
         stringResource(Res.string.catalog_search_hint_slider),
@@ -229,7 +295,7 @@ private fun CatalogSearchEntry(onClick: () -> Unit) {
                 onQueryChange = {},
                 onSearch = {},
                 expanded = false,
-                onExpandedChange = { if (it) onClick() },
+                onExpandedChange = { if (it) onActivate() },
                 label = stringResource(Res.string.catalog_search_hint),
                 hints = hints,
             )

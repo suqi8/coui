@@ -26,9 +26,6 @@ sealed interface Route : NavKey {
     @Serializable
     data class Demo(val id: String) : Route
 
-    @Serializable
-    data object Search : Route
-
     /** A design spec page: `icons`, `colors` or `text_styles`. */
     @Serializable
     data class Design(val page: String) : Route
@@ -59,7 +56,6 @@ val RouteSerializersModule = SerializersModule {
         subclass(Route.Main::class)
         subclass(Route.Category::class)
         subclass(Route.Demo::class)
-        subclass(Route.Search::class)
         subclass(Route.Design::class)
         subclass(Route.About::class)
         subclass(Route.License::class)

@@ -26,7 +26,6 @@ import catalog.CategoryPage
 import catalog.DemoCatalog
 import catalog.DemoCategory
 import catalog.DemoHostPage
-import catalog.SearchPage
 import lab.LabPage
 import lab.LabRegistry
 import lab.NavTestPage
@@ -76,7 +75,6 @@ fun AppNavHost() {
                         val demo = DemoCatalog.byId(route.id)
                         if (demo != null) DemoHostPage(demo = demo, onBack = { navigator.pop() }) else PopMissing(navigator)
                     }
-                    entry<Route.Search> { SearchPage() }
                     entry<Route.Design> { route ->
                         when (route.page) {
                             DesignPages.ICONS -> IconsPage()
