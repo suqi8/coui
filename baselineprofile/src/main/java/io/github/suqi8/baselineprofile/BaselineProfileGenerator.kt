@@ -12,6 +12,9 @@ import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.regex.Pattern
+
+private val SettingsTabLabel = Pattern.compile("Settings|设置")
 
 /**
  * This test class generates a baseline profile for the target package.
@@ -50,7 +53,7 @@ class BaselineProfileGenerator {
         ) {
             pressHome()
             startActivityAndWait()
-            device.wait(Until.hasObject(By.text("Home")), 2_000)
+            device.wait(Until.hasObject(By.scrollable(true)), 2_000)
         }
     }
 
@@ -62,16 +65,17 @@ class BaselineProfileGenerator {
         ) {
             pressHome()
             startActivityAndWait()
-            device.wait(Until.hasObject(By.text("Home")), 2_000)
+            device.wait(Until.hasObject(By.scrollable(true)), 2_000)
 
-            // Scroll the Home tab
+            // Scroll the components tab
             repeat(3) {
                 device.findObject(By.scrollable(true))?.fling(Direction.DOWN)
             }
             device.waitForIdle()
 
             // Navigate to the Settings tab
-            device.findObject(By.text("Settings"))?.click()
+            // The tab labels follow the system language.
+            device.findObject(By.text(SettingsTabLabel))?.click()
             device.waitForIdle()
         }
     }

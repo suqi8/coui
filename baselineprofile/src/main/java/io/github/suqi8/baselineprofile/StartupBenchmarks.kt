@@ -59,8 +59,8 @@ class StartupBenchmarks {
             measureBlock = {
                 startActivityAndWait()
 
-                // Wait for the Home tab content to be fully rendered
-                device.wait(Until.hasObject(By.text("Home")), 5_000)
+                // Wait for the components tab list to be rendered (labels follow the system language)
+                device.wait(Until.hasObject(By.scrollable(true)), 5_000)
             },
         )
     }
