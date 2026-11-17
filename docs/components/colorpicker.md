@@ -12,6 +12,10 @@ with haptic feedback and real-time color preview.
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.ColorPicker
+import io.github.suqi8.coui.kmp.basic.HsvColorPicker
+import io.github.suqi8.coui.kmp.basic.OkHsvColorPicker
+import io.github.suqi8.coui.kmp.basic.OkLabColorPicker
+import io.github.suqi8.coui.kmp.basic.OkLchColorPicker
 ```
 
 ## Basic Usage
@@ -69,6 +73,18 @@ ColorPicker(
 | showPreview    | Boolean                           | Show color preview            | true                               | No       |
 | hapticEffect   | SliderDefaults.SliderHapticEffect | Slider haptic feedback effect | SliderDefaults.DefaultHapticEffect | No       |
 | colorSpace     | ColorSpace                        | Color space to use            | ColorSpace.HSV                     | No       |
+
+### HsvColorPicker / OkHsvColorPicker / OkLabColorPicker / OkLchColorPicker Properties
+
+The four color-space pickers share one signature (`ColorPicker` without `colorSpace`):
+
+| Property Name  | Type                              | Description                   | Default Value                      | Required |
+|----------------|-----------------------------------|-------------------------------|------------------------------------|----------|
+| color          | Color                             | Current color                 | -                                  | Yes      |
+| onColorChanged | (Color) -> Unit                   | Callback for color changes    | -                                  | Yes      |
+| modifier       | Modifier                          | Modifier for the component    | Modifier                           | No       |
+| showPreview    | Boolean                           | Show color preview            | true                               | No       |
+| hapticEffect   | SliderDefaults.SliderHapticEffect | Slider haptic feedback effect | SliderDefaults.DefaultHapticEffect | No       |
 
 ## Individual Slider Components
 
@@ -167,6 +183,20 @@ ColorPicker(
     color = Color(0xFF4CAF50),
     onColorChanged = { /* Handle color change */ },
     colorSpace = ColorSpace.OKLCH
+)
+```
+
+### Color-Space Pickers
+
+`ColorPicker` dispatches to one picker per color space, and each of them is public on its own: `HsvColorPicker`, `OkHsvColorPicker`, `OkLabColorPicker` and `OkLchColorPicker`. Call one directly when the color space is fixed. Each renders the optional preview capsule followed by its four sliders (see [Color Spaces](#color-spaces) for the channels), keeps its slider positions in its own color space, and only reports a new `Color` through `onColorChanged` when the dragged color differs from `color`. An external change to `color` re-syncs the sliders.
+
+```kotlin
+var selectedColor by remember { mutableStateOf(Color(0xFF3482FF)) }
+
+OkLchColorPicker(
+    color = selectedColor,
+    onColorChanged = { selectedColor = it },
+    showPreview = false
 )
 ```
 

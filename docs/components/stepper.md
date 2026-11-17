@@ -2,6 +2,10 @@
 
 A stepper lets the user adjust an integer value in fixed increments using a minus and a plus button, mirroring ColorOS 17's COUIStepperView: flat 32dp circular buttons with a press mask and press scale, long-press auto-repeat and the OPLUS step haptic.
 
+<div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=stepper" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

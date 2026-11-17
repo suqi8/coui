@@ -2,6 +2,10 @@
 
 页面顶部提示条，对应 COUI 17 的 `COUIDefaultTopTips`（coui_default_toptips.xml）：圆角卡片内含可选的前置图标、可选的 16sp Medium 标题、13sp 文案、可选的实心主色行动按钮和可选的关闭按钮——行动按钮与关闭按钮可以同时出现。文案还可以单行跑马灯滚动。切换可见性会播放 COUI 17 的展开/收起动画（250ms 高度裁剪 + 内容渐隐渐显）。
 
+<div style="position: relative; height: 460px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=topTips" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

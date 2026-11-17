@@ -4,9 +4,14 @@
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 
+<div style="position: relative; height: 320px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=datePicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
+import io.github.suqi8.coui.kmp.basic.DateFieldOrder
 import io.github.suqi8.coui.kmp.basic.DatePicker
 import io.github.suqi8.coui.kmp.basic.DatePickerDefaults
 import io.github.suqi8.coui.kmp.basic.DateValue

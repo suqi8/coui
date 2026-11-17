@@ -26,6 +26,8 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
+import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
@@ -256,6 +258,50 @@ COUI 17 `MixedPopupListAdapter` shows the icon view on every vertical row as soo
 `DropdownItem.stateIcon` puts a custom icon in the 24dp trailing state slot (`PopupListItem.setStateIcon`). It is shown whether or not the item is selected, replaces the selection check (a submenu trigger keeps its indicator) and is tinted like the check: `selectedIndicatorColor` while selected, `submenuIndicatorColor` (couiColorLabelTertiary) otherwise, `alertContentColor` on an alert item.
 
 Menus never dim the content behind them by default (`enableWindowDim = false`): `COUIPopupListWindow` clears its window background and adds no dim.
+
+### DropdownGroupDivider and DropdownHeaderItem
+
+When you lay out grouped rows yourself inside `ListPopupColumn`, use the same pieces the dropdown menus put between and above `DropdownEntry` groups. `DropdownGroupDivider` is the COUI 17 group separator (`MixedPopupListAdapter` divider item): a 12dp band with a centred 0.5dp line inset 20dp at both sides. `DropdownHeaderItem` is the non-clickable group title row (12sp medium, secondary label, at most two lines); the sliding press mask passes over it.
+
+```kotlin
+ListPopupColumn {
+    DropdownHeaderItem(text = "Sort by")
+    sortOptions.forEachIndexed { index, text ->
+        DropdownImpl(text = text, optionSize = sortOptions.size, isSelected = sortIndex == index, index = index, onSelectedIndexChange = { sortIndex = it })
+    }
+    DropdownGroupDivider()
+    DropdownImpl(text = "Reset", optionSize = 1, isSelected = false, index = 0, onSelectedIndexChange = { /* Reset */ })
+}
+```
+
+| Composable           | Property Name | Type     | Description             | Default Value                              |
+| -------------------- | ------------- | -------- | ----------------------- | ------------------------------------------ |
+| DropdownGroupDivider | modifier      | Modifier | Modifier for the band   | Modifier                                   |
+| DropdownGroupDivider | color         | Color    | Color of the line       | DropdownDefaults.PopupGroupDividerColor    |
+| DropdownHeaderItem   | text          | String   | Group title (required)  | -                                          |
+| DropdownHeaderItem   | modifier      | Modifier | Modifier for the row    | Modifier                                   |
+| DropdownHeaderItem   | color         | Color    | Title color             | DropdownDefaults.dropdownColors().headerColor |
+
+The dropdown menus built on `DropdownEntry` only draw the divider once the menu holds at least three items, like COUI 17.
+
+### ListPopupContent
+
+`ListPopupContent` is the low-level popup surface that `OverlayListPopup` and `WindowListPopup` draw their content in. It applies the scale, fade and gravity-path translation driven by the progress lambdas you pass, the COUI 17 touch deformation, the popup drop shadow, the 28dp squircle surface, `backgroundModifier`, and (with `materialEffect`) the shadow-edge stroke and touch spotlight. Use it only when building your own popup host with its own animation; for menus use the list popup components above.
+
+| Property Name            | Type                   | Description                                                            | Default Value                       |
+| ------------------------ | ---------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| popupContentSize         | IntSize                | Last reported content size, to skip redundant size callbacks           | -                                   |
+| onPopupContentSizeChange | (IntSize) -> Unit      | Called when the measured content size changes                          | -                                   |
+| fractionProgress         | () -> Float            | Current scale of the popup (0 → 1)                                     | -                                   |
+| alphaProgress            | () -> Float            | Current alpha of the popup content (0 → 1)                             | -                                   |
+| popupLayoutPosition      | PopupLayoutPosition    | Where the popup spawns relative to its anchor                          | -                                   |
+| localTransformOrigin     | TransformOrigin        | Scaling origin local to the content (COUI 17 scales about the centre)  | -                                   |
+| modifier                 | Modifier               | Modifier for the popup container                                       | Modifier                            |
+| backgroundModifier       | Modifier               | Applied inside the surface clip, over `backgroundColor`, e.g. a material blur | Modifier                     |
+| translation              | () -> Offset           | Current offset from the resting place (a point on the gravity path)    | { Offset.Zero }                     |
+| backgroundColor          | Color                  | Surface fill                                                           | couiColorBackgroundTop              |
+| materialEffect           | Boolean                | Draw the shadow-edge stroke and the touch spotlight                    | false                               |
+| content                  | @Composable () -> Unit | Popup content                                                          | -                                   |
 
 ### PopupPositionProvider.Align
 

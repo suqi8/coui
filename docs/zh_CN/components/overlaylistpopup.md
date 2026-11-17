@@ -26,6 +26,8 @@ popupHost: COUIPopupHost
 ```kotlin
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
+import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownImpl
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
@@ -248,6 +250,50 @@ COUI 17 `MixedPopupListAdapter` 只要列表中有任一条目带图标，就让
 `DropdownItem.stateIcon` 在 24dp 尾部状态位放一个自定义图标（`PopupListItem.setStateIcon`）。无论是否选中都会显示，并取代选中对勾（子菜单触发行仍显示指示器）；着色与对勾一致：选中时 `selectedIndicatorColor`，否则 `submenuIndicatorColor`（couiColorLabelTertiary），警示条目为 `alertContentColor`。
 
 菜单默认不压暗背后的内容（`enableWindowDim = false`）：`COUIPopupListWindow` 会清空窗口背景，也不添加任何遮罩。
+
+### DropdownGroupDivider 与 DropdownHeaderItem
+
+在 `ListPopupColumn` 中自行排列分组选项时，可以使用下拉菜单在 `DropdownEntry` 分组之间和上方使用的同一组构件。`DropdownGroupDivider` 是 COUI 17 的分组分隔（`MixedPopupListAdapter` 的分割线项）：12dp 高的区带，中间一条 0.5dp 的线，两侧各缩进 20dp。`DropdownHeaderItem` 是不可点击的分组标题行（12sp 中等字重、次要文字色，最多两行），滑动的按压蒙层会从它上方经过。
+
+```kotlin
+ListPopupColumn {
+    DropdownHeaderItem(text = "排序方式")
+    sortOptions.forEachIndexed { index, text ->
+        DropdownImpl(text = text, optionSize = sortOptions.size, isSelected = sortIndex == index, index = index, onSelectedIndexChange = { sortIndex = it })
+    }
+    DropdownGroupDivider()
+    DropdownImpl(text = "重置", optionSize = 1, isSelected = false, index = 0, onSelectedIndexChange = { /* 重置 */ })
+}
+```
+
+| 组件                 | 属性名   | 类型     | 说明             | 默认值                                        |
+| -------------------- | -------- | -------- | ---------------- | --------------------------------------------- |
+| DropdownGroupDivider | modifier | Modifier | 应用于区带的修饰符 | Modifier                                    |
+| DropdownGroupDivider | color    | Color    | 分割线颜色       | DropdownDefaults.PopupGroupDividerColor       |
+| DropdownHeaderItem   | text     | String   | 分组标题（必填） | -                                             |
+| DropdownHeaderItem   | modifier | Modifier | 应用于该行的修饰符 | Modifier                                    |
+| DropdownHeaderItem   | color    | Color    | 标题颜色         | DropdownDefaults.dropdownColors().headerColor |
+
+与 COUI 17 一致，基于 `DropdownEntry` 的下拉菜单只在菜单至少有三个选项时才绘制分组分割线。
+
+### ListPopupContent
+
+`ListPopupContent` 是 `OverlayListPopup` 与 `WindowListPopup` 绘制内容所用的底层弹窗表面。它根据传入的进度 lambda 应用缩放、淡入淡出和重力路径位移，并附带 COUI 17 触摸形变、弹窗投影、28dp 超椭圆圆角表面、`backgroundModifier`，以及（`materialEffect` 为 true 时）阴影描边与触摸光斑。只有在自建带独立动画的弹窗宿主时才需要它；普通菜单请使用上面的列表弹窗组件。
+
+| 属性名                   | 类型                   | 说明                                                   | 默认值                 |
+| ------------------------ | ---------------------- | ------------------------------------------------------ | ---------------------- |
+| popupContentSize         | IntSize                | 上次上报的内容尺寸，用于跳过重复的尺寸回调             | -                      |
+| onPopupContentSizeChange | (IntSize) -> Unit      | 测得的内容尺寸变化时调用                               | -                      |
+| fractionProgress         | () -> Float            | 弹窗当前缩放（0 → 1）                                  | -                      |
+| alphaProgress            | () -> Float            | 弹窗内容当前透明度（0 → 1）                            | -                      |
+| popupLayoutPosition      | PopupLayoutPosition    | 弹窗相对锚点的弹出方向                                 | -                      |
+| localTransformOrigin     | TransformOrigin        | 相对内容的缩放原点（COUI 17 以中心缩放）               | -                      |
+| modifier                 | Modifier               | 应用于弹窗容器的修饰符                                 | Modifier               |
+| backgroundModifier       | Modifier               | 在表面裁剪内、`backgroundColor` 之上应用，例如材质模糊 | Modifier               |
+| translation              | () -> Offset           | 当前相对静止位置的偏移（重力路径上的点）               | { Offset.Zero }        |
+| backgroundColor          | Color                  | 表面填充色                                             | couiColorBackgroundTop |
+| materialEffect           | Boolean                | 是否绘制阴影描边与触摸光斑                             | false                  |
+| content                  | @Composable () -> Unit | 弹窗内容                                               | -                      |
 
 ### PopupPositionProvider.Align
 

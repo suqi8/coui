@@ -25,6 +25,8 @@ popupHost: None
 ```kotlin
 import io.github.suqi8.coui.kmp.window.WindowListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
+import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 ```
 
 ## 基本用法
@@ -175,6 +177,21 @@ DropdownImpl(
     onSelectedIndexChange = { /* handle click */ }
 )
 ```
+
+### DropdownGroupDivider 与 DropdownHeaderItem
+
+在 `ListPopupColumn` 中自行排列分组选项时，`DropdownGroupDivider()` 绘制 COUI 17 的分组分隔（12dp 高的区带，中间一条 0.5dp 的线，两侧各缩进 20dp），`DropdownHeaderItem(text = …)` 绘制不可点击的分组标题行，与下拉菜单在 `DropdownEntry` 分组之间的做法完全一致：
+
+```kotlin
+ListPopupColumn {
+    DropdownHeaderItem(text = "排序方式")
+    // 第一组的 DropdownImpl 选项行
+    DropdownGroupDivider()
+    // 第二组的 DropdownImpl 选项行
+}
+```
+
+两者都接受可选的 `modifier` 和 `color`，完整属性表见 [OverlayListPopup](./overlaylistpopup#dropdowngroupdivider-与-dropdownheaderitem)。两种列表弹窗共用的底层表面 `ListPopupContent` 也在该页说明。
 
 ### PopupPositionProvider.Align
 

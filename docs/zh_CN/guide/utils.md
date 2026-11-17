@@ -238,3 +238,33 @@ Box(
 | None | 无视觉反馈                             |
 | Sink | 应用下沉效果，组件在按下时轻微缩小     |
 | Tilt | 应用倾斜效果，组件根据触摸位置轻微倾斜 |
+
+## 选中态蒙层 (SelectedInteractionEffect)
+
+`COUITheme` 安装的 `COUIIndication`（见 [状态蒙层](./theme#状态蒙层)）在条目报告为选中时也会绘制焦点层（`COUITheme.colorScheme.focus`），与 COUI `COUIMaskEffectDrawable` 对选中容器条目的处理一致。`SelectedInteractionEffect`（`io.github.suqi8.coui.kmp.utils`）负责提供这一状态：`selected` 变为 true 时向交互源发出 `COUISelectInteraction.Select`，变为 false 时发出对应的 `Unselect`，离开组合时撤销选中。把同一个交互源传给绘制该指示效果的 clickable 即可。
+
+```kotlin
+var selected by remember { mutableStateOf(false) }
+val interactionSource = remember { MutableInteractionSource() }
+SelectedInteractionEffect(selected = selected, interactionSource = interactionSource)
+
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .clickable(
+            interactionSource = interactionSource,
+            indication = LocalIndication.current, // COUITheme 下即 COUIIndication
+            onClick = { selected = !selected }
+        )
+        .padding(16.dp)
+) {
+    Text("可选中的行")
+}
+```
+
+| 参数              | 类型                     | 说明                       |
+| ----------------- | ------------------------ | -------------------------- |
+| selected          | Boolean                  | 条目是否选中               |
+| interactionSource | MutableInteractionSource | 条目的指示效果所读取的交互源 |
+
+如需手动控制，也可以自行向交互源发出 `COUISelectInteraction.Select()`，之后再发出 `COUISelectInteraction.Unselect(select)`。

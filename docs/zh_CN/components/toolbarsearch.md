@@ -3,6 +3,10 @@
 `ToolbarSearch` 把 [SearchBar](./searchbar) 放进工具栏，并让它从工具栏的搜索图标中展开，对应 COUI 17
 `COUISearchBar.showInToolBar` / `hideInToolBar`。
 
+<div style="position: relative; height: 400px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=toolbarSearch" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

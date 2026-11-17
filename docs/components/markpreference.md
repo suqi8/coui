@@ -4,6 +4,10 @@
 
 Use a group of `MarkPreference` rows as a single-select list: clicking a row invokes `onClick` and the caller moves the checked state to that row.
 
+<div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=markPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin
@@ -105,13 +109,16 @@ var selected by remember { mutableIntStateOf(0) }
 val options = listOf("Option A", "Option B", "Option C")
 
 Card {
-    options.forEachIndexed { index, option ->
-        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        MarkPreference(
-            title = option,
-            checked = selected == index,
-            onClick = { selected = index }
-        )
+    CardListGroup {
+        options.forEachIndexed { index, option ->
+            item {
+                MarkPreference(
+                    title = option,
+                    checked = selected == index,
+                    onClick = { selected = index }
+                )
+            }
+        }
     }
 }
 ```

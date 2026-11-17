@@ -1,6 +1,10 @@
 # SecurityDialog
 
-`SecurityDialog` 是安全声明对话框, 对应 ColorOS 的 COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): 在常规对话框基础上扩展声明文字段落 (含可点击链接)、「不再询问」勾选行, 以及取消 / 确认双按钮 (无填充强调色文字按钮)。
+`SecurityDialog` 是安全声明对话框, 对应 ColorOS 的 COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): 在常规对话框基础上扩展声明文字段落 (含可点击链接)、「不再询问」勾选行, 以及取消 / 确认双按钮 (COUI 17 填充胶囊按钮的 [DialogButtonBar](./dialogbuttonbar))。
+
+<div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=securityDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
 
 提供两种形态:
 

@@ -10,6 +10,10 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.ColorPicker
+import io.github.suqi8.coui.kmp.basic.HsvColorPicker
+import io.github.suqi8.coui.kmp.basic.OkHsvColorPicker
+import io.github.suqi8.coui.kmp.basic.OkLabColorPicker
+import io.github.suqi8.coui.kmp.basic.OkLchColorPicker
 ```
 
 ## 基本用法
@@ -67,6 +71,18 @@ ColorPicker(
 | showPreview    | Boolean                           | 是否显示颜色预览   | true                               | 否    |
 | hapticEffect   | SliderDefaults.SliderHapticEffect | 滑块的触觉反馈效果  | SliderDefaults.DefaultHapticEffect | 否    |
 | colorSpace     | ColorSpace                        | 选择使用的颜色空间  | ColorSpace.HSV                     | 否    |
+
+### HsvColorPicker / OkHsvColorPicker / OkLabColorPicker / OkLchColorPicker 属性
+
+四个按颜色空间的取色器共用同一签名（即去掉 `colorSpace` 的 `ColorPicker`）：
+
+| 属性名            | 类型                                | 说明         | 默认值                                | 是否必须 |
+|----------------|-----------------------------------|------------|------------------------------------|------|
+| color          | Color                             | 当前颜色       | -                                  | 是    |
+| onColorChanged | (Color) -> Unit                   | 颜色变化时的回调函数 | -                                  | 是    |
+| modifier       | Modifier                          | 应用于组件的修饰符  | Modifier                           | 否    |
+| showPreview    | Boolean                           | 是否显示颜色预览   | true                               | 否    |
+| hapticEffect   | SliderDefaults.SliderHapticEffect | 滑块的触觉反馈效果  | SliderDefaults.DefaultHapticEffect | 否    |
 
 ## 单独使用滑块组件
 
@@ -162,6 +178,20 @@ ColorPicker(
     color = Color(0xFF4CAF50),
     onColorChanged = { /* 处理颜色变化 */ },
     colorSpace = ColorSpace.OKLCH
+)
+```
+
+### 按颜色空间的取色器
+
+`ColorPicker` 会按颜色空间分发给对应的取色器，这些取色器本身也都是公开的：`HsvColorPicker`、`OkHsvColorPicker`、`OkLabColorPicker` 和 `OkLchColorPicker`。颜色空间固定时可以直接调用。它们会渲染可选的预览胶囊和各自的四条滑块（通道见上方 [颜色空间](#颜色空间)），在各自的颜色空间中保存滑块位置，只有拖动得到的颜色与 `color` 不同时才通过 `onColorChanged` 回调新的 `Color`；外部修改 `color` 时滑块会重新同步。
+
+```kotlin
+var selectedColor by remember { mutableStateOf(Color(0xFF3482FF)) }
+
+OkLchColorPicker(
+    color = selectedColor,
+    onColorChanged = { selectedColor = it },
+    showPreview = false
 )
 ```
 

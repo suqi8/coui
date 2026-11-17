@@ -2,6 +2,10 @@
 
 The ColorOS "card input": a white card (24dp corners) holding an optional 16sp medium title and a bare, undecorated 15sp text field, with the counter / clear / password buttons at the end of the field and a 10sp error caption below the card. Mirrors COUICardSingleInputView (single line) and COUICardMultiInputView (multi line, counter at the bottom-end corner of the card). The error caption fades in over 217ms / out over 283ms with the COUI ease curve, and the field plays the COUI error shake if it is focused.
 
+<div style="position: relative; height: 480px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=inputView" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

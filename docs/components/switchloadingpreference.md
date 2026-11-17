@@ -2,6 +2,10 @@
 
 `SwitchLoadingPreference` is a switch preference row with a loading state, mirroring ColorOS's `COUISwitchLoadingPreference`. It looks like a `SwitchPreference`, but while `isLoading` is `true` the switch thumb shows the COUI loading spinner and neither the row nor the switch can be toggled. It is meant for settings that take effect asynchronously (e.g. toggling a network feature).
 
+<div style="position: relative; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=switchLoadingPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

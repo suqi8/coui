@@ -2,6 +2,10 @@
 
 `RangeSliderPreference` is a preference component in COUI that combines a title/summary with a range slider control. The range slider is placed in the bottom action area of the `BasicComponent`, making it ideal for settings screens where users need to select a range of values such as price filters, frequency bands, or dual-threshold controls.
 
+<div style="position: relative; height: 330px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=rangeSliderPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin
@@ -111,7 +115,7 @@ RangeSliderPreference(
     summary = "${frequencyRange.start.roundToInt()}Hz - ${frequencyRange.endInclusive.roundToInt()}Hz",
     startAction = {
         Icon(
-            imageVector = COUIIcons.Basic.Audio,
+            imageVector = COUIIcons.Music,
             contentDescription = "Frequency Icon",
             tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)

@@ -2,6 +2,10 @@
 
 ColorOS「卡片输入」：白卡（24dp 圆角）内包含可选的 16sp 中等字重标题与一个完全无装饰的 15sp 输入框，计数 / 清除 / 密码按钮位于输入框尾部，10sp 错误提示位于卡片下方。对应 COUICardSingleInputView（单行）与 COUICardMultiInputView（多行，计数位于卡片右下角）。错误提示以 COUI ease 曲线 217ms 淡入 / 283ms 淡出，输入框处于聚焦状态时播放 COUI 错误抖动。
 
+<div style="position: relative; height: 480px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=inputView" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

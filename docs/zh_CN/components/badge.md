@@ -2,6 +2,10 @@
 
 红点角标组件,对应 ColorOS 的 COUIHintRedDot,共三种形态:6dp 纯圆点、随位数变宽的 16dp 高数字胶囊,以及数字达到 1000 及以上时的三点省略号。`BadgeBox` 可将角标锚定在图标右上角,对应 COUIRedDotFrameLayout。
 
+<div style="position: relative; height: 120px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=badge" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

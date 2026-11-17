@@ -2,6 +2,10 @@
 
 A verification-code input that splits the code into individual cells, mirroring ColorOS's COUICodeInputView: 42x46dp card cells with an 8dp corner radius, a 1.6dp primary-colored stroke on the active cell, digits popping in with a 0.6 -> 1.0 scale + fade, and an optional security mode that shows dots instead of digits. Tapping anywhere focuses the hidden field; typing fills the cells from left to right, pasting distributes the pasted code into the cells, and backspace clears the last cell. A blinking cursor is shown in the active empty cell while focused.
 
+<div style="position: relative; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=codeTextField" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

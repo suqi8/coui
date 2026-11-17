@@ -2,6 +2,10 @@
 
 步进器让用户通过减号和加号按钮以固定步长调整整数值,对应 ColorOS 17 的 COUIStepperView:扁平的 32dp 圆形按钮,带按压蒙层和按压缩放,支持长按连续步进,并带 OPLUS 步进马达震动。
 
+<div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=stepper" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

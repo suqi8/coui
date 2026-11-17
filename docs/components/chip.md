@@ -2,6 +2,10 @@
 
 A capsule shaped, checkable filter tag mirroring ColorOS's COUIChip in its selection style (Widget.COUI.Chip.Choice). The unselected chip is a translucent gray capsule with a primary label; selecting it fills the capsule with the accent color and flips the label to white. The two states cross-fade on the COUI check spring, and pressing scales the chip with the COUI 17 press feedback while tinting the fill.
 
+<div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=chip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

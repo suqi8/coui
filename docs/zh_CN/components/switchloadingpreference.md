@@ -2,6 +2,10 @@
 
 `SwitchLoadingPreference` 是带加载态的开关偏好设置行，对应 ColorOS 的 `COUISwitchLoadingPreference`。外观与 `SwitchPreference` 一致，但当 `isLoading` 为 `true` 时，开关滑块上会显示 COUI 加载转圈动画，且整行与开关都无法被切换。适用于异步生效的设置项（例如切换网络功能）。
 
+<div style="position: relative; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=switchLoadingPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

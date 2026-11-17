@@ -25,6 +25,8 @@ This component does not depend on `Scaffold` and can be used in any composable s
 ```kotlin
 import io.github.suqi8.coui.kmp.window.WindowListPopup
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
+import io.github.suqi8.coui.kmp.basic.DropdownGroupDivider
+import io.github.suqi8.coui.kmp.basic.DropdownHeaderItem
 ```
 
 ## Basic Usage
@@ -183,6 +185,21 @@ DropdownImpl(
     onSelectedIndexChange = { /* handle click */ }
 )
 ```
+
+### DropdownGroupDivider and DropdownHeaderItem
+
+When you lay out grouped rows yourself inside `ListPopupColumn`, `DropdownGroupDivider()` draws the COUI 17 group separator (a 12dp band with a centred 0.5dp line inset 20dp at both sides) and `DropdownHeaderItem(text = …)` the non-clickable group title row, exactly as the dropdown menus do between `DropdownEntry` groups:
+
+```kotlin
+ListPopupColumn {
+    DropdownHeaderItem(text = "Sort by")
+    // DropdownImpl rows of the first group
+    DropdownGroupDivider()
+    // DropdownImpl rows of the second group
+}
+```
+
+Both take an optional `modifier` and `color`; see [OverlayListPopup](./overlaylistpopup#dropdowngroupdivider-and-dropdownheaderitem) for the full table. The low-level surface both list popups draw in, `ListPopupContent`, is described there as well.
 
 ### PopupPositionProvider.Align
 

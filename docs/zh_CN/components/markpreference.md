@@ -4,6 +4,10 @@
 
 多个 `MarkPreference` 行组成单选组：点击某行触发 `onClick`，由调用方将选中状态移动到该行。
 
+<div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=markPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
@@ -105,13 +109,16 @@ var selected by remember { mutableIntStateOf(0) }
 val options = listOf("选项 A", "选项 B", "选项 C")
 
 Card {
-    options.forEachIndexed { index, option ->
-        if (index > 0) HorizontalDivider(Modifier.padding(horizontal = 16.dp))
-        MarkPreference(
-            title = option,
-            checked = selected == index,
-            onClick = { selected = index }
-        )
+    CardListGroup {
+        options.forEachIndexed { index, option ->
+            item {
+                MarkPreference(
+                    title = option,
+                    checked = selected == index,
+                    onClick = { selected = index }
+                )
+            }
+        }
     }
 }
 ```

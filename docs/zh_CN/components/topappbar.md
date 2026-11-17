@@ -13,6 +13,7 @@
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
@@ -95,6 +96,32 @@ TopAppBar(
     largeTitle = "大标题",
     subtitle = "副标题",
     hideSubtitleOnCollapse = false
+)
+```
+
+### 标题下方的搜索胶囊
+
+`TopAppBarSearchSlot` 是 COUI 17 设置首页的搜索行。把它放进 `bottomContent`：它排出一行 52dp（`coui_search_view_height`）、带 16dp 页边距的区域，并随展开态标题区域一起折叠收起。通过具名参数 `inputField` 直接放一个 `InputField`；不要在里面再包一整个 `SearchBar`，因为槽位已经为胶囊留了 16dp 边距，搜索栏会再叠加一层自己的边距：
+
+```kotlin
+var query by remember { mutableStateOf("") }
+
+TopAppBar(
+    title = "设置",
+    bottomContent = {
+        TopAppBarSearchSlot(
+            inputField = {
+                InputField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = { /* 处理搜索 */ },
+                    expanded = false,
+                    onExpandedChange = { /* 打开搜索页 */ },
+                    label = "搜索"
+                )
+            }
+        )
+    }
 )
 ```
 
@@ -217,6 +244,15 @@ TopAppBar(
 | glow                       | (@Composable BoxScope.() -> Unit)? | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow`；`null` 为实色顶栏 | null | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
+### TopAppBarSearchSlot 属性
+
+| 属性名       | 类型                   | 说明                                         | 默认值                                   | 是否必须 |
+| ------------ | ---------------------- | -------------------------------------------- | ---------------------------------------- | -------- |
+| inputField   | @Composable () -> Unit | 搜索输入框，例如 SearchBar 中的 `InputField` | -                                        | 是       |
+| modifier     | Modifier               | 应用于槽位行的修饰符                         | Modifier                                 | 否       |
+| height       | Dp                     | 槽位行高度（`coui_search_view_height`）      | TopAppBarDefaults.SearchSlotHeight       | 否       |
+| insideMargin | PaddingValues          | 胶囊的水平页边距                             | TopAppBarDefaults.SearchSlotInsideMargin | 否       |
+
 ### TopAppBarDefaults 对象
 
 TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认值。
@@ -239,6 +275,8 @@ TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认�
 | NavigationIconGap          | Dp   | 导航图标与折叠态标题之间的水平间距 | 10.dp  |
 | ActionIconGap              | Dp   | 标题与操作图标之间的水平间距      | 4.dp   |
 | ActionItemSpacing          | Dp   | 相邻操作图标之间的水平间距        | 10.dp  |
+| SearchSlotHeight           | Dp   | TopAppBarSearchSlot 行高度        | 52.dp  |
+| SearchSlotInsideMargin     | PaddingValues | 搜索胶囊的水平页边距     | PaddingValues(horizontal = 16.dp) |
 
 #### 函数
 

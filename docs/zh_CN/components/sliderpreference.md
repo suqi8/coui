@@ -2,6 +2,10 @@
 
 `SliderPreference` 是 COUI 中的滑块偏好设置组件，将标题/摘要与滑块控件结合在一起。滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要调整数值的场景，如音量、亮度或字体大小控制。
 
+<div style="position: relative; height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=sliderPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
@@ -120,6 +124,7 @@ SliderPreference(
 ### 带左侧图标
 
 ```kotlin
+// import io.github.suqi8.coui.kmp.icon.extended.Music
 var volume by remember { mutableFloatStateOf(0.7f) }
 
 SliderPreference(
@@ -129,7 +134,7 @@ SliderPreference(
     summary = "${(volume * 100).roundToInt()}%",
     startAction = {
         Icon(
-            imageVector = COUIIcons.Basic.Audio,
+            imageVector = COUIIcons.Music,
             contentDescription = "音量图标",
             tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)

@@ -2,6 +2,10 @@
 
 胶囊形可选中筛选标签,对应 ColorOS 的 COUIChip 选择样式(Widget.COUI.Chip.Choice)。未选中时是半透明灰色胶囊配主文本色标签;选中后胶囊填充强调色、标签变为白色。两种状态间用 COUI 选中弹簧交叉渐变,按压时按 COUI 17 按压反馈缩放并叠加按压色。
 
+<div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=chip" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

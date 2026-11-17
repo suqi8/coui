@@ -4,6 +4,10 @@
 
 滚轮本身的行为见 [NumberPicker](./numberpicker)。日期列宽 150dp（中文、英文以外的语言为 174dp），时间列宽 62dp；选择器比各列总宽窄时，所有列按比例缩小。选中行上下的两条细线在 24 小时制下左右内缩 16dp，12 小时制下通栏绘制。
 
+<div style="position: relative; height: 320px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=dateTimePicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

@@ -2,6 +2,10 @@
 
 `RangeSliderPreference` 是 COUI 中的范围滑块偏好设置组件，将标题/摘要与范围滑块控件结合在一起。范围滑块放置在 `BasicComponent` 的底部操作区域中，适用于设置界面中需要选择数值范围的场景，如价格筛选、频段选择或双阈值控制。
 
+<div style="position: relative; height: 330px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=rangeSliderPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
@@ -111,7 +115,7 @@ RangeSliderPreference(
     summary = "${frequencyRange.start.roundToInt()}Hz - ${frequencyRange.endInclusive.roundToInt()}Hz",
     startAction = {
         Icon(
-            imageVector = COUIIcons.Basic.Audio,
+            imageVector = COUIIcons.Music,
             contentDescription = "频率图标",
             tint = COUITheme.colorScheme.labelPrimary,
             modifier = Modifier.padding(end = 16.dp)

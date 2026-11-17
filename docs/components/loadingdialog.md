@@ -2,6 +2,10 @@
 
 `LoadingDialog` is a small always-centered dialog card with a rotating spinner and an optional message, mirroring ColorOS's rotating progress dialog (COUIRotatingDialogBuilder / `coui_progress_dialog_rotating.xml`): a 152dp-wide card with the regular 45dp dialog corner radius, a 36dp spinner (28dp above, 12dp below) and 14sp secondary-label text. With a cancel button it takes the cancelable form (`COUIAlertDialog.Rotating.Cancelable`).
 
+<div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=loadingDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 Two variants are provided:
 
 - `OverlayLoadingDialog` — rendered inside `Scaffold`'s `COUIPopupHost` (must be used within `Scaffold`).
@@ -134,20 +138,7 @@ Same as `OverlayLoadingDialog`, without `renderInRootScaffold` (the dialog alway
 
 ### LoadingDialogDefaults Object
 
-#### Cancelable Form
-
-Pass `cancelAction` to add a cancel button (`COUIRotatingDialogBuilder.setCancelButton`) and optionally a `title` (`setDialogTitle`). The card then takes the `COUIAlertDialog.Rotating.Cancelable` form: 180dp wide, no minimum height, the message 16dp above a one-button bar.
-
-```kotlin
-OverlayLoadingDialog(
-    show = showLoading,
-    title = "Downloading",
-    text = "Please wait...",
-    cancelAction = DialogButtonBarAction(text = "Cancel", onClick = { showLoading = false }),
-)
-```
-
-## Properties
+#### Properties
 
 | Property Name | Type | Description                                                       |
 | ------------- | ---- | ----------------------------------------------------------------- |

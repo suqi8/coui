@@ -4,6 +4,10 @@
 
 与 COUI 布局一致,声明正文随文字增高,最高 `statementMaxHeight`(248dp),按钮紧跟其后;页面更高时,多出的空间留在底部。小屏横屏(最小宽度 < 480dp)时,退出与确认改为并排的两个 44dp 按钮。
 
+<div style="position: relative; height: 540px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=fullPageStatement" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

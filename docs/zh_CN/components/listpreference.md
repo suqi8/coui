@@ -4,6 +4,10 @@
 
 `MultiSelectListPreference` 是多选变体,对应 COUIMultiSelectListPreference:面板行行末为复选框,仅在点击确定按钮时提交选择。
 
+<div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=listPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
@@ -98,6 +102,7 @@ MultiSelectListPreference(
 
 | 常量                     | 类型 | 默认值 | COUI 来源                                      |
 | ------------------------ | ---- | ------ | ---------------------------------------------- |
+| PanelInsideMargin        | DpSize | DpSize(24.dp, 0.dp) | 库约定（面板行左右 24dp 边距） |
 | PanelItemMinHeight       | Dp   | 48.dp  | coui_delete_alert_dialog_button_height         |
 | PanelItemVerticalPadding | Dp   | 10.dp  | alert_dialog_single_list_padding_vertical      |
 | PanelItemIndicatorSpacing | Dp  | 16.dp  | coui_dialog_layout_margin_horizontal           |

@@ -2,6 +2,10 @@
 
 验证码分格输入组件,对应 ColorOS 的 COUICodeInputView:42x46dp 卡片格、8dp 圆角、活动格 1.6dp 主色描边、数字以 0.6 -> 1.0 缩放 + 淡入弹出,并支持以圆点代替数字的安全模式。点击任意位置即可聚焦隐藏输入框;输入从左到右填格,粘贴会把验证码分发到各格,退格清除最后一格。聚焦时活动空格内显示闪烁光标。
 
+<div style="position: relative; height: 260px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=codeTextField" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

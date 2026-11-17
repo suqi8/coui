@@ -3,6 +3,10 @@
 `CardListGroup` 按 COUI 偏好分组的方式组织 [Card](./card.md) 里堆叠的行：为每一行分配卡片列表位置（圆角边缘上
 2dp 的首 / 尾内边距），并绘制行间分隔线。
 
+<div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=cardListGroup" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin

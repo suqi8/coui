@@ -2,6 +2,10 @@
 
 A hint red dot mirroring ColorOS's COUIHintRedDot, with three forms: a plain 6dp dot, a 16dp-high number capsule that widens with the digit count, and a three-dot ellipsis for counts of 1000 and above. `BadgeBox` anchors a badge at the top end corner of an icon like COUIRedDotFrameLayout.
 
+<div style="position: relative; height: 120px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=badge" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

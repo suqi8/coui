@@ -4,6 +4,10 @@
 
 Like the COUI layout, the statement body grows with its text up to `statementMaxHeight` (248dp) and the buttons follow right below it; when the page is taller, the remaining space stays empty at the bottom. On small landscape windows (smallest width < 480dp) the exit and confirm actions sit side by side as two 44dp buttons.
 
+<div style="position: relative; height: 540px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=fullPageStatement" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

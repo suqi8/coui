@@ -25,6 +25,7 @@ popupHost: COUIPopupHost
 
 ```kotlin
 import io.github.suqi8.coui.kmp.preference.OverlaySpinnerPreference
+import io.github.suqi8.coui.kmp.popup.OverlayDropdownDialog
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
@@ -138,6 +139,33 @@ Scaffold {
         items = options,
         selectedIndex = selectedIndex,
         onSelectedIndexChange = { selectedIndex = it }
+    )
+}
+```
+
+### 独立使用下拉对话框
+
+对话框模式背后的对话框以 `OverlayDropdownDialog`（`io.github.suqi8.coui.kmp.popup`）公开。需要由自己的触发控件（而不是偏好设置行）打开同样的选项对话框时直接使用它。它是一个由 Scaffold 承载的 `OverlayDialog`，以 `DropdownEntry` 列表作为列表面板，底部是一个占满宽度、用于关闭对话框的按钮。点击选项会触发确认振动、调用 `DropdownItem.onClick`，并在 `collapseOnSelection` 为 true 时关闭对话框。
+
+```kotlin
+var show by remember { mutableStateOf(false) }
+var selectedIndex by remember { mutableStateOf(0) }
+val entry = DropdownEntry(
+    items = listOf("选项 1", "选项 2", "选项 3").mapIndexed { index, text ->
+        DropdownItem(text = text, selected = selectedIndex == index, onClick = { selectedIndex = index })
+    }
+)
+
+Scaffold {
+    TextButton(text = "选择", onClick = { show = true })
+    OverlayDropdownDialog(
+        entry = entry,
+        title = "选择一个选项",
+        dialogButtonString = "取消",
+        show = show,
+        onDismiss = { show = false },
+        onDismissFinished = {},
+        dropdownColors = DropdownDefaults.dialogDropdownColors()
     )
 }
 ```
@@ -317,6 +345,23 @@ Scaffold {
 | collapseOnSelection   | Boolean              | 每次选中后是否关闭对话框       | entries.size <= 1 | 否       |
 | renderInRootScaffold  | Boolean              | 是否在根 Scaffold 中渲染对话框 | true              | 否       |
 
+### OverlayDropdownDialog 属性
+
+`OverlayDropdownDialog` 提供 `entry: DropdownEntry` 重载（此时 `collapseOnSelection` 默认为 `true`）和 `entries: List<DropdownEntry>` 重载：
+
+| 属性名               | 类型                 | 说明                                         | 默认值            | 是否必须 |
+| -------------------- | -------------------- | -------------------------------------------- | ----------------- | -------- |
+| entries              | List\<DropdownEntry> | 对话框列表中的选项分组，分组之间以分割线隔开 | -                 | 是       |
+| title                | String               | 对话框标题                                   | -                 | 是       |
+| dialogButtonString   | String               | 底部按钮的文本，点击即关闭对话框             | -                 | 是       |
+| show                 | Boolean              | 是否显示对话框                               | -                 | 是       |
+| onDismiss            | () -> Unit           | 点击按钮、点击外部、返回或选中后收起时调用   | -                 | 是       |
+| onDismissFinished    | () -> Unit           | 退出动画结束后调用                           | -                 | 是       |
+| dropdownColors       | DropdownColors       | 选项行的颜色配置                             | -                 | 是       |
+| popupModifier        | Modifier             | 应用于对话框的修饰符                         | Modifier          | 否       |
+| renderInRootScaffold | Boolean              | 是否在根 Scaffold 中渲染对话框               | true              | 否       |
+| collapseOnSelection  | Boolean              | 点击选项后是否关闭对话框                     | entries.size <= 1 | 否       |
+
 ### DropdownEntry 属性
 
 | 属性名  | 类型                | 说明                       | 默认值 | 是否必须 |
@@ -326,7 +371,6 @@ Scaffold {
 | title | String?             | 可选的不可点击分组标题，渲染在各项之上（12sp 中等字重、次级标签色、最多 2 行） | null   | 否       |
 | horizontal    | Boolean             | 是否作为 COUI 17 横向条目行（最多 5 个纯图标或 3 个图标+文字），仅弹窗模式，后接分组分割线 | false | 否 |
 
-分组标题预留给后续使用。COUI 下拉样式目前没有对应的分组标题表现，因此 `title` 字段暂不开放。
 
 ### DropdownItem 属性
 

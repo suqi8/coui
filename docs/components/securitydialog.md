@@ -1,6 +1,10 @@
 # SecurityDialog
 
-`SecurityDialog` is a security statement dialog mirroring ColorOS's COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): a regular alert dialog extended with a statement paragraph (with an optional tappable link), a "Don't ask me again" checkbox row and a cancel / confirm button bar of borderless accent-tinted text buttons.
+`SecurityDialog` is a security statement dialog mirroring ColorOS's COUISecurityAlertDialogBuilder (`coui_security_alert_dialog_statement_or_checkbox.xml`): a regular alert dialog extended with a statement paragraph (with an optional tappable link), a "Don't ask me again" checkbox row and a cancel / confirm [DialogButtonBar](./dialogbuttonbar) of COUI 17 filled capsule buttons.
+
+<div style="position: relative; height: 420px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=securityDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
 
 Two variants are provided:
 

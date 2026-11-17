@@ -13,6 +13,7 @@ This component is typically used in conjunction with the `Scaffold` component to
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
@@ -98,6 +99,32 @@ TopAppBar(
     largeTitle = "Large Title",
     subtitle = "Subtitle",
     hideSubtitleOnCollapse = false
+)
+```
+
+### Search Capsule Below the Title
+
+`TopAppBarSearchSlot` is the search row of the COUI 17 settings home page. Put it in `bottomContent`: it lays out a 52dp row (`coui_search_view_height`) with the 16dp page-side margin, and folds away together with the expanded title area. Place an `InputField` directly in the slot through the named `inputField` argument; do not wrap a whole `SearchBar` in it, since the slot already pads the capsule by 16dp and the search bar would add its own margin on top:
+
+```kotlin
+var query by remember { mutableStateOf("") }
+
+TopAppBar(
+    title = "Settings",
+    bottomContent = {
+        TopAppBarSearchSlot(
+            inputField = {
+                InputField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearch = { /* Handle search */ },
+                    expanded = false,
+                    onExpandedChange = { /* Open the search page */ },
+                    label = "Search"
+                )
+            }
+        )
+    }
 )
 ```
 
@@ -220,6 +247,15 @@ TopAppBar(
 | glow                       | (@Composable BoxScope.() -> Unit)? | Backing layer drawn behind the bar, e.g. `TopAppBarGlow` with a transparent `color`; `null` for a solid bar | null | No       |
 | bottomContent              | @Composable () -> Unit          | Composable content displayed below the title bar area | {} | No |
 
+### TopAppBarSearchSlot Properties
+
+| Property Name | Type                   | Description                                             | Default Value                            | Required |
+| ------------- | ---------------------- | ------------------------------------------------------- | ---------------------------------------- | -------- |
+| inputField    | @Composable () -> Unit | The search input field, e.g. `InputField` from SearchBar | -                                       | Yes      |
+| modifier      | Modifier               | Modifier applied to the slot row                        | Modifier                                 | No       |
+| height        | Dp                     | Height of the slot row (`coui_search_view_height`)      | TopAppBarDefaults.SearchSlotHeight       | No       |
+| insideMargin  | PaddingValues          | Horizontal page-side padding of the capsule             | TopAppBarDefaults.SearchSlotInsideMargin | No       |
+
 ### TopAppBarDefaults Object
 
 The TopAppBarDefaults object provides default values for TopAppBar and SmallTopAppBar components.
@@ -242,6 +278,8 @@ The TopAppBarDefaults object provides default values for TopAppBar and SmallTopA
 | NavigationIconGap          | Dp   | Horizontal gap between the navigation icon and the collapsed title | 10.dp|
 | ActionIconGap              | Dp   | Horizontal gap between the title and the action icons | 4.dp      |
 | ActionItemSpacing          | Dp   | Horizontal spacing between adjacent action icons | 10.dp     |
+| SearchSlotHeight           | Dp   | Height of the TopAppBarSearchSlot row             | 52.dp         |
+| SearchSlotInsideMargin     | PaddingValues | Horizontal page-side padding of the search capsule | PaddingValues(horizontal = 16.dp) |
 
 #### Functions
 

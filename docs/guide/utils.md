@@ -238,3 +238,33 @@ The `PressFeedbackType` enum defines different types of visual feedback that can
 | None | No visual feedback                                                                    |
 | Sink | Applies a sink effect, where the component scales down slightly when pressed          |
 | Tilt | Applies a tilt effect, where the component tilts slightly based on the touch position |
+
+## Selected State Layer (SelectedInteractionEffect)
+
+`COUIIndication`, the indication `COUITheme` installs (see [State Layers](./theme#state-layers)), also draws its focus layer (`COUITheme.colorScheme.focus`) while an item reports itself selected, as COUI `COUIMaskEffectDrawable` does for a selected container item. `SelectedInteractionEffect` (`io.github.suqi8.coui.kmp.utils`) feeds that state: it emits a `COUISelectInteraction.Select` into the interaction source when `selected` turns true, the matching `Unselect` when it turns false, and withdraws the selection when it leaves the composition. Pass the same interaction source to the clickable that draws the indication.
+
+```kotlin
+var selected by remember { mutableStateOf(false) }
+val interactionSource = remember { MutableInteractionSource() }
+SelectedInteractionEffect(selected = selected, interactionSource = interactionSource)
+
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .clickable(
+            interactionSource = interactionSource,
+            indication = LocalIndication.current, // COUIIndication under COUITheme
+            onClick = { selected = !selected }
+        )
+        .padding(16.dp)
+) {
+    Text("Selectable row")
+}
+```
+
+| Parameter         | Type                     | Description                                       |
+| ----------------- | ------------------------ | ------------------------------------------------- |
+| selected          | Boolean                  | Whether the item is selected                      |
+| interactionSource | MutableInteractionSource | The interaction source the item's indication reads |
+
+To drive it by hand, emit `COUISelectInteraction.Select()` and later `COUISelectInteraction.Unselect(select)` into the source yourself.

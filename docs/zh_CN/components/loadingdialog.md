@@ -2,6 +2,10 @@
 
 `LoadingDialog` 是一个始终居中的小卡片加载对话框, 包含旋转加载指示器与可选文字, 对应 ColorOS 的旋转进度对话框 (COUIRotatingDialogBuilder / `coui_progress_dialog_rotating.xml`): 152dp 宽、与普通对话框相同的 45dp 圆角卡片, 36dp 加载指示器 (上 28dp、下 12dp) 与 14sp 次级标签色文字。带取消按钮时切换为可取消形态 (`COUIAlertDialog.Rotating.Cancelable`)。
 
+<div style="position: relative; height: 300px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=loadingDialog" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 提供两种形态:
 
 - `OverlayLoadingDialog` — 渲染在 `Scaffold` 的 `COUIPopupHost` 中 (必须在 `Scaffold` 内使用)。
@@ -134,20 +138,7 @@ OverlayLoadingDialog(
 
 ### LoadingDialogDefaults 对象
 
-#### 可取消形态
-
-传入 `cancelAction` 添加取消按钮 (`COUIRotatingDialogBuilder.setCancelButton`), 并可传入 `title` (`setDialogTitle`)。卡片随之切换为 `COUIAlertDialog.Rotating.Cancelable` 形态: 宽 180dp、无最小高度, 文字下方 16dp 接单按钮栏。
-
-```kotlin
-OverlayLoadingDialog(
-    show = showLoading,
-    title = "正在下载",
-    text = "请稍候...",
-    cancelAction = DialogButtonBarAction(text = "取消", onClick = { showLoading = false }),
-)
-```
-
-## 属性
+#### 属性
 
 | 属性名        | 类型 | 说明                                                            |
 | ------------- | ---- | --------------------------------------------------------------- |

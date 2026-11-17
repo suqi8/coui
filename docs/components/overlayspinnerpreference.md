@@ -25,6 +25,7 @@ This component depends on `Scaffold` providing `COUIPopupHost` to render popup c
 
 ```kotlin
 import io.github.suqi8.coui.kmp.preference.OverlaySpinnerPreference
+import io.github.suqi8.coui.kmp.popup.OverlayDropdownDialog
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 ```
@@ -138,6 +139,33 @@ Scaffold {
         items = options,
         selectedIndex = selectedIndex,
         onSelectedIndexChange = { selectedIndex = it }
+    )
+}
+```
+
+### Standalone Dropdown Dialog
+
+The dialog behind dialog mode is public as `OverlayDropdownDialog` (`io.github.suqi8.coui.kmp.popup`). Use it to open the same option dialog from your own trigger instead of a preference row. It is a scaffold-hosted `OverlayDialog` with the `DropdownEntry` list as its list panel and one full-width button at the bottom that dismisses it. Item clicks play a confirm haptic, call `DropdownItem.onClick`, and close the dialog when `collapseOnSelection` is true.
+
+```kotlin
+var show by remember { mutableStateOf(false) }
+var selectedIndex by remember { mutableStateOf(0) }
+val entry = DropdownEntry(
+    items = listOf("Option 1", "Option 2", "Option 3").mapIndexed { index, text ->
+        DropdownItem(text = text, selected = selectedIndex == index, onClick = { selectedIndex = index })
+    }
+)
+
+Scaffold {
+    TextButton(text = "Choose", onClick = { show = true })
+    OverlayDropdownDialog(
+        entry = entry,
+        title = "Choose an option",
+        dialogButtonString = "Cancel",
+        show = show,
+        onDismiss = { show = false },
+        onDismissFinished = {},
+        dropdownColors = DropdownDefaults.dialogDropdownColors()
     )
 }
 ```
@@ -317,6 +345,23 @@ Scaffold {
 | collapseOnSelection  | Boolean              | Whether to close the dialog after each selection  | entries.size <= 1 | No       |
 | renderInRootScaffold | Boolean              | Whether to render the dialog in the root Scaffold | true              | No       |
 
+### OverlayDropdownDialog Properties
+
+`OverlayDropdownDialog` has an `entry: DropdownEntry` overload (where `collapseOnSelection` defaults to `true`) and an `entries: List<DropdownEntry>` overload:
+
+| Property Name        | Type                 | Description                                                    | Default Value     | Required |
+| -------------------- | -------------------- | -------------------------------------------------------------- | ----------------- | -------- |
+| entries              | List\<DropdownEntry> | Option groups shown in the dialog list, separated by dividers  | -                 | Yes      |
+| title                | String               | Dialog title                                                   | -                 | Yes      |
+| dialogButtonString   | String               | Text of the bottom button, which dismisses the dialog          | -                 | Yes      |
+| show                 | Boolean              | Whether the dialog is shown                                    | -                 | Yes      |
+| onDismiss            | () -> Unit           | Called on the button, an outside tap, back, or a collapsing selection | -          | Yes      |
+| onDismissFinished    | () -> Unit           | Called after the exit animation finishes                       | -                 | Yes      |
+| dropdownColors       | DropdownColors       | Colors of the option rows                                      | -                 | Yes      |
+| popupModifier        | Modifier             | Modifier applied to the dialog                                 | Modifier          | No       |
+| renderInRootScaffold | Boolean              | Whether to render the dialog in the root Scaffold              | true              | No       |
+| collapseOnSelection  | Boolean              | Whether to close the dialog after an item is clicked           | entries.size <= 1 | No       |
+
 ### DropdownEntry Properties
 
 | Property Name | Type                | Description                        | Default Value | Required |
@@ -326,7 +371,6 @@ Scaffold {
 | title         | String?             | Optional non-clickable group header rendered above the items (12sp medium, secondary label, max 2 lines) | null          | No       |
 | horizontal    | Boolean             | Render the group as the COUI 17 row of horizontal items (up to 5 icons, or 3 icons with labels); popup mode only, always followed by a divider | false | No |
 
-Group titles are reserved for future use. The COUI dropdown style currently has no matching group-title presentation, so the `title` field is not exposed yet.
 
 ### DropdownItem Properties
 

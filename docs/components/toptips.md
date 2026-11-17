@@ -2,6 +2,10 @@
 
 A tip banner shown at the top of a page, mirroring COUI 17 `COUIDefaultTopTips` (coui_default_toptips.xml): a rounded card holding an optional start icon, an optional 16sp medium title, a 13sp message, an optional solid primary action button and an optional close button — the action and close buttons can be shown together. The message can also scroll as a single-line marquee. Toggling visibility plays the COUI 17 expand / collapse animation (a 250ms height clip with a content fade).
 
+<div style="position: relative; height: 460px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=topTips" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin

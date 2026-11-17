@@ -4,6 +4,10 @@
 
 `MultiSelectListPreference` is the multi-choice variant, mirroring COUIMultiSelectListPreference: panel rows end with a checkbox, and the selection is only committed when the confirm button is clicked.
 
+<div style="position: relative; height: 360px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=listPreference" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## Import
 
 ```kotlin
@@ -98,6 +102,7 @@ Additional / differing properties compared to `ListPreference`:
 
 | Constant                 | Type | Default Value | COUI source                                    |
 | ------------------------ | ---- | ------------- | ---------------------------------------------- |
+| PanelInsideMargin        | DpSize | DpSize(24.dp, 0.dp) | library convention (24dp side margin of the panel rows) |
 | PanelItemMinHeight       | Dp   | 48.dp         | coui_delete_alert_dialog_button_height         |
 | PanelItemVerticalPadding | Dp   | 10.dp         | alert_dialog_single_list_padding_vertical      |
 | PanelItemIndicatorSpacing | Dp  | 16.dp         | coui_dialog_layout_margin_horizontal           |

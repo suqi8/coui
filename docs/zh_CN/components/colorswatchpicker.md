@@ -2,6 +2,10 @@
 
 圆点色板选择器,一行圆形色块加动画选中描边环,对应 ColorOS 16 图标单色选择控件(UxColorSelectableView):44dp 单元格内 34dp 色点,选中时淡入 2dp 主题色描边环。
 
+<div style="position: relative; height: 280px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
+    <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=colorSwatchPicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+
 ## 引入
 
 ```kotlin
