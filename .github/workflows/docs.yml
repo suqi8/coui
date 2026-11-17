@@ -47,6 +47,9 @@ jobs:
           ./gradlew :example:web:wasmJsBrowserDistribution
           mkdir -p ./docs/public/example
           mv ./example/web/build/dist/wasmJs/productionExecutable/* ./docs/public/example
+          ./gradlew :docs:canvas:wasmJsBrowserDistribution
+          mkdir -p ./docs/public/canvas
+          mv ./docs/canvas/build/dist/wasmJs/productionExecutable/* ./docs/public/canvas
           ./gradlew :docs:iconGen:generateIcons
           cd ./docs
           yarn install

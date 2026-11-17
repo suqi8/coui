@@ -60,6 +60,10 @@ The skill follows the library version it ships with. When you upgrade COUI, copy
 6. User-facing text goes to Compose resources (`values/` and `values-zh/`); store ids, not display text, as state.
 7. Your own composables follow the library's parameter order: required parameters, `modifier`, defaulted parameters, trailing content.
 
+## Sketch first
+
+To show an assistant what you want instead of describing it, lay the screens out in [COUI Canvas](./canvas) and copy its prompt: every part is already named after its COUI component.
+
 ## Ask for screens like this
 
 - "Add a display settings page with a dark mode switch, a text size dropdown and a wallpaper entry."

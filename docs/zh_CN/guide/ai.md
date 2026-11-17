@@ -60,6 +60,10 @@ When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
 6. 面向用户的文字放进 Compose 资源（`values/` 和 `values-zh/`）；状态里存 id，不存显示文字。
 7. 自己写的可组合函数沿用库的参数顺序：必填参数、`modifier`、带默认值的参数、末尾的内容 lambda。
 
+## 先画草图
+
+与其用文字描述，不如先在 [COUI Canvas 画布](./canvas) 里把屏幕摆出来，再复制它生成的提示词：每个部件都已经写明了对应的 COUI 组件。
+
 ## 可以这样提需求
 
 - 「加一个显示设置页，有深色模式开关、字体大小下拉和壁纸入口。」

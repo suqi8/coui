@@ -1,0 +1,43 @@
+<!-- Copyright 2026, compose-coui-ui contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="color-scheme" content="light dark">
+    <title>COUI Canvas</title>
+    <meta name="description" content="Sketch ColorOS 17 screens with real COUI components and turn them into a prompt or Kotlin code.">
+    <style>
+        :root { --bg: #f4f5f8; --fg: #303030; --sub: #8c93b0; --accent: #3482ff; }
+        @media (prefers-color-scheme: dark) { :root { --bg: #161616; --fg: #e6e6e6; --sub: #8c93b0; --accent: #277af7; } }
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--bg); }
+        #canvasApp { width: 100%; height: 100%; }
+        #loading {
+            position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; gap: 14px;
+            align-items: center; justify-content: center; background: var(--bg); color: var(--fg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            transition: opacity .3s ease;
+        }
+        #loading.hidden { opacity: 0; pointer-events: none; }
+        #loading .logo { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; }
+        #loading .title { font-size: 20px; font-weight: 600; }
+        #loading .sub { font-size: 13px; color: var(--sub); }
+        #loading .bar { width: 160px; height: 4px; border-radius: 2px; background: rgba(127,127,127,.2); overflow: hidden; }
+        #loading .bar div { width: 40%; height: 100%; background: var(--accent); border-radius: 2px; animation: slide 1.1s ease-in-out infinite; }
+        @keyframes slide { 0% { transform: translateX(-120%); } 100% { transform: translateX(260%); } }
+    </style>
+</head>
+<body>
+<div id="loading">
+    <div class="logo">C</div>
+    <div class="title">COUI Canvas</div>
+    <div class="bar"><div></div></div>
+    <div class="sub">Loading components and fonts…</div>
+</div>
+<div id="canvasApp"></div>
+<script src="canvas.js" type="application/javascript"></script>
+</body>
+</html>

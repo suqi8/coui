@@ -57,4 +57,5 @@ include(":example:web")
 include(":example:macos")
 
 include(":docs:demo")
+include(":docs:canvas")
 include(":docs:iconGen")
