@@ -200,8 +200,8 @@ data class ButtonColors(
 
 1. Create the `@Composable` function in `coui-ui/src/commonMain/kotlin/io/github/suqi8/coui/kmp/basic/` (or `preference/` in `coui-preference` for preference components)
 2. Follow API conventions above (parameter ordering, Defaults object, Colors data class)
-3. Add a demo section in `example/shared/src/commonMain/kotlin/component/`
-4. Register the demo in the example app
+3. Add a demo page `example/shared/src/commonMain/kotlin/demo/<category>/{Name}Demo.kt` (`internal val {Name}Demo = Demo(...)`, built with `variant` / `playground` from `demo/framework/DemoDsl.kt`; every page has a playground), with its strings in `composeResources/values/strings_demo_<category>.xml` and `values-zh/`
+4. Register the demo in `example/shared/src/commonMain/kotlin/catalog/entries/<Category>Demos.kt`
 5. Verify on at least Android and Desktop
 
 ### Modifying a Component
@@ -210,7 +210,7 @@ When changing a component's API, defaults, or behavior, check and update all rel
 
 1. **Documentation** (`docs/components/` and `docs/zh_CN/components/`): update properties tables, Defaults object sections, and code examples in both English and Chinese docs
 2. **Docs demo code** (`docs/demo/`): update the interactive demo if it uses changed APIs
-3. **Example app** (`example/shared/src/commonMain/kotlin/component/`): update demo code to reflect the changes
+3. **Example app** (`example/shared/src/commonMain/kotlin/demo/<category>/`): update the demo page, its playground and its `strings_demo_<category>.xml` (English and `values-zh`) to reflect the changes
 
 ### Fixing Bugs
 

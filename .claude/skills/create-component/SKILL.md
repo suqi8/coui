@@ -57,26 +57,35 @@ Structure and conventions follow AGENTS.md (license header, parameter order, Def
 
 ## Step 4: Example app demo
 
-1. Create `example/shared/src/commonMain/kotlin/component/{Name}Section.kt`:
+The example app is a ColorOS-style catalog (Components / Design / Settings tabs): components home → category → one demo page per component, bilingual (English `values/`, Simplified Chinese `values-zh/`).
+
+1. Create `example/shared/src/commonMain/kotlin/demo/{category}/{Name}Demo.kt` (package `demo.{category}`; categories: display, buttons, selection, input, pickers, dialogs, menus, feedback, navigation, layout, preference):
 
    ```kotlin
-   fun LazyListScope.xxxSection() {
-       item(key = "xxx") {
-           SmallTitle(text = "Xxx")
-           Card(
-               modifier = Modifier
-                   .padding(horizontal = 12.dp)
-                   .padding(bottom = 12.dp),
-           ) {
-               // demo content
+   internal val XxxDemo = Demo(
+       id = "xxx",
+       apiName = "Xxx",
+       title = Res.string.demo_xxx_title,
+       category = DemoCategory.Display,
+       page = DemoPage.Variants {
+           playground {
+               var enabled by rememberSaveable { mutableStateOf(true) }
+               PlaygroundPreview { Xxx(enabled = enabled) }
+               PlaygroundControls {
+                   item { SwitchPreference(title = stringResource(Res.string.common_enabled), checked = enabled, onCheckedChange = { enabled = it }) }
+               }
            }
-       }
-   }
+           variant("states", Res.string.demo_xxx_variant_states) { /* demo content */ }
+       },
+       isNew = true, // new in COUI 17
+   )
    ```
 
-   The demo should cover the default look, key parameter variants, and the disabled state. Use several Cards (each with the padding above) for independent groups.
+   `variant` / `playground` / `PlaygroundPreview` / `PlaygroundControls` live in `demo/framework/DemoDsl.kt`. Every demo page has a playground whose rows drive the component's real parameters. Components that live in page slots (bars, FAB, toolbars) use `DemoPage.FullScreen { onBack -> AppPageScaffold(...) }` from `ui/AppPage.kt`.
 
-2. Register in `example/shared/src/commonMain/kotlin/MainPage.kt`: add `import component.xxxSection` to the alphabetized import block, and insert the `xxxSection()` call in display order inside the `if (notExpanded) { … }` block of the `LazyColumn`.
+2. Strings: add `demo_xxx_title` and every other user-facing string (`demo_xxx_*`) to `example/shared/src/commonMain/composeResources/values/strings_demo_{category}.xml` and the Chinese one under `values-zh/`. Reuse `common_*` / `sample_*` from `strings_common.xml`. API names stay untranslated.
+
+3. Register: add `XxxDemo` to the list in `example/shared/src/commonMain/kotlin/catalog/entries/{Category}Demos.kt`, in display order.
 
 ## Step 5: Docs
 
@@ -123,8 +132,8 @@ Commits follow the AGENTS.md Git Commit Style (the component and its example/doc
 A new component lands only when all 8 are done:
 
 1. Component source file (miuix-ui or miuix-preference)
-2. `example/shared/.../component/{Name}Section.kt`
-3. `example/shared/.../MainPage.kt` registration (import + call)
+2. `example/shared/.../demo/{category}/{Name}Demo.kt` with a playground, plus its strings in `strings_demo_{category}.xml` (`values` + `values-zh`)
+3. `example/shared/.../catalog/entries/{Category}Demos.kt` registration
 4. `docs/demo/.../{Name}Demo.kt`
 5. `availableComponents` entry in `docs/demo/.../Demo.kt`
 6. `docs/components/{slug}.md` + `docs/zh_CN/components/{slug}.md`

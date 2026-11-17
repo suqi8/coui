@@ -196,7 +196,7 @@ adb exec-out screencap -p > D:\AndroidStudioProjects\jadx\work\_shots\settings.p
 
 1. 文档 `docs/components/` 与 `docs/zh_CN/components/`
 2. 文档 demo `docs/demo/`
-3. 示例 app `example/shared/src/commonMain/kotlin/component/`
+3. 示例 app 演示页 `example/shared/src/commonMain/kotlin/demo/<分类>/`（含可调参数区）及其中英文案 `strings_demo_<分类>.xml`
 
 ## 8. 默认执行顺序
 
