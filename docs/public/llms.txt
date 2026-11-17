@@ -1,0 +1,19 @@
+# COUI
+
+> COUI is a Compose Multiplatform port of the ColorOS 17 (COUI 17) component kit for Android, iOS, macOS, Desktop (JVM) and Web. Maven group: io.github.suqi8.coui.kmp (modules coui-ui, coui-preference, coui-blur, coui-icons, coui-squircle, coui-nav).
+
+Rules for writing COUI screens:
+
+- Wrap the app in COUITheme(controller = ThemeController(ColorSchemeMode.System)); put every page in a COUI Scaffold (Overlay* dialogs, sheets and menus need it).
+- Page = Scaffold + TopAppBar(scrollBehavior = COUIScrollBehavior()) + LazyColumn with Modifier.overScrollVertical() and the bar's nestedScrollConnection.
+- Settings content = PreferenceCategory + Card + CardListGroup { item { SwitchPreference / ArrowPreference / OverlayDropdownPreference / SliderPreference } }. No hand-made dividers or row paddings.
+- Colours from COUITheme.colorScheme, text from COUITheme.textStyles.
+- COUI 17 material blur: record the page with rememberLayerBackdrop + Modifier.layerBackdrop, pass it to TopAppBarGlow, Modifier.couiMaterialBlur (dialogs, sheets), LocalPopupMaterialBlur (menus) and LocalMaterialBackdrop (buttons, bars); fall back to opaque when isRuntimeShaderSupported() is false.
+- Strings in Compose resources values/ and values-zh/; never store display text as state.
+
+## Docs
+
+- [Getting started](/coui/guide/getting-started): dependencies and theme
+- [Writing with AI](/coui/guide/ai): the coui-app agent skill (.claude/skills/coui-app in the repository)
+- [Blur effects](/coui/guide/blur): material blur presets and backdrops
+- [Components](/coui/components/): every component with properties and examples

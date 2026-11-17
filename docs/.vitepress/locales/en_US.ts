@@ -44,6 +44,7 @@ export default defineConfig({
                         { text: "Squircle Shapes", link: "/guide/squircle" },
                         { text: "Platform Support", link: "/guide/multiplatform" },
                         { text: "Best Practices", link: "/guide/best-practices" },
+                        { text: "Writing with AI", link: "/guide/ai" },
                     ],
                 },
             ],
