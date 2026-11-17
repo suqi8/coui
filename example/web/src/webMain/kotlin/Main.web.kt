@@ -12,8 +12,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.ComposeViewport
+import io.github.suqi8.coui.kmp.shared.generated.resources.Res
+import io.github.suqi8.coui.kmp.shared.generated.resources.app_tab_components
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import org.jetbrains.compose.resources.getString
 import webfont.preloadWebFonts
 import webfont.queryParam
 
@@ -60,6 +63,8 @@ fun main() {
                 }
             }
             withTimeoutOrNull(LOADING_FONT_TIMEOUT_MS) { preload.join() }
+            // The string files load over the network; read one so the first visible frame has text.
+            runCatching { getString(Res.string.app_tab_components) }
             platformHideLoading()
         }
 

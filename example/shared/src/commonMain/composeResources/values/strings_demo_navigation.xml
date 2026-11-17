@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_top_app_bar_title">Top app bar</string>
+    <string name="demo_navigation_bar_title">Navigation bar</string>
+    <string name="demo_floating_navigation_bar_title">Floating navigation bar</string>
+    <string name="demo_floating_accessory_navigation_bar_title">Floating bar with accessory</string>
+    <string name="demo_navigation_rail_title">Navigation rail</string>
+    <string name="demo_side_navigation_bar_title">Side navigation bar</string>
+    <string name="demo_floating_toolbar_title">Floating toolbar</string>
+    <string name="demo_floating_edit_toolbar_title">Floating edit toolbar</string>
+    <string name="demo_tab_row_title">Tabs</string>
+    <string name="demo_chip_tab_title">Chip tabs</string>
+    <string name="demo_breadcrumb_bar_title">Breadcrumb bar</string>
+    <string name="demo_alphabet_index_bar_title">Alphabet index bar</string>
+    <string name="demo_navigation3_transition_title">Page transitions</string>
+
+    <!-- Shared by the navigation demos -->
+    <string name="demo_navigation_create">Create</string>
+    <string name="demo_navigation_filler_title">Page content</string>
+    <string name="demo_navigation_badges">Red dots</string>
+    <string name="demo_navigation_image_background">Picture background</string>
+    <string name="demo_navigation_image_background_summary">Shows the preview over a picture, so the material blur is visible</string>
+
+    <!-- Top app bar -->
+    <string name="demo_top_app_bar_visible_summary">With the bar hidden, use the system back gesture to leave</string>
+    <string name="demo_top_app_bar_style_summary">Large collapses as you scroll; SettingsHome fades its 40sp title out</string>
+    <string name="demo_top_app_bar_subtitle">Subtitle</string>
+    <string name="demo_top_app_bar_actions">Action buttons</string>
+    <string name="demo_top_app_bar_search_slot">Search box</string>
+    <string name="demo_top_app_bar_search_hint">Search settings</string>
+    <string name="demo_top_app_bar_accent_title">Accent title colour</string>
+    <string name="demo_top_app_bar_entry">Settings entry %1$d</string>
+
+    <!-- Navigation bar -->
+    <string name="demo_navigation_bar_blur">Background blur</string>
+    <string name="demo_navigation_bar_blur_summary">Blurs the page behind the bar; needs the material effect setting</string>
+
+    <!-- Floating navigation bar -->
+    <string name="demo_floating_navigation_bar_large_icon">Large centre icon</string>
+    <string name="demo_floating_navigation_bar_expansion">Expansion view</string>
+    <string name="demo_floating_navigation_bar_expansion_summary">A search button beside the bar; tap it to hide it again</string>
+
+    <!-- Floating bar with accessory -->
+    <string name="demo_floating_accessory_navigation_bar_start">Start accessory</string>
+    <string name="demo_floating_accessory_navigation_bar_end">End accessory</string>
+    <string name="demo_floating_accessory_navigation_bar_end_summary">Tap the search accessory to swap its icon</string>
+    <string name="demo_floating_accessory_navigation_bar_variant_plain">Without accessories</string>
+
+    <!-- Navigation rail -->
+    <string name="demo_navigation_rail_header">Header</string>
+    <string name="demo_navigation_rail_hint">The rail sits beside the page; pick a destination on it</string>
+    <string name="demo_navigation_rail_variant_current">Current destination</string>
+
+    <!-- Side navigation bar -->
+    <string name="demo_side_navigation_bar_parent_child">Parent-child hierarchy</string>
+    <string name="demo_side_navigation_bar_parent_child_summary">Only dock on large layouts</string>
+    <string name="demo_side_navigation_bar_edit_mode">Edit mode</string>
+    <string name="demo_side_navigation_bar_edit_mode_summary">Masks the content beside a docked drawer</string>
+    <string name="demo_side_navigation_bar_edit_mask">Edit mode mask</string>
+    <string name="demo_side_navigation_bar_height">Preview height</string>
+    <string name="demo_side_navigation_bar_toggle">Show or hide the navigation</string>
+    <string name="demo_side_navigation_bar_docked">Docked: the content makes room for the drawer.</string>
+    <string name="demo_side_navigation_bar_overlay">Overlay: the drawer slides over the content; tap the mask to close it.</string>
+    <string name="demo_side_navigation_bar_page_themes">Themes</string>
+    <string name="demo_side_navigation_bar_page_wallpapers">Wallpapers</string>
+    <string name="demo_side_navigation_bar_page_fonts">Fonts</string>
+    <string name="demo_side_navigation_bar_page_icons">Icons</string>
+
+    <!-- Floating toolbar -->
+    <string name="demo_floating_toolbar_corner_radius">Corner radius</string>
+    <string name="demo_floating_toolbar_none">none</string>
+    <string name="demo_floating_toolbar_variant_items">Toolbar of items</string>
+    <string name="demo_floating_toolbar_item_title">%1$s %2$d</string>
+    <string name="demo_floating_toolbar_items_count">Items: %1$d</string>
+
+    <!-- Floating edit toolbar -->
+    <string name="demo_floating_edit_toolbar_favorite">Favourite</string>
+    <string name="demo_floating_edit_toolbar_disabled_item">Disabled item</string>
+    <string name="demo_floating_edit_toolbar_variant_compact">Compact: icons over labels</string>
+    <string name="demo_floating_edit_toolbar_variant_wide">From 600dp wide: icons beside labels</string>
+
+    <!-- Tabs -->
+    <string name="demo_tab_row_style_tiny">TabRowWithContour, tiny</string>
+    <string name="demo_tab_row_long_tab">Long tab name %1$d</string>
+    <string name="demo_tab_row_content">Content of %1$s</string>
+    <string name="demo_tab_row_all">All</string>
+    <string name="demo_tab_row_day">Day</string>
+    <string name="demo_tab_row_week">Week</string>
+    <string name="demo_tab_row_month">Month</string>
+    <string name="demo_tab_row_recommended">Recommended</string>
+    <string name="demo_tab_row_following">Following</string>
+    <string name="demo_tab_row_popular">Popular</string>
+    <string name="demo_tab_row_featured">Featured</string>
+    <string name="demo_tab_row_technology">Technology</string>
+    <string name="demo_tab_row_travel">Travel</string>
+    <string name="demo_tab_row_food">Food</string>
+    <string name="demo_tab_row_images">Images</string>
+    <string name="demo_tab_row_allowed">Allowed</string>
+    <string name="demo_tab_row_denied">Denied</string>
+    <string name="demo_tab_row_photo">Photo</string>
+    <string name="demo_tab_row_video">Video</string>
+    <string name="demo_tab_row_portrait">Portrait</string>
+    <string name="demo_tab_row_pano">Pano</string>
+    <string name="demo_tab_row_variant_fixed">Fixed tabs</string>
+    <string name="demo_tab_row_variant_scrolling">Scrolling tabs with a pager</string>
+    <string name="demo_tab_row_variant_icons">Icon tabs and red dots</string>
+    <string name="demo_tab_row_variant_contour">Segmented tabs with a pager</string>
+    <string name="demo_tab_row_variant_tiny">Tiny segmented tabs</string>
+
+    <!-- Chip tabs -->
+    <string name="demo_chip_tab_all">All</string>
+    <string name="demo_chip_tab_documents">Documents</string>
+    <string name="demo_chip_tab_downloads">Downloads</string>
+    <string name="demo_chip_tab_archives">Archives</string>
+    <string name="demo_chip_tab_others">Others</string>
+    <string name="demo_chip_tab_categories">Categories</string>
+    <string name="demo_chip_tab_leading_icon">Leading icon</string>
+    <string name="demo_chip_tab_material_type">Material type</string>
+    <string name="demo_chip_tab_starred">Starred</string>
+    <string name="demo_chip_tab_no_material">No material</string>
+    <string name="demo_chip_tab_disabled_selected">Disabled, selected</string>
+    <string name="demo_chip_tab_variant_scrolling">Scrolling row</string>
+    <string name="demo_chip_tab_variant_leading_icon">With a leading icon</string>
+    <string name="demo_chip_tab_variant_single">Single chip tabs</string>
+    <string name="demo_chip_tab_variant_backdrop">Over a picture: Default and NoBlur</string>
+
+    <!-- Breadcrumb bar -->
+    <string name="demo_breadcrumb_bar_internal_storage">Internal storage</string>
+    <string name="demo_breadcrumb_bar_depth">Path depth</string>
+    <string name="demo_breadcrumb_bar_full_path">Full path: %1$s</string>
+    <string name="demo_breadcrumb_bar_current_path">Current: %1$s</string>
+    <string name="demo_breadcrumb_bar_variant_page">On the page</string>
+    <string name="demo_breadcrumb_bar_variant_card">In a card</string>
+
+    <!-- Alphabet index bar -->
+    <string name="demo_alphabet_index_bar_height">Bar height</string>
+    <string name="demo_alphabet_index_bar_collect_key">Favourites key</string>
+    <string name="demo_alphabet_index_bar_partial_keys">Only some letters in use</string>
+    <string name="demo_alphabet_index_bar_haptic">Haptic feedback</string>
+    <string name="demo_alphabet_index_bar_full_height">Full height</string>
+    <string name="demo_alphabet_index_bar_compressed">Compressed</string>
+    <string name="demo_alphabet_index_bar_list_row">Entry %1$s%2$d</string>
+    <string name="demo_alphabet_index_bar_variant_heights">Full height and compressed</string>
+    <string name="demo_alphabet_index_bar_variant_following">Following a list</string>
+
+    <!-- Page transitions -->
+    <string name="demo_navigation3_transition_hint">These effects apply to every page change in the app right away.</string>
+    <string name="demo_navigation3_transition_depth">Back stack depth: %1$d</string>
+    <string name="demo_navigation3_transition_corner_clip">Corner clip</string>
+    <string name="demo_navigation3_transition_corner_clip_summary">Clip the top page with rounded corners during transitions</string>
+    <string name="demo_navigation3_transition_dim">Dim</string>
+    <string name="demo_navigation3_transition_dim_summary">Dim the page behind during transitions</string>
+    <string name="demo_navigation3_transition_block_input">Block input during transitions</string>
+    <string name="demo_navigation3_transition_block_input_summary">Block touches on the page that is not the target</string>
+    <string name="demo_navigation3_transition_swipe_edge">Pop follows the swipe edge</string>
+    <string name="demo_navigation3_transition_swipe_edge_summary">The pop animation runs in the direction of the edge the finger swiped from</string>
+    <string name="demo_navigation3_transition_push">Push a test page</string>
+    <string name="demo_navigation3_transition_push_summary">Watch the transition, then swipe back</string>
+</resources>

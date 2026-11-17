@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_checkbox_title">Checkbox</string>
+    <string name="demo_radio_button_title">Radio button</string>
+    <string name="demo_switch_title">Switch</string>
+    <string name="demo_slider_title">Slider</string>
+    <string name="demo_intent_slider_title">Intent slider</string>
+    <string name="demo_chip_title">Chip</string>
+    <string name="demo_chip_group_title">Chip group</string>
+
+    <!-- Checkbox -->
+    <string name="demo_checkbox_state">State</string>
+    <string name="demo_checkbox_state_unchecked">Unchecked</string>
+    <string name="demo_checkbox_state_indeterminate">Partially checked</string>
+    <string name="demo_checkbox_state_checked">Checked</string>
+    <string name="demo_checkbox_tri_state">Three states</string>
+    <string name="demo_checkbox_tri_state_summary">Tapping cycles through unchecked, partially checked and checked</string>
+    <string name="demo_checkbox_style_shape">Shape (on images)</string>
+    <string name="demo_checkbox_variant_states">States</string>
+    <string name="demo_checkbox_variant_shape">Shape checkbox on an image</string>
+
+    <!-- Radio button -->
+    <string name="demo_radio_button_show_labels">Show labels</string>
+    <string name="demo_radio_button_variant_states">States</string>
+
+    <!-- Switch -->
+    <string name="demo_switch_loading_summary">The thumb turns into a spinning arc and taps are ignored</string>
+    <string name="demo_switch_variant_states">States</string>
+
+    <!-- Slider -->
+    <string name="demo_slider_component">Component</string>
+    <string name="demo_slider_show_key_points">Show key points</string>
+    <string name="demo_slider_material_summary">Glass thumb and touch spotlight while pressed</string>
+    <string name="demo_slider_start_from_middle">Start from middle</string>
+    <string name="demo_slider_reverse">Reverse direction</string>
+    <string name="demo_slider_haptic">Haptic feedback</string>
+    <string name="demo_slider_continuous">Continuous</string>
+    <string name="demo_slider_sections">Sections</string>
+    <string name="demo_slider_key_points">Key points</string>
+    <string name="demo_slider_custom_key_points">Custom key points</string>
+    <string name="demo_slider_steps_key_points">Steps with key points</string>
+    <string name="demo_slider_material_off">Without material effect</string>
+    <string name="demo_slider_disabled_key_points">Disabled with key points</string>
+
+    <!-- Intent slider -->
+    <string name="demo_intent_slider_playback_state">Playback state</string>
+    <string name="demo_intent_slider_show_thumb">Show thumb</string>
+    <string name="demo_intent_slider_follow_thumb">Follow thumb</string>
+    <string name="demo_intent_slider_follow_thumb_summary">The progress jumps to the finger instead of moving with the drag</string>
+    <string name="demo_intent_slider_secondary_value">Secondary progress</string>
+    <string name="demo_intent_slider_loading_drag_return">Drag returns while loading</string>
+    <string name="demo_intent_slider_loading_drag_return_summary">A drag during initial loading springs back to the start on release</string>
+    <string name="demo_intent_slider_over_media">Over media</string>
+    <string name="demo_intent_slider_over_media_summary">Fixed colours with the blurred photo behind</string>
+    <string name="demo_intent_slider_conic_light">Conic light</string>
+    <string name="demo_intent_slider_conic_light_summary">A light trails the progress while playing or dragging; over media only</string>
+    <string name="demo_intent_slider_variant_sizes">Sizes</string>
+    <string name="demo_intent_slider_variant_playback">Playback</string>
+    <string name="demo_intent_slider_variant_media">Over media</string>
+    <string name="demo_intent_slider_variant_media_label">Fixed colours with conic light</string>
+    <string name="demo_intent_slider_thumb_paused">Thumb (paused)</string>
+    <string name="demo_intent_slider_thumb_playing">Thumb (playing)</string>
+    <string name="demo_intent_slider_play">Play</string>
+    <string name="demo_intent_slider_pause">Pause</string>
+    <string name="demo_intent_slider_initial_loading">Initial loading (drag returns)</string>
+    <string name="demo_intent_slider_buffering">Buffering</string>
+    <string name="demo_intent_slider_state_format">State: %1$s</string>
+
+    <!-- Chip -->
+    <string name="demo_chip_type">Component</string>
+    <string name="demo_chip_label">Label</string>
+    <string name="demo_chip_long_label">A chip label too long to fit in a single chip</string>
+    <string name="demo_chip_show_count">Show count</string>
+    <string name="demo_chip_show_red_dot">Show red dot</string>
+    <string name="demo_chip_closable">Closable</string>
+    <string name="demo_chip_closable_summary">Closing hides the chip; turn Visible back on to restore it</string>
+    <string name="demo_chip_variant_filter">Filter chips</string>
+    <string name="demo_chip_variant_badges">Count, red dot and close</string>
+    <string name="demo_chip_variant_suggestion">Suggestion chips</string>
+    <string name="demo_chip_variant_disabled">Disabled</string>
+    <string name="demo_chip_recommended">Recommended</string>
+    <string name="demo_chip_nearby">Nearby</string>
+    <string name="demo_chip_popular">Popular</string>
+    <string name="demo_chip_downloads">Downloads</string>
+    <string name="demo_chip_updates">Updates</string>
+    <string name="demo_chip_dark_mode">Dark mode</string>
+    <string name="demo_chip_reset">Reset</string>
+    <string name="demo_chip_disabled">Disabled</string>
+    <string name="demo_chip_disabled_selected">Disabled and selected</string>
+
+    <!-- Chip group -->
+    <string name="demo_chip_group_single_selection">Single selection</string>
+    <string name="demo_chip_group_selection_required">Selection required</string>
+    <string name="demo_chip_group_selection_required_summary">The last selected chip cannot be unselected</string>
+    <string name="demo_chip_group_single_line">Single line</string>
+    <string name="demo_chip_group_single_line_summary">The chips stay on one scrolling row</string>
+    <string name="demo_chip_group_collapsable">Collapsible</string>
+    <string name="demo_chip_group_collapsable_summary">Shows an expand button when the chips need more rows</string>
+    <string name="demo_chip_group_collapsed_rows">Rows when collapsed</string>
+    <string name="demo_chip_group_none">None</string>
+    <string name="demo_chip_group_variant_single_select">Single selection</string>
+    <string name="demo_chip_group_variant_collapsable">Collapsible</string>
+    <string name="demo_chip_group_variant_single_line">Single line</string>
+    <string name="demo_chip_group_all">All</string>
+    <string name="demo_chip_group_documents">Documents</string>
+    <string name="demo_chip_group_security">Security</string>
+    <string name="demo_chip_group_location">Location</string>
+    <string name="demo_chip_group_apps">Apps</string>
+    <string name="demo_chip_group_accessibility">Accessibility</string>
+    <string name="demo_chip_group_lock_screen">Lock screen</string>
+    <string name="demo_chip_group_family_space">Family space</string>
+    <string name="demo_chip_group_about_phone">About phone</string>
+</resources>

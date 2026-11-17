@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shell -->
+    <string name="app_tab_components">Components</string>
+    <string name="app_tab_design">Design</string>
+    <string name="app_tab_settings">Settings</string>
+
+    <!-- Components home and search -->
+    <string name="catalog_group_basic">Basic controls</string>
+    <string name="catalog_group_overlay">Overlays and feedback</string>
+    <string name="catalog_group_structure">Page structure</string>
+    <string name="catalog_group_more">More</string>
+    <string name="catalog_new">New</string>
+    <string name="catalog_search_hint">Search components</string>
+    <string name="catalog_search_hint_slider">Try \"Slider\"</string>
+    <string name="catalog_search_hint_dialog">Try \"Dialog\"</string>
+    <string name="catalog_search_results">%1$d results</string>
+    <string name="catalog_search_empty">No matching components</string>
+    <string name="catalog_search_empty_hint">Try another word. Both the name and the API name work.</string>
+    <string name="catalog_list_empty_detail">Pick a component from the list</string>
+
+    <!-- Categories -->
+    <string name="category_display">Display</string>
+    <string name="category_display_summary">Card, badge, tag, banner</string>
+    <string name="category_buttons">Buttons</string>
+    <string name="category_buttons_summary">Button, floating button, stepper</string>
+    <string name="category_selection">Selection</string>
+    <string name="category_selection_summary">Switch, checkbox, slider, chip</string>
+    <string name="category_input">Input and search</string>
+    <string name="category_input_summary">Text field, search bar, keyboard, lock</string>
+    <string name="category_pickers">Pickers</string>
+    <string name="category_pickers_summary">Number, date and time, calendar, colour</string>
+    <string name="category_dialogs">Dialogs and sheets</string>
+    <string name="category_dialogs_summary">Dialog, list dialog, bottom sheet</string>
+    <string name="category_menus">Menus and tips</string>
+    <string name="category_menus_summary">Dropdown menu, popup, tooltip</string>
+    <string name="category_feedback">Feedback</string>
+    <string name="category_feedback_summary">Snackbar, progress, empty state</string>
+    <string name="category_navigation">Navigation and bars</string>
+    <string name="category_navigation_summary">Top bar, navigation bar, toolbar, tabs</string>
+    <string name="category_layout">Layout</string>
+    <string name="category_layout_summary">List-detail, grid, swipe actions</string>
+    <string name="category_preference">Preferences</string>
+    <string name="category_preference_summary">Switch, list, dropdown, category</string>
+
+    <!-- Design -->
+    <string name="design_icons">Icons</string>
+    <string name="design_icons_summary">Extended icons in five weights</string>
+    <string name="design_icons_search">Search icons</string>
+    <string name="design_icons_name">Name</string>
+    <string name="design_icons_compare_hint">Tap to compare weights</string>
+    <string name="design_icons_no_match">No matching icons</string>
+    <string name="design_colors">Colours</string>
+    <string name="design_colors_summary">Theme colour slots, light, dark and dynamic</string>
+    <string name="design_colors_current">Current theme</string>
+    <string name="design_colors_light">Light theme</string>
+    <string name="design_colors_dynamic_light">Dynamic light</string>
+    <string name="design_colors_dark">Dark theme</string>
+    <string name="design_colors_dynamic_dark">Dynamic dark</string>
+    <string name="design_text_styles">Text styles</string>
+    <string name="design_text_styles_summary">The COUI type scale</string>
+    <string name="design_text_group_title">Display</string>
+    <string name="design_text_group_headline">Headline</string>
+    <string name="design_text_group_body">Body</string>
+    <string name="design_text_group_button">Button</string>
+    <string name="design_text_group_footnote">Footnote</string>
+
+    <!-- Settings -->
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_color_mode">Colour mode</string>
+    <string name="settings_color_mode_system">Follow system</string>
+    <string name="settings_color_mode_light">Light</string>
+    <string name="settings_color_mode_dark">Dark</string>
+    <string name="settings_color_mode_monet_system">Monet, follow system</string>
+    <string name="settings_color_mode_monet_light">Monet light</string>
+    <string name="settings_color_mode_monet_dark">Monet dark</string>
+    <string name="settings_key_color">Key colour</string>
+    <string name="settings_key_color_default">Default</string>
+    <string name="settings_key_color_blue">Blue</string>
+    <string name="settings_key_color_green">Green</string>
+    <string name="settings_key_color_purple">Purple</string>
+    <string name="settings_key_color_yellow">Yellow</string>
+    <string name="settings_key_color_orange">Orange</string>
+    <string name="settings_key_color_pink">Pink</string>
+    <string name="settings_key_color_teal">Teal</string>
+    <string name="settings_palette_style">Palette style</string>
+    <string name="settings_color_spec">Colour spec</string>
+    <string name="settings_group_effects">Effects</string>
+    <string name="settings_material_blur">Material and blur</string>
+    <string name="settings_material_blur_summary">COUI 17 blurred bars, panels, menus and buttons</string>
+    <string name="settings_squircle">Smooth corners</string>
+    <string name="settings_squircle_summary">Superellipse corners instead of circular arcs</string>
+    <string name="settings_group_interaction">Interaction</string>
+    <string name="settings_scroll_end_haptic">Scroll end haptics</string>
+    <string name="settings_scroll_end_haptic_summary">Vibrate when a list hits its end</string>
+    <string name="settings_group_developer">Developer</string>
+    <string name="settings_fps_monitor">Show frame rate</string>
+    <string name="settings_fps_monitor_summary">Overlay the current FPS</string>
+    <string name="settings_group_other">Other</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_summary">Version, source code and licences</string>
+
+    <!-- About -->
+    <string name="about_title">About</string>
+    <string name="about_version">Version %1$s (%2$s)</string>
+    <string name="about_name">Name</string>
+    <string name="about_components">Components</string>
+    <string name="about_components_count">%1$d demo pages</string>
+    <string name="about_group_details">Details</string>
+    <string name="about_version_label">Version</string>
+    <string name="about_design_language">Design language</string>
+    <string name="about_platforms">Platforms</string>
+    <string name="about_view_source">View source</string>
+    <string name="about_group_community">Project</string>
+    <string name="about_source">Source code</string>
+    <string name="about_telegram">Join the group</string>
+    <string name="about_group_legal">Licences</string>
+    <string name="about_license">Licence</string>
+    <string name="about_third_party">Third-party licences</string>
+
+    <!-- Lab -->
+    <string name="lab_title">Lab</string>
+    <string name="lab_entry_summary">Legacy effects and test pages</string>
+    <string name="lab_banner">These pages are kept from the Miuix days. They are not part of the COUI design language.</string>
+    <string name="lab_blur">Texture blur</string>
+    <string name="lab_blur_summary">Texture and foreground blur with highlights</string>
+    <string name="lab_bg_effect">Background effect</string>
+    <string name="lab_bg_effect_summary">HyperOS OS2 and OS3 shader background</string>
+    <string name="lab_liquid_glass">Liquid glass bar</string>
+    <string name="lab_liquid_glass_summary">An iOS-like glass navigation bar</string>
+    <string name="lab_navigation_test">Navigation test</string>
+    <string name="lab_navigation_test_summary">Long titles, popups and repeated pushes</string>
+    <string name="lab_multi_scaffold">Multi-scaffold test</string>
+    <string name="lab_multi_scaffold_summary">Popups inside nested scaffolds</string>
+</resources>

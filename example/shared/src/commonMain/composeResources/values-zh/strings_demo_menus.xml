@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_dropdown_menu_title">下拉菜单</string>
+    <string name="demo_list_popup_title">列表弹窗</string>
+    <string name="demo_context_menu_title">上下文菜单</string>
+    <string name="demo_spinner_title">下拉选择器</string>
+    <string name="demo_navigation_popup_menu_title">导航弹出菜单</string>
+    <string name="demo_tooltip_title">气泡提示</string>
+    <string name="demo_top_tips_title">顶部提示</string>
+
+    <!-- Shared by the menu demos -->
+    <string name="demo_menus_host">弹出方式</string>
+    <string name="demo_menus_host_overlay">页内浮层</string>
+    <string name="demo_menus_host_window">独立窗口</string>
+
+    <!-- Dropdown menu -->
+    <string name="demo_dropdown_menu_state_expanded">已展开</string>
+    <string name="demo_dropdown_menu_state_collapsed">已收起</string>
+    <string name="demo_dropdown_menu_content">菜单内容</string>
+    <string name="demo_dropdown_menu_content_single">单个分组</string>
+    <string name="demo_dropdown_menu_content_grouped">多个分组</string>
+    <string name="demo_dropdown_menu_content_headers">分组标题</string>
+    <string name="demo_dropdown_menu_content_variants">选项样式</string>
+    <string name="demo_dropdown_menu_collapse_on_selection">选择后收起</string>
+    <string name="demo_dropdown_menu_limit_height">限制高度</string>
+    <string name="demo_dropdown_menu_variant_item_variants">选项样式</string>
+    <string name="demo_dropdown_menu_variant_group_headers">分组标题</string>
+    <string name="demo_dropdown_menu_variant_icon_menus">图标按钮菜单</string>
+    <string name="demo_dropdown_menu_variant_disabled">禁用</string>
+    <string name="demo_dropdown_menu_disabled_summary">菜单不会弹出</string>
+    <string name="demo_dropdown_menu_icon_menus_summary">标题栏中常见的图标按钮菜单：二级菜单、分组单选与多选。</string>
+    <string name="demo_dropdown_menu_cd_view">视图选项</string>
+    <string name="demo_dropdown_menu_cd_sort">排序</string>
+    <string name="demo_dropdown_menu_cd_select">选择</string>
+    <string name="demo_dropdown_menu_group_option">选项 %1$s-%2$d</string>
+    <string name="demo_dropdown_menu_sort_captured">按拍摄时间排序</string>
+    <string name="demo_dropdown_menu_sort_added">按添加时间排序</string>
+    <string name="demo_dropdown_menu_view_mode">视图模式</string>
+    <string name="demo_dropdown_menu_view_grouped">按日期分组</string>
+    <string name="demo_dropdown_menu_view_compact">紧凑</string>
+    <string name="demo_dropdown_menu_filter">筛选</string>
+    <string name="demo_dropdown_menu_filter_all">全部项目</string>
+    <string name="demo_dropdown_menu_filter_camera">相机相册</string>
+    <string name="demo_dropdown_menu_item_icon">带图标的选项</string>
+    <string name="demo_dropdown_menu_item_description">带说明的选项</string>
+    <string name="demo_dropdown_menu_item_description_summary">第二行文字说明此选项会改变什么</string>
+    <string name="demo_dropdown_menu_item_red_dot">带红点的选项</string>
+    <string name="demo_dropdown_menu_item_count_badge">带数字角标的选项</string>
+    <string name="demo_dropdown_menu_item_all_slots">图标、说明和提示</string>
+    <string name="demo_dropdown_menu_item_all_slots_summary">三个位置同时使用</string>
+    <string name="demo_dropdown_menu_item_state_icon">自定义状态图标</string>
+    <string name="demo_dropdown_menu_item_disabled">已禁用的选项（隐藏提示）</string>
+    <string name="demo_dropdown_menu_item_long">这是一个很长的标题，超出 248dp 的宽度上限后会折到第三行，最后才以省略号结尾，用来检查选项文字的截断效果</string>
+    <string name="demo_dropdown_menu_item_alert">全部删除</string>
+    <string name="demo_dropdown_menu_header_sort">排序方式</string>
+    <string name="demo_dropdown_menu_header_name">名称</string>
+    <string name="demo_dropdown_menu_header_date">修改时间</string>
+    <string name="demo_dropdown_menu_header_long">这是一个足够长的分组标题，需要换到第二行之后才会以省略号结尾</string>
+    <string name="demo_dropdown_menu_header_ascending">升序</string>
+    <string name="demo_dropdown_menu_header_descending">降序</string>
+    <string name="demo_dropdown_menu_header_danger">危险操作</string>
+    <string name="demo_dropdown_menu_header_reset">还原所有设置</string>
+
+    <!-- List popup -->
+    <string name="demo_list_popup_show">显示弹窗</string>
+    <string name="demo_list_popup_window_dim">背景变暗</string>
+    <string name="demo_list_popup_material_blur">材质模糊</string>
+    <string name="demo_list_popup_material_effect">边缘光与触摸光斑</string>
+    <string name="demo_list_popup_limit_height">限制高度</string>
+    <string name="demo_list_popup_disabled_row">禁用第二项</string>
+    <string name="demo_list_popup_variant_sub_menus">二级菜单</string>
+    <string name="demo_list_popup_sub_menus_summary">按住“排序方式”后滑入二级菜单；也可在图标之间拖动</string>
+    <string name="demo_list_popup_variant_opaque">不透明弹窗</string>
+    <string name="demo_list_popup_opaque_summary">materialBlur = false：COUI 的非模糊背景，仍绘制边缘光与触摸光斑</string>
+    <string name="demo_list_popup_new_folder">新建文件夹</string>
+    <string name="demo_list_popup_sort">排序</string>
+    <string name="demo_list_popup_sort_by">排序方式</string>
+    <string name="demo_list_popup_sort_name">名称</string>
+    <string name="demo_list_popup_sort_date">日期</string>
+    <string name="demo_list_popup_sort_size">大小</string>
+    <string name="demo_list_popup_view">查看方式</string>
+    <string name="demo_list_popup_view_list">列表</string>
+    <string name="demo_list_popup_view_grid">网格</string>
+    <string name="demo_list_popup_theme_system">跟随系统</string>
+    <string name="demo_list_popup_theme_light">浅色</string>
+    <string name="demo_list_popup_theme_dark">深色</string>
+
+    <!-- Context menu -->
+    <string name="demo_context_menu_hint">长按或右键点击</string>
+    <string name="demo_context_menu_last_action">上次操作：%1$s</string>
+    <string name="demo_context_menu_none">无</string>
+    <string name="demo_context_menu_rename">重命名</string>
+    <string name="demo_context_menu_show_delete">显示删除分组</string>
+    <string name="demo_context_menu_haptic">触感反馈</string>
+    <string name="demo_context_menu_collapse">选择后收起</string>
+    <string name="demo_context_menu_variant_hosts">页内浮层与独立窗口</string>
+    <string name="demo_context_menu_window_summary">在系统窗口中于触点处弹出</string>
+    <string name="demo_context_menu_variant_disabled">禁用</string>
+    <string name="demo_context_menu_disabled_summary">长按不会弹出菜单</string>
+
+    <!-- Spinner -->
+    <string name="demo_spinner_state_expanded">已展开</string>
+    <string name="demo_spinner_state_collapsed">已收起</string>
+    <string name="demo_spinner_display">展示方式</string>
+    <string name="demo_spinner_display_popup">弹出菜单</string>
+    <string name="demo_spinner_display_dialog">对话框</string>
+    <string name="demo_spinner_grouped">分组</string>
+    <string name="demo_spinner_show_value">显示所选值</string>
+    <string name="demo_spinner_color_red">红色</string>
+    <string name="demo_spinner_color_green">绿色</string>
+    <string name="demo_spinner_color_blue">蓝色</string>
+    <string name="demo_spinner_color_yellow">黄色</string>
+    <string name="demo_spinner_variant_popup">弹出菜单</string>
+    <string name="demo_spinner_variant_dialog">对话框</string>
+    <string name="demo_spinner_variant_grouped">分组弹出菜单</string>
+    <string name="demo_spinner_variant_grouped_dialog">分组对话框</string>
+    <string name="demo_spinner_variant_disabled">禁用</string>
+
+    <!-- Navigation popup menu -->
+    <string name="demo_navigation_popup_menu_current">当前：%1$s。点按“更多”查看其他页面。</string>
+    <string name="demo_navigation_popup_menu_menu_count">菜单中的页面数</string>
+    <string name="demo_navigation_popup_menu_material_blur">材质模糊</string>
+    <string name="demo_navigation_popup_menu_disable_last">禁用最后一个页面</string>
+    <string name="demo_navigation_popup_menu_limit_height">限制高度</string>
+    <string name="demo_navigation_popup_menu_variant_overlay">在底部导航栏中</string>
+    <string name="demo_navigation_popup_menu_variant_window">独立窗口弹出</string>
+
+    <!-- Tooltip -->
+    <string name="demo_tooltip_show">显示提示</string>
+    <string name="demo_tooltip_show_arrow">显示箭头</string>
+    <string name="demo_tooltip_dismiss_outside">点按外部关闭</string>
+    <string name="demo_tooltip_show_dismiss">显示关闭按钮</string>
+    <string name="demo_tooltip_text_tooltips">点按关闭图标即可关闭此提示。</string>
+    <string name="demo_tooltip_text_info">信息提示没有关闭图标，点按外部即可关闭。</string>
+    <string name="demo_tooltip_icon_title">新功能</string>
+    <string name="demo_tooltip_icon_text">图标提示由 40dp 图标、标题和正文组成。</string>
+    <string name="demo_tooltip_image_title">图片提示</string>
+    <string name="demo_tooltip_image_text">图片提示宽 260dp，顶部是一张裁剪后的图片。</string>
+    <string name="demo_tooltip_got_it">知道了</string>
+    <string name="demo_tooltip_no_arrow_text">没有箭头的提示。</string>
+    <string name="demo_tooltip_button_tooltips">提示</string>
+    <string name="demo_tooltip_button_info">信息</string>
+    <string name="demo_tooltip_button_icon">图标</string>
+    <string name="demo_tooltip_button_image">图片</string>
+    <string name="demo_tooltip_button_no_arrow">无箭头</string>
+    <string name="demo_tooltip_variant_styles">样式</string>
+    <string name="demo_tooltip_variant_placement">位置与箭头</string>
+
+    <!-- Top tips -->
+    <string name="demo_top_tips_text">有新的安全更新可用</string>
+    <string name="demo_top_tips_title_text">备份已暂停</string>
+    <string name="demo_top_tips_action_update">更新</string>
+    <string name="demo_top_tips_action_count">操作按钮点按次数：%1$d</string>
+    <string name="demo_top_tips_show_action">显示操作按钮</string>
+    <string name="demo_top_tips_closable">可关闭</string>
+    <string name="demo_top_tips_marquee">跑马灯</string>
+    <string name="demo_top_tips_show_again">重新显示可关闭的提示</string>
+    <string name="demo_top_tips_closable_text">带起始图标、可关闭的提示</string>
+    <string name="demo_top_tips_long_icon_text">带起始图标时，超过两行的消息会把操作按钮移到文字下方，并与文字对齐</string>
+    <string name="demo_top_tips_turn_on">开启</string>
+    <string name="demo_top_tips_backup_text">连接 WLAN 后可继续备份照片</string>
+    <string name="demo_top_tips_marquee_text">跑马灯提示会滚动显示一行放不下的长消息</string>
+    <string name="demo_top_tips_variant_examples">示例</string>
+</resources>

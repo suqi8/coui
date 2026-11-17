@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_snackbar_title">Snackbar</string>
+    <string name="demo_custom_snackbar_title">Custom snackbar</string>
+    <string name="demo_progress_indicator_title">Progress indicator</string>
+    <string name="demo_comp_progress_indicator_title">Composite progress</string>
+    <string name="demo_install_load_progress_title">Install progress</string>
+    <string name="demo_pull_to_refresh_title">Pull to refresh</string>
+    <string name="demo_empty_state_title">Empty state</string>
+    <string name="demo_complete_state_title">Complete state</string>
+
+    <!-- Snackbar -->
+    <string name="demo_snackbar_show">Show snackbar</string>
+    <string name="demo_snackbar_result">Result: %1$s</string>
+    <string name="demo_snackbar_message">Message</string>
+    <string name="demo_snackbar_message_kind_short">Short</string>
+    <string name="demo_snackbar_message_kind_long">Long</string>
+    <string name="demo_snackbar_message_kind_multiline">Multi-line</string>
+    <string name="demo_snackbar_with_action">Action button</string>
+    <string name="demo_snackbar_with_dismiss">Close button</string>
+    <string name="demo_snackbar_duration">Duration</string>
+    <string name="demo_snackbar_message_short">This is a short message</string>
+    <string name="demo_snackbar_message_long">This is a long message to display more text content</string>
+    <string name="demo_snackbar_message_custom">This message will last for 2 seconds</string>
+    <string name="demo_snackbar_message_action">This message has an action</string>
+    <string name="demo_snackbar_message_dismissible">This message can be removed with the close button</string>
+    <string name="demo_snackbar_message_indefinite">This message stays until you close it</string>
+    <string name="demo_snackbar_message_multiline">The file has been moved to the recycle bin and will be deleted permanently after 30 days</string>
+    <string name="demo_snackbar_button_short">Short (4 s)</string>
+    <string name="demo_snackbar_button_long">Long (10 s)</string>
+    <string name="demo_snackbar_button_custom">Custom (2 s)</string>
+    <string name="demo_snackbar_button_action">With action</string>
+    <string name="demo_snackbar_action_alive">Action: showing</string>
+    <string name="demo_snackbar_action_undo">Action: undone</string>
+    <string name="demo_snackbar_action_expired">Action: expired</string>
+    <string name="demo_snackbar_button_dismissible">Dismissible</string>
+    <string name="demo_snackbar_button_indefinite">Indefinite</string>
+    <string name="demo_snackbar_button_multiline">Multi-line with action</string>
+    <string name="demo_snackbar_button_dismiss_oldest">Dismiss oldest</string>
+    <string name="demo_snackbar_button_dismiss_newest">Dismiss newest</string>
+    <string name="demo_snackbar_variant_durations">Durations</string>
+    <string name="demo_snackbar_variant_actions">Actions</string>
+    <string name="demo_snackbar_variant_queue">Queue</string>
+    <string name="demo_snackbar_variant_notification">Notification snackbar</string>
+    <string name="demo_snackbar_notification_title">Screenshot saved</string>
+    <string name="demo_snackbar_notification_subtitle">Tap Share to send it to a contact</string>
+    <string name="demo_snackbar_notification_shared">Shared %1$d time(s)</string>
+    <string name="demo_snackbar_show_again">Show again</string>
+
+    <!-- Custom snackbar -->
+    <string name="demo_custom_snackbar_show">Show custom snackbar</string>
+    <string name="demo_custom_snackbar_showing">Showing</string>
+    <string name="demo_custom_snackbar_dismissed">dismissed %1$d time(s)</string>
+    <string name="demo_custom_snackbar_content_title">Custom content</string>
+    <string name="demo_custom_snackbar_content_body">Drag down to dismiss; it also closes after the idle time</string>
+    <string name="demo_custom_snackbar_touch_slidable">Drag down to dismiss</string>
+    <string name="demo_custom_snackbar_press_feedback">Press feedback</string>
+    <string name="demo_custom_snackbar_dismiss_animation">Fade out on dismiss</string>
+    <string name="demo_custom_snackbar_auto_dismiss">Auto dismiss</string>
+    <string name="demo_custom_snackbar_variant_host">Through a SnackbarHost</string>
+    <string name="demo_custom_snackbar_host_message">Sent through the snackbar host</string>
+
+    <!-- Progress indicator -->
+    <string name="demo_progress_indicator_kind">Indicator</string>
+    <string name="demo_progress_indicator_indeterminate">Indeterminate</string>
+    <string name="demo_progress_indicator_animate">Animate the progress</string>
+    <string name="demo_progress_indicator_state">State</string>
+    <string name="demo_progress_indicator_type">Type</string>
+    <string name="demo_progress_indicator_variant_linear">Linear</string>
+    <string name="demo_progress_indicator_variant_circular">Circular</string>
+    <string name="demo_progress_indicator_variant_loading">Loading</string>
+    <string name="demo_progress_indicator_variant_states">Circular states</string>
+    <string name="demo_progress_indicator_states_hint">Tap the first ring to cycle through Normal, Paused and Error.</string>
+
+    <!-- Composite progress indicator -->
+    <string name="demo_comp_progress_indicator_show_text">Show text</string>
+    <string name="demo_comp_progress_indicator_long_text">Loading your photos, this may take a while</string>
+    <string name="demo_comp_progress_indicator_variant_all">All types</string>
+
+    <!-- Install progress -->
+    <string name="demo_install_load_progress_download">Download</string>
+    <string name="demo_install_load_progress_resume">Resume</string>
+    <string name="demo_install_load_progress_get">Get</string>
+    <string name="demo_install_load_progress_state">State</string>
+    <string name="demo_install_load_progress_auto_advance">Advance while loading</string>
+    <string name="demo_install_load_progress_variant_interactive">Interactive</string>
+    <string name="demo_install_load_progress_variant_states">States</string>
+    <string name="demo_install_load_progress_interactive_hint">Tap to start, pause and resume; the button returns to idle when the download completes.</string>
+
+    <!-- Pull to refresh -->
+    <string name="demo_pull_to_refresh_text_pull">Pull down to refresh</string>
+    <string name="demo_pull_to_refresh_text_release">Release to refresh</string>
+    <string name="demo_pull_to_refresh_text_refreshing">Refreshing…</string>
+    <string name="demo_pull_to_refresh_text_done">Refreshed</string>
+    <string name="demo_pull_to_refresh_duration">Refresh duration</string>
+    <string name="demo_pull_to_refresh_per_refresh">Rows added per refresh</string>
+    <string name="demo_pull_to_refresh_circle_size">Indicator size</string>
+    <string name="demo_pull_to_refresh_localized_texts">Localized texts</string>
+    <string name="demo_pull_to_refresh_refresh_now">Refresh now</string>
+    <string name="demo_pull_to_refresh_reset">Reset the list</string>
+    <string name="demo_pull_to_refresh_list_title">Items (%1$d)</string>
+
+    <!-- Empty state -->
+    <string name="demo_empty_state_no_content">No content</string>
+    <string name="demo_empty_state_subtitle">Nothing has been added yet</string>
+    <string name="demo_empty_state_refreshed">Refreshed %1$d time(s), still empty</string>
+    <string name="demo_empty_state_refresh">Refresh</string>
+    <string name="demo_empty_state_no_results">No search results</string>
+    <string name="demo_empty_state_try_another">Try another keyword</string>
+    <string name="demo_empty_state_show_action">Show action</string>
+    <string name="demo_empty_state_show_illustration">Show illustration</string>
+    <string name="demo_empty_state_height">Container height</string>
+    <string name="demo_empty_state_variant_default">Default</string>
+    <string name="demo_empty_state_variant_small">Small, text only</string>
+
+    <!-- Complete state -->
+    <string name="demo_complete_state_done">Done</string>
+    <string name="demo_complete_state_success">Payment successful</string>
+    <string name="demo_complete_state_failed">Payment failed</string>
+    <string name="demo_complete_state_waiting">Waiting for confirmation</string>
+    <string name="demo_complete_state_order">Order No. %1$s</string>
+    <string name="demo_complete_state_type">Type</string>
+    <string name="demo_complete_state_animate">Animate</string>
+    <string name="demo_complete_state_replay">Replay the animation</string>
+    <string name="demo_complete_state_variant_types">Types</string>
+</resources>

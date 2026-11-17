@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_basic_component_title">Basic list item</string>
+    <string name="demo_card_title">Card</string>
+    <string name="demo_badge_title">Badge</string>
+    <string name="demo_tag_view_title">Tag</string>
+    <string name="demo_marquee_text_title">Marquee text</string>
+    <string name="demo_banner_title">Banner</string>
+    <string name="demo_page_indicator_title">Page indicator</string>
+
+    <!-- BasicComponent -->
+    <string name="demo_basic_component_variant_actions">Start and end content</string>
+    <string name="demo_basic_component_variant_selection">Selection and red dots</string>
+    <string name="demo_basic_component_start">Start</string>
+    <string name="demo_basic_component_end">Details</string>
+    <string name="demo_basic_component_end_1">End 1</string>
+    <string name="demo_basic_component_end_2">End 2</string>
+    <string name="demo_basic_component_start_content">Start content</string>
+    <string name="demo_basic_component_end_content">End content</string>
+    <string name="demo_basic_component_end_icon">End icon</string>
+    <string name="demo_basic_component_start_badge">Start red dot</string>
+    <string name="demo_basic_component_start_badge_summary">A red dot on the start icon</string>
+    <string name="demo_basic_component_end_badge">End red dot</string>
+    <string name="demo_basic_component_badge_none">None</string>
+    <string name="demo_basic_component_badge_dot">Dot</string>
+    <string name="demo_basic_component_clickable">Clickable</string>
+    <string name="demo_basic_component_clicked">Row clicked</string>
+    <string name="demo_basic_component_selectable">Selectable</string>
+    <string name="demo_basic_component_tap_to_select">Tap to select</string>
+    <string name="demo_basic_component_selected_summary">Selected: the dividers around this row hide</string>
+    <string name="demo_basic_component_red_dot">Red dot</string>
+    <string name="demo_basic_component_red_dot_summary">A plain red dot before the end</string>
+
+    <!-- Card -->
+    <string name="demo_card_variant_feedback">Press feedback</string>
+    <string name="demo_card_variant_long_press">Long press</string>
+    <string name="demo_card_variant_shadow">Shadow</string>
+    <string name="demo_card_press_feedback">Press feedback</string>
+    <string name="demo_card_shadow">Shadow</string>
+    <string name="demo_card_shadow_top_hidden">Top hidden</string>
+    <string name="demo_card_shadow_angle">45° angle</string>
+    <string name="demo_card_shadow_card">Shadow card</string>
+    <string name="demo_card_shadow_summary">12 dp shadow, offset 2 dp downwards</string>
+    <string name="demo_card_corner_radius">Corner radius</string>
+    <string name="demo_card_clickable">Clickable</string>
+    <string name="demo_card_clicked">Card clicked</string>
+    <string name="demo_card_long_press">Long press</string>
+    <string name="demo_card_long_pressed">Card long pressed</string>
+    <string name="demo_card_hold_down">Held down</string>
+    <string name="demo_card_show_indication">Show indication</string>
+    <string name="demo_card_long_press_hint">Long press to show a dialog</string>
+    <string name="demo_card_dialog_title">Long press action</string>
+    <string name="demo_card_dialog_summary">Triggered by long pressing the card.</string>
+
+    <!-- Badge -->
+    <string name="demo_badge_variant_forms">Forms</string>
+    <string name="demo_badge_variant_badge_box">On an icon</string>
+    <string name="demo_badge_form">Form</string>
+    <string name="demo_badge_form_dot">Dot</string>
+    <string name="demo_badge_form_number">Number</string>
+    <string name="demo_badge_form_text">Text</string>
+    <string name="demo_badge_text_new">N</string>
+    <string name="demo_badge_text_hot">Hot</string>
+    <string name="demo_badge_stroke">Stroke</string>
+    <string name="demo_badge_stroke_summary">A white outline for badges on coloured surfaces</string>
+    <string name="demo_badge_navigation">Navigation widths</string>
+    <string name="demo_badge_navigation_summary">Narrower capsules for bottom navigation icons</string>
+
+    <!-- TagView -->
+    <string name="demo_tag_view_variant_inline">Next to text</string>
+    <string name="demo_tag_view_variant_styles">Styles</string>
+    <string name="demo_tag_view_dark_mode">Dark mode</string>
+    <string name="demo_tag_view_label_new">NEW</string>
+    <string name="demo_tag_view_label_beta">BETA</string>
+    <string name="demo_tag_view_label_long">LIMITED-TIME EVENT</string>
+    <string name="demo_tag_view_label_outlined">Outlined</string>
+    <string name="demo_tag_view_label_corner">Corner</string>
+    <string name="demo_tag_view_label_large">Large</string>
+    <string name="demo_tag_view_style_filled">Filled</string>
+    <string name="demo_tag_view_style_outlined">Outlined</string>
+    <string name="demo_tag_view_style_orange">Orange</string>
+    <string name="demo_tag_view_shape">Shape</string>
+    <string name="demo_tag_view_shape_corner">Two corners</string>
+    <string name="demo_tag_view_shape_capsule">Capsule</string>
+    <string name="demo_tag_view_trailing_icon">Trailing icon</string>
+
+    <!-- MarqueeText -->
+    <string name="demo_marquee_text_variant_states">States</string>
+    <string name="demo_marquee_text_long">Battery optimisation is limiting background activity for several apps, tap to review them</string>
+    <string name="demo_marquee_text_short">Short text stays still</string>
+    <string name="demo_marquee_text_disabled">With the marquee disabled the same long text simply wraps onto the following lines instead of scrolling</string>
+    <string name="demo_marquee_text_enabled_summary">Off: long text wraps instead of scrolling</string>
+    <string name="demo_marquee_text_caption">Caption</string>
+    <string name="demo_marquee_text_body">Body</string>
+    <string name="demo_marquee_text_velocity">Speed</string>
+    <string name="demo_marquee_text_initial_delay">Initial delay</string>
+    <string name="demo_marquee_text_spacing">Loop spacing</string>
+    <string name="demo_marquee_text_fading_edge">Fading edge</string>
+
+    <!-- Banner -->
+    <string name="demo_banner_variant_loop">Auto play</string>
+    <string name="demo_banner_variant_peek">Neighbours peeking in</string>
+    <string name="demo_banner_variant_list">List form</string>
+    <string name="demo_banner_type_auto">Auto (by width)</string>
+    <string name="demo_banner_auto_loop">Auto play</string>
+    <string name="demo_banner_infinite_loop">Infinite loop</string>
+    <string name="demo_banner_show_indicator">Show indicator</string>
+    <string name="demo_banner_peek">Show neighbours</string>
+    <string name="demo_banner_scale_pages">Scale side pages</string>
+    <string name="demo_banner_page_themes">Summer themes</string>
+    <string name="demo_banner_page_wallpapers">New wallpapers</string>
+    <string name="demo_banner_page_picks">Weekly picks</string>
+    <string name="demo_banner_page_fonts">Live fonts</string>
+    <string name="demo_banner_page_ringtones">Ringtones</string>
+    <string name="demo_banner_page_icons">Icon packs</string>
+
+    <!-- PageIndicator -->
+    <string name="demo_page_indicator_variant_pager">With a pager</string>
+    <string name="demo_page_indicator_variant_many">More than five pages</string>
+    <string name="demo_page_indicator_page">Page %1$d</string>
+    <string name="demo_page_indicator_position">Current page</string>
+    <string name="demo_page_indicator_animated">Animated</string>
+    <string name="demo_page_indicator_dot_click">Tap dots to jump</string>
+    <string name="demo_page_indicator_color_theme">Theme colour</string>
+</resources>

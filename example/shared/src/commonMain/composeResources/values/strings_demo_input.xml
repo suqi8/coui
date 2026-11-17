@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_text_field_title">Text field</string>
+    <string name="demo_input_view_title">Input view</string>
+    <string name="demo_code_text_field_title">Code field</string>
+    <string name="demo_search_bar_title">Search bar</string>
+    <string name="demo_search_history_title">Search history</string>
+    <string name="demo_toolbar_search_title">Toolbar search</string>
+    <string name="demo_tab_with_search_layout_title">Tabs with search</string>
+    <string name="demo_numeric_keyboard_title">Numeric keyboard</string>
+    <string name="demo_lock_screen_password_input_title">Lock screen password</string>
+    <string name="demo_simple_lock_title">Simple lock</string>
+    <string name="demo_lock_pattern_view_title">Pattern lock</string>
+
+    <!-- Shared by the input demos -->
+    <string name="demo_input_read_only">Read only</string>
+    <string name="demo_input_error_state">Error state</string>
+    <string name="demo_input_clear_button">Clear button</string>
+    <string name="demo_input_password_toggle">Show/hide password button</string>
+    <string name="demo_input_single_line">Single line</string>
+    <string name="demo_input_show_count">Character counter</string>
+    <string name="demo_input_max_count">Character limit</string>
+    <string name="demo_input_over_wallpaper">Over a wallpaper</string>
+    <string name="demo_input_haptic">Haptic feedback</string>
+    <string name="demo_input_none">None</string>
+
+    <!-- TextField -->
+    <string name="demo_text_field_variant_line">Line (Settings dialog)</string>
+    <string name="demo_text_field_variant_card">In a card (Settings preference)</string>
+    <string name="demo_text_field_variant_rectangle">Rectangle and floating label</string>
+    <string name="demo_text_field_device_name">Device name</string>
+    <string name="demo_text_field_state_based">Based on TextFieldState</string>
+    <string name="demo_text_field_password">Password (starts hidden)</string>
+    <string name="demo_text_field_max_10">Up to 10 characters</string>
+    <string name="demo_text_field_digits_only">Digits only (error state)</string>
+    <string name="demo_text_field_focus_line">Line only while focused</string>
+    <string name="demo_text_field_focus_line_summary">The line grows under the text when the field is focused</string>
+    <string name="demo_text_field_no_decoration">No decoration</string>
+    <string name="demo_text_field_floating_label">Floating label</string>
+    <string name="demo_text_field_floating_line">Floating label (Line)</string>
+    <string name="demo_text_field_rectangle">Rectangle (outline only)</string>
+    <string name="demo_text_field_floating_rectangle">Floating label (Rectangle)</string>
+
+    <!-- InputView -->
+    <string name="demo_input_view_variant_single">Single-line card input</string>
+    <string name="demo_input_view_variant_multi">Multi-line card input</string>
+    <string name="demo_input_view_nickname">Nickname</string>
+    <string name="demo_input_view_nickname_hint">Enter a nickname</string>
+    <string name="demo_input_view_nickname_error">The nickname can\'t contain spaces</string>
+    <string name="demo_input_view_password_hint">At least 8 characters</string>
+    <string name="demo_input_view_password_error">The password is too short</string>
+    <string name="demo_input_view_signature_hint">Signature</string>
+    <string name="demo_input_view_error_message">Check what you entered</string>
+
+    <!-- CodeTextField -->
+    <string name="demo_code_text_field_variant_default">Verification code</string>
+    <string name="demo_code_text_field_variant_security">Hidden digits</string>
+    <string name="demo_code_text_field_security">Hide digits</string>
+    <string name="demo_code_text_field_security_summary">Entered digits show as dots</string>
+    <string name="demo_code_text_field_completed">Code entered: %1$s</string>
+
+    <!-- SearchBar -->
+    <string name="demo_search_bar_variant_default">Hints and suggestions</string>
+    <string name="demo_search_bar_variant_buttons">Inner and outer buttons</string>
+    <string name="demo_search_bar_variant_non_instant">Non-instant search</string>
+    <string name="demo_search_bar_hint_search">Search components</string>
+    <string name="demo_search_bar_hint_slider">Try \"Slider\"</string>
+    <string name="demo_search_bar_hint_dialog">Try \"Dialog\"</string>
+    <string name="demo_search_bar_suggestion">Suggestion %1$d</string>
+    <string name="demo_search_bar_type">Search type</string>
+    <string name="demo_search_bar_hints">Rotating hints</string>
+    <string name="demo_search_bar_hints_summary">The hint changes every 3 seconds while the field is empty</string>
+    <string name="demo_search_bar_cancel">Cancel button</string>
+    <string name="demo_search_bar_cancel_summary">Shown while the bar is expanded</string>
+    <string name="demo_search_bar_voice">Voice input</string>
+    <string name="demo_search_bar_outer">Outer button</string>
+    <string name="demo_search_bar_navigation">Back button</string>
+    <string name="demo_search_bar_navigation_summary">Shown by NonInstant bars only</string>
+    <string name="demo_search_bar_scan">Scan</string>
+
+    <!-- SearchHistory -->
+    <string name="demo_search_history_variant_default">Recent searches</string>
+    <string name="demo_search_history_clear_description">Clear search history</string>
+    <string name="demo_search_history_cleared">History cleared</string>
+    <string name="demo_search_history_restore">Tap to bring the records back</string>
+    <string name="demo_search_history_last_clicked">Last tapped</string>
+    <string name="demo_search_history_none">None</string>
+    <string name="demo_search_history_expandable">Expandable</string>
+    <string name="demo_search_history_expandable_summary">Show an expand button when the records overflow</string>
+    <string name="demo_search_history_folded_lines">Lines when folded</string>
+    <string name="demo_search_history_long_record">A search record long enough to be cut off at the end</string>
+    <string name="demo_search_history_wallpaper">Wallpaper</string>
+    <string name="demo_search_history_dark_mode">Dark mode</string>
+    <string name="demo_search_history_battery_health">Battery health</string>
+    <string name="demo_search_history_always_on_display">Always-on display</string>
+    <string name="demo_search_history_notification_history">Notification history</string>
+    <string name="demo_search_history_screen_time">Screen time</string>
+    <string name="demo_search_history_fonts">Fonts</string>
+    <string name="demo_search_history_do_not_disturb">Do not disturb</string>
+    <string name="demo_search_history_app_lock">App lock</string>
+    <string name="demo_search_history_developer_options">Developer options</string>
+    <string name="demo_search_history_hotspot">Personal hotspot</string>
+    <string name="demo_search_history_location">Location</string>
+    <string name="demo_search_history_accessibility">Accessibility</string>
+
+    <!-- ToolbarSearch -->
+    <string name="demo_toolbar_search_expand">Expand the search bar</string>
+    <string name="demo_toolbar_search_expand_summary">Or tap the search icon in the top bar</string>
+    <string name="demo_toolbar_search_material_summary">On: the bar grows out of the icon. Off: it fades in</string>
+    <string name="demo_toolbar_search_top_bar">Top bar style</string>
+    <string name="demo_toolbar_search_results">Results</string>
+    <string name="demo_toolbar_search_no_result">No results</string>
+
+    <!-- TabWithSearchLayout -->
+    <string name="demo_tab_with_search_layout_variant_compact">Narrow window</string>
+    <string name="demo_tab_with_search_layout_variant_wide">Wide window (720dp)</string>
+    <string name="demo_tab_with_search_layout_wide_note">From 600dp wide, the tabs and the search bar sit side by side. Scroll sideways to see all of it.</string>
+    <string name="demo_tab_with_search_layout_tab_all">All</string>
+    <string name="demo_tab_with_search_layout_width">Layout width</string>
+    <string name="demo_tab_with_search_layout_width_fit">Fit</string>
+    <string name="demo_tab_with_search_layout_tabs_enabled">Tabs enabled</string>
+    <string name="demo_tab_with_search_layout_search_enabled">Search bar enabled</string>
+
+    <!-- NumericKeyboard -->
+    <string name="demo_numeric_keyboard_variant_settings">Settings keyboard</string>
+    <string name="demo_numeric_keyboard_variant_lock_screen">Lock screen glass keys</string>
+    <string name="demo_numeric_keyboard_placeholder">Type a number</string>
+    <string name="demo_numeric_keyboard_enter_animation">Entrance animation</string>
+    <string name="demo_numeric_keyboard_press_effect">Press effect</string>
+    <string name="demo_numeric_keyboard_press_effect_summary">Light is the lock screen glass style, shown over a wallpaper</string>
+    <string name="demo_numeric_keyboard_left_key">Bottom-left key</string>
+    <string name="demo_numeric_keyboard_right_key">Bottom-right key</string>
+
+    <!-- LockScreenPasswordInput -->
+    <string name="demo_lock_screen_password_input_variant_setting">Settings (6 to 16 digits)</string>
+    <string name="demo_lock_screen_password_input_variant_desktop">Lock screen</string>
+    <string name="demo_lock_screen_password_input_hint_sample">Password (123456)</string>
+    <string name="demo_lock_screen_password_input_incorrect">Incorrect password</string>
+    <string name="demo_lock_screen_password_input_show_error">Show error</string>
+    <string name="demo_lock_screen_password_input_clear_error">Clear error</string>
+    <string name="demo_lock_screen_password_input_enter_password">Enter password</string>
+    <string name="demo_lock_screen_password_input_play_press">Play the press animation</string>
+    <string name="demo_lock_screen_password_input_length_limit">Length limit</string>
+    <string name="demo_lock_screen_password_input_length_limit_summary">The arrow turns on at the minimum length; at most 16 characters</string>
+    <string name="demo_lock_screen_password_input_min_length">Minimum length</string>
+
+    <!-- SimpleLock -->
+    <string name="demo_simple_lock_variant_four">Four digits</string>
+    <string name="demo_simple_lock_variant_six">Six digits</string>
+    <string name="demo_simple_lock_clear">Clear</string>
+    <string name="demo_simple_lock_fail">Fail</string>
+    <string name="demo_simple_lock_glow">Glow</string>
+    <string name="demo_simple_lock_glow_summary">New dots spring in with a glow</string>
+    <string name="demo_simple_lock_description">%1$d of %2$d digits entered</string>
+
+    <!-- LockPatternView -->
+    <string name="demo_lock_pattern_view_variant_unlock">Draw to unlock</string>
+    <string name="demo_lock_pattern_view_draw_hint">Draw an L (1-4-7-8-9)</string>
+    <string name="demo_lock_pattern_view_release">Lift your finger when done</string>
+    <string name="demo_lock_pattern_view_correct">Correct pattern</string>
+    <string name="demo_lock_pattern_view_wrong">Wrong pattern (%1$s)</string>
+    <string name="demo_lock_pattern_view_fingerprint_match">Fingerprint matched</string>
+    <string name="demo_lock_pattern_view_fingerprint_no_match">Fingerprint not recognised</string>
+    <string name="demo_lock_pattern_view_replay">Replay</string>
+    <string name="demo_lock_pattern_view_enter_animation">Entrance animation</string>
+    <string name="demo_lock_pattern_view_stealth">Hide path</string>
+    <string name="demo_lock_pattern_view_stealth_summary">Draw without showing the path or the dot glow</string>
+    <string name="demo_lock_pattern_view_show_path">Show path</string>
+    <string name="demo_lock_pattern_view_fingerprint_ok">Fingerprint OK</string>
+    <string name="demo_lock_pattern_view_fingerprint_fail">Fingerprint fail</string>
+    <string name="demo_lock_pattern_view_display_mode">Display mode</string>
+    <string name="demo_lock_pattern_view_display_mode_summary">Shows the L pattern in the chosen mode</string>
+    <string name="demo_lock_pattern_view_clear">Clear pattern</string>
+</resources>

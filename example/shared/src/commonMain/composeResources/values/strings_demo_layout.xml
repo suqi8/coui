@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_list_detail_layout_title">List-detail layout</string>
+    <string name="demo_side_pane_layout_title">Side pane layout</string>
+    <string name="demo_responsive_grid_title">Responsive grid</string>
+    <string name="demo_expandable_group_title">Expandable group</string>
+    <string name="demo_swipe_action_item_title">Swipe actions</string>
+    <string name="demo_spring_chain_title">Spring chain</string>
+
+    <!-- Shared by the layout playgrounds -->
+    <string name="demo_layout_simulated_width">Layout width</string>
+    <string name="demo_layout_simulated_width_summary">Wider layouts are scaled down to fit the preview</string>
+    <string name="demo_layout_width_fit">Fit the card</string>
+    <string name="demo_layout_width_readout">Laid out %1$s wide, shown at %2$s</string>
+
+    <!-- ListDetailLayout -->
+    <string name="demo_list_detail_layout_variant_default">Follows the card width</string>
+    <string name="demo_list_detail_layout_selected">Selected item</string>
+    <string name="demo_list_detail_layout_none">None</string>
+    <string name="demo_list_detail_layout_list_fraction">List width share</string>
+    <string name="demo_list_detail_layout_min_list_width">Minimum list width</string>
+    <string name="demo_list_detail_layout_max_list_width">Maximum list width</string>
+    <string name="demo_list_detail_layout_divider_thickness">Divider thickness</string>
+    <string name="demo_list_detail_layout_show_empty_detail">Empty detail placeholder</string>
+    <string name="demo_list_detail_layout_show_empty_detail_summary">Shown in the split while nothing is selected</string>
+    <string name="demo_list_detail_layout_wifi_summary">Connected to Home</string>
+    <string name="demo_list_detail_layout_display_summary">Auto brightness</string>
+    <string name="demo_list_detail_layout_sound_summary">Ring mode</string>
+    <string name="demo_list_detail_layout_storage_summary">%1$s used</string>
+    <string name="demo_list_detail_layout_about">About device</string>
+    <string name="demo_list_detail_layout_empty">Select an item</string>
+    <string name="demo_list_detail_layout_detail_body">Detail of \"%1$s\". Narrower than 600dp the layout shows one pane at a time; wider, the list keeps its share of the width, between the minimum and maximum list width.</string>
+
+    <!-- SidePaneLayout -->
+    <string name="demo_side_pane_layout_variant_default">Follows the card width</string>
+    <string name="demo_side_pane_layout_toggle">Open or close the pane</string>
+    <string name="demo_side_pane_layout_pane_open">The pane is open</string>
+    <string name="demo_side_pane_layout_pane_closed">The pane is closed</string>
+    <string name="demo_side_pane_layout_cover_style">Cover style</string>
+    <string name="demo_side_pane_layout_cover_style_summary">The pane covers the content under a mask instead of resizing it</string>
+    <string name="demo_side_pane_layout_always_show_mask">Always show the mask</string>
+    <string name="demo_side_pane_layout_always_show_mask_summary">Dim the content and block its touches while the pane is open</string>
+    <string name="demo_side_pane_layout_touch_content">Tap content to close</string>
+    <string name="demo_side_pane_layout_touch_content_summary">With the cover style, touching the content closes the pane</string>
+    <string name="demo_side_pane_layout_show_toggle_icon">Show the toggle icon</string>
+    <string name="demo_side_pane_layout_pane_width">Pane width</string>
+    <string name="demo_side_pane_layout_folder_all">All notes</string>
+    <string name="demo_side_pane_layout_folder_recent">Recently edited</string>
+    <string name="demo_side_pane_layout_folder_favourites">Favourites</string>
+    <string name="demo_side_pane_layout_folder_shared">Shared</string>
+    <string name="demo_side_pane_layout_folder_deleted">Recently deleted</string>
+    <string name="demo_side_pane_layout_split">Split mode: the content resizes with the pane.</string>
+    <string name="demo_side_pane_layout_compact">Compact: the pane slides over the content.</string>
+
+    <!-- ResponsiveGrid and percentWidth -->
+    <string name="demo_responsive_grid_child_grid_number">Columns per tile</string>
+    <string name="demo_responsive_grid_margin_type">Margin type</string>
+    <string name="demo_responsive_grid_child_min_width">Minimum tile width</string>
+    <string name="demo_responsive_grid_horizontal_gap">Horizontal gap</string>
+    <string name="demo_responsive_grid_child_width">Tile width</string>
+    <string name="demo_responsive_grid_min_horizontal_gap">Minimum horizontal gap</string>
+    <string name="demo_responsive_grid_vertical_gap">Vertical gap</string>
+    <string name="demo_responsive_grid_fixed_height">Fixed tile height</string>
+    <string name="demo_responsive_grid_fixed_height_summary">72dp; off, each row is as tall as its tallest tile</string>
+    <string name="demo_responsive_grid_grid_number">Grid columns</string>
+    <string name="demo_responsive_grid_auto">Auto (4 / 6 / 8)</string>
+    <string name="demo_responsive_grid_percent_type">Content type</string>
+    <string name="demo_responsive_grid_percent_mode">Width mode</string>
+    <string name="demo_responsive_grid_parent_child">Detail pane of a split</string>
+    <string name="demo_responsive_grid_parent_child_summary">Spans every column on large windows</string>
+    <string name="demo_responsive_grid_card_list_title">Percent-width card list</string>
+    <string name="demo_responsive_grid_card_list_summary">Centred on the COUI layout grid</string>
+    <string name="demo_responsive_grid_wider_title">Wider windows</string>
+    <string name="demo_responsive_grid_wider_summary">6 of 8 columns, or 8 of 12 columns</string>
+
+    <!-- ExpandableGroup -->
+    <string name="demo_expandable_group_expanded">Expanded</string>
+    <string name="demo_expandable_group_arrow_theme">Theme colour</string>
+    <string name="demo_expandable_group_variant_groups">Groups</string>
+    <string name="demo_expandable_group_variant_arrow">Arrow</string>
+    <string name="demo_expandable_group_arrow_hint">Tap to turn the arrow over</string>
+    <string name="demo_expandable_group_network">Network</string>
+    <string name="demo_expandable_group_network_summary">Wi-Fi, mobile network, hotspot</string>
+    <string name="demo_expandable_group_hotspot">Personal hotspot</string>
+    <string name="demo_expandable_group_more_settings">More settings</string>
+    <string name="demo_expandable_group_accessibility">Accessibility</string>
+    <string name="demo_expandable_group_date_time">Date and time</string>
+    <string name="demo_expandable_group_language">Language and region</string>
+    <string name="demo_expandable_group_backup">Backup and reset</string>
+    <string name="demo_expandable_group_disabled">Disabled group</string>
+
+    <!-- SwipeActionItem -->
+    <string name="demo_swipe_action_item_variant_rect">Rectangle menu</string>
+    <string name="demo_swipe_action_item_variant_round_rect">Rounded menu</string>
+    <string name="demo_swipe_action_item_action_count">Number of actions</string>
+    <string name="demo_swipe_action_item_content_type">Action content</string>
+    <string name="demo_swipe_action_item_content_text">Text</string>
+    <string name="demo_swipe_action_item_content_icon">Icon</string>
+    <string name="demo_swipe_action_item_content_both">Icon and text</string>
+    <string name="demo_swipe_action_item_own_colors">Own colours</string>
+    <string name="demo_swipe_action_item_own_colors_summary">Each action has its own fill; off, they share the delete red</string>
+    <string name="demo_swipe_action_item_action_min_width">Minimum action width</string>
+    <string name="demo_swipe_action_item_delete">Delete action</string>
+    <string name="demo_swipe_action_item_delete_summary">Adds the built-in delete action at the end</string>
+    <string name="demo_swipe_action_item_fast_delete">Over-slide to delete</string>
+    <string name="demo_swipe_action_item_fast_delete_summary">Sliding 48dp past the menu deletes the row</string>
+    <string name="demo_swipe_action_item_action_pin">Pin</string>
+    <string name="demo_swipe_action_item_action_mark">Mark</string>
+    <string name="demo_swipe_action_item_action_move">Move</string>
+    <string name="demo_swipe_action_item_row_report">Weekly report</string>
+    <string name="demo_swipe_action_item_row_lunch">Team lunch</string>
+    <string name="demo_swipe_action_item_row_flight">Flight itinerary</string>
+    <string name="demo_swipe_action_item_row_invoice">Invoice 2041</string>
+    <string name="demo_swipe_action_item_row_design_review">Design review</string>
+    <string name="demo_swipe_action_item_row_grocery">Grocery list</string>
+    <string name="demo_swipe_action_item_row_gym">Gym schedule</string>
+    <string name="demo_swipe_action_item_row_book_club">Book club notes</string>
+    <string name="demo_swipe_action_item_summary_swipe">Swipe towards the start for actions</string>
+    <string name="demo_swipe_action_item_summary_over_slide">Over-slide to delete</string>
+    <string name="demo_swipe_action_item_summary_delete_only">Delete only: the fill grows while deleting</string>
+    <string name="demo_swipe_action_item_summary_own_colors">Own colours: each action keeps its shape</string>
+    <string name="demo_swipe_action_item_restore">Restore rows</string>
+    <string name="demo_swipe_action_item_disabled">Disabled</string>
+    <string name="demo_swipe_action_item_disabled_summary">Swiping is off</string>
+
+    <!-- springChain -->
+    <string name="demo_spring_chain_variant_list">List</string>
+    <string name="demo_spring_chain_variant_grid">Grid</string>
+    <string name="demo_spring_chain_hint">Drag past the top or bottom edge, then let go</string>
+    <string name="demo_spring_chain_row">Row</string>
+    <string name="demo_spring_chain_target">Attached to</string>
+    <string name="demo_spring_chain_target_list">List</string>
+    <string name="demo_spring_chain_target_grid">Grid</string>
+    <string name="demo_spring_chain_main_tension">Main spring tension</string>
+    <string name="demo_spring_chain_main_friction">Main spring friction</string>
+    <string name="demo_spring_chain_attachment_tension">Follower spring tension</string>
+    <string name="demo_spring_chain_attachment_friction">Follower spring friction</string>
+    <string name="demo_spring_chain_trans_factor">Step share</string>
+    <string name="demo_spring_chain_trans_factor_summary">How much of the pull each row adds to the next</string>
+    <string name="demo_spring_chain_max_rows">Rows that move</string>
+    <string name="demo_spring_chain_accumulate">Accumulate steps</string>
+    <string name="demo_spring_chain_accumulate_summary">Rows further from the edge move further, so the list fans out</string>
+    <string name="demo_spring_chain_reset">Restore defaults</string>
+</resources>

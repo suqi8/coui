@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_arrow_preference_title">Arrow preference</string>
+    <string name="demo_switch_preference_title">Switch preference</string>
+    <string name="demo_checkbox_preference_title">Checkbox preference</string>
+    <string name="demo_radio_button_preference_title">Radio button preference</string>
+    <string name="demo_slider_preference_title">Slider preference</string>
+    <string name="demo_preference_category_title">Preference category</string>
+    <string name="demo_list_preference_title">List preference</string>
+    <string name="demo_slide_select_preference_title">Slide select preference</string>
+    <string name="demo_mark_preference_title">Mark preference</string>
+    <string name="demo_button_preference_title">Button preference</string>
+    <string name="demo_input_preference_title">Input preference</string>
+    <string name="demo_card_preference_title">Card preferences</string>
+    <string name="demo_status_preference_title">Status preferences</string>
+    <string name="demo_pager_preference_title">Header and footer</string>
+    <string name="demo_dropdown_preference_title">Dropdown preference</string>
+
+    <!-- Shared by the preference demos -->
+    <string name="demo_pref_component">Component</string>
+    <string name="demo_pref_long_title">Long title</string>
+    <string name="demo_pref_long_summary">Long summary</string>
+    <string name="demo_pref_show_end_text">Show end text</string>
+    <string name="demo_pref_end_value">Details</string>
+    <string name="demo_pref_opened_page">Opened the %1$s page</string>
+    <string name="demo_pref_both_disabled">Both parts are disabled</string>
+
+    <!-- ArrowPreference -->
+    <string name="demo_arrow_preference_clickable">Clickable</string>
+    <string name="demo_arrow_preference_hold_down">Hold down state</string>
+    <string name="demo_arrow_preference_variant_basic">Basic usage</string>
+    <string name="demo_arrow_preference_variant_dialog">Open a dialog</string>
+    <string name="demo_arrow_preference_volume">Volume</string>
+    <string name="demo_arrow_preference_volume_summary">Tap the row to type an exact value</string>
+    <string name="demo_arrow_preference_volume_dialog_title">Adjust volume</string>
+    <string name="demo_arrow_preference_volume_dialog_summary">Enter 0–100</string>
+
+    <!-- SwitchPreference -->
+    <string name="demo_switch_preference_expand">Show more</string>
+    <string name="demo_switch_preference_expand_summary">Turn on to reveal another row</string>
+    <string name="demo_switch_preference_expanded_row">Extra option</string>
+    <string name="demo_switch_preference_async">Async switch</string>
+    <string name="demo_switch_preference_async_summary">Applies the change after a short delay</string>
+    <string name="demo_switch_preference_always_loading">Always loading</string>
+    <string name="demo_switch_preference_always_loading_summary">A switch stuck in the loading state</string>
+    <string name="demo_switch_preference_wifi_connected">Connected to %1$s</string>
+
+    <!-- CheckboxPreference -->
+    <string name="demo_checkbox_preference_at_end">Checkbox at the end</string>
+    <string name="demo_checkbox_preference_at_start">Checkbox at the start</string>
+    <string name="demo_checkbox_preference_choose_albums">Tap the row to choose albums</string>
+    <string name="demo_checkbox_preference_category_title">Items to migrate</string>
+
+    <!-- RadioButtonPreference -->
+    <string name="demo_radio_button_preference_variant_single">Single choice</string>
+    <string name="demo_radio_button_preference_variant_disabled">Disabled states</string>
+
+    <!-- SliderPreference -->
+    <string name="demo_slider_preference_show_key_points">Show key points</string>
+    <string name="demo_slider_preference_reverse">Reverse direction</string>
+    <string name="demo_slider_preference_show_value">Show value</string>
+    <string name="demo_slider_preference_normal">Normal</string>
+    <string name="demo_slider_preference_steps">Steps</string>
+    <string name="demo_slider_preference_steps_key_points">Steps with key points</string>
+    <string name="demo_slider_preference_custom_key_points">Custom key points</string>
+    <string name="demo_slider_preference_disabled_key_points">Disabled with key points</string>
+    <string name="demo_slider_preference_range">Range</string>
+    <string name="demo_slider_preference_range_key_points">Range with key points</string>
+    <string name="demo_slider_preference_custom_range_points">Custom range points</string>
+
+    <!-- PreferenceCategory -->
+    <string name="demo_preference_category_badge">N</string>
+    <string name="demo_preference_category_info">Info</string>
+    <string name="demo_preference_category_manage">Manage</string>
+    <string name="demo_preference_category_refresh">Refresh</string>
+    <string name="demo_preference_category_searching">Searching</string>
+    <string name="demo_preference_category_devices">Available devices</string>
+    <string name="demo_preference_category_speaker">Living room speaker</string>
+    <string name="demo_preference_category_earbuds">Earbuds</string>
+    <string name="demo_preference_category_paired">Paired</string>
+    <string name="demo_preference_category_not_connected">Not connected</string>
+    <string name="demo_preference_category_end_widget">End widget</string>
+    <string name="demo_preference_category_widget_none">None</string>
+    <string name="demo_preference_category_widget_text_button">Text button</string>
+    <string name="demo_preference_category_widget_single_icon">Single icon</string>
+    <string name="demo_preference_category_widget_text_icon">Text with icon</string>
+    <string name="demo_preference_category_margin_start">Small start margin</string>
+    <string name="demo_preference_category_show_title_icon">Title icon</string>
+    <string name="demo_preference_category_show_badge">Title badge</string>
+    <string name="demo_preference_category_show_loading_text">Loading text</string>
+    <string name="demo_preference_category_title_default">Default small title</string>
+    <string name="demo_preference_category_note_default">12sp title in the secondary label colour</string>
+    <string name="demo_preference_category_title_medium">Medium title</string>
+    <string name="demo_preference_category_note_medium">14sp title in the primary label colour</string>
+    <string name="demo_preference_category_title_large">Large title</string>
+    <string name="demo_preference_category_note_large">16sp title in the primary label colour</string>
+    <string name="demo_preference_category_title_small_margin">Small start margin</string>
+    <string name="demo_preference_category_note_small_margin">The title starts 16dp in</string>
+    <string name="demo_preference_category_title_with_icon">With title icon</string>
+    <string name="demo_preference_category_note_title_icon">With an icon, the small title turns the primary label colour</string>
+    <string name="demo_preference_category_title_with_badge">With badge</string>
+    <string name="demo_preference_category_note_badge">A text red dot after the title</string>
+    <string name="demo_preference_category_title_text_button">Text button</string>
+    <string name="demo_preference_category_note_text_button">A label in the theme colour</string>
+    <string name="demo_preference_category_title_single_icon">Single icon</string>
+    <string name="demo_preference_category_note_single_icon">16dp circular press mask</string>
+    <string name="demo_preference_category_title_text_icon">Text with icon</string>
+    <string name="demo_preference_category_note_text_icon">Clickable, so the text turns the primary label colour</string>
+    <string name="demo_preference_category_title_medium_button">Medium title with text button</string>
+    <string name="demo_preference_category_note_medium_button">The widget text grows to 14sp</string>
+
+    <!-- ListPreference -->
+    <string name="demo_list_preference_entry_summaries">Option summaries</string>
+    <string name="demo_list_preference_show_value">Show selected value</string>
+    <string name="demo_list_preference_variant_states">Disabled state</string>
+    <string name="demo_list_preference_unavailable">Unavailable</string>
+    <string name="demo_list_preference_light">Light</string>
+    <string name="demo_list_preference_dark">Dark</string>
+    <string name="demo_list_preference_follow_system">Follow system</string>
+    <string name="demo_list_preference_follow_system_summary">Switch with the system dark mode</string>
+    <string name="demo_list_preference_theme">Theme</string>
+    <string name="demo_list_preference_single_summary">Single choice bottom panel</string>
+    <string name="demo_list_preference_documents">Documents</string>
+    <string name="demo_list_preference_contacts_summary">Contacts and call logs</string>
+    <string name="demo_list_preference_system_settings">System settings</string>
+    <string name="demo_list_preference_sync_items">Sync items</string>
+    <string name="demo_list_preference_multi_summary">Multi choice bottom panel</string>
+
+    <!-- SlideSelectPreference -->
+    <string name="demo_slide_select_preference_standard">Standard</string>
+    <string name="demo_slide_select_preference_large">Large</string>
+    <string name="demo_slide_select_preference_extra_large">Extra large</string>
+    <string name="demo_slide_select_preference_font_size">Font size</string>
+    <string name="demo_slide_select_preference_screen_timeout">Screen timeout</string>
+    <string name="demo_slide_select_preference_timeout_seconds">%1$d seconds</string>
+    <string name="demo_slide_select_preference_timeout_minutes">%1$d min</string>
+    <string name="demo_slide_select_preference_never">Never</string>
+    <string name="demo_slide_select_preference_no_selection">No selection text</string>
+    <string name="demo_slide_select_preference_tap_next">Tap to switch to the next value</string>
+    <string name="demo_slide_select_preference_show_selection">Show selection text</string>
+    <string name="demo_slide_select_preference_long_selection">Long selection text</string>
+    <string name="demo_slide_select_preference_long_selection_text">A selection text long enough to be clamped</string>
+    <string name="demo_slide_select_preference_variant_examples">Examples</string>
+
+    <!-- MarkPreference -->
+    <string name="demo_mark_preference_every_day">Every day</string>
+    <string name="demo_mark_preference_workdays">Workdays only</string>
+    <string name="demo_mark_preference_never">Never</string>
+    <string name="demo_mark_preference_only_option">Only option</string>
+    <string name="demo_mark_preference_tap_for_details">Tap the row for details</string>
+    <string name="demo_mark_preference_variant_group">Single choice</string>
+    <string name="demo_mark_preference_variant_standalone">Standalone row</string>
+
+    <!-- ButtonPreference -->
+    <string name="demo_button_preference_account">Account</string>
+    <string name="demo_button_preference_sign_in">Sign in</string>
+    <string name="demo_button_preference_sign_in_summary">Sign in to sync your data</string>
+    <string name="demo_button_preference_button_clicked">Button clicked %1$d time(s)</string>
+    <string name="demo_button_preference_action">Action</string>
+    <string name="demo_button_preference_long_button">Long button text</string>
+    <string name="demo_button_preference_long_button_text">Download and install</string>
+    <string name="demo_button_preference_both_disabled">Button and row are disabled</string>
+    <string name="demo_button_preference_columns">Columns</string>
+    <string name="demo_button_preference_scan">Scan</string>
+    <string name="demo_button_preference_contacts_accounts">Contacts and accounts</string>
+    <string name="demo_button_preference_backup">Backup</string>
+    <string name="demo_button_preference_recommended_title">You might be looking for:</string>
+
+    <!-- InputPreference, EditTextPreference, StepperPreference -->
+    <string name="demo_input_preference_clear_button">Clear button</string>
+    <string name="demo_input_preference_max_count">Character limit</string>
+    <string name="demo_input_preference_password_toggle">Password toggle</string>
+    <string name="demo_input_preference_error">Error state</string>
+    <string name="demo_input_preference_error_message">This value is not valid</string>
+    <string name="demo_input_preference_read_only">Read only</string>
+    <string name="demo_input_preference_show_value">Show value</string>
+    <string name="demo_input_preference_empty_allowed">Allow empty input</string>
+    <string name="demo_input_preference_dialog_message">Dialog message</string>
+    <string name="demo_input_preference_range">Range</string>
+    <string name="demo_input_preference_device_name">Device name</string>
+    <string name="demo_input_preference_device_name_hint">Enter a name</string>
+    <string name="demo_input_preference_my_phone">My phone</string>
+    <string name="demo_input_preference_hotspot_hint">Hotspot name (no title)</string>
+    <string name="demo_input_preference_no_spaces">Spaces are not allowed</string>
+    <string name="demo_input_preference_password_hint">At least 8 characters</string>
+    <string name="demo_input_preference_nickname">Nickname</string>
+    <string name="demo_input_preference_nickname_hint">Enter a nickname</string>
+    <string name="demo_input_preference_signature">Signature</string>
+    <string name="demo_input_preference_signature_message">Shown under your name.</string>
+    <string name="demo_input_preference_locked">Locked</string>
+    <string name="demo_input_preference_copies">Copies</string>
+    <string name="demo_input_preference_font_scale">Font scale</string>
+    <string name="demo_input_preference_font_scale_summary">Steps of 10, from 50 to 200</string>
+
+    <!-- AppInfoPreference, CardInstructionPreference, CardEntrancePreference -->
+    <string name="demo_card_preference_app_name">COUI Gallery</string>
+    <string name="demo_card_preference_long_app_name">COUI Gallery, with a name long enough to wrap</string>
+    <string name="demo_card_preference_app_version">Version %1$s</string>
+    <string name="demo_card_preference_copied">Copied</string>
+    <string name="demo_card_preference_long_name">Long name</string>
+    <string name="demo_card_preference_show_copy">Copy button</string>
+    <string name="demo_card_preference_pages">Pages</string>
+    <string name="demo_card_preference_large_item">Large card</string>
+    <string name="demo_card_preference_status_on">On status</string>
+    <string name="demo_card_preference_page1_title">Swipe up from the bottom</string>
+    <string name="demo_card_preference_page1_summary">Swipe up from the bottom edge of the screen to go back to the home screen.</string>
+    <string name="demo_card_preference_page2_title">Swipe in from either side</string>
+    <string name="demo_card_preference_page2_summary">Swipe in from the left or right edge to go back to the previous screen.</string>
+    <string name="demo_card_preference_page3_summary">A page without a title caps its text block at 64dp and fades it while it scrolls. This description is long enough to scroll: keep reading to see the fading edge appear at the top once you scroll down, and at the bottom while more text follows.</string>
+    <string name="demo_card_preference_left_edge">Left edge</string>
+    <string name="demo_card_preference_right_edge">Right edge</string>
+    <string name="demo_card_preference_permissions">Permissions</string>
+    <string name="demo_card_preference_location">Location</string>
+    <string name="demo_card_preference_backup">Backup &amp; restore</string>
+    <string name="demo_card_preference_backup_summary">Last backup: yesterday</string>
+    <string name="demo_card_preference_more_settings">More settings</string>
+    <string name="demo_card_preference_unavailable">Unavailable</string>
+
+    <!-- StatusSwitchingPreference, LoadInstallProgressPreference, ActivityDialogPreference -->
+    <string name="demo_status_preference_switching">Switching</string>
+    <string name="demo_status_preference_show_status">Show status</string>
+    <string name="demo_status_preference_status_icon">Status icon</string>
+    <string name="demo_status_preference_state">State</string>
+    <string name="demo_status_preference_hotspot">Hotspot</string>
+    <string name="demo_status_preference_tap_to_switch">Tap to switch</string>
+    <string name="demo_status_preference_backup">Backup</string>
+    <string name="demo_status_preference_up_to_date">Up to date</string>
+    <string name="demo_status_preference_unavailable">Unavailable</string>
+    <string name="demo_status_preference_install">Install</string>
+    <string name="demo_status_preference_resume">Resume</string>
+    <string name="demo_status_preference_weather">Weather</string>
+    <string name="demo_status_preference_calculator">Calculator</string>
+    <string name="demo_status_preference_download_failed">Download failed</string>
+    <string name="demo_status_preference_dark_summary">Easier on the eyes at night</string>
+    <string name="demo_status_preference_scheduled">Scheduled</string>
+    <string name="demo_status_preference_appearance">Appearance</string>
+    <string name="demo_status_preference_appearance_summary">Opens the choices on a full page</string>
+
+    <!-- PagerHeaderPreference, PagerFooterPreference, SpannablePreference, LinkText -->
+    <string name="demo_pager_preference_header_text">Tap a row to open its page, or use its control to toggle it.</string>
+    <string name="demo_pager_preference_learn_more">Learn more</string>
+    <string name="demo_pager_preference_text_with_link">%1$s %2$s</string>
+    <string name="demo_pager_preference_with_link">With link</string>
+    <string name="demo_pager_preference_extra_margin">Extra bottom margin</string>
+    <string name="demo_pager_preference_location">Location services</string>
+    <string name="demo_pager_preference_location_text">Apps use your location to show nearby results. %1$s</string>
+    <string name="demo_pager_preference_disabled_link">The link of a disabled row is greyed out: %1$s</string>
+    <string name="demo_pager_preference_user_agreement">User Agreement</string>
+    <string name="demo_pager_preference_privacy_policy">Privacy Policy</string>
+    <string name="demo_pager_preference_agreement">Read the %1$s and the %2$s.</string>
+    <string name="demo_pager_preference_links_clicked">Links clicked: %1$d</string>
+    <string name="demo_pager_preference_footer_text">Turning off WLAN keeps mobile data on. %1$s</string>
+    <string name="demo_pager_preference_network_settings">Network settings</string>
+
+    <!-- OverlayDropdownPreference, WindowDropdownPreference -->
+    <string name="demo_dropdown_preference_overlay">Overlay popup</string>
+    <string name="demo_dropdown_preference_window">Window popup</string>
+    <string name="demo_dropdown_preference_grouped">Grouped options</string>
+    <string name="demo_dropdown_preference_collapse_on_selection">Collapse on selection</string>
+    <string name="demo_dropdown_preference_show_value">Show selected value</string>
+    <string name="demo_dropdown_preference_expanded">Expanded</string>
+    <string name="demo_dropdown_preference_collapsed">Collapsed</string>
+    <string name="demo_dropdown_preference_group_option">Option %1$s</string>
+    <string name="demo_dropdown_preference_long_option">Long</string>
+    <string name="demo_dropdown_preference_variant_options">Overlay and window</string>
+    <string name="demo_dropdown_preference_variant_grouped">Grouped</string>
+    <string name="demo_dropdown_preference_variant_states">Disabled state</string>
+</resources>

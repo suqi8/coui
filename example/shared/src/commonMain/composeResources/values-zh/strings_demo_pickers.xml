@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_number_picker_title">数字选择器</string>
+    <string name="demo_date_time_picker_title">日期时间选择器</string>
+    <string name="demo_lunar_date_picker_title">农历日期选择器</string>
+    <string name="demo_calendar_picker_title">日历选择器</string>
+    <string name="demo_color_picker_title">颜色选择器</string>
+
+    <!-- Number picker -->
+    <string name="demo_number_picker_range">取值范围</string>
+    <string name="demo_number_picker_visible_items">可见行数</string>
+    <string name="demo_number_picker_wrap_around">循环滚动</string>
+    <string name="demo_number_picker_wrap_around_summary">滚过最后一个值后回到第一个值；取值数需多于可见行数</string>
+    <string name="demo_number_picker_leading_zero">补零</string>
+    <string name="demo_number_picker_show_unit">显示单位</string>
+    <string name="demo_number_picker_unit_minute">分钟</string>
+    <string name="demo_number_picker_ignorable">可不选</string>
+    <string name="demo_number_picker_ignorable_summary">在最后一个值后增加占位行，用于可不选的年份等场景</string>
+    <string name="demo_number_picker_ignored">未设置</string>
+    <string name="demo_number_picker_variant_time">时间</string>
+    <string name="demo_number_picker_variant_unit">带单位（点击或长按上下行可逐个调整）</string>
+
+    <!-- Date and time picker -->
+    <string name="demo_date_time_picker_component">组件</string>
+    <string name="demo_date_time_picker_24_hour">24 小时制</string>
+    <string name="demo_date_time_picker_show_units">显示单位</string>
+    <string name="demo_date_time_picker_unit_hour">时</string>
+    <string name="demo_date_time_picker_unit_minute">分</string>
+    <string name="demo_date_time_picker_minute_five_step">分钟以 5 为间隔</string>
+    <string name="demo_date_time_picker_field_order">列顺序</string>
+    <string name="demo_date_time_picker_year_ignorable">年份可不选</string>
+    <string name="demo_date_time_picker_year_ignorable_summary">增加一个“不选年份”行，适用于生日等场景</string>
+    <string name="demo_date_time_picker_limited_range">限定范围</string>
+    <string name="demo_date_time_picker_limited_range_summary">%1$s 至 %2$s</string>
+    <string name="demo_date_time_picker_no_year">不限年份</string>
+    <string name="demo_date_time_picker_variant_date">日期</string>
+    <string name="demo_date_time_picker_variant_date_bounded">限定范围的日期</string>
+    <string name="demo_date_time_picker_variant_year_optional">年份可不选的日期</string>
+    <string name="demo_date_time_picker_variant_time_24h">时间（24 小时制，带单位）</string>
+    <string name="demo_date_time_picker_variant_time_12h">时间（12 小时制）</string>
+    <string name="demo_date_time_picker_variant_date_time">日期和时间（12 小时制）</string>
+
+    <!-- Lunar date picker -->
+    <string name="demo_lunar_date_picker_field_order">列顺序</string>
+    <string name="demo_lunar_date_picker_jump_leap_month">跳到闰月</string>
+    <string name="demo_lunar_date_picker_jump_leap_month_summary">2025 年闰六月</string>
+    <string name="demo_lunar_date_picker_jump_today">跳到今天</string>
+    <string name="demo_lunar_date_picker_solar_format">公历：%1$s</string>
+
+    <!-- Calendar picker -->
+    <string name="demo_calendar_picker_first_day">每周起始日</string>
+    <string name="demo_calendar_picker_sunday">周日</string>
+    <string name="demo_calendar_picker_monday">周一</string>
+    <string name="demo_calendar_picker_saturday">周六</string>
+    <string name="demo_calendar_picker_show_today">标记今天</string>
+    <string name="demo_calendar_picker_show_today_summary">在日期网格中圈出今天</string>
+    <string name="demo_calendar_picker_limited_range">限定范围</string>
+    <string name="demo_calendar_picker_limited_range_summary">%1$s 至 %2$s</string>
+    <string name="demo_calendar_picker_variant_limited">周一起始，限定范围</string>
+
+    <!-- Color picker -->
+    <string name="demo_color_picker_component">组件</string>
+    <string name="demo_color_picker_color_space">色彩空间</string>
+    <string name="demo_color_picker_show_preview">显示预览</string>
+    <string name="demo_color_picker_show_preview_summary">显示所选颜色的预览</string>
+    <string name="demo_color_picker_rows">行数</string>
+    <string name="demo_color_picker_hue_columns">色相列数</string>
+    <string name="demo_color_picker_gray_column">灰色列</string>
+</resources>

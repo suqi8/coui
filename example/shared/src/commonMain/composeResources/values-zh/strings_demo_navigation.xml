@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_top_app_bar_title">顶栏</string>
+    <string name="demo_navigation_bar_title">底部导航栏</string>
+    <string name="demo_floating_navigation_bar_title">悬浮导航栏</string>
+    <string name="demo_floating_accessory_navigation_bar_title">带附件的悬浮导航栏</string>
+    <string name="demo_navigation_rail_title">侧边导航栏</string>
+    <string name="demo_side_navigation_bar_title">侧边栏</string>
+    <string name="demo_floating_toolbar_title">悬浮工具栏</string>
+    <string name="demo_floating_edit_toolbar_title">悬浮编辑工具栏</string>
+    <string name="demo_tab_row_title">标签栏</string>
+    <string name="demo_chip_tab_title">胶囊标签栏</string>
+    <string name="demo_breadcrumb_bar_title">面包屑</string>
+    <string name="demo_alphabet_index_bar_title">字母索引条</string>
+    <string name="demo_navigation3_transition_title">页面转场</string>
+
+    <!-- Shared by the navigation demos -->
+    <string name="demo_navigation_create">新建</string>
+    <string name="demo_navigation_filler_title">页面内容</string>
+    <string name="demo_navigation_badges">红点</string>
+    <string name="demo_navigation_image_background">图片背景</string>
+    <string name="demo_navigation_image_background_summary">在图片上预览，便于看到材质模糊效果</string>
+
+    <!-- Top app bar -->
+    <string name="demo_top_app_bar_visible_summary">隐藏顶栏后，可使用系统返回手势退出</string>
+    <string name="demo_top_app_bar_style_summary">Large 随滚动折叠；SettingsHome 的 40sp 大标题会渐隐</string>
+    <string name="demo_top_app_bar_subtitle">副标题</string>
+    <string name="demo_top_app_bar_actions">操作按钮</string>
+    <string name="demo_top_app_bar_search_slot">搜索框</string>
+    <string name="demo_top_app_bar_search_hint">搜索设置项</string>
+    <string name="demo_top_app_bar_accent_title">标题使用强调色</string>
+    <string name="demo_top_app_bar_entry">设置项 %1$d</string>
+
+    <!-- Navigation bar -->
+    <string name="demo_navigation_bar_blur">背景模糊</string>
+    <string name="demo_navigation_bar_blur_summary">模糊导航栏后方的页面，需开启材质效果设置</string>
+
+    <!-- Floating navigation bar -->
+    <string name="demo_floating_navigation_bar_large_icon">中间大图标</string>
+    <string name="demo_floating_navigation_bar_expansion">扩展视图</string>
+    <string name="demo_floating_navigation_bar_expansion_summary">导航栏旁的搜索按钮，点击即可收起</string>
+
+    <!-- Floating bar with accessory -->
+    <string name="demo_floating_accessory_navigation_bar_start">起始附件</string>
+    <string name="demo_floating_accessory_navigation_bar_end">末尾附件</string>
+    <string name="demo_floating_accessory_navigation_bar_end_summary">点击搜索附件可切换图标</string>
+    <string name="demo_floating_accessory_navigation_bar_variant_plain">无附件</string>
+
+    <!-- Navigation rail -->
+    <string name="demo_navigation_rail_header">顶部区域</string>
+    <string name="demo_navigation_rail_hint">侧边导航栏位于页面一侧，点选其中的目标即可切换</string>
+    <string name="demo_navigation_rail_variant_current">当前目标</string>
+
+    <!-- Side navigation bar -->
+    <string name="demo_side_navigation_bar_parent_child">父子级结构</string>
+    <string name="demo_side_navigation_bar_parent_child_summary">仅在大屏布局下常驻</string>
+    <string name="demo_side_navigation_bar_edit_mode">编辑模式</string>
+    <string name="demo_side_navigation_bar_edit_mode_summary">为常驻侧边栏旁的内容添加遮罩</string>
+    <string name="demo_side_navigation_bar_edit_mask">编辑模式遮罩</string>
+    <string name="demo_side_navigation_bar_height">预览高度</string>
+    <string name="demo_side_navigation_bar_toggle">展开或收起导航</string>
+    <string name="demo_side_navigation_bar_docked">常驻：内容为侧边栏让出空间。</string>
+    <string name="demo_side_navigation_bar_overlay">覆盖：侧边栏滑出并盖住内容，点击遮罩即可关闭。</string>
+    <string name="demo_side_navigation_bar_page_themes">主题</string>
+    <string name="demo_side_navigation_bar_page_wallpapers">壁纸</string>
+    <string name="demo_side_navigation_bar_page_fonts">字体</string>
+    <string name="demo_side_navigation_bar_page_icons">图标</string>
+
+    <!-- Floating toolbar -->
+    <string name="demo_floating_toolbar_corner_radius">圆角</string>
+    <string name="demo_floating_toolbar_none">无</string>
+    <string name="demo_floating_toolbar_variant_items">按项目构建的工具栏</string>
+    <string name="demo_floating_toolbar_item_title">%1$s %2$d</string>
+    <string name="demo_floating_toolbar_items_count">项目：%1$d</string>
+
+    <!-- Floating edit toolbar -->
+    <string name="demo_floating_edit_toolbar_favorite">收藏</string>
+    <string name="demo_floating_edit_toolbar_disabled_item">禁用项</string>
+    <string name="demo_floating_edit_toolbar_variant_compact">紧凑：图标在文字上方</string>
+    <string name="demo_floating_edit_toolbar_variant_wide">宽度 600dp 起：图标在文字左侧</string>
+
+    <!-- Tabs -->
+    <string name="demo_tab_row_style_tiny">TabRowWithContour（小）</string>
+    <string name="demo_tab_row_long_tab">较长的标签名称 %1$d</string>
+    <string name="demo_tab_row_content">%1$s 的内容</string>
+    <string name="demo_tab_row_all">全部</string>
+    <string name="demo_tab_row_day">日</string>
+    <string name="demo_tab_row_week">周</string>
+    <string name="demo_tab_row_month">月</string>
+    <string name="demo_tab_row_recommended">推荐</string>
+    <string name="demo_tab_row_following">关注</string>
+    <string name="demo_tab_row_popular">热门</string>
+    <string name="demo_tab_row_featured">精选</string>
+    <string name="demo_tab_row_technology">科技</string>
+    <string name="demo_tab_row_travel">旅行</string>
+    <string name="demo_tab_row_food">美食</string>
+    <string name="demo_tab_row_images">图片</string>
+    <string name="demo_tab_row_allowed">已允许</string>
+    <string name="demo_tab_row_denied">已拒绝</string>
+    <string name="demo_tab_row_photo">照片</string>
+    <string name="demo_tab_row_video">视频</string>
+    <string name="demo_tab_row_portrait">人像</string>
+    <string name="demo_tab_row_pano">全景</string>
+    <string name="demo_tab_row_variant_fixed">固定标签</string>
+    <string name="demo_tab_row_variant_scrolling">可滚动标签与翻页</string>
+    <string name="demo_tab_row_variant_icons">图标标签与红点</string>
+    <string name="demo_tab_row_variant_contour">分段标签与翻页</string>
+    <string name="demo_tab_row_variant_tiny">小号分段标签</string>
+
+    <!-- Chip tabs -->
+    <string name="demo_chip_tab_all">全部</string>
+    <string name="demo_chip_tab_documents">文档</string>
+    <string name="demo_chip_tab_downloads">下载</string>
+    <string name="demo_chip_tab_archives">压缩包</string>
+    <string name="demo_chip_tab_others">其他</string>
+    <string name="demo_chip_tab_categories">分类</string>
+    <string name="demo_chip_tab_leading_icon">前置图标</string>
+    <string name="demo_chip_tab_material_type">材质类型</string>
+    <string name="demo_chip_tab_starred">已加星标</string>
+    <string name="demo_chip_tab_no_material">无材质</string>
+    <string name="demo_chip_tab_disabled_selected">禁用且选中</string>
+    <string name="demo_chip_tab_variant_scrolling">可滚动的标签行</string>
+    <string name="demo_chip_tab_variant_leading_icon">带前置图标</string>
+    <string name="demo_chip_tab_variant_single">单个胶囊标签</string>
+    <string name="demo_chip_tab_variant_backdrop">图片上方：Default 与 NoBlur</string>
+
+    <!-- Breadcrumb bar -->
+    <string name="demo_breadcrumb_bar_internal_storage">内部存储</string>
+    <string name="demo_breadcrumb_bar_depth">路径层级</string>
+    <string name="demo_breadcrumb_bar_full_path">完整路径：%1$s</string>
+    <string name="demo_breadcrumb_bar_current_path">当前：%1$s</string>
+    <string name="demo_breadcrumb_bar_variant_page">页面上</string>
+    <string name="demo_breadcrumb_bar_variant_card">卡片中</string>
+
+    <!-- Alphabet index bar -->
+    <string name="demo_alphabet_index_bar_height">索引条高度</string>
+    <string name="demo_alphabet_index_bar_collect_key">收藏键</string>
+    <string name="demo_alphabet_index_bar_partial_keys">仅部分字母有内容</string>
+    <string name="demo_alphabet_index_bar_haptic">振动反馈</string>
+    <string name="demo_alphabet_index_bar_full_height">完整高度</string>
+    <string name="demo_alphabet_index_bar_compressed">压缩</string>
+    <string name="demo_alphabet_index_bar_list_row">条目 %1$s%2$d</string>
+    <string name="demo_alphabet_index_bar_variant_heights">完整与压缩</string>
+    <string name="demo_alphabet_index_bar_variant_following">跟随列表</string>
+
+    <!-- Page transitions -->
+    <string name="demo_navigation3_transition_hint">这些效果会立即作用于应用内的所有页面切换。</string>
+    <string name="demo_navigation3_transition_depth">返回栈深度：%1$d</string>
+    <string name="demo_navigation3_transition_corner_clip">圆角裁剪</string>
+    <string name="demo_navigation3_transition_corner_clip_summary">转场时以圆角裁剪顶层页面</string>
+    <string name="demo_navigation3_transition_dim">背景压暗</string>
+    <string name="demo_navigation3_transition_dim_summary">转场时压暗后方页面</string>
+    <string name="demo_navigation3_transition_block_input">转场时屏蔽触摸</string>
+    <string name="demo_navigation3_transition_block_input_summary">屏蔽非目标页面上的触摸</string>
+    <string name="demo_navigation3_transition_swipe_edge">返回方向跟随滑动边缘</string>
+    <string name="demo_navigation3_transition_swipe_edge_summary">返回动画朝手指滑入的边缘方向播放</string>
+    <string name="demo_navigation3_transition_push">打开测试页面</string>
+    <string name="demo_navigation3_transition_push_summary">观察转场效果，然后滑动返回</string>
+</resources>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_button_title">Button</string>
+    <string name="demo_floating_action_button_title">Floating action button</string>
+    <string name="demo_loading_button_title">Loading button</string>
+    <string name="demo_stepper_title">Stepper</string>
+    <string name="demo_two_text_button_title">Two-line text button</string>
+    <string name="demo_segment_button_title">Segmented button</string>
+
+    <!-- Shared by the button demos -->
+    <string name="demo_buttons_stage_card">Card</string>
+    <string name="demo_buttons_stage_color">Theme colour</string>
+    <string name="demo_buttons_stage_image">Image</string>
+
+    <!-- Button -->
+    <string name="demo_button_variant_types">Types</string>
+    <string name="demo_button_variant_material">Material</string>
+    <string name="demo_button_variant_small">Small and transparent</string>
+    <string name="demo_button_variant_desc">With description</string>
+    <string name="demo_button_variant_backdrop">Over an image</string>
+    <string name="demo_button_variant_custom">Custom content</string>
+    <string name="demo_button_label">Button</string>
+    <string name="demo_button_label_long">Download and install the latest system update now</string>
+    <string name="demo_button_clicked">Button clicked</string>
+    <string name="demo_button_click_count">Clicks: %1$d</string>
+    <string name="demo_button_submit">Submit</string>
+    <string name="demo_button_borderless">Borderless</string>
+    <string name="demo_button_material_label">Material</string>
+    <string name="demo_button_transparent">Transparent</string>
+    <string name="demo_button_backdrop">Backdrop</string>
+    <string name="demo_button_upgrade">Upgrade</string>
+    <string name="demo_button_upgrade_desc">Free for the first month</string>
+    <string name="demo_button_later">Later</string>
+    <string name="demo_button_later_desc">Remind me tomorrow</string>
+    <string name="demo_button_type_secondary">Secondary</string>
+    <string name="demo_button_type_primary">Primary</string>
+    <string name="demo_button_type_borderless">Borderless</string>
+    <string name="demo_button_type_transparent">Transparent</string>
+    <string name="demo_button_width">Width</string>
+    <string name="demo_button_width_wrap">Wrap content</string>
+    <string name="demo_button_width_medium">Medium (152 dp)</string>
+    <string name="demo_button_width_large">Large single button</string>
+    <string name="demo_button_width_fill">Fill width</string>
+    <string name="demo_button_background">Background</string>
+    <string name="demo_button_backdrop_blur">Backdrop blur</string>
+    <string name="demo_button_desc">With description</string>
+    <string name="demo_button_press_scale">Press scale</string>
+
+    <!-- FloatingActionButton -->
+    <string name="demo_floating_action_button_clicked">Floating action button clicked</string>
+    <string name="demo_floating_action_button_position_end_overlay">End (over the bottom bar)</string>
+    <string name="demo_floating_action_button_type">Type</string>
+    <string name="demo_floating_action_button_type_single">Single</string>
+    <string name="demo_floating_action_button_type_expandable">Expandable</string>
+    <string name="demo_floating_action_button_color_primary">Primary</string>
+    <string name="demo_floating_action_button_color_secondary">Secondary</string>
+    <string name="demo_floating_action_button_color_translucent">Translucent</string>
+    <string name="demo_floating_action_button_size_tiny">Tiny (48 dp)</string>
+    <string name="demo_floating_action_button_shadow">Shadow</string>
+    <string name="demo_floating_action_button_hide_on_scroll">Hide on scroll</string>
+    <string name="demo_floating_action_button_hide_on_scroll_summary">Hides while scrolling down, shows again after 5 s or when scrolling up</string>
+    <string name="demo_floating_action_button_last_action">Last action</string>
+    <string name="demo_floating_action_button_none">None</string>
+    <string name="demo_floating_action_button_scan">Scan</string>
+    <string name="demo_floating_action_button_variant_styles">Styles</string>
+    <string name="demo_floating_action_button_variant_backdrop">Over an image</string>
+    <string name="demo_floating_action_button_variant_scroll">Scroll to try hiding on scroll</string>
+
+    <!-- LoadingButton -->
+    <string name="demo_loading_button_variant_forms">Loading forms</string>
+    <string name="demo_loading_button_download">Download</string>
+    <string name="demo_loading_button_label_long">Download the full offline map package</string>
+    <string name="demo_loading_button_sign_in">Sign in</string>
+    <string name="demo_loading_button_signing_in">Signing in</string>
+    <string name="demo_loading_button_auto_finish">Finish automatically</string>
+    <string name="demo_loading_button_auto_finish_summary">Stop loading 3 s after a click</string>
+    <string name="demo_loading_button_loading_text">Loading text</string>
+    <string name="demo_loading_button_loading_text_summary">Show a label with the dots while loading</string>
+
+    <!-- Stepper -->
+    <string name="demo_stepper_variant_rows">In list rows</string>
+    <string name="demo_stepper_variant_badge">Driving a badge</string>
+    <string name="demo_stepper_min">Minimum</string>
+    <string name="demo_stepper_max">Maximum</string>
+    <string name="demo_stepper_basic">Basic</string>
+    <string name="demo_stepper_basic_summary">Range 0 to 10</string>
+    <string name="demo_stepper_hold">Hold to repeat</string>
+    <string name="demo_stepper_hold_summary">Default range -999 to 9999; holding a button steps every 100 ms</string>
+    <string name="demo_stepper_badge_summary">Steps of 111, from 1 to 1000</string>
+
+    <!-- TwoTextButton -->
+    <string name="demo_two_text_button_variant_onboarding">Onboarding pages</string>
+    <string name="demo_two_text_button_get_started">Get started</string>
+    <string name="demo_two_text_button_progress_hint">Page offset: %1$s</string>
+    <string name="demo_two_text_button_page">Welcome page %1$d</string>
+    <string name="demo_two_text_button_done">All set</string>
+
+    <!-- SegmentButton -->
+    <string name="demo_segment_button_variant_forms">Forms</string>
+    <string name="demo_segment_button_variant_backdrop">Over an image</string>
+    <string name="demo_segment_button_day">Day</string>
+    <string name="demo_segment_button_week">Week</string>
+    <string name="demo_segment_button_month">Month</string>
+    <string name="demo_segment_button_all">All</string>
+    <string name="demo_segment_button_allowed">Allowed</string>
+    <string name="demo_segment_button_not_allowed">Not allowed</string>
+    <string name="demo_segment_button_list">List</string>
+    <string name="demo_segment_button_grid">Grid</string>
+    <string name="demo_segment_button_recent">Recent</string>
+    <string name="demo_segment_button_favorites">Favourites</string>
+    <string name="demo_segment_button_shared">Shared</string>
+    <string name="demo_segment_button_material_backdrop">Material backdrop</string>
+    <string name="demo_segment_button_drag_animation">Touch motion</string>
+    <string name="demo_segment_button_haptic">Haptic feedback</string>
+    <string name="demo_segment_button_responsive_width">Responsive width</string>
+    <string name="demo_segment_button_responsive_width_summary">Cap a fixed width to the COUI layout grid</string>
+</resources>

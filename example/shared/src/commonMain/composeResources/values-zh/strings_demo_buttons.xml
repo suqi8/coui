@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_button_title">按钮</string>
+    <string name="demo_floating_action_button_title">悬浮按钮</string>
+    <string name="demo_loading_button_title">加载按钮</string>
+    <string name="demo_stepper_title">步进器</string>
+    <string name="demo_two_text_button_title">双行文字按钮</string>
+    <string name="demo_segment_button_title">分段按钮</string>
+
+    <!-- Shared by the button demos -->
+    <string name="demo_buttons_stage_card">卡片</string>
+    <string name="demo_buttons_stage_color">主题色</string>
+    <string name="demo_buttons_stage_image">图片</string>
+
+    <!-- Button -->
+    <string name="demo_button_variant_types">类型</string>
+    <string name="demo_button_variant_material">材质效果</string>
+    <string name="demo_button_variant_small">小号与透明</string>
+    <string name="demo_button_variant_desc">带描述</string>
+    <string name="demo_button_variant_backdrop">图片上的按钮</string>
+    <string name="demo_button_variant_custom">自定义内容</string>
+    <string name="demo_button_label">按钮</string>
+    <string name="demo_button_label_long">立即下载并安装最新的系统更新</string>
+    <string name="demo_button_clicked">点击了按钮</string>
+    <string name="demo_button_click_count">已点击 %1$d 次</string>
+    <string name="demo_button_submit">提交</string>
+    <string name="demo_button_borderless">无边框</string>
+    <string name="demo_button_material_label">材质</string>
+    <string name="demo_button_transparent">透明</string>
+    <string name="demo_button_backdrop">背景模糊</string>
+    <string name="demo_button_upgrade">升级</string>
+    <string name="demo_button_upgrade_desc">首月免费</string>
+    <string name="demo_button_later">稍后</string>
+    <string name="demo_button_later_desc">明天提醒我</string>
+    <string name="demo_button_type_secondary">次要</string>
+    <string name="demo_button_type_primary">主要</string>
+    <string name="demo_button_type_borderless">无边框</string>
+    <string name="demo_button_type_transparent">透明</string>
+    <string name="demo_button_width">宽度</string>
+    <string name="demo_button_width_wrap">自适应内容</string>
+    <string name="demo_button_width_medium">中号（152dp）</string>
+    <string name="demo_button_width_large">大号单按钮</string>
+    <string name="demo_button_width_fill">填满宽度</string>
+    <string name="demo_button_background">背景</string>
+    <string name="demo_button_backdrop_blur">背景模糊</string>
+    <string name="demo_button_desc">带描述</string>
+    <string name="demo_button_press_scale">按压缩放</string>
+
+    <!-- FloatingActionButton -->
+    <string name="demo_floating_action_button_clicked">点击了悬浮按钮</string>
+    <string name="demo_floating_action_button_position_end_overlay">末端（覆盖底栏）</string>
+    <string name="demo_floating_action_button_type">类型</string>
+    <string name="demo_floating_action_button_type_single">单个按钮</string>
+    <string name="demo_floating_action_button_type_expandable">可展开</string>
+    <string name="demo_floating_action_button_color_primary">主题色</string>
+    <string name="demo_floating_action_button_color_secondary">次要</string>
+    <string name="demo_floating_action_button_color_translucent">半透明</string>
+    <string name="demo_floating_action_button_size_tiny">小号（48dp）</string>
+    <string name="demo_floating_action_button_shadow">阴影</string>
+    <string name="demo_floating_action_button_hide_on_scroll">滚动时隐藏</string>
+    <string name="demo_floating_action_button_hide_on_scroll_summary">向下滚动时隐藏，5 秒后或向上滚动时重新显示</string>
+    <string name="demo_floating_action_button_last_action">上次操作</string>
+    <string name="demo_floating_action_button_none">无</string>
+    <string name="demo_floating_action_button_scan">扫一扫</string>
+    <string name="demo_floating_action_button_variant_styles">样式</string>
+    <string name="demo_floating_action_button_variant_backdrop">图片上的悬浮按钮</string>
+    <string name="demo_floating_action_button_variant_scroll">滚动列表，试试滚动时隐藏</string>
+
+    <!-- LoadingButton -->
+    <string name="demo_loading_button_variant_forms">加载样式</string>
+    <string name="demo_loading_button_download">下载</string>
+    <string name="demo_loading_button_label_long">下载完整的离线地图包</string>
+    <string name="demo_loading_button_sign_in">登录</string>
+    <string name="demo_loading_button_signing_in">正在登录</string>
+    <string name="demo_loading_button_auto_finish">自动结束</string>
+    <string name="demo_loading_button_auto_finish_summary">点击 3 秒后停止加载</string>
+    <string name="demo_loading_button_loading_text">加载文字</string>
+    <string name="demo_loading_button_loading_text_summary">加载时显示文字和圆点</string>
+
+    <!-- Stepper -->
+    <string name="demo_stepper_variant_rows">列表中的步进器</string>
+    <string name="demo_stepper_variant_badge">控制徽标数字</string>
+    <string name="demo_stepper_min">最小值</string>
+    <string name="demo_stepper_max">最大值</string>
+    <string name="demo_stepper_basic">基础</string>
+    <string name="demo_stepper_basic_summary">范围 0 到 10</string>
+    <string name="demo_stepper_hold">长按连续调整</string>
+    <string name="demo_stepper_hold_summary">默认范围 -999 到 9999，长按按钮每 100 毫秒调整一次</string>
+    <string name="demo_stepper_badge_summary">步长 111，范围 1 到 1000</string>
+
+    <!-- TwoTextButton -->
+    <string name="demo_two_text_button_variant_onboarding">引导页</string>
+    <string name="demo_two_text_button_get_started">开始使用</string>
+    <string name="demo_two_text_button_progress_hint">翻页进度：%1$s</string>
+    <string name="demo_two_text_button_page">欢迎页 %1$d</string>
+    <string name="demo_two_text_button_done">设置完成</string>
+
+    <!-- SegmentButton -->
+    <string name="demo_segment_button_variant_forms">样式</string>
+    <string name="demo_segment_button_variant_backdrop">图片上的分段按钮</string>
+    <string name="demo_segment_button_day">日</string>
+    <string name="demo_segment_button_week">周</string>
+    <string name="demo_segment_button_month">月</string>
+    <string name="demo_segment_button_all">全部</string>
+    <string name="demo_segment_button_allowed">已允许</string>
+    <string name="demo_segment_button_not_allowed">未允许</string>
+    <string name="demo_segment_button_list">列表</string>
+    <string name="demo_segment_button_grid">网格</string>
+    <string name="demo_segment_button_recent">最近</string>
+    <string name="demo_segment_button_favorites">收藏</string>
+    <string name="demo_segment_button_shared">共享</string>
+    <string name="demo_segment_button_material_backdrop">材质背景模糊</string>
+    <string name="demo_segment_button_drag_animation">触摸动效</string>
+    <string name="demo_segment_button_haptic">振动反馈</string>
+    <string name="demo_segment_button_responsive_width">响应式宽度</string>
+    <string name="demo_segment_button_responsive_width_summary">固定宽度时按 COUI 栅格限制最大宽度</string>
+</resources>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_arrow_preference_title">箭头设置项</string>
+    <string name="demo_switch_preference_title">开关设置项</string>
+    <string name="demo_checkbox_preference_title">复选设置项</string>
+    <string name="demo_radio_button_preference_title">单选设置项</string>
+    <string name="demo_slider_preference_title">滑块设置项</string>
+    <string name="demo_preference_category_title">设置分组</string>
+    <string name="demo_list_preference_title">列表设置项</string>
+    <string name="demo_slide_select_preference_title">滑动选择设置项</string>
+    <string name="demo_mark_preference_title">勾选设置项</string>
+    <string name="demo_button_preference_title">按钮设置项</string>
+    <string name="demo_input_preference_title">输入设置项</string>
+    <string name="demo_card_preference_title">卡片设置项</string>
+    <string name="demo_status_preference_title">状态设置项</string>
+    <string name="demo_pager_preference_title">页眉与页脚</string>
+    <string name="demo_dropdown_preference_title">下拉设置项</string>
+
+    <!-- Shared by the preference demos -->
+    <string name="demo_pref_component">组件</string>
+    <string name="demo_pref_long_title">长标题</string>
+    <string name="demo_pref_long_summary">长摘要</string>
+    <string name="demo_pref_show_end_text">显示末尾文字</string>
+    <string name="demo_pref_end_value">详情</string>
+    <string name="demo_pref_opened_page">已打开“%1$s”页面</string>
+    <string name="demo_pref_both_disabled">整行与控件均不可用</string>
+
+    <!-- ArrowPreference -->
+    <string name="demo_arrow_preference_clickable">可点击</string>
+    <string name="demo_arrow_preference_hold_down">保持按下态</string>
+    <string name="demo_arrow_preference_variant_basic">基本用法</string>
+    <string name="demo_arrow_preference_variant_dialog">点击弹出对话框</string>
+    <string name="demo_arrow_preference_volume">音量</string>
+    <string name="demo_arrow_preference_volume_summary">点击此项可输入精确数值</string>
+    <string name="demo_arrow_preference_volume_dialog_title">调节音量</string>
+    <string name="demo_arrow_preference_volume_dialog_summary">请输入 0–100</string>
+
+    <!-- SwitchPreference -->
+    <string name="demo_switch_preference_expand">显示更多</string>
+    <string name="demo_switch_preference_expand_summary">开启后展开下一项</string>
+    <string name="demo_switch_preference_expanded_row">附加选项</string>
+    <string name="demo_switch_preference_async">异步开关</string>
+    <string name="demo_switch_preference_async_summary">稍等片刻后生效</string>
+    <string name="demo_switch_preference_always_loading">持续加载</string>
+    <string name="demo_switch_preference_always_loading_summary">始终处于加载状态的开关</string>
+    <string name="demo_switch_preference_wifi_connected">已连接到 %1$s</string>
+
+    <!-- CheckboxPreference -->
+    <string name="demo_checkbox_preference_at_end">复选框在末尾</string>
+    <string name="demo_checkbox_preference_at_start">复选框在开头</string>
+    <string name="demo_checkbox_preference_choose_albums">点击此项选择相册</string>
+    <string name="demo_checkbox_preference_category_title">要迁移的数据</string>
+
+    <!-- RadioButtonPreference -->
+    <string name="demo_radio_button_preference_variant_single">单选</string>
+    <string name="demo_radio_button_preference_variant_disabled">不可用状态</string>
+
+    <!-- SliderPreference -->
+    <string name="demo_slider_preference_show_key_points">显示刻度点</string>
+    <string name="demo_slider_preference_reverse">反向</string>
+    <string name="demo_slider_preference_show_value">显示数值</string>
+    <string name="demo_slider_preference_normal">普通</string>
+    <string name="demo_slider_preference_steps">分段</string>
+    <string name="demo_slider_preference_steps_key_points">分段并显示刻度点</string>
+    <string name="demo_slider_preference_custom_key_points">自定义刻度点</string>
+    <string name="demo_slider_preference_disabled_key_points">不可用（带刻度点）</string>
+    <string name="demo_slider_preference_range">范围</string>
+    <string name="demo_slider_preference_range_key_points">范围（带刻度点）</string>
+    <string name="demo_slider_preference_custom_range_points">范围（自定义刻度点）</string>
+
+    <!-- PreferenceCategory -->
+    <string name="demo_preference_category_badge">新</string>
+    <string name="demo_preference_category_info">说明</string>
+    <string name="demo_preference_category_manage">管理</string>
+    <string name="demo_preference_category_refresh">刷新</string>
+    <string name="demo_preference_category_searching">正在搜索</string>
+    <string name="demo_preference_category_devices">可用设备</string>
+    <string name="demo_preference_category_speaker">客厅音箱</string>
+    <string name="demo_preference_category_earbuds">耳机</string>
+    <string name="demo_preference_category_paired">已配对</string>
+    <string name="demo_preference_category_not_connected">未连接</string>
+    <string name="demo_preference_category_end_widget">末尾控件</string>
+    <string name="demo_preference_category_widget_none">无</string>
+    <string name="demo_preference_category_widget_text_button">文字按钮</string>
+    <string name="demo_preference_category_widget_single_icon">单个图标</string>
+    <string name="demo_preference_category_widget_text_icon">文字加图标</string>
+    <string name="demo_preference_category_margin_start">较小起始边距</string>
+    <string name="demo_preference_category_show_title_icon">标题图标</string>
+    <string name="demo_preference_category_show_badge">标题角标</string>
+    <string name="demo_preference_category_show_loading_text">加载文字</string>
+    <string name="demo_preference_category_title_default">默认小标题</string>
+    <string name="demo_preference_category_note_default">12sp 标题，次要文字颜色</string>
+    <string name="demo_preference_category_title_medium">中标题</string>
+    <string name="demo_preference_category_note_medium">14sp 标题，主要文字颜色</string>
+    <string name="demo_preference_category_title_large">大标题</string>
+    <string name="demo_preference_category_note_large">16sp 标题，主要文字颜色</string>
+    <string name="demo_preference_category_title_small_margin">较小起始边距</string>
+    <string name="demo_preference_category_note_small_margin">标题距起始边 16dp</string>
+    <string name="demo_preference_category_title_with_icon">带标题图标</string>
+    <string name="demo_preference_category_note_title_icon">带图标时，小标题改用主要文字颜色</string>
+    <string name="demo_preference_category_title_with_badge">带角标</string>
+    <string name="demo_preference_category_note_badge">标题后显示文字红点</string>
+    <string name="demo_preference_category_title_text_button">文字按钮</string>
+    <string name="demo_preference_category_note_text_button">主题色文字</string>
+    <string name="demo_preference_category_title_single_icon">单个图标</string>
+    <string name="demo_preference_category_note_single_icon">16dp 圆形按压遮罩</string>
+    <string name="demo_preference_category_title_text_icon">文字加图标</string>
+    <string name="demo_preference_category_note_text_icon">可点击，文字改用主要文字颜色</string>
+    <string name="demo_preference_category_title_medium_button">中标题加文字按钮</string>
+    <string name="demo_preference_category_note_medium_button">控件文字随之增大到 14sp</string>
+
+    <!-- ListPreference -->
+    <string name="demo_list_preference_entry_summaries">选项摘要</string>
+    <string name="demo_list_preference_show_value">显示所选值</string>
+    <string name="demo_list_preference_variant_states">不可用状态</string>
+    <string name="demo_list_preference_unavailable">不可用</string>
+    <string name="demo_list_preference_light">浅色</string>
+    <string name="demo_list_preference_dark">深色</string>
+    <string name="demo_list_preference_follow_system">跟随系统</string>
+    <string name="demo_list_preference_follow_system_summary">随系统深色模式切换</string>
+    <string name="demo_list_preference_theme">主题</string>
+    <string name="demo_list_preference_single_summary">单选底部面板</string>
+    <string name="demo_list_preference_documents">文档</string>
+    <string name="demo_list_preference_contacts_summary">联系人与通话记录</string>
+    <string name="demo_list_preference_system_settings">系统设置</string>
+    <string name="demo_list_preference_sync_items">同步内容</string>
+    <string name="demo_list_preference_multi_summary">多选底部面板</string>
+
+    <!-- SlideSelectPreference -->
+    <string name="demo_slide_select_preference_standard">标准</string>
+    <string name="demo_slide_select_preference_large">大</string>
+    <string name="demo_slide_select_preference_extra_large">超大</string>
+    <string name="demo_slide_select_preference_font_size">字体大小</string>
+    <string name="demo_slide_select_preference_screen_timeout">自动息屏</string>
+    <string name="demo_slide_select_preference_timeout_seconds">%1$d 秒</string>
+    <string name="demo_slide_select_preference_timeout_minutes">%1$d 分钟</string>
+    <string name="demo_slide_select_preference_never">永不</string>
+    <string name="demo_slide_select_preference_no_selection">无选择文字</string>
+    <string name="demo_slide_select_preference_tap_next">点击切换到下一个值</string>
+    <string name="demo_slide_select_preference_show_selection">显示选择文字</string>
+    <string name="demo_slide_select_preference_long_selection">较长的选择文字</string>
+    <string name="demo_slide_select_preference_long_selection_text">一段足够长、会被截断显示的选择文字</string>
+    <string name="demo_slide_select_preference_variant_examples">示例</string>
+
+    <!-- MarkPreference -->
+    <string name="demo_mark_preference_every_day">每天</string>
+    <string name="demo_mark_preference_workdays">仅工作日</string>
+    <string name="demo_mark_preference_never">从不</string>
+    <string name="demo_mark_preference_only_option">唯一选项</string>
+    <string name="demo_mark_preference_tap_for_details">点击此项查看详情</string>
+    <string name="demo_mark_preference_variant_group">单选</string>
+    <string name="demo_mark_preference_variant_standalone">独立一行</string>
+
+    <!-- ButtonPreference -->
+    <string name="demo_button_preference_account">账号</string>
+    <string name="demo_button_preference_sign_in">登录</string>
+    <string name="demo_button_preference_sign_in_summary">登录以同步你的数据</string>
+    <string name="demo_button_preference_button_clicked">按钮已点击 %1$d 次</string>
+    <string name="demo_button_preference_action">操作</string>
+    <string name="demo_button_preference_long_button">较长按钮文字</string>
+    <string name="demo_button_preference_long_button_text">下载并安装应用</string>
+    <string name="demo_button_preference_both_disabled">按钮与整行均不可用</string>
+    <string name="demo_button_preference_columns">列数</string>
+    <string name="demo_button_preference_scan">扫一扫</string>
+    <string name="demo_button_preference_contacts_accounts">联系人与账号</string>
+    <string name="demo_button_preference_backup">备份</string>
+    <string name="demo_button_preference_recommended_title">你可能在找：</string>
+
+    <!-- InputPreference, EditTextPreference, StepperPreference -->
+    <string name="demo_input_preference_clear_button">清除按钮</string>
+    <string name="demo_input_preference_max_count">字数限制</string>
+    <string name="demo_input_preference_password_toggle">密码显隐切换</string>
+    <string name="demo_input_preference_error">错误状态</string>
+    <string name="demo_input_preference_error_message">输入内容无效</string>
+    <string name="demo_input_preference_read_only">只读</string>
+    <string name="demo_input_preference_show_value">显示当前值</string>
+    <string name="demo_input_preference_empty_allowed">允许输入为空</string>
+    <string name="demo_input_preference_dialog_message">对话框说明</string>
+    <string name="demo_input_preference_range">范围</string>
+    <string name="demo_input_preference_device_name">设备名称</string>
+    <string name="demo_input_preference_device_name_hint">输入名称</string>
+    <string name="demo_input_preference_my_phone">我的手机</string>
+    <string name="demo_input_preference_hotspot_hint">热点名称（无标题）</string>
+    <string name="demo_input_preference_no_spaces">不能包含空格</string>
+    <string name="demo_input_preference_password_hint">至少 8 个字符</string>
+    <string name="demo_input_preference_nickname">昵称</string>
+    <string name="demo_input_preference_nickname_hint">输入昵称</string>
+    <string name="demo_input_preference_signature">个性签名</string>
+    <string name="demo_input_preference_signature_message">将显示在你的名字下方。</string>
+    <string name="demo_input_preference_locked">已锁定</string>
+    <string name="demo_input_preference_copies">份数</string>
+    <string name="demo_input_preference_font_scale">字体缩放</string>
+    <string name="demo_input_preference_font_scale_summary">以 10 为步长，范围 50–200</string>
+
+    <!-- AppInfoPreference, CardInstructionPreference, CardEntrancePreference -->
+    <string name="demo_card_preference_app_name">COUI 组件库</string>
+    <string name="demo_card_preference_long_app_name">名称足够长、需要换行显示的 COUI 组件库</string>
+    <string name="demo_card_preference_app_version">版本 %1$s</string>
+    <string name="demo_card_preference_copied">已复制</string>
+    <string name="demo_card_preference_long_name">长名称</string>
+    <string name="demo_card_preference_show_copy">复制按钮</string>
+    <string name="demo_card_preference_pages">页数</string>
+    <string name="demo_card_preference_large_item">大卡片</string>
+    <string name="demo_card_preference_status_on">开启状态</string>
+    <string name="demo_card_preference_page1_title">从底部上滑</string>
+    <string name="demo_card_preference_page1_summary">从屏幕底部边缘向上滑动，返回桌面。</string>
+    <string name="demo_card_preference_page2_title">从两侧向内滑</string>
+    <string name="demo_card_preference_page2_summary">从屏幕左侧或右侧边缘向内滑动，返回上一级。</string>
+    <string name="demo_card_preference_page3_summary">没有标题的页面会把文字区域限制在 64dp 高，并在滚动时渐隐边缘。这段说明足够长，可以滚动：向下滚动后顶部会出现渐隐边缘，后面还有文字时底部也会渐隐。</string>
+    <string name="demo_card_preference_left_edge">左侧边缘</string>
+    <string name="demo_card_preference_right_edge">右侧边缘</string>
+    <string name="demo_card_preference_permissions">权限管理</string>
+    <string name="demo_card_preference_location">定位服务</string>
+    <string name="demo_card_preference_backup">备份与恢复</string>
+    <string name="demo_card_preference_backup_summary">上次备份：昨天</string>
+    <string name="demo_card_preference_more_settings">更多设置</string>
+    <string name="demo_card_preference_unavailable">不可用</string>
+
+    <!-- StatusSwitchingPreference, LoadInstallProgressPreference, ActivityDialogPreference -->
+    <string name="demo_status_preference_switching">切换中</string>
+    <string name="demo_status_preference_show_status">显示状态</string>
+    <string name="demo_status_preference_status_icon">状态图标</string>
+    <string name="demo_status_preference_state">状态</string>
+    <string name="demo_status_preference_hotspot">个人热点</string>
+    <string name="demo_status_preference_tap_to_switch">点击切换</string>
+    <string name="demo_status_preference_backup">备份</string>
+    <string name="demo_status_preference_up_to_date">已是最新</string>
+    <string name="demo_status_preference_unavailable">不可用</string>
+    <string name="demo_status_preference_install">安装</string>
+    <string name="demo_status_preference_resume">继续</string>
+    <string name="demo_status_preference_weather">天气</string>
+    <string name="demo_status_preference_calculator">计算器</string>
+    <string name="demo_status_preference_download_failed">下载失败</string>
+    <string name="demo_status_preference_dark_summary">夜间使用更护眼</string>
+    <string name="demo_status_preference_scheduled">定时开启</string>
+    <string name="demo_status_preference_appearance">外观</string>
+    <string name="demo_status_preference_appearance_summary">在新页面中选择</string>
+
+    <!-- PagerHeaderPreference, PagerFooterPreference, SpannablePreference, LinkText -->
+    <string name="demo_pager_preference_header_text">点击某一项进入其页面，或使用其控件直接切换。</string>
+    <string name="demo_pager_preference_learn_more">了解更多</string>
+    <string name="demo_pager_preference_text_with_link">%1$s%2$s</string>
+    <string name="demo_pager_preference_with_link">包含链接</string>
+    <string name="demo_pager_preference_extra_margin">额外底部间距</string>
+    <string name="demo_pager_preference_location">定位服务</string>
+    <string name="demo_pager_preference_location_text">应用会使用你的位置信息显示附近的结果。%1$s</string>
+    <string name="demo_pager_preference_disabled_link">不可用的行中，链接也会置灰：%1$s</string>
+    <string name="demo_pager_preference_user_agreement">《用户协议》</string>
+    <string name="demo_pager_preference_privacy_policy">《隐私政策》</string>
+    <string name="demo_pager_preference_agreement">请阅读%1$s和%2$s。</string>
+    <string name="demo_pager_preference_links_clicked">链接点击次数：%1$d</string>
+    <string name="demo_pager_preference_footer_text">关闭 WLAN 后将继续使用移动数据。%1$s</string>
+    <string name="demo_pager_preference_network_settings">网络设置</string>
+
+    <!-- OverlayDropdownPreference, WindowDropdownPreference -->
+    <string name="demo_dropdown_preference_overlay">浮层弹窗</string>
+    <string name="demo_dropdown_preference_window">窗口弹窗</string>
+    <string name="demo_dropdown_preference_grouped">分组选项</string>
+    <string name="demo_dropdown_preference_collapse_on_selection">选择后收起</string>
+    <string name="demo_dropdown_preference_show_value">显示所选值</string>
+    <string name="demo_dropdown_preference_expanded">已展开</string>
+    <string name="demo_dropdown_preference_collapsed">已收起</string>
+    <string name="demo_dropdown_preference_group_option">选项 %1$s</string>
+    <string name="demo_dropdown_preference_long_option">很长的</string>
+    <string name="demo_dropdown_preference_variant_options">浮层与窗口</string>
+    <string name="demo_dropdown_preference_variant_grouped">分组</string>
+    <string name="demo_dropdown_preference_variant_states">不可用状态</string>
+</resources>

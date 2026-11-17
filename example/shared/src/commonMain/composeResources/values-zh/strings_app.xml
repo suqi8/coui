@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shell -->
+    <string name="app_tab_components">组件</string>
+    <string name="app_tab_design">设计</string>
+    <string name="app_tab_settings">设置</string>
+
+    <!-- Components home and search -->
+    <string name="catalog_group_basic">基础控件</string>
+    <string name="catalog_group_overlay">弹出与反馈</string>
+    <string name="catalog_group_structure">页面结构</string>
+    <string name="catalog_group_more">更多</string>
+    <string name="catalog_new">新</string>
+    <string name="catalog_search_hint">搜索组件</string>
+    <string name="catalog_search_hint_slider">试试“滑块”</string>
+    <string name="catalog_search_hint_dialog">试试“对话框”</string>
+    <string name="catalog_search_results">%1$d 个结果</string>
+    <string name="catalog_search_empty">没有找到相关组件</string>
+    <string name="catalog_search_empty_hint">换个关键词试试，中文名和 API 名都可以</string>
+    <string name="catalog_list_empty_detail">从左侧列表选择一个组件</string>
+
+    <!-- Categories -->
+    <string name="category_display">基础展示</string>
+    <string name="category_display_summary">卡片、徽标、标签、横幅</string>
+    <string name="category_buttons">按钮</string>
+    <string name="category_buttons_summary">按钮、悬浮按钮、步进器</string>
+    <string name="category_selection">选择与滑块</string>
+    <string name="category_selection_summary">开关、复选框、滑块、选择标签</string>
+    <string name="category_input">输入与搜索</string>
+    <string name="category_input_summary">文本框、搜索框、键盘、密码锁</string>
+    <string name="category_pickers">选择器</string>
+    <string name="category_pickers_summary">数字、日期时间、日历、颜色</string>
+    <string name="category_dialogs">对话框与面板</string>
+    <string name="category_dialogs_summary">对话框、列表对话框、底部面板</string>
+    <string name="category_menus">菜单与提示</string>
+    <string name="category_menus_summary">下拉菜单、弹窗、气泡提示</string>
+    <string name="category_feedback">反馈与状态</string>
+    <string name="category_feedback_summary">消息条、进度、空状态</string>
+    <string name="category_navigation">导航与栏</string>
+    <string name="category_navigation_summary">顶栏、导航栏、工具栏、标签栏</string>
+    <string name="category_layout">布局与容器</string>
+    <string name="category_layout_summary">列表-详情、栅格、滑动操作</string>
+    <string name="category_preference">设置项</string>
+    <string name="category_preference_summary">开关、列表、下拉、分组</string>
+
+    <!-- Design -->
+    <string name="design_icons">图标</string>
+    <string name="design_icons_summary">扩展图标，五种字重</string>
+    <string name="design_icons_search">搜索图标</string>
+    <string name="design_icons_name">名称</string>
+    <string name="design_icons_compare_hint">点按对比字重</string>
+    <string name="design_icons_no_match">没有找到相关图标</string>
+    <string name="design_colors">颜色</string>
+    <string name="design_colors_summary">主题颜色槽位，浅色、深色与动态取色</string>
+    <string name="design_colors_current">当前主题</string>
+    <string name="design_colors_light">浅色主题</string>
+    <string name="design_colors_dynamic_light">动态浅色</string>
+    <string name="design_colors_dark">深色主题</string>
+    <string name="design_colors_dynamic_dark">动态深色</string>
+    <string name="design_text_styles">字体</string>
+    <string name="design_text_styles_summary">COUI 字号体系</string>
+    <string name="design_text_group_title">展示</string>
+    <string name="design_text_group_headline">标题</string>
+    <string name="design_text_group_body">正文</string>
+    <string name="design_text_group_button">按钮</string>
+    <string name="design_text_group_footnote">注释</string>
+
+    <!-- Settings -->
+    <string name="settings_group_appearance">外观</string>
+    <string name="settings_color_mode">颜色模式</string>
+    <string name="settings_color_mode_system">跟随系统</string>
+    <string name="settings_color_mode_light">浅色</string>
+    <string name="settings_color_mode_dark">深色</string>
+    <string name="settings_color_mode_monet_system">莫奈取色，跟随系统</string>
+    <string name="settings_color_mode_monet_light">莫奈取色，浅色</string>
+    <string name="settings_color_mode_monet_dark">莫奈取色，深色</string>
+    <string name="settings_key_color">主题色</string>
+    <string name="settings_key_color_default">默认</string>
+    <string name="settings_key_color_blue">蓝</string>
+    <string name="settings_key_color_green">绿</string>
+    <string name="settings_key_color_purple">紫</string>
+    <string name="settings_key_color_yellow">黄</string>
+    <string name="settings_key_color_orange">橙</string>
+    <string name="settings_key_color_pink">粉</string>
+    <string name="settings_key_color_teal">青</string>
+    <string name="settings_palette_style">调色板风格</string>
+    <string name="settings_color_spec">色彩规范</string>
+    <string name="settings_group_effects">效果</string>
+    <string name="settings_material_blur">材质与模糊</string>
+    <string name="settings_material_blur_summary">COUI 17 的模糊栏、面板、菜单与按钮</string>
+    <string name="settings_squircle">平滑圆角</string>
+    <string name="settings_squircle_summary">用超椭圆圆角代替圆弧圆角</string>
+    <string name="settings_group_interaction">交互</string>
+    <string name="settings_scroll_end_haptic">滚动边缘触感</string>
+    <string name="settings_scroll_end_haptic_summary">列表滚到尽头时振动</string>
+    <string name="settings_group_developer">开发者</string>
+    <string name="settings_fps_monitor">显示帧率</string>
+    <string name="settings_fps_monitor_summary">在屏幕上叠加当前帧率</string>
+    <string name="settings_group_other">其他</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_summary">版本、源代码与许可</string>
+
+    <!-- About -->
+    <string name="about_title">关于</string>
+    <string name="about_version">版本 %1$s (%2$s)</string>
+    <string name="about_name">名称</string>
+    <string name="about_components">组件</string>
+    <string name="about_components_count">%1$d 个演示页</string>
+    <string name="about_group_details">详细信息</string>
+    <string name="about_version_label">版本</string>
+    <string name="about_design_language">设计语言</string>
+    <string name="about_platforms">平台</string>
+    <string name="about_view_source">查看源代码</string>
+    <string name="about_group_community">项目</string>
+    <string name="about_source">源代码</string>
+    <string name="about_telegram">加入群组</string>
+    <string name="about_group_legal">许可</string>
+    <string name="about_license">开源许可</string>
+    <string name="about_third_party">第三方开源许可</string>
+
+    <!-- Lab -->
+    <string name="lab_title">实验室</string>
+    <string name="lab_entry_summary">历史特效与测试页</string>
+    <string name="lab_banner">这里的页面从 Miuix 时期保留下来，不属于 COUI 设计规范。</string>
+    <string name="lab_blur">纹理模糊</string>
+    <string name="lab_blur_summary">纹理模糊、前景模糊与高光</string>
+    <string name="lab_bg_effect">背景特效</string>
+    <string name="lab_bg_effect_summary">HyperOS OS2 / OS3 着色器背景</string>
+    <string name="lab_liquid_glass">液态玻璃导航栏</string>
+    <string name="lab_liquid_glass_summary">仿 iOS 的玻璃导航栏</string>
+    <string name="lab_navigation_test">导航测试</string>
+    <string name="lab_navigation_test_summary">长标题、弹窗与连续推入</string>
+    <string name="lab_multi_scaffold">多 Scaffold 测试</string>
+    <string name="lab_multi_scaffold_summary">嵌套 Scaffold 里的弹窗</string>
+</resources>

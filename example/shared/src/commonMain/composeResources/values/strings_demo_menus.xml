@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_dropdown_menu_title">Dropdown menu</string>
+    <string name="demo_list_popup_title">List popup</string>
+    <string name="demo_context_menu_title">Context menu</string>
+    <string name="demo_spinner_title">Spinner</string>
+    <string name="demo_navigation_popup_menu_title">Navigation popup menu</string>
+    <string name="demo_tooltip_title">Tooltip</string>
+    <string name="demo_top_tips_title">Top tips</string>
+
+    <!-- Shared by the menu demos -->
+    <string name="demo_menus_host">Popup host</string>
+    <string name="demo_menus_host_overlay">Overlay</string>
+    <string name="demo_menus_host_window">Window</string>
+
+    <!-- Dropdown menu -->
+    <string name="demo_dropdown_menu_state_expanded">Expanded</string>
+    <string name="demo_dropdown_menu_state_collapsed">Collapsed</string>
+    <string name="demo_dropdown_menu_content">Menu content</string>
+    <string name="demo_dropdown_menu_content_single">One group</string>
+    <string name="demo_dropdown_menu_content_grouped">Several groups</string>
+    <string name="demo_dropdown_menu_content_headers">Group headers</string>
+    <string name="demo_dropdown_menu_content_variants">Item variants</string>
+    <string name="demo_dropdown_menu_collapse_on_selection">Close after selection</string>
+    <string name="demo_dropdown_menu_limit_height">Limit height</string>
+    <string name="demo_dropdown_menu_variant_item_variants">Item variants</string>
+    <string name="demo_dropdown_menu_variant_group_headers">Group headers</string>
+    <string name="demo_dropdown_menu_variant_icon_menus">Icon button menus</string>
+    <string name="demo_dropdown_menu_variant_disabled">Disabled</string>
+    <string name="demo_dropdown_menu_disabled_summary">The menu does not open</string>
+    <string name="demo_dropdown_menu_icon_menus_summary">Icon buttons that open a menu, as in a top bar: sub menus, one choice per group, and multiple choice.</string>
+    <string name="demo_dropdown_menu_cd_view">View options</string>
+    <string name="demo_dropdown_menu_cd_sort">Sort</string>
+    <string name="demo_dropdown_menu_cd_select">Select</string>
+    <string name="demo_dropdown_menu_group_option">Option %1$s-%2$d</string>
+    <string name="demo_dropdown_menu_sort_captured">Sort by capture date</string>
+    <string name="demo_dropdown_menu_sort_added">Sort by date added</string>
+    <string name="demo_dropdown_menu_view_mode">View mode</string>
+    <string name="demo_dropdown_menu_view_grouped">Group by date</string>
+    <string name="demo_dropdown_menu_view_compact">Compact</string>
+    <string name="demo_dropdown_menu_filter">Filter</string>
+    <string name="demo_dropdown_menu_filter_all">All items</string>
+    <string name="demo_dropdown_menu_filter_camera">Camera album</string>
+    <string name="demo_dropdown_menu_item_icon">Icon row</string>
+    <string name="demo_dropdown_menu_item_description">Row with description</string>
+    <string name="demo_dropdown_menu_item_description_summary">A second line that explains what this option changes</string>
+    <string name="demo_dropdown_menu_item_red_dot">Row with red dot</string>
+    <string name="demo_dropdown_menu_item_count_badge">Row with count badge</string>
+    <string name="demo_dropdown_menu_item_all_slots">Icon, description and hint</string>
+    <string name="demo_dropdown_menu_item_all_slots_summary">All three slots at once</string>
+    <string name="demo_dropdown_menu_item_state_icon">Custom state icon</string>
+    <string name="demo_dropdown_menu_item_disabled">Disabled row (hint hidden)</string>
+    <string name="demo_dropdown_menu_item_long">Very long title that runs past the 248dp clamp and therefore wraps onto a third line before it finally ellipsizes</string>
+    <string name="demo_dropdown_menu_item_alert">Delete everything</string>
+    <string name="demo_dropdown_menu_header_sort">Sort by</string>
+    <string name="demo_dropdown_menu_header_name">Name</string>
+    <string name="demo_dropdown_menu_header_date">Date modified</string>
+    <string name="demo_dropdown_menu_header_long">A group header long enough to need its own second line before ellipsizing</string>
+    <string name="demo_dropdown_menu_header_ascending">Ascending</string>
+    <string name="demo_dropdown_menu_header_descending">Descending</string>
+    <string name="demo_dropdown_menu_header_danger">Danger zone</string>
+    <string name="demo_dropdown_menu_header_reset">Reset all settings</string>
+
+    <!-- List popup -->
+    <string name="demo_list_popup_show">Show popup</string>
+    <string name="demo_list_popup_window_dim">Dim the window</string>
+    <string name="demo_list_popup_material_blur">Material blur</string>
+    <string name="demo_list_popup_material_effect">Edge light and spotlight</string>
+    <string name="demo_list_popup_limit_height">Limit height</string>
+    <string name="demo_list_popup_disabled_row">Disable the second row</string>
+    <string name="demo_list_popup_variant_sub_menus">Sub menus</string>
+    <string name="demo_list_popup_sub_menus_summary">Hold Sort by, then slide into the sub menu; drag across the icons</string>
+    <string name="demo_list_popup_variant_opaque">Opaque popup</string>
+    <string name="demo_list_popup_opaque_summary">materialBlur = false: COUI\'s non-blur surface, still drawing the edge light and spotlight</string>
+    <string name="demo_list_popup_new_folder">New folder</string>
+    <string name="demo_list_popup_sort">Sort</string>
+    <string name="demo_list_popup_sort_by">Sort by</string>
+    <string name="demo_list_popup_sort_name">Name</string>
+    <string name="demo_list_popup_sort_date">Date</string>
+    <string name="demo_list_popup_sort_size">Size</string>
+    <string name="demo_list_popup_view">View</string>
+    <string name="demo_list_popup_view_list">List</string>
+    <string name="demo_list_popup_view_grid">Grid</string>
+    <string name="demo_list_popup_theme_system">Follow system</string>
+    <string name="demo_list_popup_theme_light">Light</string>
+    <string name="demo_list_popup_theme_dark">Dark</string>
+
+    <!-- Context menu -->
+    <string name="demo_context_menu_hint">Long press or right-click</string>
+    <string name="demo_context_menu_last_action">Last action: %1$s</string>
+    <string name="demo_context_menu_none">None</string>
+    <string name="demo_context_menu_rename">Rename</string>
+    <string name="demo_context_menu_show_delete">Show the delete group</string>
+    <string name="demo_context_menu_haptic">Haptic feedback</string>
+    <string name="demo_context_menu_collapse">Close after selection</string>
+    <string name="demo_context_menu_variant_hosts">Overlay and window</string>
+    <string name="demo_context_menu_window_summary">Opens at the pointer in a platform window</string>
+    <string name="demo_context_menu_variant_disabled">Disabled</string>
+    <string name="demo_context_menu_disabled_summary">No menu on long press</string>
+
+    <!-- Spinner -->
+    <string name="demo_spinner_state_expanded">Expanded</string>
+    <string name="demo_spinner_state_collapsed">Collapsed</string>
+    <string name="demo_spinner_display">Show as</string>
+    <string name="demo_spinner_display_popup">Popup</string>
+    <string name="demo_spinner_display_dialog">Dialog</string>
+    <string name="demo_spinner_grouped">Grouped</string>
+    <string name="demo_spinner_show_value">Show the selected value</string>
+    <string name="demo_spinner_color_red">Red</string>
+    <string name="demo_spinner_color_green">Green</string>
+    <string name="demo_spinner_color_blue">Blue</string>
+    <string name="demo_spinner_color_yellow">Yellow</string>
+    <string name="demo_spinner_variant_popup">Popup</string>
+    <string name="demo_spinner_variant_dialog">Dialog</string>
+    <string name="demo_spinner_variant_grouped">Grouped popup</string>
+    <string name="demo_spinner_variant_grouped_dialog">Grouped dialog</string>
+    <string name="demo_spinner_variant_disabled">Disabled</string>
+
+    <!-- Navigation popup menu -->
+    <string name="demo_navigation_popup_menu_current">Current: %1$s. Tap More for the other destinations.</string>
+    <string name="demo_navigation_popup_menu_menu_count">Destinations in the menu</string>
+    <string name="demo_navigation_popup_menu_material_blur">Material blur</string>
+    <string name="demo_navigation_popup_menu_disable_last">Disable the last destination</string>
+    <string name="demo_navigation_popup_menu_limit_height">Limit height</string>
+    <string name="demo_navigation_popup_menu_variant_overlay">In a navigation bar</string>
+    <string name="demo_navigation_popup_menu_variant_window">Window popup</string>
+
+    <!-- Tooltip -->
+    <string name="demo_tooltip_show">Show tooltip</string>
+    <string name="demo_tooltip_show_arrow">Show arrow</string>
+    <string name="demo_tooltip_dismiss_outside">Dismiss on outside tap</string>
+    <string name="demo_tooltip_show_dismiss">Show dismiss button</string>
+    <string name="demo_tooltip_text_tooltips">Tap the close icon to dismiss this tip.</string>
+    <string name="demo_tooltip_text_info">Info tooltips have no close icon; tap outside.</string>
+    <string name="demo_tooltip_icon_title">New feature</string>
+    <string name="demo_tooltip_icon_text">Icon tooltips pair a 40dp icon with a title and a body.</string>
+    <string name="demo_tooltip_image_title">Image tooltip</string>
+    <string name="demo_tooltip_image_text">Image tooltips are 260dp wide with a cropped image on top.</string>
+    <string name="demo_tooltip_got_it">Got it</string>
+    <string name="demo_tooltip_no_arrow_text">A tooltip without its arrow.</string>
+    <string name="demo_tooltip_button_tooltips">Tooltip</string>
+    <string name="demo_tooltip_button_info">Info</string>
+    <string name="demo_tooltip_button_icon">Icon</string>
+    <string name="demo_tooltip_button_image">Image</string>
+    <string name="demo_tooltip_button_no_arrow">No arrow</string>
+    <string name="demo_tooltip_variant_styles">Styles</string>
+    <string name="demo_tooltip_variant_placement">Placement and arrow</string>
+
+    <!-- Top tips -->
+    <string name="demo_top_tips_text">New security update available</string>
+    <string name="demo_top_tips_title_text">Backup paused</string>
+    <string name="demo_top_tips_action_update">Update</string>
+    <string name="demo_top_tips_action_count">Action taps: %1$d</string>
+    <string name="demo_top_tips_show_action">Show action</string>
+    <string name="demo_top_tips_closable">Closable</string>
+    <string name="demo_top_tips_marquee">Marquee</string>
+    <string name="demo_top_tips_show_again">Show the closable tip again</string>
+    <string name="demo_top_tips_closable_text">Closable tip with a start icon</string>
+    <string name="demo_top_tips_long_icon_text">With a start icon, a message longer than two lines moves the action below it, aligned with the text</string>
+    <string name="demo_top_tips_turn_on">Turn on</string>
+    <string name="demo_top_tips_backup_text">Connect to Wi-Fi to continue backing up your photos</string>
+    <string name="demo_top_tips_marquee_text">Marquee tips scroll a message that is too long to fit on a single line</string>
+    <string name="demo_top_tips_variant_examples">Examples</string>
+</resources>

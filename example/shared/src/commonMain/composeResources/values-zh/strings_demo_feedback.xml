@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_snackbar_title">消息条</string>
+    <string name="demo_custom_snackbar_title">自定义消息条</string>
+    <string name="demo_progress_indicator_title">进度指示器</string>
+    <string name="demo_comp_progress_indicator_title">组合进度指示器</string>
+    <string name="demo_install_load_progress_title">安装加载进度</string>
+    <string name="demo_pull_to_refresh_title">下拉刷新</string>
+    <string name="demo_empty_state_title">空状态</string>
+    <string name="demo_complete_state_title">完成状态</string>
+
+    <!-- Snackbar -->
+    <string name="demo_snackbar_show">显示消息条</string>
+    <string name="demo_snackbar_result">结果：%1$s</string>
+    <string name="demo_snackbar_message">消息内容</string>
+    <string name="demo_snackbar_message_kind_short">短</string>
+    <string name="demo_snackbar_message_kind_long">长</string>
+    <string name="demo_snackbar_message_kind_multiline">多行</string>
+    <string name="demo_snackbar_with_action">操作按钮</string>
+    <string name="demo_snackbar_with_dismiss">关闭按钮</string>
+    <string name="demo_snackbar_duration">显示时长</string>
+    <string name="demo_snackbar_message_short">这是一条短消息</string>
+    <string name="demo_snackbar_message_long">这是一条较长的消息，用来展示更多文字内容</string>
+    <string name="demo_snackbar_message_custom">这条消息将显示 2 秒</string>
+    <string name="demo_snackbar_message_action">这条消息带有操作按钮</string>
+    <string name="demo_snackbar_message_dismissible">这条消息可通过关闭按钮移除</string>
+    <string name="demo_snackbar_message_indefinite">这条消息不会自动消失，需要手动关闭</string>
+    <string name="demo_snackbar_message_multiline">文件已移至回收站，30 天后将被永久删除</string>
+    <string name="demo_snackbar_button_short">短（4 秒）</string>
+    <string name="demo_snackbar_button_long">长（10 秒）</string>
+    <string name="demo_snackbar_button_custom">自定义（2 秒）</string>
+    <string name="demo_snackbar_button_action">带操作</string>
+    <string name="demo_snackbar_action_alive">操作：显示中</string>
+    <string name="demo_snackbar_action_undo">操作：已撤销</string>
+    <string name="demo_snackbar_action_expired">操作：已超时</string>
+    <string name="demo_snackbar_button_dismissible">可关闭</string>
+    <string name="demo_snackbar_button_indefinite">不自动消失</string>
+    <string name="demo_snackbar_button_multiline">多行带操作</string>
+    <string name="demo_snackbar_button_dismiss_oldest">关闭最早的</string>
+    <string name="demo_snackbar_button_dismiss_newest">关闭最新的</string>
+    <string name="demo_snackbar_variant_durations">显示时长</string>
+    <string name="demo_snackbar_variant_actions">操作</string>
+    <string name="demo_snackbar_variant_queue">队列</string>
+    <string name="demo_snackbar_variant_notification">通知消息条</string>
+    <string name="demo_snackbar_notification_title">截屏已保存</string>
+    <string name="demo_snackbar_notification_subtitle">点按“分享”发送给联系人</string>
+    <string name="demo_snackbar_notification_shared">已分享 %1$d 次</string>
+    <string name="demo_snackbar_show_again">再次显示</string>
+
+    <!-- Custom snackbar -->
+    <string name="demo_custom_snackbar_show">显示自定义消息条</string>
+    <string name="demo_custom_snackbar_showing">显示中</string>
+    <string name="demo_custom_snackbar_dismissed">已关闭 %1$d 次</string>
+    <string name="demo_custom_snackbar_content_title">自定义内容</string>
+    <string name="demo_custom_snackbar_content_body">向下拖动即可关闭；空闲一段时间后也会自动关闭</string>
+    <string name="demo_custom_snackbar_touch_slidable">下拉关闭</string>
+    <string name="demo_custom_snackbar_press_feedback">按压反馈</string>
+    <string name="demo_custom_snackbar_dismiss_animation">关闭时淡出</string>
+    <string name="demo_custom_snackbar_auto_dismiss">自动关闭</string>
+    <string name="demo_custom_snackbar_variant_host">通过 SnackbarHost 显示</string>
+    <string name="demo_custom_snackbar_host_message">由消息条宿主发出</string>
+
+    <!-- Progress indicator -->
+    <string name="demo_progress_indicator_kind">指示器</string>
+    <string name="demo_progress_indicator_indeterminate">不确定进度</string>
+    <string name="demo_progress_indicator_animate">自动演示进度</string>
+    <string name="demo_progress_indicator_state">状态</string>
+    <string name="demo_progress_indicator_type">类型</string>
+    <string name="demo_progress_indicator_variant_linear">线性进度条</string>
+    <string name="demo_progress_indicator_variant_circular">环形进度</string>
+    <string name="demo_progress_indicator_variant_loading">加载动画</string>
+    <string name="demo_progress_indicator_variant_states">环形进度状态</string>
+    <string name="demo_progress_indicator_states_hint">点按第一个圆环，可在正常、暂停和错误之间切换。</string>
+
+    <!-- Composite progress indicator -->
+    <string name="demo_comp_progress_indicator_show_text">显示文字</string>
+    <string name="demo_comp_progress_indicator_long_text">正在加载照片，可能需要一些时间</string>
+    <string name="demo_comp_progress_indicator_variant_all">全部类型</string>
+
+    <!-- Install progress -->
+    <string name="demo_install_load_progress_download">下载</string>
+    <string name="demo_install_load_progress_resume">继续</string>
+    <string name="demo_install_load_progress_get">获取</string>
+    <string name="demo_install_load_progress_state">状态</string>
+    <string name="demo_install_load_progress_auto_advance">加载时自动推进</string>
+    <string name="demo_install_load_progress_variant_interactive">可交互</string>
+    <string name="demo_install_load_progress_variant_states">状态</string>
+    <string name="demo_install_load_progress_interactive_hint">点按可开始、暂停和继续；下载完成后按钮恢复初始状态。</string>
+
+    <!-- Pull to refresh -->
+    <string name="demo_pull_to_refresh_text_pull">下拉刷新</string>
+    <string name="demo_pull_to_refresh_text_release">释放立即刷新</string>
+    <string name="demo_pull_to_refresh_text_refreshing">正在刷新…</string>
+    <string name="demo_pull_to_refresh_text_done">刷新成功</string>
+    <string name="demo_pull_to_refresh_duration">刷新时长</string>
+    <string name="demo_pull_to_refresh_per_refresh">每次刷新新增行数</string>
+    <string name="demo_pull_to_refresh_circle_size">指示器大小</string>
+    <string name="demo_pull_to_refresh_localized_texts">使用本地化文字</string>
+    <string name="demo_pull_to_refresh_refresh_now">立即刷新</string>
+    <string name="demo_pull_to_refresh_reset">重置列表</string>
+    <string name="demo_pull_to_refresh_list_title">列表项（%1$d）</string>
+
+    <!-- Empty state -->
+    <string name="demo_empty_state_no_content">暂无内容</string>
+    <string name="demo_empty_state_subtitle">还没有添加任何内容</string>
+    <string name="demo_empty_state_refreshed">已刷新 %1$d 次，仍然没有内容</string>
+    <string name="demo_empty_state_refresh">刷新</string>
+    <string name="demo_empty_state_no_results">无搜索结果</string>
+    <string name="demo_empty_state_try_another">换个关键词试试</string>
+    <string name="demo_empty_state_show_action">显示操作按钮</string>
+    <string name="demo_empty_state_show_illustration">显示插图</string>
+    <string name="demo_empty_state_height">容器高度</string>
+    <string name="demo_empty_state_variant_default">默认</string>
+    <string name="demo_empty_state_variant_small">小尺寸（仅文字）</string>
+
+    <!-- Complete state -->
+    <string name="demo_complete_state_done">完成</string>
+    <string name="demo_complete_state_success">支付成功</string>
+    <string name="demo_complete_state_failed">支付失败</string>
+    <string name="demo_complete_state_waiting">等待确认</string>
+    <string name="demo_complete_state_order">订单号：%1$s</string>
+    <string name="demo_complete_state_type">类型</string>
+    <string name="demo_complete_state_animate">播放动画</string>
+    <string name="demo_complete_state_replay">重新播放动画</string>
+    <string name="demo_complete_state_variant_types">类型</string>
+</resources>

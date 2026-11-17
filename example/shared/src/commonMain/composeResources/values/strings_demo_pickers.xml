@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_number_picker_title">Number picker</string>
+    <string name="demo_date_time_picker_title">Date and time picker</string>
+    <string name="demo_lunar_date_picker_title">Lunar date picker</string>
+    <string name="demo_calendar_picker_title">Calendar picker</string>
+    <string name="demo_color_picker_title">Color picker</string>
+
+    <!-- Number picker -->
+    <string name="demo_number_picker_range">Range</string>
+    <string name="demo_number_picker_visible_items">Visible rows</string>
+    <string name="demo_number_picker_wrap_around">Wrap around</string>
+    <string name="demo_number_picker_wrap_around_summary">Scrolls on from the last value to the first; needs more values than visible rows</string>
+    <string name="demo_number_picker_leading_zero">Leading zero</string>
+    <string name="demo_number_picker_show_unit">Show unit</string>
+    <string name="demo_number_picker_unit_minute">min</string>
+    <string name="demo_number_picker_ignorable">Ignorable</string>
+    <string name="demo_number_picker_ignorable_summary">Adds a placeholder row after the last value, as for an optional year</string>
+    <string name="demo_number_picker_ignored">Not set</string>
+    <string name="demo_number_picker_variant_time">Time</string>
+    <string name="demo_number_picker_variant_unit">With unit (tap or hold the row above or below to step)</string>
+
+    <!-- Date and time picker -->
+    <string name="demo_date_time_picker_component">Component</string>
+    <string name="demo_date_time_picker_24_hour">24-hour clock</string>
+    <string name="demo_date_time_picker_show_units">Show units</string>
+    <string name="demo_date_time_picker_unit_hour">h</string>
+    <string name="demo_date_time_picker_unit_minute">min</string>
+    <string name="demo_date_time_picker_minute_five_step">Minutes in steps of 5</string>
+    <string name="demo_date_time_picker_field_order">Field order</string>
+    <string name="demo_date_time_picker_year_ignorable">Optional year</string>
+    <string name="demo_date_time_picker_year_ignorable_summary">Adds a row for no year, e.g. for birthdays</string>
+    <string name="demo_date_time_picker_limited_range">Limited range</string>
+    <string name="demo_date_time_picker_limited_range_summary">From %1$s to %2$s</string>
+    <string name="demo_date_time_picker_no_year">No year</string>
+    <string name="demo_date_time_picker_variant_date">Date</string>
+    <string name="demo_date_time_picker_variant_date_bounded">Date in a limited range</string>
+    <string name="demo_date_time_picker_variant_year_optional">Date with an optional year</string>
+    <string name="demo_date_time_picker_variant_time_24h">Time, 24-hour with units</string>
+    <string name="demo_date_time_picker_variant_time_12h">Time, 12-hour</string>
+    <string name="demo_date_time_picker_variant_date_time">Date and time, 12-hour</string>
+
+    <!-- Lunar date picker -->
+    <string name="demo_lunar_date_picker_field_order">Field order</string>
+    <string name="demo_lunar_date_picker_jump_leap_month">Go to a leap month</string>
+    <string name="demo_lunar_date_picker_jump_leap_month_summary">The leap sixth month of 2025</string>
+    <string name="demo_lunar_date_picker_jump_today">Go to today</string>
+    <string name="demo_lunar_date_picker_solar_format">Gregorian: %1$s</string>
+
+    <!-- Calendar picker -->
+    <string name="demo_calendar_picker_first_day">First day of the week</string>
+    <string name="demo_calendar_picker_sunday">Sunday</string>
+    <string name="demo_calendar_picker_monday">Monday</string>
+    <string name="demo_calendar_picker_saturday">Saturday</string>
+    <string name="demo_calendar_picker_show_today">Mark today</string>
+    <string name="demo_calendar_picker_show_today_summary">Rings today\'s date in the grid</string>
+    <string name="demo_calendar_picker_limited_range">Limited range</string>
+    <string name="demo_calendar_picker_limited_range_summary">From %1$s to %2$s</string>
+    <string name="demo_calendar_picker_variant_limited">Monday first, limited range</string>
+
+    <!-- Color picker -->
+    <string name="demo_color_picker_component">Component</string>
+    <string name="demo_color_picker_color_space">Colour space</string>
+    <string name="demo_color_picker_show_preview">Show preview</string>
+    <string name="demo_color_picker_show_preview_summary">Shows a preview of the selected colour</string>
+    <string name="demo_color_picker_rows">Rows</string>
+    <string name="demo_color_picker_hue_columns">Hue columns</string>
+    <string name="demo_color_picker_gray_column">Grey column</string>
+</resources>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_basic_component_title">基础列表项</string>
+    <string name="demo_card_title">卡片</string>
+    <string name="demo_badge_title">徽标</string>
+    <string name="demo_tag_view_title">标签</string>
+    <string name="demo_marquee_text_title">跑马灯文本</string>
+    <string name="demo_banner_title">横幅</string>
+    <string name="demo_page_indicator_title">页面指示器</string>
+
+    <!-- BasicComponent -->
+    <string name="demo_basic_component_variant_actions">头尾内容</string>
+    <string name="demo_basic_component_variant_selection">选中与红点</string>
+    <string name="demo_basic_component_start">头部</string>
+    <string name="demo_basic_component_end">详情</string>
+    <string name="demo_basic_component_end_1">尾部 1</string>
+    <string name="demo_basic_component_end_2">尾部 2</string>
+    <string name="demo_basic_component_start_content">头部内容</string>
+    <string name="demo_basic_component_end_content">尾部内容</string>
+    <string name="demo_basic_component_end_icon">尾部图标</string>
+    <string name="demo_basic_component_start_badge">头部红点</string>
+    <string name="demo_basic_component_start_badge_summary">头部图标上的红点</string>
+    <string name="demo_basic_component_end_badge">尾部红点</string>
+    <string name="demo_basic_component_badge_none">无</string>
+    <string name="demo_basic_component_badge_dot">圆点</string>
+    <string name="demo_basic_component_clickable">可点击</string>
+    <string name="demo_basic_component_clicked">点击了列表项</string>
+    <string name="demo_basic_component_selectable">可选中</string>
+    <string name="demo_basic_component_tap_to_select">点按以选中</string>
+    <string name="demo_basic_component_selected_summary">已选中：该行上下的分割线隐藏</string>
+    <string name="demo_basic_component_red_dot">红点</string>
+    <string name="demo_basic_component_red_dot_summary">尾部前的纯红点</string>
+
+    <!-- Card -->
+    <string name="demo_card_variant_feedback">按压反馈</string>
+    <string name="demo_card_variant_long_press">长按</string>
+    <string name="demo_card_variant_shadow">阴影</string>
+    <string name="demo_card_press_feedback">按压反馈</string>
+    <string name="demo_card_shadow">阴影</string>
+    <string name="demo_card_shadow_top_hidden">隐藏顶部</string>
+    <string name="demo_card_shadow_angle">45° 投影</string>
+    <string name="demo_card_shadow_card">阴影卡片</string>
+    <string name="demo_card_shadow_summary">12dp 阴影，向下偏移 2dp</string>
+    <string name="demo_card_corner_radius">圆角</string>
+    <string name="demo_card_clickable">可点击</string>
+    <string name="demo_card_clicked">点击了卡片</string>
+    <string name="demo_card_long_press">长按</string>
+    <string name="demo_card_long_pressed">长按了卡片</string>
+    <string name="demo_card_hold_down">保持按下</string>
+    <string name="demo_card_show_indication">显示指示效果</string>
+    <string name="demo_card_long_press_hint">长按弹出对话框</string>
+    <string name="demo_card_dialog_title">长按操作</string>
+    <string name="demo_card_dialog_summary">由长按卡片触发。</string>
+
+    <!-- Badge -->
+    <string name="demo_badge_variant_forms">样式</string>
+    <string name="demo_badge_variant_badge_box">图标角标</string>
+    <string name="demo_badge_form">样式</string>
+    <string name="demo_badge_form_dot">圆点</string>
+    <string name="demo_badge_form_number">数字</string>
+    <string name="demo_badge_form_text">文字</string>
+    <string name="demo_badge_text_new">新</string>
+    <string name="demo_badge_text_hot">热</string>
+    <string name="demo_badge_stroke">描边</string>
+    <string name="demo_badge_stroke_summary">在彩色表面上加白色描边</string>
+    <string name="demo_badge_navigation">导航栏宽度</string>
+    <string name="demo_badge_navigation_summary">用于底部导航图标的较窄胶囊</string>
+
+    <!-- TagView -->
+    <string name="demo_tag_view_variant_inline">跟随文字</string>
+    <string name="demo_tag_view_variant_styles">样式</string>
+    <string name="demo_tag_view_dark_mode">深色模式</string>
+    <string name="demo_tag_view_label_new">新</string>
+    <string name="demo_tag_view_label_beta">测试版</string>
+    <string name="demo_tag_view_label_long">限时活动进行中</string>
+    <string name="demo_tag_view_label_outlined">描边</string>
+    <string name="demo_tag_view_label_corner">切角</string>
+    <string name="demo_tag_view_label_large">大号</string>
+    <string name="demo_tag_view_style_filled">填充</string>
+    <string name="demo_tag_view_style_outlined">描边</string>
+    <string name="demo_tag_view_style_orange">橙色</string>
+    <string name="demo_tag_view_shape">形状</string>
+    <string name="demo_tag_view_shape_corner">对角圆角</string>
+    <string name="demo_tag_view_shape_capsule">胶囊</string>
+    <string name="demo_tag_view_trailing_icon">尾部图标</string>
+
+    <!-- MarqueeText -->
+    <string name="demo_marquee_text_variant_states">状态</string>
+    <string name="demo_marquee_text_long">电池优化正在限制多个应用的后台活动，点按以查看详情</string>
+    <string name="demo_marquee_text_short">短文本保持静止</string>
+    <string name="demo_marquee_text_disabled">关闭跑马灯后，同样的长文本会直接换行显示，而不是循环滚动</string>
+    <string name="demo_marquee_text_enabled_summary">关闭后长文本换行显示</string>
+    <string name="demo_marquee_text_caption">辅助文字</string>
+    <string name="demo_marquee_text_body">正文</string>
+    <string name="demo_marquee_text_velocity">速度</string>
+    <string name="demo_marquee_text_initial_delay">起始延迟</string>
+    <string name="demo_marquee_text_spacing">循环间距</string>
+    <string name="demo_marquee_text_fading_edge">渐隐边缘</string>
+
+    <!-- Banner -->
+    <string name="demo_banner_variant_loop">自动轮播</string>
+    <string name="demo_banner_variant_peek">露出相邻页</string>
+    <string name="demo_banner_variant_list">列表形式</string>
+    <string name="demo_banner_type_auto">自动（按宽度）</string>
+    <string name="demo_banner_auto_loop">自动轮播</string>
+    <string name="demo_banner_infinite_loop">无限循环</string>
+    <string name="demo_banner_show_indicator">显示指示器</string>
+    <string name="demo_banner_peek">露出相邻页</string>
+    <string name="demo_banner_scale_pages">缩放两侧页面</string>
+    <string name="demo_banner_page_themes">夏日主题</string>
+    <string name="demo_banner_page_wallpapers">新壁纸</string>
+    <string name="demo_banner_page_picks">每周精选</string>
+    <string name="demo_banner_page_fonts">动态字体</string>
+    <string name="demo_banner_page_ringtones">铃声</string>
+    <string name="demo_banner_page_icons">图标包</string>
+
+    <!-- PageIndicator -->
+    <string name="demo_page_indicator_variant_pager">跟随翻页</string>
+    <string name="demo_page_indicator_variant_many">超过五页</string>
+    <string name="demo_page_indicator_page">第 %1$d 页</string>
+    <string name="demo_page_indicator_position">当前页</string>
+    <string name="demo_page_indicator_animated">动画过渡</string>
+    <string name="demo_page_indicator_dot_click">点按圆点跳转</string>
+    <string name="demo_page_indicator_color_theme">主题色</string>
+</resources>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_list_detail_layout_title">列表-详情布局</string>
+    <string name="demo_side_pane_layout_title">侧边面板布局</string>
+    <string name="demo_responsive_grid_title">响应式栅格</string>
+    <string name="demo_expandable_group_title">可展开分组</string>
+    <string name="demo_swipe_action_item_title">滑动操作项</string>
+    <string name="demo_spring_chain_title">弹簧联动</string>
+
+    <!-- Shared by the layout playgrounds -->
+    <string name="demo_layout_simulated_width">布局宽度</string>
+    <string name="demo_layout_simulated_width_summary">更宽的布局会缩小显示在预览中</string>
+    <string name="demo_layout_width_fit">跟随卡片</string>
+    <string name="demo_layout_width_readout">按 %1$s 宽布局，以 %2$s 显示</string>
+
+    <!-- ListDetailLayout -->
+    <string name="demo_list_detail_layout_variant_default">跟随卡片宽度</string>
+    <string name="demo_list_detail_layout_selected">选中项</string>
+    <string name="demo_list_detail_layout_none">无</string>
+    <string name="demo_list_detail_layout_list_fraction">列表宽度占比</string>
+    <string name="demo_list_detail_layout_min_list_width">列表最小宽度</string>
+    <string name="demo_list_detail_layout_max_list_width">列表最大宽度</string>
+    <string name="demo_list_detail_layout_divider_thickness">分割线粗细</string>
+    <string name="demo_list_detail_layout_show_empty_detail">详情空白页</string>
+    <string name="demo_list_detail_layout_show_empty_detail_summary">分栏且未选中任何项时显示</string>
+    <string name="demo_list_detail_layout_wifi_summary">已连接到 Home</string>
+    <string name="demo_list_detail_layout_display_summary">自动亮度</string>
+    <string name="demo_list_detail_layout_sound_summary">响铃模式</string>
+    <string name="demo_list_detail_layout_storage_summary">已使用 %1$s</string>
+    <string name="demo_list_detail_layout_about">关于本机</string>
+    <string name="demo_list_detail_layout_empty">请选择一项</string>
+    <string name="demo_list_detail_layout_detail_body">“%1$s”的详情。宽度小于 600dp 时一次只显示一个面板；更宽时列表按占比显示，宽度限制在最小与最大列表宽度之间。</string>
+
+    <!-- SidePaneLayout -->
+    <string name="demo_side_pane_layout_variant_default">跟随卡片宽度</string>
+    <string name="demo_side_pane_layout_toggle">展开或收起面板</string>
+    <string name="demo_side_pane_layout_pane_open">面板已展开</string>
+    <string name="demo_side_pane_layout_pane_closed">面板已收起</string>
+    <string name="demo_side_pane_layout_cover_style">覆盖样式</string>
+    <string name="demo_side_pane_layout_cover_style_summary">面板在遮罩下覆盖内容，而不是挤压内容</string>
+    <string name="demo_side_pane_layout_always_show_mask">始终显示遮罩</string>
+    <string name="demo_side_pane_layout_always_show_mask_summary">面板展开时压暗内容并拦截内容区的触摸</string>
+    <string name="demo_side_pane_layout_touch_content">点击内容收起</string>
+    <string name="demo_side_pane_layout_touch_content_summary">覆盖样式下，触摸内容区会收起面板</string>
+    <string name="demo_side_pane_layout_show_toggle_icon">显示切换图标</string>
+    <string name="demo_side_pane_layout_pane_width">面板宽度</string>
+    <string name="demo_side_pane_layout_folder_all">全部笔记</string>
+    <string name="demo_side_pane_layout_folder_recent">最近编辑</string>
+    <string name="demo_side_pane_layout_folder_favourites">收藏</string>
+    <string name="demo_side_pane_layout_folder_shared">共享</string>
+    <string name="demo_side_pane_layout_folder_deleted">最近删除</string>
+    <string name="demo_side_pane_layout_split">分栏模式：内容区随面板伸缩。</string>
+    <string name="demo_side_pane_layout_compact">紧凑模式：面板滑出覆盖在内容上。</string>
+
+    <!-- ResponsiveGrid and percentWidth -->
+    <string name="demo_responsive_grid_child_grid_number">每格占用栅格列数</string>
+    <string name="demo_responsive_grid_margin_type">边距类型</string>
+    <string name="demo_responsive_grid_child_min_width">格子最小宽度</string>
+    <string name="demo_responsive_grid_horizontal_gap">水平间距</string>
+    <string name="demo_responsive_grid_child_width">格子宽度</string>
+    <string name="demo_responsive_grid_min_horizontal_gap">最小水平间距</string>
+    <string name="demo_responsive_grid_vertical_gap">垂直间距</string>
+    <string name="demo_responsive_grid_fixed_height">固定格子高度</string>
+    <string name="demo_responsive_grid_fixed_height_summary">72dp；关闭后每行高度取最高的格子</string>
+    <string name="demo_responsive_grid_grid_number">栅格列数</string>
+    <string name="demo_responsive_grid_auto">自动（4 / 6 / 8）</string>
+    <string name="demo_responsive_grid_percent_type">内容类型</string>
+    <string name="demo_responsive_grid_percent_mode">宽度模式</string>
+    <string name="demo_responsive_grid_parent_child">分栏中的详情面板</string>
+    <string name="demo_responsive_grid_parent_child_summary">大屏窗口下占满全部栅格列</string>
+    <string name="demo_responsive_grid_card_list_title">百分比宽度卡片列表</string>
+    <string name="demo_responsive_grid_card_list_summary">在 COUI 布局栅格上居中</string>
+    <string name="demo_responsive_grid_wider_title">更宽的窗口</string>
+    <string name="demo_responsive_grid_wider_summary">占 8 列中的 6 列，或 12 列中的 8 列</string>
+
+    <!-- ExpandableGroup -->
+    <string name="demo_expandable_group_expanded">展开</string>
+    <string name="demo_expandable_group_arrow_theme">主题色</string>
+    <string name="demo_expandable_group_variant_groups">分组</string>
+    <string name="demo_expandable_group_variant_arrow">箭头</string>
+    <string name="demo_expandable_group_arrow_hint">点击翻转箭头</string>
+    <string name="demo_expandable_group_network">网络</string>
+    <string name="demo_expandable_group_network_summary">WLAN、移动网络、热点</string>
+    <string name="demo_expandable_group_hotspot">个人热点</string>
+    <string name="demo_expandable_group_more_settings">更多设置</string>
+    <string name="demo_expandable_group_accessibility">无障碍</string>
+    <string name="demo_expandable_group_date_time">日期与时间</string>
+    <string name="demo_expandable_group_language">语言与地区</string>
+    <string name="demo_expandable_group_backup">备份与重置</string>
+    <string name="demo_expandable_group_disabled">已停用的分组</string>
+
+    <!-- SwipeActionItem -->
+    <string name="demo_swipe_action_item_variant_rect">矩形菜单</string>
+    <string name="demo_swipe_action_item_variant_round_rect">圆角菜单</string>
+    <string name="demo_swipe_action_item_action_count">操作数量</string>
+    <string name="demo_swipe_action_item_content_type">操作内容</string>
+    <string name="demo_swipe_action_item_content_text">文字</string>
+    <string name="demo_swipe_action_item_content_icon">图标</string>
+    <string name="demo_swipe_action_item_content_both">图标和文字</string>
+    <string name="demo_swipe_action_item_own_colors">独立颜色</string>
+    <string name="demo_swipe_action_item_own_colors_summary">每个操作使用各自的填充色；关闭后统一使用删除红色</string>
+    <string name="demo_swipe_action_item_action_min_width">操作最小宽度</string>
+    <string name="demo_swipe_action_item_delete">删除操作</string>
+    <string name="demo_swipe_action_item_delete_summary">在末尾添加内置的删除操作</string>
+    <string name="demo_swipe_action_item_fast_delete">滑动删除</string>
+    <string name="demo_swipe_action_item_fast_delete_summary">滑过菜单 48dp 即删除该行</string>
+    <string name="demo_swipe_action_item_action_pin">置顶</string>
+    <string name="demo_swipe_action_item_action_mark">标记</string>
+    <string name="demo_swipe_action_item_action_move">移动</string>
+    <string name="demo_swipe_action_item_row_report">周报</string>
+    <string name="demo_swipe_action_item_row_lunch">团队午餐</string>
+    <string name="demo_swipe_action_item_row_flight">航班行程</string>
+    <string name="demo_swipe_action_item_row_invoice">发票 2041</string>
+    <string name="demo_swipe_action_item_row_design_review">设计评审</string>
+    <string name="demo_swipe_action_item_row_grocery">购物清单</string>
+    <string name="demo_swipe_action_item_row_gym">健身计划</string>
+    <string name="demo_swipe_action_item_row_book_club">读书会笔记</string>
+    <string name="demo_swipe_action_item_summary_swipe">向起始侧滑动以显示操作</string>
+    <string name="demo_swipe_action_item_summary_over_slide">继续滑动即可删除</string>
+    <string name="demo_swipe_action_item_summary_delete_only">仅删除：删除时填充色逐渐铺满</string>
+    <string name="demo_swipe_action_item_summary_own_colors">独立颜色：每个操作保持各自的形状</string>
+    <string name="demo_swipe_action_item_restore">恢复列表</string>
+    <string name="demo_swipe_action_item_disabled">已停用</string>
+    <string name="demo_swipe_action_item_disabled_summary">无法滑动</string>
+
+    <!-- springChain -->
+    <string name="demo_spring_chain_variant_list">列表</string>
+    <string name="demo_spring_chain_variant_grid">网格</string>
+    <string name="demo_spring_chain_hint">拖动越过顶部或底部边缘后松手</string>
+    <string name="demo_spring_chain_row">行</string>
+    <string name="demo_spring_chain_target">作用对象</string>
+    <string name="demo_spring_chain_target_list">列表</string>
+    <string name="demo_spring_chain_target_grid">网格</string>
+    <string name="demo_spring_chain_main_tension">主弹簧张力</string>
+    <string name="demo_spring_chain_main_friction">主弹簧摩擦力</string>
+    <string name="demo_spring_chain_attachment_tension">跟随弹簧张力</string>
+    <string name="demo_spring_chain_attachment_friction">跟随弹簧摩擦力</string>
+    <string name="demo_spring_chain_trans_factor">步进比例</string>
+    <string name="demo_spring_chain_trans_factor_summary">每一行在上一行基础上叠加的拖动比例</string>
+    <string name="demo_spring_chain_max_rows">参与联动的行数</string>
+    <string name="demo_spring_chain_accumulate">累加步进</string>
+    <string name="demo_spring_chain_accumulate_summary">离边缘越远的行位移越大，列表呈扇形展开</string>
+    <string name="demo_spring_chain_reset">恢复默认值</string>
+</resources>

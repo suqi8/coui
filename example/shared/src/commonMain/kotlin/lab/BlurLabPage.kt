@@ -1,0 +1,413 @@
+// Copyright 2026, compose-coui-ui contributors
+// SPDX-License-Identifier: Apache-2.0
+package lab
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import io.github.suqi8.coui.kmp.basic.Card
+import io.github.suqi8.coui.kmp.basic.CardListGroup
+import io.github.suqi8.coui.kmp.basic.SmallTitle
+import io.github.suqi8.coui.kmp.basic.Text
+import io.github.suqi8.coui.kmp.blur.BlendColorEntry
+import io.github.suqi8.coui.kmp.blur.BlurBlendMode
+import io.github.suqi8.coui.kmp.blur.BlurDefaults
+import io.github.suqi8.coui.kmp.blur.isRuntimeShaderSupported
+import io.github.suqi8.coui.kmp.blur.layerBackdrop
+import io.github.suqi8.coui.kmp.blur.rememberLayerBackdrop
+import io.github.suqi8.coui.kmp.blur.textureBlur
+import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
+import io.github.suqi8.coui.kmp.preference.SliderPreference
+import io.github.suqi8.coui.kmp.preference.SwitchPreference
+import io.github.suqi8.coui.kmp.shared.generated.resources.Res
+import io.github.suqi8.coui.kmp.shared.generated.resources.blur_test_bg
+import io.github.suqi8.coui.kmp.theme.COUITheme
+import lab.blend.ColorBlendToken
+import lab.effect.BgEffectBackground
+import lab.highlight.HighlightConfig
+import lab.highlight.rememberContainerHighlight
+import org.jetbrains.compose.resources.painterResource
+import ui.isInDarkTheme
+import androidx.compose.ui.graphics.BlendMode as ComposeBlendMode
+
+fun LazyListScope.blurSection() {
+    if (!isRuntimeShaderSupported()) return
+    item(key = "blur") {
+        SmallTitle(text = "Texture Blur")
+        BlurDemo()
+    }
+    item(key = "foreground_blur") {
+        SmallTitle(text = "Foreground Blur")
+        ForegroundBlurDemo()
+    }
+}
+
+@Composable
+private fun BlurDemo() {
+    var blurRadiusX by remember { mutableFloatStateOf(100f) }
+    var blurRadiusY by remember { mutableFloatStateOf(100f) }
+    var noiseCoefficient by remember { mutableFloatStateOf(BlurDefaults.NoiseCoefficient) }
+    var brightness by remember { mutableFloatStateOf(0f) }
+    var contrast by remember { mutableFloatStateOf(1f) }
+    var saturation by remember { mutableFloatStateOf(1f) }
+
+    val isInDark = isInDarkTheme()
+
+    val backdrop = rememberLayerBackdrop()
+    val surface = COUITheme.colorScheme.backgroundWithCard.copy(alpha = 0.6f)
+
+    var tiltDriven by remember { mutableStateOf(true) }
+    val containers = HighlightConfig.Container.entries
+    val containerItems = remember { containers.map { it.displayName } }
+    var containerIndex by remember { mutableIntStateOf(HighlightConfig.Container.Small.ordinal) }
+    val currentContainer = containers[containerIndex]
+    val highlight = rememberContainerHighlight(
+        container = currentContainer,
+        isDark = isInDark,
+        tiltDriven = tiltDriven,
+    )
+
+    val blendConfigs = remember(isInDark, surface) {
+        listOf(
+            "None" to emptyList(),
+            "Info Thin" to if (isInDark) ColorBlendToken.Info_Thin_Dark else ColorBlendToken.Info_Thin_Light,
+            "Info Regular" to if (isInDark) ColorBlendToken.Info_Regular_Dark else ColorBlendToken.Info_Regular_Light,
+            "Colored Thin" to if (isInDark) ColorBlendToken.Colored_Thin_Dark else ColorBlendToken.Colored_Thin_Light,
+            "Colored Regular" to if (isInDark) ColorBlendToken.Colored_Regular_Dark else ColorBlendToken.Colored_Regular_Light,
+            "Colored Thick" to if (isInDark) ColorBlendToken.Colored_Thick_Dark else ColorBlendToken.Colored_Thick_Light,
+            "Pured Regular" to if (isInDark) ColorBlendToken.Pured_Regular_Dark else ColorBlendToken.Pured_Regular_Light,
+            "Pured Thick" to if (isInDark) ColorBlendToken.Pured_Thick_Dark else ColorBlendToken.Pured_Thick_Light,
+            "Overlay Thin" to if (isInDark) ColorBlendToken.Overlay_Thin_Light else ColorBlendToken.Overlay_Thin_Light,
+            "Overlay Thick" to if (isInDark) ColorBlendToken.Overlay_Thick_Dark else ColorBlendToken.Overlay_Thick_Light,
+        )
+    }
+    var blendModeIndex by remember { mutableIntStateOf(5) }
+    val currentBlend = blendConfigs[blendModeIndex]
+    val blendModeItems = remember(blendConfigs) { blendConfigs.map { it.first } }
+
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp),
+    ) {
+        // Preview area
+        Card(
+            modifier = Modifier.padding(bottom = 16.dp),
+        ) {
+            CardListGroup {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                    ) {
+                        // Background layer (captured by layerBackdrop)
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .layerBackdrop(backdrop),
+                        ) {
+                            StaticBackground()
+                        }
+
+                        // Blur overlay
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .height(140.dp)
+                                .align(Alignment.Center)
+                                .textureBlur(
+                                    backdrop = backdrop,
+                                    shape = RoundedCornerShape(24.dp),
+                                    blurRadiusX = blurRadiusX,
+                                    blurRadiusY = blurRadiusY,
+                                    noiseCoefficient = noiseCoefficient,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = currentBlend.second,
+                                        brightness = brightness,
+                                        contrast = contrast,
+                                        saturation = saturation,
+                                    ),
+                                    highlight = highlight,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Texture Blur | R=${blurRadiusX.toInt()}",
+                                    style = COUITheme.textStyles.headlineXS,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "${currentBlend.first} | ${containerItems[containerIndex]}",
+                                    style = COUITheme.textStyles.bodyM,
+                                    color = COUITheme.colorScheme.labelTertiary,
+                                )
+                            }
+                        }
+                    }
+                }
+                item {
+                    OverlayDropdownPreference(
+                        title = "Blend Mode",
+                        items = blendModeItems,
+                        selectedIndex = blendModeIndex,
+                        onSelectedIndexChange = { blendModeIndex = it },
+                    )
+                }
+                item {
+                    OverlayDropdownPreference(
+                        title = "Highlight",
+                        items = containerItems,
+                        selectedIndex = containerIndex,
+                        onSelectedIndexChange = { containerIndex = it },
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Blur Radius",
+                        valueText = "${blurRadiusX.toInt()}",
+                        value = blurRadiusX / 200f,
+                        onValueChange = {
+                            blurRadiusX = it * 200f
+                            blurRadiusY = it * 200f
+                        },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Noise",
+                        valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
+                        value = noiseCoefficient / 0.1f,
+                        onValueChange = { noiseCoefficient = it * 0.1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Brightness",
+                        valueText = "${(brightness * 100).toInt() / 100f}",
+                        value = (brightness + 1f) / 2f,
+                        onValueChange = { brightness = it * 2f - 1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Contrast",
+                        valueText = "${(contrast * 100).toInt() / 100f}",
+                        value = contrast / 3f,
+                        onValueChange = { contrast = it * 3f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Saturation",
+                        valueText = "${(saturation * 100).toInt() / 100f}",
+                        value = saturation / 3f,
+                        onValueChange = { saturation = it * 3f },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ForegroundBlurDemo() {
+    var blurRadiusX by remember { mutableFloatStateOf(200f) }
+    var blurRadiusY by remember { mutableFloatStateOf(200f) }
+    var noiseCoefficient by remember { mutableFloatStateOf(BlurDefaults.NoiseCoefficient) }
+    var brightness by remember { mutableFloatStateOf(0f) }
+    var contrast by remember { mutableFloatStateOf(1f) }
+    var saturation by remember { mutableFloatStateOf(1f) }
+
+    val isInDark = isInDarkTheme()
+    val dynamicBackground = remember { mutableStateOf(true) }
+
+    val backdrop = rememberLayerBackdrop()
+    val onBackground = COUITheme.colorScheme.labelPrimary
+    val logoBlend = remember(isInDark) {
+        if (isInDark) {
+            listOf(
+                BlendColorEntry(Color(0xe6a1a1a1), BlurBlendMode.ColorDodge),
+                BlendColorEntry(Color(0x4de6e6e6), BlurBlendMode.LinearLight),
+                BlendColorEntry(Color(0xff1af500), BlurBlendMode.Lab),
+            )
+        } else {
+            listOf(
+                BlendColorEntry(Color(0xcc4a4a4a), BlurBlendMode.ColorBurn),
+                BlendColorEntry(Color(0xff4f4f4f), BlurBlendMode.LinearLight),
+                BlendColorEntry(Color(0xff1af200), BlurBlendMode.Lab),
+            )
+        }
+    }
+    val blendConfigs = remember(isInDark, onBackground) {
+        listOf(
+            "None" to emptyList(),
+            "Logo Blend" to logoBlend,
+            "Colored Thin" to if (isInDark) ColorBlendToken.Colored_Thin_Dark else ColorBlendToken.Colored_Thin_Light,
+            "Colored Regular" to if (isInDark) ColorBlendToken.Colored_Regular_Dark else ColorBlendToken.Colored_Regular_Light,
+            "Colored Thick" to if (isInDark) ColorBlendToken.Colored_Thick_Dark else ColorBlendToken.Colored_Thick_Light,
+            "Pured Regular" to if (isInDark) ColorBlendToken.Pured_Regular_Dark else ColorBlendToken.Pured_Regular_Light,
+            "Overlay Thin" to if (isInDark) ColorBlendToken.Overlay_Thin_Light else ColorBlendToken.Overlay_Thin_Light,
+            "Info Colored" to ColorBlendToken.Info_Colored_Regular,
+        )
+    }
+    var blendModeIndex by remember { mutableIntStateOf(1) }
+    val currentBlend = blendConfigs[blendModeIndex]
+    val blendModeItems = remember(blendConfigs) { blendConfigs.map { it.first } }
+    var isOs3Effect by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+    ) {
+        Card(
+            modifier = Modifier.padding(bottom = 16.dp),
+        ) {
+            CardListGroup {
+                item {
+                    BgEffectBackground(
+                        dynamicBackground = dynamicBackground.value,
+                        isFullSize = true,
+                        isOs3Effect = isOs3Effect,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        bgModifier = Modifier.layerBackdrop(backdrop),
+                    ) {
+                        // Foreground blur text
+                        Text(
+                            text = "Foreground Blur\nCOUI Demo",
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.Center)
+                                .textureBlur(
+                                    backdrop = backdrop,
+                                    shape = RoundedCornerShape(0.dp),
+                                    blurRadiusX = blurRadiusX,
+                                    blurRadiusY = blurRadiusY,
+                                    noiseCoefficient = noiseCoefficient,
+                                    colors = BlurDefaults.blurColors(
+                                        blendColors = currentBlend.second,
+                                        brightness = brightness,
+                                        contrast = contrast,
+                                        saturation = saturation,
+                                    ),
+                                    contentBlendMode = ComposeBlendMode.DstIn,
+                                ),
+                        )
+                    }
+                }
+                item {
+                    val effectVariantOptions = listOf("OS2", "OS3")
+                    OverlayDropdownPreference(
+                        title = "Effect Variant",
+                        items = effectVariantOptions,
+                        selectedIndex = if (isOs3Effect) 1 else 0,
+                        onSelectedIndexChange = { isOs3Effect = (it == 1) },
+                    )
+                }
+                item {
+                    OverlayDropdownPreference(
+                        title = "Blend Mode",
+                        items = blendModeItems,
+                        selectedIndex = blendModeIndex,
+                        onSelectedIndexChange = { blendModeIndex = it },
+                    )
+                }
+                item {
+                    SwitchPreference(
+                        title = "Dynamic Background",
+                        checked = dynamicBackground.value,
+                        onCheckedChange = { dynamicBackground.value = it },
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Blur Radius",
+                        valueText = "${blurRadiusX.toInt()}",
+                        value = blurRadiusX / 200f,
+                        onValueChange = {
+                            blurRadiusX = it * 200f
+                            blurRadiusY = it * 200f
+                        },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Noise",
+                        valueText = "${(noiseCoefficient * 10000).toInt() / 10000f}",
+                        value = noiseCoefficient / 0.1f,
+                        onValueChange = { noiseCoefficient = it * 0.1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Brightness",
+                        valueText = "${(brightness * 100).toInt() / 100f}",
+                        value = (brightness + 1f) / 2f,
+                        onValueChange = { brightness = it * 2f - 1f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Contrast",
+                        valueText = "${(contrast * 100).toInt() / 100f}",
+                        value = contrast / 3f,
+                        onValueChange = { contrast = it * 3f },
+                        insideMargin = PaddingValues(16.dp, 16.dp, 16.dp, 0.dp),
+                    )
+                }
+                item {
+                    SliderPreference(
+                        title = "Saturation",
+                        valueText = "${(saturation * 100).toInt() / 100f}",
+                        value = saturation / 3f,
+                        onValueChange = { saturation = it * 3f },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StaticBackground() {
+    Image(
+        painter = painterResource(Res.drawable.blur_test_bg),
+        contentDescription = null,
+        modifier = Modifier.fillMaxSize(),
+        contentScale = ContentScale.Crop,
+    )
+}

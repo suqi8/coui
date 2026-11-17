@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package utils
 
-import LocalAppState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import app.LocalAppSettings
 import io.github.suqi8.coui.kmp.blur.Backdrop
 import io.github.suqi8.coui.kmp.blur.LayerBackdrop
 import io.github.suqi8.coui.kmp.blur.MaterialBlendMode
@@ -52,9 +52,8 @@ class PanelBlur(
  */
 @Composable
 fun panelBlur(style: (isDark: Boolean) -> MaterialBlurStyle): PanelBlur? {
-    val appState = LocalAppState.current
     val backdrop = LocalPageBackdrop.current
-    if (!appState.enableBlur || backdrop == null || !isRuntimeShaderSupported()) return null
+    if (!LocalAppSettings.current.enableMaterialBlur || backdrop == null || !isRuntimeShaderSupported()) return null
     val isDark = COUITheme.colorScheme.isDark
     return PanelBlur(
         backgroundModifier = Modifier.couiMaterialBlur(backdrop = backdrop, style = style(isDark)),
@@ -76,7 +75,7 @@ fun panelBlur(style: (isDark: Boolean) -> MaterialBlurStyle): PanelBlur? {
  */
 @Composable
 fun rememberMaterialBackdropProvider(backdrop: Backdrop?): MaterialBackdropProvider? {
-    val active = LocalAppState.current.enableBlur && backdrop != null && isRuntimeShaderSupported()
+    val active = LocalAppSettings.current.enableMaterialBlur && backdrop != null && isRuntimeShaderSupported()
     return remember(backdrop, active) {
         if (active && backdrop != null) {
             MaterialBackdropProvider { spec, shape ->
@@ -110,7 +109,7 @@ private fun MaterialBackdropSpec.toViewBlurStyle(): ViewBlurStyle = ViewBlurStyl
  */
 @Composable
 fun rememberPopupMaterialBlur(backdrop: Backdrop?): MaterialBlurProvider? {
-    val active = LocalAppState.current.enableBlur && backdrop != null && isRuntimeShaderSupported()
+    val active = LocalAppSettings.current.enableMaterialBlur && backdrop != null && isRuntimeShaderSupported()
     return remember(backdrop, active) {
         if (active && backdrop != null) {
             MaterialBlurProvider { spec, shape ->

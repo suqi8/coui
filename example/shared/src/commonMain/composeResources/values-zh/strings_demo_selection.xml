@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="demo_checkbox_title">复选框</string>
+    <string name="demo_radio_button_title">单选按钮</string>
+    <string name="demo_switch_title">开关</string>
+    <string name="demo_slider_title">滑块</string>
+    <string name="demo_intent_slider_title">意图滑块</string>
+    <string name="demo_chip_title">选择标签</string>
+    <string name="demo_chip_group_title">选择标签组</string>
+
+    <!-- Checkbox -->
+    <string name="demo_checkbox_state">状态</string>
+    <string name="demo_checkbox_state_unchecked">未选中</string>
+    <string name="demo_checkbox_state_indeterminate">部分选中</string>
+    <string name="demo_checkbox_state_checked">已选中</string>
+    <string name="demo_checkbox_tri_state">三态切换</string>
+    <string name="demo_checkbox_tri_state_summary">点击时依次切换未选中、部分选中和已选中</string>
+    <string name="demo_checkbox_style_shape">形状（用于图片上）</string>
+    <string name="demo_checkbox_variant_states">状态</string>
+    <string name="demo_checkbox_variant_shape">图片上的形状复选框</string>
+
+    <!-- Radio button -->
+    <string name="demo_radio_button_show_labels">显示文字</string>
+    <string name="demo_radio_button_variant_states">状态</string>
+
+    <!-- Switch -->
+    <string name="demo_switch_loading_summary">滑块变为旋转的圆弧，点击无效</string>
+    <string name="demo_switch_variant_states">状态</string>
+
+    <!-- Slider -->
+    <string name="demo_slider_component">组件</string>
+    <string name="demo_slider_show_key_points">显示刻度点</string>
+    <string name="demo_slider_material_summary">按下时显示玻璃滑块和触摸光斑</string>
+    <string name="demo_slider_start_from_middle">从中间开始</string>
+    <string name="demo_slider_reverse">反向</string>
+    <string name="demo_slider_haptic">振动反馈</string>
+    <string name="demo_slider_continuous">连续</string>
+    <string name="demo_slider_sections">分段</string>
+    <string name="demo_slider_key_points">刻度点</string>
+    <string name="demo_slider_custom_key_points">自定义刻度点</string>
+    <string name="demo_slider_steps_key_points">分档并显示刻度点</string>
+    <string name="demo_slider_material_off">关闭材质效果</string>
+    <string name="demo_slider_disabled_key_points">禁用（带刻度点）</string>
+
+    <!-- Intent slider -->
+    <string name="demo_intent_slider_playback_state">播放状态</string>
+    <string name="demo_intent_slider_show_thumb">显示滑块</string>
+    <string name="demo_intent_slider_follow_thumb">跟手</string>
+    <string name="demo_intent_slider_follow_thumb_summary">进度直接跳到手指位置，而不是随拖动距离移动</string>
+    <string name="demo_intent_slider_secondary_value">缓冲进度</string>
+    <string name="demo_intent_slider_loading_drag_return">加载时拖动回弹</string>
+    <string name="demo_intent_slider_loading_drag_return_summary">首次加载时拖动，松手后回到起点</string>
+    <string name="demo_intent_slider_over_media">叠加在媒体上</string>
+    <string name="demo_intent_slider_over_media_summary">使用固定配色，背后为模糊的图片</string>
+    <string name="demo_intent_slider_conic_light">锥形光效</string>
+    <string name="demo_intent_slider_conic_light_summary">播放或拖动时光效跟随进度，仅叠加在媒体上时可用</string>
+    <string name="demo_intent_slider_variant_sizes">尺寸</string>
+    <string name="demo_intent_slider_variant_playback">播放</string>
+    <string name="demo_intent_slider_variant_media">叠加在媒体上</string>
+    <string name="demo_intent_slider_variant_media_label">固定配色与锥形光效</string>
+    <string name="demo_intent_slider_thumb_paused">滑块（已暂停）</string>
+    <string name="demo_intent_slider_thumb_playing">滑块（播放中）</string>
+    <string name="demo_intent_slider_play">播放</string>
+    <string name="demo_intent_slider_pause">暂停</string>
+    <string name="demo_intent_slider_initial_loading">首次加载（拖动回弹）</string>
+    <string name="demo_intent_slider_buffering">缓冲中</string>
+    <string name="demo_intent_slider_state_format">状态：%1$s</string>
+
+    <!-- Chip -->
+    <string name="demo_chip_type">组件</string>
+    <string name="demo_chip_label">标签</string>
+    <string name="demo_chip_long_label">这是一段很长的标签文字，一个标签放不下</string>
+    <string name="demo_chip_show_count">显示数量</string>
+    <string name="demo_chip_show_red_dot">显示红点</string>
+    <string name="demo_chip_closable">可关闭</string>
+    <string name="demo_chip_closable_summary">关闭后标签会隐藏，重新打开“显示”即可恢复</string>
+    <string name="demo_chip_variant_filter">筛选标签</string>
+    <string name="demo_chip_variant_badges">数量、红点与关闭</string>
+    <string name="demo_chip_variant_suggestion">建议标签</string>
+    <string name="demo_chip_variant_disabled">禁用</string>
+    <string name="demo_chip_recommended">推荐</string>
+    <string name="demo_chip_nearby">附近</string>
+    <string name="demo_chip_popular">热门</string>
+    <string name="demo_chip_downloads">下载</string>
+    <string name="demo_chip_updates">更新</string>
+    <string name="demo_chip_dark_mode">深色模式</string>
+    <string name="demo_chip_reset">重置</string>
+    <string name="demo_chip_disabled">禁用</string>
+    <string name="demo_chip_disabled_selected">禁用且已选中</string>
+
+    <!-- Chip group -->
+    <string name="demo_chip_group_single_selection">单选</string>
+    <string name="demo_chip_group_selection_required">至少选择一项</string>
+    <string name="demo_chip_group_selection_required_summary">最后一个已选标签不能取消选择</string>
+    <string name="demo_chip_group_single_line">单行</string>
+    <string name="demo_chip_group_single_line_summary">标签排成一行，可横向滚动</string>
+    <string name="demo_chip_group_collapsable">可折叠</string>
+    <string name="demo_chip_group_collapsable_summary">标签超出行数时显示展开按钮</string>
+    <string name="demo_chip_group_collapsed_rows">折叠时的行数</string>
+    <string name="demo_chip_group_none">无</string>
+    <string name="demo_chip_group_variant_single_select">单选</string>
+    <string name="demo_chip_group_variant_collapsable">可折叠</string>
+    <string name="demo_chip_group_variant_single_line">单行</string>
+    <string name="demo_chip_group_all">全部</string>
+    <string name="demo_chip_group_documents">文档</string>
+    <string name="demo_chip_group_security">安全</string>
+    <string name="demo_chip_group_location">位置信息</string>
+    <string name="demo_chip_group_apps">应用</string>
+    <string name="demo_chip_group_accessibility">无障碍</string>
+    <string name="demo_chip_group_lock_screen">锁屏</string>
+    <string name="demo_chip_group_family_space">家庭空间</string>
+    <string name="demo_chip_group_about_phone">关于手机</string>
+</resources>
