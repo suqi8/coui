@@ -77,7 +77,7 @@
     window.__couiLoading = {
         log: log,
         fontProgress: function (done, total) {
-            if (!fonts) log('ui', tr('Interface started, loading the CJK font', '界面已启动，正在加载中文字体'));
+            if (!fonts) log('ui', tr('Loading the CJK font', '正在加载中文字体'));
             fonts = { done: done, total: total };
             log('fonts', tr('Fonts ', '字体 ') + done + ' / ' + total + (done >= total ? tr(', done', '，完成') : ''));
             render();

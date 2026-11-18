@@ -6,11 +6,11 @@ package canvas.web
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.window.ComposeViewport
@@ -22,10 +22,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 /** MiSans with its CJK subsets, the font the COUI example site uses. */
 private const val FONT_CSS = "https://cdn-font.hyperos.mi.com/font/css?family=MiSans_VF:VF:Chinese_Simplify&display=swap"
 
-/**
- * How long the loading screen waits for the CJK subsets before showing the editor anyway; text laid out
- * before its glyphs arrive keeps showing boxes until it is laid out again.
- */
+/** How long the loading screen waits for the CJK subsets before showing the editor anyway. */
 private const val FONT_WAIT_MS = 45_000L
 
 @JsFun("(done, total) => { if (window.__couiLoading) window.__couiLoading.fontProgress(done, total); }")
@@ -40,21 +37,24 @@ fun main() {
         val platform = remember { BrowserPlatform() }
         val resolver = LocalFontFamilyResolver.current
         val scope = rememberCoroutineScope()
-        var fontEpoch by remember { mutableIntStateOf(0) }
+        // The editor's labels are plain strings, so it is composed only once the CJK subsets are in:
+        // text measured before its glyphs arrive keeps the narrow width of the missing-glyph boxes,
+        // and Skia's paragraph cache hands that layout back even to a remounted tree.
+        var fontsReady by remember { mutableStateOf(false) }
         LaunchedEffect(Unit) {
             val fonts = scope.launch {
                 preloadWebFonts(queryParam("cssUrl").ifBlank { FONT_CSS }, resolver, ::setFontProgress)
             }
             withTimeoutOrNull(FONT_WAIT_MS) { fonts.join() }
-            // The editor composed behind the loading screen before the glyphs arrived; lay it out
-            // again with them. The design lives in local storage, so remounting loses nothing.
-            fontEpoch++
-            hideLoading()
-            if (fonts.isActive) {
-                fonts.join()
-                fontEpoch++
+            fontsReady = true
+            // Let the editor paint its first frame under the loading screen before revealing it. A
+            // background tab gets no animation frames, so the wait is capped.
+            withTimeoutOrNull(500) {
+                withFrameNanos {}
+                withFrameNanos {}
             }
+            hideLoading()
         }
-        key(fontEpoch) { CanvasApp(platform) }
+        if (fontsReady) CanvasApp(platform)
     }
 }
