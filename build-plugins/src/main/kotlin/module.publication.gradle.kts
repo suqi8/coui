@@ -100,6 +100,16 @@ publishing {
     }
 }
 
+// The Central bundle zips the whole staging repository, so it must hold only the version being
+// published: versions left from an earlier release make Central reject the entire bundle.
+val cleanSonatypeStaging = tasks.register<Delete>("cleanSonatypeStaging") {
+    description = "Delete the Maven Central staging repository before staging a new version"
+    delete(sonatypePackageUrl)
+}
+tasks.withType<PublishToMavenRepository>().configureEach {
+    if (name.endsWith("ToSonatypeRepository")) dependsOn(cleanSonatypeStaging)
+}
+
 tasks.register<CentralPublisherUploadTask>("publishToMavenCentralUsingCentralApi") {
     description = "Upload the staged Maven Central bundle via the Central Publisher API"
     dependsOn("publishAllPublicationsToSonatypeRepository")
