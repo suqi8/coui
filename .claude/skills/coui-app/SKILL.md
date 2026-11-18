@@ -47,7 +47,8 @@ A "dark mode" switch on some page writes `settings.colorMode`; it does not hold 
 5. **Material blur is plumbing.** Overlays and bars only blur when the page is recorded into a backdrop and handed to them (section 6). Keep the opaque fallback for platforms without runtime shaders.
 6. **No hard-coded user-facing text**: Compose resources, `values/` + `values-zh/` (section 7).
 7. **Haptics**: library widgets fire their own. For custom interactions: `val haptic = rememberCouiHaptic(); haptic(CouiHapticEffect.Switch)`.
-8. **Your own composables follow the library conventions**: required params, then `modifier: Modifier = Modifier` (any second `Modifier` param right after it), then defaulted params, trailing content lambda; every public composable that emits UI takes a `modifier` and applies it to its root; a `Defaults` object for dimensions and colour factories; `@Immutable` colour classes.
+8. **A top-bar search is linked with the bar, like the ColorOS Settings search.** A search box under a top bar that the user types into is always `TopAppBarSearchBar` + `rememberTopAppBarSearchState` passed to the bar (`CouiPageScaffold(topBarSearchState = …)`), with the page under `Modifier.topAppBarSearchContent(state)` and the results in their own list under `Modifier.topAppBarSearchResults(state)` (section 3). Never a static `TopAppBarSearchSlot` + `InputField` that filters in place, never a second search row swapped in for the bar, never a separate search page. `TopAppBarSearchSlot` is only for a capsule that opens something else.
+9. **Your own composables follow the library conventions**: required params, then `modifier: Modifier = Modifier` (any second `Modifier` param right after it), then defaulted params, trailing content lambda; every public composable that emits UI takes a `modifier` and applies it to its root; a `Defaults` object for dimensions and colour factories; `@Immutable` colour classes.
 
 ## 3. A page
 
@@ -134,7 +135,7 @@ Category titles: pages with several topics put a `PreferenceCategory` above each
 
 Top bars: collapsing large title on narrow windows, small pinned bar on wide windows (`wide = isWideWindow()` — a helper in `CouiPage.kt`: at least 840dp wide, or 600dp wide in landscape). Pushed pages pass `onBack` to show the back button.
 
-Home / top-level page (ColorOS Settings home): `topBarStyle = CouiTopBarStyle.SettingsHome` (116dp bar, 40sp title, 24dp side and 18dp bottom margins; collapses into the pinned small title) with `topBarBottomContent = { TopAppBarSearchSlot(inputField = { InputField(…) }) }`. Tapping the capsule searches in place: through `CouiPageScaffold(topBarContainer = …)` swap the top bar for a pinned row with an expanded `SearchBar` (focused) + a localized `CancelButton`, show the results in the same list, and let system back leave the search (`NavigationBackHandler` from `androidx.navigationevent`). Do not navigate to a separate search page.
+Home / top-level page (ColorOS Settings home): `topBarStyle = CouiTopBarStyle.SettingsHome` (116dp bar, 40sp title, 24dp side and 18dp bottom margins; collapses into the pinned small title) with a search bar below the title. Tapping the search bar searches in place like the settings home (core rule 8 is the short form): `topBarBottomContent = { TopAppBarSearchBar(query, onQueryChange, expanded = searching, onExpandedChange = { searching = it; if (!it) query = "" }, cancelText = stringResource(Res.string.cancel), label = …) }` and `topBarSearchState = rememberTopAppBarSearchState(active = searching)` on `CouiPageScaffold` (not `CouiPage`: the page and its results need their own lists). The title fades away and the search bar rises to the top with its cancel button; put the page list under `Modifier.topAppBarSearchContent(state)` with a hoisted `LazyListState`, and the results list under `if (state.isResultsVisible)` with `Modifier.topAppBarSearchResults(state)`. The search bar leaves the search on system back. Do not navigate to a separate search page, and do not swap the top bar for a second search row.
 
 Icons in rows go in `startAction` (`Modifier.size(24.dp)`, tinted `colorScheme.primary` for entry rows) — no extra padding, the row already spaces it.
 
@@ -216,6 +217,8 @@ Run through `references/pitfalls.md`, then check:
 - every Overlay component is under a Scaffold, dialogs are in `overlays`, not in lazy items;
 - every `Card` has its 16dp page and gap padding; no hex colours, hand-made dividers or padding on row icons;
 - all user-facing strings in both languages; no display text as state;
+- a search the user types into under a top bar is a `TopAppBarSearchBar` linked with the bar through `rememberTopAppBarSearchState` (core rule 8), not a static slot or a swapped-in row;
+- every `OverlayListPopup` / `WindowListPopup` shares a `Box` with the button that opens it, never sits directly in a top bar `actions` row or another spaced `Row`;
 - dark mode looks right (`COUITheme.colorScheme.isDark` drives the blur presets);
 - the project's formatter / ktlint passes (Compose rules: modifier on public composables and in the right position, no reused content slots, single root emitter, line length).
 

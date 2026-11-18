@@ -90,7 +90,7 @@ Every item needs `id` and `kind`; everything else is optional. Rows of a run sha
 
 | kind | COUI component | useful fields | size |
 |---|---|---|---|
-| `topBar` | `TopAppBar` (collapsing large title) | `label` title; `variant` `large` (default) / `home` (ColorOS Settings home: 40sp title and a search capsule, `supporting` = its placeholder) / `small`; `supporting` subtitle (large/small); `icon: "Back"` shows the back button; `icon2` one action icon; `actions` keys `icon`, `icon2`, `search` | full width, ~150 tall (home ~220), at the top |
+| `topBar` | `TopAppBar` (collapsing large title) | `label` title; `variant` `large` (default) / `home` (ColorOS Settings home: 40sp title and a search capsule, `supporting` = its placeholder; it searches in place, linked with the bar, unless `actions.search` opens another frame) / `small`; `supporting` subtitle (large/small); `icon: "Back"` shows the back button; `icon2` one action icon; `actions` keys `icon`, `icon2`, `search` | full width, ~150 tall (home ~220), at the top |
 | `searchBar` | `InputField` search capsule | `label` placeholder, `action` | 328 × 52 |
 | `tabs` | `TabRow` | `tabs` (labels), `selected`, `variant` `underline` / `contour` | 328 × 48 |
 | `bottomNav` | `FloatingNavigationBar` | `tabs` (2–5 of `{label, icon}`), `selected`, `actions` keys `tab:0`… | full width, ~96 tall, at the bottom |

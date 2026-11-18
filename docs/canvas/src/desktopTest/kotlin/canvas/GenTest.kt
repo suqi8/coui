@@ -133,7 +133,7 @@ class GenTest {
     fun promptNamesComponentsAndNavigation() {
         val components = listOf(
             "SwitchPreference", "ArrowPreference", "BasicComponent", "OverlayDropdownPreference", "PreferenceCategory",
-            "FloatingNavigationBar", "CouiTopBarStyle.SettingsHome", "TopAppBarSearchSlot", "OverlayDialog", "DialogButtonBar",
+            "FloatingNavigationBar", "CouiTopBarStyle.SettingsHome", "TopAppBarSearchBar", "OverlayDialog", "DialogButtonBar",
             "TextButton", "COUIIcons.WorldClock", "COUIIcons.Back",
         )
         for (lang in Lang.entries) {

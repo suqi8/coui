@@ -10,6 +10,8 @@ Rules for writing COUI screens:
 - Colours from COUITheme.colorScheme, text from COUITheme.textStyles.
 - COUI 17 material blur: record the page with rememberLayerBackdrop + Modifier.layerBackdrop, pass it to TopAppBarGlow, Modifier.couiMaterialBlur (dialogs, sheets), LocalPopupMaterialBlur (menus) and LocalMaterialBackdrop (buttons, bars); fall back to opaque when isRuntimeShaderSupported() is false.
 - Strings in Compose resources values/ and values-zh/; never store display text as state.
+- A search typed into under a top bar is linked with the bar like the ColorOS Settings search: TopAppBarSearchBar in the bar's bottomContent, rememberTopAppBarSearchState passed as the bar's searchState, the page under Modifier.topAppBarSearchContent and the results in their own list under Modifier.topAppBarSearchResults. No static TopAppBarSearchSlot + InputField filter, no swapped-in search row.
+- Wrap a list popup with the button that opens it: Box { IconButton(...); OverlayListPopup(...) }. Placed directly in a top bar actions row it pushes the button aside while shown.
 
 ## Docs
 

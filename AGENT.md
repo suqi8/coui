@@ -241,4 +241,5 @@ adb exec-out screencap -p > D:\AndroidStudioProjects\jadx\work\_shots\settings.p
 - 静态资源与运行时值冲突时，以运行时实测为准（动态取色 / 主题会覆盖静态默认）。
 - 逆向工作区统一放 `D:\AndroidStudioProjects\jadx\work\<package_name>\`，结论写进该目录 `notes.md`。
 - 写 / 改组件仍遵守 `CLAUDE.md` 的 API 约定、性能约束、`@Immutable`/`@Stable` 规则。
+- 顶栏下方可输入的搜索（example 页面、文档示例、canvas 生成代码）一律用 `TopAppBarSearchBar` + `rememberTopAppBarSearchState` 与顶栏联动，页面挂 `Modifier.topAppBarSearchContent`，结果放独立列表并挂 `Modifier.topAppBarSearchResults`，效果对齐 COUI 17 设置搜索（`HomepageImpl.animToEdit`）。不要用静态 `TopAppBarSearchSlot` + `InputField` 原地过滤，也不要另换一个搜索行；`TopAppBarSearchSlot` 只用于点击后跳转别处的胶囊。示例见 `example/.../catalog/CatalogPages.kt` 的 `CatalogHomePage`。
 - 与用户用中文交流、用中文输出 Plan；生成的代码（含注释 / KDoc）保持英文。

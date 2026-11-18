@@ -59,6 +59,8 @@ When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
 5. 材质模糊需要接线：用 `layerBackdrop` 录制页面，交给录制层之外的顶栏光晕、对话框、弹出菜单和各类栏；设备不支持运行时着色器时保留不透明的回退。
 6. 面向用户的文字放进 Compose 资源（`values/` 和 `values-zh/`）；状态里存 id，不存显示文字。
 7. 自己写的可组合函数沿用库的参数顺序：必填参数、`modifier`、带默认值的参数、末尾的内容 lambda。
+8. 顶栏下方可输入的搜索要像 ColorOS 设置的搜索一样与顶栏联动：用 `TopAppBarSearchBar` + `rememberTopAppBarSearchState`，页面用 `Modifier.topAppBarSearchContent` 淡出，结果用 `Modifier.topAppBarSearchResults` 进入。不要用原地过滤的静态胶囊。
+9. 列表弹出菜单要和打开它的按钮一起包在一个 `Box` 里；直接放进顶栏 `actions` 行时，菜单显示期间会把按钮挤开。
 
 ## 先画草图
 

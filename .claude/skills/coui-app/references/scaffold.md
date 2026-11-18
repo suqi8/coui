@@ -217,6 +217,7 @@ import io.github.suqi8.coui.kmp.basic.SnackbarHostState
 import io.github.suqi8.coui.kmp.basic.ToolbarPosition
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBarDefaults
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchState
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
 import io.github.suqi8.coui.kmp.basic.glowScrollOffsetPx
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
@@ -285,6 +286,7 @@ fun CouiPageScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     topBarBottomContent: @Composable () -> Unit = {},
     topBarContainer: @Composable (topBar: @Composable () -> Unit) -> Unit = { topBar -> topBar() },
+    topBarSearchState: TopAppBarSearchState? = null,
     snackbarHostState: SnackbarHostState? = null,
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -300,7 +302,7 @@ fun CouiPageScaffold(
     Scaffold(
         modifier = modifier,
         topBar = {
-            // topBarContainer can swap the bar for something else, e.g. an in-place search row.
+            // topBarContainer can wrap the bar, e.g. to anchor something to it.
             topBarContainer {
                 CouiPageTopBar(
                     title = title,
@@ -311,6 +313,7 @@ fun CouiPageScaffold(
                     style = topBarStyle,
                     wide = wide,
                     actions = actions,
+                    searchState = topBarSearchState,
                     bottomContent = topBarBottomContent,
                 )
             }
@@ -425,6 +428,7 @@ fun CouiPageTopBar(
     style: CouiTopBarStyle = CouiTopBarStyle.Large,
     wide: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
+    searchState: TopAppBarSearchState? = null,
     bottomContent: @Composable () -> Unit = {},
 ) {
     val colors = COUITheme.colorScheme
@@ -482,6 +486,7 @@ fun CouiPageTopBar(
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,
+            searchState = searchState,
             bottomContent = bottomContent,
         )
     }
@@ -490,6 +495,47 @@ fun CouiPageTopBar(
 
 Notes:
 
-- The search capsule in a top bar: `topBarBottomContent = { TopAppBarSearchSlot(inputField = { InputField(...) }) }` — put the `InputField` directly in the slot (named argument; the slot's last parameter is not a lambda). The slot already has the 16dp page margin.
+- A search under the top bar is always linked with the bar (SKILL.md core rule 8):
+
+```kotlin
+var searching by rememberSaveable { mutableStateOf(false) }
+var query by rememberSaveable { mutableStateOf("") }
+val searchState = rememberTopAppBarSearchState(active = searching)
+val pageListState = rememberLazyListState() // keeps the page's scroll position behind the search
+
+CouiPageScaffold(
+    title = stringResource(Res.string.settings),
+    topBarStyle = CouiTopBarStyle.SettingsHome,
+    topBarSearchState = searchState,
+    topBarBottomContent = {
+        TopAppBarSearchBar(
+            query = query,
+            onQueryChange = { query = it },
+            expanded = searching,
+            onExpandedChange = { searching = it; if (!it) query = "" },
+            cancelText = stringResource(Res.string.cancel),
+            label = stringResource(Res.string.search_hint),
+        )
+    },
+) { scope ->
+    Box(Modifier.fillMaxSize()) {
+        if (searchState.isContentVisible) {
+            LazyColumn(
+                modifier = Modifier.couiPageScroll(scope).topAppBarSearchContent(searchState),
+                state = pageListState,
+                contentPadding = scope.contentPadding,
+            ) { /* the page */ }
+        }
+        if (searchState.isResultsVisible) {
+            LazyColumn(
+                modifier = Modifier.couiPageScroll(scope).topAppBarSearchResults(searchState),
+                contentPadding = scope.contentPadding,
+            ) { /* the results for query */ }
+        }
+    }
+}
+```
+
+  `TopAppBarSearchSlot(inputField = { InputField(expanded = false, …) })` is only for a capsule that opens something else (named argument; the slot already has the 16dp page margin, so never put a `SearchBar` or `TopAppBarSearchBar` in it).
 - A main shell with a bottom bar records the pager into its own backdrop and gives the bar `LocalMaterialBackdrop`; each tab page is still a `CouiPageScaffold`. Pass the bar height to the pages so their lists end above it.
 - Components that live in page slots (bottom bars, FAB, floating toolbar) go into the scaffold slots, not into the list.

@@ -346,9 +346,17 @@ private class PromptWriter(val doc: CanvasDoc, val plan: AppPlan, val lang: Lang
         when (item.variant) {
             "home" -> {
                 parts += t("ColorOS Settings home bar", "ColorOS 设置首页顶栏") + p(code("CouiTopBarStyle.SettingsHome")) + t(" titled ", "，标题 ") + q(item.label)
-                parts += t("search capsule", "搜索胶囊") + p(code("TopAppBarSearchSlot") + " + " + code("InputField")) +
-                    (item.supporting?.takeIf { it.isNotBlank() }?.let { t(" with placeholder ", "，占位文字 ") + q(it) } ?: "") +
-                    (if (plan.edgesFrom(s.frame.id).any { it.item?.id == item.id && it.trigger == NavEdge.SEARCH }) goes(s, item, NavEdge.SEARCH) else t(" that searches in place", "，原地搜索"))
+                val opensPage = plan.edgesFrom(s.frame.id).any { it.item?.id == item.id && it.trigger == NavEdge.SEARCH }
+                val hint = item.supporting?.takeIf { it.isNotBlank() }?.let { t(" with placeholder ", "，占位文字 ") + q(it) } ?: ""
+                parts += if (opensPage) {
+                    t("search capsule", "搜索胶囊") + p(code("TopAppBarSearchSlot") + " + " + code("InputField")) + hint + goes(s, item, NavEdge.SEARCH)
+                } else {
+                    t("search bar", "搜索栏") + p(code("TopAppBarSearchBar") + " + " + code("rememberTopAppBarSearchState")) + hint +
+                        t(
+                            " that searches in place, linked with the top bar like the ColorOS Settings search (the title fades, the bar rises with a cancel button, the page fades out and the results come in)",
+                            "，原地搜索并与顶栏联动，和 ColorOS 设置的搜索一样（标题淡出、搜索栏带着取消按钮升到顶部、页面淡出、结果从下方进入）",
+                        )
+                }
             }
 
             "small" -> parts += t("small pinned bar", "小标题固定栏") + p(code("CouiTopBarStyle.Small")) + t(" titled ", "，标题 ") + q(item.label) +
@@ -432,6 +440,14 @@ private class PromptWriter(val doc: CanvasDoc, val plan: AppPlan, val lang: Lang
             t(
                 "Icons are `COUIIcons.<Name>` from coui-icons (`io.github.suqi8.coui.kmp.icon.extended.<Name>`).",
                 "图标用 coui-icons 的 `COUIIcons.<Name>`（`io.github.suqi8.coui.kmp.icon.extended.<Name>`）。",
+            ),
+            t(
+                "A search typed into under a top bar is linked with the bar like the ColorOS Settings search: `TopAppBarSearchBar` + `rememberTopAppBarSearchState` on `CouiPageScaffold`, the page under `Modifier.topAppBarSearchContent`, the results in their own list under `Modifier.topAppBarSearchResults`; never a static capsule that filters in place.",
+                "顶栏下方可输入的搜索要像 ColorOS 设置的搜索一样与顶栏联动：在 `CouiPageScaffold` 上用 `TopAppBarSearchBar` + `rememberTopAppBarSearchState`，页面挂 `Modifier.topAppBarSearchContent`，结果放独立列表并挂 `Modifier.topAppBarSearchResults`；不要用原地过滤的静态胶囊。",
+            ),
+            t(
+                "A list popup shares a `Box` with the button that opens it (`Box { IconButton(…); OverlayListPopup(…) }`); directly in a top bar `actions` row it pushes the button aside while shown.",
+                "列表弹出菜单和打开它的按钮一起包在 `Box` 里（`Box { IconButton(…); OverlayListPopup(…) }`）；直接放进顶栏 `actions` 行时，显示期间会把按钮挤开。",
             ),
             t(
                 "Check each component's signature in the library source / KDoc before using it; do not invent parameters.",

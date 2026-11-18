@@ -59,6 +59,8 @@ The skill follows the library version it ships with. When you upgrade COUI, copy
 5. Material blur needs plumbing: record the page with `layerBackdrop`, hand it to the top bar glow, dialogs, popups and bars that sit outside the recording, and keep the opaque fallback when runtime shaders are missing.
 6. User-facing text goes to Compose resources (`values/` and `values-zh/`); store ids, not display text, as state.
 7. Your own composables follow the library's parameter order: required parameters, `modifier`, defaulted parameters, trailing content.
+8. A search typed into under a top bar is linked with the bar like the ColorOS Settings search: `TopAppBarSearchBar` + `rememberTopAppBarSearchState`, the page fading out with `Modifier.topAppBarSearchContent` and the results coming in with `Modifier.topAppBarSearchResults`. No static capsule that filters in place.
+9. A list popup shares a `Box` with the button that opens it; directly in a top bar `actions` row it pushes the button aside while it is shown.
 
 ## Sketch first
 

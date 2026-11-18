@@ -15,7 +15,9 @@ Most pop-ups exist twice:
 | --- | --- |
 | Page with collapsing title | `Scaffold` + `TopAppBar(scrollBehavior = COUIScrollBehavior())` (or the skill's `CouiPage`) |
 | Pinned small toolbar | `SmallTopAppBar` |
-| Settings home bar with search capsule | `TopAppBar(expandedHeight = 116.dp, largeTitleFontSize = 40.sp, titlePadding = 24.dp, largeTitleBottomMargin = 18.dp, bottomContent = { TopAppBarSearchSlot(inputField = { InputField(…) }) })` |
+| Settings home bar with search | `TopAppBar(expandedHeight = 116.dp, largeTitleFontSize = 40.sp, titlePadding = 24.dp, largeTitleBottomMargin = 18.dp, searchState = searchState, bottomContent = { TopAppBarSearchBar(…) })` with `val searchState = rememberTopAppBarSearchState(active = searching)` |
+| Search under any top bar (in place, linked with the bar like the ColorOS Settings search) | `TopAppBarSearchBar` + `rememberTopAppBarSearchState` + `Modifier.topAppBarSearchContent` / `topAppBarSearchResults` |
+| Capsule under a top bar that only opens something else | `TopAppBarSearchSlot(inputField = { InputField(expanded = false, …) })` |
 | Toolbar search that grows out of the search icon | `ToolbarSearchAnchor`, `ToolbarFloatingSearchBar`, `rememberToolbarSearchState`, `Modifier.toolbarSearchEntry/Item` |
 | Top bar glow / blur | `TopAppBarGlow` (coui-blur) in the bar's `glow` slot |
 | Bottom tab bar (COUI 17) | `FloatingNavigationBar` + `FloatingNavigationBarItem`; classic: `NavigationBar` |

@@ -3,6 +3,8 @@
 ## Layout
 
 - **Double search margin.** `TopAppBarSearchSlot` already pads the capsule 16dp from the page edge. Wrapping a whole `SearchBar` in it adds the search bar's own responsive 16dp → 32dp. Put `InputField` directly in the slot.
+- **Static search under the top bar.** A `TopAppBarSearchSlot` + `InputField` that filters the list in place, or a second search row swapped in for the bar, does not behave like the ColorOS Settings search: the title stays, there is no cancel button and nothing moves. Use `TopAppBarSearchBar` with `rememberTopAppBarSearchState` (SKILL.md core rule 8). `TopAppBarSearchBar` brings its own 52dp row and 16dp margin: never wrap it in the slot.
+- **Search hides the page list for good.** With `if (state.isContentVisible)` around the page list, hoist its `LazyListState`; otherwise leaving the search scrolls the page back to the top.
 - **Extra icon gap in rows.** `startAction` is already spaced from the title by the row. `Modifier.padding(end = 16.dp)` on the icon doubles the gap. Use `Modifier.size(24.dp)` only.
 - **Hand-made dividers.** `CardListGroup` draws COUI dividers (starting at the title, hidden next to a selected row). `HorizontalDivider` between rows draws a second, wrong one.
 - **Cards touching the screen edge.** `Card` has no outer margin. Every card needs `Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)`.
@@ -12,6 +14,7 @@
 
 ## Overlays and blur
 
+- **List popup as a sibling in a row.** `OverlayListPopup` / `WindowListPopup` anchor to their parent and, while shown, add a zero-size child to it. Put directly in a top bar `actions` row (spaced 10dp), that child adds a gap that pushes the button sideways until the popup has closed, and the menu anchors to the whole row. Always wrap the button and its popup in their own `Box { IconButton(…); WindowListPopup(…) }`.
 - **Dialog inside a lazy item.** An `OverlayDialog` registers itself while it is composed; inside a `LazyColumn` item it disappears when that item scrolls away. Put dialogs and sheets in `CouiPage(overlays = { … })` (or beside the list).
 - **Overlay without Scaffold** shows nothing. Every page that opens an `Overlay*` must be inside a `Scaffold`.
 - **Pushed pages lose the blur** when only the main shell provides the page backdrop. Each page scaffold must record its own content and provide `LocalPageBackdrop` / `LocalPopupMaterialBlur` (the skill's `CouiPageScaffold` does).
