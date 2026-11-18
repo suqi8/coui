@@ -74,6 +74,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [CameraShutterButton](../components/camerashutterbutton) | Camera shutter (photo / video / recording) and round camera control button | Camera capture, recording controls |
 | [CameraZoomBar](../components/camerazoombar) | Joystick zoom bar with ± buttons and ratio labels | Continuous camera zoom |
 | [CameraLensBar](../components/cameralensbar) | Camera lens switcher of zoom-ratio discs | Lens / zoom ratio switching in camera UIs |
+| [CameraHint](../components/camerahint) | Camera floating hint panel and outlined text | Viewfinder tips, overlay labels |
 | [CameraThumbnail](../components/camerathumbnail) | Camera gallery thumbnail with new-photo scale-in | Camera bottom bar, latest photo |
 | [CameraModeBar](../components/cameramodebar) | Camera mode strip with selected capsule, and the mode title | Switching camera modes |
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |

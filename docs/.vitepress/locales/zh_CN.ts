@@ -126,6 +126,7 @@ export default defineConfig({
                         { text: "CameraShutterButton", link: "/zh_CN/components/camerashutterbutton" },
                         { text: "CameraZoomBar", link: "/zh_CN/components/camerazoombar" },
                         { text: "CameraLensBar", link: "/zh_CN/components/cameralensbar" },
+                        { text: "CameraHint", link: "/zh_CN/components/camerahint" },
                         { text: "CameraThumbnail", link: "/zh_CN/components/camerathumbnail" },
                         { text: "CameraModeBar", link: "/zh_CN/components/cameramodebar" },
                         { text: "Stepper", link: "/zh_CN/components/stepper" },

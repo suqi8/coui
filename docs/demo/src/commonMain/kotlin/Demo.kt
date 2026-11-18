@@ -183,6 +183,7 @@ private val availableComponents = listOf(
     AvailableComponent("IndividualStatementDialog", "individualStatementDialog") { IndividualStatementDialogDemo() },
     AvailableComponent("CameraModeBar", "cameraModeBar") { CameraModeBarDemo() },
     AvailableComponent("CameraThumbnail", "cameraThumbnail") { CameraThumbnailDemo() },
+    AvailableComponent("CameraHint", "cameraHint") { CameraHintDemo() },
     AvailableComponent("CameraLensBar", "cameraLensBar") { CameraLensBarDemo() },
     AvailableComponent("CameraZoomBar", "cameraZoomBar") { CameraZoomBarDemo() },
     AvailableComponent("CameraShutterButton", "cameraShutterButton") { CameraShutterButtonDemo() },

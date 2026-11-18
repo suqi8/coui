@@ -74,6 +74,7 @@ ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画�
 | [CameraShutterButton](../components/camerashutterbutton) | 相机快门（拍照 / 录像 / 录制中）与圆形相机控制按钮 | 相机拍摄、录像控制 |
 | [CameraZoomBar](../components/camerazoombar) | 带加减按钮与倍率标签的摇杆式变焦条 | 相机连续变焦 |
 | [CameraLensBar](../components/cameralensbar) | 相机倍率圆钮镜头切换条 | 相机界面切换镜头 / 倍率 |
+| [CameraHint](../components/camerahint) | 相机浮动提示面板与描边文字 | 取景提示、画面上的标签 |
 | [CameraThumbnail](../components/camerathumbnail) | 相机相册缩略图，新照片从中心放大出现 | 相机底栏、最新照片入口 |
 | [CameraModeBar](../components/cameramodebar) | 带选中胶囊的相机模式条及模式标题 | 相机模式切换 |
 | [DatePicker](../components/datepicker)                     | 日期滚轮选择器（年/月/日） | 日期选择、表单       |
