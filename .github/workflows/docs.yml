@@ -37,20 +37,25 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
       - name: Build Docs
+        # One short-lived Gradle JVM per step that compiles Kotlin in-process: a long-lived daemon
+        # plus a Kotlin daemon kept growing across the steps until the runner ran out of memory
+        # during the Wasm optimization of the example app.
+        env:
+          GRADLE: ./gradlew --no-daemon -Pkotlin.compiler.execution.strategy=in-process -Dorg.gradle.jvmargs=-Xmx6g
         run: |
-          ./gradlew :coui-ui:dokkaGenerate -Prelease
+          $GRADLE :coui-ui:dokkaGenerate -Prelease
           mkdir -p ./docs/public/dokka
           mv ./coui-ui/build/dokka/html/* ./docs/public/dokka
-          ./gradlew :docs:demo:jsBrowserDistribution
+          $GRADLE :docs:demo:jsBrowserDistribution
           mkdir -p ./docs/public/compose
           mv ./docs/demo/build/dist/js/productionExecutable/* ./docs/public/compose
-          ./gradlew :example:web:wasmJsBrowserDistribution
+          $GRADLE :example:web:wasmJsBrowserDistribution
           mkdir -p ./docs/public/example
           mv ./example/web/build/dist/wasmJs/productionExecutable/* ./docs/public/example
-          ./gradlew :docs:canvas:wasmJsBrowserDistribution
+          $GRADLE :docs:canvas:wasmJsBrowserDistribution
           mkdir -p ./docs/public/canvas
           mv ./docs/canvas/build/dist/wasmJs/productionExecutable/* ./docs/public/canvas
-          ./gradlew :docs:iconGen:generateIcons
+          $GRADLE :docs:iconGen:generateIcons
           cd ./docs
           yarn install
           yarn docs:build
