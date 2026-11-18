@@ -324,7 +324,7 @@ TopAppBar(
 | modifier           | Modifier                      | Modifier applied to the search bar                           | Modifier      | No       |
 | onSearch           | (String) -> Unit              | Called when the keyboard's search action is pressed          | {}            | No       |
 | label              | String                        | Hint shown while the query is empty                          | ""            | No       |
-| hints              | List<String>                  | Rotating hints shown in place of the label                   | emptyList()   | No       |
+| hints              | List\<String>                  | Rotating hints shown in place of the label                   | emptyList()   | No       |
 | innerPrimaryButton | (@Composable () -> Unit)?     | Button inside the capsule while the query is empty, e.g. voice input | null  | No       |
 
 ### TopAppBarSearchState
@@ -346,9 +346,9 @@ Created with `rememberTopAppBarSearchState(active)`, which runs the transition e
 
 | Property Name    | Type                 | Description                                        | Value  |
 | ---------------- | -------------------- | -------------------------------------------------- | ------ |
-| TransitionSpec   | AnimationSpec<Float> | Title, toolbar and search bar spring               | response 0.35, bounce 0 |
-| ResultsEnterSpec | AnimationSpec<Float> | Results spring on entering                         | response 0.35, bounce 0 |
-| ResultsExitSpec  | AnimationSpec<Float> | Results spring on leaving                          | response 0.1, bounce 0 |
+| TransitionSpec   | AnimationSpec\<Float> | Title, toolbar and search bar spring               | response 0.35, bounce 0 |
+| ResultsEnterSpec | AnimationSpec\<Float> | Results spring on entering                         | response 0.35, bounce 0 |
+| ResultsExitSpec  | AnimationSpec\<Float> | Results spring on leaving                          | response 0.1, bounce 0 |
 | ResultsOffset    | Dp                   | How far below their place the results start (`homepage_init_searchbar_top`) | 108.dp |
 | TitleEndScale    | Float                | Scale the title shrinks to                         | 0.8    |
 | TitleTravel      | Dp                   | How far the title moves up (200px at 3.5x)         | 57.dp  |

@@ -110,7 +110,7 @@ Text(
 | softWrap       | Boolean                        | Whether to wrap text automatically            | true                       | No       |
 | maxLines       | Int                            | Maximum number of lines                       | Int.MAX_VALUE              | No       |
 | minLines       | Int                            | Minimum number of lines                       | 1                          | No       |
-| inlineContent  | Map<String, InlineTextContent> | Mapping for inserting inline composables      | mapOf()                    | No       |
+| inlineContent  | Map\<String, InlineTextContent> | Mapping for inserting inline composables      | mapOf()                    | No       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | Callback after text layout is completed       | {}                         | No       |
 | style          | TextStyle                      | Text style                                    | COUITheme.textStyles.bodyXL | No       |
 

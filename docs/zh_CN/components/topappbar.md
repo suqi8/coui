@@ -321,7 +321,7 @@ TopAppBar(
 | modifier           | Modifier                      | 应用于搜索栏的修饰符                     | Modifier    | 否       |
 | onSearch           | (String) -> Unit              | 按下键盘搜索键时回调                     | {}          | 否       |
 | label              | String                        | 查询为空时显示的提示文字                 | ""          | 否       |
-| hints              | List<String>                  | 代替 label 轮播显示的提示                | emptyList() | 否       |
+| hints              | List\<String>                  | 代替 label 轮播显示的提示                | emptyList() | 否       |
 | innerPrimaryButton | (@Composable () -> Unit)?     | 查询为空时胶囊内的按钮，例如语音输入     | null        | 否       |
 
 ### TopAppBarSearchState
@@ -343,9 +343,9 @@ TopAppBar(
 
 | 属性名           | 类型                 | 说明                                              | 值     |
 | ---------------- | -------------------- | ------------------------------------------------- | ------ |
-| TransitionSpec   | AnimationSpec<Float> | 标题、工具栏与搜索栏的弹簧                         | response 0.35，bounce 0 |
-| ResultsEnterSpec | AnimationSpec<Float> | 结果进入时的弹簧                                  | response 0.35，bounce 0 |
-| ResultsExitSpec  | AnimationSpec<Float> | 结果退出时的弹簧                                  | response 0.1，bounce 0 |
+| TransitionSpec   | AnimationSpec\<Float> | 标题、工具栏与搜索栏的弹簧                         | response 0.35，bounce 0 |
+| ResultsEnterSpec | AnimationSpec\<Float> | 结果进入时的弹簧                                  | response 0.35，bounce 0 |
+| ResultsExitSpec  | AnimationSpec\<Float> | 结果退出时的弹簧                                  | response 0.1，bounce 0 |
 | ResultsOffset    | Dp                   | 结果起始位置在最终位置下方多远（`homepage_init_searchbar_top`） | 108.dp |
 | TitleEndScale    | Float                | 标题缩小到的比例                                  | 0.8    |
 | TitleTravel      | Dp                   | 标题上移的距离（3.5x 下 200px）                   | 57.dp  |

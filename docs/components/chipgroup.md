@@ -93,7 +93,7 @@ ChipGroup(
 | ------------------- | ----------- | ------------------------------------------------------------------ |
 | singleSelection     | Boolean     | At most one chip selected                                          |
 | selectionRequired   | Boolean     | The last selected chip cannot be unselected                        |
-| selectedIndices     | Set<Int>    | The selected chip indices                                          |
+| selectedIndices     | Set\<Int>    | The selected chip indices                                          |
 | collapsed           | Boolean     | Whether a collapsable group is collapsed (writable)                |
 | isSelected(index)   | Boolean     | Whether the chip at `index` is selected                            |
 | toggle(index)       | Unit        | Toggles the chip at `index` following the selection rules          |

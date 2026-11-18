@@ -93,7 +93,7 @@ ChipGroup(
 | ----------------- | -------- | ---------------------------------------- |
 | singleSelection   | Boolean  | 最多只能选中一个                         |
 | selectionRequired | Boolean  | 不能取消最后一个选中项                   |
-| selectedIndices   | Set<Int> | 选中的 Chip 下标                         |
+| selectedIndices   | Set\<Int> | 选中的 Chip 下标                         |
 | collapsed         | Boolean  | 可折叠的组当前是否折叠（可写）           |
 | isSelected(index) | Boolean  | 下标为 `index` 的 Chip 是否选中          |
 | toggle(index)     | Unit     | 按选择规则切换下标为 `index` 的 Chip     |

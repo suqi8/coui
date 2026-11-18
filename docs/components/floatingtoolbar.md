@@ -69,7 +69,7 @@ Scaffold(
 
 | Property Name              | Type                            | Description                                              | Default Value                                      | Required |
 | -------------------------- | ------------------------------- | -------------------------------------------------------- | -------------------------------------------------- | -------- |
-| items                      | List<FloatingToolbarItem>       | The items; the same `group` forms one capsule (at most three groups) | -                                      | Yes      |
+| items                      | List\<FloatingToolbarItem>       | The items; the same `group` forms one capsule (at most three groups) | -                                      | Yes      |
 | modifier                   | Modifier                        | Modifier applied to the full-width toolbar               | Modifier                                           | No       |
 | visible                    | Boolean                         | Whether the capsules are shown (scale springs)           | true                                               | No       |
 | materialEffect             | Boolean                         | Draw the COUI 17 bottom-bar material on the capsules     | `LocalCOUIMaterialEffectEnabled.current` | No       |

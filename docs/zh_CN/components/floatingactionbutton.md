@@ -277,7 +277,7 @@ ExpandableFloatingActionButton(
 | ---------------------- | ------------------------------ | -------------------- | ----------------------------------------------------- | ---- |
 | expanded               | Boolean                        | 是否展开子项               | -                                                     | 是    |
 | onExpandedChange       | (Boolean) -> Unit              | 点击主按钮时以新状态回调         | -                                                     | 是    |
-| items                  | List<FloatingActionButtonItem> | 子操作，下标 0 离主按钮最近       | -                                                     | 是    |
+| items                  | List\<FloatingActionButtonItem> | 子操作，下标 0 离主按钮最近       | -                                                     | 是    |
 | modifier               | Modifier                       | 应用于主按钮位置的修饰符      | Modifier                                              | 否    |
 | enabled                | Boolean                        | 主按钮是否启用              | true                                                  | 否    |
 | visible                | Boolean                        | 主按钮是否显示;隐藏时同时收起菜单 | true                                            | 否    |

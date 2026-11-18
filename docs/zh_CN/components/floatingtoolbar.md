@@ -69,7 +69,7 @@ Scaffold(
 
 | 属性名                     | 类型                            | 说明                                               | 默认值                                             | 是否必须 |
 | -------------------------- | ------------------------------- | -------------------------------------------------- | -------------------------------------------------- | -------- |
-| items                      | List<FloatingToolbarItem>       | 条目；同一 `group` 组成一个胶囊（最多三组）        | -                                                  | 是       |
+| items                      | List\<FloatingToolbarItem>       | 条目；同一 `group` 组成一个胶囊（最多三组）        | -                                                  | 是       |
 | modifier                   | Modifier                        | 应用于满宽工具栏的修饰符                           | Modifier                                           | 否       |
 | visible                    | Boolean                         | 是否显示胶囊（缩放弹簧）                           | true                                               | 否       |
 | materialEffect             | Boolean                         | 是否在胶囊上绘制 COUI 17 底栏材质                  | `LocalCOUIMaterialEffectEnabled.current` | 否       |

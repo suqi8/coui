@@ -83,7 +83,7 @@ SearchBar(
 | innerPrimaryButton | @Composable (() -> Unit)? | 胶囊内 36dp 槽位中的按钮，查询为空时显示（输入文字后由清除按钮取代） | null | 否    |
 | innerSecondaryButton | @Composable (() -> Unit)? | `innerPrimaryButton` 之后的第二个内部按钮 | null | 否    |
 | interactionSource | MutableInteractionSource? | 交互源           | null     | 否    |
-| hints             | List<String>              | 查询为空时代替 `label` 轮播的提示文本；为空列表时保留 `label` | emptyList() | 否    |
+| hints             | List\<String>              | 查询为空时代替 `label` 轮播的提示文本；为空列表时保留 `label` | emptyList() | 否    |
 | hintRepeatCount   | Int                       | 轮播停止前播放的切换次数 | Int.MAX_VALUE | 否    |
 | onHintChange      | ((Int) -> Unit)?          | 每次切换到新提示时回调其下标 | null     | 否    |
 
@@ -116,7 +116,7 @@ SearchBarDefaults 对象提供了 SearchBar 和 InputField 组件的默认值。
 | NonInstantCancelPadding     | PaddingValues | 非即时胶囊内 CancelButton 的内边距 | PaddingValues(12.dp, 4.dp) |
 | CancelHeight                | Dp       | CancelButton 胶囊高度            | 40.dp               |
 | CancelPaddingHorizontal     | Dp       | CancelButton 文字水平内边距      | 16.dp               |
-| LiftAnimationSpec           | AnimationSpec<Float> | `Modifier.searchBarLift` 的动画（450ms，COUI move-ease） | tween(450) |
+| LiftAnimationSpec           | AnimationSpec\<Float> | `Modifier.searchBarLift` 的动画（450ms，COUI move-ease） | tween(450) |
 | CancelMaxWidth              | Dp       | CancelButton 最大宽度            | 152.dp              |
 | CancelFontSize              | TextUnit | CancelButton 文字字号            | 14.sp               |
 

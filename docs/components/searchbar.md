@@ -89,7 +89,7 @@ SearchBar(
 | innerPrimaryButton | @Composable (() -> Unit)? | Button in a 36dp slot inside the capsule, shown while the query is empty (the clear button takes its place once text is typed) | null | No       |
 | innerSecondaryButton | @Composable (() -> Unit)? | Second inner button after `innerPrimaryButton` | null              | No       |
 | interactionSource | MutableInteractionSource? | Interaction source                   | null                 | No       |
-| hints             | List<String>              | Rotating hints shown instead of `label` while the query is empty; empty keeps `label` | emptyList() | No       |
+| hints             | List\<String>              | Rotating hints shown instead of `label` while the query is empty; empty keeps `label` | emptyList() | No       |
 | hintRepeatCount   | Int                       | Hint changes played before the rotation stops | Int.MAX_VALUE | No       |
 | onHintChange      | ((Int) -> Unit)?          | Called with the index of each newly shown hint | null          | No       |
 
@@ -122,7 +122,7 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 | NonInstantCancelPadding    | PaddingValues | Padding of a CancelButton inside a non-instant capsule | PaddingValues(12.dp, 4.dp) |
 | CancelHeight               | Dp       | Height of the CancelButton capsule                 | 40.dp              |
 | CancelPaddingHorizontal    | Dp       | Horizontal label padding inside the CancelButton   | 16.dp              |
-| LiftAnimationSpec          | AnimationSpec<Float> | Animation of `Modifier.searchBarLift` (450ms, COUI move-ease) | tween(450) |
+| LiftAnimationSpec          | AnimationSpec\<Float> | Animation of `Modifier.searchBarLift` (450ms, COUI move-ease) | tween(450) |
 | CancelMaxWidth             | Dp       | Maximum width of the CancelButton                  | 152.dp             |
 | CancelFontSize             | TextUnit | Font size of the CancelButton label                | 14.sp              |
 

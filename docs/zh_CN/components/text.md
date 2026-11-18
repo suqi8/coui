@@ -110,7 +110,7 @@ Text(
 | softWrap       | Boolean                        | 是否自动换行                   | true                       | 否       |
 | maxLines       | Int                            | 最大行数                       | Int.MAX_VALUE              | 否       |
 | minLines       | Int                            | 最小行数                       | 1                          | 否       |
-| inlineContent  | Map<String, InlineTextContent> | 内联可组合项的映射             | mapOf()                    | 否       |
+| inlineContent  | Map\<String, InlineTextContent> | 内联可组合项的映射             | mapOf()                    | 否       |
 | onTextLayout   | (TextLayoutResult) -> Unit     | 文本布局完成后的回调           | {}                         | 否       |
 | style          | TextStyle                      | 文本样式                       | COUITheme.textStyles.bodyXL | 否       |
 

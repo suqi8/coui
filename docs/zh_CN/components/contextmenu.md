@@ -2,8 +2,8 @@
 title: ContextMenu
 requiresScaffoldHost: true
 prerequisites:
-  - `OverlayContextMenu` 必须在 `Scaffold` 中使用以提供 `COUIPopupHost`
-  - `WindowContextMenu` 在平台窗口中渲染，不需要 `Scaffold`
+  - "`OverlayContextMenu` 必须在 `Scaffold` 中使用以提供 `COUIPopupHost`"
+  - "`WindowContextMenu` 在平台窗口中渲染，不需要 `Scaffold`"
 hostComponent: Scaffold
 ---
 
@@ -49,7 +49,7 @@ Scaffold {
 
 | 属性名                   | 类型                     | 说明                            | 默认值                               | 是否必须 |
 | --------------------- | ---------------------- | ----------------------------- | --------------------------------- | ---- |
-| entries               | List<DropdownEntry>    | 菜单分组，组间以分割线分隔                 | -                                 | 是    |
+| entries               | List\<DropdownEntry>    | 菜单分组，组间以分割线分隔                 | -                                 | 是    |
 | modifier              | Modifier               | 应用于内容外层包裹的修饰符                 | Modifier                          | 否    |
 | enabled               | Boolean                | 长按或右键是否弹出菜单                   | true                              | 否    |
 | dropdownColors        | DropdownColors         | 菜单行颜色                         | DropdownDefaults.dropdownColors() | 否    |

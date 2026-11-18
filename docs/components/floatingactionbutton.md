@@ -280,7 +280,7 @@ menu; clicks on items that are sliding back into the main button are ignored.
 | ---------------------- | ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------- | -------- |
 | expanded               | Boolean                        | Whether the items are shown                                  | -                                                     | Yes      |
 | onExpandedChange       | (Boolean) -> Unit              | Called with the new state when the main button is clicked    | -                                                     | Yes      |
-| items                  | List<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
+| items                  | List\<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
 | modifier               | Modifier                       | Modifier applied to the main button slot                     | Modifier                                              | No       |
 | enabled                | Boolean                        | Whether the main button is enabled                           | true                                                  | No       |
 | visible                | Boolean                        | Whether the main button is shown; hiding also collapses the menu | true                                              | No       |

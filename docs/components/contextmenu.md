@@ -2,8 +2,8 @@
 title: ContextMenu
 requiresScaffoldHost: true
 prerequisites:
-  - `OverlayContextMenu` must be used within `Scaffold` to provide `COUIPopupHost`
-  - `WindowContextMenu` renders in a platform window and needs no `Scaffold`
+  - "`OverlayContextMenu` must be used within `Scaffold` to provide `COUIPopupHost`"
+  - "`WindowContextMenu` renders in a platform window and needs no `Scaffold`"
 hostComponent: Scaffold
 ---
 
@@ -49,7 +49,7 @@ Scaffold {
 
 | Property Name         | Type                  | Description                                               | Default Value                    | Required |
 | --------------------- | --------------------- | --------------------------------------------------------- | -------------------------------- | -------- |
-| entries               | List<DropdownEntry>   | Menu groups, separated by dividers                        | -                                | Yes      |
+| entries               | List\<DropdownEntry>   | Menu groups, separated by dividers                        | -                                | Yes      |
 | modifier              | Modifier              | Modifier applied to the wrapper around the content        | Modifier                         | No       |
 | enabled               | Boolean               | Whether a long press or right click opens the menu        | true                             | No       |
 | dropdownColors        | DropdownColors        | Colors of the menu rows                                   | DropdownDefaults.dropdownColors() | No      |
