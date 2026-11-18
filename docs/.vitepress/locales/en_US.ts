@@ -17,6 +17,16 @@ export default defineConfig({
             { text: "Home", link: "/" },
             { text: "Getting Started", link: "/guide/getting-started" },
             { text: "Components", link: "/components/" },
+            { text: "Example", link: "/example/", target: "_blank" },
+            { text: "Canvas", link: "/canvas/", target: "_blank" },
+            {
+                text: "For AI",
+                items: [
+                    { text: "Writing with AI", link: "/guide/ai" },
+                    { text: "llms.txt", link: "/llms.txt", target: "_blank" },
+                    { text: "llms-full.txt", link: "/llms-full.txt", target: "_blank" },
+                ],
+            },
         ],
 
         sidebar: {
@@ -27,7 +37,7 @@ export default defineConfig({
                     items: [
                         { text: "Getting Started", link: "/guide/getting-started" },
                         { text: "Migrating from Miuix", link: "/guide/migration" },
-                        { text: "Upgrading", link: "/guide/upgrading" },
+                        { text: "Upgrading to 2.0 (ColorOS 17)", link: "/guide/upgrading" },
                     ],
                 },
                 {

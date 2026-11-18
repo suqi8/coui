@@ -5,7 +5,7 @@ layout: home
 hero:
   name: COUI
   text: A UI library for Compose MultiPlatform
-  tagline: 提供 ColorOS 设计风格的组件库
+  tagline: ColorOS 17 风格的组件库，支持 Android、iOS、桌面和网页
   image:
     src: /Icon.webp
     alt: Logo
@@ -17,27 +17,45 @@ hero:
       text: 组件库
       link: /zh_CN/components/index
     - theme: alt
-      text: GitHub
-      link: https://github.com/suqi8/coui
+      text: 在线体验示例
+      link: /example/
+      target: _blank
+    - theme: alt
+      text: COUI Canvas
+      link: /canvas/
+      target: _blank
 
 features:
-  - icon: 🚀
-    title: 简单易用
-    details: 类似 Compose Material 的使用方式，低学习成本，快速上手。
   - icon: 🎨
-    title: ColorOS 美学
-    details: 精确还原 ColorOS 原生组件的设计与交互体验。
+    title: ColorOS 17 美学
+    details: 参照 COUI 17 源码和真机效果还原。
   - icon: 📦
     title: 组件丰富
-    details: 提供全面的基础组件和部分复杂的交互组件，满足大多数应用开发需求。
-  - icon: 🌐
-    title: 全平台支持
-    details: 基于 Compose Multiplatform，一套代码支持 Android、iOS、Desktop 等平台。
+    details: 设置页、对话框、菜单、选择器等常用组件都有。
+    link: /zh_CN/components/index
+    linkText: 浏览组件
+  - icon: 📱
+    title: 网页版示例
+    details: 不用安装，在浏览器里直接体验所有组件。
+    link: /example/
+    linkText: 打开示例
+    target: _blank
+  - icon: 🖌️
+    title: COUI Canvas
+    details: 在浏览器里拖组件画页面，可以导出代码或给 AI 的提示词。
+    link: /canvas/
+    linkText: 打开 Canvas
+    target: _blank
+  - icon: 🤖
+    title: 方便 AI 使用
+    details: 提供 skill 和 llms.txt，让 AI 也能写出规范的 COUI 页面。
+    link: /zh_CN/guide/ai
+    linkText: 用 AI 写 COUI
   - icon: 🧬
     title: 基于 Miuix
-    details: 基于优秀的 Miuix Compose Multiplatform UI 组件库构建。
-    link: https://github.com/compose-miuix-ui/miuix
-    linkText: 访问 Miuix
+    details: 基于 Miuix 构建，可以从 Miuix 迁移过来。
+    link: /zh_CN/guide/migration
+    linkText: 从 Miuix 迁移
 
 nolebase:
   gitChangelog: false

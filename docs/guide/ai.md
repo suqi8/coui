@@ -49,6 +49,7 @@ The skill follows the library version it ships with. When you upgrade COUI, copy
 | `references/scaffold.md` | A copyable page scaffold (`CouiPage`, `CouiPageScaffold`) and the blur bridge (`panelBlur`, popup and button material providers) |
 | `references/components.md` | ColorOS widget → COUI component map, Overlay vs Window |
 | `references/pitfalls.md` | Mistakes seen in practice and how to avoid them |
+| `references/migration.md` | Miuix / COUI 1.x → 2.0 renames, for porting old code |
 
 ## The rules in short
 
@@ -62,9 +63,19 @@ The skill follows the library version it ships with. When you upgrade COUI, copy
 8. A search typed into under a top bar is linked with the bar like the ColorOS Settings search: `TopAppBarSearchBar` + `rememberTopAppBarSearchState`, the page fading out with `Modifier.topAppBarSearchContent` and the results coming in with `Modifier.topAppBarSearchResults`. No static capsule that filters in place.
 9. A list popup shares a `Box` with the button that opens it; directly in a top bar `actions` row it pushes the button aside while it is shown.
 
+## Without the skill
+
+Every docs page has buttons above the title: **Copy as Markdown** puts the page source on the clipboard, **View Markdown** opens it, and **Ask ChatGPT** / **Ask Claude** open a chat that reads the page first. For an assistant that reads the web, point it at:
+
+- <a href="/coui/llms.txt" target="_blank">llms.txt</a>: the rules in short and the main links.
+- <a href="/coui/llms-full.txt" target="_blank">llms-full.txt</a>: the whole English guide and component reference in one file.
+- Any page with `.md` added to its address, for example <a href="/coui/guide/migration.md" target="_blank">guide/migration.md</a>.
+
+To port an existing Miuix or COUI 1.x project, ask it to follow [Migrating from Miuix](./migration) or [Upgrading](./upgrading); the skill carries the same tables in `references/migration.md`.
+
 ## Sketch first
 
-To show an assistant what you want instead of describing it, lay the screens out in [COUI Canvas](./canvas) and copy its prompt: every part is already named after its COUI component.
+To show an assistant what you want instead of describing it, lay the screens out in [COUI Canvas](./canvas) and copy its prompt: every part is already named after its COUI component. To check how a finished component looks and behaves, open the <a href="/coui/example/" target="_blank">example app in the browser</a>.
 
 ## Ask for screens like this
 

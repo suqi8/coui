@@ -1,9 +1,9 @@
 # Migrating from Miuix
 
-COUI is based on [Miuix](https://github.com/compose-miuix-ui/miuix) and keeps the same overall API surface, so migrating an existing Miuix project is mostly a mechanical rename: swap the dependency coordinates, update the package prefix, and rename a handful of `Miuix*` symbols to their `COUI*` counterparts. This page walks through every step.
+COUI is based on [Miuix](https://github.com/compose-miuix-ui/miuix) and keeps the same overall API surface, so migrating an existing Miuix project is mostly a mechanical rename: swap the dependency coordinates, update the package prefix, rename a handful of `Miuix*` symbols to their `COUI*` counterparts, and rename the colour and text style slots to the official COUI names. This page walks through every step for COUI 2.0, the ColorOS 17 (COUI 17) design.
 
 ::: tip
-After migration your app keeps working with the same component set — but the visuals change from Xiaomi HyperOS to ColorOS design (colors, corner radii, motion curves, press feedback). See [Behavioral and visual differences](#behavioral-and-visual-differences) below.
+After migration your app keeps working with the same component set — but the visuals change from Xiaomi HyperOS to the ColorOS 17 design (colors, corner radii, motion curves, press feedback, material blur). See [Behavioral and visual differences](#behavioral-and-visual-differences) below.
 :::
 
 ## 1. Update dependencies
@@ -66,6 +66,51 @@ All `Miuix*`-prefixed symbols are renamed to `COUI*`. The mapping is exactly 1:1
 
 A second find-and-replace of `MiuixTheme` → `COUITheme`, `MiuixIcons` → `COUIIcons`, etc. covers these. The `folmeSpring` easing helper (formerly in `MiuixEasing.kt`, now `COUIEasing.kt`) keeps its name — no code change needed there.
 
+### Colour and text style slots
+
+COUI names the `Colors` and `TextStyles` slots after the official COUI attributes (`couiColorXxx` → `xxx`, `couiTextXxx` → `xxx`), while Miuix uses Material-like names (`onBackground`, `surfaceContainer`, `main`, `title4`, …). There are no aliases, so every `COUITheme.colorScheme.*` and `COUITheme.textStyles.*` reference needs its new name. Several Miuix slots merge into one COUI slot:
+
+| Old color slot | New color slot |
+| :------------- | :------------- |
+| `onBackground`, `onSurface`, `onSurfaceContainer`, `onSecondaryVariant` | `labelPrimary` |
+| `onBackgroundVariant`, `onSurfaceSecondary` | `labelSecondary` |
+| `onSurfaceVariantSummary`, `onSurfaceContainerVariant` | `labelSecondaryVariant` |
+| `onSurfaceVariantActions`, `onSurfaceContainerHigh`, `sliderKeyPoint` | `labelTertiary` |
+| `disabledOnSurface`, `disabledOnSecondaryVariant` | `disabledNeutral` |
+| `disabledPrimary`, `disabledPrimaryButton`, `disabledPrimarySlider` | `disable` |
+| `onSecondary`, `sliderKeyPointForeground` | `labelOnColor` |
+| `onTertiaryContainer` | `primaryText` |
+| `tertiaryContainer` | `secondary` |
+| `surface` | `backgroundWithCard` |
+| `background` | `surface` for dialogs, bottom sheets, popups and other floating panels; `backgroundElevated` elsewhere |
+| `surfaceContainer` | `cardBackground` |
+| `surfaceContainerHigh` | `cardPressed` |
+| `dividerLine` | `divider` |
+| `windowDimming` | `mask` |
+| `textFieldError` | `errorTextBg` |
+| `primaryVariant` | Removed; use `primary` |
+| `primaryContainer` | Removed; use `containerTheme` |
+| `onPrimaryVariant`, `onPrimaryContainer` | Removed; use `labelOnColor` |
+| `surfaceVariant` | Removed; use `card` |
+| `errorContainer`, `onErrorContainer`, `disabledOnPrimary`, `disabledSecondary`, `disabledOnSecondary`, `onSecondaryContainer`, `secondaryContainerVariant`, `onSecondaryContainerVariant`, `tertiaryContainerVariant`, `onSurfaceContainerHighest`, `secondary` (the grey `#E5E5E5` / `#757575`) | Removed |
+
+| Old text style | New text style |
+| :------------- | :------------- |
+| `main`, `body1` | `bodyXL` |
+| `paragraph` | `bodyL` |
+| `body2` | `bodyM` |
+| `button` | `buttonL` |
+| `footnote1` | `bodyS` |
+| `footnote2` | `bodyXS` |
+| `headline1`, `headline2` | `headlineXS` |
+| `subtitle` | `buttonM` |
+| `title1` | `displayS` |
+| `title2` | `displayXS` |
+| `title3` | `headlineM` |
+| `title4` | `headlineS` |
+
+`background`, `surface` and `secondary` exist in both libraries but mean different things: in COUI, `background` is the page background, `surface` is the colour of dialogs, bottom sheets, popups and other floating panels, and `secondary` is the theme colour at 15% (light) / 25% (dark), not a grey. Rename `surface` before `background`, since `background` becomes `surface` in places, and check each use instead of keeping the name.
+
 ## 4. Changed APIs
 
 A few components were rebuilt for ColorOS and their signatures differ.
@@ -121,7 +166,9 @@ If you show many dialogs, wrap this once in your own `AppDialog` composable inst
 
 ### TopAppBar
 
-The navigation icon already carries a built-in `navigationIconPadding` of `16.dp`. If you added your own start padding around the back button under Miuix, remove it — otherwise the icon sits too far from the edge.
+The horizontal padding of the navigation icon, the title and the actions follows the window width: 16dp on phones, 24dp on medium and 40dp on expanded windows (`TopAppBarDefaults.horizontalPadding()`). Remove any start padding you added around the back button under Miuix. The `SmallTopAppBar` title is 18dp Medium.
+
+For a search box under a top bar, use `TopAppBarSearchBar` with `TopAppBar(searchState = …)`: the title fades away and the search bar rises to the top, like the ColorOS 17 Settings home. See [Searching in place](../components/topappbar.md#searching-in-place).
 
 ### TabRow
 
@@ -130,6 +177,18 @@ The navigation icon already carries a built-in `navigationIconPadding` of `16.dp
 ### Switch
 
 `Switch` gains `isLoading: Boolean = false` — while loading, the thumb shows the COUI spinner and the switch cannot be toggled (mirroring ColorOS async settings).
+
+### Tooltip
+
+Miuix's `PlainTooltip`, `RichTooltip` and `TooltipBox(positionProvider, …)` are replaced by the COUI 17 tooltips: `TooltipBox(state, tooltip)` with `Tooltip`, `IconTooltip` or `ImageTooltip`. COUI tooltips are shown from code and have no timeout by default. The [upgrading guide](./upgrading.md#tooltip-is-the-coui-17-tooltip) has the mapping and an example.
+
+### Bottom sheets
+
+`BottomSheetDefaults.insideMargin` is `0.dp`: COUI panels add no padding, so the content sets its own (`DpSize(24.dp, 0.dp)` restores the Miuix inset). The drag handle is hidden unless you pass `showDragHandle = true`, and on windows at least 600dp wide the sheet floats centered, at most 540dp wide.
+
+### Dropdown and spinner types
+
+The spinner types are merged into the dropdown ones: `SpinnerEntry`, `SpinnerColors`, `SpinnerDefaults` and `SpinnerItemImpl` become `DropdownItem`, `DropdownColors`, `DropdownDefaults` and `DropdownImpl`, and `DropdownItem(icon, title, summary)` becomes `DropdownItem(text = …, icon = …, summary = …)`.
 
 ## 5. Migrating from an older Miuix (the `extra` package)
 
@@ -150,20 +209,29 @@ The preference components live in the separate `coui-preference` artifact — ad
 
 ## 6. Custom color schemes
 
-The `Colors` slots use the official COUI names (`couiColorXxx` → `xxx`), not Miuix's, so a fully custom scheme has to be ported to the new parameter names; the [upgrading guide](./upgrading.md) lists every old slot with its replacement. Consider deleting your custom palette entirely — `lightColorScheme()` / `darkColorScheme()` now return the native ColorOS 16 palette, which is usually what a COUI app wants; a real-world migration removed ~220 lines of custom colors this way.
+The `Colors` slots use the official COUI names (`couiColorXxx` → `xxx`), not Miuix's, so a fully custom scheme has to be ported to the new parameter names with the table in [Colour and text style slots](#colour-and-text-style-slots). Consider deleting your custom palette entirely — `lightColorScheme()` / `darkColorScheme()` return the native ColorOS 17 palette, which is usually what a COUI app wants; a real-world migration removed ~220 lines of custom colors this way.
 
 ## 7. Behavioral and visual differences
 
-The API stays familiar, but every component is rethemed to ColorOS 16:
+The API stays familiar, but every component follows ColorOS 17 (COUI 17):
 
-- **Colors**: the color scheme values follow ColorOS (accent, container and surface colors differ from HyperOS); keep using `COUITheme.colorScheme.*` and your code picks the new values up automatically.
-- **Shape and metrics**: corner radii, paddings and component sizes follow the ColorOS specification.
-- **Motion**: animation curves and press feedback (scale/tint) follow COUI's motion design.
+- **Colors**: the color scheme values follow ColorOS (accent, container and surface colors differ from HyperOS); keep using `COUITheme.colorScheme.*` with the new slot names.
+- **Shape and metrics**: corner radii, paddings and component sizes follow the ColorOS specification, and many components adapt to medium and expanded windows (wider margins, floating bottom sheets, side-by-side navigation labels).
+- **Motion**: animation curves and press feedback follow COUI's motion design. Lists use the COUI overscroll, a rubber band with a spring back and a scroll-edge haptic.
+- **Material**: floating bars, buttons, search bars and popups draw the COUI 17 material (blur, glow, shadow edge). `LocalCOUIMaterialEffectEnabled provides false` turns it off app-wide, for example in battery saver.
+- **List rows**: `CardListGroup` draws the dividers between rows itself, so do not add your own.
 - **Dynamic color**: Monet / dynamic color is still supported through `ThemeController` (`ColorSchemeMode.MonetSystem`, `MonetLight`, `MonetDark`), exactly as before — see [Theme System](../guide/theme.md).
 
 ## 8. New components
 
 Migrating also unlocks components that do not exist in Miuix:
+
+- [TopAppBar search in place](../components/topappbar.md#searching-in-place) — the ColorOS 17 Settings search linked with the top bar.
+- [CardListGroup](../components/cardlistgroup.md) — grouped rows in one card, with the COUI dividers.
+- [Tooltip](../components/tooltip.md) — the COUI 17 bubbles with an arrow.
+- [ListDialog](../components/listdialog.md), [ProgressDialog](../components/progressdialog.md), [InputDialog](../components/inputdialog.md), [UserStatementDialog](../components/userstatementdialog.md) and [IndividualStatementDialog](../components/individualstatementdialog.md).
+- [FloatingToolbar](../components/floatingtoolbar.md) and [ChipGroup](../components/chipgroup.md).
+- Camera controls from the ColorOS camera, such as [CameraShutterButton](../components/camerashutterbutton.md), [CameraModeBar](../components/cameramodebar.md), [CameraZoomDial](../components/camerazoomdial.md) and [ExposureBar](../components/exposurebar.md).
 
 - [Chip](../components/chip.md) — capsule-shaped checkable filter tag.
 - [TopTips](../components/toptips.md) — tip banner shown at the top of a page.
@@ -178,3 +246,5 @@ Migrating also unlocks components that do not exist in Miuix:
 - [LoadingDialog](../components/loadingdialog.md) — rotating-spinner progress dialog (Overlay/Window variants).
 - [SecurityDialog](../components/securitydialog.md) — security statement dialog (Overlay/Window variants).
 - New preferences: [ButtonPreference](../components/buttonpreference.md), [ListPreference / MultiSelectListPreference](../components/listpreference.md), [MarkPreference](../components/markpreference.md), [RecommendedPreference](../components/recommendedpreference.md), [SwitchLoadingPreference](../components/switchloadingpreference.md).
+
+To see how a ColorOS 17 screen should be built before porting yours, sketch it in [COUI Canvas](./canvas.md) or open the <a href="/coui/example/" target="_blank">example app in the browser</a>.

@@ -26,6 +26,16 @@ export default defineConfig({
             { text: "首页", link: "/zh_CN/" },
             { text: "快速开始", link: "/zh_CN/guide/getting-started" },
             { text: "组件库", link: "/zh_CN/components/" },
+            { text: "在线示例", link: "/example/", target: "_blank" },
+            { text: "Canvas", link: "/canvas/", target: "_blank" },
+            {
+                text: "给 AI",
+                items: [
+                    { text: "用 AI 写 COUI", link: "/zh_CN/guide/ai" },
+                    { text: "llms.txt", link: "/llms.txt", target: "_blank" },
+                    { text: "llms-full.txt", link: "/llms-full.txt", target: "_blank" },
+                ],
+            },
         ],
 
         sidebar: {
@@ -36,7 +46,7 @@ export default defineConfig({
                     items: [
                         { text: "快速开始", link: "/zh_CN/guide/getting-started" },
                         { text: "从 Miuix 迁移", link: "/zh_CN/guide/migration" },
-                        { text: "升级指南", link: "/zh_CN/guide/upgrading" },
+                        { text: "升级到 2.0（ColorOS 17）", link: "/zh_CN/guide/upgrading" },
                     ],
                 },
                 {

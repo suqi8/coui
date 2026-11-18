@@ -5,7 +5,7 @@ layout: home
 hero:
   name: COUI
   text: A UI library for Compose MultiPlatform
-  tagline: Provides components with ColorOS design style
+  tagline: ColorOS 17 style components for Android, iOS, Desktop and Web
   image:
     src: /Icon.webp
     alt: Logo
@@ -17,27 +17,45 @@ hero:
       text: Components
       link: /components/index
     - theme: alt
-      text: GitHub
-      link: https://github.com/suqi8/coui
+      text: Try the Example
+      link: /example/
+      target: _blank
+    - theme: alt
+      text: COUI Canvas
+      link: /canvas/
+      target: _blank
 
 features:
-  - icon: 🚀
-    title: Easy to Use
-    details: Similar to Compose Material with low learning curve for quick integration.
   - icon: 🎨
-    title: ColorOS Aesthetics
-    details: Authentic ColorOS design language and interactive effects for your apps.
+    title: ColorOS 17 Aesthetics
+    details: Matched to the COUI 17 source and real devices.
   - icon: 📦
     title: Rich Components
-    details: Comprehensive basic and complex components for most application scenarios.
-  - icon: 🌐
-    title: Cross-Platform
-    details: One codebase for Android, iOS, Desktop and more via Compose Multiplatform.
+    details: Settings pages, dialogs, menus, pickers and more.
+    link: /components/index
+    linkText: Browse components
+  - icon: 📱
+    title: Web Example
+    details: Try every component in the browser, no install needed.
+    link: /example/
+    linkText: Open the example
+    target: _blank
+  - icon: 🖌️
+    title: COUI Canvas
+    details: Drag components into a screen in the browser and export code or an AI prompt.
+    link: /canvas/
+    linkText: Open Canvas
+    target: _blank
+  - icon: 🤖
+    title: AI Friendly
+    details: A skill and llms.txt help AI write proper COUI screens.
+    link: /guide/ai
+    linkText: Writing with AI
   - icon: 🧬
     title: Based on Miuix
-    details: Built on the excellent Miuix Compose Multiplatform UI library.
-    link: https://github.com/compose-miuix-ui/miuix
-    linkText: Visit Miuix
+    details: Built on Miuix, with a guide for migrating from it.
+    link: /guide/migration
+    linkText: Migrate from Miuix
 
 nolebase:
   gitChangelog: false

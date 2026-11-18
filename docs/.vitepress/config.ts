@@ -1,5 +1,35 @@
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { defineConfig } from "vitepress";
 import locales from "./locales";
+
+// Strips what only the rendered page needs (front matter, demo iframes) so the text reads well to a model.
+function plainMarkdown(source: string): string {
+  return source
+    .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "")
+    .replace(/<div[^>]*>\s*<iframe[\s\S]*?<\/iframe>\s*<\/div>\s*/g, "")
+    .trim();
+}
+
+// Guide pages in llms-full.txt, in reading order; the component pages follow.
+const fullGuidePages = [
+  "guide/getting-started.md",
+  "guide/migration.md",
+  "guide/upgrading.md",
+  "guide/ai.md",
+  "guide/best-practices.md",
+  "guide/theme.md",
+  "guide/colors.md",
+  "guide/textstyles.md",
+  "guide/icons.md",
+  "guide/utils.md",
+  "guide/coui-nav.md",
+  "guide/navigation3.md",
+  "guide/blur.md",
+  "guide/squircle.md",
+  "guide/multiplatform.md",
+  "guide/canvas.md",
+];
 import {
   GitChangelog,
   GitChangelogMarkdownSection,
@@ -40,7 +70,25 @@ export default defineConfig({
   cleanUrls: true,
   // The dokka API reference lives in public/ as raw static HTML, invisible to
   // the dead-link checker which only knows VitePress pages.
-  ignoreDeadLinks: [/\/dokka\//],
+  // The canvas and example web apps are copied into public/ by the docs workflow.
+  ignoreDeadLinks: [/\/dokka\//, /\/(canvas|example)\//],
+  // Publish every page's Markdown next to it (read by the AI page actions) and the whole English
+  // guide and component reference as llms-full.txt.
+  buildEnd(siteConfig) {
+    for (const page of siteConfig.pages) {
+      const target = join(siteConfig.outDir, page);
+      mkdirSync(dirname(target), { recursive: true });
+      copyFileSync(join(siteConfig.srcDir, page), target);
+    }
+    const components = siteConfig.pages
+      .filter((page) => page.startsWith("components/") && page !== "components/index.md")
+      .sort();
+    const sections = [...fullGuidePages, ...components]
+      .filter((page) => siteConfig.pages.includes(page))
+      .map((page) => `<!-- ${page} -->\n\n${plainMarkdown(readFileSync(join(siteConfig.srcDir, page), "utf-8"))}`);
+    const intro = readFileSync(join(siteConfig.srcDir, "public/llms.txt"), "utf-8").trim();
+    writeFileSync(join(siteConfig.outDir, "llms-full.txt"), [intro, ...sections].join("\n\n---\n\n") + "\n");
+  },
   themeConfig: {
     logo: "/Icon.webp",
     socialLinks: [

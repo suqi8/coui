@@ -2,6 +2,8 @@
 
 ## 1.1.0 → 2.0.0
 
+2.0.0 moves COUI from the ColorOS 16 design (COUI 1.x) to ColorOS 17 (COUI 17). Coming from Miuix instead? Start with [Migrating from Miuix](./migration.md).
+
 ### Popup menus are blurred by default
 
 List popups, cascading menus and the dropdown / spinner popups now use the COUI 17 popup material

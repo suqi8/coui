@@ -22,6 +22,7 @@ import { useData, useRoute } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 
 import "./style/index.css";
+import AiPageActions from "./components/AiPageActions.vue";
 
 export default {
   extends: DefaultTheme,
@@ -29,6 +30,7 @@ export default {
   /* Nólëbase Integrations */
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
+      "doc-before": () => h(AiPageActions),
       "nav-bar-content-after": () => h(NolebaseEnhancedReadabilitiesMenu),
       "nav-screen-content-after": () =>
         h(NolebaseEnhancedReadabilitiesScreenMenu),

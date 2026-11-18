@@ -49,6 +49,7 @@ When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
 | `references/scaffold.md` | 可直接复制的页面脚手架（`CouiPage`、`CouiPageScaffold`）和模糊桥接（`panelBlur`、弹窗与按钮的材质提供者） |
 | `references/components.md` | ColorOS 控件与 COUI 组件对照、Overlay 与 Window 的区别 |
 | `references/pitfalls.md` | 实际踩过的坑和避免方法 |
+| `references/migration.md` | Miuix / COUI 1.x → 2.0 的改名对照，用于迁移旧代码 |
 
 ## 规则摘要
 
@@ -62,9 +63,19 @@ When writing UI with the COUI library (io.github.suqi8.coui.kmp), follow
 8. 顶栏下方可输入的搜索要像 ColorOS 设置的搜索一样与顶栏联动：用 `TopAppBarSearchBar` + `rememberTopAppBarSearchState`，页面用 `Modifier.topAppBarSearchContent` 淡出，结果用 `Modifier.topAppBarSearchResults` 进入。不要用原地过滤的静态胶囊。
 9. 列表弹出菜单要和打开它的按钮一起包在一个 `Box` 里；直接放进顶栏 `actions` 行时，菜单显示期间会把按钮挤开。
 
+## 不装技能时
+
+每个文档页标题上方都有一排按钮：**复制为 Markdown** 把本页源码复制到剪贴板，**查看 Markdown** 打开源码，**问 ChatGPT** / **问 Claude** 会打开一个先读本页的对话。能上网的助手可以直接给它这些地址：
+
+- <a href="/coui/llms.txt" target="_blank">llms.txt</a>：规则摘要和主要链接。
+- <a href="/coui/llms-full.txt" target="_blank">llms-full.txt</a>：整套英文指南和组件文档合成的一个文件。
+- 任意页面地址后加 `.md`，例如 <a href="/coui/zh_CN/guide/migration.md" target="_blank">zh_CN/guide/migration.md</a>。
+
+迁移现有的 Miuix 或 COUI 1.x 项目时，让它按[从 Miuix 迁移](./migration)或[升级指南](./upgrading)来改；技能里的 `references/migration.md` 有同样的对照表。
+
 ## 先画草图
 
-与其用文字描述，不如先在 [COUI Canvas 画布](./canvas) 里把屏幕摆出来，再复制它生成的提示词：每个部件都已经写明了对应的 COUI 组件。
+与其用文字描述，不如先在 [COUI Canvas 画布](./canvas) 里把屏幕摆出来，再复制它生成的提示词：每个部件都已经写明了对应的 COUI 组件。想看某个组件做出来的实际效果和交互，可以打开<a href="/coui/example/" target="_blank">网页版示例应用</a>。
 
 ## 可以这样提需求
 

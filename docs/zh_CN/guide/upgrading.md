@@ -2,6 +2,8 @@
 
 ## 1.1.0 → 2.0.0
 
+2.0.0 把 COUI 从 ColorOS 16 设计（COUI 1.x）升级到 ColorOS 17（COUI 17）。如果是从 Miuix 迁移过来，请先看[从 Miuix 迁移](./migration.md)。
+
 ### 弹出菜单默认模糊
 
 列表弹窗、级联菜单与下拉 / Spinner 弹窗现在默认使用 COUI 17 弹窗材质（160px 模糊、glow overlay

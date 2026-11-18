@@ -11,12 +11,16 @@ Rules for writing COUI screens:
 - COUI 17 material blur: record the page with rememberLayerBackdrop + Modifier.layerBackdrop, pass it to TopAppBarGlow, Modifier.couiMaterialBlur (dialogs, sheets), LocalPopupMaterialBlur (menus) and LocalMaterialBackdrop (buttons, bars); fall back to opaque when isRuntimeShaderSupported() is false.
 - Strings in Compose resources values/ and values-zh/; never store display text as state.
 - A search typed into under a top bar is linked with the bar like the ColorOS Settings search: TopAppBarSearchBar in the bar's bottomContent, rememberTopAppBarSearchState passed as the bar's searchState, the page under Modifier.topAppBarSearchContent and the results in their own list under Modifier.topAppBarSearchResults. No static TopAppBarSearchSlot + InputField filter, no swapped-in search row.
+- Porting Miuix (top.yukonga.miuix.kmp) or COUI 1.x code: rename the colour and text style slots to the official names (onBackground -> labelPrimary, surface -> backgroundWithCard, background -> surface on floating panels / backgroundElevated elsewhere, main -> bodyXL, title4 -> headlineS, ...), there are no aliases. Tables in the migration guide below.
 - Wrap a list popup with the button that opens it: Box { IconButton(...); OverlayListPopup(...) }. Placed directly in a top bar actions row it pushes the button aside while shown.
 
 ## Docs
 
 - [Getting started](/coui/guide/getting-started): dependencies and theme
+- [Migrating from Miuix](/coui/guide/migration.md) and [Upgrading from COUI 1.x](/coui/guide/upgrading.md): every renamed slot and API
+- [llms-full.txt](/coui/llms-full.txt): the whole English guide and component reference in one file; any page is also served as Markdown by adding .md to its address
 - [Writing with AI](/coui/guide/ai): the coui-app agent skill (.claude/skills/coui-app in the repository)
 - [COUI Canvas](/coui/canvas/): sketch COUI screens in the browser; agents can write designs for it following /coui/canvas/agent.md
 - [Blur effects](/coui/guide/blur): material blur presets and backdrops
 - [Components](/coui/components/): every component with properties and examples
+- [Example app](/coui/example/): every component running in the browser

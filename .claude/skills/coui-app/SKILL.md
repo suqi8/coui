@@ -1,6 +1,6 @@
 ---
 name: coui-app
-description: Write app screens with the COUI Compose Multiplatform library (io.github.suqi8.coui.kmp — ColorOS 17 / COUI 17 design) the way ColorOS itself builds them — settings-style pages, grouped cards, preference rows, collapsing top bars with a search capsule, dialogs / bottom sheets / menus with the COUI 17 material blur, floating navigation bars, navigation with system back, bilingual strings. Use whenever code imports io.github.suqi8.coui.kmp, the user wants a ColorOS / COUI / OPPO / OnePlus style screen, or asks to "用 COUI 写", "做成 ColorOS 风格", "加一个设置页", "加个页面" in a project that depends on coui-ui / coui-preference. Not for changing the COUI library itself (use the repo's CLAUDE.md / create-component for that).
+description: Write app screens with the COUI Compose Multiplatform library (io.github.suqi8.coui.kmp — ColorOS 17 / COUI 17 design) the way ColorOS itself builds them — settings-style pages, grouped cards, preference rows, collapsing top bars with a search capsule, dialogs / bottom sheets / menus with the COUI 17 material blur, floating navigation bars, navigation with system back, bilingual strings. Use whenever code imports io.github.suqi8.coui.kmp, the user wants a ColorOS / COUI / OPPO / OnePlus style screen, or asks to "用 COUI 写", "做成 ColorOS 风格", "加一个设置页", "加个页面" in a project that depends on coui-ui / coui-preference. Also for porting Miuix (top.yukonga.miuix.kmp) or COUI 1.x code to COUI 2.0 ("从 Miuix 迁移", "升级到 COUI 17"). Not for changing the COUI library itself (use the repo's CLAUDE.md / create-component for that).
 ---
 
 # Writing apps with COUI
@@ -8,6 +8,8 @@ description: Write app screens with the COUI Compose Multiplatform library (io.g
 COUI is a Compose Multiplatform port of the ColorOS 17 component kit (COUI 17). Screens look right only when they are assembled the way ColorOS assembles them: a page scaffold with a collapsing top bar, content in rounded cards on the window background, rows that are preferences, overlays that blur the page behind them. This skill is the recipe. When something here disagrees with the library's KDoc or source, the source wins — read it before calling an API you have not used yet.
 
 Supported targets: Android, iOS, macOS, Desktop (JVM), Web (Wasm / JS). Put UI in `commonMain`.
+
+If the code still imports `top.yukonga.miuix.kmp` or uses COUI 1.x names (`colorScheme.onBackground`, `textStyles.main`, `PlainTooltip`, …), port it with `references/migration.md` first.
 
 ## 1. Setup
 
@@ -227,3 +229,4 @@ Run through `references/pitfalls.md`, then check:
 - `references/scaffold.md` — copyable page scaffold + blur bridge.
 - `references/components.md` — ColorOS widget → COUI component map, packages, Overlay vs Window.
 - `references/pitfalls.md` — mistakes seen in practice and their fixes.
+- `references/migration.md` — Miuix / COUI 1.x → 2.0 renames and API changes.
