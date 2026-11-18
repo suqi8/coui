@@ -129,6 +129,15 @@
     <string name="demo_marquee_text_search_terms">滚动, 跑马灯, marquee, scroll</string>
     <string name="demo_page_indicator_search_terms">指示点, dots, pager</string>
     <string name="demo_tag_view_search_terms">标记, tag, label</string>
+    <string name="demo_camera_thumbnail_title">相机缩略图</string>
+    <string name="demo_camera_thumbnail_search_terms">相机, 缩略图, 相册, 照片, 预览</string>
+    <string name="demo_camera_thumbnail_transition">过渡动画</string>
+    <string name="demo_camera_thumbnail_empty">无照片</string>
+    <string name="demo_camera_thumbnail_empty_summary">显示占位图；按下快门会重新出现照片</string>
+    <string name="demo_camera_thumbnail_opened">已打开相册 %1$d 次</string>
+    <string name="demo_camera_thumbnail_burst">连拍</string>
+    <string name="demo_camera_thumbnail_variant_burst">连拍</string>
+    <string name="demo_camera_thumbnail_variant_delete">删除最新照片</string>
     <string name="demo_camera_level_indicator_title">相机水平仪</string>
     <string name="demo_camera_level_indicator_search_terms">水平仪, 水平线, 地平线, 倾斜, 相机, 取景框, level, gradienter</string>
     <string name="demo_camera_level_indicator_roll">横滚</string>

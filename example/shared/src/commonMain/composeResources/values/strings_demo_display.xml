@@ -129,6 +129,15 @@
     <string name="demo_marquee_text_search_terms">marquee, scroll</string>
     <string name="demo_page_indicator_search_terms">dots, pager</string>
     <string name="demo_tag_view_search_terms">tag, label</string>
+    <string name="demo_camera_thumbnail_title">Camera thumbnail</string>
+    <string name="demo_camera_thumbnail_search_terms">camera, thumbnail, gallery, photo, preview</string>
+    <string name="demo_camera_thumbnail_transition">Transition</string>
+    <string name="demo_camera_thumbnail_empty">No photo</string>
+    <string name="demo_camera_thumbnail_empty_summary">Show the placeholder; the shutter brings a photo back</string>
+    <string name="demo_camera_thumbnail_opened">Opened the gallery %1$d times</string>
+    <string name="demo_camera_thumbnail_burst">Burst</string>
+    <string name="demo_camera_thumbnail_variant_burst">Burst shooting</string>
+    <string name="demo_camera_thumbnail_variant_delete">Deleting the latest photo</string>
     <string name="demo_camera_level_indicator_title">Camera level</string>
     <string name="demo_camera_level_indicator_search_terms">level, horizon, gradienter, tilt, spirit level, camera, viewfinder</string>
     <string name="demo_camera_level_indicator_roll">Roll</string>

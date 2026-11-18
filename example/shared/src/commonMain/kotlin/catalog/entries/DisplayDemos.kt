@@ -9,6 +9,7 @@ import demo.display.BannerDemo
 import demo.display.BasicComponentDemo
 import demo.display.CameraGridOverlayDemo
 import demo.display.CameraLevelIndicatorDemo
+import demo.display.CameraThumbnailDemo
 import demo.display.CardDemo
 import demo.display.MarqueeTextDemo
 import demo.display.PageIndicatorDemo
@@ -25,6 +26,7 @@ internal val DisplayDemos: List<Demo> = listOf(
     MarqueeTextDemo,
     BannerDemo,
     PageIndicatorDemo,
+    CameraThumbnailDemo,
     CameraLevelIndicatorDemo,
     CameraGridOverlayDemo,
 )
