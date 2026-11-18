@@ -146,4 +146,16 @@
     <string name="demo_camera_focus_indicator_label_locked">AF/AE lock</string>
     <string name="demo_camera_focus_indicator_focus_center">Focus at the center</string>
     <string name="demo_camera_focus_indicator_variant_locked">Locked, kept on screen</string>
+    <string name="demo_camera_record_timer_title">Record timer</string>
+    <string name="demo_camera_record_timer_search_terms">camera, video, recording, timer, time, clock, duration</string>
+    <string name="demo_camera_record_timer_recording">Recording</string>
+    <string name="demo_camera_record_timer_start">Start from</string>
+    <string name="demo_camera_record_timer_count_down">Count down</string>
+    <string name="demo_camera_record_timer_count_down_summary">Count down one minute, rounding partial seconds up</string>
+    <string name="demo_camera_record_timer_plate">Red plate</string>
+    <string name="demo_camera_record_timer_recording_dot">Recording dot</string>
+    <string name="demo_camera_record_timer_light">Light weight</string>
+    <string name="demo_camera_record_timer_variant_plate">Recording plate</string>
+    <string name="demo_camera_record_timer_variant_dot">Blinking dot without plate</string>
+    <string name="demo_camera_record_timer_variant_hours">Over an hour</string>
 </resources>

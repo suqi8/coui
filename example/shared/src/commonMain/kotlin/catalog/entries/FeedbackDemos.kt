@@ -5,6 +5,7 @@ package catalog.entries
 import catalog.Demo
 import catalog.DemoCategory
 import demo.feedback.CameraFocusIndicatorDemo
+import demo.feedback.CameraRecordTimerDemo
 import demo.feedback.CompProgressIndicatorDemo
 import demo.feedback.CompleteStateDemo
 import demo.feedback.CustomSnackbarDemo
@@ -27,4 +28,5 @@ internal val FeedbackDemos: List<Demo> = listOf(
     EmptyStateDemo,
     CompleteStateDemo,
     CameraFocusIndicatorDemo,
+    CameraRecordTimerDemo,
 )

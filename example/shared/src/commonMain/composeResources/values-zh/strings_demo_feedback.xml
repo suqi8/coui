@@ -146,4 +146,16 @@
     <string name="demo_camera_focus_indicator_label_locked">对焦/曝光锁定</string>
     <string name="demo_camera_focus_indicator_focus_center">对焦到中心</string>
     <string name="demo_camera_focus_indicator_variant_locked">锁定并常驻</string>
+    <string name="demo_camera_record_timer_title">录像计时器</string>
+    <string name="demo_camera_record_timer_search_terms">相机, 录像, 录制, 计时器, 时间, 时长</string>
+    <string name="demo_camera_record_timer_recording">正在录制</string>
+    <string name="demo_camera_record_timer_start">起始时间</string>
+    <string name="demo_camera_record_timer_count_down">倒计时</string>
+    <string name="demo_camera_record_timer_count_down_summary">倒数一分钟，不足一秒向上取整</string>
+    <string name="demo_camera_record_timer_plate">红色底板</string>
+    <string name="demo_camera_record_timer_recording_dot">录制圆点</string>
+    <string name="demo_camera_record_timer_light">细字重</string>
+    <string name="demo_camera_record_timer_variant_plate">录制底板</string>
+    <string name="demo_camera_record_timer_variant_dot">无底板的闪烁圆点</string>
+    <string name="demo_camera_record_timer_variant_hours">超过一小时</string>
 </resources>

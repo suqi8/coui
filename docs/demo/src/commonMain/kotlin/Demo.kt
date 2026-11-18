@@ -189,6 +189,7 @@ private val availableComponents = listOf(
     AvailableComponent("CameraMenuButton", "cameraMenuButton") { CameraMenuButtonDemo() },
     AvailableComponent("CameraTopMenu", "cameraTopMenu") { CameraTopMenuDemo() },
     AvailableComponent("CameraZoomDial", "cameraZoomDial") { CameraZoomDialDemo() },
+    AvailableComponent("CameraRecordTimer", "cameraRecordTimer") { CameraRecordTimerDemo() },
 )
 
 @Composable
