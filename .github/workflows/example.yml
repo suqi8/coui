@@ -131,7 +131,7 @@ jobs:
   post_telegram:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.ref_type != 'tag' }}
+    if: ${{ success() && github.event_name != 'pull_request' && github.ref == 'refs/heads/coui17' && github.ref_type != 'tag' }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v7
