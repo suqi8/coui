@@ -169,4 +169,22 @@
     <string name="demo_side_navigation_bar_search_terms">sidebar, drawer</string>
     <string name="demo_tab_row_search_terms">tab, segment</string>
     <string name="demo_top_app_bar_search_terms">toolbar, appbar</string>
+    <string name="demo_camera_mode_bar_title">Camera Mode Bar</string>
+    <string name="demo_camera_mode_bar_search_terms">camera mode bar headline strip picker photo video night portrait title</string>
+    <string name="demo_camera_mode_bar_more_modes">More modes</string>
+    <string name="demo_camera_mode_bar_more_modes_summary">Add the modes usually kept under More, wider than the screen</string>
+    <string name="demo_camera_mode_bar_material_blur_summary">Blur the viewfinder behind the selected capsule</string>
+    <string name="demo_camera_mode_bar_variant_title">Mode title</string>
+    <string name="demo_camera_mode_bar_title_hint">Pick More to open a mode title; tap the title to leave it.</string>
+    <string name="demo_camera_mode_bar_mode_night">Night</string>
+    <string name="demo_camera_mode_bar_mode_portrait">Portrait</string>
+    <string name="demo_camera_mode_bar_mode_photo">Photo</string>
+    <string name="demo_camera_mode_bar_mode_video">Video</string>
+    <string name="demo_camera_mode_bar_mode_pro">Pro</string>
+    <string name="demo_camera_mode_bar_mode_more">More</string>
+    <string name="demo_camera_mode_bar_mode_pano">Pano</string>
+    <string name="demo_camera_mode_bar_mode_slow_motion">Slow-mo</string>
+    <string name="demo_camera_mode_bar_mode_time_lapse">Time-lapse</string>
+    <string name="demo_camera_mode_bar_mode_high_res">Hi-Res</string>
+    <string name="demo_camera_mode_bar_mode_movie">Movie</string>
 </resources>

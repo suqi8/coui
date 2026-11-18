@@ -169,4 +169,22 @@
     <string name="demo_side_navigation_bar_search_terms">抽屉, 侧边栏, sidebar, drawer</string>
     <string name="demo_tab_row_search_terms">选项卡, 分段, tab, segment</string>
     <string name="demo_top_app_bar_search_terms">标题栏, 大标题, toolbar, appbar</string>
+    <string name="demo_camera_mode_bar_title">相机模式条</string>
+    <string name="demo_camera_mode_bar_search_terms">相机 模式 模式条 headline 拍照 录像 夜景 人像 模式标题</string>
+    <string name="demo_camera_mode_bar_more_modes">更多模式</string>
+    <string name="demo_camera_mode_bar_more_modes_summary">加入通常收在“更多”里的模式，宽度超出屏幕</string>
+    <string name="demo_camera_mode_bar_material_blur_summary">模糊选中胶囊后方的取景画面</string>
+    <string name="demo_camera_mode_bar_variant_title">模式标题</string>
+    <string name="demo_camera_mode_bar_title_hint">选择“更多”打开模式标题；点击标题即可退出。</string>
+    <string name="demo_camera_mode_bar_mode_night">夜景</string>
+    <string name="demo_camera_mode_bar_mode_portrait">人像</string>
+    <string name="demo_camera_mode_bar_mode_photo">拍照</string>
+    <string name="demo_camera_mode_bar_mode_video">录像</string>
+    <string name="demo_camera_mode_bar_mode_pro">专业</string>
+    <string name="demo_camera_mode_bar_mode_more">更多</string>
+    <string name="demo_camera_mode_bar_mode_pano">全景</string>
+    <string name="demo_camera_mode_bar_mode_slow_motion">慢动作</string>
+    <string name="demo_camera_mode_bar_mode_time_lapse">延时摄影</string>
+    <string name="demo_camera_mode_bar_mode_high_res">高像素</string>
+    <string name="demo_camera_mode_bar_mode_movie">电影</string>
 </resources>

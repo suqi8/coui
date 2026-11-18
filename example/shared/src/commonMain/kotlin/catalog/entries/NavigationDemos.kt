@@ -6,6 +6,7 @@ import catalog.Demo
 import catalog.DemoCategory
 import demo.navigation.AlphabetIndexBarDemo
 import demo.navigation.BreadcrumbBarDemo
+import demo.navigation.CameraModeBarDemo
 import demo.navigation.ChipTabDemo
 import demo.navigation.FloatingAccessoryNavigationBarDemo
 import demo.navigation.FloatingEditToolbarDemo
@@ -34,5 +35,6 @@ internal val NavigationDemos: List<Demo> = listOf(
     ChipTabDemo,
     BreadcrumbBarDemo,
     AlphabetIndexBarDemo,
+    CameraModeBarDemo,
     Navigation3TransitionDemo,
 )
