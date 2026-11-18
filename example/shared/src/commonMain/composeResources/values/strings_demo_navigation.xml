@@ -187,4 +187,22 @@
     <string name="demo_camera_mode_bar_mode_time_lapse">Time-lapse</string>
     <string name="demo_camera_mode_bar_mode_high_res">Hi-Res</string>
     <string name="demo_camera_mode_bar_mode_movie">Movie</string>
+    <string name="demo_camera_top_menu_title">Camera Top Menu</string>
+    <string name="demo_camera_top_menu_search_terms">camera, top bar, settings, flash, ratio, expand</string>
+    <string name="demo_camera_top_menu_flash">Flash</string>
+    <string name="demo_camera_top_menu_flash_off">Off</string>
+    <string name="demo_camera_top_menu_flash_auto">Auto</string>
+    <string name="demo_camera_top_menu_flash_on">On</string>
+    <string name="demo_camera_top_menu_flash_torch">Always on</string>
+    <string name="demo_camera_top_menu_ratio">Ratio</string>
+    <string name="demo_camera_top_menu_ratio_full">Full</string>
+    <string name="demo_camera_top_menu_video">Video</string>
+    <string name="demo_camera_top_menu_resolution">Size</string>
+    <string name="demo_camera_top_menu_fps">FPS</string>
+    <string name="demo_camera_top_menu_hint">Tap an icon to open its options; tap the photo to close them</string>
+    <string name="demo_camera_top_menu_material_blur">Material blur</string>
+    <string name="demo_camera_top_menu_material_blur_summary">Blur the photo under the bar and its panels</string>
+    <string name="demo_camera_top_menu_ratio_title">Ratio title</string>
+    <string name="demo_camera_top_menu_ratio_title_summary">Start the ratio strip with its title instead of the icon</string>
+    <string name="demo_camera_top_menu_variant_group">Grouped panel</string>
 </resources>

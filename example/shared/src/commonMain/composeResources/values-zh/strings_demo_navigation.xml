@@ -187,4 +187,22 @@
     <string name="demo_camera_mode_bar_mode_time_lapse">延时摄影</string>
     <string name="demo_camera_mode_bar_mode_high_res">高像素</string>
     <string name="demo_camera_mode_bar_mode_movie">电影</string>
+    <string name="demo_camera_top_menu_title">相机顶部菜单</string>
+    <string name="demo_camera_top_menu_search_terms">相机, 顶部栏, 设置, 闪光灯, 画幅, 展开</string>
+    <string name="demo_camera_top_menu_flash">闪光灯</string>
+    <string name="demo_camera_top_menu_flash_off">关闭</string>
+    <string name="demo_camera_top_menu_flash_auto">自动</string>
+    <string name="demo_camera_top_menu_flash_on">开启</string>
+    <string name="demo_camera_top_menu_flash_torch">常亮</string>
+    <string name="demo_camera_top_menu_ratio">画幅</string>
+    <string name="demo_camera_top_menu_ratio_full">全屏</string>
+    <string name="demo_camera_top_menu_video">视频</string>
+    <string name="demo_camera_top_menu_resolution">画质</string>
+    <string name="demo_camera_top_menu_fps">帧率</string>
+    <string name="demo_camera_top_menu_hint">点击图标展开选项，点击照片收起</string>
+    <string name="demo_camera_top_menu_material_blur">材质模糊</string>
+    <string name="demo_camera_top_menu_material_blur_summary">模糊设置栏及其面板下方的照片</string>
+    <string name="demo_camera_top_menu_ratio_title">画幅标题</string>
+    <string name="demo_camera_top_menu_ratio_title_summary">画幅选项条以标题代替图标开头</string>
+    <string name="demo_camera_top_menu_variant_group">分组面板</string>
 </resources>

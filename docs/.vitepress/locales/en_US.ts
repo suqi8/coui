@@ -106,6 +106,7 @@ export default defineConfig({
                         { text: "NumberPicker", link: "/components/numberpicker" },
                         { text: "ExposureBar", link: "/components/exposurebar" },
                         { text: "CameraZoomDial", link: "/components/camerazoomdial" },
+                        { text: "CameraTopMenu", link: "/components/cameratopmenu" },
                         { text: "CameraMenuButton", link: "/components/cameramenubutton" },
                         { text: "CameraFocusIndicator", link: "/components/camerafocusindicator" },
                         { text: "CameraShutterButton", link: "/components/camerashutterbutton" },
