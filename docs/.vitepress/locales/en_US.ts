@@ -45,6 +45,7 @@ export default defineConfig({
                         { text: "Platform Support", link: "/guide/multiplatform" },
                         { text: "Best Practices", link: "/guide/best-practices" },
                         { text: "Writing with AI", link: "/guide/ai" },
+                        { text: "COUI Canvas", link: "/guide/canvas" },
                     ],
                 },
             ],

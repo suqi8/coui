@@ -54,6 +54,7 @@ export default defineConfig({
                         { text: "平台支持", link: "/zh_CN/guide/multiplatform" },
                         { text: "最佳实践", link: "/zh_CN/guide/best-practices" },
                         { text: "用 AI 编写", link: "/zh_CN/guide/ai" },
+                        { text: "COUI Canvas 画布", link: "/zh_CN/guide/canvas" },
                     ],
                 },
             ],
