@@ -7,6 +7,7 @@ import catalog.DemoCategory
 import demo.pickers.CalendarPickerDemo
 import demo.pickers.ColorPickerDemo
 import demo.pickers.DateTimePickerDemo
+import demo.pickers.ExposureBarDemo
 import demo.pickers.LunarDatePickerDemo
 import demo.pickers.NumberPickerDemo
 
@@ -19,4 +20,5 @@ internal val PickersDemos: List<Demo> = listOf(
     LunarDatePickerDemo,
     CalendarPickerDemo,
     ColorPickerDemo,
+    ExposureBarDemo,
 )

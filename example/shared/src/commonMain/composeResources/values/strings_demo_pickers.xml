@@ -71,4 +71,13 @@
     <string name="demo_date_time_picker_search_terms">date, time</string>
     <string name="demo_lunar_date_picker_search_terms">lunar, chinese calendar</string>
     <string name="demo_number_picker_search_terms">wheel, spinner</string>
+    <string name="demo_exposure_bar_title">Exposure bar</string>
+    <string name="demo_exposure_bar_search_terms">ev, exposure, camera, ruler, scale bar</string>
+    <string name="demo_exposure_bar_wide_range">Wide range</string>
+    <string name="demo_exposure_bar_wide_range_summary">-3.0 to +3.0 EV, as in the professional modes</string>
+    <string name="demo_exposure_bar_material_blur">Material blur</string>
+    <string name="demo_exposure_bar_material_blur_summary">Blur the photo behind the panel; off shows the opaque fill</string>
+    <string name="demo_exposure_bar_reset_button">Reset button</string>
+    <string name="demo_exposure_bar_variant_wide">Professional range</string>
+    <string name="demo_exposure_bar_variant_ruler">ScaleBar on its own</string>
 </resources>

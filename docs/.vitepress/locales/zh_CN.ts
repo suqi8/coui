@@ -113,6 +113,7 @@ export default defineConfig({
                         { text: "Slider", link: "/zh_CN/components/slider" },
                         { text: "IntentSlider", link: "/zh_CN/components/intentslider" },
                         { text: "NumberPicker", link: "/zh_CN/components/numberpicker" },
+                        { text: "ExposureBar", link: "/zh_CN/components/exposurebar" },
                         { text: "Stepper", link: "/zh_CN/components/stepper" },
                         { text: "DatePicker", link: "/zh_CN/components/datepicker" },
                         { text: "TimePicker", link: "/zh_CN/components/timepicker" },

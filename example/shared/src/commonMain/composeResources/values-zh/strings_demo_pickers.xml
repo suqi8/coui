@@ -71,4 +71,13 @@
     <string name="demo_date_time_picker_search_terms">日期, 时间, date, time</string>
     <string name="demo_lunar_date_picker_search_terms">农历, 阴历, lunar, chinese calendar</string>
     <string name="demo_number_picker_search_terms">滚轮, wheel, spinner</string>
+    <string name="demo_exposure_bar_title">曝光补偿条</string>
+    <string name="demo_exposure_bar_search_terms">ev, 曝光, 相机, 刻度尺, 刻度条</string>
+    <string name="demo_exposure_bar_wide_range">扩展范围</string>
+    <string name="demo_exposure_bar_wide_range_summary">-3.0 到 +3.0 EV，与专业模式一致</string>
+    <string name="demo_exposure_bar_material_blur">材质模糊</string>
+    <string name="demo_exposure_bar_material_blur_summary">模糊面板后方的照片；关闭后显示不透明底色</string>
+    <string name="demo_exposure_bar_reset_button">重置按钮</string>
+    <string name="demo_exposure_bar_variant_wide">专业模式范围</string>
+    <string name="demo_exposure_bar_variant_ruler">单独使用 ScaleBar</string>
 </resources>

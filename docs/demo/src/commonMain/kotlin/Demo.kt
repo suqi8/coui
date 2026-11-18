@@ -80,6 +80,7 @@ private val availableComponents = listOf(
     AvailableComponent("Slider", "slider") { SliderDemo() },
     AvailableComponent("IntentSlider", "intentSlider") { IntentSliderDemo() },
     AvailableComponent("NumberPicker", "numberPicker") { NumberPickerDemo() },
+    AvailableComponent("ExposureBar", "exposureBar") { ExposureBarDemo() },
     AvailableComponent("CalendarPicker", "calendarPicker") { CalendarPickerDemo() },
     AvailableComponent("LunarDatePicker", "lunarDatePicker") { LunarDatePickerDemo() },
     AvailableComponent("ProgressIndicator", "progressIndicator") { ProgressIndicatorDemo() },

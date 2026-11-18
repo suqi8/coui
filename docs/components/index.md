@@ -61,6 +61,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [Slider](../components/slider)                             | Sliding control for value adjustment       | Volume control, range selection       |
 | [IntentSlider](../components/intentslider)                 | Slim media progress bar with buffering     | Video/music playback progress         |
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
+| [ExposureBar](../components/exposurebar)                   | Camera EV ruler panel with reset button    | Exposure compensation, camera tools   |
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |
 | [TimePicker](../components/timepicker)                     | Time wheel picker (hour / minute)          | Time selection, alarms                |
 | [DateTimePicker](../components/datetimepicker)             | Date + time wheel picker                   | Reminders, scheduling                 |
