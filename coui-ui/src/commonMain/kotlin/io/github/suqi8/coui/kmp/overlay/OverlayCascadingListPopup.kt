@@ -20,6 +20,7 @@ import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.layout.CascadingListPopupLayout
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
+import io.github.suqi8.coui.kmp.utils.popupHostInsideBackdrop
 
 /**
  * A cascading list popup rendered inside the host `Scaffold`. Cascading depth is limited to 2.
@@ -103,7 +104,8 @@ fun OverlayCascadingListPopup(
         collapseOnSelection = collapseOnSelection,
         backgroundColor = backgroundColor,
         backgroundModifier = backgroundModifier,
-        materialBlur = materialBlur,
+        // A popup drawn inside the page recording it would blur stays opaque (no self-sampling).
+        materialBlur = materialBlur && !popupHostInsideBackdrop(renderInRootScaffold),
         materialEffect = materialEffect,
     )
 }

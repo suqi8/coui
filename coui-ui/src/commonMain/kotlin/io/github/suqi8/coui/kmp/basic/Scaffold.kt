@@ -34,13 +34,16 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.COUIPopupHost
 import io.github.suqi8.coui.kmp.utils.LocalDialogStates
+import io.github.suqi8.coui.kmp.utils.LocalPopupHostInsideBackdrop
 import io.github.suqi8.coui.kmp.utils.LocalPopupStates
 import io.github.suqi8.coui.kmp.utils.LocalRootDialogStates
+import io.github.suqi8.coui.kmp.utils.LocalRootPopupHostInsideBackdrop
 import io.github.suqi8.coui.kmp.utils.LocalRootPopupStates
 
 /**
@@ -95,6 +98,10 @@ fun Scaffold(
     val rootDialogStates = parentRootDialogStates ?: dialogStates
     val parentRootPopupStates = LocalRootPopupStates.current
     val rootPopupStates = parentRootPopupStates ?: popupStates
+    // A Scaffold composed inside a recorded page (a page blur provider is in scope) draws its popup
+    // host inside that recording, so popups there must not blur the page.
+    val hostInsideBackdrop = LocalPopupMaterialBlur.current != null
+    val rootHostInsideBackdrop = if (parentRootPopupStates != null) LocalRootPopupHostInsideBackdrop.current else hostInsideBackdrop
     Surface(
         modifier = modifier.onConsumedWindowInsetsChanged { consumedWindowInsets ->
             // Exclude currently consumed window insets from user provided contentWindowInsets
@@ -107,6 +114,8 @@ fun Scaffold(
             LocalDialogStates provides dialogStates,
             LocalRootDialogStates provides rootDialogStates,
             LocalRootPopupStates provides rootPopupStates,
+            LocalPopupHostInsideBackdrop provides hostInsideBackdrop,
+            LocalRootPopupHostInsideBackdrop provides rootHostInsideBackdrop,
         ) {
             ScaffoldLayout(
                 topBar = topBar,

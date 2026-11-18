@@ -603,3 +603,25 @@ internal val LocalPopupStates = staticCompositionLocalOf { mutableStateListOf<CO
 internal val LocalDialogStates = staticCompositionLocalOf { mutableStateListOf<COUIPopupUtils.DialogState>() }
 internal val LocalRootDialogStates = staticCompositionLocalOf<MutableList<COUIPopupUtils.DialogState>?> { null }
 internal val LocalRootPopupStates = staticCompositionLocalOf<MutableList<COUIPopupUtils.PopupState>?> { null }
+
+/**
+ * Whether the popup host of the nearest [io.github.suqi8.coui.kmp.basic.Scaffold] is drawn inside a
+ * page backdrop recording: the Scaffold was composed where a [LocalPopupMaterialBlur] is provided,
+ * i.e. inside a recorded page. A popup drawn in such a host must not blur that page, or the page's
+ * layer would draw itself (an endless render-node cycle that overflows the render thread's stack).
+ */
+internal val LocalPopupHostInsideBackdrop = staticCompositionLocalOf { false }
+
+/** [LocalPopupHostInsideBackdrop] for the outermost Scaffold's popup host. */
+internal val LocalRootPopupHostInsideBackdrop = staticCompositionLocalOf { false }
+
+/**
+ * Whether a popup rendered in the root host ([renderInRootScaffold]) or in the nearest Scaffold's
+ * host would be drawn inside the page backdrop it would blur, so it has to stay opaque.
+ */
+@Composable
+internal fun popupHostInsideBackdrop(renderInRootScaffold: Boolean): Boolean = if (renderInRootScaffold && LocalRootPopupStates.current != null) {
+    LocalRootPopupHostInsideBackdrop.current
+} else {
+    LocalPopupHostInsideBackdrop.current
+}

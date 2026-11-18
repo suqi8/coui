@@ -17,6 +17,7 @@ import io.github.suqi8.coui.kmp.basic.PreciseClickState
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.layout.ListPopupLayout
 import io.github.suqi8.coui.kmp.utils.COUIPopupUtils.Companion.PopupLayout
+import io.github.suqi8.coui.kmp.utils.popupHostInsideBackdrop
 
 /**
  * A popup with a list of items.
@@ -102,7 +103,8 @@ fun OverlayListPopup(
         preciseClickState = preciseClickState,
         backgroundColor = backgroundColor,
         backgroundModifier = backgroundModifier,
-        materialBlur = materialBlur,
+        // A popup drawn inside the page recording it would blur stays opaque (no self-sampling).
+        materialBlur = materialBlur && !popupHostInsideBackdrop(renderInRootScaffold),
         materialEffect = materialEffect,
         content = content,
     )
