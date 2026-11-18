@@ -112,6 +112,8 @@ export default defineConfig({
                         { text: "CameraTopMenu", link: "/components/cameratopmenu" },
                         { text: "CameraMenuButton", link: "/components/cameramenubutton" },
                         { text: "CameraFocusIndicator", link: "/components/camerafocusindicator" },
+                        { text: "CameraGridOverlay", link: "/components/cameragridoverlay" },
+                        { text: "CameraLevelIndicator", link: "/components/cameralevelindicator" },
                         { text: "CameraShutterButton", link: "/components/camerashutterbutton" },
                         { text: "CameraZoomBar", link: "/components/camerazoombar" },
                         { text: "CameraLensBar", link: "/components/cameralensbar" },

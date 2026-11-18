@@ -185,6 +185,8 @@ private val availableComponents = listOf(
     AvailableComponent("CameraLensBar", "cameraLensBar") { CameraLensBarDemo() },
     AvailableComponent("CameraZoomBar", "cameraZoomBar") { CameraZoomBarDemo() },
     AvailableComponent("CameraShutterButton", "cameraShutterButton") { CameraShutterButtonDemo() },
+    AvailableComponent("CameraLevelIndicator", "cameraLevelIndicator") { CameraLevelIndicatorDemo() },
+    AvailableComponent("CameraGridOverlay", "cameraGridOverlay") { CameraGridOverlayDemo() },
     AvailableComponent("CameraFocusIndicator", "cameraFocusIndicator") { CameraFocusIndicatorDemo() },
     AvailableComponent("CameraMenuButton", "cameraMenuButton") { CameraMenuButtonDemo() },
     AvailableComponent("CameraTopMenu", "cameraTopMenu") { CameraTopMenuDemo() },

@@ -69,6 +69,8 @@ ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画�
 | [CameraTopMenu](../components/cameratopmenu) | 相机顶部设置栏，图标可展开为选项条或分组面板 | 闪光灯、画幅、视频画质设置 |
 | [CameraMenuButton](../components/cameramenubutton) | 相机圆形菜单按钮，带强调色选中态与边缘光，另含效果入口按钮 | 相机底部效果菜单、滤镜/虚化入口 |
 | [CameraFocusIndicator](../components/camerafocusindicator) | 相机点按对焦框，带竖向曝光太阳滑杆与 AE/AF 锁定 | 点按对焦、曝光调节、相机预览 |
+| [CameraGridOverlay](../components/cameragridoverlay) | 相机构图参考线（网格、对角线、黄金螺线） | 构图参考线、相机取景框 |
+| [CameraLevelIndicator](../components/cameralevelindicator) | 相机水平线与俯拍十字 | 水平仪、相机取景框 |
 | [CameraShutterButton](../components/camerashutterbutton) | 相机快门（拍照 / 录像 / 录制中）与圆形相机控制按钮 | 相机拍摄、录像控制 |
 | [CameraZoomBar](../components/camerazoombar) | 带加减按钮与倍率标签的摇杆式变焦条 | 相机连续变焦 |
 | [CameraLensBar](../components/cameralensbar) | 相机倍率圆钮镜头切换条 | 相机界面切换镜头 / 倍率 |

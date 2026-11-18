@@ -69,6 +69,8 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [CameraTopMenu](../components/cameratopmenu) | Camera top settings bar whose icons morph into option strips and grouped panels | Flash, ratio, video quality settings |
 | [CameraMenuButton](../components/cameramenubutton) | Camera round menu button with accent selection and edge light, plus the effect entry button | Camera bottom effect menu, filter/bokeh entries |
 | [CameraFocusIndicator](../components/camerafocusindicator) | Camera tap-to-focus box with a vertical exposure sun slider and AE/AF lock | Tap to focus, exposure adjustment, camera preview |
+| [CameraGridOverlay](../components/cameragridoverlay) | Camera composition guides (grid, diagonal, golden spiral) | Composition guides, camera viewfinder |
+| [CameraLevelIndicator](../components/cameralevelindicator) | Camera level line and top-down crosses | Horizon level, camera viewfinder |
 | [CameraShutterButton](../components/camerashutterbutton) | Camera shutter (photo / video / recording) and round camera control button | Camera capture, recording controls |
 | [CameraZoomBar](../components/camerazoombar) | Joystick zoom bar with ± buttons and ratio labels | Continuous camera zoom |
 | [CameraLensBar](../components/cameralensbar) | Camera lens switcher of zoom-ratio discs | Lens / zoom ratio switching in camera UIs |
