@@ -14,6 +14,7 @@ import demo.feedback.EmptyStateDemo
 import demo.feedback.InstallLoadProgressDemo
 import demo.feedback.ProgressIndicatorDemo
 import demo.feedback.PullToRefreshDemo
+import demo.feedback.RollingNumberDemo
 import demo.feedback.SnackbarDemo
 
 /**
@@ -31,4 +32,5 @@ internal val FeedbackDemos: List<Demo> = listOf(
     CameraFocusIndicatorDemo,
     CameraRecordTimerDemo,
     CameraCountdownDemo,
+    RollingNumberDemo,
 )

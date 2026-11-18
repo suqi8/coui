@@ -158,6 +158,15 @@
     <string name="demo_camera_record_timer_variant_plate">录制底板</string>
     <string name="demo_camera_record_timer_variant_dot">无底板的闪烁圆点</string>
     <string name="demo_camera_record_timer_variant_hours">超过一小时</string>
+    <string name="demo_rolling_number_title">滚动数字</string>
+    <string name="demo_rolling_number_search_terms">滚动, 计数, 数字, 里程表, 动画, 连拍</string>
+    <string name="demo_rolling_number_roll_ones">个位也滚动</string>
+    <string name="demo_rolling_number_roll_ones_summary">相机直接切换个位，只滚动进位</string>
+    <string name="demo_rolling_number_auto_count">自动计数</string>
+    <string name="demo_rolling_number_auto_count_summary">每 120ms 加一，类似连拍</string>
+    <string name="demo_rolling_number_min_digits">最少位数</string>
+    <string name="demo_rolling_number_variant_burst">连拍计数</string>
+    <string name="demo_rolling_number_variant_palette">调色盘数值</string>
     <string name="demo_camera_countdown_title">相机倒计时</string>
     <string name="demo_camera_countdown_search_terms">相机, 定时拍摄, 定时器, 倒计时, 长曝光, 夜景, 进度环</string>
     <string name="demo_camera_countdown_duration">定时</string>

@@ -158,6 +158,15 @@
     <string name="demo_camera_record_timer_variant_plate">Recording plate</string>
     <string name="demo_camera_record_timer_variant_dot">Blinking dot without plate</string>
     <string name="demo_camera_record_timer_variant_hours">Over an hour</string>
+    <string name="demo_rolling_number_title">Rolling number</string>
+    <string name="demo_rolling_number_search_terms">rolling, counter, digits, odometer, number, animation, burst</string>
+    <string name="demo_rolling_number_roll_ones">Roll the ones digit</string>
+    <string name="demo_rolling_number_roll_ones_summary">The camera switches the ones digit at once and rolls only the carries</string>
+    <string name="demo_rolling_number_auto_count">Auto count</string>
+    <string name="demo_rolling_number_auto_count_summary">Count up every 120ms, like a burst</string>
+    <string name="demo_rolling_number_min_digits">Minimum digits</string>
+    <string name="demo_rolling_number_variant_burst">Burst counter</string>
+    <string name="demo_rolling_number_variant_palette">Palette value</string>
     <string name="demo_camera_countdown_title">Camera countdown</string>
     <string name="demo_camera_countdown_search_terms">camera, self-timer, timer, countdown, long exposure, night, progress ring</string>
     <string name="demo_camera_countdown_duration">Timer</string>
