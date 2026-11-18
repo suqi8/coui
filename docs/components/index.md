@@ -62,6 +62,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [IntentSlider](../components/intentslider)                 | Slim media progress bar with buffering     | Video/music playback progress         |
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [ExposureBar](../components/exposurebar)                   | Camera EV ruler panel with reset button    | Exposure compensation, camera tools   |
+| [CameraCountdown](../components/cameracountdown) | Self-timer number, long-exposure readout and progress rings | Self-timer, night mode, recording stop |
 | [CameraRecordTimer](../components/camerarecordtimer) | Camera video recording timer on a red plate | Video recording, count-downs |
 | [CameraZoomDial](../components/camerazoomdial) | Camera arc zoom dial with a logarithmic ruler | Camera zoom, lens switching |
 | [CameraTopMenu](../components/cameratopmenu) | Camera top settings bar whose icons morph into option strips and grouped panels | Flash, ratio, video quality settings |

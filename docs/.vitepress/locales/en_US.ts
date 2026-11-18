@@ -105,6 +105,7 @@ export default defineConfig({
                         { text: "IntentSlider", link: "/components/intentslider" },
                         { text: "NumberPicker", link: "/components/numberpicker" },
                         { text: "ExposureBar", link: "/components/exposurebar" },
+                        { text: "CameraCountdown", link: "/components/cameracountdown" },
                         { text: "CameraRecordTimer", link: "/components/camerarecordtimer" },
                         { text: "CameraZoomDial", link: "/components/camerazoomdial" },
                         { text: "CameraTopMenu", link: "/components/cameratopmenu" },

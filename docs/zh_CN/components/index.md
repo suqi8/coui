@@ -62,6 +62,7 @@ ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画�
 | [IntentSlider](../components/intentslider)                 | 带缓冲进度的细长媒体进度条 | 视频/音乐播放进度    |
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [ExposureBar](../components/exposurebar)                   | 相机曝光补偿刻度面板   | 曝光补偿、相机工具   |
+| [CameraCountdown](../components/cameracountdown) | 定时拍摄数字、长曝光读数与进度环 | 定时拍摄、夜景、录像停止 |
 | [CameraRecordTimer](../components/camerarecordtimer) | 红色底板上的相机录像计时器 | 录像、倒计时 |
 | [CameraZoomDial](../components/camerazoomdial) | 相机弧形对数变焦刻度环 | 相机变焦、镜头切换 |
 | [CameraTopMenu](../components/cameratopmenu) | 相机顶部设置栏，图标可展开为选项条或分组面板 | 闪光灯、画幅、视频画质设置 |

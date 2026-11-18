@@ -158,4 +158,13 @@
     <string name="demo_camera_record_timer_variant_plate">Recording plate</string>
     <string name="demo_camera_record_timer_variant_dot">Blinking dot without plate</string>
     <string name="demo_camera_record_timer_variant_hours">Over an hour</string>
+    <string name="demo_camera_countdown_title">Camera countdown</string>
+    <string name="demo_camera_countdown_search_terms">camera, self-timer, timer, countdown, long exposure, night, progress ring</string>
+    <string name="demo_camera_countdown_duration">Timer</string>
+    <string name="demo_camera_countdown_compact">Compact</string>
+    <string name="demo_camera_countdown_compact_summary">The small disc the camera moves to the top of the preview</string>
+    <string name="demo_camera_countdown_restart">Restart</string>
+    <string name="demo_camera_countdown_variant_exposure">Long-exposure countdown</string>
+    <string name="demo_camera_countdown_variant_ring">Progress ring</string>
+    <string name="demo_camera_countdown_variant_draining">Recording-stop ring</string>
 </resources>

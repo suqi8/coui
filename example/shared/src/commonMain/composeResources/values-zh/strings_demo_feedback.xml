@@ -158,4 +158,13 @@
     <string name="demo_camera_record_timer_variant_plate">录制底板</string>
     <string name="demo_camera_record_timer_variant_dot">无底板的闪烁圆点</string>
     <string name="demo_camera_record_timer_variant_hours">超过一小时</string>
+    <string name="demo_camera_countdown_title">相机倒计时</string>
+    <string name="demo_camera_countdown_search_terms">相机, 定时拍摄, 定时器, 倒计时, 长曝光, 夜景, 进度环</string>
+    <string name="demo_camera_countdown_duration">定时</string>
+    <string name="demo_camera_countdown_compact">紧凑样式</string>
+    <string name="demo_camera_countdown_compact_summary">相机移到取景画面顶部的小圆底样式</string>
+    <string name="demo_camera_countdown_restart">重新开始</string>
+    <string name="demo_camera_countdown_variant_exposure">长曝光倒计时</string>
+    <string name="demo_camera_countdown_variant_ring">进度环</string>
+    <string name="demo_camera_countdown_variant_draining">录像停止环</string>
 </resources>
