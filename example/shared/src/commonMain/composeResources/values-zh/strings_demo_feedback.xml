@@ -131,4 +131,19 @@
     <string name="demo_progress_indicator_search_terms">进度条, 加载, loading</string>
     <string name="demo_pull_to_refresh_search_terms">刷新, 下拉, refresh</string>
     <string name="demo_snackbar_search_terms">提示, 消息, toast</string>
+    <string name="demo_camera_focus_indicator_title">相机对焦框</string>
+    <string name="demo_camera_focus_indicator_search_terms">对焦, 点按对焦, 测光, 曝光, 锁定, 太阳, 相机, af, ae</string>
+    <string name="demo_camera_focus_indicator_hint">点按照片对焦，然后在任意位置上下拖动调节曝光</string>
+    <string name="demo_camera_focus_indicator_state_format">曝光：%1$s · %2$s</string>
+    <string name="demo_camera_focus_indicator_locked">AE/AF 已锁定</string>
+    <string name="demo_camera_focus_indicator_unlocked">AE/AF 未锁定</string>
+    <string name="demo_camera_focus_indicator_auto_hide">自动隐藏</string>
+    <string name="demo_camera_focus_indicator_auto_hide_summary">对焦 3 秒后淡出；调节 1.5 秒后变暗</string>
+    <string name="demo_camera_focus_indicator_lock_button">AE/AF 锁定按钮</string>
+    <string name="demo_camera_focus_indicator_lock_button_summary">首次拖动后显示在滑杆旁</string>
+    <string name="demo_camera_focus_indicator_show_label">对焦框下方标签</string>
+    <string name="demo_camera_focus_indicator_label_focus">对焦框</string>
+    <string name="demo_camera_focus_indicator_label_locked">对焦/曝光锁定</string>
+    <string name="demo_camera_focus_indicator_focus_center">对焦到中心</string>
+    <string name="demo_camera_focus_indicator_variant_locked">锁定并常驻</string>
 </resources>

@@ -131,4 +131,19 @@
     <string name="demo_progress_indicator_search_terms">loading</string>
     <string name="demo_pull_to_refresh_search_terms">refresh</string>
     <string name="demo_snackbar_search_terms">toast</string>
+    <string name="demo_camera_focus_indicator_title">Camera focus indicator</string>
+    <string name="demo_camera_focus_indicator_search_terms">focus, tap to focus, af, ae, exposure, metering, lock, sun, camera</string>
+    <string name="demo_camera_focus_indicator_hint">Tap the photo to focus, then drag up or down anywhere to adjust the exposure</string>
+    <string name="demo_camera_focus_indicator_state_format">Exposure: %1$s · %2$s</string>
+    <string name="demo_camera_focus_indicator_locked">AE/AF locked</string>
+    <string name="demo_camera_focus_indicator_unlocked">AE/AF unlocked</string>
+    <string name="demo_camera_focus_indicator_auto_hide">Auto hide</string>
+    <string name="demo_camera_focus_indicator_auto_hide_summary">Fade out 3 s after focusing; dim 1.5 s after an adjustment</string>
+    <string name="demo_camera_focus_indicator_lock_button">AE/AF lock button</string>
+    <string name="demo_camera_focus_indicator_lock_button_summary">Shown next to the slider after the first drag</string>
+    <string name="demo_camera_focus_indicator_show_label">Label under the box</string>
+    <string name="demo_camera_focus_indicator_label_focus">Focus</string>
+    <string name="demo_camera_focus_indicator_label_locked">AF/AE lock</string>
+    <string name="demo_camera_focus_indicator_focus_center">Focus at the center</string>
+    <string name="demo_camera_focus_indicator_variant_locked">Locked, kept on screen</string>
 </resources>

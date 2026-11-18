@@ -63,6 +63,7 @@ ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画�
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [ExposureBar](../components/exposurebar)                   | 相机曝光补偿刻度面板   | 曝光补偿、相机工具   |
 | [CameraZoomDial](../components/camerazoomdial) | 相机弧形对数变焦刻度环 | 相机变焦、镜头切换 |
+| [CameraFocusIndicator](../components/camerafocusindicator) | 相机点按对焦框，带竖向曝光太阳滑杆与 AE/AF 锁定 | 点按对焦、曝光调节、相机预览 |
 | [CameraShutterButton](../components/camerashutterbutton) | 相机快门（拍照 / 录像 / 录制中）与圆形相机控制按钮 | 相机拍摄、录像控制 |
 | [CameraZoomBar](../components/camerazoombar) | 带加减按钮与倍率标签的摇杆式变焦条 | 相机连续变焦 |
 | [CameraLensBar](../components/cameralensbar) | 相机倍率圆钮镜头切换条 | 相机界面切换镜头 / 倍率 |
