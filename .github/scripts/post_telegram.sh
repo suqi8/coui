@@ -94,23 +94,37 @@ header = f"New CI from {repo_name}"
 version_line = f"Version: v{version}-{short_hash} ({commit_count})"
 msg_label = "Commit message:"
 
-text = f"{escape_md(header)}\n\n{escape_md(version_line)}\n\n{escape_md(msg_label)}\n```\n{escape_code(commit_msg)}\n```"
-
 max_batch_files = int(os.environ.get("TELEGRAM_MAX_BATCH_FILES", "10"))
+# The Bot API takes at most 50 MB per upload request; keep a margin for the multipart overhead.
+max_batch_bytes = 48 * 1024 * 1024
 
 files = []
+skipped = []
 for name in sorted(os.listdir("packaged")):
     path = os.path.join("packaged", name)
     if os.path.isfile(path):
-        files.append((name, os.path.getsize(path)))
+        size = os.path.getsize(path)
+        if size > max_batch_bytes:
+            skipped.append(name)
+        else:
+            files.append((name, size))
+
+text = f"{escape_md(header)}\n\n{escape_md(version_line)}\n\n{escape_md(msg_label)}\n```\n{escape_code(commit_msg)}\n```"
+if skipped:
+    server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    run_url = f"{server}/{repo_name}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
+    text += "\n\n" + escape_md("Too large for Telegram: " + ", ".join(skipped) + ". Download: " + run_url)
 
 batches = []
 current = []
+current_bytes = 0
 for name, size in files:
-    if len(current) >= max_batch_files:
+    if len(current) >= max_batch_files or current_bytes + size > max_batch_bytes:
         batches.append(current)
         current = []
+        current_bytes = 0
     current.append((name, size))
+    current_bytes += size
 if current:
     batches.append(current)
 
@@ -141,20 +155,40 @@ if [ "$batches_count" -eq 0 ]; then
     exit 0
 fi
 
+batch=0
 while IFS= read -r line; do
     [ -z "$line" ] && continue
     media_path="${line%%|*}"
     files_path="${line##*|}"
     args=()
     index=0
+    last=""
     while IFS= read -r name; do
         if [ -n "$name" ]; then
             args+=(-F "file${index}=@packaged/${name}")
             index=$((index + 1))
+            last="$name"
         fi
     done <"$files_path"
-    curl -s "${BOT_API_URL}/bot${BOT_TOKEN}/sendMediaGroup" \
-        -F "chat_id=${CHANNEL_ID}" \
-        -F "media=$(cat "$media_path")" \
-        "${args[@]}"
+    if [ "$index" -eq 1 ]; then
+        # A media group needs at least two files; a single file goes as a plain document.
+        single=(-F "chat_id=${CHANNEL_ID}" -F "document=@packaged/${last}")
+        if [ "$batch" -eq 0 ] && [ -n "$caption_text" ]; then
+            single+=(--form-string "caption=${caption_text}" -F "parse_mode=MarkdownV2")
+        fi
+        response=$(curl -s "${BOT_API_URL}/bot${BOT_TOKEN}/sendDocument" "${single[@]}")
+    else
+        response=$(curl -s "${BOT_API_URL}/bot${BOT_TOKEN}/sendMediaGroup" \
+            -F "chat_id=${CHANNEL_ID}" \
+            -F "media=$(cat "$media_path")" \
+            "${args[@]}")
+    fi
+    batch=$((batch + 1))
+    # Print only a failure: a successful response echoes the whole message back.
+    if [[ "$response" != *'"ok":true'* ]]; then
+        echo "Telegram rejected a batch: $response"
+        failed=1
+    fi
 done <batches.list
+
+exit "${failed:-0}"
