@@ -2,14 +2,14 @@ name: Build All Tests
 
 on:
   push:
-    branches: ["main"]
+    branches: ["coui17"]
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"
       - "AGENTS.md"
       - "docs/**"
   pull_request:
-    branches: ["main"]
+    branches: ["coui17"]
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"

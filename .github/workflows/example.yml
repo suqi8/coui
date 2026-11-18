@@ -2,7 +2,7 @@ name: Build Example App
 
 on:
   push:
-    branches: [main]
+    branches: [coui17]
     paths-ignore:
       - "README.md"
       - "CLAUDE.md"

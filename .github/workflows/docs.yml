@@ -3,7 +3,7 @@ name: Build Docs Page
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [coui17]
     paths:
       - "docs/**"
       - "coui-ui/src/**"
