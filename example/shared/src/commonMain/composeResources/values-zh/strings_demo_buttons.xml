@@ -140,4 +140,20 @@
     <string name="demo_camera_shutter_button_variant_states">状态</string>
     <string name="demo_camera_shutter_button_variant_styles">样式</string>
     <string name="demo_camera_shutter_button_variant_controls">控制按钮</string>
+    <string name="demo_camera_menu_button_title">相机菜单按钮</string>
+    <string name="demo_camera_menu_button_search_terms">相机, 底部菜单, 圆形按钮, 效果, 滤镜, 虚化, 边缘光</string>
+    <string name="demo_camera_menu_button_selected">选中</string>
+    <string name="demo_camera_menu_button_label">标签</string>
+    <string name="demo_camera_menu_button_gradient">哈苏渐变</string>
+    <string name="demo_camera_menu_button_gradient_summary">关闭时选中圆盘为纯色强调色</string>
+    <string name="demo_camera_menu_button_colorful_border">彩色描边</string>
+    <string name="demo_camera_menu_button_edge_light">边缘光</string>
+    <string name="demo_camera_menu_button_effect_visible">显示入口按钮</string>
+    <string name="demo_camera_menu_button_material_blur">材质模糊</string>
+    <string name="demo_camera_menu_button_material_blur_summary">模糊入口按钮下方的照片</string>
+    <string name="demo_camera_menu_button_variant_menu">底部菜单</string>
+    <string name="demo_camera_menu_button_variant_effect">效果入口按钮</string>
+    <string name="demo_camera_menu_button_bokeh">虚化</string>
+    <string name="demo_camera_menu_button_filter">滤镜</string>
+    <string name="demo_camera_menu_button_ratio">画幅</string>
 </resources>

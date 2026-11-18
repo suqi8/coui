@@ -140,4 +140,20 @@
     <string name="demo_camera_shutter_button_variant_states">States</string>
     <string name="demo_camera_shutter_button_variant_styles">Styles</string>
     <string name="demo_camera_shutter_button_variant_controls">Control buttons</string>
+    <string name="demo_camera_menu_button_title">Camera Menu Button</string>
+    <string name="demo_camera_menu_button_search_terms">camera, bottom menu, round button, effect, filter, bokeh, edge light</string>
+    <string name="demo_camera_menu_button_selected">Selected</string>
+    <string name="demo_camera_menu_button_label">Label</string>
+    <string name="demo_camera_menu_button_gradient">Hasselblad gradient</string>
+    <string name="demo_camera_menu_button_gradient_summary">Off: the selected disc is the solid accent</string>
+    <string name="demo_camera_menu_button_colorful_border">Colorful border</string>
+    <string name="demo_camera_menu_button_edge_light">Edge light</string>
+    <string name="demo_camera_menu_button_effect_visible">Show entry buttons</string>
+    <string name="demo_camera_menu_button_material_blur">Material blur</string>
+    <string name="demo_camera_menu_button_material_blur_summary">Blur the photo under the entry buttons</string>
+    <string name="demo_camera_menu_button_variant_menu">Bottom menu</string>
+    <string name="demo_camera_menu_button_variant_effect">Effect entry buttons</string>
+    <string name="demo_camera_menu_button_bokeh">Bokeh</string>
+    <string name="demo_camera_menu_button_filter">Filter</string>
+    <string name="demo_camera_menu_button_ratio">Ratio</string>
 </resources>

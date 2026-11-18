@@ -63,6 +63,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [ExposureBar](../components/exposurebar)                   | Camera EV ruler panel with reset button    | Exposure compensation, camera tools   |
 | [CameraZoomDial](../components/camerazoomdial) | Camera arc zoom dial with a logarithmic ruler | Camera zoom, lens switching |
+| [CameraMenuButton](../components/cameramenubutton) | Camera round menu button with accent selection and edge light, plus the effect entry button | Camera bottom effect menu, filter/bokeh entries |
 | [CameraFocusIndicator](../components/camerafocusindicator) | Camera tap-to-focus box with a vertical exposure sun slider and AE/AF lock | Tap to focus, exposure adjustment, camera preview |
 | [CameraShutterButton](../components/camerashutterbutton) | Camera shutter (photo / video / recording) and round camera control button | Camera capture, recording controls |
 | [CameraZoomBar](../components/camerazoombar) | Joystick zoom bar with ± buttons and ratio labels | Continuous camera zoom |

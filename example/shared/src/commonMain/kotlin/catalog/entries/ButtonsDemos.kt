@@ -5,6 +5,7 @@ package catalog.entries
 import catalog.Demo
 import catalog.DemoCategory
 import demo.buttons.ButtonDemo
+import demo.buttons.CameraMenuButtonDemo
 import demo.buttons.CameraShutterButtonDemo
 import demo.buttons.FloatingActionButtonDemo
 import demo.buttons.LoadingButtonDemo
@@ -23,4 +24,5 @@ internal val ButtonsDemos: List<Demo> = listOf(
     TwoTextButtonDemo,
     SegmentButtonDemo,
     CameraShutterButtonDemo,
+    CameraMenuButtonDemo,
 )
