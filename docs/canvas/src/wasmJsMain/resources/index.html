@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <meta name="color-scheme" content="light dark">
     <title>COUI Canvas</title>
+    <link rel="icon" href="icon.webp">
     <meta name="description" content="Sketch ColorOS 17 screens with real COUI components and turn them into a prompt or Kotlin code.">
     <style>
         :root { --bg: #f4f5f8; --fg: #303030; --sub: #8c93b0; --accent: #3482ff; }
@@ -21,8 +22,7 @@
             transition: opacity .3s ease;
         }
         #loading.hidden { opacity: 0; pointer-events: none; }
-        #loading .logo { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); color: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: 700; }
+        #loading .logo { width: 64px; height: 64px; }
         #loading .title { font-size: 20px; font-weight: 600; }
         #loading .sub { font-size: 13px; color: var(--sub); }
         #loading .bar { width: 160px; height: 4px; border-radius: 2px; background: rgba(127,127,127,.2); overflow: hidden; }
@@ -32,7 +32,7 @@
 </head>
 <body>
 <div id="loading">
-    <div class="logo">C</div>
+    <img class="logo" src="icon.webp" alt="">
     <div class="title">COUI Canvas</div>
     <div class="bar"><div></div></div>
     <div class="sub">Loading components and fonts…</div>

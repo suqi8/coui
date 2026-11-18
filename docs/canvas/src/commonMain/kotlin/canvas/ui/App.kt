@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package canvas.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,8 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import canvas.generated.resources.Res
+import canvas.generated.resources.coui_logo
 import canvas.model.CanvasDoc
 import canvas.model.parseDoc
 import io.github.suqi8.coui.kmp.basic.Icon
@@ -53,6 +56,7 @@ import io.github.suqi8.coui.kmp.theme.ColorSchemeMode
 import io.github.suqi8.coui.kmp.theme.ThemeController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
+import org.jetbrains.compose.resources.painterResource
 
 /** The document a visit starts from: the one kept in the browser, or the sample. */
 fun initialDoc(platform: CanvasPlatform, zh: Boolean): CanvasDoc = platform.load(EditorState.STORE_KEY)?.let { parseDoc(it).doc } ?: sampleDoc(zh)
@@ -194,9 +198,7 @@ private fun Toolbar(state: EditorState) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(Modifier.size(28.dp).clip(RoundedCornerShape(8.dp)).background(SelectionBlue), contentAlignment = Alignment.Center) {
-            Text("C", color = Color.White, style = COUITheme.textStyles.bodyL.copy(fontWeight = FontWeight.Bold))
-        }
+        Image(painterResource(Res.drawable.coui_logo), contentDescription = null, modifier = Modifier.size(28.dp))
         Column(Modifier.padding(start = 6.dp, end = 12.dp)) {
             Text("COUI Canvas", style = COUITheme.textStyles.bodyL.copy(fontWeight = FontWeight.Medium), color = colors.labelPrimary)
             Caption(state.doc.title.ifEmpty { tr("Untitled", "未命名") })

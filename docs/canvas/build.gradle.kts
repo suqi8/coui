@@ -33,6 +33,7 @@ kotlin {
             implementation(projects.couiPreference)
             implementation(projects.couiIcons)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.jetbrains.compose.components.resources)
         }
         val desktopTest by getting {
             dependencies {
@@ -40,4 +41,8 @@ kotlin {
             }
         }
     }
+}
+
+compose.resources {
+    packageOfResClass = "canvas.generated.resources"
 }
