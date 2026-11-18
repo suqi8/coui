@@ -1,7 +1,11 @@
 HSPLio/github/suqi8/coui/kmp/squircle/LocalSquircleEnabledKt**->**(**)**
 HSPLio/github/suqi8/coui/kmp/squircle/SquircleBackgroundKt**->**(**)**
-HSPLio/github/suqi8/coui/kmp/squircle/SquircleBorderKt**->**(**)**
 HSPLio/github/suqi8/coui/kmp/squircle/SquircleDefaults;->**(**)**
 HSPLio/github/suqi8/coui/kmp/squircle/SquirclePathKt**->**(**)**
 HSPLio/github/suqi8/coui/kmp/squircle/SquircleShaderBrush;->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/SquircleShape;->**(**)**
+HSPLio/github/suqi8/coui/kmp/squircle/internal/SoftCapsule;->**(**)**
 HSPLio/github/suqi8/coui/kmp/squircle/internal/SuperellipseCorner;->**(**)**
+PLio/github/suqi8/coui/kmp/squircle/LegacySquirclePathKt**->**(**)**
+PLio/github/suqi8/coui/kmp/squircle/LegacySquircleShape;->**(**)**
+PLio/github/suqi8/coui/kmp/squircle/SquircleShapeKt**->**(**)**
