@@ -28,10 +28,10 @@ private const val FONT_CSS = "https://cdn-font.hyperos.mi.com/font/css?family=Mi
  */
 private const val FONT_WAIT_MS = 45_000L
 
-@JsFun("(done, total) => { const el = document.querySelector('#loading .sub'); if (el && total > 0) el.textContent = 'Loading fonts ' + done + ' / ' + total + '…'; }")
+@JsFun("(done, total) => { if (window.__couiLoading) window.__couiLoading.fontProgress(done, total); }")
 private external fun setFontProgress(done: Int, total: Int)
 
-@JsFun("() => { const el = document.getElementById('loading'); if (el) { el.classList.add('hidden'); setTimeout(() => el.remove(), 400); } }")
+@JsFun("() => { if (window.__couiLoading) window.__couiLoading.hide(); }")
 private external fun hideLoading()
 
 @OptIn(ExperimentalComposeUiApi::class)
