@@ -14,6 +14,11 @@ This component is typically used in conjunction with the `Scaffold` component to
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchState
+import io.github.suqi8.coui.kmp.basic.topAppBarSearchContent
+import io.github.suqi8.coui.kmp.basic.topAppBarSearchResults
+import io.github.suqi8.coui.kmp.basic.rememberTopAppBarSearchState
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
@@ -104,7 +109,7 @@ TopAppBar(
 
 ### Search Capsule Below the Title
 
-`TopAppBarSearchSlot` is the search row of the COUI 17 settings home page. Put it in `bottomContent`: it lays out a 52dp row (`coui_search_view_height`) with the 16dp page-side margin, and folds away together with the expanded title area. Place an `InputField` directly in the slot through the named `inputField` argument; do not wrap a whole `SearchBar` in it, since the slot already pads the capsule by 16dp and the search bar would add its own margin on top:
+`TopAppBarSearchSlot` is a static search capsule row for a capsule that only opens something else, such as a separate search page; a search the user types into belongs in a `TopAppBarSearchBar` (see Searching In Place). Put it in `bottomContent`: it lays out a 52dp row (`coui_search_view_height`) with the 16dp page-side margin, and folds away together with the expanded title area. Place an `InputField` directly in the slot through the named `inputField` argument; do not wrap a whole `SearchBar` in it, since the slot already pads the capsule by 16dp and the search bar would add its own margin on top:
 
 ```kotlin
 var query by remember { mutableStateOf("") }
@@ -126,6 +131,56 @@ TopAppBar(
         )
     }
 )
+```
+
+### Searching In Place
+
+A search the user types into under the title searches in place, linked with the bar like the COUI 17 settings home: tapping the capsule turns it into the edit state with a cancel button, the large title shrinks to 80%, fades and moves up, the toolbar scrolls away and the search bar rises to just below the status bar (`HomepageImpl.animToEdit`, a response 0.35 spring without bounce). Put a `TopAppBarSearchBar` in `bottomContent` (it brings its own 52dp row and page padding, so leave `TopAppBarSearchSlot` out) and pass the same `TopAppBarSearchState` to the bar. Fade the page out with `Modifier.topAppBarSearchContent` and bring the results in with `Modifier.topAppBarSearchResults`, in a list of their own: they fade in while moving up 108dp. Cancel and system back leave the search and clear the query. Keep `TopAppBarSearchSlot` for a capsule that only opens something else.
+
+```kotlin
+var searching by rememberSaveable { mutableStateOf(false) }
+var query by rememberSaveable { mutableStateOf("") }
+val searchState = rememberTopAppBarSearchState(active = searching)
+val pageListState = rememberLazyListState()
+
+Scaffold(
+    topBar = {
+        TopAppBar(
+            title = "Settings",
+            scrollBehavior = scrollBehavior,
+            searchState = searchState,
+            bottomContent = {
+                TopAppBarSearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    expanded = searching,
+                    onExpandedChange = {
+                        searching = it
+                        if (!it) query = ""
+                    },
+                    cancelText = "Cancel",
+                    label = "Search"
+                )
+            }
+        )
+    }
+) { padding ->
+    Box(Modifier.fillMaxSize()) {
+        if (searchState.isContentVisible) {
+            LazyColumn(
+                modifier = Modifier.topAppBarSearchContent(searchState),
+                state = pageListState,
+                contentPadding = padding
+            ) { /* The page */ }
+        }
+        if (searchState.isResultsVisible) {
+            LazyColumn(
+                modifier = Modifier.topAppBarSearchResults(searchState),
+                contentPadding = padding
+            ) { /* The results for query */ }
+        }
+    }
+}
 ```
 
 ## Large TopAppBar Scroll Behavior (Using Scaffold)
@@ -222,6 +277,7 @@ TopAppBar(
 | largeTitleBottomMargin     | Dp                              | Anchor the large title to the bar bottom by this margin instead of the top padding | Dp.Unspecified | No       |
 | fadeLargeTitleOnCollapse   | Boolean                         | Fade and shrink the large title away instead of morphing it into the collapsed title (COUI 17 settings home) | false | No       |
 | glow                       | (@Composable BoxScope.() -> Unit)? | Backing layer drawn behind the bar, e.g. `TopAppBarGlow` with a transparent `color`; `null` for a solid bar | null | No       |
+| searchState                | TopAppBarSearchState?           | Links the bar to a search bar in `bottomContent`: as the search enters, the title fades away and the bottom content rises to the top (COUI 17 settings home) | null | No |
 | bottomContent              | @Composable () -> Unit          | Composable content displayed below the title bar area | {} | No |
 
 ### SmallTopAppBar Properties
@@ -255,6 +311,47 @@ TopAppBar(
 | modifier      | Modifier               | Modifier applied to the slot row                        | Modifier                                 | No       |
 | height        | Dp                     | Height of the slot row (`coui_search_view_height`)      | TopAppBarDefaults.SearchSlotHeight       | No       |
 | insideMargin  | PaddingValues          | Horizontal page-side padding of the capsule             | TopAppBarDefaults.SearchSlotInsideMargin | No       |
+
+### TopAppBarSearchBar Properties
+
+| Property Name      | Type                          | Description                                                  | Default Value | Required |
+| ------------------ | ----------------------------- | ------------------------------------------------------------ | ------------- | -------- |
+| query              | String                        | The search text                                              | -             | Yes      |
+| onQueryChange      | (String) -> Unit              | Called with the new search text                              | -             | Yes      |
+| expanded           | Boolean                       | Whether the search is active                                 | -             | Yes      |
+| onExpandedChange   | (Boolean) -> Unit             | Called to enter or leave the search                          | -             | Yes      |
+| cancelText         | String                        | Localized text of the cancel button                          | -             | Yes      |
+| modifier           | Modifier                      | Modifier applied to the search bar                           | Modifier      | No       |
+| onSearch           | (String) -> Unit              | Called when the keyboard's search action is pressed          | {}            | No       |
+| label              | String                        | Hint shown while the query is empty                          | ""            | No       |
+| hints              | List<String>                  | Rotating hints shown in place of the label                   | emptyList()   | No       |
+| innerPrimaryButton | (@Composable () -> Unit)?     | Button inside the capsule while the query is empty, e.g. voice input | null  | No       |
+
+### TopAppBarSearchState
+
+Created with `rememberTopAppBarSearchState(active)`, which runs the transition each time `active` changes.
+
+| Property Name   | Type    | Description                                                                 |
+| --------------- | ------- | --------------------------------------------------------------------------- |
+| isActive        | Boolean | Whether the search is active, or entering                                   |
+| progress        | Float   | How far the bar has moved into the search: 0 title area, 1 search bar at the top |
+| resultsProgress | Float   | How far the search results have come in (response 0.35 entering, 0.1 leaving) |
+| contentAlpha    | Float   | Alpha of the title and the page behind the search: `1 - progress`, cubed while entering |
+| isContentVisible | Boolean | Whether the page behind the search still shows |
+| isResultsVisible | Boolean | Whether the results show: while active and until they have left |
+
+`Modifier.topAppBarSearchContent(state)` fades the page behind the search; `Modifier.topAppBarSearchResults(state)` fades the results in while moving them up from `ResultsOffset`. `isContentVisible` and `isResultsVisible` tell when each list needs to be composed.
+
+### TopAppBarSearchDefaults Object
+
+| Property Name    | Type                 | Description                                        | Value  |
+| ---------------- | -------------------- | -------------------------------------------------- | ------ |
+| TransitionSpec   | AnimationSpec<Float> | Title, toolbar and search bar spring               | response 0.35, bounce 0 |
+| ResultsEnterSpec | AnimationSpec<Float> | Results spring on entering                         | response 0.35, bounce 0 |
+| ResultsExitSpec  | AnimationSpec<Float> | Results spring on leaving                          | response 0.1, bounce 0 |
+| ResultsOffset    | Dp                   | How far below their place the results start (`homepage_init_searchbar_top`) | 108.dp |
+| TitleEndScale    | Float                | Scale the title shrinks to                         | 0.8    |
+| TitleTravel      | Dp                   | How far the title moves up (200px at 3.5x)         | 57.dp  |
 
 ### TopAppBarDefaults Object
 

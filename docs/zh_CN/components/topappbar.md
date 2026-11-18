@@ -14,6 +14,11 @@
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.SmallTopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchState
+import io.github.suqi8.coui.kmp.basic.topAppBarSearchContent
+import io.github.suqi8.coui.kmp.basic.topAppBarSearchResults
+import io.github.suqi8.coui.kmp.basic.rememberTopAppBarSearchState
 import io.github.suqi8.coui.kmp.basic.COUIScrollBehavior
 import io.github.suqi8.coui.kmp.basic.rememberTopAppBarState
 ```
@@ -101,7 +106,7 @@ TopAppBar(
 
 ### 标题下方的搜索胶囊
 
-`TopAppBarSearchSlot` 是 COUI 17 设置首页的搜索行。把它放进 `bottomContent`：它排出一行 52dp（`coui_search_view_height`）、带 16dp 页边距的区域，并随展开态标题区域一起折叠收起。通过具名参数 `inputField` 直接放一个 `InputField`；不要在里面再包一整个 `SearchBar`，因为槽位已经为胶囊留了 16dp 边距，搜索栏会再叠加一层自己的边距：
+`TopAppBarSearchSlot` 是静态的搜索胶囊行，只用于点击后跳转别处（例如单独的搜索页）的胶囊；可输入的搜索请用 `TopAppBarSearchBar`（见“原地搜索”）。把它放进 `bottomContent`：它排出一行 52dp（`coui_search_view_height`）、带 16dp 页边距的区域，并随展开态标题区域一起折叠收起。通过具名参数 `inputField` 直接放一个 `InputField`；不要在里面再包一整个 `SearchBar`，因为槽位已经为胶囊留了 16dp 边距，搜索栏会再叠加一层自己的边距：
 
 ```kotlin
 var query by remember { mutableStateOf("") }
@@ -123,6 +128,56 @@ TopAppBar(
         )
     }
 )
+```
+
+### 原地搜索
+
+标题下方可输入的搜索都原地进行，并像 COUI 17 设置首页一样与顶栏联动：点击胶囊后它进入编辑态并出现取消按钮，大标题缩小到 80%、淡出并上移，工具栏向上滚走，搜索栏升到状态栏正下方（`HomepageImpl.animToEdit`，response 0.35、无回弹的弹簧）。在 `bottomContent` 里放 `TopAppBarSearchBar`（它自带 52dp 的行和页边距，所以不要再套 `TopAppBarSearchSlot`），并把同一个 `TopAppBarSearchState` 传给顶栏。用 `Modifier.topAppBarSearchContent` 淡出页面，用 `Modifier.topAppBarSearchResults` 让结果在独立的列表里进入：结果一边淡入一边上移 108dp。取消和系统返回都会退出搜索并清空查询。`TopAppBarSearchSlot` 只用于点击后跳转别处的胶囊。
+
+```kotlin
+var searching by rememberSaveable { mutableStateOf(false) }
+var query by rememberSaveable { mutableStateOf("") }
+val searchState = rememberTopAppBarSearchState(active = searching)
+val pageListState = rememberLazyListState()
+
+Scaffold(
+    topBar = {
+        TopAppBar(
+            title = "Settings",
+            scrollBehavior = scrollBehavior,
+            searchState = searchState,
+            bottomContent = {
+                TopAppBarSearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    expanded = searching,
+                    onExpandedChange = {
+                        searching = it
+                        if (!it) query = ""
+                    },
+                    cancelText = "Cancel",
+                    label = "Search"
+                )
+            }
+        )
+    }
+) { padding ->
+    Box(Modifier.fillMaxSize()) {
+        if (searchState.isContentVisible) {
+            LazyColumn(
+                modifier = Modifier.topAppBarSearchContent(searchState),
+                state = pageListState,
+                contentPadding = padding
+            ) { /* The page */ }
+        }
+        if (searchState.isResultsVisible) {
+            LazyColumn(
+                modifier = Modifier.topAppBarSearchResults(searchState),
+                contentPadding = padding
+            ) { /* The results for query */ }
+        }
+    }
+}
 ```
 
 ## 大标题顶部栏滚动行为（使用脚手架）
@@ -219,6 +274,7 @@ TopAppBar(
 | largeTitleBottomMargin     | Dp                              | 指定后大标题按此边距贴展开态底部，而不是用顶部边距 | Dp.Unspecified | 否       |
 | fadeLargeTitleOnCollapse   | Boolean                         | 折叠时让大标题淡出缩小，而不是变形为折叠标题（COUI 17 设置首页） | false | 否       |
 | glow                       | (@Composable BoxScope.() -> Unit)? | 顶栏背后的衬底层，例如配合透明 `color` 使用的 `TopAppBarGlow`；`null` 为实色顶栏 | null | 否       |
+| searchState                | TopAppBarSearchState?           | 把顶栏与 `bottomContent` 中的搜索栏联动：进入搜索时标题淡出、底部内容升到顶部（COUI 17 设置首页） | null | 否       |
 | bottomContent              | @Composable () -> Unit          | 显示在标题栏下方的可组合内容 | {}                                | 否       |
 
 ### SmallTopAppBar 属性
@@ -252,6 +308,47 @@ TopAppBar(
 | modifier     | Modifier               | 应用于槽位行的修饰符                         | Modifier                                 | 否       |
 | height       | Dp                     | 槽位行高度（`coui_search_view_height`）      | TopAppBarDefaults.SearchSlotHeight       | 否       |
 | insideMargin | PaddingValues          | 胶囊的水平页边距                             | TopAppBarDefaults.SearchSlotInsideMargin | 否       |
+
+### TopAppBarSearchBar 属性
+
+| 属性名             | 类型                          | 说明                                     | 默认值      | 是否必须 |
+| ------------------ | ----------------------------- | ---------------------------------------- | ----------- | -------- |
+| query              | String                        | 搜索文本                                 | -           | 是       |
+| onQueryChange      | (String) -> Unit              | 搜索文本变化时回调                       | -           | 是       |
+| expanded           | Boolean                       | 搜索是否处于激活状态                     | -           | 是       |
+| onExpandedChange   | (Boolean) -> Unit             | 进入或退出搜索时回调                     | -           | 是       |
+| cancelText         | String                        | 取消按钮的本地化文字                     | -           | 是       |
+| modifier           | Modifier                      | 应用于搜索栏的修饰符                     | Modifier    | 否       |
+| onSearch           | (String) -> Unit              | 按下键盘搜索键时回调                     | {}          | 否       |
+| label              | String                        | 查询为空时显示的提示文字                 | ""          | 否       |
+| hints              | List<String>                  | 代替 label 轮播显示的提示                | emptyList() | 否       |
+| innerPrimaryButton | (@Composable () -> Unit)?     | 查询为空时胶囊内的按钮，例如语音输入     | null        | 否       |
+
+### TopAppBarSearchState
+
+由 `rememberTopAppBarSearchState(active)` 创建，`active` 每次变化都会播放过渡动画。
+
+| 属性名          | 类型    | 说明                                                         |
+| --------------- | ------- | ------------------------------------------------------------ |
+| isActive        | Boolean | 搜索是否处于激活或进入中                                     |
+| progress        | Float   | 顶栏进入搜索的程度：0 为标题区域，1 为搜索栏位于顶部         |
+| resultsProgress | Float   | 搜索结果进入的程度（进入 response 0.35，退出 0.1）           |
+| contentAlpha    | Float   | 标题及搜索背后页面的透明度：`1 - progress`，进入时取立方     |
+| isContentVisible | Boolean | 搜索背后的页面是否仍可见 |
+| isResultsVisible | Boolean | 结果是否显示：激活期间以及退场完成前 |
+
+`Modifier.topAppBarSearchContent(state)` 让搜索背后的页面淡出；`Modifier.topAppBarSearchResults(state)` 让结果从 `ResultsOffset` 处上移并淡入。`isContentVisible` 与 `isResultsVisible` 指示两个列表何时需要组合。
+
+### TopAppBarSearchDefaults 对象
+
+| 属性名           | 类型                 | 说明                                              | 值     |
+| ---------------- | -------------------- | ------------------------------------------------- | ------ |
+| TransitionSpec   | AnimationSpec<Float> | 标题、工具栏与搜索栏的弹簧                         | response 0.35，bounce 0 |
+| ResultsEnterSpec | AnimationSpec<Float> | 结果进入时的弹簧                                  | response 0.35，bounce 0 |
+| ResultsExitSpec  | AnimationSpec<Float> | 结果退出时的弹簧                                  | response 0.1，bounce 0 |
+| ResultsOffset    | Dp                   | 结果起始位置在最终位置下方多远（`homepage_init_searchbar_top`） | 108.dp |
+| TitleEndScale    | Float                | 标题缩小到的比例                                  | 0.8    |
+| TitleTravel      | Dp                   | 标题上移的距离（3.5x 下 200px）                   | 57.dp  |
 
 ### TopAppBarDefaults 对象
 

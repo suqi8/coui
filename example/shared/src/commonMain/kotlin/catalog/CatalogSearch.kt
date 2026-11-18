@@ -4,29 +4,26 @@ package catalog
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.basic.CancelButton
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.EmptyState
-import io.github.suqi8.coui.kmp.basic.InputField
-import io.github.suqi8.coui.kmp.basic.SearchBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchBar
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchState
 import io.github.suqi8.coui.kmp.preference.PreferenceCategory
 import io.github.suqi8.coui.kmp.shared.generated.resources.Res
 import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_empty
 import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_empty_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_hint
+import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_hint_dialog
+import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_hint_slider
 import io.github.suqi8.coui.kmp.shared.generated.resources.catalog_search_results
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_cancel
 import org.jetbrains.compose.resources.getString
@@ -85,43 +82,40 @@ fun rememberDemoSearchResults(query: String, index: List<DemoSearchEntry>): List
 }
 
 /**
- * The expanded search row that replaces the home top bar while searching: the search field,
- * focused on entry, and a cancel button, pinned below the status bar like the ColorOS Settings
- * search.
+ * The [TopAppBarSearchBar] of the components home, with its rotating hints, docked below the top bar title like the ColorOS
+ * Settings search: tapping the capsule enters the search in place, where the capsule gains a
+ * cancel button and the top bar lifts it to the top (see [TopAppBarSearchState]); cancel or back
+ * leaves it again.
  *
  * @param query The search text.
  * @param onQueryChange Called with the new search text.
- * @param onCancel Leaves the search.
- * @param modifier The modifier for the row.
+ * @param expanded Whether the search is active.
+ * @param onExpandedChange Called to enter or leave the search.
+ * @param modifier The modifier for the bar.
  */
 @Composable
 fun CatalogSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
-    onCancel: () -> Unit,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(focusRequester) { focusRequester.requestFocus() }
-    SearchBar(
-        modifier = modifier.fillMaxWidth().statusBarsPadding().padding(vertical = 6.dp),
-        inputField = {
-            InputField(
-                query = query,
-                onQueryChange = onQueryChange,
-                onSearch = {},
-                expanded = true,
-                onExpandedChange = {},
-                modifier = Modifier.focusRequester(focusRequester),
-                label = stringResource(Res.string.catalog_search_hint),
-            )
-        },
-        outsideEndAction = {
-            CancelButton(onClick = onCancel, text = stringResource(Res.string.common_cancel))
-        },
-        expanded = true,
-        onExpandedChange = { if (!it) onCancel() },
-    ) {}
+    val hints = listOf(
+        stringResource(Res.string.catalog_search_hint),
+        stringResource(Res.string.catalog_search_hint_slider),
+        stringResource(Res.string.catalog_search_hint_dialog),
+    )
+    TopAppBarSearchBar(
+        query = query,
+        onQueryChange = onQueryChange,
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
+        cancelText = stringResource(Res.string.common_cancel),
+        modifier = modifier,
+        label = stringResource(Res.string.catalog_search_hint),
+        hints = hints,
+    )
 }
 
 /**

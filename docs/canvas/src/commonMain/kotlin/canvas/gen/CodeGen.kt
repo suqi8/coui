@@ -363,6 +363,10 @@ private class PageWriter(
     private val contentWidth = contentWidth(s.frame)
     private var searchQuery: String? = null
 
+    /** The in-place search of a settings home bar: its active flag and [TopAppBarSearchState] names. */
+    private var searching: String? = null
+    private var searchState: String? = null
+
     private fun str(text: String, hint: String): String = f.str(strings.key(s.snake, text, hint))
 
     private fun icon(name: String): String = f.icon(if (name in canvas.model.IconNames) name else FALLBACK_ICON)
@@ -394,7 +398,18 @@ private class PageWriter(
     private fun allocate() {
         callbacks.forEach { names += it.name }
         names += "modifier"
-        s.topBar?.item?.takeIf { it.variant == "home" }?.let { searchQuery = state(it.id, "searchQuery", "String", "\"\"") }
+        s.topBar?.item?.takeIf { it.variant == "home" }?.let { bar ->
+            searchQuery = state(bar.id, "searchQuery", "String", "\"\"")
+            // A capsule without a search edge searches in place, linked with the top bar.
+            if (edge(bar, NavEdge.SEARCH) == null) {
+                val active = state(bar.id + ":searching", "searching", "Boolean", "false")
+                val name = unique("searchState")
+                f.import("io.github.suqi8.coui.kmp.basic.rememberTopAppBarSearchState")
+                states += State(name, "val $name = rememberTopAppBarSearchState(active = $active)")
+                searching = active
+                searchState = name
+            }
+        }
         s.overlays.forEach { o ->
             val kindName = if (o.part.kind == Kind.Dialog) "Dialog" else "Sheet"
             val b = Names.pascal(Names.words(o.part.item.label).take(3).joinToString(" "))
@@ -532,7 +547,8 @@ private class PageWriter(
 
     private fun page() {
         val bar = s.topBar?.item
-        val scaffold = s.bottomNav != null || s.fab != null || bar == null
+        // A linked search needs the scaffold, so the page and its results can each have their own list.
+        val scaffold = s.bottomNav != null || s.fab != null || bar == null || searchState != null
         val args = mutableListOf<Arg>()
         args += Arg.V("title", bar?.label?.takeIf { it.isNotBlank() }?.let { str(it, "title") } ?: "\"\"")
         args += Arg.V("modifier", "modifier")
@@ -554,27 +570,48 @@ private class PageWriter(
         }
         if (bar?.variant == "home") {
             val q = searchQuery!!
-            f.import("io.github.suqi8.coui.kmp.basic.InputField", "io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot")
-            args += Arg.L("topBarBottomContent") {
-                line("// TODO: search in place (coui-app skill, section 3): swap the bar for an expanded SearchBar.")
-                call(
-                    "TopAppBarSearchSlot",
-                    listOf(
-                        Arg.L("inputField") {
-                            call(
-                                "InputField",
-                                listOfNotNull(
-                                    Arg.V("query", q),
-                                    Arg.V("onQueryChange", "{ $q = it }"),
-                                    Arg.V("onSearch", "{}"),
-                                    Arg.V("expanded", "false"),
-                                    Arg.V("onExpandedChange", callbackOf(edge(bar, NavEdge.SEARCH))?.let { "{ if (it) $it() }" } ?: "{}"),
-                                    bar.supporting?.takeIf { it.isNotBlank() }?.let { Arg.V("label", str(it, "search_hint")) },
-                                ),
-                            )
-                        },
-                    ),
-                )
+            val label = bar.supporting?.takeIf { it.isNotBlank() }?.let { Arg.V("label", str(it, "search_hint")) }
+            val active = searching
+            val linked = searchState
+            if (active != null && linked != null) {
+                // ColorOS Settings search: the capsule enters the edit state in place and the bar lifts it.
+                f.import("io.github.suqi8.coui.kmp.basic.TopAppBarSearchBar")
+                args += Arg.V("topBarSearchState", linked)
+                args += Arg.L("topBarBottomContent") {
+                    call(
+                        "TopAppBarSearchBar",
+                        listOfNotNull(
+                            Arg.V("query", q),
+                            Arg.V("onQueryChange", "{ $q = it }"),
+                            Arg.V("expanded", active),
+                            Arg.V("onExpandedChange", "{ $active = it; if (!it) $q = \"\" }"),
+                            Arg.V("cancelText", str("Cancel", "search_cancel")),
+                            label,
+                        ),
+                    )
+                }
+            } else {
+                f.import("io.github.suqi8.coui.kmp.basic.InputField", "io.github.suqi8.coui.kmp.basic.TopAppBarSearchSlot")
+                args += Arg.L("topBarBottomContent") {
+                    call(
+                        "TopAppBarSearchSlot",
+                        listOf(
+                            Arg.L("inputField") {
+                                call(
+                                    "InputField",
+                                    listOfNotNull(
+                                        Arg.V("query", q),
+                                        Arg.V("onQueryChange", "{ $q = it }"),
+                                        Arg.V("onSearch", "{}"),
+                                        Arg.V("expanded", "false"),
+                                        Arg.V("onExpandedChange", callbackOf(edge(bar, NavEdge.SEARCH))?.let { "{ if (it) $it() }" } ?: "{}"),
+                                        label,
+                                    ),
+                                )
+                            },
+                        ),
+                    )
+                }
             }
         }
         if (bar == null) args += Arg.V("topBarContainer", "{}")
@@ -594,8 +631,25 @@ private class PageWriter(
             f.import("androidx.compose.foundation.layout.Box", "androidx.compose.foundation.layout.fillMaxSize", "androidx.compose.foundation.lazy.LazyColumn")
             w.call("CouiPageScaffold", args, lambdaParams = "scope ->") {
                 w.block("Box(modifier = ${mod(".fillMaxSize()")}) {", "}") {
-                    call("LazyColumn", listOf(Arg.V("modifier", "Modifier.couiPageScroll(scope)"), Arg.V("contentPadding", "scope.contentPadding"))) {
+                    val linked = searchState
+                    val page = if (linked == null) "Modifier.couiPageScroll(scope)" else "Modifier.couiPageScroll(scope).topAppBarSearchContent($linked)"
+                    call("LazyColumn", listOf(Arg.V("modifier", page), Arg.V("contentPadding", "scope.contentPadding"))) {
                         body()
+                    }
+                    if (linked != null) {
+                        // The page fades out behind the search and the results come up from below.
+                        f.import("io.github.suqi8.coui.kmp.basic.topAppBarSearchContent", "io.github.suqi8.coui.kmp.basic.topAppBarSearchResults")
+                        w.block("if ($linked.isResultsVisible) {", "}") {
+                            call(
+                                "LazyColumn",
+                                listOf(
+                                    Arg.V("modifier", "Modifier.couiPageScroll(scope).topAppBarSearchResults($linked)"),
+                                    Arg.V("contentPadding", "scope.contentPadding"),
+                                ),
+                            ) {
+                                w.line("// TODO: the results matching ${searchQuery!!}.")
+                            }
+                        }
                     }
                     overlays()
                 }

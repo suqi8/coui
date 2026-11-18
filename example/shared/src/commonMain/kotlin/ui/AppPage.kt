@@ -49,6 +49,7 @@ import io.github.suqi8.coui.kmp.basic.SnackbarHostState
 import io.github.suqi8.coui.kmp.basic.ToolbarPosition
 import io.github.suqi8.coui.kmp.basic.TopAppBar
 import io.github.suqi8.coui.kmp.basic.TopAppBarDefaults
+import io.github.suqi8.coui.kmp.basic.TopAppBarSearchState
 import io.github.suqi8.coui.kmp.basic.VerticalScrollBar
 import io.github.suqi8.coui.kmp.basic.glowScrollOffsetPx
 import io.github.suqi8.coui.kmp.basic.rememberScrollBarAdapter
@@ -129,6 +130,7 @@ fun Modifier.appPageScroll(scope: AppPageContentScope): Modifier {
  * @param actions The top bar actions.
  * @param topBarBottomContent Content docked below the top bar title, such as a search slot.
  * @param topBarContainer Wraps the top bar, for demos that anchor something to it.
+ * @param topBarSearchState Links the top bar to a search bar in [topBarBottomContent] (large bars only).
  * @param snackbarHostState Shows a snackbar host for this state.
  * @param bottomBar The bottom bar.
  * @param floatingActionButton The floating action button.
@@ -150,6 +152,7 @@ fun AppPageScaffold(
     actions: @Composable RowScope.() -> Unit = {},
     topBarBottomContent: @Composable () -> Unit = {},
     topBarContainer: @Composable (topBar: @Composable () -> Unit) -> Unit = { topBar -> topBar() },
+    topBarSearchState: TopAppBarSearchState? = null,
     snackbarHostState: SnackbarHostState? = null,
     bottomBar: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
@@ -178,6 +181,7 @@ fun AppPageScaffold(
                         backdrop = backdrop,
                         titleColor = titleColor,
                         actions = actions,
+                        searchState = topBarSearchState,
                         bottomContent = topBarBottomContent,
                     )
                 }
@@ -311,6 +315,7 @@ fun AppPageTopBar(
     style: AppPageTopBarStyle = AppPageTopBarStyle.Large,
     titleColor: Color = Color.Unspecified,
     actions: @Composable RowScope.() -> Unit = {},
+    searchState: TopAppBarSearchState? = null,
     bottomContent: @Composable () -> Unit = {},
 ) {
     val colors = COUITheme.colorScheme
@@ -371,6 +376,7 @@ fun AppPageTopBar(
             glow = glow,
             navigationIcon = navigationIcon,
             actions = actions,
+            searchState = searchState,
             bottomContent = bottomContent,
         )
     }

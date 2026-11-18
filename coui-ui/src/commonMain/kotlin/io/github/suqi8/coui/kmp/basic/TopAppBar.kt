@@ -131,6 +131,11 @@ import kotlin.math.roundToInt
  *   to get the frosted top bar: the bar itself draws no background, and the scrolled content is
  *   blurred beneath it. Pass `null` for a solid bar (and whenever the blur is off), which also
  *   lets [showDivider] take effect.
+ * @param searchState Links the bar to a [TopAppBarSearchBar] in [bottomContent], like the COUI 17
+ *   settings home: as the search enters, the title shrinks, fades and moves up, the toolbar scrolls
+ *   away and the bottom content rises to just below the status bar; see
+ *   [rememberTopAppBarSearchState].
+ *   `null` keeps the bar as it is.
  * @param bottomContent The [Composable] content displayed below the title bar area.
  */
 @Composable
@@ -158,6 +163,7 @@ fun TopAppBar(
     largeTitleBottomMargin: Dp = Dp.Unspecified,
     fadeLargeTitleOnCollapse: Boolean = false,
     glow: (@Composable BoxScope.() -> Unit)? = null,
+    searchState: TopAppBarSearchState? = null,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Wrap the given actions in a Row. The actions and the navigation icon are COUI toolbar items,
@@ -207,6 +213,7 @@ fun TopAppBar(
         largeTitleBottomMargin = largeTitleBottomMargin,
         fadeLargeTitleOnCollapse = fadeLargeTitleOnCollapse,
         glow = glow,
+        searchState = searchState,
         bottomContent = bottomContent,
     )
 }
@@ -216,6 +223,11 @@ fun TopAppBar(
  *
  * It renders a capsule search field inside a fixed-height row, with the COUI page-side
  * horizontal padding, so the bar collapses away with the rest of the expanded title area.
+ *
+ * A search the user types into should search in place like the settings home, where the capsule
+ * itself enters the edit state with a cancel button and rises to the top: use [TopAppBarSearchBar]
+ * as [TopAppBar]'s `bottomContent` instead (it brings its own 52dp row and page padding), together
+ * with a [TopAppBarSearchState]. Keep this slot for a capsule that only opens something else.
  *
  * @param inputField the search input field (e.g. [SearchBar]'s `InputField`).
  * @param modifier the [Modifier] to be applied to the slot.
@@ -850,6 +862,7 @@ private suspend fun settleAppBar(
  * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [TopAppBar].
  * @param showDivider whether to draw the bottom hairline divider while collapsing.
  * @param hideSubtitleOnCollapse whether the subtitle fades out while the bar collapses.
+ * @param searchState the search transition that lifts [bottomContent] over the title area.
  * @param bottomContent the composable content displayed below the title bar area.
  */
 @Composable
@@ -877,6 +890,7 @@ private fun TopAppBarLayout(
     largeTitleBottomMargin: Dp = Dp.Unspecified,
     fadeLargeTitleOnCollapse: Boolean = false,
     glow: (@Composable BoxScope.() -> Unit)? = null,
+    searchState: TopAppBarSearchState? = null,
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Producer lambdas — reads stay in layout/draw phases so scroll never recomposes this subtree.
@@ -1160,7 +1174,16 @@ private fun TopAppBarLayout(
         val collapsed = !fadeLargeTitleOnCollapse && collapseFraction >= CollapsedTitleSwapFraction
         val pivotX = if (layoutDirection == LayoutDirection.Rtl) 1f else 0f
 
-        val contentTop = barHeight
+        // Search transition (HomepageImpl.animToEdit): the title area scrolls away above the bottom
+        // content, which rises to the top of the bar, while the titles also shrink, fade and move up
+        // (CollapsingToolbarLayout.setTitleTransform). Read here, so it only re-lays out the bar.
+        val searchProgress = searchState?.progress ?: 0f
+        val searchAlpha = searchState?.contentAlpha ?: 1f
+        val contentTop = (barHeight * (1f - searchProgress)).roundToInt()
+        val areaShift = contentTop - barHeight
+        val titleShift = areaShift - (TopAppBarSearchDefaults.TitleTravel.toPx() * searchProgress).roundToInt()
+        val titleSearchScale = lerp(TopAppBarSearchDefaults.TitleEndScale, 1f, searchAlpha)
+
         val layoutHeight = contentTop + bottomContentPlaceable.height
         val glowPlaceable = measureGlow(measurables, constraints.maxWidth, statusBarInsetPx + layoutHeight)
 
@@ -1170,37 +1193,41 @@ private fun TopAppBarLayout(
             glowPlaceable?.placeRelative(x = 0, y = -statusBarInsetPx)
 
             // Navigation icon
-            navigationIconPlaceable.placeRelative(
+            navigationIconPlaceable.placeRelativeWithLayer(
                 x = navigationIconPaddingPx,
-                y = verticalCenter - navigationIconPlaceable.height / 2,
-            )
+                y = verticalCenter - navigationIconPlaceable.height / 2 + areaShift,
+            ) {
+                alpha = searchAlpha
+            }
 
             // Action icons
-            actionIconsPlaceable.placeRelative(
+            actionIconsPlaceable.placeRelativeWithLayer(
                 x = constraints.maxWidth - actionIconPaddingPx - actionIconsPlaceable.width,
-                y = verticalCenter - actionIconsPlaceable.height / 2,
-            )
+                y = verticalCenter - actionIconsPlaceable.height / 2 + areaShift,
+            ) {
+                alpha = searchAlpha
+            }
 
             // Subtitle (COUICollapsableAppBarLayout.adjustSubtitleIfNeed): rides the scroll 1:1,
             // lifted by the interpolating bottom padding; fades out only when hideSubtitleOnCollapse.
             subtitlePlaceable?.placeRelativeWithLayer(
                 x = titlePaddingPx,
                 y = expandedBarHeight - subtitleHeight -
-                    (largeTitleBottomPaddingPx * (1f - collapseFraction)).roundToInt() + offsetPx,
+                    (largeTitleBottomPaddingPx * (1f - collapseFraction)).roundToInt() + offsetPx + titleShift,
             ) {
-                alpha = if (hideSubtitleOnCollapse) 1f - collapseFraction else 1f
+                alpha = (if (hideSubtitleOnCollapse) 1f - collapseFraction else 1f) * searchAlpha
             }
 
             // Large title: translates and scales into the collapsed title; swapped for the
             // dedicated collapsed title only at full collapse.
             largeTitlePlaceable.placeRelativeWithLayer(
                 x = largeTitleX.roundToInt(),
-                y = largeTitleY.roundToInt(),
+                y = largeTitleY.roundToInt() + titleShift,
             ) {
                 transformOrigin = TransformOrigin(pivotX, 0f)
-                scaleX = largeTitleScale
-                scaleY = largeTitleScale
-                alpha = when {
+                scaleX = largeTitleScale * titleSearchScale
+                scaleY = largeTitleScale * titleSearchScale
+                alpha = searchAlpha * when {
                     fadeLargeTitleOnCollapse -> 1f - collapseFraction
                     collapsed -> 0f
                     else -> 1f
@@ -1210,9 +1237,12 @@ private fun TopAppBarLayout(
             // Collapsed title (start-aligned, visible only at full collapse).
             titlePlaceable.placeRelativeWithLayer(
                 x = collapsedTitleX,
-                y = collapsedTitleY,
+                y = collapsedTitleY + titleShift,
             ) {
-                alpha = if (collapsed) 1f else 0f
+                transformOrigin = TransformOrigin(pivotX, 0f)
+                scaleX = titleSearchScale
+                scaleY = titleSearchScale
+                alpha = if (collapsed) searchAlpha else 0f
             }
 
             // Bottom content (pinned, below the bar)
