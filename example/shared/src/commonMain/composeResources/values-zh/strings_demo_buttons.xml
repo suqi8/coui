@@ -120,4 +120,24 @@
     <string name="demo_segment_button_search_terms">分段, 切换, segmented, tabs</string>
     <string name="demo_stepper_search_terms">计数, counter, number, plus, minus</string>
     <string name="demo_two_text_button_search_terms">引导, onboarding, crossfade</string>
+    <string name="demo_camera_shutter_button_title">相机快门按钮</string>
+    <string name="demo_camera_shutter_button_search_terms">快门, 相机, 拍照, 录像, 视频, 切换摄像头, 暂停</string>
+    <string name="demo_camera_shutter_button_photo">拍照</string>
+    <string name="demo_camera_shutter_button_video">录像</string>
+    <string name="demo_camera_shutter_button_material_blur">材质模糊</string>
+    <string name="demo_camera_shutter_button_material_blur_summary">模糊按钮后方的照片；关闭后显示半透明底色</string>
+    <string name="demo_camera_shutter_button_long_exposure">长曝光</string>
+    <string name="demo_camera_shutter_button_long_exposure_summary">拍照时进度环在 3 秒内走满，随后保存</string>
+    <string name="demo_camera_shutter_button_timer">定时标签</string>
+    <string name="demo_camera_shutter_button_timer_summary">以 3 秒定时代替中心圆盘</string>
+    <string name="demo_camera_shutter_button_shots">已拍摄：%1$d 张</string>
+    <string name="demo_camera_shutter_button_recording">录制中</string>
+    <string name="demo_camera_shutter_button_paused">已暂停</string>
+    <string name="demo_camera_shutter_button_switch_camera">切换摄像头</string>
+    <string name="demo_camera_shutter_button_pause">暂停录制</string>
+    <string name="demo_camera_shutter_button_resume">继续录制</string>
+    <string name="demo_camera_shutter_button_capture">拍照</string>
+    <string name="demo_camera_shutter_button_variant_states">状态</string>
+    <string name="demo_camera_shutter_button_variant_styles">样式</string>
+    <string name="demo_camera_shutter_button_variant_controls">控制按钮</string>
 </resources>

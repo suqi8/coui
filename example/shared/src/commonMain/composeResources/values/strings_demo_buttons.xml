@@ -120,4 +120,24 @@
     <string name="demo_segment_button_search_terms">segmented, tabs</string>
     <string name="demo_stepper_search_terms">counter, number, plus, minus</string>
     <string name="demo_two_text_button_search_terms">onboarding, crossfade</string>
+    <string name="demo_camera_shutter_button_title">Camera shutter button</string>
+    <string name="demo_camera_shutter_button_search_terms">shutter, camera, capture, record, video, photo, switch camera, pause</string>
+    <string name="demo_camera_shutter_button_photo">Photo</string>
+    <string name="demo_camera_shutter_button_video">Video</string>
+    <string name="demo_camera_shutter_button_material_blur">Material blur</string>
+    <string name="demo_camera_shutter_button_material_blur_summary">Blur the photo behind the buttons; off shows the translucent fill</string>
+    <string name="demo_camera_shutter_button_long_exposure">Long exposure</string>
+    <string name="demo_camera_shutter_button_long_exposure_summary">A photo fills the progress ring over 3 seconds, then saves</string>
+    <string name="demo_camera_shutter_button_timer">Self-timer label</string>
+    <string name="demo_camera_shutter_button_timer_summary">Show the 3-second timer in place of the disc</string>
+    <string name="demo_camera_shutter_button_shots">Shots: %1$d</string>
+    <string name="demo_camera_shutter_button_recording">Recording</string>
+    <string name="demo_camera_shutter_button_paused">Paused</string>
+    <string name="demo_camera_shutter_button_switch_camera">Switch camera</string>
+    <string name="demo_camera_shutter_button_pause">Pause recording</string>
+    <string name="demo_camera_shutter_button_resume">Resume recording</string>
+    <string name="demo_camera_shutter_button_capture">Take a photo</string>
+    <string name="demo_camera_shutter_button_variant_states">States</string>
+    <string name="demo_camera_shutter_button_variant_styles">Styles</string>
+    <string name="demo_camera_shutter_button_variant_controls">Control buttons</string>
 </resources>

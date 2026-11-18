@@ -62,6 +62,7 @@ ZH after Card: | [PageIndicator](../components/pageindicator) | 带轨迹动画�
 | [IntentSlider](../components/intentslider)                 | 带缓冲进度的细长媒体进度条 | 视频/音乐播放进度    |
 | [NumberPicker](../components/numberpicker)                 | 垂直滚动数字选择器     | 时间选择、数量选择   |
 | [ExposureBar](../components/exposurebar)                   | 相机曝光补偿刻度面板   | 曝光补偿、相机工具   |
+| [CameraShutterButton](../components/camerashutterbutton) | 相机快门（拍照 / 录像 / 录制中）与圆形相机控制按钮 | 相机拍摄、录像控制 |
 | [DatePicker](../components/datepicker)                     | 日期滚轮选择器（年/月/日） | 日期选择、表单       |
 | [TimePicker](../components/timepicker)                     | 时间滚轮选择器（时/分） | 时间选择、闹钟       |
 | [DateTimePicker](../components/datetimepicker)             | 日期 + 时间滚轮选择器   | 提醒、日程           |
