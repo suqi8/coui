@@ -1,6 +1,6 @@
 # 升级指南
 
-## 未发布
+## 1.1.0 → 2.0.0
 
 ### 弹出菜单默认模糊
 
@@ -441,6 +441,20 @@ CompositionLocalProvider(LocalCOUIMaterialEffectEnabled provides !batterySaver) 
 - 材质模糊：对话框、底部面板与弹窗的模糊扩散约小 4%，并带抖动。
 - 宽窗口（不小于 600dp）：底部面板居中浮起、最宽 540dp，`Banner` 切换为列表形态。
 - `TextField` 浮动标签：新的标签位置与缺口，以及 62dp 最小高度。
+
+### 本版新增
+
+- **与顶栏联动的搜索。** `TopAppBarSearchBar`、`rememberTopAppBarSearchState`、
+  `TopAppBar(searchState = …)` 以及 `Modifier.topAppBarSearchContent` / `topAppBarSearchResults`
+  实现与 ColorOS 17 设置首页一样的原地搜索：标题淡出，搜索栏带着取消按钮升到顶部，页面淡出，结果从下方进入。
+  顶栏下方所有可输入的搜索都用它；`TopAppBarSearchSlot` 只用于点击后跳转别处的胶囊。
+  见 [TopAppBar](../components/topappbar.md#原地搜索)。
+- **相机控件**，来自 ColorOS 相机：`ExposureBar`、`ScaleBar`、`CameraShutterButton`、
+  `CameraSwitchButton`、`CameraModeBar`、`CameraModeTitle`、`CameraLensBar`、`CameraZoomBar`、
+  `CameraZoomDial`、`CameraFocusIndicator`、`CameraMenuButton`、`CameraEffectButton`、
+  `CameraTopMenu`、`CameraRecordTimer`、`CameraCountdown`、`RollingNumber`、
+  `CameraLevelIndicator`、`CameraGridOverlay`、`CameraThumbnail` 和 `CameraHint`。
+- **Baseline profile**：所有库模块的 profile 已按 `io.github.suqi8.coui.kmp` 包名重新生成。
 
 ## 1.0.0 → 1.1.0
 

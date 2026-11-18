@@ -1,6 +1,6 @@
 # Upgrading
 
-## Unreleased
+## 1.1.0 → 2.0.0
 
 ### Popup menus are blurred by default
 
@@ -526,6 +526,22 @@ These compile without changes but are easy to miss in a preview; look at them on
 - Wide windows (at least 600dp): bottom sheets float centered at up to 540dp, and `Banner` switches
   to the list form.
 - `TextField` floating labels: the new label offsets and cutout, and the 62dp minimum height.
+
+### New in this release
+
+- **Search linked with the top bar.** `TopAppBarSearchBar`, `rememberTopAppBarSearchState`,
+  `TopAppBar(searchState = …)` and `Modifier.topAppBarSearchContent` / `topAppBarSearchResults`
+  search in place like the ColorOS 17 Settings home: the title fades away, the search bar rises to
+  the top with a cancel button, the page fades out and the results come up from below. Use it for
+  every search typed into under a top bar; keep `TopAppBarSearchSlot` for a capsule that only opens
+  something else. See [TopAppBar](../components/topappbar.md#searching-in-place).
+- **Camera controls** from the ColorOS camera: `ExposureBar`, `ScaleBar`, `CameraShutterButton`,
+  `CameraSwitchButton`, `CameraModeBar`, `CameraModeTitle`, `CameraLensBar`, `CameraZoomBar`,
+  `CameraZoomDial`, `CameraFocusIndicator`, `CameraMenuButton`, `CameraEffectButton`,
+  `CameraTopMenu`, `CameraRecordTimer`, `CameraCountdown`, `RollingNumber`,
+  `CameraLevelIndicator`, `CameraGridOverlay`, `CameraThumbnail` and `CameraHint`.
+- **Baseline profiles** for every library module, regenerated for the `io.github.suqi8.coui.kmp`
+  packages.
 
 ## 1.0.0 → 1.1.0
 
