@@ -23,6 +23,7 @@ export default defineConfig({
                 text: "For AI",
                 items: [
                     { text: "Writing with AI", link: "/guide/ai" },
+                    { text: "coui-app skill", link: "https://github.com/suqi8/coui/tree/HEAD/.claude/skills/coui-app" },
                     { text: "llms.txt", link: "/llms.txt", target: "_blank" },
                     { text: "llms-full.txt", link: "/llms-full.txt", target: "_blank" },
                 ],

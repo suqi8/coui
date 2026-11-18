@@ -48,7 +48,7 @@ features:
     target: _blank
   - icon: 🤖
     title: AI Friendly
-    details: A skill and llms.txt help AI write proper COUI screens.
+    details: A skill and llms.txt help AI write proper COUI screens. Both are under "For AI" in the top bar.
     link: /guide/ai
     linkText: Writing with AI
   - icon: 🧬

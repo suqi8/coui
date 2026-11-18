@@ -32,6 +32,7 @@ export default defineConfig({
                 text: "给 AI",
                 items: [
                     { text: "用 AI 写 COUI", link: "/zh_CN/guide/ai" },
+                    { text: "coui-app skill", link: "https://github.com/suqi8/coui/tree/HEAD/.claude/skills/coui-app" },
                     { text: "llms.txt", link: "/llms.txt", target: "_blank" },
                     { text: "llms-full.txt", link: "/llms-full.txt", target: "_blank" },
                 ],

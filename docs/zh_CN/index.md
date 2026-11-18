@@ -48,7 +48,7 @@ features:
     target: _blank
   - icon: 🤖
     title: 方便 AI 使用
-    details: 提供 skill 和 llms.txt，让 AI 也能写出规范的 COUI 页面。
+    details: 提供 skill 和 llms.txt，让 AI 也能写出规范的 COUI 页面，入口在顶栏「给 AI」里。
     link: /zh_CN/guide/ai
     linkText: 用 AI 写 COUI
   - icon: 🧬
