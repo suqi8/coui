@@ -17,9 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-26, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
+        os: [macos-15-intel, ubuntu-latest, ubuntu-24.04-arm, windows-latest]
         include:
-          - os: macos-26
+          - os: macos-15-intel
             platform: macos arm64
             build-command: ./gradlew packageDmgNativeReleaseMacosArm64
             artifact-path: example/macos/build/compose/binaries/main/native-macosArm64-release-dmg/*.dmg
@@ -70,19 +70,29 @@ jobs:
         shell: bash
         run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
       - name: Run the Kotlin/Native compiler in its own process
-        # The macOS runner has 7 GB of memory, and the release link of the macOS app runs out of a
-        # 6g Gradle heap. Linking in a separate compiler process with its own heap leaves the Gradle
-        # daemon small; the user-level file overrides gradle.properties, also for the iOS archive.
+        # The release link of the macOS app needs more than the 7 GB of the arm64 macOS runners, so
+        # the job runs on the 14 GB Intel runner and cross-compiles for arm64. Linking in a separate
+        # compiler process with its own heap leaves the Gradle daemon small; the user-level file
+        # overrides gradle.properties, also for the iOS archive.
         if: runner.os == 'macOS'
         shell: bash
         run: |
           mkdir -p ~/.gradle
           {
-            echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8"
+            echo "org.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8"
             echo "kotlin.compiler.execution.strategy=in-process"
             echo "kotlin.native.disableCompilerDaemon=true"
-            echo "kotlin.native.jvmArgs=-Xmx6g"
+            echo "kotlin.native.jvmArgs=-Xmx10g"
           } >> ~/.gradle/gradle.properties
+      - name: Select Xcode 26
+        # The iOS app targets iOS 26.
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          ls -d /Applications/Xcode*.app
+          xcode=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
+          xcodebuild -version
       - name: Build ${{ matrix.platform }} platform
         run: ${{ matrix.build-command }}
       - name: Build ${{ matrix.platformEx }} platform
