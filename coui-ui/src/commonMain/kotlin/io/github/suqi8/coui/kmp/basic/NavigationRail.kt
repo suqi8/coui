@@ -82,23 +82,25 @@ fun NavigationRail(
     mode: NavigationRailDisplayMode = NavigationRailDisplayMode.IconAndText,
     content: @Composable () -> Unit,
 ) {
+    // The background and the divider run edge to edge, under the status bar; only the rail's own
+    // content keeps clear of the system bars and the cutout.
     Row(
         modifier = modifier
             .fillMaxHeight()
-            .then(
-                if (defaultWindowInsetsPadding) {
-                    Modifier
-                        .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Vertical))
-                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
-                        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start))
-                } else {
-                    Modifier
-                },
-            )
             .background(color),
     ) {
         BoxWithConstraints(
             modifier = Modifier
+                .then(
+                    if (defaultWindowInsetsPadding) {
+                        Modifier
+                            .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Vertical))
+                            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Start))
+                            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Start))
+                    } else {
+                        Modifier
+                    },
+                )
                 .width(minWidth)
                 .fillMaxHeight(),
         ) {
