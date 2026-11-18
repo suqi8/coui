@@ -8,11 +8,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <title>COUI</title>
     <link rel="shortcut icon" href="./favicon.ico">
+    <link href="loading.css" rel="stylesheet" type="text/css">
     <link href="styles.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-<div id="loading">Loading</div>
+<div id="loading">
+    <img id="loading-logo" src="ic_launcher.png" alt="">
+    <div id="loading-track"><div id="loading-bar"></div></div>
+    <div id="loading-text"></div>
+    <div id="loading-log" aria-live="polite"></div>
+</div>
 <div id="composeApp"></div>
+<script src="loading.js" data-app="composeApp.js" data-modules="2" data-guess-bytes="12000000"></script>
 </body>
-<script src="composeApp.js" type="application/javascript"></script>
 </html>

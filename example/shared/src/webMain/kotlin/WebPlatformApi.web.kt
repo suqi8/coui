@@ -6,7 +6,7 @@ import kotlin.js.ExperimentalWasmJsInterop
 @JsFun(
     """
         function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
+            if (window.__couiLoading) window.__couiLoading.hide();
             document.getElementById('composeApp').style.display = 'block';
         }
     """,

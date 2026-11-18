@@ -1,0 +1,113 @@
+/* Copyright 2026, compose-coui-ui contributors */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+:root {
+    color-scheme: light dark;
+    --loading-bg: #ffffff;
+    --loading-track: rgba(0, 0, 0, 0.08);
+    --loading-accent: #3482ff;
+    --loading-sub: #8e8e93;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --loading-bg: #242424;
+        --loading-track: rgba(255, 255, 255, 0.14);
+        --loading-accent: #277af7;
+    }
+}
+
+#loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--loading-bg);
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+#loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#loading-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#loading-track {
+    width: min(240px, 60vw);
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--loading-track);
+}
+
+#loading-bar {
+    width: 0;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--loading-accent);
+    transition: width 0.25s ease-out;
+}
+
+#loading-text {
+    min-height: 1em;
+    max-width: min(420px, 90vw);
+    text-align: center;
+    font: 13px/1.4 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--loading-sub);
+}
+
+#loading-log {
+    position: fixed;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, "Microsoft YaHei", monospace;
+    color: var(--loading-sub);
+    opacity: 0.85;
+    pointer-events: none;
+    white-space: pre;
+}
+
+.loading-log-row {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    animation: loading-log-in 0.25s ease-out;
+}
+
+.loading-log-row.failed {
+    color: #ff453a;
+}
+
+@keyframes loading-log-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.loading-action {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--loading-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
