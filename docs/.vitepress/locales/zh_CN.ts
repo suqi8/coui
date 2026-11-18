@@ -115,6 +115,7 @@ export default defineConfig({
                         { text: "NumberPicker", link: "/zh_CN/components/numberpicker" },
                         { text: "ExposureBar", link: "/zh_CN/components/exposurebar" },
                         { text: "CameraShutterButton", link: "/zh_CN/components/camerashutterbutton" },
+                        { text: "CameraLensBar", link: "/zh_CN/components/cameralensbar" },
                         { text: "CameraModeBar", link: "/zh_CN/components/cameramodebar" },
                         { text: "Stepper", link: "/zh_CN/components/stepper" },
                         { text: "DatePicker", link: "/zh_CN/components/datepicker" },

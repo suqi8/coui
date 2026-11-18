@@ -106,6 +106,7 @@ export default defineConfig({
                         { text: "NumberPicker", link: "/components/numberpicker" },
                         { text: "ExposureBar", link: "/components/exposurebar" },
                         { text: "CameraShutterButton", link: "/components/camerashutterbutton" },
+                        { text: "CameraLensBar", link: "/components/cameralensbar" },
                         { text: "CameraModeBar", link: "/components/cameramodebar" },
                         { text: "Stepper", link: "/components/stepper" },
                         { text: "DatePicker", link: "/components/datepicker" },

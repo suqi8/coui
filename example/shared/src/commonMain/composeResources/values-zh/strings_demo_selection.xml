@@ -117,4 +117,13 @@
     <string name="demo_radio_button_search_terms">单选, radio</string>
     <string name="demo_slider_search_terms">拖动条, 范围, seekbar</string>
     <string name="demo_switch_search_terms">开关, toggle</string>
+    <string name="demo_camera_lens_bar_title">镜头切换条</string>
+    <string name="demo_camera_lens_bar_search_terms">镜头, 变焦, 倍率, 相机, 切换镜头, 0.6x</string>
+    <string name="demo_camera_lens_bar_ultra_tele">超长焦镜头</string>
+    <string name="demo_camera_lens_bar_ultra_tele_summary">增加 6× 镜头</string>
+    <string name="demo_camera_lens_bar_light_background">浅色背景</string>
+    <string name="demo_camera_lens_bar_light_background_summary">相机在明亮画面上使用的配色</string>
+    <string name="demo_camera_lens_bar_enlarged">大屏尺寸</string>
+    <string name="demo_camera_lens_bar_enlarged_summary">圆钮 15dp，选中 18dp</string>
+    <string name="demo_camera_lens_bar_variant_four">四颗镜头</string>
 </resources>

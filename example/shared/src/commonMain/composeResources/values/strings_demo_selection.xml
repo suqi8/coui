@@ -117,4 +117,13 @@
     <string name="demo_radio_button_search_terms">radio</string>
     <string name="demo_slider_search_terms">seekbar</string>
     <string name="demo_switch_search_terms">toggle</string>
+    <string name="demo_camera_lens_bar_title">Camera lens bar</string>
+    <string name="demo_camera_lens_bar_search_terms">lens, zoom, ratio, camera, switch camera, 0.6x</string>
+    <string name="demo_camera_lens_bar_ultra_tele">Ultra tele lens</string>
+    <string name="demo_camera_lens_bar_ultra_tele_summary">Add a 6× lens</string>
+    <string name="demo_camera_lens_bar_light_background">Light background</string>
+    <string name="demo_camera_lens_bar_light_background_summary">The palette the camera uses over bright scenes</string>
+    <string name="demo_camera_lens_bar_enlarged">Large screen size</string>
+    <string name="demo_camera_lens_bar_enlarged_summary">15dp discs, 18dp when selected</string>
+    <string name="demo_camera_lens_bar_variant_four">Four lenses</string>
 </resources>
