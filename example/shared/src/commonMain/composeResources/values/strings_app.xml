@@ -128,8 +128,6 @@
     <string name="lab_blur_summary">Texture and foreground blur with highlights</string>
     <string name="lab_bg_effect">Background effect</string>
     <string name="lab_bg_effect_summary">HyperOS OS2 and OS3 shader background</string>
-    <string name="lab_liquid_glass">Liquid glass bar</string>
-    <string name="lab_liquid_glass_summary">An iOS-like glass navigation bar</string>
     <string name="lab_navigation_test">Navigation test</string>
     <string name="lab_navigation_test_summary">Long titles, popups and repeated pushes</string>
     <string name="lab_multi_scaffold">Multi-scaffold test</string>

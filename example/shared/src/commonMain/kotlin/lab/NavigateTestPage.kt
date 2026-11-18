@@ -199,48 +199,52 @@ fun TopBarActions() {
     val topPopupHoldDown = remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableIntStateOf(0) }
     val hapticFeedback = LocalHapticFeedback.current
-    IconButton(
-        onClick = {
-            showTopPopup.value = true
-            topPopupHoldDown.value = true
-        },
-        holdDownState = topPopupHoldDown.value,
-    ) {
-        Icon(
-            imageVector = COUIIcons.Edit,
-            contentDescription = "WindowListPopup",
-            tint = COUITheme.colorScheme.labelPrimary,
-        )
-    }
-    WindowListPopup(
-        show = showTopPopup.value,
-        popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
-        alignment = PopupPositionProvider.Align.TopEnd,
-        onDismissRequest = {
-            showTopPopup.value = false
-        },
-        onDismissFinished = {
-            topPopupHoldDown.value = false
-        },
-        content = {
-            val state = LocalDismissState.current
-            ListPopupColumn {
-                TopBarPopupItems.forEachIndexed { index, string ->
-                    key(index) {
-                        DropdownImpl(
-                            text = string,
-                            optionSize = TopBarPopupItems.size,
-                            isSelected = selectedIndex == index,
-                            index = index,
-                            onSelectedIndexChange = { selectedIdx ->
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
-                                selectedIndex = selectedIdx
-                                state?.invoke()
-                            },
-                        )
+    // The popup anchors to its parent, so it shares a Box with the button: as a direct child of the
+    // top bar's spaced actions row it would add a gap (moving the button) and anchor to the whole row.
+    Box {
+        IconButton(
+            onClick = {
+                showTopPopup.value = true
+                topPopupHoldDown.value = true
+            },
+            holdDownState = topPopupHoldDown.value,
+        ) {
+            Icon(
+                imageVector = COUIIcons.Edit,
+                contentDescription = "WindowListPopup",
+                tint = COUITheme.colorScheme.labelPrimary,
+            )
+        }
+        WindowListPopup(
+            show = showTopPopup.value,
+            popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+            alignment = PopupPositionProvider.Align.TopEnd,
+            onDismissRequest = {
+                showTopPopup.value = false
+            },
+            onDismissFinished = {
+                topPopupHoldDown.value = false
+            },
+            content = {
+                val state = LocalDismissState.current
+                ListPopupColumn {
+                    TopBarPopupItems.forEachIndexed { index, string ->
+                        key(index) {
+                            DropdownImpl(
+                                text = string,
+                                optionSize = TopBarPopupItems.size,
+                                isSelected = selectedIndex == index,
+                                index = index,
+                                onSelectedIndexChange = { selectedIdx ->
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+                                    selectedIndex = selectedIdx
+                                    state?.invoke()
+                                },
+                            )
+                        }
                     }
                 }
-            }
-        },
-    )
+            },
+        )
+    }
 }

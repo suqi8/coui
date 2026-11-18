@@ -126,8 +126,6 @@
     <string name="lab_blur_summary">纹理模糊、前景模糊与高光</string>
     <string name="lab_bg_effect">背景特效</string>
     <string name="lab_bg_effect_summary">HyperOS OS2 / OS3 着色器背景</string>
-    <string name="lab_liquid_glass">液态玻璃导航栏</string>
-    <string name="lab_liquid_glass_summary">仿 iOS 的玻璃导航栏</string>
     <string name="lab_navigation_test">导航测试</string>
     <string name="lab_navigation_test_summary">长标题、弹窗与连续推入</string>
     <string name="lab_multi_scaffold">多 Scaffold 测试</string>
