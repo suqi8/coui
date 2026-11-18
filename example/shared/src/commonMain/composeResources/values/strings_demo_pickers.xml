@@ -80,4 +80,11 @@
     <string name="demo_exposure_bar_reset_button">Reset button</string>
     <string name="demo_exposure_bar_variant_wide">Professional range</string>
     <string name="demo_exposure_bar_variant_ruler">ScaleBar on its own</string>
+    <string name="demo_camera_zoom_dial_title">Camera zoom dial</string>
+    <string name="demo_camera_zoom_dial_search_terms">zoom, camera, dial, lens, ruler, arc</string>
+    <string name="demo_camera_zoom_dial_expanded">Expanded</string>
+    <string name="demo_camera_zoom_dial_expanded_summary">Long-press or drag the lens buttons to unfold the dial; it folds away 1.5s after the last touch</string>
+    <string name="demo_camera_zoom_dial_short_range">Short range</string>
+    <string name="demo_camera_zoom_dial_short_range_summary">0.6x to 5x: the dial spans 60° instead of 90°</string>
+    <string name="demo_camera_zoom_dial_variant_pinned">Always expanded</string>
 </resources>

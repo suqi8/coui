@@ -62,6 +62,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [IntentSlider](../components/intentslider)                 | Slim media progress bar with buffering     | Video/music playback progress         |
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [ExposureBar](../components/exposurebar)                   | Camera EV ruler panel with reset button    | Exposure compensation, camera tools   |
+| [CameraZoomDial](../components/camerazoomdial) | Camera arc zoom dial with a logarithmic ruler | Camera zoom, lens switching |
 | [CameraShutterButton](../components/camerashutterbutton) | Camera shutter (photo / video / recording) and round camera control button | Camera capture, recording controls |
 | [CameraZoomBar](../components/camerazoombar) | Joystick zoom bar with ± buttons and ratio labels | Continuous camera zoom |
 | [CameraLensBar](../components/cameralensbar) | Camera lens switcher of zoom-ratio discs | Lens / zoom ratio switching in camera UIs |

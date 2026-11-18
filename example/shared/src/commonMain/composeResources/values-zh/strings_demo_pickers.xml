@@ -80,4 +80,11 @@
     <string name="demo_exposure_bar_reset_button">重置按钮</string>
     <string name="demo_exposure_bar_variant_wide">专业模式范围</string>
     <string name="demo_exposure_bar_variant_ruler">单独使用 ScaleBar</string>
+    <string name="demo_camera_zoom_dial_title">相机变焦刻度环</string>
+    <string name="demo_camera_zoom_dial_search_terms">变焦, 相机, 刻度环, 镜头, 倍率, zoom</string>
+    <string name="demo_camera_zoom_dial_expanded">展开</string>
+    <string name="demo_camera_zoom_dial_expanded_summary">长按或拖动镜头按钮展开刻度环；最后一次触摸 1.5 秒后自动收起</string>
+    <string name="demo_camera_zoom_dial_short_range">短焦段</string>
+    <string name="demo_camera_zoom_dial_short_range_summary">0.6x 至 5x：刻度环占 60° 而非 90°</string>
+    <string name="demo_camera_zoom_dial_variant_pinned">始终展开</string>
 </resources>

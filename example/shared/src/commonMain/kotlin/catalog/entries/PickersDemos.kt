@@ -5,6 +5,7 @@ package catalog.entries
 import catalog.Demo
 import catalog.DemoCategory
 import demo.pickers.CalendarPickerDemo
+import demo.pickers.CameraZoomDialDemo
 import demo.pickers.ColorPickerDemo
 import demo.pickers.DateTimePickerDemo
 import demo.pickers.ExposureBarDemo
@@ -21,4 +22,5 @@ internal val PickersDemos: List<Demo> = listOf(
     CalendarPickerDemo,
     ColorPickerDemo,
     ExposureBarDemo,
+    CameraZoomDialDemo,
 )
