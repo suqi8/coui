@@ -63,6 +63,7 @@ EN after Card: | [PageIndicator](../components/pageindicator) | Dot page indicat
 | [NumberPicker](../components/numberpicker)                 | Vertical scroll picker for number selection | Time picker, quantity selection       |
 | [ExposureBar](../components/exposurebar)                   | Camera EV ruler panel with reset button    | Exposure compensation, camera tools   |
 | [CameraShutterButton](../components/camerashutterbutton) | Camera shutter (photo / video / recording) and round camera control button | Camera capture, recording controls |
+| [CameraZoomBar](../components/camerazoombar) | Joystick zoom bar with ± buttons and ratio labels | Continuous camera zoom |
 | [CameraLensBar](../components/cameralensbar) | Camera lens switcher of zoom-ratio discs | Lens / zoom ratio switching in camera UIs |
 | [CameraModeBar](../components/cameramodebar) | Camera mode strip with selected capsule, and the mode title | Switching camera modes |
 | [DatePicker](../components/datepicker)                     | Date wheel picker (year / month / day)     | Date selection, forms                 |

@@ -5,6 +5,7 @@ package catalog.entries
 import catalog.Demo
 import catalog.DemoCategory
 import demo.selection.CameraLensBarDemo
+import demo.selection.CameraZoomBarDemo
 import demo.selection.CheckboxDemo
 import demo.selection.ChipDemo
 import demo.selection.ChipGroupDemo
@@ -23,6 +24,7 @@ internal val SelectionDemos: List<Demo> = listOf(
     SliderDemo,
     IntentSliderDemo,
     CameraLensBarDemo,
+    CameraZoomBarDemo,
     ChipDemo,
     ChipGroupDemo,
 )

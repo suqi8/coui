@@ -126,4 +126,13 @@
     <string name="demo_camera_lens_bar_enlarged">Large screen size</string>
     <string name="demo_camera_lens_bar_enlarged_summary">15dp discs, 18dp when selected</string>
     <string name="demo_camera_lens_bar_variant_four">Four lenses</string>
+    <string name="demo_camera_zoom_bar_title">Camera zoom bar</string>
+    <string name="demo_camera_zoom_bar_search_terms">zoom, inertial, joystick, camera, plus, minus</string>
+    <string name="demo_camera_zoom_bar_step_buttons">Step buttons</string>
+    <string name="demo_camera_zoom_bar_step_buttons_summary">Tap for ±0.1×, hold to zoom continuously</string>
+    <string name="demo_camera_zoom_bar_value_labels">Value labels</string>
+    <string name="demo_camera_zoom_bar_value_labels_summary">Current, minimum and maximum ratios while the bar is used</string>
+    <string name="demo_camera_zoom_bar_extended_range">Extended range</string>
+    <string name="demo_camera_zoom_bar_extended_range_summary">Up to 120×</string>
+    <string name="demo_camera_zoom_bar_variant_bar_only">Bar only</string>
 </resources>

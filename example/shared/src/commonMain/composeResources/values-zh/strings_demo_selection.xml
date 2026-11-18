@@ -126,4 +126,13 @@
     <string name="demo_camera_lens_bar_enlarged">大屏尺寸</string>
     <string name="demo_camera_lens_bar_enlarged_summary">圆钮 15dp，选中 18dp</string>
     <string name="demo_camera_lens_bar_variant_four">四颗镜头</string>
+    <string name="demo_camera_zoom_bar_title">惯性变焦条</string>
+    <string name="demo_camera_zoom_bar_search_terms">变焦, 惯性, 摇杆, 相机, 放大, 缩小</string>
+    <string name="demo_camera_zoom_bar_step_buttons">加减按钮</string>
+    <string name="demo_camera_zoom_bar_step_buttons_summary">轻点 ±0.1×，长按持续变焦</string>
+    <string name="demo_camera_zoom_bar_value_labels">倍率标签</string>
+    <string name="demo_camera_zoom_bar_value_labels_summary">使用时显示当前、最小与最大倍率</string>
+    <string name="demo_camera_zoom_bar_extended_range">扩展范围</string>
+    <string name="demo_camera_zoom_bar_extended_range_summary">最高 120×</string>
+    <string name="demo_camera_zoom_bar_variant_bar_only">仅变焦条</string>
 </resources>
