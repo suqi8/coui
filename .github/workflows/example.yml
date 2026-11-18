@@ -69,15 +69,20 @@ jobs:
         if: matrix.platformEx == 'android universal' && env.SIGNING_KEY != ''
         shell: bash
         run: echo "$SIGNING_KEY" | base64 -d > keystore.jks
-      - name: Raise the Gradle heap for Kotlin/Native
-        # The release link of the macOS app and the iOS archive run out of the 3g heap from
-        # gradle.properties; the user-level file overrides it for both Gradle invocations.
+      - name: Run the Kotlin/Native compiler in its own process
+        # The macOS runner has 7 GB of memory, and the release link of the macOS app runs out of a
+        # 6g Gradle heap. Linking in a separate compiler process with its own heap leaves the Gradle
+        # daemon small; the user-level file overrides gradle.properties, also for the iOS archive.
         if: runner.os == 'macOS'
         shell: bash
         run: |
           mkdir -p ~/.gradle
-          echo "org.gradle.jvmargs=-Xmx5g -Dfile.encoding=UTF-8" >> ~/.gradle/gradle.properties
-          echo "kotlin.compiler.execution.strategy=in-process" >> ~/.gradle/gradle.properties
+          {
+            echo "org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8"
+            echo "kotlin.compiler.execution.strategy=in-process"
+            echo "kotlin.native.disableCompilerDaemon=true"
+            echo "kotlin.native.jvmArgs=-Xmx6g"
+          } >> ~/.gradle/gradle.properties
       - name: Build ${{ matrix.platform }} platform
         run: ${{ matrix.build-command }}
       - name: Build ${{ matrix.platformEx }} platform
