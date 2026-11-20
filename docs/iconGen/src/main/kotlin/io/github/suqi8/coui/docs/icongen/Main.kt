@@ -13,9 +13,9 @@ data class SvgPath(
     val strokeAlpha: Float = 1.0f,
     val strokeWidth: Float = 0.0f,
     val transform: String = "",
+    val lineCap: String? = null,
+    val lineJoin: String? = null,
 )
-
-private val WEIGHT_NAMES = listOf("Light", "Normal", "Regular", "Medium", "Demibold")
 
 /** Simple CLI entry that converts Compose vector icon definitions to SVG files. */
 fun main(args: Array<String>) {
@@ -58,9 +58,9 @@ fun main(args: Array<String>) {
     if (!dest.exists()) dest.mkdirs()
 
     var count = 0
-    // Map of BaseName -> Map<Style, RelativePath>
-    val basicIconsMap = mutableMapOf<String, MutableMap<String, String>>()
-    val extendedIconsMap = mutableMapOf<String, MutableMap<String, String>>()
+    // Map of icon name -> relative SVG path
+    val basicIconsMap = mutableMapOf<String, String>()
+    val extendedIconsMap = mutableMapOf<String, String>()
 
     srcDirs.forEach { srcDir ->
         val src = File(srcDir)
@@ -190,13 +190,16 @@ fun main(args: Array<String>) {
                         paths.add(
                             SvgPath(
                                 d = d,
-                                fill = parseFill(params),
+                                // A stroke-only path has no fill; without this it would be filled black.
+                                fill = parseFill(params) ?: parseStroke(params)?.let { "none" },
                                 fillAlpha = parseAlpha(params, "fillAlpha"),
                                 fillRule = parseFillRule(params),
                                 stroke = parseStroke(params),
                                 strokeAlpha = parseAlpha(params, "strokeAlpha"),
                                 strokeWidth = parseFloat(params, "strokeLineWidth"),
                                 transform = groupTransform,
+                                lineCap = Regex("StrokeCap\\.(\\w+)").find(params)?.groupValues?.get(1)?.lowercase(),
+                                lineJoin = Regex("StrokeJoin\\.(\\w+)").find(params)?.groupValues?.get(1)?.lowercase(),
                             ),
                         )
                     }
@@ -204,7 +207,8 @@ fun main(args: Array<String>) {
 
                 // 2. Find Vector paths: addPath(params containing pathData)
                 val addPathRegex = Regex("addPath\\s*\\(")
-                addPathRegex.findAll(applyBlock).forEach { match ->
+                if (applyBlock.contains("addPathNodes(")) paths += parseStringPaths(applyBlock)
+                addPathRegex.findAll(applyBlock).takeIf { !applyBlock.contains("addPathNodes(") }.orEmpty().forEach { match ->
                     val start = match.range.last
                     var count = 1
                     var currentIndex = start + 1
@@ -271,13 +275,7 @@ fun main(args: Array<String>) {
                         file.path.contains("basic${File.separator}") || file.path.contains("basic/") || file.path.contains("basic\\")
                     val targetMap = if (isBasic) basicIconsMap else extendedIconsMap
 
-                    val matchedWeight = WEIGHT_NAMES.firstOrNull { iconName.endsWith(".$it") }
-                    if (matchedWeight != null) {
-                        val simpleName = iconName.removeSuffix(".$matchedWeight")
-                        targetMap.getOrPut(simpleName) { mutableMapOf() }[matchedWeight] = relativePath
-                    } else if (!iconName.contains(".")) {
-                        targetMap.getOrPut(iconName) { mutableMapOf() }["Regular"] = relativePath
-                    }
+                    if (!iconName.contains(".")) targetMap[iconName] = relativePath
                 }
             }
         }
@@ -285,19 +283,12 @@ fun main(args: Array<String>) {
 
     println("[iconGen] Generated $count SVG(s) into $dest")
     if (genDoc && (basicIconsMap.isNotEmpty() || extendedIconsMap.isNotEmpty())) {
-        val separator = "|" + "---|".repeat(WEIGHT_NAMES.size + 1)
-        fun generateTable(map: Map<String, Map<String, String>>, nameHeader: String): String {
+        fun generateTable(map: Map<String, String>, nameHeader: String): String {
             val sb = StringBuilder()
-            sb.append("| $nameHeader | ").append(WEIGHT_NAMES.joinToString(" | ")).append(" |\n")
-            sb.append(separator).append("\n")
+            sb.append("| $nameHeader | Icon |\n")
+            sb.append("|---|---|\n")
             map.keys.sorted().forEach { name ->
-                val variants = map[name]!!
-                sb.append("| `$name` |")
-                WEIGHT_NAMES.forEach { weight ->
-                    val cell = variants[weight]?.let { "<img src=\"/icons/$it\" width=\"24\" height=\"24\" />" } ?: "-"
-                    sb.append(" ").append(cell).append(" |")
-                }
-                sb.append("\n")
+                sb.append("| `$name` | <img src=\"/icons/${map[name]}\" width=\"24\" height=\"24\" /> |\n")
             }
             return sb.toString()
         }
@@ -464,8 +455,82 @@ fun buildSvg(paths: List<SvgPath>, w: Float, h: Float, light: String, dark: Stri
             val strokeAlphaAttr = if (p.strokeAlpha < 1.0f) " stroke-opacity=\"${p.strokeAlpha}\"" else ""
             val strokeWidthAttr = if (p.strokeWidth > 0f) " stroke-width=\"${p.strokeWidth}\"" else ""
 
-            appendLine("  <path d=\"${p.d}\" fill=\"$fillValue\"$opacityAttr$strokeAttr$strokeAlphaAttr$strokeWidthAttr${p.transform} fill-rule=\"${p.fillRule}\" clip-rule=\"${p.fillRule}\" />")
+            val capAttr = p.lineCap?.let { " stroke-linecap=\"$it\"" } ?: ""
+            val joinAttr = p.lineJoin?.let { " stroke-linejoin=\"$it\"" } ?: ""
+            appendLine("  <path d=\"${p.d}\" fill=\"$fillValue\"$opacityAttr$strokeAttr$strokeAlphaAttr$strokeWidthAttr$capAttr$joinAttr${p.transform} fill-rule=\"${p.fillRule}\" clip-rule=\"${p.fillRule}\" />")
         }
         appendLine("</svg>")
     }
+}
+
+/**
+ * Parses the `addPath(pathData = addPathNodes("..."), ...)` form used by the ColorOS icons, keeping
+ * the transform of every enclosing `group(...)`.
+ */
+fun parseStringPaths(block: String): List<SvgPath> {
+    fun closeParen(open: Int): Int {
+        var depth = 0
+        var i = open
+        while (i < block.length) {
+            when (block[i]) {
+                '(' -> depth++
+                ')' -> if (--depth == 0) return i
+                '"' -> i = block.indexOf('"', i + 1)
+            }
+            i++
+        }
+        return block.length - 1
+    }
+
+    fun arg(args: String, key: String, default: Float): Float = Regex("\\b$key\\s*=\\s*(-?[0-9.]+)f").find(args)?.groupValues?.get(1)?.toFloatOrNull() ?: default
+
+    val out = mutableListOf<SvgPath>()
+    val stack = ArrayDeque<String>()
+    var i = 0
+    while (i < block.length) {
+        when {
+            block.startsWith("group(", i) -> {
+                val end = closeParen(i + 5)
+                val args = block.substring(i + 6, end)
+                val px = arg(args, "pivotX", 0f)
+                val py = arg(args, "pivotY", 0f)
+                val tx = arg(args, "translationX", 0f)
+                val ty = arg(args, "translationY", 0f)
+                val r = arg(args, "rotate", 0f)
+                val sx = arg(args, "scaleX", 1f)
+                val sy = arg(args, "scaleY", 1f)
+                stack.addLast("translate(${tx + px} ${ty + py}) rotate($r) scale($sx $sy) translate(${-px} ${-py})")
+                i = block.indexOf('{', end) + 1
+            }
+
+            block.startsWith("addPath(", i) -> {
+                val end = closeParen(i + 7)
+                val args = block.substring(i + 8, end)
+                val d = Regex("addPathNodes\\(\"([^\"]*)\"\\)").find(args)?.groupValues?.get(1).orEmpty()
+                val hasStroke = args.contains("stroke = SolidColor")
+                out +=
+                    SvgPath(
+                        d = d,
+                        fill = if (args.contains("fill = SolidColor")) "#000000" else "none",
+                        fillAlpha = arg(args, "fillAlpha", 1f),
+                        fillRule = if (args.contains("PathFillType.EvenOdd")) "evenodd" else "nonzero",
+                        stroke = if (hasStroke) "#000000" else null,
+                        strokeAlpha = arg(args, "strokeAlpha", 1f),
+                        strokeWidth = if (hasStroke) arg(args, "strokeLineWidth", 1f) else 0f,
+                        transform = if (stack.isEmpty()) "" else " transform=\"${stack.joinToString(" ")}\"",
+                        lineCap = Regex("StrokeCap\\.(\\w+)").find(args)?.groupValues?.get(1)?.lowercase(),
+                        lineJoin = Regex("StrokeJoin\\.(\\w+)").find(args)?.groupValues?.get(1)?.lowercase(),
+                    )
+                i = end + 1
+            }
+
+            block[i] == '}' -> {
+                stack.removeLastOrNull()
+                i++
+            }
+
+            else -> i++
+        }
+    }
+    return out
 }

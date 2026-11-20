@@ -7,250 +7,39 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.PathNode
-import androidx.compose.ui.graphics.vector.group
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 
+/** Messages: ColorOS `mms_ic_tab_message_unselected` (com.android.mms_16.60.10). */
 val COUIIcons.Messages: ImageVector
-    get() = COUIIcons.Regular.Messages
-
-val COUIIcons.Light.Messages: ImageVector
     get() {
-        if (_messagesLight != null) return _messagesLight!!
-        _messagesLight = ImageVector.Builder(
-            name = "Messages.Light",
-            defaultWidth = 24.0f.dp,
-            defaultHeight = 24.0f.dp,
-            viewportWidth = 1237.2f,
-            viewportHeight = 1237.2f,
+        _messages?.let { return it }
+        return ImageVector.Builder(
+            name = "Messages",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
         ).apply {
-            group(scaleY = -1.0f, translationY = 1237.2f) {
-                addPath(
-                    pathData = listOf(
-                        PathNode.MoveTo(252.1f, 373.6f),
-                        PathNode.QuadTo(184.1f, 430.6f, 143.6f, 507.1f),
-                        PathNode.QuadTo(103.1f, 583.6f, 103.1f, 670.6f),
-                        PathNode.QuadTo(103.1f, 794.6f, 177.1f, 890.6f),
-                        PathNode.QuadTo(251.1f, 986.6f, 370.1f, 1039.6f),
-                        PathNode.QuadTo(489.1f, 1092.6f, 619.1f, 1092.6f),
-                        PathNode.QuadTo(758.1f, 1092.6f, 876.1f, 1037.6f),
-                        PathNode.QuadTo(994.1f, 982.6f, 1064.1f, 885.6f),
-                        PathNode.QuadTo(1134.1f, 788.6f, 1134.1f, 670.6f),
-                        PathNode.QuadTo(1134.1f, 546.6f, 1078.6f, 463.6f),
-                        PathNode.QuadTo(1023.1f, 380.6f, 931.1f, 323.6f),
-                        PathNode.QuadTo(875.1f, 290.6f, 829.6f, 273.1f),
-                        PathNode.QuadTo(784.1f, 255.6f, 706.1f, 232.6f),
-                        PathNode.LineTo(681.1f, 225.6f),
-                        PathNode.QuadTo(658.1f, 218.6f, 500.1f, 173.6f),
-                        PathNode.LineTo(407.1f, 146.6f),
-                        PathNode.QuadTo(400.1f, 144.6f, 397.1f, 147.6f),
-                        PathNode.QuadTo(394.1f, 150.6f, 396.1f, 157.6f),
-                        PathNode.LineTo(424.1f, 254.6f),
-                        PathNode.QuadTo(428.1f, 264.6f, 424.1f, 272.6f),
-                        PathNode.QuadTo(420.1f, 280.6f, 409.1f, 285.6f),
-                        PathNode.QuadTo(314.1f, 321.6f, 252.1f, 373.6f),
-                        PathNode.Close,
-                    ),
-                    fill = SolidColor(Color.Black),
-                    fillAlpha = 1f,
-                    pathFillType = PathFillType.NonZero,
-                )
-            }
-        }.build()
-        return _messagesLight!!
+            addPath(
+                pathData = addPathNodes("M6,6.499C5.614,6.499 5.3,6.812 5.3,7.199C5.3,7.586 5.614,7.899 6,7.899H14C14.387,7.899 14.7,7.586 14.7,7.199C14.7,6.812 14.387,6.499 14,6.499H6Z"),
+                fill = SolidColor(Color.Black),
+            )
+            addPath(
+                pathData = addPathNodes("M5.3,10.199C5.3,9.812 5.614,9.499 6,9.499H11C11.387,9.499 11.7,9.812 11.7,10.199C11.7,10.586 11.387,10.899 11,10.899H6C5.614,10.899 5.3,10.586 5.3,10.199Z"),
+                fill = SolidColor(Color.Black),
+            )
+            addPath(
+                pathData = addPathNodes("M4.053,2C3.712,2 3.414,2 3.169,2.02C2.909,2.041 2.646,2.088 2.392,2.218C2.016,2.41 1.71,2.716 1.518,3.092C1.388,3.346 1.341,3.609 1.32,3.869C1.3,4.115 1.3,4.412 1.3,4.753V18.032C1.3,18.312 1.466,18.565 1.723,18.675C1.981,18.785 2.279,18.732 2.482,18.539L5.39,15.779C5.636,15.546 5.682,15.508 5.725,15.483C5.777,15.452 5.834,15.429 5.894,15.416C5.942,15.404 6.002,15.4 6.34,15.4H15.946C16.288,15.4 16.585,15.4 16.831,15.38C17.091,15.359 17.354,15.312 17.608,15.182C17.984,14.991 18.29,14.685 18.482,14.308C18.611,14.054 18.659,13.791 18.68,13.531C18.7,13.285 18.7,12.988 18.7,12.647V4.753C18.7,4.412 18.7,4.115 18.68,3.869C18.659,3.609 18.611,3.346 18.482,3.092C18.29,2.716 17.984,2.41 17.608,2.218C17.354,2.088 17.091,2.041 16.831,2.02C16.585,2 16.288,2 15.946,2H4.053ZM3.027,3.465C3.051,3.453 3.109,3.43 3.283,3.415C3.465,3.401 3.704,3.4 4.08,3.4H15.92C16.295,3.4 16.535,3.401 16.717,3.415C16.89,3.43 16.948,3.453 16.972,3.465C17.085,3.523 17.177,3.615 17.234,3.728C17.247,3.752 17.27,3.81 17.284,3.983C17.299,4.165 17.3,4.404 17.3,4.78V12.62C17.3,12.996 17.299,13.235 17.284,13.417C17.27,13.591 17.247,13.649 17.234,13.673C17.177,13.785 17.085,13.877 16.972,13.935C16.948,13.947 16.89,13.971 16.717,13.985C16.535,14 16.295,14 15.92,14L6.286,14C6.033,14 5.802,14 5.577,14.052C5.38,14.098 5.19,14.173 5.015,14.276C4.816,14.393 4.649,14.552 4.466,14.727L2.7,16.402V4.78C2.7,4.404 2.7,4.165 2.715,3.983C2.729,3.81 2.753,3.752 2.765,3.728C2.823,3.615 2.915,3.523 3.027,3.465Z"),
+                pathFillType = PathFillType.EvenOdd,
+                fill = SolidColor(Color.Black),
+            )
+            addPath(
+                pathData = addPathNodes("M20,8.399C20.337,8.399 20.551,8.399 20.715,8.411C20.871,8.423 20.925,8.442 20.946,8.452C21.08,8.512 21.187,8.619 21.247,8.753C21.257,8.774 21.276,8.828 21.287,8.984C21.299,9.148 21.3,9.362 21.3,9.699V20.509L19.565,18.774C19.379,18.588 19.21,18.419 19.006,18.294C18.827,18.184 18.632,18.103 18.428,18.054C18.196,17.999 17.957,17.999 17.694,17.999L10,17.999C9.663,17.999 9.448,17.999 9.285,17.987C9.129,17.975 9.075,17.956 9.054,17.946C8.92,17.886 8.813,17.779 8.753,17.645C8.743,17.624 8.724,17.57 8.712,17.414C8.7,17.25 8.7,17.036 8.7,16.699H7.3L7.3,16.723C7.3,17.029 7.3,17.295 7.316,17.516C7.333,17.75 7.371,17.987 7.476,18.22C7.677,18.666 8.033,19.022 8.479,19.223C8.712,19.328 8.949,19.366 9.182,19.383C9.403,19.399 9.67,19.399 9.976,19.399H17.638C17.99,19.399 18.051,19.403 18.101,19.416C18.163,19.43 18.221,19.455 18.275,19.487C18.319,19.514 18.366,19.555 18.614,19.803L21.505,22.694C21.705,22.894 22.006,22.954 22.268,22.846C22.529,22.737 22.7,22.482 22.7,22.199V9.675C22.7,9.369 22.7,9.103 22.684,8.882C22.667,8.648 22.628,8.411 22.524,8.178C22.323,7.733 21.966,7.376 21.521,7.175C21.288,7.07 21.051,7.032 20.817,7.015C20.596,6.999 20.33,6.999 20.024,6.999L20,6.999V8.399Z"),
+                fill = SolidColor(Color.Black),
+            )
+        }.build().also { _messages = it }
     }
 
-private var _messagesLight: ImageVector? = null
-
-val COUIIcons.Normal.Messages: ImageVector
-    get() {
-        if (_messagesNormal != null) return _messagesNormal!!
-        _messagesNormal = ImageVector.Builder(
-            name = "Messages.Normal",
-            defaultWidth = 24.0f.dp,
-            defaultHeight = 24.0f.dp,
-            viewportWidth = 1255.3f,
-            viewportHeight = 1255.3f,
-        ).apply {
-            group(scaleY = -1.0f, translationY = 1255.3f) {
-                addPath(
-                    pathData = listOf(
-                        PathNode.MoveTo(256.4f, 378.5f),
-                        PathNode.QuadTo(187.0f, 436.2f, 145.8f, 514.5f),
-                        PathNode.QuadTo(104.6f, 592.7f, 104.6f, 681.7f),
-                        PathNode.QuadTo(104.6f, 808.5f, 179.6f, 906.5f),
-                        PathNode.QuadTo(254.7f, 1004.6f, 375.4f, 1058.3f),
-                        PathNode.QuadTo(496.1f, 1112.0f, 628.2f, 1112.0f),
-                        PathNode.QuadTo(768.5f, 1112.0f, 888.6f, 1056.0f),
-                        PathNode.QuadTo(1008.7f, 999.9f, 1079.7f, 901.2f),
-                        PathNode.QuadTo(1150.7f, 802.5f, 1150.7f, 681.7f),
-                        PathNode.QuadTo(1150.7f, 555.7f, 1093.9f, 470.6f),
-                        PathNode.QuadTo(1037.0f, 385.5f, 943.6f, 327.9f),
-                        PathNode.QuadTo(887.6f, 294.2f, 841.8f, 276.7f),
-                        PathNode.QuadTo(795.9f, 259.2f, 717.9f, 236.2f),
-                        PathNode.LineTo(692.9f, 229.2f),
-                        PathNode.QuadTo(652.0f, 216.7f, 504.4f, 174.4f),
-                        PathNode.LineTo(401.0f, 144.7f),
-                        PathNode.QuadTo(395.4f, 143.4f, 391.7f, 147.0f),
-                        PathNode.QuadTo(388.0f, 150.7f, 390.0f, 156.4f),
-                        PathNode.LineTo(422.2f, 265.0f),
-                        PathNode.QuadTo(424.8f, 273.7f, 421.5f, 280.6f),
-                        PathNode.QuadTo(418.2f, 287.6f, 409.2f, 291.2f),
-                        PathNode.QuadTo(319.7f, 325.2f, 256.4f, 378.5f),
-                        PathNode.Close,
-                    ),
-                    fill = SolidColor(Color.Black),
-                    fillAlpha = 1f,
-                    pathFillType = PathFillType.NonZero,
-                )
-            }
-        }.build()
-        return _messagesNormal!!
-    }
-
-private var _messagesNormal: ImageVector? = null
-
-val COUIIcons.Regular.Messages: ImageVector
-    get() {
-        if (_messagesRegular != null) return _messagesRegular!!
-        _messagesRegular = ImageVector.Builder(
-            name = "Messages.Regular",
-            defaultWidth = 24.0f.dp,
-            defaultHeight = 24.0f.dp,
-            viewportWidth = 1263.6f,
-            viewportHeight = 1263.6f,
-        ).apply {
-            group(scaleY = -1.0f, translationY = 1263.6f) {
-                addPath(
-                    pathData = listOf(
-                        PathNode.MoveTo(258.3f, 380.8f),
-                        PathNode.QuadTo(188.3f, 438.8f, 146.8f, 517.8f),
-                        PathNode.QuadTo(105.3f, 596.8f, 105.3f, 686.8f),
-                        PathNode.QuadTo(105.3f, 814.8f, 180.8f, 913.8f),
-                        PathNode.QuadTo(256.3f, 1012.8f, 377.8f, 1066.8f),
-                        PathNode.QuadTo(499.3f, 1120.8f, 632.3f, 1120.8f),
-                        PathNode.QuadTo(773.3f, 1120.8f, 894.3f, 1064.3f),
-                        PathNode.QuadTo(1015.3f, 1007.8f, 1086.8f, 908.3f),
-                        PathNode.QuadTo(1158.3f, 808.8f, 1158.3f, 686.8f),
-                        PathNode.QuadTo(1158.3f, 559.8f, 1100.8f, 473.8f),
-                        PathNode.QuadTo(1043.3f, 387.8f, 949.3f, 329.8f),
-                        PathNode.QuadTo(893.3f, 295.8f, 847.3f, 278.3f),
-                        PathNode.QuadTo(801.3f, 260.8f, 723.3f, 237.8f),
-                        PathNode.LineTo(698.3f, 230.8f),
-                        PathNode.QuadTo(649.3f, 215.8f, 506.3f, 174.8f),
-                        PathNode.LineTo(398.3f, 143.8f),
-                        PathNode.QuadTo(393.3f, 142.8f, 389.3f, 146.8f),
-                        PathNode.QuadTo(385.3f, 150.8f, 387.3f, 155.8f),
-                        PathNode.LineTo(421.3f, 269.8f),
-                        PathNode.QuadTo(423.3f, 277.8f, 420.3f, 284.3f),
-                        PathNode.QuadTo(417.3f, 290.8f, 409.3f, 293.8f),
-                        PathNode.QuadTo(322.3f, 326.8f, 258.3f, 380.8f),
-                        PathNode.Close,
-                    ),
-                    fill = SolidColor(Color.Black),
-                    fillAlpha = 1f,
-                    pathFillType = PathFillType.NonZero,
-                )
-            }
-        }.build()
-        return _messagesRegular!!
-    }
-
-private var _messagesRegular: ImageVector? = null
-
-val COUIIcons.Medium.Messages: ImageVector
-    get() {
-        if (_messagesMedium != null) return _messagesMedium!!
-        _messagesMedium = ImageVector.Builder(
-            name = "Messages.Medium",
-            defaultWidth = 24.0f.dp,
-            defaultHeight = 24.0f.dp,
-            viewportWidth = 1279.1f,
-            viewportHeight = 1279.1f,
-        ).apply {
-            group(scaleY = -1.0f, translationY = 1279.1f) {
-                addPath(
-                    pathData = listOf(
-                        PathNode.MoveTo(261.9f, 383.6f),
-                        PathNode.QuadTo(190.8f, 442.7f, 148.7f, 523.2f),
-                        PathNode.QuadTo(106.6f, 603.7f, 106.6f, 695.4f),
-                        PathNode.QuadTo(106.6f, 825.2f, 183.0f, 925.7f),
-                        PathNode.QuadTo(259.4f, 1026.2f, 382.6f, 1081.0f),
-                        PathNode.QuadTo(505.9f, 1135.9f, 640.1f, 1135.9f),
-                        PathNode.QuadTo(782.8f, 1135.9f, 905.3f, 1078.5f),
-                        PathNode.QuadTo(1027.8f, 1021.2f, 1100.2f, 920.2f),
-                        PathNode.QuadTo(1172.5f, 819.2f, 1172.5f, 695.4f),
-                        PathNode.QuadTo(1172.5f, 566.1f, 1114.2f, 478.3f),
-                        PathNode.QuadTo(1055.8f, 390.6f, 960.6f, 332.0f),
-                        PathNode.QuadTo(903.4f, 298.0f, 856.5f, 279.9f),
-                        PathNode.QuadTo(809.7f, 261.8f, 733.4f, 240.0f),
-                        PathNode.LineTo(708.4f, 233.0f),
-                        PathNode.QuadTo(630.0f, 209.7f, 512.3f, 175.8f),
-                        PathNode.LineTo(409.6f, 146.0f),
-                        PathNode.QuadTo(399.3f, 143.2f, 391.8f, 151.3f),
-                        PathNode.QuadTo(384.2f, 159.4f, 387.4f, 169.7f),
-                        PathNode.LineTo(419.7f, 277.3f),
-                        PathNode.QuadTo(421.7f, 283.5f, 418.7f, 289.4f),
-                        PathNode.QuadTo(415.7f, 295.3f, 409.4f, 297.7f),
-                        PathNode.QuadTo(324.8f, 330.2f, 261.9f, 383.6f),
-                        PathNode.Close,
-                    ),
-                    fill = SolidColor(Color.Black),
-                    fillAlpha = 1f,
-                    pathFillType = PathFillType.NonZero,
-                )
-            }
-        }.build()
-        return _messagesMedium!!
-    }
-
-private var _messagesMedium: ImageVector? = null
-
-val COUIIcons.Demibold.Messages: ImageVector
-    get() {
-        if (_messagesDemibold != null) return _messagesDemibold!!
-        _messagesDemibold = ImageVector.Builder(
-            name = "Messages.Demibold",
-            defaultWidth = 24.0f.dp,
-            defaultHeight = 24.0f.dp,
-            viewportWidth = 1290.0f,
-            viewportHeight = 1290.0f,
-        ).apply {
-            group(scaleY = -1.0f, translationY = 1290.0f) {
-                addPath(
-                    pathData = listOf(
-                        PathNode.MoveTo(264.5f, 385.5f),
-                        PathNode.QuadTo(192.5f, 445.5f, 150.0f, 527.0f),
-                        PathNode.QuadTo(107.5f, 608.5f, 107.5f, 701.5f),
-                        PathNode.QuadTo(107.5f, 832.5f, 184.5f, 934.0f),
-                        PathNode.QuadTo(261.5f, 1035.5f, 386.0f, 1091.0f),
-                        PathNode.QuadTo(510.5f, 1146.5f, 645.5f, 1146.5f),
-                        PathNode.QuadTo(789.5f, 1146.5f, 913.0f, 1088.5f),
-                        PathNode.QuadTo(1036.5f, 1030.5f, 1109.5f, 928.5f),
-                        PathNode.QuadTo(1182.5f, 826.5f, 1182.5f, 701.5f),
-                        PathNode.QuadTo(1182.5f, 570.5f, 1123.5f, 481.5f),
-                        PathNode.QuadTo(1064.5f, 392.5f, 968.5f, 333.5f),
-                        PathNode.QuadTo(910.5f, 299.5f, 863.0f, 281.0f),
-                        PathNode.QuadTo(815.5f, 262.5f, 740.5f, 241.5f),
-                        PathNode.LineTo(715.5f, 234.5f),
-                        PathNode.QuadTo(616.5f, 205.5f, 516.5f, 176.5f),
-                        PathNode.LineTo(417.5f, 147.5f),
-                        PathNode.QuadTo(403.5f, 143.5f, 393.5f, 154.5f),
-                        PathNode.QuadTo(383.5f, 165.5f, 387.5f, 179.5f),
-                        PathNode.LineTo(418.5f, 282.5f),
-                        PathNode.QuadTo(420.5f, 287.5f, 417.5f, 293.0f),
-                        PathNode.QuadTo(414.5f, 298.5f, 409.5f, 300.5f),
-                        PathNode.QuadTo(326.5f, 332.5f, 264.5f, 385.5f),
-                        PathNode.Close,
-                    ),
-                    fill = SolidColor(Color.Black),
-                    fillAlpha = 1f,
-                    pathFillType = PathFillType.NonZero,
-                )
-            }
-        }.build()
-        return _messagesDemibold!!
-    }
-
-private var _messagesDemibold: ImageVector? = null
+private var _messages: ImageVector? = null

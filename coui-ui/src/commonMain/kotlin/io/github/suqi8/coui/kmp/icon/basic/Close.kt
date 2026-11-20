@@ -6,27 +6,31 @@ package io.github.suqi8.coui.kmp.icon.basic
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 
+/** Close: ColorOS `coui_menu_ic_cancel_normal` (settings_17.0.0). */
 val COUIIcons.Basic.Close: ImageVector
     get() {
-        if (_close != null) return _close!!
-        _close = ImageVector.Builder("Close", 24.dp, 24.dp, 24f, 24f).apply {
-            path(
+        _close?.let { return it }
+        return ImageVector.Builder(
+            name = "Close",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).apply {
+            addPath(
+                pathData = addPathNodes("M20,4L4,20M20,20L4,4"),
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 2.2f,
+                strokeLineWidth = 1.4f,
                 strokeLineCap = StrokeCap.Round,
-            ) {
-                moveTo(6f, 6f)
-                lineTo(18f, 18f)
-                moveTo(18f, 6f)
-                lineTo(6f, 18f)
-            }
-        }.build()
-        return _close!!
+                strokeLineJoin = StrokeJoin.Miter,
+            )
+        }.build().also { _close = it }
     }
 
 private var _close: ImageVector? = null

@@ -1,5 +1,23 @@
 # Upgrading
 
+## 2.0.0 → 2.1.0
+
+### Extended icons are the ColorOS 17 drawings
+
+The icons in `coui-icons` are now the ones ColorOS 17 draws, taken from the ColorOS system apps.
+They come in a single weight, so `COUIIcons.Light`, `Normal`, `Regular`, `Medium` and `Demibold`
+are removed. Use `COUIIcons.<Name>` instead; the icon names are unchanged.
+
+```kotlin
+// Before
+Icon(imageVector = COUIIcons.Light.Settings, contentDescription = "Settings")
+
+// After
+Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
+```
+
+The shapes changed with the new drawings, so check icon sizes in your layouts after upgrading.
+
 ## 1.1.0 → 2.0.0
 
 2.0.0 moves COUI from the ColorOS 16 design (COUI 1.x) to ColorOS 17 (COUI 17). Coming from Miuix instead? Start with [Migrating from Miuix](./migration.md).

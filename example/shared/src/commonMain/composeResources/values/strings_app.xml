@@ -45,10 +45,10 @@
 
     <!-- Design -->
     <string name="design_icons">Icons</string>
-    <string name="design_icons_summary">Extended icons in five weights</string>
+    <string name="design_icons_summary">Extended icons from ColorOS 17</string>
     <string name="design_icons_search">Search icons</string>
     <string name="design_icons_name">Name</string>
-    <string name="design_icons_compare_hint">Tap to compare weights</string>
+    <string name="design_icons_compare_hint">Tap to see sizes</string>
     <string name="design_icons_no_match">No matching icons</string>
     <string name="design_colors">Colours</string>
     <string name="design_colors_summary">Theme colour slots, light, dark and dynamic</string>

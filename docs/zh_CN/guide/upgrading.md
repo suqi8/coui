@@ -1,5 +1,22 @@
 # 升级指南
 
+## 2.0.0 → 2.1.0
+
+### 扩展图标改为 ColorOS 17 的图标
+
+`coui-icons` 中的图标现在是 ColorOS 17 自己绘制的图标，取自 ColorOS 系统应用。它们只有一种粗细，因此移除了
+`COUIIcons.Light`、`Normal`、`Regular`、`Medium` 和 `Demibold`，改用 `COUIIcons.<Name>`；图标名称不变。
+
+```kotlin
+// 之前
+Icon(imageVector = COUIIcons.Light.Settings, contentDescription = "Settings")
+
+// 之后
+Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
+```
+
+新图标的形状有变化，升级后请检查布局中的图标尺寸。
+
 ## 1.1.0 → 2.0.0
 
 2.0.0 把 COUI 从 ColorOS 16 设计（COUI 1.x）升级到 ColorOS 17（COUI 17）。如果是从 Miuix 迁移过来，请先看[从 Miuix 迁移](./migration.md)。

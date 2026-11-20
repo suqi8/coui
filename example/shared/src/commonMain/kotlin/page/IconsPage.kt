@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.LocalNavigator
 import io.github.suqi8.coui.kmp.basic.EmptyState
@@ -58,11 +59,11 @@ import utils.All
 
 private val IconListTopShape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
 private val IconListBottomShape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
-private val WeightNames = listOf("Light", "Normal", "Regular", "Medium", "Demibold")
+private val PreviewSizes = listOf(16.dp, 24.dp, 32.dp, 48.dp)
 
 /**
- * The icon reference: every extended icon by name; tapping a row compares its weights. The search
- * bar below the title searches in place: the full list fades out and the matching icons come up.
+ * The icon reference: every extended icon by name; tapping a row shows it at several sizes. The
+ * search bar below the title searches in place: the full list fades out and the matching icons come up.
  */
 @Composable
 fun IconsPage(modifier: Modifier = Modifier) {
@@ -74,11 +75,7 @@ fun IconsPage(modifier: Modifier = Modifier) {
     val allListState = rememberLazyListState()
 
     val allIcons = remember { COUIIcons.All }
-    val regularIcons = remember(allIcons) { allIcons["Regular"].orEmpty() }
-    val weightVariants: List<Pair<String, List<ImageVector>>> = remember(allIcons) {
-        WeightNames.map { name -> name to allIcons[name].orEmpty() }
-    }
-    val iconNames = remember(regularIcons) { regularIcons.map { it.name.substringBefore(".") } }
+    val iconNames = remember(allIcons) { allIcons.map { it.name } }
     val allIndices = remember(iconNames) { iconNames.indices.toList() }
     val matches = remember(query, iconNames) {
         val q = query.trim()
@@ -90,8 +87,7 @@ fun IconsPage(modifier: Modifier = Modifier) {
         iconRows(
             indices = indices,
             names = iconNames,
-            icons = regularIcons,
-            weightVariants = weightVariants,
+            icons = allIcons,
             expandedIndex = expandedIndex,
             onToggle = { index -> expandedIndex = if (expandedIndex == index) -1 else index },
         )
@@ -138,7 +134,6 @@ private fun LazyListScope.iconRows(
     indices: List<Int>,
     names: List<String>,
     icons: List<ImageVector>,
-    weightVariants: List<Pair<String, List<ImageVector>>>,
     expandedIndex: Int,
     onToggle: (Int) -> Unit,
 ) {
@@ -180,7 +175,6 @@ private fun LazyListScope.iconRows(
         IconRow(
             name = names[index],
             icon = icons[index],
-            weights = weightVariants.map { (label, variants) -> label to variants[index] },
             expanded = expandedIndex == index,
             onToggle = { onToggle(index) },
             isLast = position == indices.lastIndex,
@@ -192,7 +186,6 @@ private fun LazyListScope.iconRows(
 private fun IconRow(
     name: String,
     icon: ImageVector,
-    weights: List<Pair<String, ImageVector>>,
     expanded: Boolean,
     onToggle: () -> Unit,
     isLast: Boolean,
@@ -234,30 +227,47 @@ private fun IconRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp, bottom = 4.dp),
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.Bottom,
             ) {
-                weights.forEach { (label, weightIcon) ->
-                    Column(
+                PreviewSizes.forEach { size ->
+                    IconSizePreview(
+                        name = name,
+                        icon = icon,
+                        size = size,
                         modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Icon(
-                            imageVector = weightIcon,
-                            contentDescription = "$name ($label)",
-                            tint = colorScheme.labelPrimary,
-                            modifier = Modifier.size(28.dp),
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = label,
-                            style = COUITheme.textStyles.bodyXS,
-                            color = colorScheme.labelTertiary,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                        )
-                    }
+                    )
                 }
             }
         }
+    }
+}
+
+/** [icon] drawn at [size] with the size written under it. */
+@Composable
+private fun IconSizePreview(
+    name: String,
+    icon: ImageVector,
+    size: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val label = "${size.value.toInt()} dp"
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = "$name ($label)",
+            tint = colorScheme.labelPrimary,
+            modifier = Modifier.size(size),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = COUITheme.textStyles.bodyXS,
+            color = colorScheme.labelTertiary,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }

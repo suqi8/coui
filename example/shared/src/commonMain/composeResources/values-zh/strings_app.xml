@@ -45,10 +45,10 @@
 
     <!-- Design -->
     <string name="design_icons">图标</string>
-    <string name="design_icons_summary">扩展图标，五种字重</string>
+    <string name="design_icons_summary">ColorOS 17 扩展图标</string>
     <string name="design_icons_search">搜索图标</string>
     <string name="design_icons_name">名称</string>
-    <string name="design_icons_compare_hint">点按对比字重</string>
+    <string name="design_icons_compare_hint">点按查看尺寸</string>
     <string name="design_icons_no_match">没有找到相关图标</string>
     <string name="design_colors">颜色</string>
     <string name="design_colors_summary">主题颜色槽位，浅色、深色与动态取色</string>
