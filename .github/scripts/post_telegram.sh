@@ -81,15 +81,15 @@ def escape_md(text):
 def escape_code(text):
     return text.replace("\\", "\\\\").replace("`", "\\`")
 
+def tg_len(text):
+    # Telegram measures text in UTF-16 code units.
+    return len(text.encode("utf-16-le")) // 2
+
 repo_name = os.environ.get("GITHUB_REPOSITORY", "Unknown")
 version = os.environ.get("VERSION_NAME", "Unknown")
 short_hash = os.environ.get("SHORT_HASH", "Unknown")
 commit_count = os.environ.get("COMMIT_COUNT", "0")
 commit_msg = os.environ.get("COMMIT_MSG_BODY", "No commit message")
-
-max_len = 900
-if len(commit_msg) > max_len:
-    commit_msg = commit_msg[:max_len] + "..."
 
 header = f"New CI from {repo_name}"
 version_line = f"Version: v{version}-{short_hash} ({commit_count})"
@@ -110,11 +110,28 @@ for name in sorted(os.listdir("packaged")):
         else:
             files.append((name, size))
 
-text = f"{escape_md(header)}\n\n{escape_md(version_line)}\n\n{escape_md(msg_label)}\n```\n{escape_code(commit_msg)}\n```"
+note = ""
 if skipped:
     server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
     run_url = f"{server}/{repo_name}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
-    text += "\n\n" + escape_md("Too large for Telegram: " + ", ".join(skipped) + ". Download: " + run_url)
+    note = "Too large for Telegram: " + ", ".join(skipped) + ". Download: " + run_url
+
+# A caption holds at most 1024 characters once the MarkdownV2 markup is parsed; the commit
+# message gets what the header, the version line, the label and the note leave, minus a margin
+# for the line breaks around the code block.
+caption_limit = 1024
+fixed = f"{header}\n\n{version_line}\n\n{msg_label}\n" + (f"\n\n{note}" if note else "")
+budget = max(caption_limit - tg_len(fixed) - 8, 0)
+if tg_len(commit_msg) > budget:
+    ellipsis = "..."
+    commit_msg = commit_msg[:max(budget - len(ellipsis), 0)]
+    while commit_msg and tg_len(commit_msg) + len(ellipsis) > budget:
+        commit_msg = commit_msg[:-1]
+    commit_msg += ellipsis
+
+text = f"{escape_md(header)}\n\n{escape_md(version_line)}\n\n{escape_md(msg_label)}\n```\n{escape_code(commit_msg)}\n```"
+if note:
+    text += "\n\n" + escape_md(note)
 
 batches = []
 current = []
@@ -179,9 +196,10 @@ while IFS= read -r line; do
         fi
         response=$(curl -s "${BOT_API_URL}/bot${BOT_TOKEN}/sendDocument" "${single[@]}")
     else
+        # --form-string keeps the JSON whole: -F would cut it at a ';' in the caption.
         response=$(curl -s "${BOT_API_URL}/bot${BOT_TOKEN}/sendMediaGroup" \
             -F "chat_id=${CHANNEL_ID}" \
-            -F "media=$(cat "$media_path")" \
+            --form-string "media=$(cat "$media_path")" \
             "${args[@]}")
     fi
     batch=$((batch + 1))
