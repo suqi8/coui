@@ -42,15 +42,15 @@ A ColorOS-styled UI library for Compose Multiplatform, based on [Miuix](https://
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:coui-ui:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:2.1.0")
             // Optional: Add coui-preference for preference components
-            implementation("io.github.suqi8.coui.kmp:coui-preference:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-preference:2.1.0")
             // Optional: Add coui-icons for more icons
-            implementation("io.github.suqi8.coui.kmp:coui-icons:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-icons:2.1.0")
             // Optional: Add coui-blur for blur effects
-            implementation("io.github.suqi8.coui.kmp:coui-blur:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-blur:2.1.0")
             // Optional: Add coui-navigation3-ui for navigation3 support
-            implementation("io.github.suqi8.coui.kmp:coui-navigation3-ui:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-navigation3-ui:2.1.0")
             // Other dependencies...
         }
         // Other sourceSets...

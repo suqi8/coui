@@ -9,7 +9,7 @@ Full guides: https://suqi8.github.io/coui/guide/migration (from Miuix) and https
 | Miuix | COUI |
 | --- | --- |
 | `top.yukonga.miuix.kmp.*` | `io.github.suqi8.coui.kmp.*` (same sub-packages) |
-| Artifacts `miuix-ui`, `miuix-preference`, … | `io.github.suqi8.coui.kmp:coui-ui`, `coui-preference`, … `:2.0.0` |
+| Artifacts `miuix-ui`, `miuix-preference`, … | `io.github.suqi8.coui.kmp:coui-ui`, `coui-preference`, … `:2.1.0` |
 | `MiuixTheme`, `MiuixIcons`, `MiuixScrollBehavior`, `MiuixPopupUtils`, `MiuixIndication`, `MiuixOverscrollEffect` | `COUITheme`, `COUIIcons`, `COUIScrollBehavior`, `COUIPopupUtils`, `COUIIndication`, `COUIOverscrollEffect` |
 | `BadgedBox(badge = { Badge { Text("8") } })` | `BadgeBox(badge = { Badge(count = 8) })` |
 | `extra.SuperSwitch` / `SuperArrow` / `SuperCheckbox` / `SuperDropdown` / `SuperSpinner` | `preference.SwitchPreference` / `ArrowPreference` / `CheckboxPreference` / `OverlayDropdownPreference` / `OverlaySpinnerPreference` (artifact `coui-preference`) |

@@ -25,10 +25,10 @@ Replace the Miuix Maven coordinates (`top.yukonga.miuix.kmp`) with the COUI ones
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.suqi8.coui.kmp:coui-ui:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-ui:2.1.0")
             // Optional modules, same pattern:
-            implementation("io.github.suqi8.coui.kmp:coui-preference:2.0.0")
-            implementation("io.github.suqi8.coui.kmp:coui-icons:2.0.0")
+            implementation("io.github.suqi8.coui.kmp:coui-preference:2.1.0")
+            implementation("io.github.suqi8.coui.kmp:coui-icons:2.1.0")
         }
     }
 }
