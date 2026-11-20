@@ -4,6 +4,7 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.VectorConverter
+import kotlin.math.roundToInt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -94,6 +95,69 @@ class SearchBarMotionTest {
             assertEquals(p.coerceIn(0f, 1f), frame.alpha, 1e-6f)
             assertEquals(1f, frame.textAlpha, 1e-6f)
             assertEquals(0f, frame.blurPx, 1e-6f)
+        }
+    }
+
+    @Test
+    fun collapseUndershoot_carriesTheCapsulePastItsNormalWidth() {
+        // doWidthChangedAnimate: right = left + max + (min - max) * p, so below 0 the capsule is wider
+        // than at rest by (gap + button) * -p. For a 12dp gap and a 60dp cancel button at 3x density
+        // (216px) the bounce-0.25 undershoot opens a few pixels, well inside the 20px COUI lays the
+        // background out wider by.
+        val reachPx = 216f
+        val overshootPx = reachPx * -collapseCurve.min()
+        assertTrue(overshootPx > 3f && overshootPx < 20f, "overshoot $overshootPx")
+    }
+
+    // --- edit frame: SearchBarBackgroundView.doBeforeAnimate / updateEditFrameClip ---
+
+    /** The edit frame width at [progress] for a 900px normal frame that shrinks by 216px. */
+    private fun frameWidthAt(progress: Float): Int = 900 - (216 * progress).roundToInt()
+
+    @Test
+    fun editFrame_keepsItsNormalWidthThroughMostOfTheChange() {
+        for (p in listOf(0.05f, 0.25f, 0.5f, 0.8f)) {
+            assertEquals(900, searchBarEditFrameMeasureWidth(frameWidthAt(p), shrinkPx = 216, progress = p), "at $p")
+        }
+    }
+
+    @Test
+    fun editFrame_snapsToItsEditWidthWithinThirtyPixels() {
+        // 216 * 0.9 = 194px in: 22px from the 684px edit width.
+        assertEquals(684, searchBarEditFrameMeasureWidth(frameWidthAt(0.9f), shrinkPx = 216, progress = 0.9f))
+        // The overshoot past the edit width stays measured at the edit width, clipped.
+        assertEquals(684, searchBarEditFrameMeasureWidth(frameWidthAt(1.02f), shrinkPx = 216, progress = 1.02f))
+        // The undershoot of a collapse is measured at the normal width, inside the wider capsule.
+        assertEquals(900, searchBarEditFrameMeasureWidth(frameWidthAt(-0.03f), shrinkPx = 216, progress = -0.03f))
+    }
+
+    @Test
+    fun editFrame_measuresAsItIsWhenItDoesNotShrink() {
+        assertEquals(700, searchBarEditFrameMeasureWidth(700, shrinkPx = 0, progress = 0.5f))
+        assertEquals(700, searchBarEditFrameMeasureWidth(700, shrinkPx = -40, progress = 0.5f))
+    }
+
+    // --- search history expand / fold button: COUIPressFeedbackImageView ---
+
+    @Test
+    fun historyTogglePress_runsToNinetyPercentOnMoveEase() {
+        assertEquals(1f, searchHistoryTogglePressScale(from = 1f, elapsedMillis = 0f), 1e-6f)
+        assertEquals(0.9f, searchHistoryTogglePressScale(from = 1f, elapsedMillis = 200f), 1e-6f)
+        assertEquals(0.9f, searchHistoryTogglePressScale(from = 1f, elapsedMillis = 500f), 1e-6f)
+        // COUIMoveEaseInterpolator (0.3, 0, 0.1, 1) has covered most of the way by the 160ms hold
+        // point a quick tap waits for.
+        val atHold = searchHistoryTogglePressScale(from = 1f, elapsedMillis = 160f)
+        assertTrue(atHold < 0.91f && atHold > 0.9f, "scale at the hold point $atHold")
+    }
+
+    @Test
+    fun historyTogglePress_continuesFromAPartlyReleasedScale() {
+        assertEquals(0.95f, searchHistoryTogglePressScale(from = 0.95f, elapsedMillis = 0f), 1e-6f)
+        assertEquals(0.9f, searchHistoryTogglePressScale(from = 0.95f, elapsedMillis = 200f), 1e-6f)
+        // setScale clamps to [0.9, 1].
+        for (millis in 0..200 step 10) {
+            val scale = searchHistoryTogglePressScale(from = 1f, elapsedMillis = millis.toFloat())
+            assertTrue(scale in 0.9f..1f, "scale $scale at $millis ms")
         }
     }
 }

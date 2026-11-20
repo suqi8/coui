@@ -4,21 +4,18 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,22 +33,22 @@ import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
-import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIFontScale
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -60,7 +58,9 @@ import kotlinx.coroutines.launch
  * A [SearchHistory] component with COUI style.
  *
  * The search history panel of ColorOS's COUISearchHistoryView: a title bar with a clear button,
- * and the history records as capsule chips flowing into lines (COUIFlowLayout). With
+ * and the history records as capsule chips flowing into lines (COUIFlowLayout). Each record is a
+ * [SuggestionChip] (the COUIChip `COUIFlowLayout` inflates), with its press scale and tints and a
+ * label that follows the font scale up to 1.35. With
  * [maxLinesFolded], the records past that many lines are folded behind a round expand button
  * that takes the end of the last folded line (replacing its last chip if it does not fit).
  * Expanding shows up to [maxLinesExpanded] lines at once and fades the extra records in (400ms,
@@ -349,46 +349,46 @@ private fun SearchHistoryFlow(
     }
 }
 
-/** One record: a COUIChip in Widget.COUI.Chip.Suggestion style. */
+/**
+ * One record: the COUIChip `COUIFlowLayout.getChip` inflates in `Widget.COUI.Chip.Suggestion` style,
+ * i.e. a [SuggestionChip] with its COUIPressFeedbackHelper press scale, COUIMaskEffectDrawable press
+ * and hover tints and focus ring. `COUIChangeTextUtil.adaptFontSize(chip, G4)` caps the label's font
+ * scale at 1.35.
+ */
 @Composable
 private fun HistoryChip(
     text: String,
     colors: SearchHistoryColors,
     onClick: () -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressProgress by animateFloatAsState(if (pressed) 1f else 0f, ChipPressSpring)
-    val pressColor = COUITheme.colorScheme.press
-    val fill = if (pressProgress > 0f) {
-        pressColor.copy(alpha = pressColor.alpha * pressProgress).compositeOver(colors.chipColor)
-    } else {
-        colors.chipColor
+    val density = LocalDensity.current
+    val cappedFontScale = COUIFontScale.suitableFontScale(density.fontScale, COUIFontScale.G4)
+    // Keeps the platform density (and its non-linear font scaling) unless the cap applies.
+    val chipDensity = remember(density, cappedFontScale) {
+        if (cappedFontScale == density.fontScale) density else Density(density.density, cappedFontScale)
     }
-    Box(
-        modifier = Modifier
-            .couiPressScale(pressed = pressed)
-            .widthIn(max = SearchHistoryDefaults.ChipMaxWidth)
-            .squircleSurface(color = fill, cornerRadius = SearchHistoryDefaults.ChipHeight / 2)
-            .clickable(interactionSource = interactionSource, indication = null, role = Role.Button, onClick = onClick)
-            .defaultMinSize(minWidth = SearchHistoryDefaults.ChipMinWidth, minHeight = SearchHistoryDefaults.ChipHeight)
-            .padding(horizontal = SearchHistoryDefaults.ChipHorizontalPadding),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            color = colors.chipContentColor,
-            style = SearchHistoryDefaults.chipTextStyle(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.widthIn(max = SearchHistoryDefaults.ChipTextMaxWidth),
+    CompositionLocalProvider(LocalDensity provides chipDensity) {
+        SuggestionChip(
+            onClick = onClick,
+            label = text,
+            cornerRadius = SearchHistoryDefaults.ChipHeight / 2,
+            minWidth = SearchHistoryDefaults.ChipMinWidth,
+            minHeight = SearchHistoryDefaults.ChipHeight,
+            maxWidth = SearchHistoryDefaults.ChipMaxWidth,
+            colors = ChipDefaults.chipColors(
+                containerColor = colors.chipColor,
+                contentColor = colors.chipContentColor,
+            ),
+            insideMargin = PaddingValues(horizontal = SearchHistoryDefaults.ChipHorizontalPadding),
         )
     }
 }
 
 /**
  * The expand / fold button: a COUIPressFeedbackImageView, i.e. a chip-height circle around a
- * 16dp arrow that scales to 0.9 over 200ms when pressed and back over 340ms on release.
+ * 16dp arrow that scales to 0.9 over 200ms when pressed and back over 340ms on release. A release
+ * in the first 80% of the press-in lets the press-in run on to that point first
+ * (`cancelAnimator` / `isNeedToDelayCancelScaleAnim`), so even a quick tap visibly dips.
  */
 @Composable
 private fun FoldToggleButton(
@@ -397,13 +397,52 @@ private fun FoldToggleButton(
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
     val scale = remember { Animatable(1f) }
-    LaunchedEffect(pressed) {
-        if (pressed) {
-            scale.animateTo(TOGGLE_PRESSED_SCALE, tween(TOGGLE_PRESS_MILLIS, easing = MoveEase))
-        } else if (scale.value < 1f) {
-            scale.animateTo(1f, tween(TOGGLE_RELEASE_MILLIS, easing = MoveEase))
+    // Collected directly rather than through a pressed state, so a tap whose press and release land
+    // in the same frame still plays the dip.
+    LaunchedEffect(interactionSource) {
+        // The frame time the running press-in started at (or NO_PRESS / PRESS_PENDING) and the scale
+        // it started from.
+        var pressStart = NO_PRESS
+        var pressFrom = 1f
+        var job: Job? = null
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    job?.cancel()
+                    pressFrom = scale.value
+                    pressStart = PRESS_PENDING
+                    // executeScaleAnimator(true): 200ms to 0.9 on COUIMoveEaseInterpolator, driven
+                    // frame by frame so a release can carry its timeline on.
+                    job = launch {
+                        val start = withFrameNanos { it }
+                        pressStart = start
+                        do {
+                            val elapsedMillis = (withFrameNanos { it } - start) / 1_000_000f
+                            scale.snapTo(searchHistoryTogglePressScale(pressFrom, elapsedMillis))
+                        } while (elapsedMillis < TOGGLE_PRESS_MILLIS)
+                    }
+                }
+
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    job?.cancel()
+                    job = launch {
+                        // A press-in that has not had its first frame yet starts now.
+                        val start = if (pressStart == PRESS_PENDING) withFrameNanos { it } else pressStart
+                        if (start != NO_PRESS) {
+                            // Let the press-in play on to 80% of its duration, then release from there.
+                            while (true) {
+                                val elapsedMillis = (withFrameNanos { it } - start) / 1_000_000f
+                                if (elapsedMillis >= TOGGLE_PRESS_MILLIS * TOGGLE_PRESS_HOLD_FRACTION) break
+                                scale.snapTo(searchHistoryTogglePressScale(pressFrom, elapsedMillis))
+                            }
+                        }
+                        pressStart = NO_PRESS
+                        // executeScaleAnimator(false): back to 1 over 340ms on COUIMoveEaseInterpolator.
+                        scale.animateTo(1f, tween(TOGGLE_RELEASE_MILLIS, easing = MoveEase))
+                    }
+                }
+            }
         }
     }
     Box(
@@ -604,11 +643,30 @@ private fun toggleArrow(name: String, pathData: String): ImageVector = ImageVect
     )
 }.build()
 
-/** COUIChip press tint spring: COUISpringForce(response 0.3, bounce 0). */
-private val ChipPressSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
-
 /** COUIMoveEaseInterpolator. */
 private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+/**
+ * The expand / fold button scale [elapsedMillis] into a press-in that started at [from]: the
+ * COUIPressFeedbackImageView 200ms COUIMoveEaseInterpolator run to 0.9, clamped to `[0.9, 1]`
+ * (`setScale`).
+ */
+internal fun searchHistoryTogglePressScale(from: Float, elapsedMillis: Float): Float {
+    val t = (elapsedMillis / TOGGLE_PRESS_MILLIS).coerceIn(0f, 1f)
+    return (from + (TOGGLE_PRESSED_SCALE - from) * MoveEase.transform(t)).coerceIn(TOGGLE_PRESSED_SCALE, 1f)
+}
+
+/** No press-in is running. */
+private const val NO_PRESS = Long.MIN_VALUE
+
+/** A press-in has been asked for but has not had its first frame yet. */
+private const val PRESS_PENDING = Long.MIN_VALUE + 1
+
+/**
+ * COUIPressFeedbackImageView `cancelAnimator`: a release before this share of the press-in duration
+ * waits for it (`currentPlayTime > duration * 0.8f`).
+ */
+private const val TOGGLE_PRESS_HOLD_FRACTION = 0.8f
 
 private const val EXPAND_ID = -1
 private const val FOLD_ID = -2

@@ -59,7 +59,7 @@ COUI provides the overscroll of the COUI 17 scroll views (`COUIRecyclerView`, `C
 
 - A drag past the edge moves the content by `0.4 × (1 − |overscroll| / window size)` of the finger (`COUIPhysicalAnimationUtil.calcRealOverScrollDist`), so it starts at 40% and stiffens as it goes.
 - A release springs the content back on the `SpringOverScroller` RK4 spring (friction 12.19, tension 16 × 2.15 vertically / 16 × 3.2 horizontally, in origami units: slightly overdamped).
-- A fling that runs into the edge carries its leftover speed past it on the same spring; the overshoot saturates at 37.31% of the window (`calcOverFlingDecelerateDist`). A fling back towards the content while overscrolled scrolls the content; one further out is dropped.
+- A fling that runs into the edge carries its leftover speed past it on the same spring; the overshoot saturates at 37.31% of the window (`calcOverFlingDecelerateDist`). A release while overscrolled springs back without flinging the content (`COUIRecyclerView.performSpringBack`). Only a fling faster than 6000px/s changes that: back towards the content it carries the overscroll through the edge and hands its leftover speed to the content (`performOverScrollingReverseFling`); further out it carries its speed into the spring-back (`setCurrVelocityY`).
 
 ### Vertical Overscroll
 
@@ -106,7 +106,7 @@ LazyColumn(
 
 ### Via OverscrollFactory (Theme-Level Integration)
 
-`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same overscroll physics as `overScrollVertical()`, but integrated at the theme level. Like `COUIRecyclerView` / `COUINestedScrollView` (`couiRecyclerViewEnableVibrator`, on by default), its effect also plays the scroll-edge vibration (`performHapticFeedback(307)`) when a fling runs into an edge or a drag is released while overscrolled; create `COUIOverscrollEffect(edgeHapticEnabled = false)` to turn it off. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the COUI overscroll effect automatically — no extra modifier required.
+`COUIOverscrollFactory` implements the Compose `OverscrollFactory` interface and provides the same overscroll physics as `overScrollVertical()`, but integrated at the theme level. Like `COUIRecyclerView` / `COUINestedScrollView` (`couiRecyclerViewEnableVibrator`, on by default), its effect also plays the scroll-edge vibration (`performHapticFeedback(307)`) when a fling runs into an edge or a drag is released while overscrolled (not after a tap that moved less than 10px, `isClickEvent`); create `COUIOverscrollEffect(edgeHapticEnabled = false)` to turn it off. It is already set as the default factory in both overloads of `COUITheme`, so all standard Compose scrollable components (`LazyColumn`, `LazyRow`, `verticalScroll`, `horizontalScroll`, etc.) use the COUI overscroll effect automatically — no extra modifier required.
 
 ```kotlin
 // No modifier needed — COUITheme provides the overscroll effect automatically
@@ -156,6 +156,14 @@ LazyColumn(
 | Requires a modifier on each component | ✅ | ❌ |
 
 > **Limitation:** `COUIOverscrollFactory` works by receiving the delta that the scrollable component could not consume after reaching its scroll boundary. If the content does not overflow the container (e.g., a `LazyColumn` whose items all fit on screen), the scrollable component never reaches a boundary, so `applyToScroll` is never called with a non-zero remainder and the overscroll effect will **not** trigger. For such cases, use `overScrollVertical()` instead.
+
+### COUI Fling (COUIFlingBehavior)
+
+The overscroll takes over where a fling ends; the fling itself is the scrollable's `FlingBehavior`, and Compose has no theme-wide one. Pass `rememberCOUIFlingBehavior()` to get the fling of `COUIRecyclerView` / `COUINestedScrollView` (`SpringOverScroller`): the distance and duration come from a friction simulation of the release speed, scaled by 1 → 0.8 → 0.4 (distance) and 1.3 → 0.8 → 0.5 (duration) as the speed rises from 2000 to 20000px/s, and the content follows `COUISpringInterpolator` (stiffness 40, damping ratio 1.15) over that time — a longer, softer glide than the Android fling. A fling that reaches the end hands its speed to the COUI overscroll.
+
+```kotlin
+LazyColumn(flingBehavior = rememberCOUIFlingBehavior()) { /* ... */ }
+```
 
 ## Scroll End Haptic Feedback (Modifier.scrollEndHaptic())
 

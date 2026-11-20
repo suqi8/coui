@@ -6,11 +6,12 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -292,15 +293,14 @@ private fun SheetActionButton(
     }
 }
 
-/** The bottom padding that keeps the last sheet row clear of the navigation and caption bars. */
+/**
+ * The bottom space that keeps the last sheet row clear of the navigation and caption bars. It skips
+ * what the sheet's keyboard lift already covers, so an open keyboard does not add the bar twice
+ * (COUI lifts a panel by `ime - navigationBars` and keeps its navigation margin).
+ */
 @Composable
 private fun SheetBottomSpacer(modifier: Modifier = Modifier) {
-    Spacer(
-        modifier.padding(
-            bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                WindowInsets.captionBar.asPaddingValues().calculateBottomPadding(),
-        ),
-    )
+    Spacer(modifier.windowInsetsBottomHeight(WindowInsets.navigationBars.union(WindowInsets.captionBar)))
 }
 
 /** The playground sheet content: a card of [rowCount] rows, scrolling once it outgrows the panel. */

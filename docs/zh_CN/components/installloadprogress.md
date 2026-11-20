@@ -39,7 +39,9 @@ InstallLoadProgress(
 | `Paused`  | 与 `Loading` 绘制完全相同                                            |
 | `Failed`  | 主色胶囊 + 白色文字                                                  |
 
-进度变化走临界阻尼弹簧（COUI `COUISpringForce` bounce 0、response 1.0）。按下时填充色变暗（HSL 亮度 × 0.8），胶囊四边各内缩自身尺寸的 5%，文字缩小到 92%；按下 200ms、抬起 340ms，曲线为 move ease。
+进度变化走临界阻尼弹簧（COUI `COUISpringForce` bounce 0、response 1.0）。按下时填充色变暗（HSL 亮度 × 0.8），胶囊四边各内缩自身尺寸的 5%，文字缩小到 92%；按下 200ms、抬起 340ms，曲线为 move ease。手指一落下内缩就至少有 0.5%（`DEFAULT_MIN_PRESS_FEEDBACK`），按压立即可见。
+
+设置 `hapticFeedbackEnabled = true`（对应 COUI `loadingButtonNeedVibrate`，默认关闭）后，按下和抬起时各播放一次 COUI 轻触振动。
 
 ## 样式
 
@@ -68,6 +70,7 @@ InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Circ
 | state             | InstallLoadState          | 当前状态                                     | InstallLoadState.Idle                                   | 否       |
 | progress          | Float                     | 0 到 1 之间的进度，在下载中/暂停时显示       | 0f                                                      | 否       |
 | enabled           | Boolean                   | 是否启用                                     | true                                                    | 否       |
+| hapticFeedbackEnabled | Boolean               | 按下与抬起时是否播放 COUI 轻触振动           | false                                                   | 否       |
 | style             | InstallLoadStyle          | 尺寸样式                                     | InstallLoadStyle.Small                                  | 否       |
 | colors            | InstallLoadProgressColors | 颜色配置                                     | InstallLoadProgressDefaults.installLoadProgressColors() | 否       |
 | textStyle         | TextStyle                 | 文字样式                                     | COUITheme.textStyles.buttonM                           | 否       |
@@ -111,4 +114,4 @@ InstallLoadProgress(text = "下载", onClick = {}, style = InstallLoadStyle.Circ
 ## 说明
 
 - 禁用时只把填充色换成 `disabledColor`，文字颜色保持不变，与 COUI 一致。
-- 圆形样式（`smallCircleButton`，33dp，带下载/暂停/重试图标）尚未移植。
+- 礼包状态（`INSTALL_HAVE_GIFT`）未移植：COUI 17 会读取 `couiInstallGiftBg`，但从不绘制。

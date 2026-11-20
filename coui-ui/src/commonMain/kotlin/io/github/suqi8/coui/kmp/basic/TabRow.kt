@@ -7,14 +7,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animate
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.draggable
@@ -44,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -62,28 +60,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChangedIgnoreConsumed
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
@@ -99,10 +94,10 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.util.lerp
+import io.github.suqi8.coui.kmp.effect.couiPressScale
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
@@ -152,6 +147,11 @@ data class TabRowItem(
  * content width they are spread with equal gaps, when they fit into the row they are centered with
  * [itemSpacing] between them, and otherwise the row scrolls with fading edges and the
  * `COUIHorizontalScrollView` rubber-band overscroll.
+ *
+ * A tab reacts on touch down (`COUITabView.onTouchEvent`), even inside a scrolling page: its press
+ * mask starts at once and touching a tab that is not selected vibrates. The row itself stays
+ * silent, as `COUITabLayoutBaseStyle` turns the layout's own haptics off: no tick when a pager
+ * swipe changes the tab and none at the scroll edges.
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow].
@@ -273,7 +273,6 @@ fun TabRow(
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
     val windowInfo = LocalWindowInfo.current
-    val performHaptic = rememberCouiHaptic()
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = COUITheme.textStyles.bodyM
     // COUITabLayout: sans-serif-medium for the selected tab, sans-serif for the others.
@@ -297,11 +296,17 @@ fun TabRow(
     // programmatic page change after a tab click leaves the click animation in charge.
     var pagerDragging by remember { mutableStateOf(false) }
     var pagerSettledIndex by remember { mutableIntStateOf(selectedTabIndex) }
+    // COUITabLayout.mSelectedPosition: the page the label crossfade of a drag starts from. It moves
+    // to every page the drag passes, so a drag across several pages crossfades each pair in turn.
+    var pagerColorIndex by remember { mutableIntStateOf(selectedTabIndex) }
     if (pagerState != null) {
         LaunchedEffect(pagerState) {
             pagerState.interactionSource.interactions.collect { interaction ->
                 if (interaction is DragInteraction.Start) {
-                    if (!pagerDragging) pagerSettledIndex = pagerState.currentPage
+                    if (!pagerDragging) {
+                        pagerSettledIndex = pagerState.currentPage
+                        pagerColorIndex = pagerState.currentPage
+                    }
                     pagerDragging = true
                 }
             }
@@ -374,11 +379,13 @@ fun TabRow(
         }
         val currentGeometry by rememberUpdatedState(geometry)
         val scope = rememberCoroutineScope()
+        // COUITabLayoutBaseStyle sets android:hapticFeedbackEnabled="false" on the tab layout, which
+        // silences the COUIHorizontalScrollView edge vibration (performHapticFeedback(307)), so
+        // strip.onEdge stays empty. Only the tabs themselves vibrate.
         val strip = remember { TabStripScroller() }
         strip.range = geometry.scrollRange.toFloat()
         strip.canScroll = geometry.scrollable
         strip.maxOverScroll = windowInfo.containerSize.width
-        strip.onEdge = { performHaptic(CouiHapticEffect.ScrollEdge) }
 
         // COUISlidingTabStrip.animateIndicatorToPosition: one animator drives the indicator edges
         // and the label color crossfade. The edges lerp from where the indicator was drawn.
@@ -423,11 +430,21 @@ fun TabRow(
 
         // COUITabLayout.setScrollPosition: a dragged pager scrolls the row with it.
         LaunchedEffect(strip) {
+            var lastOffset = Float.NaN
             snapshotFlow { pagerPosition }.collect { position ->
-                if (!position.isNaN()) {
-                    strip.stop()
-                    strip.value = currentGeometry.scrollTargetFor(position)
+                if (position.isNaN()) {
+                    lastOffset = Float.NaN
+                    return@collect
                 }
+                // setSelectedTabView(int, float): an offset that lands on a page or wraps by more
+                // than half a page (the drag passed a page) restarts the crossfade from there.
+                val offset = position - floor(position)
+                if (offset == 0f || (!lastOffset.isNaN() && abs(offset - lastOffset) > 0.5f)) {
+                    pagerColorIndex = position.roundToInt().coerceIn(0, max(0, currentGeometry.lastIndex))
+                }
+                lastOffset = offset
+                strip.stop()
+                strip.value = currentGeometry.scrollTargetFor(position)
             }
         }
 
@@ -439,12 +456,11 @@ fun TabRow(
                 return@LaunchedEffect
             }
             if (pagerDragging) {
-                // COUITabLayout.selectTab(tab, false): the indicator already follows the pager,
-                // only the haptic plays.
+                // COUITabLayout.selectTab(tab, false): the indicator already follows the pager. Its
+                // performHapticFeedback(302) is silenced by the style's hapticFeedbackEnabled="false".
                 targetIndex = selectedTabIndex
                 previousIndex = -1
                 progress.snapTo(1f)
-                if (enabled) performHaptic(CouiHapticEffect.Switch)
                 return@LaunchedEffect
             }
             val p = progress.value
@@ -474,9 +490,9 @@ fun TabRow(
                     pressed -> selectedColor
 
                     // COUITabLayout.setSelectedTabView(position, offset): the label nearest the page
-                    // offset crossfades with the settled one over the second half of the drag.
+                    // offset crossfades with the last page passed over the second half of the way.
                     !position.isNaN() -> {
-                        val settled = pagerSettledIndex
+                        val settled = pagerColorIndex
                         val nearest = position.roundToInt()
                         val t = (2f * abs(position - settled) - 1f).coerceIn(0f, 1f)
                         when {
@@ -665,22 +681,17 @@ private fun UnderlineTab(
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val performHaptic = rememberCouiHaptic()
-    val currentIsSelected by rememberUpdatedState(isSelected)
-    val currentEnabled by rememberUpdatedState(enabled)
-    // COUITabView.onTouchEvent: haptic 302 when a non-selected tab is touched down.
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press && currentEnabled && !currentIsSelected) {
-                performHaptic(CouiHapticEffect.Switch)
-            }
-        }
-    }
     Layout(
         modifier = Modifier
             .fillMaxHeight()
             .width(width)
             // COUITabView: COUIMaskEffectDrawable over the whole tab, 8dp corners.
             .clip(RoundedCornerShape(cornerRadius))
+            // COUITabView.onTouchEvent: ACTION_DOWN marks the mask touched at once, even inside a
+            // scrolling page, and vibrates (302) when the tab is not the selected one.
+            .tabTouchDownPress(interactionSource = interactionSource, enabled = enabled) {
+                if (!isSelected) performHaptic(CouiHapticEffect.Switch)
+            }
             .selectable(
                 selected = isSelected,
                 interactionSource = interactionSource,
@@ -731,6 +742,49 @@ private fun UnderlineTab(
                 // (dot) or 1dp (number) top margin.
                 val top = if ((item.badge ?: 0) > 0) BadgeTopOffsetNumber else BadgeTopOffsetDot
                 badge.placeRelative(x + BadgeHorizontalOffset.roundToPx(), top.roundToPx())
+            }
+        }
+    }
+}
+
+/**
+ * Starts a press of [interactionSource] the moment a pointer goes down, as the COUI views do on
+ * `ACTION_DOWN` (`COUITabView.onTouchEvent` marks its mask touched, `COUIChip.handleActionDown`
+ * starts its press scale and mask, `COUISegmentButtonLayout.dispatchTouchEvent` presses the
+ * touched segment), instead of after the tap timeout Compose's clickable waits for inside a
+ * scrolling parent. The press is released when the pointer lifts and cancelled when a parent
+ * scroller takes the gesture (`ACTION_CANCEL`). [onDown] runs with the down.
+ *
+ * The clickable of the element keeps emitting its own, possibly delayed, press into the same
+ * source; the COUI indications and press-state readers only ask whether a press is active, so the
+ * two overlap harmlessly.
+ */
+@Composable
+internal fun Modifier.tabTouchDownPress(
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean,
+    onDown: () -> Unit = {},
+): Modifier {
+    val currentOnDown by rememberUpdatedState(onDown)
+    return pointerInput(interactionSource, enabled) {
+        if (!enabled) return@pointerInput
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val press = PressInteraction.Press(down.position)
+            interactionSource.tryEmit(press)
+            currentOnDown()
+            var end: PressInteraction = PressInteraction.Cancel(press)
+            try {
+                while (true) {
+                    val change = awaitPointerEvent(PointerEventPass.Final).changes.firstOrNull { it.id == down.id } ?: break
+                    if (!change.pressed) {
+                        end = PressInteraction.Release(press)
+                        break
+                    }
+                    if (change.isConsumed && change.positionChangedIgnoreConsumed()) break
+                }
+            } finally {
+                interactionSource.tryEmit(end)
             }
         }
     }
@@ -1098,10 +1152,16 @@ private fun tabBadgeWidth(badge: Int): Dp = when {
 /**
  * A [TabRowWithContour] with COUI style.
  *
- * A port of the ColorOS 16 segmented control (COUISegmentButtonLayout, default `SegmentButton`
- * style). For the `SegmentButton.Tiny` style, pass [TabRowDefaults.TabRowWithContourTinyHeight],
- * [TabRowDefaults.TabRowWithContourTinyCornerRadius] and
- * [TabRowDefaults.TabRowWithContourTinyPadding].
+ * A port of the ColorOS segmented control (COUISegmentButtonLayout, default `SegmentButton`
+ * style) that scrolls when its segments overflow. For the `SegmentButton.Tiny` style, pass
+ * [TabRowDefaults.TabRowWithContourTinyHeight], [TabRowDefaults.TabRowWithContourTinyCornerRadius]
+ * and [TabRowDefaults.TabRowWithContourTinyPadding].
+ *
+ * The indicator moves on the COUI 17 segment button springs, as in [SegmentButton]: position
+ * (response 0.4, bounce 0.1), width (response 0.6 → 0.4 and bounce 0.5 → 0.1 by how different the
+ * two widths are) and a height dip to 90%. A touched segment shrinks with the COUI 17 press scale
+ * from the touch down, and pressing the selected segment presses the indicator in. All labels use
+ * `couiTextButtonM`. Use [SegmentButton] for the drag-to-switch indicator and the COUI 17 material.
  *
  * @param tabs The text to be displayed in the [TabRow].
  * @param selectedTabIndex The selected tab index of the [TabRow].
@@ -1158,7 +1218,13 @@ fun TabRowWithContour(
 }
 
 /**
- * Shared implementation of the COUI segment button, following COUISegmentButtonLayout.onDraw.
+ * Shared implementation of the COUI segment button, following `COUISegmentButtonLayout.onDraw`.
+ *
+ * The indicator runs on the [SegmentButton] springs ([SegmentButtonState]): position response 0.4 /
+ * bounce 0.1, a width spring started at 1000 px/s whose response and bounce ease by how different
+ * the two widths are, and a height that dips towards 90% and springs back. Pressing a segment
+ * shrinks it with the COUI 17 press scale from the touch down; pressing the selected one also
+ * presses the indicator in. Every label uses `couiTextButtonM` (`refreshSegmentTextConfig`).
  */
 @Composable
 private fun SegmentButtonRow(
@@ -1180,16 +1246,28 @@ private fun SegmentButtonRow(
 ) {
     val currentOnTabSelected by rememberUpdatedState(onTabSelected)
     val isDarkTheme = COUITheme.colorScheme.isDark
-    val shadowColor = if (isDarkTheme) IndicatorShadowDark else IndicatorShadowLight
-    val shadowPenumbraColor = remember(shadowColor) { shadowColor.copy(alpha = shadowColor.alpha * 0.5f) }
+    // coui_segment_button_shadow_color / _end_color, as the segment button draws them.
+    val segmentColors = SegmentButtonDefaults.segmentButtonColors()
+    val shadowColor = segmentColors.indicatorShadowColor
+    val shadowEndColor = segmentColors.indicatorShadowEndColor
     val containerColor = colors.backgroundColor(false)
     val indicatorColor = colors.backgroundColor(true)
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer()
-    val labelFontSize = COUITheme.textStyles.bodyM.fontSize
-    // COUI measures segments with the selected appearance (couiTextButtonM: 14sp, medium).
-    val measureStyle = remember(labelFontSize) { TextStyle(fontSize = labelFontSize, fontWeight = FontWeight.Medium) }
+    // refreshSegmentTextConfig: couiTextButtonM (14sp, medium) on every segment, selected or not.
+    val labelStyle = SegmentButtonDefaults.textStyle()
     val resolvedListState = listState ?: rememberLazyListState()
+    val state = remember { SegmentButtonState() }
+    val scope = rememberCoroutineScope()
+
+    // selectSegmentAt: the indicator follows the hoisted selection on the segment button springs.
+    SideEffect {
+        if (selectedTabIndex != state.paramIndex) {
+            state.paramIndex = selectedTabIndex
+            state.selected = selectedTabIndex
+            if (state.indicatorTarget != selectedTabIndex) state.animateTo(selectedTabIndex, scope)
+        }
+    }
 
     BoxWithConstraints(
         modifier = Modifier
@@ -1202,6 +1280,7 @@ private fun SegmentButtonRow(
         val maxWidthPx = if (maxWidth == Dp.Infinity) Int.MAX_VALUE else with(density) { maxWidth.roundToPx() }
         val spacingPx = with(density) { itemSpacing.roundToPx() }
         val segmentPaddingPx = with(density) { SegmentPaddingHorizontal.roundToPx() }
+        val paddingPx = with(density) { contourPadding.roundToPx() }
 
         // COUISegmentButtonLayout.calculateChildrenWidths: natural label widths distributed to fill the row.
         val segmentWidthsPx = remember(
@@ -1212,11 +1291,11 @@ private fun SegmentButtonRow(
             spacingPx,
             segmentPaddingPx,
             textMeasurer,
-            measureStyle,
+            labelStyle,
         ) {
             val naturalWidths = tabs.map { label ->
                 max(
-                    textMeasurer.measure(text = label, style = measureStyle, maxLines = 1).size.width +
+                    textMeasurer.measure(text = label, style = labelStyle, maxLines = 1).size.width +
                         2 * segmentPaddingPx,
                     minWidthPx,
                 )
@@ -1233,36 +1312,15 @@ private fun SegmentButtonRow(
                 }
             }
         }
-
-        // Initialized from the current selection so the first frame shows the indicator at rest.
-        val indicatorCenterX = remember {
-            val index = selectedTabIndex.coerceIn(0, max(0, segmentWidthsPx.lastIndex))
-            Animatable(
-                if (segmentWidthsPx.isEmpty()) 0f else segmentLeftsPx[index] + segmentWidthsPx[index] / 2f,
-            )
+        // The segment bounds along the whole (possibly scrolling) track, from its start edge.
+        val segmentStarts = remember(segmentLeftsPx, paddingPx) {
+            FloatArray(segmentLeftsPx.size) { (paddingPx + segmentLeftsPx[it]).toFloat() }
         }
-        val indicatorWidth = remember {
-            val index = selectedTabIndex.coerceIn(0, max(0, segmentWidthsPx.lastIndex))
-            Animatable(if (segmentWidthsPx.isEmpty()) 0f else segmentWidthsPx[index].toFloat())
+        val segmentEnds = remember(segmentStarts, segmentWidthsPx) {
+            FloatArray(segmentStarts.size) { segmentStarts[it] + segmentWidthsPx[it] }
         }
-        val indicatorScale = remember { Animatable(1f) }
-        var selectedSegmentPressed by remember { mutableStateOf(false) }
+        val trackWidth = if (segmentEnds.isEmpty()) 0f else segmentEnds.last() + paddingPx
         var lastSettledSelectedTabIndex by remember(resolvedListState) { mutableIntStateOf(-1) }
-
-        // COUI animateIndicatorToPosition: independent position and width springs.
-        LaunchedEffect(selectedTabIndex, segmentWidthsPx, segmentLeftsPx) {
-            if (segmentWidthsPx.isEmpty()) return@LaunchedEffect
-            val index = selectedTabIndex.coerceIn(0, segmentWidthsPx.lastIndex)
-            val targetWidth = segmentWidthsPx[index].toFloat()
-            val targetCenter = segmentLeftsPx[index] + targetWidth / 2f
-            if (lastSettledSelectedTabIndex < 0 || lastSettledSelectedTabIndex == selectedTabIndex) {
-                indicatorCenterX.snapTo(targetCenter)
-                indicatorWidth.snapTo(targetWidth)
-            } else {
-                launch { indicatorCenterX.animateTo(targetCenter, SegmentButtonSpring) }
-                launch { indicatorWidth.animateTo(targetWidth, SegmentButtonSpring) }
-            }
-        }
 
         // Keep the selected tab visible when the row overflows and scrolls.
         LaunchedEffect(selectedTabIndex, viewportPx, resolvedListState, segmentWidthsPx) {
@@ -1278,19 +1336,10 @@ private fun SegmentButtonRow(
             lastSettledSelectedTabIndex = selectedTabIndex
         }
 
-        // COUIPressFeedbackHelper: pressing the selected segment scales the indicator around its center.
-        LaunchedEffect(selectedSegmentPressed, selectedTabIndex, segmentWidthsPx, height, contourPadding) {
-            val target = if (selectedSegmentPressed && segmentWidthsPx.isNotEmpty()) {
-                val index = selectedTabIndex.coerceIn(0, segmentWidthsPx.lastIndex)
-                with(density) {
-                    pressedScaleEndRatio(
-                        Size(segmentWidthsPx[index].toFloat(), (height - contourPadding * 2).toPx()),
-                    )
-                }
-            } else {
-                1f
-            }
-            indicatorScale.animateTo(target, SegmentButtonSpring)
+        // The indicator's COUIPressFeedbackHelper: pressing the selected segment presses it in.
+        var selectedSegmentPressed by remember { mutableStateOf(false) }
+        LaunchedEffect(selectedSegmentPressed) {
+            state.pressIndicator(selectedSegmentPressed, scope)
         }
 
         val scrollOffset by remember(segmentLeftsPx, resolvedListState) {
@@ -1309,6 +1358,23 @@ private fun SegmentButtonRow(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(constraints)
+                    val measureDensity: Density = this
+                    layout(placeable.width, placeable.height) {
+                        // onLayout / onSizeChanged: a new layout snaps the indicator onto the selection.
+                        state.onLayout(
+                            density = measureDensity,
+                            lefts = segmentStarts,
+                            rights = segmentEnds,
+                            width = trackWidth,
+                            height = placeable.height.toFloat(),
+                            padding = paddingPx.toFloat(),
+                            paddingDp = contourPadding,
+                        )
+                        placeable.place(0, 0)
+                    }
+                }
                 .drawWithCache {
                     // 1. Container capsule (COUISegmentButtonLayout.drawButtonBackground).
                     val containerRadius = min((cornerRadius + contourPadding).toPx(), size.height / 2f)
@@ -1321,25 +1387,22 @@ private fun SegmentButtonRow(
                             squircleEnabled = squircleEnabled,
                         )
                     }
+                    val shadowOffset = IndicatorShadowOffsetY.toPx()
+                    val radiusLimit = cornerRadius.toPx()
                     onDrawBehind {
                         if (containerColor.alpha > 0f) {
                             drawPath(path = containerPath, color = containerColor)
                         }
-                        if (segmentWidthsPx.isEmpty()) return@onDrawBehind
-                        val pad = contourPadding.toPx()
-                        val scale = indicatorScale.value
-                        val indicatorW = indicatorWidth.value * scale
-                        val indicatorH = (size.height - 2f * pad) * scale
-                        if (indicatorW <= 0f || indicatorH <= 0f) return@onDrawBehind
-                        val centerX = pad + indicatorCenterX.value - scrollOffset
-                        val centerY = size.height / 2f
-                        val rect = Rect(
-                            centerX - indicatorW / 2f,
-                            centerY - indicatorH / 2f,
-                            centerX + indicatorW / 2f,
-                            centerY + indicatorH / 2f,
-                        )
-                        val radius = min(cornerRadius.toPx(), indicatorH / 2f)
+                        // updateIndicatorRect, along the track; the segments scroll under the row.
+                        val track = state.indicatorRect(trackWidth)
+                        if (track.width <= 0f || track.height <= 0f) return@onDrawBehind
+                        val scroll = scrollOffset
+                        val rect = if (layoutDirection == LayoutDirection.Rtl) {
+                            Rect(size.width - track.right + scroll, track.top, size.width - track.left + scroll, track.bottom)
+                        } else {
+                            Rect(track.left - scroll, track.top, track.right - scroll, track.bottom)
+                        }
+                        val radius = min(radiusLimit, rect.height / 2f)
                         indicatorPath.rewind()
                         indicatorPath.addSquircleRect(
                             rect = rect,
@@ -1348,22 +1411,17 @@ private fun SegmentButtonRow(
                             squircleEnabled = squircleEnabled,
                         )
                         clipPath(containerPath) {
-                            // 2. Indicator shadow, clipped outside the indicator (Region.Op.DIFFERENCE);
-                            // the 1dp blur is approximated with a half-alpha penumbra pass.
-                            clipPath(indicatorPath, clipOp = ClipOp.Difference) {
-                                val shadowDy = IndicatorShadowOffsetY.toPx()
-                                val shadowBlur = IndicatorShadowBlurRadius.toPx()
-                                drawRoundRect(
-                                    color = shadowPenumbraColor,
-                                    topLeft = Offset(rect.left - shadowBlur, rect.top + shadowDy - shadowBlur),
-                                    size = Size(indicatorW + 2 * shadowBlur, indicatorH + 2 * shadowBlur),
-                                    cornerRadius = CornerRadius(radius + shadowBlur),
-                                )
-                                translate(top = shadowDy) {
-                                    drawPath(path = indicatorPath, color = shadowColor)
-                                }
-                            }
-                            // 3. Indicator capsule fill.
+                            // 2. drawShadowWithGradient, then 3. the indicator capsule.
+                            drawSegmentIndicatorShadow(
+                                rect = rect,
+                                radius = radius,
+                                indicatorPath = indicatorPath,
+                                bottom = size.height,
+                                offset = shadowOffset,
+                                shadowColor = shadowColor,
+                                shadowEndColor = shadowEndColor,
+                                isDark = isDarkTheme,
+                            )
                             drawPath(path = indicatorPath, color = indicatorColor)
                         }
                     }
@@ -1386,7 +1444,7 @@ private fun SegmentButtonRow(
                         onClick = { currentOnTabSelected.invoke(index) },
                         width = with(density) { segmentWidthsPx[index].toDp() },
                         color = colors.contentColor(selectedTabIndex == index),
-                        fontSize = labelFontSize,
+                        style = labelStyle,
                         contentAlignment = contentAlignment,
                         interactionSource = interactionSource,
                         indication = indication,
@@ -1405,7 +1463,7 @@ private fun SegmentTab(
     onClick: () -> Unit,
     width: Dp,
     color: Color,
-    fontSize: TextUnit,
+    style: TextStyle,
     contentAlignment: Alignment,
     interactionSource: MutableInteractionSource?,
     indication: Indication?,
@@ -1418,13 +1476,7 @@ private fun SegmentTab(
     LaunchedEffect(isPressed, isSelected) {
         currentOnSelectedPressedChange(isPressed && isSelected)
     }
-    // COUIPressFeedbackHelper on the segment label.
-    val scaleProgress by animateFloatAsState(
-        targetValue = if (isPressed) 1f else 0f,
-        animationSpec = SegmentButtonSpring,
-        label = "segmentPressScale",
-    )
-    // COUISegmentButtonLayout.setSelectedAt: color crossfades over 300ms, weight switches instantly.
+    // COUISegmentButtonLayout.setSelectedAt: the label colour crossfades over 300ms.
     val textColor by animateColorAsState(
         targetValue = color,
         animationSpec = tween(TextColorAnimationDuration, easing = TextColorEasing),
@@ -1434,11 +1486,10 @@ private fun SegmentTab(
         modifier = Modifier
             .fillMaxHeight()
             .width(width)
-            .graphicsLayer {
-                val scale = 1f - (1f - pressedScaleEndRatio(size)) * scaleProgress
-                scaleX = scale
-                scaleY = scale
-            }
+            // executeScaleAnimatorAt: the segment's COUIPressFeedbackHelper, the COUI 17 press scale.
+            .couiPressScale(pressed = isPressed)
+            // dispatchTouchEvent presses the touched segment on ACTION_DOWN, inside a scroller too.
+            .tabTouchDownPress(interactionSource = interactionSource, enabled = true)
             .clickable(
                 interactionSource = interactionSource,
                 indication = indication,
@@ -1454,8 +1505,7 @@ private fun SegmentTab(
         Text(
             text = text,
             color = textColor,
-            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-            fontSize = fontSize,
+            style = style,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -1645,8 +1695,8 @@ object TabRowDefaults {
 
     /**
      * The default colors for the [TabRowWithContour], following
-     * COUISegmentButtonLayout: both label states default to `couiColorLabelPrimary` — the
-     * selected state is distinguished by the indicator and the medium font weight.
+     * COUISegmentButtonLayout: both label states default to `couiColorLabelPrimary` and every label
+     * uses the medium `couiTextButtonM`, so the selected segment is told by the indicator alone.
      */
     @Composable
     fun tabRowColors(
@@ -1785,12 +1835,6 @@ private const val INDICATOR_MAX_DURATION = 300
 private const val INDICATOR_DURATION_PER_TAB = 50
 private const val INDICATOR_BASE_DURATION = 150
 
-/**
- * COUISpringForce(response = 0.3f, bounce = 0f): a critically damped spring with stiffness
- * (2 * PI / 0.3)^2 ~= 438.65, used for the indicator springs and the press scale.
- */
-private val SegmentButtonSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
-
 /** COUIMoveEaseInterpolator: PathInterpolator(0.3f, 0f, 0.1f, 1f). */
 private val TextColorEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
 
@@ -1803,15 +1847,6 @@ private val SegmentPaddingHorizontal = 12.dp
 /** COUI `coui_segment_shadow_offset` (2dp) — the vertical offset of the indicator shadow. */
 private val IndicatorShadowOffsetY = 2.dp
 
-/** COUI `coui_segment_shadow_radius` (1dp) — the blur radius of the indicator shadow. */
-private val IndicatorShadowBlurRadius = 1.dp
-
-/** COUI `coui_segment_button_shadow_color` in light themes (#0D000000). */
-private val IndicatorShadowLight = Color(0x0D000000)
-
-/** COUI 17 `coui_segment_button_shadow_color` in dark themes (#14000000). */
-private val IndicatorShadowDark = Color(0x14000000)
-
 /** COUI `coui_color_segment_button_background` in light themes (#0F000000). */
 private val SegmentContainerLight = Color(0x0F000000)
 
@@ -1823,35 +1858,3 @@ private val SegmentIndicatorLight = Color(0xB2FFFFFF)
 
 /** COUI 17 `coui_color_segment_button_indicator` in dark themes (#33FFFFFF). */
 private val SegmentIndicatorDark = Color(0x33FFFFFF)
-
-/** COUIInEaseInterpolator, used to map the segment area to the pressed end scale. */
-private val PressedScaleEasing = CubicBezierEasing(0f, 0f, 0.1f, 1f)
-
-/** COUIPressFeedbackHelper area bounds: coui_min_end_value_size (48dp) squared. */
-private val PressedScaleMinAreaDp2 = 48f * 48f
-
-/** COUIPressFeedbackHelper area bounds: coui_max_end_value_width x height (328dp x 220dp). */
-private val PressedScaleMaxAreaDp2 = 328f * 220f
-
-/** The pressed end scale of the smallest surfaces (COUIPressFeedbackHelper DEFAULT_SCALE_END_RATIO). */
-private val PressedScaleMin = 0.92f
-
-/** The pressed end scale of the largest surfaces (COUIPressFeedbackHelper MAX_SCALE_END_RATIO). */
-private val PressedScaleMax = 0.98f
-
-/**
- * The scale a segment of [size] shrinks to when fully pressed: [PressedScaleMin] for areas up to
- * 48 x 48dp, easing towards [PressedScaleMax] at 328 x 220dp
- * (COUIPressFeedbackHelper.getCardScaleRatio).
- */
-private fun Density.pressedScaleEndRatio(size: Size): Float {
-    val area = size.width.toDp().value * size.height.toDp().value
-    return when {
-        area <= PressedScaleMinAreaDp2 -> PressedScaleMin
-
-        area >= PressedScaleMaxAreaDp2 -> PressedScaleMax
-
-        else -> PressedScaleMin + (PressedScaleMax - PressedScaleMin) *
-            PressedScaleEasing.transform((area - PressedScaleMinAreaDp2) / (PressedScaleMaxAreaDp2 - PressedScaleMinAreaDp2))
-    }
-}

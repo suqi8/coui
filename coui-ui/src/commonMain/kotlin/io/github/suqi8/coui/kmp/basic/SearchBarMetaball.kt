@@ -17,6 +17,7 @@ import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Links a [SearchBar] to the toolbar search entry it expands out of, after COUI 17
@@ -28,6 +29,10 @@ import kotlin.math.max
  *   until it has been measured.
  * @property interactive whether the bar takes touches. A collapsing bar sits behind the toolbar
  *   children in COUI (`updateLayerInToolBar(false)`), so its capsule and buttons stay still.
+ * @property touchMotionEnabled whether a touch may start the capsule's and the buttons' touch motion
+ *   (press scale, rubber band, deformation). `showInToolBar` and `hideInToolBar` switch it off
+ *   (`updateSearchAndButtonTouchDeformation(false)`) until the expansion or fade has settled, while
+ *   the spotlight keeps following the finger.
  * @property onFadeChange told by the [InputField] whether its capsule goes without the glass
  *   material: `showInToolBar` / `hideInToolBar` only run the icon expansion when `isBlurEnable()`,
  *   and otherwise fade the whole bar in over the toolbar (`mFadeInFadeOutAnimation`).
@@ -37,6 +42,7 @@ internal class SearchBarIconExpand(
     val progress: () -> Float,
     val sourceCenterX: () -> Float,
     val interactive: () -> Boolean,
+    val touchMotionEnabled: () -> Boolean,
     val onFadeChange: (Boolean) -> Unit,
 )
 
@@ -50,6 +56,31 @@ internal val LocalSearchBarIconExpand = staticCompositionLocalOf<SearchBarIconEx
 internal class SearchBarCapsuleInfo {
     var material by mutableStateOf(false)
     var fallbackColor by mutableStateOf(Color.Unspecified)
+
+    /**
+     * The bar's resolved horizontal padding in pixels (`getInternalPaddingEnd()`), written while the
+     * bar measures and read by the [InputField] layout of the same pass; -1 until measured. A
+     * collapsing capsule widens by it on both sides.
+     */
+    var horizontalPaddingPx: Int = -1
+
+    /**
+     * Reads the bar's edit-state progress while its capsule changes width with the state spring
+     * (an instant bar with a functional button); `null` otherwise.
+     */
+    var stateProgress: (() -> Float)? = null
+
+    /**
+     * The functional button's full claim (start gap plus button width) in pixels, the width the
+     * capsule gives up for it at edit-state progress 1; written while the bar measures.
+     */
+    var actionReachPx: Int = 0
+
+    /**
+     * The lone instant outer button's claim (button width plus gap) in pixels, the width the capsule
+     * takes back from it at edit-state progress 1; 0 without one.
+     */
+    var outerReachPx: Int = 0
 }
 
 internal val LocalSearchBarCapsuleInfo = staticCompositionLocalOf<SearchBarCapsuleInfo?> { null }
@@ -75,6 +106,28 @@ internal class SearchBarGeometry {
     /** The action button's untransformed bounds within the row. */
     val actionRect: Rect get() = actionLocalRect.translate(actionSlotOrigin)
 }
+
+/**
+ * The width the edit frame (text and hints) is measured at while the capsule changes width,
+ * `SearchBarBackgroundView.doBeforeAnimate` / `updateEditFrameClip`: the frame keeps its normal-state
+ * width and is clipped to the [currentWidth] it has, until it comes within 30px
+ * (`SNAP_THRESHOLD`) of its edit-state width, where it is measured at that width instead. The text
+ * so slides under the moving capsule edge rather than being laid out (and ellipsized) again on
+ * every frame.
+ *
+ * @param currentWidth the frame's width this frame, in pixels.
+ * @param shrinkPx how much narrower the frame is in the edit state than in the normal state.
+ * @param progress the edit-state progress, which may overshoot 0 or 1.
+ */
+internal fun searchBarEditFrameMeasureWidth(currentWidth: Int, shrinkPx: Int, progress: Float): Int {
+    if (shrinkPx <= 0) return currentWidth
+    val normalWidth = currentWidth + (shrinkPx * progress).roundToInt()
+    val editWidth = normalWidth - shrinkPx
+    return if (editWidth > 0 && abs(currentWidth - editWidth) < EditFrameSnapThresholdPx) editWidth else normalWidth
+}
+
+/** `SearchBarBackgroundView.SNAP_THRESHOLD`, in raw pixels. */
+private val EditFrameSnapThresholdPx = 30
 
 /**
  * The cancel-button transform during a toolbar icon expansion, `COUISearchBar.funBtnAnimateIconExpand`:

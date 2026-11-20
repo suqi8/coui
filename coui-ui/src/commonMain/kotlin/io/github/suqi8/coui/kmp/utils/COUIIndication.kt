@@ -3,10 +3,11 @@
 package io.github.suqi8.coui.kmp.utils
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.Interaction
@@ -17,15 +18,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChangedIgnoreConsumed
 import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.node.DrawModifierNode
 import io.github.suqi8.coui.kmp.interfaces.HoldDownInteraction
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
@@ -40,6 +46,12 @@ private val DefaultHoverDark = Color(0x26FFFFFF)
 private val DefaultFocusLight = Color(0x1F0080FF)
 private val DefaultFocusDark = Color(0x331A8CFF)
 
+/** The COUI `couiColorHover` fallback of a state layer drawn without a theme color. */
+internal fun defaultHoverLayerColor(isDark: Boolean): Color = if (isDark) DefaultHoverDark else DefaultHoverLight
+
+/** The COUI `couiColorFocus` fallback of a state layer drawn without a theme color. */
+internal fun defaultFocusLayerColor(isDark: Boolean): Color = if (isDark) DefaultFocusDark else DefaultFocusLight
+
 // COUI: COUISpringForce response 0.3 / bounce 0 -> stiffness (2 * PI / 0.3)^2 = 438.65, damping ratio 1.
 private val StateLayerSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 
@@ -48,6 +60,129 @@ private val StateLayerSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.
  * (COUIMaskEffectDrawable DEFAULT_MIN_PROGRESS_FOR_TOUCH_ENTER_ANIMATION).
  */
 private val PressMinVisibleProgress = 0.7f
+
+/**
+ * One `StateEffectAnimator` of `COUIMaskEffectDrawable` (press, hover or focus): a 0..1 progress on
+ * the response 0.3 / bounce 0 spring.
+ *
+ * Re-targeting keeps the layer's momentum, as `animateToProgress(target, true)` re-targets a
+ * running `COUISpringAnimation` without resetting its velocity. A cancelled `Animatable` forgets
+ * its velocity, so the velocity is sampled every frame and handed to the next spring.
+ */
+@Stable
+internal class StateLayerAnimator {
+    private val progress = Animatable(0f)
+
+    /** The velocity of the running spring, sampled every frame; 0 once it settles. */
+    private var sampledVelocity = 0f
+
+    /** The target of the spring that was last started; it stays set when the spring is cancelled. */
+    private var target = 0f
+
+    /** The current progress, 0..1 (a snapshot read: read it in the draw phase). */
+    val value: Float get() = progress.value
+
+    /** `animateToProgress(target, true)`: springs to [target], keeping the current momentum. */
+    suspend fun animateTo(target: Float) {
+        val start = sampledVelocity
+        this.target = target
+        if (progress.value == target && start == 0f) return
+        progress.animateTo(target, StateLayerSpring, start) { sampledVelocity = velocity }
+        sampledVelocity = 0f
+    }
+
+    /** `animateToProgress(target, false)`: jumps to [target] without the spring. */
+    suspend fun snapTo(target: Float) {
+        this.target = target
+        sampledVelocity = 0f
+        progress.snapTo(target)
+    }
+
+    /**
+     * `animateToProgressUntil(0, minProgress)`: a release that comes while the layer is still
+     * springing in below [minProgress] lets it run on until it passes [minProgress], then turns it
+     * around with the momentum it has, so even a quick tap (a press and release delivered in the
+     * same frame included) shows a clearly visible layer. Otherwise the layer fades out at once.
+     */
+    suspend fun fadeOut(minProgress: Float) {
+        if (target == 1f && progress.value < minProgress) {
+            try {
+                progress.animateTo(1f, StateLayerSpring, sampledVelocity) {
+                    sampledVelocity = velocity
+                    if (value >= minProgress) throw StateLayerThresholdReached()
+                }
+            } catch (_: StateLayerThresholdReached) {
+                // The layer passed the minimum visible progress; turn it around.
+            }
+        }
+        animateTo(0f)
+    }
+}
+
+/** Thrown to stop a press-in that a release is waiting on once it passes the minimum progress. */
+private class StateLayerThresholdReached : CancellationException("State layer reached the minimum visible progress")
+
+/**
+ * An interaction reporting that a finger is down on an element, from the touch down to the last
+ * finger's lift or the gesture's cancellation: `COUIMaskEffectDrawable.setTouchEntered` /
+ * `setTouchExited`, which `COUIButton` and the list rows (`ListSelectedItemLayout`) call on
+ * `ACTION_DOWN` and `ACTION_UP` / `ACTION_CANCEL`. [COUIIndication] shows its press layer while
+ * the element is touched, without the tap timeout a clickable waits for inside scrolling
+ * containers, and still carries a press that a scroll cancels on to its minimum visible progress.
+ *
+ * Emit it with [couiTouchFeedback], or emit [Enter] / [Exit] directly.
+ *
+ * @see Enter
+ * @see Exit
+ */
+interface COUITouchInteraction : Interaction {
+    /** A finger went down on the element. */
+    class Enter : COUITouchInteraction
+
+    /**
+     * The last finger left, or another element (a scrolling parent) took the gesture.
+     *
+     * @property enter The [Enter] interaction this one ends.
+     */
+    class Exit(
+        val enter: Enter,
+    ) : COUITouchInteraction
+}
+
+/**
+ * Reports the raw touches of this element to [interactionSource] as [COUITouchInteraction]s, so a
+ * [COUIIndication] on the same source enters its press layer at the touch down, as the COUI list
+ * rows and buttons do (`setTouchEntered` on `ACTION_DOWN`), instead of after the tap timeout of a
+ * clickable inside a scrolling container. A gesture that a parent takes over (a scroll) exits it.
+ * Pointer events are only observed, never consumed.
+ *
+ * Place it next to the element's `clickable`, on the same interaction source.
+ *
+ * @param interactionSource The interaction source the element's indication reads.
+ * @param enabled Whether touches are reported; a disabled element never enters the state.
+ */
+fun Modifier.couiTouchFeedback(
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean = true,
+): Modifier {
+    if (!enabled) return this
+    return this.pointerInput(interactionSource) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false)
+            val enter = COUITouchInteraction.Enter()
+            interactionSource.tryEmit(enter)
+            try {
+                // The Final pass sees what the parents consumed in the Main pass.
+                do {
+                    val event = awaitPointerEvent(PointerEventPass.Final)
+                    val stolen = event.changes.any { it.pressed && it.positionChangedIgnoreConsumed() && it.isConsumed }
+                } while (!stolen && event.changes.any { it.pressed })
+            } finally {
+                interactionSource.tryEmit(COUITouchInteraction.Exit(enter))
+            }
+        }
+    }
+}
 
 /**
  * An interaction for the slide-to-select gesture of a list: the finger, pressed on one item, slides
@@ -140,11 +275,16 @@ private class SelectInteractionHolder {
  * COUI default [Indication]: the rectangular state layers of `COUIMaskEffectDrawable`.
  *
  * Hover, focus and press are three independent layers, each driven by its own response 0.3 /
- * bounce 0 spring and drawn in that order over the content. A release that comes before the press
- * layer reached 70% of its progress first carries it on to 70% so quick taps stay visible.
+ * bounce 0 spring and drawn in that order over the content. A layer that changes direction keeps
+ * its momentum (`StateEffectAnimator` re-targets the running spring). A release that comes before
+ * the press layer reached 70% of its progress first carries it on to 70% so quick taps stay
+ * visible, even when the press and its release arrive together (`animateToProgressUntil`).
  *
  * The focus layer also shows while a [COUISelectInteraction] reports the item selected, and a
- * [COUITouchSelectInteraction] shows or clears the press layer without animation.
+ * [COUITouchSelectInteraction] shows or clears the press layer without animation. A
+ * [COUITouchInteraction] (see [couiTouchFeedback]) holds the press layer from the touch down, as
+ * the COUI list rows do, while a plain clickable inside a scrolling container only presses after
+ * its tap timeout.
  *
  * Colors left [Color.Unspecified] fall back to the COUI light or dark values, picked by the
  * luminance of [color] — the content color (e.g. `labelPrimary`), which is bright in dark theme.
@@ -198,51 +338,45 @@ class COUIIndication(
     ) : Modifier.Node(),
         DrawModifierNode {
         private var isPressed = false
-        private var isHovered = false
+        private var isTouched = false
+
+        // Counted like collectIsHoveredAsState, so several hover sources (a pointer and a
+        // popup anchor's hover lock) stack instead of the first exit clearing the layer.
+        private val hoverEnters = mutableListOf<HoverInteraction.Enter>()
         private var isFocused = false
         private var isSelected = false
         private var isTouchSelected = false
         private var isHoldDown = false
-        private val pressProgress = Animatable(0f)
-        private val hoverProgress = Animatable(0f)
-        private val focusProgress = Animatable(0f)
+        private val pressLayer = StateLayerAnimator()
+        private val hoverLayer = StateLayerAnimator()
+        private val focusLayer = StateLayerAnimator()
         private var pressJob: Job? = null
         private var hoverJob: Job? = null
         private var focusJob: Job? = null
 
-        private fun animateLayer(previous: Job?, layer: Animatable<Float, AnimationVector1D>, target: Float): Job {
+        // The layers start undispatched: each records its new target before the next interaction is
+        // handled, so a release delivered right after its press (a quick tap inside a scrolling
+        // container) still sees the press-in it has to carry to the minimum visible progress.
+        private fun animateLayer(previous: Job?, layer: StateLayerAnimator, target: Float): Job {
             previous?.cancel()
-            return coroutineScope.launch { layer.animateTo(target, StateLayerSpring) }
+            return coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) { layer.animateTo(target) }
         }
 
         private fun updateFocus() {
-            focusJob = animateLayer(focusJob, focusProgress, if (isFocused || isSelected) 1f else 0f)
+            focusJob = animateLayer(focusJob, focusLayer, if (isFocused || isSelected) 1f else 0f)
         }
 
         private fun snapPress(target: Float) {
             pressJob?.cancel()
-            pressJob = coroutineScope.launch { pressProgress.snapTo(target) }
+            pressJob = coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) { pressLayer.snapTo(target) }
         }
 
         private fun updatePress() {
             // Hold-down keeps the press layer visible after the press is released.
-            val active = isPressed || isHoldDown || isTouchSelected
+            val active = isPressed || isTouched || isHoldDown || isTouchSelected
             pressJob?.cancel()
-            pressJob = coroutineScope.launch {
-                if (active) {
-                    pressProgress.animateTo(1f, StateLayerSpring)
-                } else if (pressProgress.value > 0f) {
-                    if (pressProgress.value < PressMinVisibleProgress) {
-                        try {
-                            pressProgress.animateTo(1f, StateLayerSpring) {
-                                if (value >= PressMinVisibleProgress) throw PressMinVisibleProgressReached()
-                            }
-                        } catch (_: PressMinVisibleProgressReached) {
-                            // Minimum visible progress reached; fall through to the fade-out.
-                        }
-                    }
-                    pressProgress.animateTo(0f, StateLayerSpring)
-                }
+            pressJob = coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                if (active) pressLayer.animateTo(1f) else pressLayer.fadeOut(PressMinVisibleProgress)
             }
         }
 
@@ -260,6 +394,16 @@ class COUIIndication(
                             updatePress()
                         }
 
+                        is COUITouchInteraction.Enter -> if (!isTouched) {
+                            isTouched = true
+                            updatePress()
+                        }
+
+                        is COUITouchInteraction.Exit -> if (isTouched) {
+                            isTouched = false
+                            updatePress()
+                        }
+
                         is HoldDownInteraction.HoldDown -> if (!isHoldDown) {
                             isHoldDown = true
                             updatePress()
@@ -270,14 +414,13 @@ class COUIIndication(
                             updatePress()
                         }
 
-                        is HoverInteraction.Enter -> if (!isHovered) {
-                            isHovered = true
-                            hoverJob = animateLayer(hoverJob, hoverProgress, 1f)
+                        is HoverInteraction.Enter -> {
+                            hoverEnters.add(interaction)
+                            if (hoverEnters.size == 1) hoverJob = animateLayer(hoverJob, hoverLayer, 1f)
                         }
 
-                        is HoverInteraction.Exit -> if (isHovered) {
-                            isHovered = false
-                            hoverJob = animateLayer(hoverJob, hoverProgress, 0f)
+                        is HoverInteraction.Exit -> if (hoverEnters.remove(interaction.enter) && hoverEnters.isEmpty()) {
+                            hoverJob = animateLayer(hoverJob, hoverLayer, 0f)
                         }
 
                         is FocusInteraction.Focus -> if (!isFocused) {
@@ -309,7 +452,7 @@ class COUIIndication(
 
                         is COUITouchSelectInteraction.Exit -> if (isTouchSelected) {
                             isTouchSelected = false
-                            if (isPressed || isHoldDown) updatePress() else snapPress(0f)
+                            if (isPressed || isTouched || isHoldDown) updatePress() else snapPress(0f)
                         }
                     }
                 }
@@ -318,15 +461,12 @@ class COUIIndication(
 
         override fun ContentDrawScope.draw() {
             drawContent()
-            val hover = hoverProgress.value
+            val hover = hoverLayer.value
             if (hover > 0f) drawRect(color = hoverColor, alpha = hover.coerceAtMost(1f))
-            val focus = focusProgress.value
+            val focus = focusLayer.value
             if (focus > 0f) drawRect(color = focusColor, alpha = focus.coerceAtMost(1f))
-            val press = pressProgress.value
+            val press = pressLayer.value
             if (press > 0f) drawRect(color = pressColor, alpha = press.coerceAtMost(1f))
         }
     }
 }
-
-/** Thrown to stop the deferred press-in animation once [PressMinVisibleProgress] is reached. */
-private class PressMinVisibleProgressReached : CancellationException("Press layer reached the minimum visible progress")

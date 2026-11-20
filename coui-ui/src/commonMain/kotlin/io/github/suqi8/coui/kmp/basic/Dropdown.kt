@@ -27,7 +27,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +49,6 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,7 +57,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.ArrowUpDown
 import io.github.suqi8.coui.kmp.icon.basic.Check
@@ -89,9 +86,10 @@ fun RowScope.DropdownArrowEndAction(
  *
  * In popup mode the row follows COUI 17 `coui_popup_list_window_item.xml` as bound by
  * `MixedPopupListAdapter.VerticalViewHolder`: a 40dp minimum height with 8dp vertical and 20dp
- * horizontal padding, an optional 20dp icon, the title over an optional description, then — only
- * when needed — a trailing hint slot and a 24dp state icon (the check of a selected row, or the
- * sub-menu indicator). Press feedback is the list's shared mask, not a per-row highlight.
+ * horizontal padding, an optional 20dp icon, the 15sp `couiTextBodyL` title over an optional 12sp
+ * description, then — only when needed — a trailing hint slot and a 24dp state icon (the check of a
+ * selected row, or the sub-menu indicator). Press feedback is the list's shared mask, not a per-row
+ * highlight.
  *
  * @param item The item of the current option.
  * @param optionSize The size of the options.
@@ -241,7 +239,10 @@ internal fun PopupDropdownRow(
             Text(
                 text = item.text,
                 modifier = TitleWidthModifier,
-                style = popupRowTitleStyle(),
+                // MixedPopupListAdapter.setTitleForVertical re-applies couiTextBodyL (15sp, body_l line
+                // spacing) on every bind from API 23 on; the 16sp couiTextAppearanceBodyL of
+                // coui_popup_list_window_item.xml is only the pre-23 fallback.
+                style = COUITheme.textStyles.bodyL,
                 // COUI coui_popup_list_window_item.xml textFontWeight=400; the sub-menu header turns
                 // medium (MixedPopupListAdapter.setTitleForVertical, groupState 2 at index 0).
                 fontWeight = if (submenuHeader) FontWeight.Medium else FontWeight.Normal,
@@ -853,20 +854,6 @@ private val TitleEndGapModifier = Modifier.width(DropdownDefaults.CheckIconStart
 
 private val HintEndGapModifier = Modifier.width(DropdownDefaults.HintEndPadding)
 
-/**
- * The popup row title style: coui_popup_list_window_item.xml uses the legacy
- * `couiTextAppearanceBodyL` (16sp with the body_l line spacing), one step above the 15sp
- * `couiTextBodyL` that [io.github.suqi8.coui.kmp.theme.TextStyles.bodyL] maps.
- */
-@Composable
-@ReadOnlyComposable
-private fun popupRowTitleStyle(): TextStyle {
-    val bodyL = COUITheme.textStyles.bodyL
-    return bodyL.copy(fontSize = PopupRowTitleFontSize, lineHeight = bodyL.lineHeight * (PopupRowTitleFontSize.value / bodyL.fontSize.value))
-}
-
-private val PopupRowTitleFontSize = 16.sp
-
 private val HintCellModifier = Modifier.widthIn(max = DropdownDefaults.HintMaxWidth)
 
 private val IconCellModifier = Modifier
@@ -885,8 +872,10 @@ private val DialogIconCellModifier = Modifier
  *
  * Icon-only cells are 40dp tall with a 24dp icon, 12dp from the menu edges and 8dp apart; labelled
  * cells are at least 52dp wide and 40dp tall, 6dp padded, with a 20dp icon, a 4dp gap and a
- * two-line 12sp label, 8dp from the edges and 4dp apart. The grid has three columns, or as many as
- * there are icon-only cells up to five.
+ * two-line 12sp label, 8dp from the edges and 4dp apart. As soon as one label is wider than its cell,
+ * every label keeps two lines, so the labelled cells share one height and one mask height
+ * (`MixedPopupListAdapter.updateHorizontalTitleForceTwoLine`). The grid has three columns, or as many
+ * as there are icon-only cells up to five.
  *
  * Inside a [ListPopupColumn] the cells join the list's shared mask and drag selection like the
  * vertical rows (`COUITouchRecyclerView` treats item view type 0 as selectable): the mask covers the
@@ -933,6 +922,10 @@ fun DropdownHorizontalItems(
         }
     }
     val rowParentData = remember(handles) { PopupHorizontalRowParentData { handles } }
+    // MixedPopupListAdapter.updateHorizontalTitleForceTwoLine (computed once per item list): one
+    // label wider than its cell gives every label minLines 2 (setTitleForHorizontal).
+    val labels = shown.map { it.text }
+    var forceTwoLines by remember(labels) { mutableStateOf(false) }
 
     Layout(
         modifier = modifier
@@ -946,6 +939,8 @@ fun DropdownHorizontalItems(
                     enabled = enabled && item.enabled,
                     dropdownColors = dropdownColors,
                     sharedMask = host != null,
+                    forceTwoLines = forceTwoLines,
+                    onLabelWrapped = { forceTwoLines = true },
                     onClick = { currentOnItemClick(index) },
                 )
             }
@@ -997,6 +992,8 @@ private fun DropdownHorizontalCell(
     enabled: Boolean,
     dropdownColors: DropdownColors,
     sharedMask: Boolean,
+    forceTwoLines: Boolean,
+    onLabelWrapped: () -> Unit,
     onClick: () -> Unit,
 ) {
     val clickAction = onClick
@@ -1072,8 +1069,10 @@ private fun DropdownHorizontalCell(
                 style = COUITheme.textStyles.bodyXS,
                 color = labelColor,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = HORIZONTAL_LABEL_MAX_LINES,
+                minLines = if (forceTwoLines) HORIZONTAL_LABEL_MAX_LINES else 1,
                 overflow = TextOverflow.Ellipsis,
+                onTextLayout = { if (it.lineCount > 1) onLabelWrapped() },
             )
         }
     }
@@ -1081,3 +1080,6 @@ private fun DropdownHorizontalCell(
 
 private const val HORIZONTAL_MAX_ICON_ONLY = 5
 private const val HORIZONTAL_MAX_WITH_TEXT = 3
+
+/** The label line limit of a horizontal cell (MixedPopupListAdapter.setTitleForHorizontal maxLines). */
+private const val HORIZONTAL_LABEL_MAX_LINES = 2

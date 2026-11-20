@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -29,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
@@ -61,6 +59,7 @@ import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.overScrollVertical
+import io.github.suqi8.coui.kmp.utils.rememberCOUIFlingBehavior
 import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 import utils.LocalPageBackdrop
 import utils.rememberBlurBackdrop
@@ -287,6 +286,8 @@ fun AppPageList(
             state = listState,
             modifier = Modifier.appPageScroll(scope),
             contentPadding = scope.contentPadding,
+            // COUI lists fling through SpringOverScroller, which runs longer than Compose's spline.
+            flingBehavior = rememberCOUIFlingBehavior(),
         ) {
             content()
             item(key = "app_page_tail") { Spacer(Modifier.height(32.dp)) }
@@ -388,15 +389,32 @@ fun AppPageTopBar(
  */
 @Composable
 private fun appPageContentPadding(innerPadding: PaddingValues, showTopBar: Boolean): PaddingValues {
-    val layoutDirection = LocalLayoutDirection.current
-    val appPadding = LocalAppPadding.current
     val hostBottom = LocalHostBottomPadding.current
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-    val top = innerPadding.calculateTopPadding() + if (showTopBar) 12.dp else 0.dp
-    val bottom = max(max(innerPadding.calculateBottomPadding(), hostBottom), navBottom) + appPadding.calculateBottomPadding()
-    val start = innerPadding.calculateStartPadding(layoutDirection)
-    val end = innerPadding.calculateEndPadding(layoutDirection)
-    return remember(top, bottom, start, end) {
-        PaddingValues(start = start, top = top, end = end, bottom = bottom)
+    val appBottom = LocalAppPadding.current.calculateBottomPadding()
+    val topGap = if (showTopBar) 12.dp else 0.dp
+    return remember(innerPadding, topGap, hostBottom, navBottom, appBottom) {
+        AppPageContentPadding(innerPadding, topGap, hostBottom, navBottom, appBottom)
     }
+}
+
+/**
+ * The page content padding, read from the scaffold padding while the content lays out, so the list
+ * moves in the same frame as the collapsing top bar instead of trailing it by a recomposition.
+ */
+@Stable
+private class AppPageContentPadding(
+    private val innerPadding: PaddingValues,
+    private val topGap: Dp,
+    private val hostBottom: Dp,
+    private val navBottom: Dp,
+    private val appBottom: Dp,
+) : PaddingValues {
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = innerPadding.calculateLeftPadding(layoutDirection)
+
+    override fun calculateTopPadding(): Dp = innerPadding.calculateTopPadding() + topGap
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = innerPadding.calculateRightPadding(layoutDirection)
+
+    override fun calculateBottomPadding(): Dp = max(max(innerPadding.calculateBottomPadding(), hostBottom), navBottom) + appBottom
 }

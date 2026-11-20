@@ -35,8 +35,10 @@ val entries = listOf(
 )
 
 Scaffold {
-    OverlayContextMenu(entries = entries) {
-        BasicComponent(title = "Report.pdf", onClick = { /* open */ })
+    // Share the row's interaction source so the row keeps its hover layer while the menu shows.
+    val row = remember { MutableInteractionSource() }
+    OverlayContextMenu(entries = entries, anchorInteractionSource = row) {
+        BasicComponent(title = "Report.pdf", onClick = { /* open */ }, interactionSource = row)
     }
 }
 ```
@@ -57,6 +59,7 @@ Scaffold {
 | renderInRootScaffold  | Boolean               | Whether the popup renders in the root scaffold overlay (Overlay only) | true                 | No       |
 | collapseOnSelection   | Boolean               | Whether a row click dismisses the menu                    | true                             | No       |
 | hapticFeedbackEnabled | Boolean               | Whether the long press plays the long-press haptic        | true                             | No       |
+| anchorInteractionSource | MutableInteractionSource? | Interaction source of the list row in `content`; its hover layer stays locked while the menu is showing | null | No |
 | onExpandedChange      | ((Boolean) -> Unit)?  | Called when the menu opens or closes                      | null                             | No       |
 | content               | @Composable () -> Unit | Content the menu is registered on                        | -                                | Yes      |
 
@@ -64,5 +67,6 @@ Scaffold {
 
 - **Long press**: the menu opens at the DOWN point once the pointer has stayed within the touch slop for the long-press timeout (COUI `PreciseLongPressHelper`), with the long-press haptic. The rest of the gesture is consumed, so the content's own click does not also run.
 - **Right click**: a secondary mouse button press opens the menu at once, without a haptic.
+- **Anchor row**: COUI locks the hover layer of a list-row anchor while its menu is showing (`COUIPopupListWindow.setAnchorHoveredState`) and releases it as the menu starts to leave. Pass the row's `MutableInteractionSource` both to the row and to `anchorInteractionSource` to get the same: after the long press the row's press fades out and its hover layer stays on until the menu dismisses.
 - **Placement**: the anchor collapses to the pointer (`COUIPopupListWindow.show(view, x, y)`, `COUIIsolatedPopupListWindow`'s 1px dummy anchor); the popup locator puts the menu below or above that point with no anchor gap and keeps it inside the window barriers. The menu itself is the regular dropdown popup, with its material, animation and row behavior.
 - **Accessibility**: the wrapper adds no semantics of its own; expose the same actions elsewhere for users who cannot long press.

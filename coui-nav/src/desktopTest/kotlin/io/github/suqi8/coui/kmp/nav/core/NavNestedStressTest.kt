@@ -196,9 +196,15 @@ class NavNestedStressTest {
             assertEquals(before + 1, pageClicks, "page probe dead after: $step")
         }
 
+        // A tap is a down and an up a frame apart, and the target must still be under the finger at
+        // the up. The COUI page switch (350ms) is at its steepest around 120ms, where a 50dp button
+        // slides out from under a stationary finger between the two; 200ms is still mid-settle but
+        // the page has slowed down enough for the tap to land.
+        val midSettleTapMillis = 200L
+
         // Arm 1: rapid double-push — second click lands mid-settle of the first.
         onNodeWithTag("push-1").performClick()
-        mainClock.advanceTimeBy(120)
+        mainClock.advanceTimeBy(midSettleTapMillis)
         waitForIdle()
         onNodeWithTag("push-2").performClick()
         settleFully()
@@ -207,7 +213,7 @@ class NavNestedStressTest {
 
         // Arm 2: back, then re-push the same level mid-pop-settle (revival path).
         runOnIdle { owner.input.backCompleted() }
-        mainClock.advanceTimeBy(120)
+        mainClock.advanceTimeBy(midSettleTapMillis)
         waitForIdle()
         onNodeWithTag("push-2").performClick()
         settleFully()
@@ -216,7 +222,7 @@ class NavNestedStressTest {
 
         // Arm 3: push an outer page mid-inner-settle, then back mid-outer-settle.
         runOnIdle { owner.input.backCompleted() }
-        mainClock.advanceTimeBy(120)
+        mainClock.advanceTimeBy(midSettleTapMillis)
         waitForIdle()
         onNodeWithTag("pushOuter-2").performClick()
         mainClock.advanceTimeBy(120)

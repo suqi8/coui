@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,13 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -41,16 +40,18 @@ import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.contentButtonMaterial
 import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
+import io.github.suqi8.coui.kmp.effect.TouchMotionState
 import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.theme.COUIFontScale
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
-import kotlin.coroutines.cancellation.CancellationException
+import io.github.suqi8.coui.kmp.utils.StateLayerAnimator
 
 /**
  * A [Button] component with COUI style.
@@ -162,40 +163,47 @@ internal fun CouiButton(
     // The material layer needs runtime shaders; without them COUI keeps the plain mask.
     val shadersSupported = remember { isRuntimeShaderSupported() }
     val materialActive = materialType != null && shadersSupported
+    val touchMotion = remember { TouchMotionState() }
 
-    // COUIMaskEffectDrawable press tint. COUIButton.applyBlurEffect turns the pressed state off
-    // while the material is on.
+    // COUIMaskEffectDrawable press tint (mask type 0). COUIButton.onTouchEvent enters it on
+    // ACTION_DOWN and exits it on ACTION_UP / ACTION_CANCEL (setTouchEntered / setTouchExited), not
+    // with the View's pressed state: it shows at once inside scrolling containers and stays while the
+    // finger slides off the button. Keyboard and accessibility presses come from the interaction
+    // source. COUIButton.applyBlurEffect turns the pressed state off while the material is on.
     val isPressed by interactionSource.collectIsPressedAsState()
-    val tintProgress = remember { Animatable(0f) }
+    val tintPressed = touchMotion.touching || isPressed
+    val pressLayer = remember { StateLayerAnimator() }
     val pressTintEnabled = enabled && !materialActive
-    LaunchedEffect(pressTintEnabled, isPressed) {
-        if (pressTintEnabled && isPressed) {
-            tintProgress.animateTo(1f, PressTintSpring)
-        } else if (!pressTintEnabled) {
-            tintProgress.snapTo(0f)
-        } else if (tintProgress.value > 0f) {
-            if (tintProgress.value < PressedTintMinVisibleProgress) {
-                // Keep the press-in animation running until the tint is clearly visible.
-                try {
-                    tintProgress.animateTo(1f, PressTintSpring) {
-                        if (value >= PressedTintMinVisibleProgress) throw PressTintThresholdReached()
-                    }
-                } catch (_: PressTintThresholdReached) {
-                    // Minimum visible progress reached; fall through to the fade-out.
-                }
-            }
-            tintProgress.animateTo(0f, PressTintSpring)
+    LaunchedEffect(pressTintEnabled, tintPressed) {
+        when {
+            // onViewStateChanged(state_enabled): a disabled mask jumps to rest.
+            !pressTintEnabled -> pressLayer.snapTo(0f)
+
+            tintPressed -> pressLayer.animateTo(1f)
+
+            else -> pressLayer.fadeOut(PressedTintMinVisibleProgress)
         }
     }
     // The hover layer of the same drawable (COUIButton.dispatchHoverEvent), on the same spring.
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val hoverProgress = remember { Animatable(0f) }
+    val hoverLayer = remember { StateLayerAnimator() }
     LaunchedEffect(enabled, isHovered) {
-        hoverProgress.animateTo(if (enabled && isHovered) 1f else 0f, PressTintSpring)
+        if (enabled) hoverLayer.animateTo(if (isHovered) 1f else 0f) else hoverLayer.snapTo(0f)
     }
     val isDark = COUITheme.colorScheme.isDark
-    val pressTint = if (isDark) PressedTintDark else PressedTintLight
-    val hoverTint = if (isDark) HoveredTintDark else HoveredTintLight
+    // ?couiColorPress / ?couiColorHover.
+    val pressTint = COUITheme.colorScheme.press
+    val hoverTint = COUITheme.colorScheme.hover
+    // COUIButton.onDraw: the mask is drawn over the fill and under the label. The layers are read
+    // here, in the draw phase, so the tint animates without recomposing the button.
+    val maskModifier = remember(pressLayer, hoverLayer, pressTint, hoverTint) {
+        Modifier.drawBehind {
+            val hover = hoverLayer.value
+            if (hover > 0f) drawRect(hoverTint, alpha = hover.coerceIn(0f, 1f))
+            val press = pressLayer.value
+            if (press > 0f) drawRect(pressTint, alpha = press.coerceIn(0f, 1f))
+        }
+    }
     // The background outline, shared by the backdrop blur and the focus ring.
     val shape = remember(cornerRadius) {
         if (cornerRadius == Dp.Unspecified) {
@@ -218,22 +226,14 @@ internal fun CouiButton(
     } else {
         Modifier
     }
-    var fillColor = if (backdropSpec != null) Color.Transparent else containerColor
-    if (hoverProgress.value > 0f) {
-        fillColor = hoverTint.copy(alpha = hoverTint.alpha * hoverProgress.value).compositeOver(fillColor)
-    }
-    if (tintProgress.value > 0f) {
-        fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
-    }
-    // With the backdrop the fill is only the hover tint, drawn over the backdrop below.
-    val surfaceColor = if (backdropSpec != null) Color.Transparent else fillColor
+    // With the backdrop the filtered backdrop is the fill; the mask is drawn over it.
+    val surfaceColor = if (backdropSpec != null) Color.Transparent else containerColor
     val surfaceModifier = if (cornerRadius == Dp.Unspecified) {
         // COUIButton.updateRoundRectPath: a height-derived capsule takes the 1.0 soft capsule weight.
         Modifier.squircleSurface(color = surfaceColor, cornerRadius = COUIRoundCorner.Full, weight = COUIRoundCorner.CapsuleWeight)
     } else {
         Modifier.squircleSurface(color = surfaceColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.Large.Weight)
     }
-    val backdropTint = if (backdropSpec != null && fillColor.alpha > 0f) fillColor else null
 
     CompositionLocalProvider(LocalContentColor provides contentColor) {
         Box(
@@ -243,6 +243,7 @@ internal fun CouiButton(
                     interactionSource = interactionSource,
                     enabled = enabled,
                     pressScaleEnabled = pressScaleEnabled,
+                    state = touchMotion,
                 )
                 // COUIButton layers a TYPE_OUTER COUIStrokeDrawable around its background outline.
                 .couiFocusStroke(interactionSource = interactionSource, shape = shape, enabled = enabled)
@@ -251,7 +252,7 @@ internal fun CouiButton(
                 // is overlaid on what lies beneath it in this layer, so it needs the backdrop there.
                 .then(surfaceModifier)
                 .then(backdropModifier)
-                .then(if (backdropTint != null) Modifier.drawBehind { drawRect(backdropTint) } else Modifier)
+                .then(maskModifier)
                 .then(
                     if (materialType != null) {
                         Modifier.contentButtonMaterial(materialType, enabled, cornerRadius)
@@ -348,7 +349,7 @@ fun TextButton(
     ) {
         Text(
             text = text,
-            style = textStyle,
+            style = buttonLabelStyle(textStyle),
             maxLines = maxLines,
             overflow = TextOverflow.Ellipsis,
         )
@@ -367,6 +368,9 @@ fun TextButton(
  * Give it a width from [ButtonDefaults] (for instance [ButtonDefaults.MediumWidth], the
  * `SingleButtonWrap` DescMedium tier) or let it wrap its text.
  *
+ * Both lines follow the `G2` font step of `DescButtonTextSpan.initPaint` (1.0 below a 1.15 font
+ * scale, 1.15 from there on), and so does the min height (`COUIChangeTextUtil.getDpG2Size`).
+ *
  * @param text The label of the button.
  * @param descText The description drawn under the label.
  * @param onClick The callback when the button is clicked.
@@ -375,7 +379,8 @@ fun TextButton(
  * @param pressScaleEnabled Whether the button shrinks while pressed, see [Button].
  * @param cornerRadius The corner radius of the button; the height-derived capsule by default.
  * @param minWidth The minimum width of the button.
- * @param minHeight The minimum height of the button.
+ * @param minHeight The minimum height of the button at a font scale below 1.15; from 1.15 on it
+ *   grows by the `G2` step (x1.15).
  * @param colors The [TextButtonColors] of the button.
  * @param insideMargin The margin inside the button.
  * @param material The COUI 17 material layer drawn over the fill, see [Button].
@@ -408,8 +413,10 @@ fun DescTextButton(
             disabledContentColor = colors.disabledTextColor,
         )
     }
-    val labelStyle = ButtonDefaults.textStyleDesc()
-    val descStyle = ButtonDefaults.textStyleDescSub()
+    val labelStyle = buttonLabelStyle(ButtonDefaults.textStyleDesc(), COUIFontScale.G2)
+    val descStyle = buttonLabelStyle(ButtonDefaults.textStyleDescSub(), COUIFontScale.G2)
+    // setIsDescTypeStyle: COUIChangeTextUtil.getDpG2Size(coui_btn_desc_height_min, fontScale).
+    val descMinHeight = if (LocalDensity.current.fontScale < DescG2FontScale) minHeight else minHeight * DescG2FontScale
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -417,7 +424,7 @@ fun DescTextButton(
         pressScaleEnabled = pressScaleEnabled,
         cornerRadius = cornerRadius,
         minWidth = minWidth,
-        minHeight = minHeight,
+        minHeight = descMinHeight,
         colors = mappedColors,
         insideMargin = insideMargin,
         material = material,
@@ -756,23 +763,31 @@ data class TextButtonColors(
     val disabledTextColor: Color,
 )
 
-/** The COUIMaskEffectDrawable press tint spring (COUISpringForce response 0.3f / bounce 0f). */
-private val PressTintSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
-
-/** couiColorPress in light themes (coui_color_press #1F000000). */
-private val PressedTintLight = Color(0x1F000000)
-
-/** couiColorPress in dark themes (coui_color_press_dark #33FFFFFF). */
-private val PressedTintDark = Color(0x33FFFFFF)
-
-/** couiColorHover in light themes (coui_color_hover #14000000). */
-private val HoveredTintLight = Color(0x14000000)
-
-/** couiColorHover in dark themes (coui_color_hover_dark #26FFFFFF). */
-private val HoveredTintDark = Color(0x26FFFFFF)
-
-/** The minimum press tint progress before a release may fade out (COUIMaskEffectDrawable). */
+/**
+ * The minimum press tint progress before a release may fade out
+ * (`COUIMaskEffectDrawable.DEFAULT_MIN_PROGRESS_FOR_TOUCH_ENTER_ANIMATION`).
+ */
 private val PressedTintMinVisibleProgress = 0.7f
 
-/** Thrown to stop the deferred press-in tint animation once [PressedTintMinVisibleProgress] is reached. */
-private class PressTintThresholdReached : CancellationException("Press tint reached the minimum visible progress")
+/** `COUIChangeTextUtil.getDpG2Size`: from a 1.15 font scale on, a G2 size grows by 1.15. */
+private val DescG2FontScale = 1.15f
+
+/**
+ * The label style of the COUI buttons: [style] at the font scale `COUIChangeTextUtil` allows for
+ * [level]. Every `COUIButton` runs `adaptFontSize(this, G4)` (`closeLimitTextSize` is off in all
+ * COUI styles), so a label stops growing past a 1.35 font scale; the desc-type lines
+ * (`DescButtonTextSpan`) use `G2`, 1.0 below a 1.15 font scale and 1.15 above. The size and the
+ * line height are scaled together, so the label keeps its line spacing.
+ */
+@Composable
+@ReadOnlyComposable
+internal fun buttonLabelStyle(style: TextStyle, level: Int = COUIFontScale.G4): TextStyle {
+    val fontScale = LocalDensity.current.fontScale
+    if (fontScale <= 0f) return style
+    val factor = COUIFontScale.suitableFontScale(fontScale, level) / fontScale
+    if (factor == 1f) return style
+    return style.copy(
+        fontSize = if (style.fontSize.isSp) style.fontSize * factor else style.fontSize,
+        lineHeight = if (style.lineHeight.isSp) style.lineHeight * factor else style.lineHeight,
+    )
+}

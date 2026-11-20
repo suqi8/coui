@@ -46,10 +46,12 @@ fun ListWithScrollBar() {
 - The thumb rect is 14dp wide (`coui_scrollbar_wight`) and at least 48dp long (`coui_scrollbar_min_height`). The visible thumb is drawn inside it, 8dp from its start and 16dp from its end (`coui_scrollbar_margin_top` / `_bottom`) and 5.5dp from the edge, so it is 3dp wide and at least 24dp long.
 - It appears at once when the content scrolls, stays for 2000ms after the last scroll or drag (`SCROLLER_FADE_TIMEOUT`, four times the platform delay when it first appears) and then fades out linearly over 250ms.
 - While the thumb is visible it can be grabbed: it widens to 6dp at once (pressed inset 4dp) and scrolls the content as it is dragged; releasing it restarts the fade timer.
+- Like `COUIScrollBar`, which lives inside the scrolled view and only intercepts a touch that lands on the shown thumb, the bar takes no other touch: the content below it still scrolls and clicks under its strip, and while the thumb is hidden the strip is not a drag handle.
+- In a right-to-left layout the vertical thumb sits on the left edge (`mIsRTL`). A bar given a wider minimum size, for example `Modifier.matchParentSize()` over the content, fills it and keeps the thumb at the end edge.
 - The thumb color is `#29000000` / `#40FFFFFF` (`coui_scrollbar_color`), the same while dragged.
 
 ::: info Library extensions
-`COUIScrollBar` handles the vertical direction only and draws no track. `HorizontalScrollBar`, `ScrollBarColors.trackColor` (hidden by default) and the thumb widening while a mouse hovers it are library extensions.
+`COUIScrollBar` handles the vertical direction only and draws no track. `HorizontalScrollBar`, `ScrollBarColors.trackColor` (hidden by default) and the thumb widening while a mouse hovers its 14dp strip are library extensions.
 :::
 
 ## Properties

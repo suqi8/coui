@@ -88,10 +88,10 @@ Origami values are converted as in Rebound: tension `(t - 30) x 3.62 + 194`, fri
 
 ## Behavior
 
-- **Pull**: only a touch drag that the list can no longer scroll pulls the chain. Each move closes `1 - |distance| / (2 x viewport)` of the gap between the damped distance and the finger travel (`getFormalDistance`), and the row at chain index `c` moves by the sum of the steps `0..c`: with the default calculator the edge row moves 10% of the pull, the next 20%, and so on. As in COUI, the end edge counts one step more than the start edge.
+- **Pull**: only a touch drag that the list can no longer scroll pulls the chain. Each move closes `1 - |distance| / (2 x viewport)` of the gap between the damped distance and the finger travel (`getFormalDistance`), and the row at chain index `c` moves by the sum of the steps `0..c`: with the default calculator the edge row moves 10% of the pull, the next 20%, and so on. As in COUI, the end edge counts one step more than the start edge. `COUIGridSpringChainScrollView` also hands every move on to its scroll view, so the same pull overscrolls the whole list under the fanned-out rows: by `0.4 * (1 - |overscroll| / range)` of the move, the range being 0.3 of the window (`setCustomOverScrollDistFactor(0.3f)`), without the edge vibration (`setEnableVibrator(false)`), and it springs back on release on the `SpringOverScroller` spring. The pull does not scroll an enclosing list.
 - **Rebound**: on release the control spring at the edge returns to 0 while every other spring chases its neighbour, which gives the staggered follow. The springs are Rebound springs integrated with its fixed 1ms RK4 step (frame delta capped at 64ms) and come to rest within 0.1px.
 - **Interrupt**: touching the list while it rebounds freezes the rows in place; they rebound from there when the finger lifts.
-- Flings and mouse wheels that reach the edge leave the chain at rest, as the original only reads touch events.
+- Flings, mouse wheels and mouse drags that reach the edge leave the chain at rest, as the original only reads touch events.
 - The per-frame work runs on preallocated arrays and allocates nothing; item layers redraw without recomposition.
 - Not ported: the per-item `skipSpringChainCalc` flag, the `ISpringUpdateListener` callback (use `translationOf`), and the multi-finger `inheritDistance` beyond restarting the pull at the current distance.
 

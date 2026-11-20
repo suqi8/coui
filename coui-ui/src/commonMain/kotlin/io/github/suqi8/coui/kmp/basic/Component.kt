@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
@@ -23,11 +25,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +47,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.COUITouchSelectInteraction
+import io.github.suqi8.coui.kmp.utils.couiTouchFeedback
 import kotlin.math.roundToInt
 
 /**
@@ -63,11 +70,14 @@ import kotlin.math.roundToInt
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [BasicComponent] is enabled.
- * @param selected Whether the row is selected (`COUIPreference.setSelected`): the press layer stays
- *   on, and inside a [CardListGroup] the divider below this row and the one above it are hidden.
+ * @param selected Whether the row is selected (`COUIPreference.setSelected`): the press layer is
+ *   locked on and switched on or off without animation, and inside a [CardListGroup] the divider
+ *   below this row and the one above it are hidden.
  * @param startBadge Whether a red dot sits on the top end corner of [startAction] (COUI `img_red_dot`).
+ *   Toggling it scales the dot in or out (`showIconRedDot` / `dismissIconRedDot`).
  * @param endBadgeCount The red dot between the title and [endActions] (COUI `jump_icon_red_dot`):
- *   `null` hides it, `0` shows a plain dot and a positive value shows the number.
+ *   `null` hides it, `0` shows a plain dot and a positive value shows the number. Switching between
+ *   `null` and a value scales the dot in or out (`showEndRedDot` / `dismissEndRedDot`).
  * @param endIcon An optional 16dp icon shown right before [endActions] (COUI `assignment_icon`).
  * @param interactionSource The [MutableInteractionSource] for the [BasicComponent].
  *   The value should remain null or non-null for the lifetime of this component;
@@ -157,11 +167,14 @@ fun BasicComponent(
  * @param role The semantic [Role] of the [BasicComponent] for accessibility services.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [BasicComponent] is enabled.
- * @param selected Whether the row is selected (`COUIPreference.setSelected`): the press layer stays
- *   on, and inside a [CardListGroup] the divider below this row and the one above it are hidden.
+ * @param selected Whether the row is selected (`COUIPreference.setSelected`): the press layer is
+ *   locked on and switched on or off without animation, and inside a [CardListGroup] the divider
+ *   below this row and the one above it are hidden.
  * @param startBadge Whether a red dot sits on the top end corner of [startAction] (COUI `img_red_dot`).
+ *   Toggling it scales the dot in or out (`showIconRedDot` / `dismissIconRedDot`).
  * @param endBadgeCount The red dot between the content and [endActions] (COUI `jump_icon_red_dot`):
- *   `null` hides it, `0` shows a plain dot and a positive value shows the number.
+ *   `null` hides it, `0` shows a plain dot and a positive value shows the number. Switching between
+ *   `null` and a value scales the dot in or out (`showEndRedDot` / `dismissEndRedDot`).
  * @param endIcon An optional 16dp icon shown right before [endActions] (COUI `assignment_icon`).
  * @param interactionSource The [MutableInteractionSource] for the [BasicComponent].
  *   The value should remain null or non-null for the lifetime of this component;
@@ -241,20 +254,28 @@ private fun BasicComponentLayout(
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
     val currentOnClick by rememberUpdatedState(onClick)
 
+    HoldDownObserver(holdDownState, interactionSource)
     // COUICardListSelectedItemLayout.setIsSelected locks the touch-enter (press) state of the row's
     // COUIMaskEffectDrawable, so a selected row keeps the couiColorPress layer on.
-    HoldDownObserver(holdDownState || selected, interactionSource)
+    BasicComponentSelectedObserver(selected, interactionSource)
 
     val indication = LocalIndication.current
     val clickableModifier = remember(enabled, onClick != null, interactionSource, role, onClickLabel, indication) {
         if (enabled && onClick != null) {
-            Modifier.clickable(
-                interactionSource = interactionSource,
-                indication = indication,
-                onClickLabel = onClickLabel,
-                role = role,
-                onClick = { currentOnClick?.invoke() },
-            )
+            Modifier
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = indication,
+                    onClickLabel = onClickLabel,
+                    role = role,
+                    onClick = { currentOnClick?.invoke() },
+                )
+                // ListSelectedItemLayout.handlePressAnimationInternal: an enabled, clickable row enters
+                // its press mask on ACTION_DOWN, without the tap timeout the clickable waits for inside
+                // a scrolling list, and leaves it on ACTION_UP or when the list takes the gesture over
+                // (ACTION_CANCEL). Reported as COUITouchInteraction, so the clickable's own press is
+                // the only PressInteraction in the source.
+                .couiTouchFeedback(interactionSource)
         } else {
             // Still draw the state layer, so holdDownState / selected show on non-clickable rows.
             Modifier.indication(interactionSource, indication)
@@ -262,19 +283,39 @@ private fun BasicComponentLayout(
     }
 
     // Register with the enclosing CardListGroup row slot so the group can draw the COUI divider
-    // (COUIPreferenceItemDecoration) aligned with the title and hide it around selected rows.
+    // (COUIPreferenceItemDecoration) aligned with the title, hide it around selected rows and fade it
+    // around pressed ones.
     val listItem = LocalCardListItem.current?.takeIf { cardListPosition != CardListPosition.None }
     if (listItem != null) {
         DisposableEffect(listItem) {
             listItem.attach()
             onDispose { listItem.detach() }
         }
+        // COUIRecyclerDividerManager: pressing the row fades the dividers on both of its sides.
+        LaunchedEffect(listItem, interactionSource) {
+            listItem.hideDividersWhilePressed(interactionSource)
+        }
         SideEffect {
             listItem.selected = selected
             listItem.position = cardListPosition
         }
     }
-    val hasEnd = endActions != null || endBadgeCount != null || endIcon != null
+
+    // COUIPreference.dismissEndRedDot scales the end red dot out before it is gone, so the end
+    // content stays while it does; endBadge.count keeps the number it last showed.
+    val endBadge = remember { BasicComponentEndBadge() }
+    if (endBadgeCount != null) {
+        endBadge.count = endBadgeCount
+        SideEffect { endBadge.shown = true }
+    } else if (endBadge.shown) {
+        LaunchedEffect(endBadge) {
+            // Badge scales out over the same tween; the end content goes once it is done.
+            animate(initialValue = 1f, targetValue = 0f, animationSpec = tween(BadgeDefaults.ScaleAnimDurationMillis)) { _, _ -> }
+            endBadge.shown = false
+        }
+    }
+    val endBadgePresent = endBadgeCount != null || endBadge.shown
+    val hasEnd = endActions != null || endBadgePresent || endIcon != null
     if (listItem != null && startAction == null && !hasEnd) {
         val titleStart = with(LocalDensity.current) {
             insideMargin.calculateStartPadding(LocalLayoutDirection.current).roundToPx()
@@ -308,17 +349,17 @@ private fun BasicComponentLayout(
                     startAction?.let {
                         Box(modifier = Modifier.layoutId("start")) {
                             it()
-                            if (startBadge) {
-                                // COUI img_red_dot: end|top of img_layout, inset by support_preference_icon_red_dot_margin_top.
-                                Badge(
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(
-                                            top = BasicComponentDefaults.StartBadgeInset,
-                                            end = BasicComponentDefaults.StartBadgeInset,
-                                        ),
-                                )
-                            }
+                            // COUI img_red_dot: end|top of img_layout, inset by support_preference_icon_red_dot_margin_top.
+                            // Kept in the tree so toggling it plays the COUIHintRedDot.executeScaleAnim scale.
+                            Badge(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(
+                                        top = BasicComponentDefaults.StartBadgeInset,
+                                        end = BasicComponentDefaults.StartBadgeInset,
+                                    ),
+                                visible = startBadge,
+                            )
                         }
                     }
                     Column(
@@ -336,7 +377,8 @@ private fun BasicComponentLayout(
                             // Center end actions vertically so trailing value text lines up with taller siblings.
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 BasicComponentEndDecorations(
-                                    endBadgeCount = endBadgeCount,
+                                    endBadgeCount = if (endBadgePresent) endBadgeCount ?: endBadge.count else null,
+                                    endBadgeVisible = endBadgeCount != null,
                                     endIcon = endIcon,
                                     hasEndActions = endActions != null,
                                 )
@@ -451,10 +493,14 @@ private fun BasicComponentLayout(
  * The red dot and the 16dp icon COUI places between the title and the assignment
  * (`coui_preference_assignment_in_right.xml`): each keeps
  * `support_preference_reddot_margin_end_in_right_hasassignment` (4dp) to what follows it.
+ *
+ * [endBadgeCount] is the number the red dot draws, `null` when it is not in the tree at all;
+ * [endBadgeVisible] scales it in or out (`COUIHintRedDot.executeScaleAnim`).
  */
 @Composable
 private fun BasicComponentEndDecorations(
     endBadgeCount: Int?,
+    endBadgeVisible: Boolean,
     endIcon: (@Composable () -> Unit)?,
     hasEndActions: Boolean,
 ) {
@@ -465,6 +511,7 @@ private fun BasicComponentEndDecorations(
             Badge(
                 modifier = Modifier.padding(end = if (endIcon != null || hasEndActions) gap else 0.dp),
                 count = endBadgeCount,
+                visible = endBadgeVisible,
             )
         }
         if (endIcon != null) {
@@ -478,6 +525,51 @@ private fun BasicComponentEndDecorations(
             }
         }
     }
+}
+
+/**
+ * Mirrors [selected] into [interactionSource] as a [COUITouchSelectInteraction], which
+ * [COUIIndication][io.github.suqi8.coui.kmp.utils.COUIIndication] shows or clears at once: COUI
+ * rebinds a selected preference with `COUICardListSelectedItemLayout.setIsSelected(selected)`, i.e.
+ * `COUIStateEffectDrawable.setStateLocked(1, selected, selected, false)`, which moves the press layer
+ * of `COUIMaskEffectDrawable` without animation and keeps touches from clearing it. The lock is
+ * released when this effect leaves the composition.
+ */
+@Composable
+private fun BasicComponentSelectedObserver(
+    selected: Boolean,
+    interactionSource: MutableInteractionSource,
+) {
+    val lock = remember(interactionSource) { BasicComponentSelectedLock() }
+    LaunchedEffect(selected, interactionSource) {
+        val current = lock.enter
+        if (selected && current == null) {
+            val enter = COUITouchSelectInteraction.Enter()
+            lock.enter = enter
+            interactionSource.emit(enter)
+        } else if (!selected && current != null) {
+            lock.enter = null
+            interactionSource.emit(COUITouchSelectInteraction.Exit(current))
+        }
+    }
+    DisposableEffect(interactionSource) {
+        onDispose {
+            val current = lock.enter ?: return@onDispose
+            lock.enter = null
+            interactionSource.tryEmit(COUITouchSelectInteraction.Exit(current))
+        }
+    }
+}
+
+/** The [COUITouchSelectInteraction.Enter] a [BasicComponentSelectedObserver] has emitted and not yet ended. */
+private class BasicComponentSelectedLock {
+    var enter: COUITouchSelectInteraction.Enter? = null
+}
+
+/** The end red dot of a [BasicComponent]: the number it last showed and whether it is still in the tree. */
+private class BasicComponentEndBadge {
+    var count = 0
+    var shown by mutableStateOf(false)
 }
 
 /** COUICustomListSelectedLinearLayout.REMAINING_TOTAL_LINE: above this line count the start content is top aligned. */

@@ -35,7 +35,7 @@ Scaffold(
 }
 ```
 
-- A tap clicks the item it started and ended on. The capsule takes the COUI press scale, rubber band and deformation and the touch spotlight; items have no press mask of their own. With every item disabled the capsule gives no touch feedback.
+- A tap clicks the item it started and ended on, unless the finger slid off that item by more than the touch slop on the way (`View.onTouchEvent`). The capsule takes the COUI press scale, rubber band and deformation and the touch spotlight; items have no press mask of their own. With every item disabled the capsule gives no touch feedback.
 - `visible = false` slides the capsule out below the toolbar's bottom edge on a spring (response 0.38, bounce 0.25), with no fade. The hidden toolbar keeps its space but takes no touches.
 
 ## Properties

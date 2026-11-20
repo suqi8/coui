@@ -95,4 +95,4 @@ AlphabetIndexBar(
 - 字母为 12dp 中粗文字，在 16dp 顶部留白之下逐行居中于 16dp 行高；星标为 12dp 描边图标。空间充足时索引条按全部字母所需高度包裹，空间不足时折叠出圆点。
 - 选中的字母、星标或圆点变为 `selectedKeyColor`，松手后保持高亮，与 COUI 一致。
 - 48dp 气泡以 20sp 中粗显示字母，字体缩放上限 1.35（`COUIChangeTextUtil.getSuitableFontSize` 第 4 级）（星标为 24dp 图标），与字母行垂直居中，距索引条 8.5dp。气泡在 350ms 内按 COUIMoveEaseInterpolator 从 0.8 放大并淡入，松手一秒后在 300ms 内缩回 0.8 并淡出。
-- 切换到另一个字母时触发 COUI `GRANULAR_SHORT_VIBRATE_SYNC`（308）触感（`CouiHapticEffect.Strength`）；`selectedKey` 变化不触发触感。每个可选字母也作为无障碍自定义操作提供。
+- 切换到另一个字母时触发一次强度随拖动速度变化的触感，与 COUI 的自适应振动一致（`couiAdaptiveVibrator`，默认开启，`performAdaptiveFeedback`）：手指静止时为一半强度，随速度线性增强，到 8000px/s 时为满强度（`VibrateUtils.getVibratorValueWithLimit`，强度 50..100），且两次触感至少间隔 25ms（`filterVibrator`）。设备不支持按强度振动时播放完整的 COUI `GRANULAR_SHORT_VIBRATE_SYNC`（308）触感（`CouiHapticEffect.Strength`）。`selectedKey` 变化不触发触感。每个可选字母也作为无障碍自定义操作提供。

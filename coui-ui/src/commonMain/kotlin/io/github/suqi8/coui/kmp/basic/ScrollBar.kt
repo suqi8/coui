@@ -9,11 +9,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.hoverable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridItemInfo
@@ -37,11 +33,23 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.takeOrElse
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.PointerInputModifierNode
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastRoundToInt
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
@@ -49,6 +57,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -281,6 +290,8 @@ private fun ScrollBar(
     endPadding: Dp = ScrollBarDefaults.EndPadding,
 ) {
     val density = LocalDensity.current
+    // COUIScrollBar puts the vertical thumb on the left in RTL (mIsRTL).
+    val rtl = isVertical && LocalLayoutDirection.current == LayoutDirection.Rtl
     // COUI draws the normal and the pressed thumb in the same coui_scrollbar_color.
     val thumbColor = colors.thumbColor.takeOrElse { COUITheme.colorScheme.dragHandle }
 
@@ -314,8 +325,8 @@ private fun ScrollBar(
         sliderAdapter.trackSize = (containerSize - totalTrackPaddingPx.fastRoundToInt()).coerceAtLeast(0)
     }
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
+    // A mouse over the thumb strip (not the whole bar, which may span the content).
+    var isHovered by remember { mutableStateOf(false) }
     var opacity by remember { mutableFloatStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
     val isHighlighted = isHovered || isDragging
@@ -378,44 +389,66 @@ private fun ScrollBar(
     Layout(
         content = {},
         modifier = modifier
-            .hoverable(interactionSource = interactionSource)
-            .pointerInput(isVertical, sliderAdapter, beforeTrackPaddingPx) {
+            // COUIScrollBar lives inside the scrolled view and only takes a touch that lands on the
+            // shown thumb (onInterceptTouchEvent); the content below keeps every other touch.
+            .scrollBarPointerInput(isVertical, sliderAdapter, beforeTrackPaddingPx, rtl) {
                 val touchTargetPx = ScrollBarDefaults.TouchTargetWidth.toPx()
+                fun inStrip(position: Offset): Boolean = when {
+                    !isVertical -> position.y >= size.height - touchTargetPx
+                    rtl -> position.x <= touchTargetPx
+                    else -> position.x >= size.width - touchTargetPx
+                }
 
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
-
-                    // COUIScrollBar only grabs the thumb while it is shown (scroll cache not OFF).
-                    if (opacity <= 0f) return@awaitEachGesture
-
-                    val inStrip = if (isVertical) {
-                        down.position.x >= size.width - touchTargetPx
-                    } else {
-                        down.position.y >= size.height - touchTargetPx
-                    }
-                    if (!inStrip) return@awaitEachGesture
-
-                    // The hit area is the whole thumb rect, its 8dp / 16dp margins included.
-                    val thumbRange = sliderAdapter.thumbPixelRange
-                    val touchPos = if (isVertical) down.position.y else down.position.x
-                    val adjustedTouchPos = touchPos - beforeTrackPaddingPx
-                    if (adjustedTouchPos < thumbRange.first || adjustedTouchPos > thumbRange.last) {
-                        return@awaitEachGesture
+                coroutineScope {
+                    launch {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                isHovered = event.type != PointerEventType.Exit &&
+                                    event.changes.any { it.type == PointerType.Mouse && inStrip(it.position) }
+                            }
+                        }
                     }
 
-                    isDragging = true
-                    opacity = 1f
-                    fadeOut.cancel()
-                    down.consume()
+                    // The Initial pass reaches the bar before the content below it, so a thumb drag
+                    // is consumed before the content can start scrolling with it.
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
 
-                    sliderAdapter.onDragStarted()
+                        // COUIScrollBar only grabs the thumb while it is shown (scroll cache not OFF).
+                        if (opacity <= 0f || !inStrip(down.position)) return@awaitEachGesture
 
-                    drag(down.id) { change ->
-                        sliderAdapter.onDragDelta(change.positionChange())
-                        change.consume()
+                        // The hit area is the whole thumb rect, its 8dp / 16dp margins included.
+                        val thumbRange = sliderAdapter.thumbPixelRange
+                        val touchPos = if (isVertical) down.position.y else down.position.x
+                        val adjustedTouchPos = touchPos - beforeTrackPaddingPx
+                        if (adjustedTouchPos < thumbRange.first || adjustedTouchPos > thumbRange.last) {
+                            return@awaitEachGesture
+                        }
+
+                        isDragging = true
+                        opacity = 1f
+                        fadeOut.cancel()
+                        down.consume()
+
+                        sliderAdapter.onDragStarted()
+
+                        try {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) {
+                                    change.consume()
+                                    break
+                                }
+                                val delta = change.positionChange()
+                                if (delta != Offset.Zero) sliderAdapter.onDragDelta(delta)
+                                change.consume()
+                            }
+                        } finally {
+                            isDragging = false
+                        }
                     }
-
-                    isDragging = false
                 }
             }
             .drawBehind {
@@ -426,13 +459,14 @@ private fun ScrollBar(
                 val endPaddingPx = currentEndPadding.toPx()
                 val cornerRadiusPx = if (cornerRadius == Dp.Unspecified) thumbWidthPx / 2 else cornerRadius.toPx()
                 val cr = CornerRadius(cornerRadiusPx)
+                val thumbX = if (rtl) endPaddingPx else size.width - thumbWidthPx - endPaddingPx
 
                 if (colors.trackColor != Color.Unspecified) {
                     val trackColor = colors.trackColor.copy(alpha = colors.trackColor.alpha * opacity)
                     if (isVertical) {
                         drawRoundRect(
                             color = trackColor,
-                            topLeft = Offset(size.width - thumbWidthPx - endPaddingPx, beforeTrackPaddingPx),
+                            topLeft = Offset(thumbX, beforeTrackPaddingPx),
                             size = Size(thumbWidthPx, size.height - totalTrackPaddingPx),
                             cornerRadius = cr,
                         )
@@ -459,7 +493,7 @@ private fun ScrollBar(
                 if (isVertical) {
                     drawRoundRect(
                         color = color,
-                        topLeft = Offset(size.width - thumbWidthPx - endPaddingPx, thumbOffset),
+                        topLeft = Offset(thumbX, thumbOffset),
                         size = Size(thumbWidthPx, thumbLength),
                         cornerRadius = cr,
                     )
@@ -507,6 +541,8 @@ private class ScrollBarFadeOut(
     }
 }
 
+// A bar given a wider minimum (Modifier.matchParentSize over the content) fills it and keeps its
+// thumb at the end edge, instead of being centred by the layout at its own strip width.
 private fun verticalMeasurePolicy(
     setContainerSize: (Int) -> Unit,
     density: androidx.compose.ui.unit.Density,
@@ -516,7 +552,7 @@ private fun verticalMeasurePolicy(
     setContainerSize(constraints.maxHeight)
     val width = with(density) {
         (thumbWidth + endPadding * 2).roundToPx()
-    }.coerceAtMost(constraints.maxWidth)
+    }.coerceIn(constraints.minWidth, constraints.maxWidth)
     layout(width, constraints.maxHeight) {}
 }
 
@@ -529,8 +565,88 @@ private fun horizontalMeasurePolicy(
     setContainerSize(constraints.maxWidth)
     val height = with(density) {
         (thumbWidth + endPadding * 2).roundToPx()
-    }.coerceAtMost(constraints.maxHeight)
+    }.coerceIn(constraints.minHeight, constraints.maxHeight)
     layout(constraints.maxWidth, height) {}
+}
+
+/**
+ * A `Modifier.pointerInput` whose events also reach the siblings below the bar. The bar is laid
+ * over the content it scrolls, and Compose stops hit testing at the first sibling with pointer
+ * input, so a plain `pointerInput` would keep every touch in the bar's strip from scrolling the
+ * content. Like `pointerInput`, [block] restarts when a key changes.
+ */
+private fun Modifier.scrollBarPointerInput(
+    key1: Any?,
+    key2: Any?,
+    key3: Any?,
+    key4: Any?,
+    block: suspend PointerInputScope.() -> Unit,
+): Modifier = this then ScrollBarPointerInputElement(key1, key2, key3, key4, block)
+
+private class ScrollBarPointerInputElement(
+    private val key1: Any?,
+    private val key2: Any?,
+    private val key3: Any?,
+    private val key4: Any?,
+    private val block: suspend PointerInputScope.() -> Unit,
+) : ModifierNodeElement<ScrollBarPointerInputNode>() {
+    override fun create(): ScrollBarPointerInputNode = ScrollBarPointerInputNode(block)
+
+    override fun update(node: ScrollBarPointerInputNode) {
+        node.update(block)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ScrollBarPointerInputElement) return false
+        return key1 == other.key1 && key2 == other.key2 && key3 == other.key3 && key4 == other.key4
+    }
+
+    override fun hashCode(): Int {
+        var result = key1?.hashCode() ?: 0
+        result = 31 * result + (key2?.hashCode() ?: 0)
+        result = 31 * result + (key3?.hashCode() ?: 0)
+        result = 31 * result + (key4?.hashCode() ?: 0)
+        return result
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "scrollBarPointerInput"
+        properties["key1"] = key1
+        properties["key2"] = key2
+        properties["key3"] = key3
+        properties["key4"] = key4
+    }
+}
+
+private class ScrollBarPointerInputNode(
+    private var block: suspend PointerInputScope.() -> Unit,
+) : DelegatingNode(),
+    PointerInputModifierNode {
+    private val pointerInputNode = delegate(SuspendingPointerInputModifierNode { block(this) })
+
+    fun update(block: suspend PointerInputScope.() -> Unit) {
+        this.block = block
+        pointerInputNode.resetPointerInputHandler()
+    }
+
+    override fun onPointerEvent(pointerEvent: PointerEvent, pass: PointerEventPass, bounds: IntSize) {
+        pointerInputNode.onPointerEvent(pointerEvent, pass, bounds)
+    }
+
+    override fun onCancelPointerInput() {
+        pointerInputNode.onCancelPointerInput()
+    }
+
+    override fun onDensityChange() {
+        pointerInputNode.onDensityChange()
+    }
+
+    override fun onViewConfigurationChange() {
+        pointerInputNode.onViewConfigurationChange()
+    }
+
+    override fun sharePointerInputWithSiblings(): Boolean = true
 }
 
 @OptIn(ExperimentalScrollBarApi::class)

@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -15,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -55,7 +52,9 @@ data class DateValue(
  * inset 16dp from both sides, and holding a row above or below the center steps the year and day
  * every 100ms and the month every 200ms. The wheels follow the locale's date field order
  * ([fieldOrder]), as COUIDatePicker.reorderSpinners does with the best "yyyyMMMMdd" pattern, and
- * the picker is at most [NumberPickerDefaults.PickersMaxWidth] wide.
+ * the picker is at most [NumberPickerDefaults.PickersMaxWidth] wide. The columns stay centered as a
+ * group, but the first and last wheel also cover the space left at either side, so a drag anywhere
+ * across the picker moves them (COUIDatePicker.onMeasure: setNumberPickerPaddingLeft / Right).
  *
  * With [yearIgnorable] the year wheel gets a placeholder row after the last year (COUIDatePicker
  * couiYearIgnorable); selecting it reports [DatePickerDefaults.IgnoredYear] as the year, and the
@@ -165,19 +164,21 @@ fun DatePicker(
         { newDay: Int -> emit(currentValue.copy(day = newDay)) }
     }
 
-    Row(
+    // COUIDatePicker.onMeasure: the first and last wheel take the space left at the sides
+    // (numberPickerPaddingLeft / Right), so the whole width of the picker scrolls them.
+    NumberPickerRow(
         modifier = modifier
             .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        for (field in fieldOrder.fields) {
+        val fields = fieldOrder.fields
+        fields.forEachIndexed { index, field ->
+            val alignment = numberPickerColumnAlignment(index, fields.size)
             key(field) {
                 when (field) {
-                    DateField.Year -> NumberPicker(
+                    DateField.Year -> NumberPickerWheel(
                         value = date.year,
                         onValueChange = onYearChange,
                         modifier = Modifier.width(yearColumnWidth),
@@ -190,9 +191,11 @@ fun DatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = yearColumnWidth,
+                        contentAlignment = alignment,
                     )
 
-                    DateField.Month -> NumberPicker(
+                    DateField.Month -> NumberPickerWheel(
                         value = date.month,
                         onValueChange = onMonthChange,
                         modifier = Modifier.width(monthColumnWidth),
@@ -204,9 +207,11 @@ fun DatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = monthColumnWidth,
+                        contentAlignment = alignment,
                     )
 
-                    DateField.Day -> NumberPicker(
+                    DateField.Day -> NumberPickerWheel(
                         value = date.day,
                         onValueChange = onDayChange,
                         modifier = Modifier.width(dayColumnWidth),
@@ -218,6 +223,8 @@ fun DatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = dayColumnWidth,
+                        contentAlignment = alignment,
                     )
                 }
             }

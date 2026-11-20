@@ -1,6 +1,6 @@
 # EmptyState
 
-`EmptyState` is the empty-page placeholder mirroring ColorOS's COUIEmptyStateView: an illustration slot, a title, a subtitle and a borderless action text button, stacked and centered. When the height is bounded the group is placed 45% of the way down the free height (50% for the small size type). The illustration is hidden for `Small` and shown at full size for `Medium` and `Large` (COUI 17 scales both by 1.0); `Auto` picks Small below 200dp of height, Medium below 320dp of width or 480dp of height, else Large. The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll once they exceed 92dp together.
+`EmptyState` is the empty-page placeholder mirroring ColorOS's COUIEmptyStateView: an illustration slot, a title, a subtitle and a borderless action text button, stacked and centered. When the height is bounded the group is placed 45% of the way down the free height (50% for the small size type). The illustration is hidden for `Small` and shown at full size for `Medium` and `Large` (COUI 17 scales both by 1.0); `Auto` picks Small below 200dp of height, Medium below 320dp of width or 480dp of height, else Large. The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll once they exceed 92dp together. Text that fits neither scrolls nor rubber-bands, so a drag on it moves the page behind it.
 
 COUI fills the illustration with a Lottie animation or an image; here `illustration` is a composable slot drawn inside a box of the resolved illustration size.
 

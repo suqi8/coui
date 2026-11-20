@@ -52,6 +52,14 @@ Scaffold(
 
 `NavigationBarItem` 遵循 COUI tab 导航的状态模型：选中项的图标与标签以完整标签色显示，未选中项呈暗化色；图标在两种状态间以 180ms 交叉淡变过渡，标签颜色则瞬时切换。标签始终使用 Medium 字重；按压未选中项时图标会预览选中色。
 
+### 悬停与焦点
+
+指针悬停在导航项上或键盘焦点落在导航项上时，图标与标签后方会淡入 COUI 的悬停 / 焦点蒙层：覆盖整个单元格的 8dp 圆角矩形（`COUINavigationItemView.configStateEffectBackground`，`?couiColorHover` / `?couiColorFocus`，各自走 response 0.3 弹簧）。与 COUI tab 导航栏一致，点击不显示蒙层。
+
+### 切换菜单
+
+`NavigationBar(targetState) { state -> ... }` 重载按状态构建导航项，并以 `COUINavigationView.switchToMenu` 的方式切换：当前导航项先在 100ms 内（线性）淡出，随后新状态的导航项在 350ms 内从栏底边升起，并在前 100ms 内淡入（均为 `COUIInEaseInterpolator`）。导航栏本身、背景与分割线保持不动。
+
 ### 宽窗口
 
 导航栏与 COUI 的资源限定符一样跟随窗口变化。窗口宽度不小于 600dp 时（`values-w600dp`，`is_big_layout`），`IconAndText` 导航项改为图标在左、14dp 标签在右，间距 8dp，整体居中（`COUINavigationItemView.leftToRight`），两侧边距变为 44dp；横屏窗口同样使用 44dp 边距（`values-land`）。
@@ -69,6 +77,13 @@ Scaffold(
 | defaultWindowInsetsPadding | Boolean                 | 是否应用默认窗口嵌入边距   | true                                  | 否       |
 | mode                       | NavigationBarDisplayMode   | 导航项的显示模式           | NavigationBarDisplayMode.IconAndText     | 否       |
 | content                    | @Composable RowScope.() | 导航栏的内容               | -                                     | 是       |
+
+按状态驱动的重载接受相同的属性，另有：
+
+| 属性名      | 类型                     | 说明                                                         | 默认值 | 是否必须 |
+| ----------- | ------------------------ | ------------------------------------------------------------ | ------ | -------- |
+| targetState | T                        | 构建导航项所依据的状态；变化时播放 `switchToMenu` 动画       | -      | 是       |
+| content     | @Composable RowScope.(T) | 某一状态下的导航项；收到的是正在显示的状态，旧导航项淡出期间它落后于 `targetState` | - | 是 |
 
 ### NavigationBarItem 属性
 
@@ -105,6 +120,10 @@ NavigationBarDefaults 对象提供了 NavigationBar 和 NavigationBarItem 组件
 | IconFadeDurationMillis | Int      | 图标状态间交叉淡变时长     | 180    |
 | HideDurationMillis     | Int      | 隐藏平移时长               | 200    |
 | ShowDurationMillis     | Int      | 显示平移时长               | 250    |
+| MenuExitDurationMillis | Int      | 切换菜单时当前导航项的淡出时长 | 100 |
+| MenuEnterFadeDurationMillis | Int | 切入导航项的淡入时长       | 100    |
+| MenuEnterDurationMillis | Int     | 切入导航项从栏底边升起的时长 | 350  |
+| ItemMaskCornerRadius   | Dp       | 导航项后方悬停 / 焦点蒙层的圆角 | 8.dp |
 | BadgeDotOffset         | Dp       | 红点超出图标右上角的距离   | 1.dp   |
 | BadgeNumberHorizontalOffset | Dp  | 数字徽标右缘超出图标的距离（小于 10 时 -2dp，100 到 999 时 +1dp） | 8.dp |
 | BadgeNumberVerticalOffset | Dp    | 数字徽标高出图标的距离     | 5.dp   |
@@ -177,6 +196,20 @@ NavigationBar(
     mode = NavigationBarDisplayMode.IconWithSelectedLabel
 ) {
     // ... items ...
+}
+```
+
+#### 切换菜单
+
+```kotlin
+var editing by remember { mutableStateOf(false) }
+
+NavigationBar(targetState = editing) { inEditMode ->
+    if (inEditMode) {
+        // ... 编辑模式的工具 ...
+    } else {
+        // ... 页面的标签 ...
+    }
 }
 ```
 

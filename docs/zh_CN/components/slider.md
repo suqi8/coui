@@ -71,6 +71,8 @@ Slider(
 
 `Slider`、`VerticalSlider` 与 `IntentSlider` 与 COUI 17 `COUISeekBar` 一样（`VibrationFeedbackHandler`，默认开启），在整数进度变化时振动：到达两端（`EDGE_SHORT_VIBRATE`，306）、连续滑块被手指拖动每 1%（`STEPPING_SHORT_VIBRATE`，305）、分段滑块每跨一段（`GRANULAR_SHORT_VIBRATE_SYNC`，308）。这就是它们的默认值 `SliderHapticEffect.Step`；传 `Edge` 只在两端振动，传 `None` 关闭。详见 [SliderHapticEffect](../components/slider#sliderhapticeffect)。
 
+与 COUI 一致，只有手指拖动和轻点分段滑块会振动：连续滑块的轻点、滑行，以及分段滑块松手后的吸附都不振动，即使落在端点上也一样（`startClickTransitionAnim`、`onPhysicsFlingUpdate`、`snapToNearestSection` 都不触发反馈）。
+
 ```kotlin
 var value by remember { mutableFloatStateOf(0.5f) }
 
@@ -88,8 +90,8 @@ Slider(
 - 按下即放大：轨道从 20dp 长到 28dp，拇指从 6dp 长到 8dp 并带轻微回弹（response 0.5 的弹簧，拇指放大 bounce 0.3）。如果抬手时轨道还没长到一半，会等长到一半再收回，快速轻点也能看到反馈。
 - 轻点轨道时进度以弹簧（response 0.3）跳到点击位置；拖动时进度跟手（response 0.15）。
 - 快速松手（至少 100px/s）时进度会继续滑行，按 15/s 的线性阻尼减速。设置了 `steps` 的滑块不滑行，与 `COUISectionSeekBar` 一致。
-- 拖动或滑行撞到最大值时，进度条上会闪过一道白色渐变高光（`GlitterEffectRenderer`）。滑行到两端时直接停住、不越界回弹：`FlingBehavior` 的边界弹簧被钳制在轨道内（`setFlingScale`）。
-- 设置 `steps` 时滑块即 `COUISectionSeekBar`：分段刻度始终绘制；拖动以起手所在的段为锚点，段内拇指只跟随手指的 60%，到达新段时以 (0, 0, 0.25, 1) 曲线 100ms 吸附；松手 150ms 落到某一段，轻点 200ms 移过去（`SectionAnimationHandler`）。
+- 拖动或滑行撞到最大值时，进度条上会闪过一道白色渐变高光（`GlitterEffectRenderer`）。渐变保持在撞到端点时进度条所在的位置，立刻往回拖会露出它较暗的一段。滑行到两端时直接停住、不越界回弹：`FlingBehavior` 的边界弹簧被钳制在轨道内（`setFlingScale`）。
+- 设置 `steps` 时滑块即 `COUISectionSeekBar`：分段刻度始终绘制（被拇指完全盖住的刻度除外，按下时玻璃拇指下不会透出刻度）；拖动以起手所在的段为锚点，段内拇指只跟随手指的 60%，到达新段时以 (0, 0, 0.25, 1) 曲线 100ms 吸附；松手 150ms 落到某一段，轻点 200ms 移过去（`SectionAnimationHandler`）。
 - 设置 `startFromMiddle`（`couiSeekBarStartMiddle`，仅连续滑块）时进度从轨道中点画到拇指；停在中点时手指移动不足 20px 拇指不动；撞到任一端都会闪高光。
 - 拖动时整个滑块会沿 COUI 17 触控橡皮筋横向跟手（`TouchMotionEffectRenderer`：`(1 - 1 / (0.05·|dx| / 28dp + 1)) · 28dp`），松手后弹回（response 0.45、bounce 0.65）。
 - 布局高度为轨道高度的 1.4 倍（默认 28dp，对应 `COUISeekBarCore.onMeasure`），放大后的轨道不再画出边界；触摸命中区按 Compose 最小触控目标（Android 上 48dp）向外扩展。

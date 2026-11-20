@@ -44,7 +44,15 @@ Row {
 
 ### 选中状态
 
-`NavigationRailItem` 都会自动处理选中项的视觉样式，选中项将高亮图标与文本。标签始终使用 Medium 字重（`sans-serif-medium`）。
+`NavigationRailItem` 使用 COUI 侧栏配色（`coui_navigation_rail_icon_tint_color_selector` / `coui_navigation_rail_label_tint_color_selector`）：常态 `?couiColorSecondNeutral`，选中或按压时 `?couiColorLabelPrimary`，禁用时 `?couiColorDisabledNeutral`，颜色瞬时切换。标签始终使用 Medium 字重（`sans-serif-medium`），最多两行。
+
+### 悬停与焦点
+
+指针悬停在导航项上或键盘焦点落在导航项上时，图标与标签后方会淡入 COUI 的悬停 / 焦点蒙层：距导航项左右各 4dp 的 8dp 圆角矩形（`COUINavigationRailItemView`，`?couiColorHover` / `?couiColorFocus`，各自走 response 0.3 弹簧）。点击不显示蒙层。
+
+### 红点
+
+`badge` 在图标上显示 COUI 红点，位置与 `NavigationBarItem` 相同：`0` 为 6dp 圆点，超出图标右上角 1dp；正数为数字红点，右边缘超出图标 8dp（小于 10 时 -2dp，100 到 999 时 +1dp），上边缘高出图标 5dp。
 
 ## 属性
 
@@ -71,6 +79,17 @@ Row {
 | label    | String      | 该项的标签文本   | -      | 是       |
 | modifier | Modifier    | 应用于 NavigationRailItem 的修饰符 | Modifier | 否       |
 | enabled  | Boolean     | 是否启用该项     | true     | 否       |
+| badge    | Int?        | 图标上的红点：`null` 无，`0` 圆点，正数为数字红点；`TextOnly` 模式与禁用项不显示 | null | 否 |
+| colors   | NavigationRailItemColors | 图标与标签的内容颜色 | NavigationRailDefaults.itemColors() | 否 |
+
+### NavigationRailItemColors
+
+| 属性名          | 类型  | 说明                     |
+| --------------- | ----- | ------------------------ |
+| selectedColor   | Color | 选中项的颜色             |
+| unselectedColor | Color | 未选中项的颜色           |
+| pressedColor    | Color | 按压时的颜色（不论选中与否） |
+| disabledColor   | Color | 禁用项的颜色             |
 
 ### NavigationRailDefaults 对象
 
@@ -89,11 +108,17 @@ NavigationRailDefaults 对象提供了 NavigationRail 和 NavigationRailItem 组
 | IconTextSpacing        | Dp       | 图标与文字间距               | 2.dp   |
 | ItemVerticalPadding    | Dp       | 图标上方与标签下方的间距（`coui_navigation_margin_vertical`） | 12.dp |
 | LabelFontSize          | Dp       | 标签字号，单位 dp（不随字体缩放） | 10.dp |
+| LabelMaxLines          | Int      | 标签最多行数                 | 2      |
+| ItemMaskCornerRadius   | Dp       | 悬停 / 焦点蒙层的圆角        | 8.dp   |
+| ItemMaskHorizontalInset | Dp      | 悬停 / 焦点蒙层距导航项左右的距离 | 4.dp |
 | TextOnlyFontSize       | TextUnit | TextOnly 模式字号            | 14.sp  |
 | TextOnlyVerticalPadding| Dp       | TextOnly 模式垂直内边距      | 4.dp   |
-| SelectedPressedAlpha   | Float    | 选中项按压时的透明度         | 0.5f   |
-| UnselectedPressedAlpha | Float    | 未选中项按压时的透明度       | 0.6f   |
-| UnselectedAlpha        | Float    | 未选中项的透明度             | 0.4f   |
+
+#### 函数
+
+| 函数名       | 返回类型                 | 说明 |
+| ------------ | ------------------------ | ---- |
+| itemColors() | NavigationRailItemColors | COUI 侧栏配色：选中 `?couiColorLabelPrimary`，常态 `?couiColorSecondNeutral`，按压 `?couiColorPrimaryNeutral`，禁用 `?couiColorDisabledNeutral` |
 
 ### NavigationRailDisplayMode
 

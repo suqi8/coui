@@ -88,6 +88,7 @@ WindowDialog(
 | CornerRadius  | Dp     | Dialog panel corner radius (45.dp, `coui_round_corner_xxxxl_radius_large_16_1`) |
 | MaxWidth      | Dp     | Maximum visible panel width (360.dp: `coui_dialog_max_width` 392dp minus the two 16dp side insets) |
 | CustomContentPaddingBottom | Dp | Bottom padding of `customContent` (8.dp, `coui_alert_dialog_customer_layout_padding_bottom`) |
+| ScrollFadeLength | Dp | Fading edge length of the title / message scroll views (32.dp, `center_dialog_scroll_fading_edge_length`) |
 | MaxHeight     | Dp     | Maximum panel height (600.dp: `coui_dialog_max_height` 632dp minus the 32dp bottom margin) |
 | outsideMargin | DpSize | Default dialog external margin (16, 32); the height is the bottom gap without a navigation bar |
 | MarginBottomWithNavigationBar | Dp | Gap between a bottom-aligned dialog and the screen edge under three-button navigation (60.dp) |

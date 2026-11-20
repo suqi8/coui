@@ -33,6 +33,9 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param title The category title.
  * @param modifier The modifier to be applied to the [LoadingPreferenceCategory].
  * @param loading Whether the spinner is shown (LoadingType.LOADING).
+ * @param paused Whether the spinner holds its current frame (LoadingType.PAUSE, `pauseAnimation()`).
+ *   It continues from that frame when unpaused; COUI restarts at frame 0, which a caller can get by
+ *   keying the category on a restart count.
  * @param loadingText The optional text before the spinner (COUI text_in_loading).
  * @param titleType The size of the title, see [PreferenceCategory]. Next to a medium or large title
  *   [loadingText] grows to 14sp and the loading widget to a 28dp minimum height
@@ -49,6 +52,7 @@ fun LoadingPreferenceCategory(
     title: String,
     modifier: Modifier = Modifier,
     loading: Boolean = true,
+    paused: Boolean = false,
     loadingText: String? = null,
     titleType: PreferenceCategoryTitleType = PreferenceCategoryTitleType.Small,
     marginStartType: PreferenceCategoryMarginStartType = PreferenceCategoryMarginStartType.Large,
@@ -85,11 +89,15 @@ fun LoadingPreferenceCategory(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                // coui_preference_category_widget_layout_loading.xml: COUICompProgressIndicator
+                // small_animation at 16dp, which scales coui_rotating_loading.json (84-unit comp,
+                // 78-unit ring, 6-unit stroke), not the fainter small lottie tier.
                 RotatingProgressIndicator(
+                    paused = paused,
                     color = indicatorColor,
-                    size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
-                    ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
-                    strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,
+                    size = 16.dp,
+                    ringDiameter = 16.dp * (78f / 84f),
+                    strokeWidth = 16.dp * (6f / 84f),
                 )
             }
         } else if (endContent != null) {

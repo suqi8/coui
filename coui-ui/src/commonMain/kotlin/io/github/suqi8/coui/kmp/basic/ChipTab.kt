@@ -30,10 +30,13 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -49,6 +52,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -82,6 +86,8 @@ import io.github.suqi8.coui.kmp.squircle.squircleClip
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.max
@@ -438,6 +444,87 @@ fun ChipTabRow(
                 }
             }
         }
+    }
+}
+
+/**
+ * The page under a [ChipTabRow], switched with the ColorOS 17 chip tab page transition
+ * (`COUIChipTabGroupFragmentMediator.switchToFragment`): the page that is left fades out on a
+ * response 0.2 / bounce 0 spring and is then dropped, while the selected page fades in on a
+ * response 0.3 / bounce 0 spring after a 150ms delay (`PAGE_APPEAR_DELAY`). The first page fades
+ * in without the delay. A new selection before a switch settles drops the page still fading out at
+ * once and fades the page that was appearing out from where it is.
+ *
+ * Every page keeps its saveable state while it is not shown, as the mediator keeps its fragments.
+ *
+ * @param selectedTabIndex The page to show, usually the selected chip of the [ChipTabRow].
+ * @param modifier The modifier to be applied to the [ChipTabContent].
+ * @param content The page for an index.
+ */
+@Composable
+fun ChipTabContent(
+    selectedTabIndex: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable (index: Int) -> Unit,
+) {
+    val pages = remember { mutableStateListOf<ChipTabContentPage>() }
+    // The page being shown, read only by the switch.
+    val current = remember { arrayOfNulls<ChipTabContentPage>(1) }
+    val stateHolder = rememberSaveableStateHolder()
+    LaunchedEffect(selectedTabIndex) {
+        switchChipTabContentPage(pages, current, selectedTabIndex)
+    }
+    Box(modifier = modifier, propagateMinConstraints = true) {
+        pages.forEach { page ->
+            key(page.index) {
+                Box(
+                    modifier = Modifier.graphicsLayer { alpha = page.alpha.value },
+                    propagateMinConstraints = true,
+                ) {
+                    stateHolder.SaveableStateProvider(page.index) {
+                        content(page.index)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** One page of a [ChipTabContent] and its alpha. */
+private class ChipTabContentPage(val index: Int) {
+    val alpha = Animatable(0f, visibilityThreshold = CHIP_TAB_PAGE_MIN_VISIBLE_ALPHA)
+}
+
+/**
+ * `COUIChipTabGroupFragmentMediator.switchToFragment`: shows page [index] in [pages], fading the
+ * page in [current] out and the new one in. Runs until both fades have finished; a newer switch
+ * cancels it and ends the old fades itself.
+ */
+private suspend fun switchChipTabContentPage(
+    pages: MutableList<ChipTabContentPage>,
+    current: Array<ChipTabContentPage?>,
+    index: Int,
+) {
+    val previous = current[0]
+    if (previous?.index == index) return
+    // The fades of an earlier switch end now (cancelling a COUISpringAnimation runs its end
+    // listener): a page that was still fading out is hidden at once.
+    pages.removeAll { it !== previous && it.index != index }
+    val next = pages.firstOrNull { it.index == index } ?: ChipTabContentPage(index).also { pages.add(it) }
+    current[0] = next
+    next.alpha.snapTo(0f)
+    if (previous == null) {
+        next.alpha.animateTo(1f, ChipTabPageFadeInSpring)
+        return
+    }
+    coroutineScope {
+        launch {
+            // A page that never became visible is hidden without a fade.
+            if (previous.alpha.value > 0f) previous.alpha.animateTo(0f, ChipTabPageFadeOutSpring)
+            pages.remove(previous)
+        }
+        delay(CHIP_TAB_PAGE_APPEAR_DELAY_MILLIS)
+        next.alpha.animateTo(1f, ChipTabPageFadeInSpring)
     }
 }
 
@@ -853,6 +940,10 @@ private fun ChipTabSurface(
                         Modifier
                     },
                 )
+                // COUIChip.handleActionDown starts the press scale and the press mask on ACTION_DOWN,
+                // also inside the scrolling ChipTabRow, where a clickable would wait for the tap
+                // timeout first.
+                .tabTouchDownPress(interactionSource = interactionSource, enabled = enabled)
                 .selectable(
                     selected = selected,
                     interactionSource = interactionSource,
@@ -963,6 +1054,21 @@ private class ChipTabMaskThresholdReached : CancellationException("Press mask re
 
 /** `COUIChipTabGroup.scrollToChipTabWithAnimation`: COUISpringForce(response 0.4, bounce 0.2). */
 private val ChipTabRevealSpring = spring<Float>(dampingRatio = 0.8f, stiffness = 246.74f)
+
+/**
+ * `COUIChipTabGroupFragmentMediator.pageFadeInSpring`: COUISpringForce(response 0.3, bounce 0) on
+ * the page alpha, settling within the 1/256 `MIN_VISIBLE_CHANGE_ALPHA`.
+ */
+private val ChipTabPageFadeInSpring = spring(dampingRatio = 1f, stiffness = 438.65f, visibilityThreshold = 1f / 256f)
+
+/** `COUIChipTabGroupFragmentMediator.pageFadeOutSpring`: COUISpringForce(response 0.2, bounce 0). */
+private val ChipTabPageFadeOutSpring = spring(dampingRatio = 1f, stiffness = 986.96f, visibilityThreshold = 1f / 256f)
+
+/** `COUIChipTabGroupFragmentMediator.PAGE_APPEAR_DELAY`. */
+private const val CHIP_TAB_PAGE_APPEAR_DELAY_MILLIS = 150L
+
+/** `DynamicAnimation.MIN_VISIBLE_CHANGE_ALPHA`. */
+private const val CHIP_TAB_PAGE_MIN_VISIBLE_ALPHA = 1f / 256f
 
 /** The visible width of the focus outline: COUI default_focus_stroke_radius. */
 private val ChipTabFocusStrokeWidth = 3.dp

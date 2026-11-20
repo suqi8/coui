@@ -85,9 +85,11 @@ import io.github.suqi8.coui.kmp.basic.PopupRelayTarget
 import io.github.suqi8.coui.kmp.basic.PopupSpotLight
 import io.github.suqi8.coui.kmp.basic.consumePopupTouches
 import io.github.suqi8.coui.kmp.basic.popupDropShadow
+import io.github.suqi8.coui.kmp.basic.popupEnterPivot
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.popupMaterialEffect
 import io.github.suqi8.coui.kmp.basic.popupPanelLightInput
+import io.github.suqi8.coui.kmp.basic.popupTouchMotion
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupPanelLight
 import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
@@ -95,7 +97,6 @@ import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
 import io.github.suqi8.coui.kmp.effect.LocalPopupMaterialBlur
 import io.github.suqi8.coui.kmp.effect.TouchMotionState
-import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
@@ -566,19 +567,29 @@ internal fun CascadingListPopupLayout(
                             hostMeasured = true
                         }
                         // COUIPopupMenuRootView.handleMainAreaDelayedDismissOnTouch and the main
-                        // root's click while a sub menu is up; observes, consumes nothing.
-                        .mainAreaDismiss(
-                            geometryHolder = geometryHolder,
-                            touchSlop = touchSlop,
-                            active = { expandedItem != null },
-                            entered = { gestureRelay.subEntered },
-                            onCollapse = requestCollapse,
+                        // root's click while a sub menu is up (observes, consumes nothing), and the
+                        // outside tap. Once the popup starts to leave the window takes no touches
+                        // (COUIPopupListWindow.dismiss → setTouchable(false)): without a pointer
+                        // input here the page beneath gets them during the exit.
+                        .then(
+                            if (show) {
+                                Modifier
+                                    .mainAreaDismiss(
+                                        geometryHolder = geometryHolder,
+                                        touchSlop = touchSlop,
+                                        active = { expandedItem != null },
+                                        entered = { gestureRelay.subEntered },
+                                        onCollapse = requestCollapse,
+                                    )
+                                    .pointerInput(Unit) {
+                                        detectTapGestures(onTap = {
+                                            if (expandedItem != null) expandedItem = null else currentOnDismiss()
+                                        })
+                                    }
+                            } else {
+                                Modifier
+                            },
                         )
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = {
-                                if (expandedItem != null) expandedItem = null else currentOnDismiss()
-                            })
-                        }
                         // The enter / exit motion moves both menus together about the main menu
                         // centre, so an open sub menu leaves with the main menu (startMainMenuExit).
                         .graphicsLayer {
@@ -618,13 +629,22 @@ internal fun CascadingListPopupLayout(
                                     translationY = lerp(0f, geometry?.mainTranslationY ?: 0f, p)
                                     transformOrigin = geometry?.mainPivot ?: TransformOrigin.Center
                                 }
-                                // The main menu's touch motion pauses while a sub menu is open
-                                // (BasePopupMenuAnimationController.makeAnimator).
-                                .couiTouchMotion(
-                                    interactionSource = null,
-                                    enabled = displayedItem == null,
-                                    pressScaleEnabled = false,
+                                // The main menu's touch motion follows the finger for the whole
+                                // gesture and pauses (springing home) while a sub menu is open
+                                // (BasePopupMenuAnimationController.makeAnimator). It stretches about
+                                // the enter pivot, or about the sub-menu pivot the controllers set
+                                // once a sub menu opens, until it has gone (resetMainMenuPivotToEnter).
+                                .popupTouchMotion(
                                     state = mainTouchMotion,
+                                    enabled = displayedItem == null,
+                                    transformOrigin = {
+                                        val geometry = geometryHolder.submenu
+                                        if (displayedItem != null && geometry != null) {
+                                            geometry.mainPivot
+                                        } else {
+                                            geometryHolder.enterPivot
+                                        }
+                                    },
                                 )
                                 .popupDropShadow(shape)
                                 .squircleSurface(color = surfaceColor, cornerRadius = CascadingPopupCornerRadius, weight = PopupCornerWeight)
@@ -730,12 +750,21 @@ internal fun CascadingListPopupLayout(
                                         }
                                         .onGloballyPositioned { geometryHolder.subMotionCoordinates = it }
                                         // The sub menu's touch motion stops (and springs home) once
-                                        // it starts to leave (startSubMenuExit → resetTouchOnly).
-                                        .couiTouchMotion(
-                                            interactionSource = null,
-                                            enabled = expandedItem != null,
-                                            pressScaleEnabled = false,
+                                        // it starts to leave (startSubMenuExit → resetTouchOnly). A
+                                        // larger window's sub menu stretches about its enter pivot
+                                        // (getSubMenuEnterPivotX / Y); a compact one keeps the view's
+                                        // default centre pivot.
+                                        .popupTouchMotion(
                                             state = subTouchMotion,
+                                            enabled = expandedItem != null,
+                                            transformOrigin = {
+                                                val geometry = geometryHolder.submenu
+                                                if (geometry == null || geometry.compact) {
+                                                    TransformOrigin.Center
+                                                } else {
+                                                    geometry.subPivot
+                                                }
+                                            },
                                         )
                                         .onGloballyPositioned { geometryHolder.subPanelCoordinates = it }
                                         .popupPanelLightInput(
@@ -863,6 +892,8 @@ internal fun CascadingListPopupLayout(
                         (mainRect.bottom - host.y).toFloat(),
                     )
                     geometryHolder.gravityPath = popupGravityPathFor(parentBounds, mainOffset, measuredMain, density.density)
+                    val enterPivot = popupEnterPivot(parentBounds, mainOffset, measuredMain)
+                    if (geometryHolder.enterPivot != enterPivot) geometryHolder.enterPivot = enterPivot
 
                     // The band only depends on the main menu and the anchor row, so it is known
                     // before the sub menu is measured: its surface must never be measured at the
@@ -934,6 +965,12 @@ private class CascadeGeometryHolder {
      * never shrinks and snaps back when the sub menu leaves).
      */
     var submenu: SubmenuGeometry? by mutableStateOf(null)
+
+    /**
+     * The main menu's enter pivot (`PopupMenuDomain.getMainMenuEnterPivotX` / `Y`), which its touch
+     * deformation stretches about. Snapshot state, as the touch-motion layer reads it.
+     */
+    var enterPivot: TransformOrigin by mutableStateOf(TransformOrigin.Center)
 
     /** The sub menu's resting rect in the host's space (`PopupMenuDomain.mSubMenu`). */
     var subRectLocal: Rect? = null
@@ -1043,7 +1080,7 @@ private class CascadeSubPanel(
         tracker.resetTracking()
         tracker.addPosition(uptimeMillis, point)
         touchMotion.touching = true
-        with(touchMotion) { density.down(point) }
+        with(touchMotion) { density.down(point, scope) }
     }
 
     override fun move(windowPosition: Offset, uptimeMillis: Long) {

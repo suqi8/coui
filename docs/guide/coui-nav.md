@@ -72,11 +72,13 @@ A built-in preset library is available as `NavTransitions`:
 
 | Preset | Description |
 | :-- | :-- |
-| `COUIDefault` (default) | Full-width slide + quarter-width parallax + light covered alpha falloff |
+| `COUIDefault` (default) | The COUI 17 page switch: full-width slide, the covered page shifts 30% of the width (25% while a back gesture drives), 350ms on the COUI curve, critically damped 400 / 450 gesture release springs |
 | `Modal` | Bottom-up slide; lower layer stays visible |
 | `None` | Instant, no animation |
 
-The leading-edge corner clip and the dark dim scrim are not baked into any preset — they come from the orthogonal `NavDisplayEffects` layer (`enableCornerClip`, `dimAmount`; both on by default), while each transition only shapes the scrim's curve along the motion via `scrimFraction`.
+`COUIDefault` follows the official sources: programmatic push / pop is `Animation.COUI.Activity` (`coui_open_slide_*` / `coui_close_slide_*`, the window animation of `Theme.COUI`, identical to the ColorOS shell's `oplus_*_slide_*`): 350ms on cubic-bezier(0.3, 0.1, 0.3, 1), the covered page moving -30%. A back gesture follows the ColorOS predictive back (`CrossBackAnimationExt`): the closing page tracks the finger, the revealed page trails at `-(width - x) / 4`, and the release settles on critically damped springs (stiffness 400 to commit, 450 to cancel). Its pieces are public for custom transitions: `NavTransitions.COUIPageEasing`, `COUIPageMotion`, `COUI_PAGE_DURATION_MILLIS`, `COUI_COVERED_SHIFT_FRACTION` and `COUI_GESTURE_COVERED_SHIFT_FRACTION`.
+
+The leading-edge corner clip and the dark dim scrim are not baked into any preset — they come from the orthogonal `NavDisplayEffects` layer (`enableCornerClip`, `dimAmount`; both on by default), while each transition only shapes the scrim's curve along the motion via `scrimFraction`. The defaults reproduce the official page switch: the covered page fades to 0.5 over a black backdrop (the 0.5 dim scrim) and the moving page is rounded with the screen corner.
 
 Set a global default on `NavDisplay(transition = ...)` and override per route with `entry(transition = ...)`:
 
@@ -187,6 +189,8 @@ val snappy = navGraphicsTransition(
 
 The host resolves the motion from the **topmost presented entry's** governing transition (per-route overrides win), so during a pop the leaving entry's own motion carries its exit.
 
+The table lists `NavMotion.Default`, the engine default for transitions that declare nothing. `NavTransitions.COUIDefault` declares `NavTransitions.COUIPageMotion` instead: a 350ms tween on `COUIPageEasing` for programmatic push / pop, and critically damped springs at stiffness 400 (commit) and 450 (cancel) for a released gesture, as the ColorOS predictive back settles.
+
 Overshoot rules:
 
 - By default the commit settle floors its seed velocity at the exact no-overshoot bound, so navigation never bounces. Pass `clampOvershoot = false` to keep the full release velocity; an underdamped spring (`dampingRatio < 1`) overshoots by construction and **requires** that opt-out (the constructor rejects the ambiguous combination).
@@ -251,7 +255,7 @@ One trade-off to know: a gesture may grab the stack mid-programmatic-settle, swi
 | Property | Default | Description |
 | :-- | :-- | :-- |
 | `enableCornerClip` | `true` | Clip the transitioning top entry with smooth rounded corners while it animates over the layer below |
-| `cornerClipRadius` | `0.dp` | Radius of that clip; pass `rememberNavSystemCornerRadius()` to follow the device screen corner (still no rounding where the platform reports 0) |
+| `cornerClipRadius` | `Dp.Unspecified` | Radius of that clip; unspecified follows the device screen corner (`rememberNavSystemCornerRadius()`), as ColorOS rounds the moving page of a page switch with the window corner radius — still no rounding where the platform reports none (Desktop, Web, iOS). Pass an explicit radius to override it, e.g. `0.dp` in a pane |
 | `cornerClipMode` | `Leading` | Which corners to round: `Leading` — the corners meeting the screen edge, for slide-style transitions; `All` — every corner, for card-style transitions that scale the whole page |
 | `dimAmount` | `0.5f` | Maximum alpha of the fullscreen dim scrim beneath the top-most layer; the curve along the motion belongs to the transition (`scrimFraction`), this only caps darkness. `0f` disables |
 | `blockInputDuringTransition` | `false` | Swallow touch input on mid-transition entries, so taps cannot reach a half-animated screen |
@@ -339,7 +343,7 @@ if (isWideScreen) {
 Rules of the pattern, each learned the hard way:
 
 - **Clip the pane** (`clipToBounds`): transition layers translate outside the pane (covered-page parallax, fly-outs) and would otherwise draw over the chrome next to it.
-- **Zero the screen-corner clip radius in panes** (`cornerClipRadius = 0.dp`): the pane edge is mid-screen; the device corner radius belongs to physical screen edges only.
+- **Zero the screen-corner clip radius in panes** (`cornerClipRadius = 0.dp`): the default follows the device screen corner, but the pane edge is mid-screen; the device corner radius belongs to physical screen edges only.
 - **Drop edge insets the chrome already consumed**: a pane sitting right of a rail must not add the display-cutout start padding again.
 - **Two displays under one parent are supported**: ViewModel registries are per-display, and each display's back handler arms only while its own stack has more than one entry.
 - **A detail pane needs a placeholder root** — an empty back stack is rejected — and moving keys between stacks loses their state (saveable/ViewModel scopes are per-display); to survive a posture change, move the whole `NavDisplay` between layout slots with an app-level `movableContentOf` instead.

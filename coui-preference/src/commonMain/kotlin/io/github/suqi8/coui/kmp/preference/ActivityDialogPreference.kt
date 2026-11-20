@@ -46,7 +46,6 @@ import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
 import io.github.suqi8.coui.kmp.basic.Card
 import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.CardListPosition
-import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Icon
 import io.github.suqi8.coui.kmp.basic.IconButton
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
@@ -210,14 +209,12 @@ private fun ActivityDialogPage(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
+                // CardListGroup draws the item_divider of coui_preference_listview_item.xml below every
+                // row but the last (coui_preference_divider_default_horizontal_padding from both list
+                // edges, i.e. from the title start to the card inset).
                 CardListGroup {
                     entries.forEachIndexed { index, entry ->
                         item(key = index) {
-                            if (index > 0) {
-                                HorizontalDivider(
-                                    Modifier.padding(horizontal = ActivityDialogPreferenceDefaults.DividerHorizontalPadding),
-                                )
-                            }
                             RadioButtonPreference(
                                 title = entry.text,
                                 selected = index == selectedIndex,

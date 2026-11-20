@@ -98,7 +98,8 @@ import kotlin.math.min
  *   24dp (40dp from 840dp) and draws a 44dp capsule whose items put the icon beside a 14dp label of
  *   up to two lines (98dp each, 152dp for a single item; `STYLE_EDIT_TOOLBAR_HORIZONTAL`). Items that
  *   do not fit shrink equally (`BaseBottomFloatingMenuView.onMeasure`); there is no overflow menu.
- * - **Touch**: a tap clicks the item it started and ended on. The capsule takes the
+ * - **Touch**: a tap clicks the item it started and ended on, unless the finger slid off that item
+ *   by more than the touch slop on the way (`View.onTouchEvent`). The capsule takes the
  *   `COUITouchMotionAnimator` press scale, rubber band and deformation and the touch spotlight;
  *   items have no press mask of their own (`shouldStripPressedForContainerTouch`). With every item
  *   disabled the capsule gives no touch feedback (`isMenuTouchFeedbackEnabled`).
@@ -303,8 +304,12 @@ private fun FloatingEditToolbarCapsule(
                             val glow = spot && state.touchFeedbackEnabled
                             if (glow) scope.launch { spotlight.glow(down.position) }
                             val downItem = state.itemAt(down.position)
+                            // View.onTouchEvent: a finger that slides out of the item by more than
+                            // the touch slop unpresses it for good, even if it comes back.
+                            val downBounds = state.boundsAt(down.position)?.inflate(viewConfiguration.touchSlop)
                             var upPosition: Offset? = null
                             var cancelled = false
+                            var slipped = false
                             while (true) {
                                 val event = awaitPointerEvent()
                                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
@@ -317,6 +322,7 @@ private fun FloatingEditToolbarCapsule(
                                     upPosition = change.position
                                     break
                                 }
+                                if (downBounds != null && !downBounds.contains(change.position)) slipped = true
                                 if (glow && change.position != change.previousPosition) {
                                     val position = change.position
                                     scope.launch { spotlight.follow(position) }
@@ -324,8 +330,8 @@ private fun FloatingEditToolbarCapsule(
                             }
                             if (glow) scope.launch { spotlight.extinguish() }
                             // The item views click themselves: the item the finger went down on,
-                            // when it also lifts on it.
-                            if (!cancelled && upPosition != null) {
+                            // when it lifts on it without having slid off it.
+                            if (!cancelled && !slipped && upPosition != null) {
                                 state.itemAt(upPosition)?.takeIf { it === downItem && it.enabled }?.onClick?.invoke()
                             }
                         }
@@ -664,7 +670,7 @@ object FloatingEditToolbarDefaults {
     @Composable
     fun itemColors(
         contentColor: Color = COUITheme.colorScheme.labelPrimary,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledNeutral,
+        disabledContentColor: Color = COUITheme.colorScheme.labelTertiary,
     ): FloatingEditToolbarColors = remember(contentColor, disabledContentColor) {
         FloatingEditToolbarColors(
             contentColor = contentColor,
@@ -695,14 +701,22 @@ private class FloatingEditToolbarState {
 
     /** `findChildViewUnder`: the item whose bounds contain [position], if any. */
     fun itemAt(position: Offset): FloatingEditToolbarItemHandle? {
+        val index = indexAt(position)
+        return if (index >= 0) items.getOrNull(index) else null
+    }
+
+    /** The bounds of the item under [position], if any. */
+    fun boundsAt(position: Offset): Rect? = itemBounds.getOrNull(indexAt(position))
+
+    private fun indexAt(position: Offset): Int {
         val bounds = itemBounds
         for (index in bounds.indices) {
             val rect = bounds[index]
             if (position.x >= rect.left && position.x <= rect.right && position.y >= rect.top && position.y <= rect.bottom) {
-                return items.getOrNull(index)
+                return index
             }
         }
-        return null
+        return -1
     }
 }
 

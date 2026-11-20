@@ -31,7 +31,7 @@ Switch(
 
 - The 44 x 24 dp track holds an 18 dp thumb that travels 20 dp.
 - Toggling moves the thumb on a spring (response 0.4, bounce 0.3). The thumb stretches with its position, up to 1.3x about a third of the way, and the track colour blends with it. Toggling again mid-flight redirects the thumb instead of restarting it.
-- The thumb can be dragged: past the touch slop it follows the finger, and on release it settles on the nearer end, or on the end it was flung towards. A drag that ends on the other end calls `onCheckedChange`; if the owner keeps the old state, the thumb springs back.
+- The thumb can be dragged: past the touch slop it follows the finger one to one (COUISpringDragHelper moves it by the raw finger distance, clamped to the track), and on release it settles on the nearer end, or on the end it was flung towards. A drag that ends on the other end calls `onCheckedChange`; if the owner keeps the old state, the thumb springs back.
 - Press and hover lay `COUITheme.colorScheme.press` / `hover` over the track.
 
 ## Component States

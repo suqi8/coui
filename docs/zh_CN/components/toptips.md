@@ -126,7 +126,7 @@ TopTips(
 
 ## 行为
 
-- 行动按钮是 `Widget.COUI.Button.Small.ButtonNew` 主色胶囊（14sp Medium、内边距 12/4dp、最小 52x28dp），强制关闭材质效果。行动按钮与关闭按钮可同时出现（间距 12dp，关闭按钮距末端 12dp）。
+- 行动按钮是 `Widget.COUI.Button.Small.ButtonNew` 主色胶囊（14sp Medium、内边距 12/4dp、最小 52x28dp），强制关闭材质效果。行动按钮与关闭按钮可同时出现（间距 12dp，关闭按钮距末端 12dp）。与官方关闭按钮（无背景的 `ImageView`，图标是无按压态的普通矢量图）一致，关闭按钮按下时没有按压反馈。
 - 无标题时前置图标为 24dp，按钮位于文案之后、与文案垂直居中。只有在有前置图标、且文案在按钮旁需要超过两行时，行动按钮才移到文案下方并与文案起始边对齐（上 8dp、下 12dp），图标与关闭按钮对齐到前两行的中线（`isNeedDefaultMultiTextWithoutTitle`）。
 - 有标题时前置图标为 36dp（间距 12dp），按钮在「标题 + 文案」整体上垂直居中。有前置图标且任一文字在按钮旁放不下一行时，行动按钮移到文案下方，关闭按钮与标题顶部对齐（`isNeedDefaultMultiTextWithTitle`）。
 - 开启 `marquee` 后文案为单行；放不下时以 25dp/s 连续滚动，副本间距 80dp，两端 26dp 渐隐（`COUIMarqueeTextView`），此时行动按钮不会下移。

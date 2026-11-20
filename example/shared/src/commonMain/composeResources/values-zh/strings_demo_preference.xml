@@ -119,12 +119,12 @@
     <string name="demo_list_preference_follow_system">跟随系统</string>
     <string name="demo_list_preference_follow_system_summary">随系统深色模式切换</string>
     <string name="demo_list_preference_theme">主题</string>
-    <string name="demo_list_preference_single_summary">单选底部面板</string>
+    <string name="demo_list_preference_single_summary">单选对话框</string>
     <string name="demo_list_preference_documents">文档</string>
     <string name="demo_list_preference_contacts_summary">联系人与通话记录</string>
     <string name="demo_list_preference_system_settings">系统设置</string>
     <string name="demo_list_preference_sync_items">同步内容</string>
-    <string name="demo_list_preference_multi_summary">多选底部面板</string>
+    <string name="demo_list_preference_multi_summary">多选对话框</string>
 
     <!-- SlideSelectPreference -->
     <string name="demo_slide_select_preference_standard">标准</string>

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
@@ -20,10 +21,13 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
@@ -45,8 +49,10 @@ import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
+import io.github.suqi8.coui.kmp.utils.COUITouchInteraction
 import io.github.suqi8.coui.kmp.utils.PressFeedbackType
 import io.github.suqi8.coui.kmp.utils.TiltFeedback
+import io.github.suqi8.coui.kmp.utils.couiTouchFeedback
 import io.github.suqi8.coui.kmp.utils.pressable
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.PI
@@ -142,12 +148,17 @@ fun Card(
     // COUI card press feedback (COUICardListSelectedItemLayout): fill animates towards pressedColor.
     val tintEnabled = pressFeedbackType == PressFeedbackType.Tint
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isTouched by interactionSource.collectCardTouchedAsState()
     val isHeldDown by interactionSource.collectIsHeldDownAsState()
+    // A single card (COUICardListSelectedItemLayout with consumeDispatchingEventForState) and the
+    // COUIPressFeedbackHelper card scale both start on ACTION_DOWN, so the touch drives the feedback;
+    // the clickable's press (delayed inside scrolling containers) adds keyboard presses.
+    val pressActive = isPressed || isTouched || isHeldDown
     val tintProgress = remember { Animatable(0f) }
-    LaunchedEffect(tintEnabled, isPressed, isHeldDown) {
+    LaunchedEffect(tintEnabled, pressActive) {
         if (!tintEnabled) {
             tintProgress.snapTo(0f)
-        } else if (isPressed || isHeldDown) {
+        } else if (pressActive) {
             tintProgress.animateTo(1f, CardPressFeedbackSpring)
         } else if (tintProgress.value > 0f) {
             if (tintProgress.value < PressedTintMinVisibleProgress) {
@@ -163,16 +174,11 @@ fun Card(
             tintProgress.animateTo(0f, CardPressFeedbackSpring)
         }
     }
-    val fillColor = if (tintProgress.value > 0f) {
-        lerp(colors.color, colors.pressedColor, tintProgress.value)
-    } else {
-        colors.color
-    }
 
     // COUI 17 touch motion press scale: the target scale follows the card's own dp size.
     val sinkEnabled = pressFeedbackType == PressFeedbackType.Sink
     val pressScaleModifier = if (sinkEnabled) {
-        Modifier.couiPressScale(pressed = isPressed || isHeldDown)
+        Modifier.couiPressScale(pressed = pressActive)
     } else {
         Modifier
     }
@@ -185,23 +191,26 @@ fun Card(
     val isClickable = hasOnClick || hasLongPress
     val clickableModifier = remember(isClickable, hasLongPress, interactionSource, indicationToUse) {
         if (isClickable) {
-            Modifier.combinedClickable(
-                interactionSource = interactionSource,
-                indication = indicationToUse,
-                onClick = { currentOnClick?.invoke() },
-                onLongClick = if (hasLongPress) {
-                    { currentOnLongPress?.invoke() }
-                } else {
-                    null
-                },
-            )
+            Modifier
+                .combinedClickable(
+                    interactionSource = interactionSource,
+                    indication = indicationToUse,
+                    onClick = { currentOnClick?.invoke() },
+                    onLongClick = if (hasLongPress) {
+                        { currentOnLongPress?.invoke() }
+                    } else {
+                        null
+                    },
+                )
+                // Touch down / up / a scroll taking over, as COUITouchInteraction (no second press).
+                .couiTouchFeedback(interactionSource)
         } else {
             Modifier
         }
     }
 
     BasicCard(
-        color = fillColor,
+        color = colors.color,
         contentColor = colors.contentColor,
         modifier = modifier
             .then(pressScaleModifier)
@@ -212,6 +221,8 @@ fun Card(
             ),
         cornerRadius = cornerRadius,
         shadow = shadow,
+        pressedColor = if (tintEnabled) colors.pressedColor else colors.color,
+        pressProgress = { tintProgress.value },
     ) {
         Column(
             modifier = Modifier
@@ -230,6 +241,10 @@ fun Card(
  * @param modifier The modifier to be applied to the [BasicCard].
  * @param cornerRadius The corner radius of the [BasicCard].
  * @param shadow The optional [CardShadow] drawn around the [BasicCard].
+ * @param pressedColor The fill the card moves towards as [pressProgress] goes to 1; equal to
+ *   [color] for a card without press tint.
+ * @param pressProgress The press tint progress, read only while drawing so its animation does not
+ *   recompose the card.
  * @param content The [Composable] content of the [BasicCard].
  */
 @Composable
@@ -239,6 +254,8 @@ private fun BasicCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = CardDefaults.CornerRadius,
     shadow: CardShadow? = null,
+    pressedColor: Color = color,
+    pressProgress: () -> Float = { 0f },
     content: @Composable () -> Unit,
 ) {
     val shadowModifier = if (shadow != null && shadow.size > 0.dp) {
@@ -254,6 +271,17 @@ private fun BasicCard(
     } else {
         Modifier
     }
+    // A tinted card draws its own fill inside the squircle mask, so the press animation only
+    // redraws it; translucent fills are interpolated, not stacked.
+    val tinted = pressedColor != color
+    val fillModifier = if (tinted) {
+        Modifier.drawBehind {
+            val progress = pressProgress().coerceIn(0f, 1f)
+            drawRect(if (progress > 0f) lerp(color, pressedColor, progress) else color)
+        }
+    } else {
+        Modifier
+    }
     CompositionLocalProvider(
         LocalContentColor provides contentColor,
     ) {
@@ -263,7 +291,12 @@ private fun BasicCard(
                     isTraversalGroup = true
                 }
                 .then(shadowModifier)
-                .squircleSurface(color = color, cornerRadius = cornerRadius, weight = COUIRoundCorner.Normal.Weight),
+                .squircleSurface(
+                    color = if (tinted) Color.Transparent else color,
+                    cornerRadius = cornerRadius,
+                    weight = COUIRoundCorner.Normal.Weight,
+                )
+                .then(fillModifier),
             propagateMinConstraints = true,
         ) {
             content()
@@ -501,6 +534,26 @@ private const val CARD_SHADOW_ALPHA = 136f / 255f
 
 /** How far past an unhidden side the shadow clip reaches, in pixels. */
 private const val CARD_SHADOW_CLIP_REACH = 100_000f
+
+/**
+ * Whether a finger is on the card, from the [COUITouchInteraction]s that [couiTouchFeedback] reports
+ * from the touch down to the lift or to a scroll taking the gesture over.
+ */
+@Composable
+private fun InteractionSource.collectCardTouchedAsState(): State<Boolean> {
+    val touched = remember { mutableStateOf(false) }
+    LaunchedEffect(this) {
+        val touches = mutableListOf<COUITouchInteraction.Enter>()
+        interactions.collect { interaction ->
+            when (interaction) {
+                is COUITouchInteraction.Enter -> touches.add(interaction)
+                is COUITouchInteraction.Exit -> touches.remove(interaction.enter)
+            }
+            touched.value = touches.isNotEmpty()
+        }
+    }
+    return touched
+}
 
 /** The COUI card press feedback spring (COUISpringForce response 0.3f / bounce 0f). */
 private val CardPressFeedbackSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)

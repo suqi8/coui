@@ -18,8 +18,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.LinkAnnotation
@@ -216,24 +214,19 @@ private fun SecurityDialogCustomContent(
             )
         }
         if (checkboxText != null) {
-            val hapticFeedback = LocalHapticFeedback.current
-            val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
             Row(
                 // COUI aligns the checkbox drawable's inner ring with the text edge.
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = CheckboxRowMarginStart, end = DialogDefaults.insideMargin.width)
+                    // The row is the COUICheckBox itself (coui_security_alert_dialog_checkbox): a
+                    // click toggles it through COUICheckBox.toggle / setState, with no haptics.
                     .toggleable(
                         value = checked,
                         interactionSource = null,
                         indication = null,
                         role = Role.Checkbox,
-                        onValueChange = {
-                            onCheckedChange(it)
-                            currentHapticFeedback.performHapticFeedback(
-                                if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
-                            )
-                        },
+                        onValueChange = { onCheckedChange(it) },
                     ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

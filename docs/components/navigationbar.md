@@ -52,6 +52,14 @@ Scaffold(
 
 `NavigationBarItem` follows the COUI tab navigation state model: the selected item shows the icon and label at full label color, unselected items are dimmed, and the icon cross-fades between the two states over 180ms while the label color switches instantly. Labels always use medium font weight; pressing an unselected item previews the selected icon color.
 
+### Hover and Focus
+
+A pointer hovering an item, or keyboard focus on it, fades in COUI's hover / focus mask behind the icon and the label: an 8dp rounded rectangle over the whole cell (`COUINavigationItemView.configStateEffectBackground`, `?couiColorHover` / `?couiColorFocus`, each on a response 0.3 spring). A tap shows no mask, as on COUI tab bars.
+
+### Switching Menus
+
+The `NavigationBar(targetState) { state -> ... }` overload builds its items from a state and switches them the way `COUINavigationView.switchToMenu` does: the items on show fade out over 100ms (linear), then the items of the new state rise from the bar's bottom edge over 350ms while fading in over the first 100ms (both `COUIInEaseInterpolator`). The bar, its background and its divider stay in place.
+
 ### Wide Windows
 
 The bar follows the window as COUI's resource qualifiers do. On windows at least 600dp wide (`values-w600dp`, `is_big_layout`), `IconAndText` items put the icon beside a 14dp label, 8dp apart, centred as a group (`COUINavigationItemView.leftToRight`), and the row keeps 44dp from the edges; landscape windows also take the 44dp edge padding (`values-land`).
@@ -69,6 +77,13 @@ The bar follows the window as COUI's resource qualifiers do. On windows at least
 | defaultWindowInsetsPadding | Boolean                  | Apply default window insets padding | true                                  | No       |
 | mode                       | NavigationBarDisplayMode    | Display mode for items              | NavigationBarDisplayMode.IconAndText     | No       |
 | content                    | @Composable RowScope.()  | The content of the nav bar          | -                                     | Yes      |
+
+The state-driven overload takes the same properties plus:
+
+| Property Name | Type                        | Description                                                                 | Default Value | Required |
+| ------------- | --------------------------- | --------------------------------------------------------------------------- | ------------- | -------- |
+| targetState   | T                           | The state the items are built from; a change plays the `switchToMenu` animation | -         | Yes      |
+| content       | @Composable RowScope.(T)    | The items for a state; receives the state on show, which trails `targetState` while the old items fade out | - | Yes |
 
 ### NavigationBarItem Properties
 
@@ -105,6 +120,10 @@ The NavigationBarDefaults object provides default values for NavigationBar and N
 | IconFadeDurationMillis | Int      | Icon cross-fade duration between states      | 180           |
 | HideDurationMillis     | Int      | Hide translation duration                    | 200           |
 | ShowDurationMillis     | Int      | Show translation duration                    | 250           |
+| MenuExitDurationMillis | Int      | Fade-out of the items on show when the menu switches | 100   |
+| MenuEnterFadeDurationMillis | Int | Fade-in of the switched-in items             | 100           |
+| MenuEnterDurationMillis | Int     | Rise of the switched-in items from the bar's bottom edge | 350 |
+| ItemMaskCornerRadius   | Dp       | Corner radius of the hover / focus mask behind an item | 8.dp |
 | BadgeDotOffset         | Dp       | How far a red dot sticks out of the icon's top end corner | 1.dp |
 | BadgeNumberHorizontalOffset | Dp  | How far a number badge's end lies past the icon (-2dp under 10, +1dp from 100 to 999) | 8.dp |
 | BadgeNumberVerticalOffset | Dp    | How far a number badge rises above the icon  | 5.dp          |
@@ -177,6 +196,20 @@ NavigationBar(
     mode = NavigationBarDisplayMode.IconWithSelectedLabel
 ) {
     // ... items ...
+}
+```
+
+#### Switching Menus
+
+```kotlin
+var editing by remember { mutableStateOf(false) }
+
+NavigationBar(targetState = editing) { inEditMode ->
+    if (inEditMode) {
+        // ... the tools of the edit mode ...
+    } else {
+        // ... the tabs of the page ...
+    }
 }
 ```
 

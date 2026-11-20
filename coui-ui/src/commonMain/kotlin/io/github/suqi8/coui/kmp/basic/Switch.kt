@@ -381,10 +381,14 @@ private class SwitchMotionState(initialFraction: Float) {
 }
 
 /**
- * Tracks a drag on the switch: once the pointer leaves the touch slop the thumb follows it,
- * mapped proportionally (`COUISwitch.convertToTranslationCoordinates`: x / width * travel), and the
- * gesture is consumed so the tap is cancelled. [onRelease] receives the release velocity in checked
- * fractions per second.
+ * Tracks a drag on the switch: once the pointer leaves the touch slop the thumb follows the finger
+ * one to one, clamped to the track, and the gesture is consumed so the tap is cancelled.
+ *
+ * `COUISwitch` hands `COUISpringDragHelper.springDrag` an event relocated by
+ * `convertToTranslationCoordinates` (x / width * travel), but the helper positions the thumb from
+ * `getRawX()`, which that relocation does not touch: the thumb moves exactly as far as the finger.
+ * Only its `VelocityTracker` sees the relocated x, so [onRelease] receives the release velocity in
+ * that scaled space, expressed in checked fractions per second (velocity / width).
  */
 private suspend fun PointerInputScope.detectSwitchDrag(
     motion: SwitchMotionState,
@@ -409,6 +413,7 @@ private suspend fun PointerInputScope.detectSwitchDrag(
         val startFraction = motion.fraction.value
         val direction = if (isRtl) -1f else 1f
         val width = size.width.toFloat().coerceAtLeast(1f)
+        val travel = SwitchDefaults.Travel.toPx().coerceAtLeast(1f)
         val velocityTracker = VelocityTracker()
         velocityTracker.addPointerInputChange(down)
         var dragging = false
@@ -426,7 +431,9 @@ private suspend fun PointerInputScope.detectSwitchDrag(
                 }
                 if (dragging) {
                     change.consume()
-                    val target = startFraction + direction * (change.position.x - down.position.x) / width
+                    // COUISpringDragHelper.dragTo: start translation + raw finger delta, clamped to the
+                    // stable points {0, travel} (the switch passes no over-drag distance).
+                    val target = startFraction + direction * (change.position.x - down.position.x) / travel
                     onDrag(target.coerceIn(0f, 1f))
                 }
             }

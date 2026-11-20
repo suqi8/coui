@@ -115,7 +115,7 @@ val content = buildAnnotatedString {
 
 ## 行为
 
-- 声明正文可滚动,上下各有 32dp 渐隐边缘,随滚动偏移逐渐显现,对应 COUIMaxHeightScrollView 宿主的 fading edge。
+- 声明正文可滚动,上下各有 32dp 渐隐边缘,随滚动偏移逐渐显现,对应 COUIMaxHeightScrollView 宿主的 fading edge。标题或正文放得下时拖动既不滚动也不回弹,与 COUI 标题(`disableTitleScrollBeforeMaxHeight`)及 `overScrollMode="ifContentScrolls"` 下的 `COUIScrollView` 一致。
 - 窗口高度小于 300dp 时使用 values-h200dp 的紧凑边距(标题 3dp,按钮上 10dp / 下 8dp)。
 - 主按钮文字最多两行(COUIFullPageStatement `setMaxLines(2)`),宽度按 COUI 资源分档:174dp,窗口宽 ≥300dp 时 220dp,≥600dp 时 280dp。
 - 退出按钮是无底色的主题色纯文字(16sp,中等字重),无按压蒙层,对应 COUI 的 `txt_exit` TextView。

@@ -157,6 +157,7 @@ available = min(392.dp, barWidth) / buttonCount
 
 - **最底部单元格承担面板留白。** 它 16dp 的下内边距就是对话框的底部留白，面板自身无需再加底部内边距。
 - **按钮有按压缩放。** `COUIAlertDialogBottomButtonSecondary` 保留 `scaleEnable=true`，按下时与其他 COUI 按钮一样缩小，并共享 `Button` 的拖动形变（橡皮筋跟手 + 拉伸）。
+- **被按下的按钮绘制在最上层。** 与 `COUIButtonBarLayout.getChildDrawingOrder` 一致，最近一次按下的单元格会绘制在相邻按钮之上，直到按下另一个按钮，因此拖动按钮时的橡皮筋跟手、拉伸形变及其回弹不会被旁边的按钮盖住。
 - **材质跟随对话框模糊。** `COUIButtonBarLayout.setBlurBackgroundWindow(blur)` 在窗口模糊时把按钮设为 `FOLLOW_SYSTEM`，否则为 `FORCE_DISABLE`。因此在 `materialStroke = true` 的 `OverlayDialog` / `WindowDialog` 中按钮栏会变为材质按钮：`drawableMaterialEffect` 的半透明白色填充、`CONTENT_CAPSULE_5` 描边光 + 内阴影（描边权重 2）、`TYPE_OPAQUE_MEDIUM_2` 跟手聚光，且没有按压着色。传入 `material = false` 可关闭。
 - **推荐按钮保持不透明。** COUI 对按钮栏按钮保留 `drawableMaterialEffect = true`，因此材质对话框中推荐按钮仍是不透明主题色填充（从不采样背景），并使用 `CONTENT_CAPSULE_4` 描边光与 `TYPE_OPAQUE_MEDIUM_1` 跟手聚光。未开启 `material` 时则是带按压着色的普通主色胶囊。
 

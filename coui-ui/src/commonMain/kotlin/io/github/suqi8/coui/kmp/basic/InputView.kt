@@ -5,6 +5,7 @@ package io.github.suqi8.coui.kmp.basic
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -46,6 +48,8 @@ import io.github.suqi8.coui.kmp.squircle.squircleBackground
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
+import kotlin.math.PI
+import kotlin.math.cos
 
 /**
  * An [InputView] component with COUI style — the ColorOS Settings "card input".
@@ -128,8 +132,14 @@ fun InputView(
     interactionSource: MutableInteractionSource? = null,
 ) {
     val currentOnValueChange by rememberUpdatedState(onValueChange)
+    // Counts the insertions cut off at the limit: COUICardMultiInputView.afterTextChanged runs for
+    // each of them and flashes the multi-line counter again.
+    var overflowAttempts by remember { mutableIntStateOf(0) }
     val handleValueChange = remember(maxCount) {
-        { new: String -> currentOnValueChange(if (maxCount > 0) new.take(maxCount) else new) }
+        { new: String ->
+            if (maxCount > 0 && new.length > maxCount) overflowAttempts++
+            currentOnValueChange(if (maxCount > 0) new.take(maxCount) else new)
+        }
     }
 
     val isError = errorMessage.isNotEmpty()
@@ -205,6 +215,7 @@ fun InputView(
                     countVisible = countVisible,
                     length = value.length.coerceAtMost(maxCount.coerceAtLeast(0)),
                     maxCount = maxCount,
+                    overflowAttempts = overflowAttempts,
                     colors = colors,
                     field = field,
                 )
@@ -243,6 +254,7 @@ private fun MultiInputArea(
     countVisible: Boolean,
     length: Int,
     maxCount: Int,
+    overflowAttempts: Int,
     colors: InputViewColors,
     field: @Composable (Modifier) -> Unit,
 ) {
@@ -283,6 +295,7 @@ private fun MultiInputArea(
                 length = length,
                 maxCount = maxCount,
                 atLimit = length >= maxCount,
+                overflowAttempts = overflowAttempts,
                 colors = colors,
             )
         }
@@ -291,19 +304,28 @@ private fun MultiInputArea(
 
 /**
  * The bottom-end "length/max" counter of the multi-line card form: 12sp couiColorLabelTertiary
- * (coui_multi_input_card_view.xml input_count, couiTextBodyXS). When the limit is reached the
- * color animates to the error color over 250ms and back 1s later
- * (COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME / ERROR_COUNT_COLOR_DELAY_TIME).
+ * (coui_multi_input_card_view.xml input_count, couiTextBodyXS). When an edit reaches the limit, or
+ * an insertion is cut off at it ([overflowAttempts]), the color animates to the error color over
+ * 250ms and back 1s after the last such edit; dropping below the limit brings it back at once
+ * (COUICardMultiInputView ERROR_COUNT_COLOR_ANIMATOR_TIME / ERROR_COUNT_COLOR_DELAY_TIME, an
+ * ArgbEvaluator ValueAnimator on its default AccelerateDecelerateInterpolator). Only edits flash
+ * it: a field composed at the limit starts in the normal color.
  */
 @Composable
 private fun MultiInputViewCount(
     length: Int,
     maxCount: Int,
     atLimit: Boolean,
+    overflowAttempts: Int,
     colors: InputViewColors,
 ) {
     var errorHighlighted by remember { mutableStateOf(false) }
-    LaunchedEffect(length, atLimit) {
+    val firstRun = remember { booleanArrayOf(true) }
+    LaunchedEffect(length, atLimit, overflowAttempts) {
+        if (firstRun[0]) {
+            firstRun[0] = false
+            return@LaunchedEffect
+        }
         if (atLimit) {
             errorHighlighted = true
             delay(CountErrorColorDelay)
@@ -312,7 +334,7 @@ private fun MultiInputViewCount(
     }
     val countColor by animateColorAsState(
         targetValue = if (errorHighlighted) colors.errorColor else colors.countColor,
-        animationSpec = tween(durationMillis = CountColorAnimDuration),
+        animationSpec = tween(durationMillis = CountColorAnimDuration, easing = CountColorEasing),
     )
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -484,3 +506,6 @@ private val CountColorAnimDuration = 250
 
 /** COUICardMultiInputView ERROR_COUNT_COLOR_DELAY_TIME. */
 private val CountErrorColorDelay = 1000L
+
+/** The default ValueAnimator AccelerateDecelerateInterpolator of the counter color animator. */
+private val CountColorEasing = Easing { (cos((it + 1f) * PI.toFloat()) / 2f) + 0.5f }

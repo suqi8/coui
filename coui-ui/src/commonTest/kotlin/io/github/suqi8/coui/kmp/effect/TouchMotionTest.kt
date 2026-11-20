@@ -86,6 +86,23 @@ class TouchMotionTest {
         assertEquals(1f, TouchMotion.handUpBounce(-5000f, 0.65f))
     }
 
+    @Test
+    fun pressScaleSpringsSettleAtTheOfficialMinimumVisibleChanges() {
+        // TouchMotionMinVisibleChange.clampPressBaseline(0.001) pressing, PRESS_HAND_UP_DEFAULT
+        // (1e-4) releasing; a spring without a threshold would stop 0.01 short of its target.
+        assertEquals(0.001f, pressScaleSpring(132f, 44f, pressed = true).visibilityThreshold)
+        assertEquals(1.0e-4f, pressScaleSpring(132f, 44f, pressed = false).visibilityThreshold)
+        assertEquals(0.001f, pressScaleSpring(40f, 40f, pressed = true).visibilityThreshold)
+        assertEquals(1.0e-4f, pressScaleSpring(40f, 40f, pressed = false).visibilityThreshold)
+        // Same jelly / candy springs as the fraction variant.
+        listOf(132f to 44f, 40f to 40f, 52f to 28f).forEach { (w, h) ->
+            listOf(true, false).forEach { pressed ->
+                assertEquals(pressSpring(w, h, pressed).stiffness, pressScaleSpring(w, h, pressed).stiffness)
+                assertEquals(pressSpring(w, h, pressed).dampingRatio, pressScaleSpring(w, h, pressed).dampingRatio)
+            }
+        }
+    }
+
     private fun assertClose(expected: Float, actual: Float, tolerance: Float = 0.001f) {
         assertTrue(abs(expected - actual) <= tolerance, "expected $expected but was $actual")
     }

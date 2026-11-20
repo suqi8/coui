@@ -106,5 +106,6 @@ LockScreenPasswordInput(
 
 - 错误文字在 217ms 内淡入、283ms 内淡出（`COUIEaseInterpolator`），输入框进入错误态。
 - 桌面模式按压：按钮回弹到 COUI 按压缩放；边缘发光，径向光延伸进输入框，均为 response 0.3 的弹簧（外光松开时为 0.6）。仅在按钮激活时有按压效果。
+- 眼睛按钮保持 COUI 眼睛图标的 34dp 尺寸，并向输入框尾部内边距内伸 12dp（`button_layout` marginEnd -12dp）；斜线动画与 `TextField` 的密码切换一致。
 - `minCount` / `maxCount` 组合无效时回退为 6 / 16。
 - 下一步按钮位于行尾：从右到左布局中在左侧。

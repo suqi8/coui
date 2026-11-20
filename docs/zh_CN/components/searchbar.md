@@ -17,8 +17,10 @@ import io.github.suqi8.coui.kmp.basic.SearchBarType
 
 在 ColorOS 17 上，搜索胶囊与取消按钮都是带顶栏材质的玻璃胶囊（背景滤色、阴影、边缘光、触摸聚光与按压/拖拽动效）；
 平台不支持所需混合模式时回退为不透明的栏颜色（浅色 `#FAFAFA`，深色 `#1E1E1E`）。进入与退出编辑态使用弹簧动画
-（response 0.5，bounce 0.25）：胶囊收窄的同时，取消按钮从半尺寸放大淡入，两者运动中像融球一样粘连。按压或拖拽胶囊会让它缩放与形变；
-清除按钮同样会带动胶囊并点亮触摸聚光；从胶囊内其他可点击元素（自定义图标按钮）开始的手势不会带动胶囊，也不会点亮聚光。
+（response 0.5，bounce 0.25）：胶囊收窄的同时，取消按钮从半尺寸放大淡入，两者运动中像融球一样粘连；退出时胶囊会先略微超出原宽度几个像素再回弹到位。
+这些弹簧结束之前，取消按钮不做按压缩放与拖拽形变。展开时的 `content`（搜索结果）以 response 0.35 的弹簧淡入、以 response 0.1 的弹簧迅速淡出，
+与 ColorOS 17 设置搜索的结果面板一致。按压或拖拽胶囊会让它缩放与形变；清除按钮同样会带动胶囊并点亮触摸聚光（自身还有 18dp 的圆形按压高亮）；
+从胶囊内其他可点击元素（自定义图标按钮）开始的手势不会带动胶囊，也不会点亮聚光。
 
 ## 基本用法
 
@@ -62,7 +64,7 @@ SearchBar(
 | outerPrimaryButton | @Composable (() -> Unit)?         | 胶囊后 12dp 处的 40dp 按钮 | null                | 否    |
 | outerSecondaryButton | @Composable (() -> Unit)?       | 第二个外部按钮；`Instant` 形态只在仅设置了一个外部按钮时显示 | null                | 否    |
 | outsideEndAction  | @Composable (() -> Unit)?          | 展开时显示的功能按钮，通常为 `CancelButton`；为 `null` 时隐藏 | null                | 否    |
-| content           | @Composable ColumnScope.() -> Unit | 展开时显示的内容      | -                   | 是    |
+| content           | @Composable ColumnScope.() -> Unit | 展开时显示的内容；淡入（response 0.35）、淡出（response 0.1） | -                   | 是    |
 
 ### InputField 属性
 
@@ -142,7 +144,7 @@ SearchBarDefaults 对象提供了 SearchBar 和 InputField 组件的默认值。
 
 ### CancelButton 属性
 
-`CancelButton` 是 COUI 17 的功能按钮：40dp 玻璃胶囊，14sp 中粗文字。放在 `outsideEndAction` 中时，展开与收起都跟随编辑态弹簧：在半尺寸与原尺寸之间缩放，玻璃胶囊从最多 30px 的模糊中浮现（收起时则溶入模糊），除进度最初的 1/5 外保持不透明，文字随进度淡入淡出。在 `NonInstant` 搜索栏中它位于胶囊内部，是一个纯文字按钮（12dp × 4dp 内边距，无胶囊与材质）。
+`CancelButton` 是 COUI 17 的功能按钮：40dp 玻璃胶囊，14sp 中粗文字，文字只随系统字体缩放放大到 1.15 档（`COUIChangeTextUtil` G2）。放在 `outsideEndAction` 中时，展开与收起都跟随编辑态弹簧：在半尺寸与原尺寸之间缩放，玻璃胶囊从最多 30px 的模糊中浮现（收起时则溶入模糊），除进度最初的 1/5 外保持不透明，文字随进度淡入淡出。在 `NonInstant` 搜索栏中它位于胶囊内部，是一个纯文字按钮（12dp × 4dp 内边距，无胶囊与材质）。
 
 | 属性名   | 类型            | 说明                         | 默认值                              | 是否必须 |
 | -------- | --------------- | ---------------------------- | ----------------------------------- | -------- |

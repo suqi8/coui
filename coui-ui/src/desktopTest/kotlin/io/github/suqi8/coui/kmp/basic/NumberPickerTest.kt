@@ -18,7 +18,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -119,6 +121,41 @@ class NumberPickerTest {
         waitForIdle()
         assertEquals(TimeValue(12, 30), value.time)
         assertEquals(DateValue(2026, 10, 23), value.date)
+    }
+
+    @Test
+    fun outerWheelsTakeTheSpaceAtTheSides() = runComposeUiTest {
+        var value by mutableStateOf(DateValue(2026, 6, 15))
+        setContent {
+            COUITheme {
+                DatePicker(
+                    value = value,
+                    onValueChange = { value = it },
+                    modifier = Modifier.width(400.dp).testTag("date"),
+                    fieldOrder = DateFieldOrder.YearMonthDay,
+                )
+            }
+        }
+        // The 76 + 96 + 62dp columns sit centered, but the 83dp left of them belong to the year
+        // wheel too (COUIDatePicker numberPickerPaddingLeft): a slow two-row drag there moves it.
+        onNodeWithTag("date").performTouchInput {
+            val row = 45.dp.toPx()
+            down(Offset(10.dp.toPx(), centerY))
+            repeat(40) { moveBy(Offset(0f, -row * 2f / 40f), delayMillis = 50) }
+            up()
+        }
+        waitForIdle()
+        assertEquals(DateValue(2028, 6, 15), value)
+    }
+
+    @Test
+    fun calendarTextsStopGrowingAtG3() {
+        val style = TextStyle(fontSize = 16.sp, lineHeight = 20.sp)
+        assertEquals(style, style.calendarFontScaleCapped(1f))
+        // COUIChangeTextUtil.getG3FontSize: any font scale above 1 ends at 1.15x the unscaled size.
+        val capped = style.calendarFontScaleCapped(2f)
+        assertEquals(16f * 1.15f, capped.fontSize.value * 2f, 1e-3f)
+        assertEquals(20f * 1.15f, capped.lineHeight.value * 2f, 1e-3f)
     }
 
     @Test

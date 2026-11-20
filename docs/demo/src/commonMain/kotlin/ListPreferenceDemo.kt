@@ -24,7 +24,7 @@ import io.github.suqi8.coui.kmp.preference.ListPreferenceEntry
 
 @Composable
 fun ListPreferenceDemo() {
-    // The selection panel is an OverlayBottomSheet, which needs a hosting Scaffold.
+    // The selection dialog is an OverlayDialog, which needs a hosting Scaffold.
     Scaffold {
         ListPreferenceDemoContent()
     }

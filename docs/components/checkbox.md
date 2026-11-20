@@ -100,9 +100,9 @@ Default colors follow COUI 17 (`coui_btn_check_*.xml`): the unchecked ring is `l
 
 ### Press Feedback
 
-Like `COUICheckBox`, the box never shrinks on press. An interactive checkbox (`onClick != null`) shows a 40dp circular highlight in `press` (#1F000000 / #33FFFFFF) behind the 24dp box, following the platform ripple timing. Pass `onClick = null` when a surrounding row handles the click (as `CheckboxPreference` does) so only the row shows its press state. Like `COUICheckBox`, the standalone checkbox plays no haptic feedback.
+Like `COUICheckBox`, the box never shrinks on press. An interactive checkbox (`onClick != null`) shows a 40dp circular highlight in `press` (#1F000000 / #33FFFFFF) behind the 24dp box, following the platform ripple timing; the same circle takes the `hover` and keyboard-focus (`focus`) layers of COUI's `COUIMaskRippleDrawable` on response 0.3 springs. Pass `onClick = null` when a surrounding row handles the click (as `CheckboxPreference` does) so only the row shows its press state. Like `COUICheckBox`, the standalone checkbox plays no haptic feedback.
 
-State changes replay the COUI animations only while enabled; a disabled checkbox jumps to its new state, except between indeterminate and checked, which COUI also animates when disabled. At rest the indeterminate box follows COUI's static drawable: it sits 0.666dp lower than the other states, with a 1.6dp dash (1.5dp when disabled).
+State changes replay the COUI AVDs: the fill fades, the checkmark draws or erases itself, the indeterminate dash grows from or retracts to its left end (a growing dash is the overlap of an eased clip and a linear path morph, so it grows almost linearly), and the box, the checkmark and the dash each pop 1 -> 1.08 -> 1 on their own easings (the checkmark stays unscaled between indeterminate and checked). They replay only while enabled; a disabled checkbox jumps to its new state, except between indeterminate and checked, which COUI also animates when disabled. At rest the indeterminate box follows COUI's static drawable: it sits 0.666dp lower than the other states, with a 1.6dp dash (1.5dp when disabled).
 
 ## Advanced Usage
 

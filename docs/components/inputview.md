@@ -133,7 +133,7 @@ InputView(
 ## Behavior
 
 - The inner field is fully undecorated (`TextFieldMode.None`, COUIEditText MODE_BACKGROUND_NO_LINE) — no underline and no border, exactly like the card inputs in ColorOS Settings.
-- When `maxCount > 0` the input is hard-limited to that many characters; the counter (if shown) reads `length/max`. The single-line counter switches to `couiColorError` at the limit (COUIInputView); the multi-line counter animates to the error color (250ms) and back after 1s (COUICardMultiInputView).
+- When `maxCount > 0` the input is hard-limited to that many characters; the counter (if shown) reads `length/max`. The single-line counter switches to `couiColorError` at the limit (COUIInputView); the multi-line counter animates to the error color (250ms) and back 1s after the last edit that hit the limit, so every character typed past the limit flashes it again (COUICardMultiInputView).
 - Setting a non-empty `errorMessage` shows the caption below the card (fade in 217ms / out 283ms, COUI ease 0.33, 0, 0.67, 1) and plays the COUI error shake on the field when it is focused. The last non-empty message keeps showing during the fade-out.
 - On ColorOS 17 both card inputs draw their card with COUIInputListSelectedItemLayout, which uses the 24dp card list radius (coui_round_corner_xl_radius_normal_16_1) on the smooth-corner path.
 - Field paddings mirror COUICardSingleInputView: 15dp top/bottom without a title; 0dp top / 12dp bottom when a title is shown. The multi-line card pads the field 13dp on top and, with the counter, ends the text right above the counter (otherwise 13dp + 12dp) inside its fixed 152dp area.

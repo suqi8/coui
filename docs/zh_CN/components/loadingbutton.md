@@ -84,5 +84,6 @@ LoadingButton(
 - `isLoading` 为 `true` 时标签隐藏但仍参与测量，按钮宽度不会跳变；点击被吞掉，COUI 按压反馈（缩放 + 着色）仍会播放。
 - 三个圆点按线性曲线以 20% -> 50% -> 100% -> 50% -> 20% 的透明度脉动；相邻圆点错峰 333ms，整个 1332ms 波浪循环播放，与 COUILoadingButton 的动画器时序一致。
 - 设置 `loadingText` 后，加载态显示该文案及其后三个逐点动画的 "." 字形，替代纯圆点指示（COUIButton `isShowLoadingText`）。当文案加三个点宽于按钮去掉内边距后的宽度时，改画纯圆点（`COUILoadingButton.onDraw`）。
-- 圆点使用按钮内容色绘制，与 COUILoadingButton 使用标签画笔一致。
+- 圆点使用按钮内容色绘制，与 COUILoadingButton 使用标签画笔一致。闪烁动画直接设定圆点的透明度（`paint.setAlpha`），而不是与颜色自身的透明度相乘。
+- 与所有 `COUIButton` 一样，标签与加载文字在字体缩放超过 1.35 后不再变大（`COUIChangeTextUtil.adaptFontSize(this, G4)`）。
 - 几何、颜色与 COUI 17 按压反馈继承自 `Button`：随高度的胶囊圆角、132dp 最小宽度、单行标签。

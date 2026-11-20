@@ -1,6 +1,6 @@
 # DatePicker
 
-`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。日期限定在 `minDate` .. `maxDate` 之内：与 COUIDatePicker.updateSpinners 一致，选中值处于首 / 末年（或月）时，月（或日）滚轮只提供可达的值，且除非仍覆盖全年（或整月）否则不再循环。默认文案随语言变化（英文 "2026 / Jan / 01"，中文 "2026年 / 1月 / 1日"），选择器最大宽度 640dp。选中行上下各有一条 `divider` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp。与 COUIDatePicker 一致，按住中心上方或下方的行时，年和日每 100ms、月每 200ms 自动步进。各列按当前语言的日期字段顺序排列（如美式英语为月/日/年、中文为年/月/日、德语为日/月/年），对应 COUIDatePicker.reorderSpinners。滚轮本身的行为见 [NumberPicker](./numberpicker)。
+`DatePicker` 是 COUI 中的基础交互组件，通过三列垂直滚轮（年 / 月 / 日）选择日期，对应 ColorOS 的 COUIDatePicker。日列范围会随所选年月自动联动（含闰年），切换到天数更少的月份时日值会自动收敛。日期限定在 `minDate` .. `maxDate` 之内：与 COUIDatePicker.updateSpinners 一致，选中值处于首 / 末年（或月）时，月（或日）滚轮只提供可达的值，且除非仍覆盖全年（或整月）否则不再循环。默认文案随语言变化（英文 "2026 / Jan / 01"，中文 "2026年 / 1月 / 1日"），选择器最大宽度 640dp。选中行上下各有一条 `divider` 颜色的细线，位于中心 ± 24dp，左右各内缩 16dp。与 COUIDatePicker 一致，按住中心上方或下方的行时，年和日每 100ms、月每 200ms 自动步进。各列按当前语言的日期字段顺序排列（如美式英语为月/日/年、中文为年/月/日、德语为日/月/年），对应 COUIDatePicker.reorderSpinners。各列作为整体居中，但首末两列的触摸区域会延伸到两侧留白，在选择器任意位置拖动都能滚动它们（COUIDatePicker.onMeasure）。滚轮本身的行为见 [NumberPicker](./numberpicker)。
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 

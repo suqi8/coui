@@ -39,7 +39,9 @@ InstallLoadProgress(
 | `Paused`  | Drawn exactly like `Loading`                                                         |
 | `Failed`  | Accent capsule with a white label                                                    |
 
-Progress changes follow a critically damped spring (COUI `COUISpringForce` bounce 0, response 1.0). Pressing dims the fills (HSL lightness × 0.8), insets the capsule by 5% of its size on every side and shrinks the label to 92%, over 200ms on press and 340ms on release with the move ease curve.
+Progress changes follow a critically damped spring (COUI `COUISpringForce` bounce 0, response 1.0). Pressing dims the fills (HSL lightness × 0.8), insets the capsule by 5% of its size on every side and shrinks the label to 92%, over 200ms on press and 340ms on release with the move ease curve. The inset is at least 0.5% from the moment the finger lands (`DEFAULT_MIN_PRESS_FEEDBACK`), so the press shows at once.
+
+With `hapticFeedbackEnabled = true` (COUI `loadingButtonNeedVibrate`, off by default) the button plays the COUI tap haptic when pressed and again when released.
 
 ## Styles
 
@@ -68,6 +70,7 @@ The circle style draws no label and no progress fill: a 30dp rounded square (7dp
 | state             | InstallLoadState           | Current state                                            | InstallLoadState.Idle                                   | No       |
 | progress          | Float                      | Progress between 0 and 1, shown while loading or paused  | 0f                                                      | No       |
 | enabled           | Boolean                    | Whether the button is enabled                            | true                                                    | No       |
+| hapticFeedbackEnabled | Boolean                | Whether press and release play the COUI tap haptic       | false                                                   | No       |
 | style             | InstallLoadStyle           | Size style                                               | InstallLoadStyle.Small                                  | No       |
 | colors            | InstallLoadProgressColors  | Color configuration                                      | InstallLoadProgressDefaults.installLoadProgressColors() | No       |
 | textStyle         | TextStyle                  | Label text style                                         | COUITheme.textStyles.buttonM                           | No       |
@@ -111,4 +114,4 @@ The circle style draws no label and no progress fill: a 30dp rounded square (7dp
 ## Notes
 
 - A disabled button only swaps its fills to `disabledColor`; the label keeps its colors, as in COUI.
-- The circle style (`smallCircleButton`, 33dp with load / pause / reload icons) is not ported.
+- The gift state (`INSTALL_HAVE_GIFT`) is not ported: COUI 17 reads `couiInstallGiftBg` but never draws it.

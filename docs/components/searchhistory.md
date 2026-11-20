@@ -34,6 +34,8 @@ The panel draws nothing while `items` is empty.
 
 With `maxLinesFolded`, records past that many lines are folded: a round expand button takes the end of the last folded line (replacing its last record if it does not fit). Expanding shows up to `maxLinesExpanded` lines, and a fold button closes the last line. `expandable = false` keeps the panel at `maxLinesFolded` lines without a button.
 
+The records are COUI suggestion chips (`SuggestionChip`): pressing one scales it and tints it with the press colour, and even a quick tap keeps the tint until it is clearly visible; their labels follow the system font scale up to 1.35 (`COUIChangeTextUtil` G4). The expand and fold buttons dip to 0.9 over 200ms and come back over 340ms; a quick tap first lets the dip run to 80% of its 200ms (`COUIPressFeedbackImageView`).
+
 ## Properties
 
 ### SearchHistory

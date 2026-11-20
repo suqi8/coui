@@ -210,6 +210,7 @@ private fun InteractiveInstallLoadProgress(
         modifier = modifier,
         state = state,
         progress = progress,
+        hapticFeedbackEnabled = true,
         style = style,
     )
 }

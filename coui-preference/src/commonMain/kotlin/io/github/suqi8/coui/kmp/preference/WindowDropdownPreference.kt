@@ -4,19 +4,13 @@ package io.github.suqi8.coui.kmp.preference
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
@@ -27,11 +21,14 @@ import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
-import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
 import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
+import io.github.suqi8.coui.kmp.popup.DropdownValueText
+import io.github.suqi8.coui.kmp.popup.PopupAnchorHoverLock
 import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
-import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.popup.dropdownArrowColor
+import io.github.suqi8.coui.kmp.popup.dropdownValueColor
+import io.github.suqi8.coui.kmp.popup.rememberClickSelectMenuOpener
 import io.github.suqi8.coui.kmp.window.WindowListPopup
 
 /**
@@ -132,7 +129,6 @@ fun WindowDropdownPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     // COUI wires the dropdown preference row through PreciseClickHelper, so the menu opens at
     // the finger rather than centred on the row.
     val preciseClickState = rememberPreciseClickState()
@@ -145,32 +141,26 @@ fun WindowDropdownPreference(
             }
         }
     }
+    // COUIClickSelectMenu: a showing soft keyboard is hidden before the menu opens.
+    val openMenu = rememberClickSelectMenuOpener { setExpanded(true) }
 
     val itemsNotEmpty = entry.items.isNotEmpty()
     val actualEnabled = enabled && itemsNotEmpty
 
-    val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelTertiary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
-    val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelSecondary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
+    val actionColor = dropdownArrowColor(actualEnabled)
+    val valueColor = dropdownValueColor(actualEnabled)
 
-    val handleClick = remember(actualEnabled) {
+    val handleClick = remember(actualEnabled, openMenu) {
         {
             if (actualEnabled) {
-                setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                }
+                if (isDropdownExpanded.value) setExpanded(false) else openMenu()
             }
         }
     }
 
+    // COUIPopupListWindow.setAnchorHoveredState: the row's hover layer stays locked while the menu
+    // is showing and is released as soon as it starts to leave.
+    PopupAnchorHoverLock(locked = isDropdownExpanded.value, interactionSource = interactionSource)
     BasicComponent(
         modifier = modifier.preciseClickAnchor(preciseClickState),
         interactionSource = interactionSource,
@@ -185,19 +175,7 @@ fun WindowDropdownPreference(
             if (showValue && itemsNotEmpty) {
                 val text = entry.items.firstOrNull { it.selected }?.text
                 if (!text.isNullOrEmpty()) {
-                    Text(
-                        text = text,
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .align(Alignment.CenterVertically)
-                            .weight(1f, fill = false),
-                        fontSize = COUITheme.textStyles.bodyS.fontSize,
-                        color = valueColor,
-                        textAlign = TextAlign.End,
-                        // TextAppearance.COUI.List.Assignment.End: maxLines 2.
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                    DropdownValueText(text = text, color = valueColor)
                 }
             }
             DropdownArrowEndAction(
@@ -208,7 +186,9 @@ fun WindowDropdownPreference(
                     entry = entry,
                     show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
-                    onDismissFinished = { isHoldDown.value = false },
+                    // PreciseClickHelper falls back to the anchor without a fresh touch point (TalkBack):
+                    // forget this one once the menu has gone.
+                    onDismissFinished = { preciseClickState.clear() },
                     maxHeight = maxHeight,
                     dropdownColors = dropdownColors,
                     collapseOnSelection = collapseOnSelection,
@@ -219,7 +199,6 @@ fun WindowDropdownPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
 }
@@ -245,7 +224,6 @@ fun WindowDropdownPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     // COUI wires the dropdown preference row through PreciseClickHelper, so the menu opens at
     // the finger rather than centred on the row.
     val preciseClickState = rememberPreciseClickState()
@@ -258,33 +236,27 @@ fun WindowDropdownPreference(
             }
         }
     }
+    // COUIClickSelectMenu: a showing soft keyboard is hidden before the menu opens.
+    val openMenu = rememberClickSelectMenuOpener { setExpanded(true) }
 
     val nonEmptyEntries = entries.filter { it.items.isNotEmpty() }
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
 
-    val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelTertiary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
-    val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelSecondary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
+    val actionColor = dropdownArrowColor(actualEnabled)
+    val valueColor = dropdownValueColor(actualEnabled)
 
-    val handleClick = remember(actualEnabled) {
+    val handleClick = remember(actualEnabled, openMenu) {
         {
             if (actualEnabled) {
-                setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                }
+                if (isDropdownExpanded.value) setExpanded(false) else openMenu()
             }
         }
     }
 
+    // COUIPopupListWindow.setAnchorHoveredState: the row's hover layer stays locked while the menu
+    // is showing and is released as soon as it starts to leave.
+    PopupAnchorHoverLock(locked = isDropdownExpanded.value, interactionSource = interactionSource)
     BasicComponent(
         modifier = modifier.preciseClickAnchor(preciseClickState),
         interactionSource = interactionSource,
@@ -305,17 +277,7 @@ fun WindowDropdownPreference(
                 .joinToString("\n")
                 .ifBlank { null }
             if (showValue && hasEntries && !selectedValueText.isNullOrBlank()) {
-                Text(
-                    text = selectedValueText,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .align(Alignment.CenterVertically)
-                        .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.bodyS.fontSize,
-                    color = valueColor,
-                    textAlign = TextAlign.End,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                DropdownValueText(text = selectedValueText, color = valueColor)
             }
             DropdownArrowEndAction(
                 actionColor = actionColor,
@@ -325,7 +287,9 @@ fun WindowDropdownPreference(
                     entries = nonEmptyEntries,
                     show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
-                    onDismissFinished = { isHoldDown.value = false },
+                    // PreciseClickHelper falls back to the anchor without a fresh touch point (TalkBack):
+                    // forget this one once the menu has gone.
+                    onDismissFinished = { preciseClickState.clear() },
                     maxHeight = maxHeight,
                     dropdownColors = dropdownColors,
                     collapseOnSelection = collapseOnSelection,
@@ -336,7 +300,6 @@ fun WindowDropdownPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
 }

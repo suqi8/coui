@@ -266,11 +266,18 @@ internal object TouchMotion {
  */
 @Stable
 internal class TouchMotionState {
-    val press = Animatable(1f, visibilityThreshold = 0.001f)
+    val press = Animatable(1f, visibilityThreshold = PressMinimumVisibleChange)
     val scaleX = Animatable(1f, visibilityThreshold = TouchMotion.DeformMinimumVisibleChange)
     val scaleY = Animatable(1f, visibilityThreshold = TouchMotion.DeformMinimumVisibleChange)
     val translationX = Animatable(0f, visibilityThreshold = TouchMotion.RubberMinimumVisibleChange)
     val translationY = Animatable(0f, visibilityThreshold = TouchMotion.RubberMinimumVisibleChange)
+
+    /**
+     * The velocity of the running [press] spring, sampled every frame. A cancelled `Animatable`
+     * forgets its velocity, so the release that interrupts a press-in reads it from here to keep the
+     * momentum, as `COUISpringAnimation.animateToFinalPosition` does on a running spring.
+     */
+    var pressVelocity = 0f
 
     /**
      * Whether the drag deforms the element. Hosts that only apply the translation (the COUI 17
@@ -278,7 +285,12 @@ internal class TouchMotionState {
      */
     var deformEnabled = true
 
-    /** Whether a touch gesture holds the element (the press scale stays in even out of bounds). */
+    /**
+     * Whether a touch gesture holds the element, from the touch down to the last pointer's up or
+     * the gesture's cancellation. The press scale stays in even when the finger slides out of
+     * bounds, and hosts drive their touch-entered state from it (`COUIButton.onTouchEvent` enters
+     * its press mask on `ACTION_DOWN` and exits it on `ACTION_UP` / `ACTION_CANCEL`).
+     */
     var touching by mutableStateOf(false)
 
     /** The latest measured size in pixels and dp, written from the layer block. */
@@ -296,10 +308,31 @@ internal class TouchMotionState {
     private var deformStart = Offset.Zero
     private var lastPosition = Offset.Zero
 
+    // The velocities of the springs a touch down stopped (translationX, translationY, scaleX,
+    // scaleY), NaN for none. COUIDynamicAnimation.cancel() keeps mVelocity, so the next drag restarts
+    // each spring with the momentum it was caught with.
+    private val caughtVelocity = floatArrayOf(Float.NaN, Float.NaN, Float.NaN, Float.NaN)
+
     private fun Density.maxStretch() = TouchMotion.MaxStretchDistance.toPx()
     private fun Density.maxDeform() = TouchMotion.MaxDeformRubberDistance.toPx()
 
-    fun Density.down(position: Offset) {
+    /** Springs [axis] to [target] with the drag spring, resuming a caught velocity once. */
+    private fun CoroutineScope.dragTo(axis: Animatable<Float, *>, index: Int, target: Float, spec: SpringSpec<Float>) {
+        val caught = caughtVelocity[index]
+        caughtVelocity[index] = Float.NaN
+        launch {
+            if (caught.isNaN()) axis.animateTo(target, spec) else axis.animateTo(target, spec, initialVelocity = caught)
+        }
+    }
+
+    /**
+     * The touch down of the rubber and deformation units (`COUIITouchMotionUnit.handleTouchDown`).
+     * A gesture that lands on a still-springing element resumes from the drag that would produce
+     * its current displacement. With a [scope], the running springs are also stopped where they are
+     * (`cancel()`), so the finger catches the element mid-bounce; the next drag restarts them with
+     * the velocity they were caught with, or the release springs them home.
+     */
+    fun Density.down(position: Offset, scope: CoroutineScope? = null) {
         val maxStretch = maxStretch()
         val rubberMoving = translationX.isRunning || translationY.isRunning
         rubberStart = if (rubberMoving) {
@@ -321,6 +354,21 @@ internal class TouchMotionState {
             position
         }
         lastPosition = position
+        caughtVelocity.fill(Float.NaN)
+        if (scope != null) {
+            if (rubberMoving) {
+                caughtVelocity[0] = translationX.velocity
+                caughtVelocity[1] = translationY.velocity
+                scope.launch { translationX.stop() }
+                scope.launch { translationY.stop() }
+            }
+            if (deformMoving) {
+                caughtVelocity[2] = scaleX.velocity
+                caughtVelocity[3] = scaleY.velocity
+                scope.launch { scaleX.stop() }
+                scope.launch { scaleY.stop() }
+            }
+        }
     }
 
     /** `handlePointerSwitch`: keeps the accumulated drag when another pointer takes over. */
@@ -340,14 +388,14 @@ internal class TouchMotionState {
             val maxStretch = maxStretch()
             val tx = TouchMotion.rubberBand(rubber.x, TouchMotion.RubberCurveRatio, maxStretch)
             val ty = TouchMotion.rubberBand(rubber.y, TouchMotion.RubberCurveRatio, maxStretch)
-            scope.launch { translationX.animateTo(tx, spec) }
-            scope.launch { translationY.animateTo(ty, spec) }
+            scope.dragTo(translationX, 0, tx, spec)
+            scope.dragTo(translationY, 1, ty, spec)
         }
         if (deformEnabled && (abs(deform.x) >= TouchMotion.DeadZonePx || abs(deform.y) >= TouchMotion.DeadZonePx)) {
             val deformSpec = TouchMotion.spring(TouchMotion.DragSpringResponse, TouchMotion.DragSpringBounce, TouchMotion.DeformMinimumVisibleChange)
             val (sx, sy) = TouchMotion.deformScale(deform.x, deform.y, maxDeform(), TouchMotion.deformMaxScale(width, height))
-            scope.launch { scaleX.animateTo(sx, deformSpec) }
-            scope.launch { scaleY.animateTo(sy, deformSpec) }
+            scope.dragTo(scaleX, 2, sx, deformSpec)
+            scope.dragTo(scaleY, 3, sy, deformSpec)
         }
     }
 
@@ -357,6 +405,8 @@ internal class TouchMotionState {
      * ([velocityX] / [velocityY] in px/s).
      */
     fun Density.release(velocityX: Float, velocityY: Float, scope: CoroutineScope) {
+        // applyHandUpSpring sets every start velocity explicitly.
+        caughtVelocity.fill(Float.NaN)
         val vx = velocityX / 1000f * TouchMotion.VelocityScale
         val vy = velocityY / 1000f * TouchMotion.VelocityScale
         // resolveTotalDistancePx(stretch = true) for both units.
@@ -385,6 +435,10 @@ internal class TouchMotionState {
  * - **Press scale** (`COUIPressAnimatorUnit`): the element springs down to
  *   [COUIMaterialEffect.pressTargetScale] while touched (it stays down when the finger slides
  *   out, as the unit only reacts to up / cancel) or while [interactionSource] reports a press.
+ *   Every press starts its spring from rest (impact velocity 0) and the release takes over the
+ *   momentum of a press-in still under way, so a quick tap sinks a little further before the
+ *   jelly / candy release spring bounces it back. Both settle at the official minimum visible
+ *   changes (0.001, release 0.0001) rather than jumping the last 1%.
  * - **Rubber band** (`COUIRubberAnimatorUnit`): past a 5px dead zone the element follows the
  *   finger on `TouchMotionRubberBand` up to 28dp, on a response 0.15 / bounce 0.15 spring.
  * - **Deformation** (`COUIDeformAnimatorUnit`): the drag stretches the element along the drag
@@ -392,6 +446,9 @@ internal class TouchMotionState {
  * - **Release**: translation and deformation spring home on the area-resolved hand-up spring
  *   (response 0.42 → 0.45, bounce 0.65), seeded with the finger velocity; the press scale uses
  *   its own jelly / candy release spring.
+ * - **Re-touch**: a touch that lands while the element is still springing back stops the rubber
+ *   and deformation springs where they are (`COUIITouchMotionUnit.handleTouchDown` cancels every
+ *   unit) and resumes the drag from that displacement.
  *
  * A gesture another node consumes (a parent scroll stealing it) is handled like `ACTION_CANCEL`:
  * a release with zero velocity. Pointer events are only observed, never consumed. When
@@ -427,9 +484,17 @@ internal fun Modifier.couiTouchMotion(
 
     LaunchedEffect(pressed) {
         val target = if (pressed) COUIMaterialEffect.pressTargetScale(state.widthDp, state.heightDp) else 1f
-        if (state.press.value != target) {
-            state.press.animateTo(target, pressSpring(state.widthDp, state.heightDp, pressed))
+        // COUIPressAnimatorUnit.handleTouchDown cancels the running spring and restarts it with the
+        // impact velocity (PressPhysicsEngine.calculateImpactVelocity, 0 at the default impact
+        // factor); backAnimation re-targets the running spring, which keeps its momentum.
+        val start = if (pressed) 0f else state.pressVelocity
+        state.pressVelocity = start
+        if (state.press.value != target || start != 0f) {
+            state.press.animateTo(target, pressScaleSpring(state.widthDp, state.heightDp, pressed), start) {
+                state.pressVelocity = velocity
+            }
         }
+        state.pressVelocity = 0f
     }
     LaunchedEffect(enabled) {
         if (!enabled) {
@@ -458,7 +523,7 @@ internal fun Modifier.couiTouchMotion(
                 tracker.addPosition(down.uptimeMillis, down.position)
                 var activeId: PointerId = down.id
                 state.touching = true
-                with(state) { down(down.position) }
+                with(state) { down(down.position, scope) }
                 var cancelled = false
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Final)

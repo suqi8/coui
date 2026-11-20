@@ -28,7 +28,7 @@ import io.github.suqi8.coui.kmp.icon.basic.ArrowRight
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
- * An arrow with a title and a summary.
+ * An arrow with a title and a summary (COUI `COUIJumpPreference`).
  *
  * @param title The title of the [ArrowPreference].
  * @param titleColor The color of the title.
@@ -43,6 +43,12 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param holdDownState Used to determine whether it is in the pressed state.
  * @param enabled Whether the [ArrowPreference] is clickable.
+ * @param selected Whether the row is selected (`COUIPreference.setSelected`): the press layer stays on
+ *   and the card-group dividers next to the row are hidden.
+ * @param startBadge Whether a red dot sits on the top end corner of [startAction] (COUI `iconRedDotMode`).
+ * @param endBadgeCount The red dot before the end content (COUI `endRedDotMode` / `endRedDotNum`):
+ *   `null` hides it, `0` shows a plain dot and a positive value shows the number.
+ * @param endIcon An optional 16dp icon right before the end content (COUI `coui_assign_icon`).
  */
 @Composable
 @NonRestartableComposable
@@ -60,6 +66,10 @@ fun ArrowPreference(
     onClick: (() -> Unit)? = null,
     holdDownState: Boolean = false,
     enabled: Boolean = true,
+    selected: Boolean = false,
+    startBadge: Boolean = false,
+    endBadgeCount: Int? = null,
+    endIcon: (@Composable () -> Unit)? = null,
 ) {
     BasicComponent(
         modifier = modifier,
@@ -80,7 +90,7 @@ fun ArrowPreference(
             ) {
                 endActions()
             }
-            ArrowPreferenceEndAction(
+            JumpArrowEndAction(
                 enabled = enabled,
             )
         },
@@ -88,11 +98,19 @@ fun ArrowPreference(
         onClick = onClick,
         holdDownState = holdDownState,
         enabled = enabled,
+        selected = selected,
+        startBadge = startBadge,
+        endBadgeCount = endBadgeCount,
+        endIcon = endIcon,
     )
 }
 
+/**
+ * The COUI jump arrow (`coui_preference_widget_jump` with `coui_btn_next`): a 12 x 24dp chevron in
+ * [ArrowPreferenceDefaults.endActionColors], shared by every preference that uses the jump widget.
+ */
 @Composable
-private fun RowScope.ArrowPreferenceEndAction(
+internal fun RowScope.JumpArrowEndAction(
     enabled: Boolean,
 ) {
     val actionColors = ArrowPreferenceDefaults.endActionColors()
@@ -112,12 +130,13 @@ private fun RowScope.ArrowPreferenceEndAction(
 
 object ArrowPreferenceDefaults {
     /**
-     * The default color of the arrow (COUI coui_btn_next, couiColorLabelTertiary).
+     * The default color of the arrow: `coui_btn_next` draws `coui_btn_next_normal` in
+     * couiColorLabelTertiary and `coui_btn_next_disabled` in couiColorLabelQuaternary.
      */
     @Composable
     fun endActionColors(): EndActionColors {
         val color = COUITheme.colorScheme.labelTertiary
-        val disabledColor = COUITheme.colorScheme.disabledNeutral
+        val disabledColor = COUITheme.colorScheme.labelQuaternary
         return remember(color, disabledColor) {
             EndActionColors(
                 color = color,

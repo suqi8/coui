@@ -41,7 +41,7 @@ SideNavigationBar(
 | 模式    | 条件                                  | 抽屉宽度                        | 内容                                 |
 | ------- | ------------------------------------- | ------------------------------- | ------------------------------------ |
 | Docked  | 窗口权重 > 内容权重                   | `min(280dp, width × 0.382)`     | 在抽屉旁收窄，无遮罩                 |
-| Overlay | 其余情况（如宽度不足 600dp）          | 300dp                           | 被抽屉和 `coui_color_mask` 遮罩覆盖；点击遮罩收起抽屉 |
+| Overlay | 其余情况（如宽度不足 600dp）          | 300dp                           | 被抽屉和 `coui_color_mask` 遮罩覆盖；点击遮罩（抬起点与按下点的距离在触摸阈值内）收起抽屉 |
 
 两种模式下抽屉末端边缘都跟随一条 0.33dp 的 `couiColorDivider` 分割线。`state.mode` 暴露当前模式，内容可据此只在覆盖模式下选中后收起抽屉。
 
@@ -51,7 +51,7 @@ SideNavigationBar(
 
 ## 编辑模式
 
-`editMode = true`（`setIsInEditState`）时，停靠抽屉旁的内容以 300ms 淡入遮罩并不再接收触摸；覆盖模式下遮罩点击不再收起抽屉。`editModeMask = false`（`setHandlerEditModeMask`）时不绘制遮罩。
+`editMode = true`（`setIsInEditState`）时，停靠抽屉旁的内容以 300ms、系统默认先加速后减速曲线淡入遮罩并不再接收触摸；退出编辑模式或中途改变时，淡变从当前位置反向播放。与遮罩层一样，编辑遮罩随抽屉打开程度缩放。覆盖模式下编辑模式会让遮罩点击不再收起抽屉。`editModeMask = false`（`setHandlerEditModeMask`）时不绘制遮罩。
 
 ## 属性
 
@@ -91,6 +91,7 @@ SideNavigationBar(
 | DockedDrawerWidthFraction    | Float   | 停靠时占宽度的比例                           | 0.382                    |
 | DividerThickness             | Dp      | `coui_side_navigation_drawer_divider_width`  | 0.33.dp                  |
 | EDIT_MASK_DURATION_MILLIS    | Int     | 编辑遮罩淡入时长                             | 300                      |
+| EditMaskEasing               | Easing  | 编辑遮罩曲线：`AccelerateDecelerateInterpolator`，`cos((t + 1)π) / 2 + 0.5` | - |
 | SettleEasing                 | Easing  | `ViewDragHelper` 插值器 `(t - 1)^5 + 1`      | -                        |
 | maskColor                    | Color   | `coui_color_mask`（`colorScheme.mask`） | #33000000 / #99000000 |
 | drawerMode(width, height, parentChildHierarchy) | SideNavigationBarMode | 某尺寸下的模式 | -          |

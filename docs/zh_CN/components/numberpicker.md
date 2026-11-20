@@ -4,7 +4,8 @@
 
 - 每一行绘制两次，并在中心 48dp 选中带（中心 ± 24dp）处硬裁切：带内为 20dp 选中色文字，带外为 16dp 未选中色文字。跨越选中带边缘的行会被切成两半，没有渐变过渡。
 - 字号单位是 dp，不跟随系统字体缩放。
-- 惯性滑动使用 Android 样条曲线，速度为松手速度的 1.6 倍（先限制在 750..5000 px/s），停在整行上，再用 300ms 吸附对齐。Android 与 COUI 一样直接使用这些 px/s 原始值；其他平台把它们视为 3.5x 参考手机上的像素，再按实际密度缩放（`值 * density / 3.5`），使甩动距离与手机一致。
+- 惯性滑动使用 Android 样条曲线，速度为松手速度的 1.6 倍（先限制在 750..5000 px/s）。与 COUINumberPicker.fling 一致，滑动距离按整行计算，并从松手时显示的值（而不是手指位置）起算，时长为样条时长 x 1.5；不足一行的轻甩保留小数部分，随后的 300ms 吸附决定落在哪一行。不循环的滚轮会在首行或末行直接停住，而不是缓动靠过去。Android 与 COUI 一样直接使用这些 px/s 原始值；其他平台把它们视为 3.5x 参考手机上的像素，再按实际密度缩放（`值 * density / 3.5`），使甩动距离与手机一致。
+- 比滚轮还宽的文字从起始边绘制而不再居中；与 COUI 一致，按未选中字号判断一次，两遍绘制共用结果。
 - 滚动过程中每次值变化都会触发 `onValueChange`，而不只是在停止时。
 - 每次值变化都会触发一次振动，强度随滚动速度变化（静止 50%，5000 px/s 时 100%，即 COUI「crisp」RichTap 曲线），最短间隔 25ms。Android 11+ 且应用声明了 `VIBRATE` 权限时使用按强度缩放的 `VibrationEffect` 组合原语；否则使用固定的 OPLUS 308 振动（非 Android 平台为标准触感）。
 - Android 上每次值变化还会在系统「触摸提示音」开启时播放 COUI 的 `coui_numberpicker_click.ogg`；其他平台静音。
@@ -59,7 +60,7 @@ NumberPicker(
 
 ### 可选值
 
-`ignorable = true` 会在最后一个值之后加一行占位（绘制为两条短横），选中时回调 `NumberPickerDefaults.IgnoredValue`（COUI `setIgnorable`，`DatePicker` 的可忽略年份即用它）。
+`ignorable = true` 会在最后一个值之后加一行占位（绘制为两条短横，位置略低于行中心，COUI 为中心下方 33.75px），选中时回调 `NumberPickerDefaults.IgnoredValue`（COUI `setIgnorable`，`DatePicker` 的可忽略年份即用它）。
 
 ```kotlin
 var year by remember { mutableIntStateOf(NumberPickerDefaults.IgnoredValue) }

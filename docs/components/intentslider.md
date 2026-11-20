@@ -94,6 +94,7 @@ Over media, `conicLight = true` (`couiIntentSeekBarConicLight`) switches to the 
 - The progress takes `IntentSliderColors.conicLightColor` (#F87796), with a white gradient over its end (`IntentConicProgressRenderer`): a fifth of the track while `Playing`, a tenth while dragging, the whole progress near the start; it fades in and out on a response 0.5 spring.
 - While `Playing`, and while dragging during playback, two cones of light trail the progress end, spreading vertically as they go back (`ConicLightEffectRenderer`, AGSL `ConicLightShaderParams`, drawn with `BlendMode.Screen` and clipped to the bar). Entering playback springs the shape in with response 0.9 and the alpha with 0.3; dragging and fading out use 0.4.
 - The light needs runtime shaders (Android 13+ and every Skia target) and is skipped elsewhere; the progress style is drawn everywhere.
+- While a hold-to-speed-up gesture of the player is active, pass `holdToSpeedUp = true` (`setHoldToSpeedUpConeLightActive`): during `Playing` the cone light then takes its dragging shape, as during a drag, and returns to the playing shape when it is set back.
 
 ```kotlin
 IntentSlider(
@@ -101,6 +102,7 @@ IntentSlider(
     onValueChange = { position = it },
     followSystemTheme = false,
     conicLight = true,
+    holdToSpeedUp = isSpeedingUp,
     playbackState = IntentSliderPlaybackState.Playing,
 )
 ```
@@ -110,9 +112,10 @@ IntentSlider(
 `IntentSlider` follows COUI 17 `COUIIntentSeekBar`:
 
 - On touch down the track grows from its rest height to its pressed height (`IntentSliderSize`) on a response 0.5 / bounce 0 spring, and shrinks back on release. A release waits until the track has grown by 2dp (`getMinEnlargeHeight`), so a quick tap still shows the feedback.
-- Dragging moves the progress by the finger's travel from wherever it was (`couiSeekBarIsFollowThumb = false`); with `followThumb = true` the progress chases the finger instead (response 0.15).
+- Dragging moves the progress by the finger's travel from wherever it was (`couiSeekBarIsFollowThumb = false`); with `followThumb = true` the progress chases the finger instead. Either way the drawn progress trails the dragged value on the response 0.15 follow-hand spring (`FlexibleFollowHandHandler`).
 - A tap springs the progress to the tapped position (response 0.3); a fast release (at least 100px/s) keeps it gliding.
-- While dragging, the whole bar follows the finger horizontally on the touch-motion rubber band (`TouchMotionEffectRenderer`) and springs back on release.
+- Only drags vibrate: taps and flings are silent, as `startClickTransitionAnim` and `onPhysicsFlingUpdate` run no feedback.
+- While dragging, the whole bar follows the finger horizontally on the touch-motion rubber band (`TouchMotionEffectRenderer`) and springs back on release. `onDragHorizontalOffsetChange` receives that offset every frame (`OnDragHorizontalOffsetChangeListener`), to move labels along with the bar.
 - The thumb grows to its pressed radius with a bounce (0.3), then either settles on its rest radius (paused) or disappears (response 0.4) once the track starts shrinking.
 - Programmatic `value` updates are drawn at once (playback updates every frame); only the gestures animate.
 - `IntentSlider` has no touch spotlight and no glitter: `COUIIntentSeekBar.initAdvancedFeatures` overrides the base setup and leaves both out.
@@ -133,11 +136,13 @@ IntentSlider(
 | materialBackdrop      | Boolean                           | Whether the blur-blend background may replace the fill (only with followSystemTheme off and a provider)  | true                                   | No       |
 | conicLight            | Boolean                           | Whether to use the conic light progress style (only with followSystemTheme off)                          | false                                  | No       |
 | loadingDragReturn     | Boolean                           | Whether a drag while LoadingInitial shows the progress and springs it back to the start on release       | false                                  | No       |
+| holdToSpeedUp         | Boolean                           | Whether a hold-to-speed-up gesture is active; while Playing with conicLight the cone light takes its dragging shape | false                       | No       |
 | playbackState         | IntentSliderPlaybackState         | Playback state: Idle, LoadingInitial, Playing, Paused or LoadingBuffering                                | IntentSliderPlaybackState.Idle         | No       |
 | valueRange            | ClosedFloatingPointRange\<Float\> | Range of values                                                                                          | 0f..1f                                 | No       |
 | secondaryValue        | Float?                            | Secondary (buffered) value drawn under the progress; null hides it                                       | null                                   | No       |
 | onValueChangeFinished | (() -> Unit)?                     | Called at the end of a drag, a fling or a tap                                                            | null                                   | No       |
 | onLoadingDragReturnComplete | (() -> Unit)?               | Called when a loading drag return has brought the progress back to the start                            | null                                   | No       |
+| onDragHorizontalOffsetChange | ((Float) -> Unit)?       | Called with the touch-motion rubber-band offset (px) every frame it moves the bar                         | null                                   | No       |
 | size                  | IntentSliderSize                  | Track and thumb sizes                                                                                    | IntentSliderSize.Default               | No       |
 | horizontalPadding     | Dp                                | Inset of the track from both ends                                                                        | IntentSliderDefaults.HorizontalPadding | No       |
 | colors                | IntentSliderColors                | Colors of the bar                                                                                        | intentSliderColors() / fixedColors()   | No       |

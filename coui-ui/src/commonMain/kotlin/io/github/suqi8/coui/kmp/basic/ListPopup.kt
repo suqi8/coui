@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,7 +87,7 @@ import io.github.suqi8.coui.kmp.anim.SinOutEasing
 import io.github.suqi8.coui.kmp.anim.folmeSpring
 import io.github.suqi8.coui.kmp.effect.MaterialBlurBlendMode
 import io.github.suqi8.coui.kmp.effect.MaterialBlurSpec
-import io.github.suqi8.coui.kmp.effect.couiTouchMotion
+import io.github.suqi8.coui.kmp.effect.TouchMotionState
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.squircle.addSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
@@ -105,6 +106,7 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 private fun PopupPositionProvider.Align.resolve(layoutDirection: LayoutDirection): PopupPositionProvider.Align {
@@ -480,6 +482,27 @@ internal fun popupMaskGeometry(
         MaskGeometry(horizontalMargin, row.top, width - horizontalMargin, row.bottom, cornerRadius, POPUP_MASK_CORNER_WEIGHT)
     }
 }
+
+/**
+ * The colour of the shared mask at press [progress]: COUI's `StateEffectAnimator.setProgress`
+ * evaluates `ArgbEvaluator` from transparent black to the end colour ([end], `couiColorHover`),
+ * which mixes in linear light. Alpha grows linearly, each colour channel as
+ * `(progress · c^2.2)^(1/2.2)`, so the dark scheme's white mask (`#26FFFFFF`) rises from a dim grey
+ * while it fades in and out instead of staying white; the light scheme's black mask is unchanged.
+ */
+internal fun popupMaskColor(end: Color, progress: Float): Color {
+    val fraction = progress.coerceIn(0f, 1f)
+    fun channel(value: Float): Float = (fraction * value.pow(MASK_COLOR_GAMMA)).pow(1f / MASK_COLOR_GAMMA)
+    return Color(
+        red = channel(end.red),
+        green = channel(end.green),
+        blue = channel(end.blue),
+        alpha = fraction * end.alpha,
+    )
+}
+
+/** The gamma `android.animation.ArgbEvaluator` linearises colour channels with. */
+private const val MASK_COLOR_GAMMA = 2.2f
 
 /**
  * Owns the drag-to-select gesture and the shared press mask of one popup list, mirroring COUI 17
@@ -938,7 +961,9 @@ internal fun snapPopupListHeight(childHeights: List<Int>, verticalInsets: Int, m
  * The column owns the COUI 17 popup gesture: a single pointer handler resolves the row under the
  * finger, so dragging slides the shared press mask between rows and a release selects the row the
  * finger currently rests on. It also adds the 8dp list insets (COUI coui_popup_list_padding_vertical)
- * above the first and below the last child, and limits its viewport to whole rows.
+ * above the first and below the last child, and limits its viewport to whole rows. Like
+ * `COUITouchRecyclerView`, it only overscrolls when it has rows to scroll: dragging a list that fits
+ * moves the popup panel (its touch motion) and never the rows inside it.
  *
  * @param content The items
  */
@@ -959,6 +984,9 @@ internal fun ListPopupColumn(
     content: @Composable () -> Unit,
 ) {
     val scrollState = rememberScrollState()
+    // COUITouchRecyclerView.updateOverScrollMode: the list only overscrolls when it can scroll;
+    // a drag on a list that fits moves the panel (its touch motion), never the rows inside it.
+    val overscrollEffect = rememberOverscrollEffect()
     val coroutineScope = rememberCoroutineScope()
     val performHaptic = rememberCouiHaptic()
     val hapticFeedback = LocalHapticFeedback.current
@@ -1111,7 +1139,10 @@ internal fun ListPopupColumn(
                     val placeable = measurable.measure(viewport)
                     layout(placeable.width, placeable.height) { placeable.place(0, 0) }
                 }
-                .verticalScroll(state = scrollState)
+                .verticalScroll(
+                    state = scrollState,
+                    overscrollEffect = if (scrollState.maxValue > 0) overscrollEffect else null,
+                )
                 .onGloballyPositioned { host.coordinates = it }
                 .popupListGestures(
                     host = host,
@@ -1125,7 +1156,7 @@ internal fun ListPopupColumn(
                 .drawWithContent {
                     drawContent()
                     val progress = host.mask.buildPath(host.maskPath, squircleEnabled)
-                    if (progress > 0f) drawPath(path = host.maskPath, color = maskColor, alpha = progress)
+                    if (progress > 0f) drawPath(path = host.maskPath, color = popupMaskColor(maskColor, progress))
                 },
             measurePolicy = measurePolicy,
         )
@@ -2135,6 +2166,11 @@ internal fun popupGravityPathFor(
  * @param materialEffect Whether to draw the material effects of a COUI 17 popup surface
  *   (`RoundFrameLayout.initMaterialEffects`): the shadow-edge stroke and the touch spotlight, on a
  *   blurred or an opaque [backgroundColor].
+ * @param touchMotionOrigin The point, as fractions of the popup size, the touch deformation
+ *   stretches the popup about. COUI 17 keeps the menu's enter pivot there
+ *   (`PopupMenuDomain.getMainMenuEnterPivotX` / `Y`): the anchor's horizontal centre on the edge
+ *   facing the anchor, so a menu below its anchor stretches downwards from its top edge. Defaults to
+ *   the horizontal centre of that edge, from [popupLayoutPosition].
  * @param content The content of the popup.
  */
 @Composable
@@ -2150,9 +2186,12 @@ fun ListPopupContent(
     translation: () -> Offset = { Offset.Zero },
     backgroundColor: Color = popupSurfaceColor(),
     materialEffect: Boolean = false,
+    touchMotionOrigin: () -> TransformOrigin = { TransformOrigin(0.5f, if (popupLayoutPosition.showBelow) 0f else 1f) },
     content: @Composable () -> Unit,
 ) {
     val shape = remember { RoundedCornerShape(PopupCornerRadius) }
+    // Composed inside the popup host, so a spring still running when the popup leaves goes with it.
+    val touchMotion = remember { TouchMotionState() }
 
     Box(
         modifier = modifier
@@ -2170,8 +2209,9 @@ fun ListPopupContent(
                 transformOrigin = localTransformOrigin
             }
             // COUI BasePopupMenuAnimationController.makeAnimator: deformation and rubber band
-            // follow a finger on the menu, without the press scale.
-            .couiTouchMotion(interactionSource = null, pressScaleEnabled = false)
+            // follow the finger for the whole gesture, also while the list drag-selects or
+            // scrolls, without the press scale.
+            .popupTouchMotion(state = touchMotion, transformOrigin = touchMotionOrigin)
             // The shadow fades by its own colour outside the fading layer: a layer below full
             // alpha renders offscreen at its own bounds and would cut the shadow off.
             .popupDropShadow(shape, alpha = alphaProgress)

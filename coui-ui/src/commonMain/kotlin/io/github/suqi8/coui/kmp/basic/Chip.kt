@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
@@ -27,36 +29,44 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.couiPressScale
-import io.github.suqi8.coui.kmp.squircle.squircleSurface
+import io.github.suqi8.coui.kmp.squircle.squircleClip
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
 import kotlin.coroutines.cancellation.CancellationException
-import androidx.compose.animation.Animatable as ColorAnimatable
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * A [Chip] component with COUI style.
@@ -65,8 +75,9 @@ import androidx.compose.animation.Animatable as ColorAnimatable
  * (Widget.COUI.Chip.Choice): the unselected chip is a translucent gray capsule with a primary
  * label; selecting it fills the capsule with the accent color and flips the label to white.
  * The selected/unselected colors cross-fade with the same critically damped spring
- * COUIChipDrawable.TintAnimation uses, while enabling or disabling the chip switches its colors
- * at once. Pressing scales the chip like COUI 17's COUIPressFeedbackHelper (the size-dependent
+ * COUIChipDrawable.TintAnimation uses, blended like its `ArgbEvaluator` (in linear light), while
+ * enabling or disabling the chip switches its colors at once. Pressing scales the chip like
+ * COUI 17's COUIPressFeedbackHelper (the size-dependent
  * COUIPressAnimatorUnit press, about 0.89 for a 52 x 32dp chip, released on an under-damped
  * spring) while COUIMaskEffectDrawable tints the fill with couiColorPress; hovering tints it with
  * couiColorHover. Keyboard focus draws COUIStrokeDrawable's 3dp couiColorFocusOutline ring just
@@ -86,7 +97,9 @@ import androidx.compose.animation.Animatable as ColorAnimatable
  * @param onClose When not `null`, the chip shows the COUI close icon (`ic_chip_close`) at its end
  *   and calls this when it is tapped (`COUIChip.setCloseIconVisible` +
  *   `setOnCloseIconClickListener`). The close icon replaces the end padding with its own
- *   8dp + 12dp + 8dp touch area.
+ *   8dp + 12dp + 8dp touch area, and pressing it lays the press tint over a 24dp circle behind it.
+ *   Switching between `null` and a callback plays COUIChipDrawable's CloseIconAnimation: the chip
+ *   grows or shrinks by the slot while the icon fades and scales between 0.3 and 1.
  * @param count An optional count drawn 2dp after the label in [ChipColors.countColor]
  *   (`COUIChip.setCountText`, couiColorLabelSecondary at the label size).
  * @param cornerRadius The corner radius of the [Chip]. COUIChip uses a capsule (half of the
@@ -320,203 +333,356 @@ private fun ChipImpl(
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
 
-    // COUIChipDrawable.TintAnimation: the checked/unchecked background, label and icon colors are
-    // evaluated by an ArgbEvaluator driven by COUISpringForce(response 0.3, bounce 0). Enabling or
+    // COUIChipDrawable.TintAnimation: one checked fraction drives the background, label and icon
+    // colors through an ArgbEvaluator on COUISpringForce(response 0.3, bounce 0). Enabling or
     // disabling cancels it and assigns the new colors directly (COUIChipDrawable.onStateChange).
-    val containerColor by animateChipColor(colors.containerColor(enabled, selected), enabled)
-    val contentColor by animateChipColor(colors.contentColor(enabled, selected), enabled)
+    // The colors are resolved while drawing, so the cross-fade does not recompose the chip.
+    val checkProgress = remember { Animatable(if (selected) 1f else 0f) }
+    // The enabled flag the last effect saw; only written from the effect.
+    val lastEnabled = remember { booleanArrayOf(enabled) }
+    LaunchedEffect(selected, enabled) {
+        val target = if (selected) 1f else 0f
+        val wasEnabled = lastEnabled[0]
+        lastEnabled[0] = enabled
+        if (enabled && wasEnabled) checkProgress.animateTo(target, ChipTintSpring) else checkProgress.snapTo(target)
+    }
+    val contentTint = remember(colors, enabled, selected, checkProgress) {
+        ColorProducer {
+            chipTint(
+                unchecked = colors.contentColor,
+                checked = colors.selectedContentColor,
+                disabledUnchecked = colors.disabledContentColor,
+                disabledChecked = colors.selectedDisabledContentColor,
+                enabled = enabled,
+                selected = selected,
+                fraction = checkProgress.value,
+            )
+        }
+    }
+    val countTint = remember(colors, contentTint) { ColorProducer { colors.countColor.takeOrElse { contentTint() } } }
+    val closeIconTint = remember(colors, contentTint) { ColorProducer { colors.closeIconColor.takeOrElse { contentTint() } } }
 
     // COUI 17 press feedback: COUIPressFeedbackHelper is a COUIPressFeedbackAnimator with only the
     // press scale on (no rubber, no deformation), and COUIMaskEffectDrawable tints the fill with
-    // couiColorPress on a critically damped response-0.3 spring.
+    // couiColorPress and couiColorHover on critically damped response-0.3 springs.
     val isPressed by interactionSource.collectIsPressedAsState()
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val hoverProgress = remember { Animatable(0f) }
-    LaunchedEffect(enabled, isHovered) {
-        if (!enabled) hoverProgress.snapTo(0f) else hoverProgress.animateTo(if (isHovered) 1f else 0f, ChipPressFeedbackSpring)
-    }
-    // COUIStrokeDrawable: the focus outline fades on a response 0.3 / bounce 0 spring and is cleared
-    // at once when the chip is disabled.
     val isFocused by interactionSource.collectIsFocusedAsState()
-    val focusProgress = remember { Animatable(0f) }
-    LaunchedEffect(enabled, isFocused) {
-        if (!enabled) focusProgress.snapTo(0f) else focusProgress.animateTo(if (isFocused) 1f else 0f, ChipPressFeedbackSpring)
-    }
+    val pressProgress = rememberChipMaskPress(pressed = isPressed, enabled = enabled)
+    val hoverProgress = rememberChipMaskLayer(active = isHovered, enabled = enabled)
+    // COUIStrokeDrawable: the focus outline fades on the same spring and is cleared at once when the
+    // chip is disabled.
+    val focusProgress = rememberChipMaskLayer(active = isFocused, enabled = enabled)
     val focusOutline = COUITheme.colorScheme.focusOutline
-    val tintProgress = remember { Animatable(0f) }
-    LaunchedEffect(enabled, isPressed) {
-        if (enabled && isPressed) {
-            tintProgress.animateTo(1f, ChipPressFeedbackSpring)
+    // couiColorPress #1F000000 / #33FFFFFF over couiColorHover #14000000 / #26FFFFFF.
+    val pressTint = COUITheme.colorScheme.press
+    val hoverTint = COUITheme.colorScheme.hover
+
+    // COUIChipDrawable.CloseIconAnimation (setCloseIconVisible animates): the close icon fades and
+    // scales in or out while the chip grows or shrinks by its slot, and stays drawn until it is gone.
+    val closeVisible = onClose != null
+    val closeProgress = remember { Animatable(if (closeVisible) 1f else 0f) }
+    LaunchedEffect(closeVisible) {
+        closeProgress.animateTo(if (closeVisible) 1f else 0f, ChipCloseIconSpring)
+    }
+    val closeIconDrawn by remember { derivedStateOf { closeProgress.value > 0f } }
+    val showCloseSlot = closeVisible || closeIconDrawn
+
+    Box(
+        modifier = modifier
+            .couiPressScale(pressed = isPressed, enabled = enabled)
+            .widthIn(max = maxWidth)
+            .drawWithContent {
+                drawContent()
+                val focus = focusProgress.value
+                if (focus > 0f) {
+                    // COUIStrokeDrawable TYPE_OUTER: a 2 x default_focus_stroke_radius stroke on the
+                    // plain round rect, clipped to its outside, i.e. a 3dp ring around the chip.
+                    val ring = ChipFocusStrokeWidth.toPx()
+                    val radius = minOf(cornerRadius.toPx(), size.minDimension / 2f)
+                    drawRoundRect(
+                        color = focusOutline,
+                        topLeft = Offset(-ring / 2f, -ring / 2f),
+                        size = Size(size.width + ring, size.height + ring),
+                        cornerRadius = CornerRadius(radius + ring / 2f),
+                        style = Stroke(width = ring),
+                        alpha = focus.coerceIn(0f, 1f),
+                    )
+                }
+            }
+            .squircleClip(cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
+            .drawBehind {
+                // COUIChipDrawable.drawChipBackground, then the hover and press layers of drawStateEffects.
+                var fill = chipTint(
+                    unchecked = colors.containerColor,
+                    checked = colors.selectedContainerColor,
+                    disabledUnchecked = colors.disabledContainerColor,
+                    disabledChecked = colors.selectedDisabledContainerColor,
+                    enabled = enabled,
+                    selected = selected,
+                    fraction = checkProgress.value,
+                )
+                val hover = hoverProgress.value.coerceAtMost(1f)
+                if (hover > 0f) fill = hoverTint.copy(alpha = hoverTint.alpha * hover).compositeOver(fill)
+                val press = pressProgress.value.coerceAtMost(1f)
+                if (press > 0f) fill = pressTint.copy(alpha = pressTint.alpha * press).compositeOver(fill)
+                drawRect(fill)
+            }
+            .then(
+                if (selectable) {
+                    Modifier.selectable(
+                        selected = selected,
+                        interactionSource = interactionSource,
+                        indication = indication,
+                        enabled = enabled,
+                        role = Role.Checkbox,
+                        onClick = onClick,
+                    )
+                } else {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = indication,
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClick = onClick,
+                    )
+                },
+            ),
+        propagateMinConstraints = true,
+    ) {
+        val layoutDirection = LocalLayoutDirection.current
+        val endPadding = insideMargin.calculateEndPadding(layoutDirection)
+        // COUIChipDrawable: a visible (or animating) close icon replaces chipEndPadding with its own
+        // closeIconStartPadding + closeIconSize + closeIconEndPadding.
+        val rowPadding = if (showCloseSlot) {
+            PaddingValues(
+                start = insideMargin.calculateStartPadding(layoutDirection),
+                top = insideMargin.calculateTopPadding(),
+                bottom = insideMargin.calculateBottomPadding(),
+            )
+        } else {
+            insideMargin
+        }
+        Row(
+            modifier = Modifier
+                .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
+                .padding(rowPadding),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (icon != null) {
+                Box(
+                    modifier = Modifier
+                        .padding(start = metrics.iconStartPadding, end = if (label.isEmpty()) metrics.iconEndPadding else 0.dp)
+                        .size(metrics.iconSize),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ChipIconTint(tint = contentTint, icon = icon)
+                }
+                if (label.isNotEmpty()) Spacer(Modifier.width(metrics.iconEndPadding))
+            }
+            if (label.isNotEmpty() || count != null) {
+                val redDotColor = BadgeDefaults.badgeColors().containerColor
+                Row(
+                    modifier = if (showRedDot) {
+                        Modifier.drawWithContent {
+                            drawContent()
+                            // COUIChipDrawable.calculateRedDotBounds: 2dp after the label / count,
+                            // 6dp below the chip's top edge (the chip is minHeight tall).
+                            val dot = ChipRedDotDiameter.toPx()
+                            val gap = ChipRedDotOffsetHorizontal.toPx()
+                            val top = ChipRedDotOffsetVertical.toPx() - (minHeight.toPx() - size.height) / 2f
+                            val left = if (layoutDirection == LayoutDirection.Ltr) size.width + gap else -gap - dot
+                            drawCircle(
+                                color = redDotColor,
+                                radius = dot / 2f,
+                                center = Offset(left + dot / 2f, top + dot / 2f),
+                            )
+                        }
+                    } else {
+                        Modifier
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (label.isNotEmpty()) {
+                        Text(
+                            text = label,
+                            color = contentTint,
+                            modifier = Modifier.widthIn(max = ChipDefaults.TextMaxWidth),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = textStyle,
+                        )
+                    }
+                    if (count != null) {
+                        Text(
+                            text = count,
+                            color = countTint,
+                            modifier = Modifier.padding(start = ChipDefaults.CountSpacing),
+                            maxLines = 1,
+                            style = textStyle,
+                        )
+                    }
+                }
+            }
+            if (showCloseSlot) {
+                ChipCloseIconSlot(
+                    progress = { closeProgress.value },
+                    onClose = onClose,
+                    enabled = enabled,
+                    restWidth = endPadding,
+                    minHeight = minHeight,
+                    tint = closeIconTint,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Provides the chip's current icon tint as [LocalContentColor] (COUIChip `chipIconApplyTint`), in
+ * its own scope so the check cross-fade only recomposes the icon.
+ */
+@Composable
+private fun ChipIconTint(
+    tint: ColorProducer,
+    icon: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(LocalContentColor provides tint(), content = icon)
+}
+
+/**
+ * The close icon slot of a chip (`COUIChipDrawable.drawCloseIcon`).
+ *
+ * At [progress] 1 the slot is `closeIconStartPadding + closeIconSize + closeIconEndPadding` wide,
+ * at 0 it shrinks to [restWidth] (the chip's end padding), so the chip grows and shrinks with the
+ * `CloseIconAnimation`. The icon fades with the progress and scales from 0.3 about a centre that
+ * travels with the chip's end edge at half its speed, as `drawCloseIcon` places it. Only a shown
+ * icon ([onClose] not `null`) is clickable: its 24dp circle (`closeIconTouchBoundsSize`, scaled with
+ * the icon) takes the press, hover and focus layers of `mCloseIconEffectDrawable`.
+ */
+@Composable
+private fun ChipCloseIconSlot(
+    progress: () -> Float,
+    onClose: (() -> Unit)?,
+    enabled: Boolean,
+    restWidth: Dp,
+    minHeight: Dp,
+    tint: ColorProducer,
+    modifier: Modifier = Modifier,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val interactive = onClose != null && enabled
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val pressProgress = rememberChipMaskPress(pressed = isPressed, enabled = interactive)
+    val hoverProgress = rememberChipMaskLayer(active = isHovered, enabled = interactive)
+    val focusProgress = rememberChipMaskLayer(active = isFocused, enabled = interactive)
+    val pressTint = COUITheme.colorScheme.press
+    val hoverTint = COUITheme.colorScheme.hover
+    val focusTint = COUITheme.colorScheme.focus
+    val painter = rememberVectorPainter(ChipCloseIcon)
+    Box(
+        modifier = modifier
+            .layout { measurable, constraints ->
+                val fullWidth = ChipCloseIconSlotWidth.roundToPx()
+                val shrunkWidth = restWidth.roundToPx()
+                val fraction = progress().coerceIn(0f, 1f)
+                val width = (shrunkWidth + (fullWidth - shrunkWidth) * fraction).roundToInt()
+                val height = minHeight.roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
+                val placeable = measurable.measure(Constraints.fixed(width, height))
+                layout(width, height) { placeable.place(0, 0) }
+            }
+            .then(
+                if (onClose != null) {
+                    Modifier.clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClick = onClose,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .drawBehind {
+                val fraction = progress().coerceIn(0f, 1f)
+                if (fraction <= 0f) return@drawBehind
+                val scale = ChipCloseIconMinScale + (1f - ChipCloseIconMinScale) * fraction
+                val iconSize = ChipDefaults.CloseIconSize.toPx()
+                val fullWidth = ChipCloseIconSlotWidth.toPx()
+                val shrunkWidth = restWidth.toPx()
+                // drawCloseIcon: the icon centre follows the background's current width at half
+                // speed; measured from the label side of the slot it is 6dp at rest and 14dp shown.
+                val fromLabel = shrunkWidth - ChipDefaults.CloseIconEndPadding.toPx() - iconSize / 2f +
+                    (fullWidth - shrunkWidth) * (1f + fraction) / 2f
+                val center = Offset(
+                    x = if (layoutDirection == LayoutDirection.Ltr) fromLabel else size.width - fromLabel,
+                    y = size.height / 2f,
+                )
+                val maskRadius = ChipCloseIconTouchSize.toPx() / 2f * scale
+                val hover = hoverProgress.value.coerceAtMost(1f)
+                if (hover > 0f) drawCircle(color = hoverTint, radius = maskRadius, center = center, alpha = hover)
+                val focus = focusProgress.value.coerceAtMost(1f)
+                if (focus > 0f) drawCircle(color = focusTint, radius = maskRadius, center = center, alpha = focus)
+                val press = pressProgress.value.coerceAtMost(1f)
+                if (press > 0f) drawCircle(color = pressTint, radius = maskRadius, center = center, alpha = press)
+                val drawSize = iconSize * scale
+                translate(left = center.x - drawSize / 2f, top = center.y - drawSize / 2f) {
+                    with(painter) {
+                        draw(size = Size(drawSize, drawSize), alpha = fraction, colorFilter = ColorFilter.tint(tint()))
+                    }
+                }
+            },
+    )
+}
+
+/**
+ * The touch layer of a `COUIMaskEffectDrawable` (`StateEffectAnimator` "press", response 0.3 /
+ * bounce 0): it follows the press, but a release before it is clearly visible keeps it rising to
+ * [ChipPressedTintMinVisibleProgress] first (`animateToProgressUntil`), so a quick tap still
+ * flashes. A disabled control resets it without animation.
+ */
+@Composable
+private fun rememberChipMaskPress(pressed: Boolean, enabled: Boolean): Animatable<Float, AnimationVector1D> {
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(enabled, pressed) {
+        if (enabled && pressed) {
+            progress.animateTo(1f, ChipPressFeedbackSpring)
         } else if (!enabled) {
             // COUIMaskEffectDrawable resets the mask without animation when disabled.
-            tintProgress.snapTo(0f)
-        } else if (tintProgress.value > 0f) {
-            if (tintProgress.value < ChipPressedTintMinVisibleProgress) {
+            progress.snapTo(0f)
+        } else if (progress.value > 0f) {
+            if (progress.value < ChipPressedTintMinVisibleProgress) {
                 // COUIMaskEffectDrawable.animateToProgressUntil: keep the press-in animation
                 // running until the tint is clearly visible, then reverse from there.
                 try {
-                    tintProgress.animateTo(1f, ChipPressFeedbackSpring) {
+                    progress.animateTo(1f, ChipPressFeedbackSpring) {
                         if (value >= ChipPressedTintMinVisibleProgress) throw ChipPressTintThresholdReached()
                     }
                 } catch (_: ChipPressTintThresholdReached) {
                     // Minimum visible progress reached; fall through to the fade-out.
                 }
             }
-            tintProgress.animateTo(0f, ChipPressFeedbackSpring)
+            progress.animateTo(0f, ChipPressFeedbackSpring)
         }
     }
-    // couiColorPress #1F000000 / #33FFFFFF over couiColorHover #14000000 / #26FFFFFF.
-    val pressTint = COUITheme.colorScheme.press
-    val hoverTint = COUITheme.colorScheme.hover
-    var fillColor = containerColor
-    if (hoverProgress.value > 0f) fillColor = hoverTint.copy(alpha = hoverTint.alpha * hoverProgress.value).compositeOver(fillColor)
-    if (tintProgress.value > 0f) fillColor = pressTint.copy(alpha = pressTint.alpha * tintProgress.value).compositeOver(fillColor)
+    return progress
+}
 
-    CompositionLocalProvider(LocalContentColor provides contentColor) {
-        Box(
-            modifier = modifier
-                .couiPressScale(pressed = isPressed, enabled = enabled)
-                .widthIn(max = maxWidth)
-                .drawWithContent {
-                    drawContent()
-                    val focus = focusProgress.value
-                    if (focus > 0f) {
-                        // COUIStrokeDrawable TYPE_OUTER: a 2 x default_focus_stroke_radius stroke on the
-                        // plain round rect, clipped to its outside, i.e. a 3dp ring around the chip.
-                        val ring = ChipFocusStrokeWidth.toPx()
-                        val radius = minOf(cornerRadius.toPx(), size.minDimension / 2f)
-                        drawRoundRect(
-                            color = focusOutline,
-                            topLeft = Offset(-ring / 2f, -ring / 2f),
-                            size = Size(size.width + ring, size.height + ring),
-                            cornerRadius = CornerRadius(radius + ring / 2f),
-                            style = Stroke(width = ring),
-                            alpha = focus.coerceIn(0f, 1f),
-                        )
-                    }
-                }
-                .squircleSurface(color = fillColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
-                .then(
-                    if (selectable) {
-                        Modifier.selectable(
-                            selected = selected,
-                            interactionSource = interactionSource,
-                            indication = indication,
-                            enabled = enabled,
-                            role = Role.Checkbox,
-                            onClick = onClick,
-                        )
-                    } else {
-                        Modifier.clickable(
-                            interactionSource = interactionSource,
-                            indication = indication,
-                            enabled = enabled,
-                            role = Role.Button,
-                            onClick = onClick,
-                        )
-                    },
-                ),
-            propagateMinConstraints = true,
-        ) {
-            val layoutDirection = LocalLayoutDirection.current
-            // COUIChipDrawable: a visible close icon replaces chipEndPadding with its own
-            // closeIconStartPadding + closeIconSize + closeIconEndPadding.
-            val rowPadding = if (onClose != null) {
-                PaddingValues(
-                    start = insideMargin.calculateStartPadding(layoutDirection),
-                    top = insideMargin.calculateTopPadding(),
-                    bottom = insideMargin.calculateBottomPadding(),
-                )
-            } else {
-                insideMargin
-            }
-            Row(
-                modifier = Modifier
-                    .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
-                    .padding(rowPadding),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (icon != null) {
-                    Box(
-                        modifier = Modifier
-                            .padding(start = metrics.iconStartPadding, end = if (label.isEmpty()) metrics.iconEndPadding else 0.dp)
-                            .size(metrics.iconSize),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        icon()
-                    }
-                    if (label.isNotEmpty()) Spacer(Modifier.width(metrics.iconEndPadding))
-                }
-                if (label.isNotEmpty() || count != null) {
-                    val redDotColor = BadgeDefaults.badgeColors().containerColor
-                    Row(
-                        modifier = if (showRedDot) {
-                            Modifier.drawWithContent {
-                                drawContent()
-                                // COUIChipDrawable.calculateRedDotBounds: 2dp after the label / count,
-                                // 6dp below the chip's top edge (the chip is minHeight tall).
-                                val dot = ChipRedDotDiameter.toPx()
-                                val gap = ChipRedDotOffsetHorizontal.toPx()
-                                val top = ChipRedDotOffsetVertical.toPx() - (minHeight.toPx() - size.height) / 2f
-                                val left = if (layoutDirection == LayoutDirection.Ltr) size.width + gap else -gap - dot
-                                drawCircle(
-                                    color = redDotColor,
-                                    radius = dot / 2f,
-                                    center = Offset(left + dot / 2f, top + dot / 2f),
-                                )
-                            }
-                        } else {
-                            Modifier
-                        },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (label.isNotEmpty()) {
-                            Text(
-                                text = label,
-                                color = contentColor,
-                                style = textStyle,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.widthIn(max = ChipDefaults.TextMaxWidth),
-                            )
-                        }
-                        if (count != null) {
-                            Text(
-                                text = count,
-                                color = colors.countColor.takeOrElse { contentColor },
-                                style = textStyle,
-                                maxLines = 1,
-                                modifier = Modifier.padding(start = ChipDefaults.CountSpacing),
-                            )
-                        }
-                    }
-                }
-                if (onClose != null) {
-                    Box(
-                        modifier = Modifier
-                            .defaultMinSize(minHeight = minHeight)
-                            .clickable(
-                                interactionSource = null,
-                                indication = null,
-                                enabled = enabled,
-                                role = Role.Button,
-                                onClick = onClose,
-                            )
-                            .padding(start = ChipDefaults.CloseIconStartPadding, end = ChipDefaults.CloseIconEndPadding),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = ChipCloseIcon,
-                            contentDescription = null,
-                            tint = colors.closeIconColor.takeOrElse { contentColor },
-                            modifier = Modifier.size(ChipDefaults.CloseIconSize),
-                        )
-                    }
-                }
-            }
-        }
+/**
+ * A hover or focus layer of a `COUIMaskEffectDrawable` / `COUIStrokeDrawable`: it fades with
+ * [active] on the response 0.3 / bounce 0 spring and is cleared at once while disabled.
+ */
+@Composable
+private fun rememberChipMaskLayer(active: Boolean, enabled: Boolean): Animatable<Float, AnimationVector1D> {
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(enabled, active) {
+        if (!enabled) progress.snapTo(0f) else progress.animateTo(if (active) 1f else 0f, ChipPressFeedbackSpring)
     }
+    return progress
 }
 
 /** COUI `ic_chip_close` (14 x 14 viewport), drawn at `coui_chip_suggest_style_close_icon_size`. */
@@ -712,35 +878,76 @@ data class ChipColors(
 }
 
 /**
- * A chip color that follows [target] on the check tint spring while the chip stays enabled, and
- * jumps to it when the chip is disabled or re-enabled (COUIChipDrawable cancels the TintAnimation
- * and assigns the enabled or disabled colors directly).
+ * COUIChipDrawable's current tint: while enabled, the `ArgbEvaluator` blend of the unchecked and
+ * checked colors at the TintAnimation [fraction]; while disabled, the disabled color of the state,
+ * assigned without animation.
  */
-@Composable
-private fun animateChipColor(target: Color, enabled: Boolean): State<Color> {
-    val color = remember { ColorAnimatable(target) }
-    // The enabled flag the last effect saw; only written from the effect.
-    val lastEnabled = remember { booleanArrayOf(enabled) }
-    LaunchedEffect(target, enabled) {
-        if (enabled && lastEnabled[0]) {
-            color.animateTo(target, CheckTintColorSpring)
-        } else {
-            color.snapTo(target)
-        }
-        lastEnabled[0] = enabled
-    }
-    return color.asState()
+private fun chipTint(
+    unchecked: Color,
+    checked: Color,
+    disabledUnchecked: Color,
+    disabledChecked: Color,
+    enabled: Boolean,
+    selected: Boolean,
+    fraction: Float,
+): Color = if (enabled) {
+    chipArgbEvaluate(unchecked, checked, fraction)
+} else if (selected) {
+    disabledChecked
+} else {
+    disabledUnchecked
 }
+
+/**
+ * `android.animation.ArgbEvaluator`, which COUIChipDrawable.TintAnimation uses: alpha blends
+ * linearly while the color channels blend in linear light (sRGB decoded with a 2.2 power, then
+ * encoded back), so a dark label turning white brightens early instead of passing through the
+ * mid grey of an Oklab blend.
+ */
+private fun chipArgbEvaluate(start: Color, end: Color, fraction: Float): Color = when {
+    fraction <= 0f -> start
+
+    fraction >= 1f -> end
+
+    else -> Color(
+        red = chipLinearLightBlend(start.red, end.red, fraction),
+        green = chipLinearLightBlend(start.green, end.green, fraction),
+        blue = chipLinearLightBlend(start.blue, end.blue, fraction),
+        alpha = start.alpha + (end.alpha - start.alpha) * fraction,
+    )
+}
+
+private fun chipLinearLightBlend(start: Float, end: Float, fraction: Float): Float {
+    val from = start.pow(CHIP_ARGB_EVALUATOR_GAMMA)
+    val to = end.pow(CHIP_ARGB_EVALUATOR_GAMMA)
+    return (from + (to - from) * fraction).coerceIn(0f, 1f).pow(1f / CHIP_ARGB_EVALUATOR_GAMMA)
+}
+
+/** The transfer exponent `ArgbEvaluator` decodes and encodes the color channels with. */
+private const val CHIP_ARGB_EVALUATOR_GAMMA = 2.2f
 
 /** The visible width of the focus outline: COUI default_focus_stroke_radius. */
 private val ChipFocusStrokeWidth = 3.dp
 
 /**
- * The COUI check tint spring for colors: COUIChipDrawable.TintAnimation uses
+ * The COUI check tint spring: COUIChipDrawable.TintAnimation uses
  * COUISpringForce(response = 0.3f, bounce = 0f), i.e. a critically damped spring with stiffness
  * (2 * PI / 0.3)^2 ~= 438.65.
  */
-private val CheckTintColorSpring = spring<Color>(dampingRatio = 1f, stiffness = 438.65f)
+private val ChipTintSpring = spring(dampingRatio = 1f, stiffness = 438.65f, visibilityThreshold = 0.001f)
+
+/** COUIChipDrawable.CloseIconAnimation: COUISpringForce(response = 0.3f, bounce = 0f). */
+private val ChipCloseIconSpring = spring(dampingRatio = 1f, stiffness = 438.65f, visibilityThreshold = 0.001f)
+
+/** CloseIconAnimation.CLOSE_ICON_SCALE_MIN_VALUE: the close icon scales from 0.3 as it appears. */
+private val ChipCloseIconMinScale = 0.3f
+
+/** The width of a shown close icon slot: closeIconStartPadding + closeIconSize + closeIconEndPadding. */
+private val ChipCloseIconSlotWidth =
+    ChipDefaults.CloseIconStartPadding + ChipDefaults.CloseIconSize + ChipDefaults.CloseIconEndPadding
+
+/** The close icon's press circle (COUI coui_chip_suggest_style_close_icon_touch_bounds_size). */
+private val ChipCloseIconTouchSize = 24.dp
 
 /**
  * The COUI mask spring: COUISpringForce(response = 0.3f, bounce = 0f), shared by the press and

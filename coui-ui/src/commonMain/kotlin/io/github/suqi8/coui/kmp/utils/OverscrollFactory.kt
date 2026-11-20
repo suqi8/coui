@@ -54,12 +54,20 @@ object COUIOverscrollFactory : OverscrollFactory {
  * - a drag past the edge moves the content by `0.4 * (1 - |overscroll| / window size)` of the
  *   finger (`COUIPhysicalAnimationUtil.calcRealOverScrollDist`);
  * - a release while overscrolled springs back on the `SpringOverScroller` RK4 spring, tension
- *   multiple 2.15 vertically and 3.2 horizontally;
+ *   multiple 2.15 vertically and 3.2 horizontally, and the content does not fling
+ *   (`COUIRecyclerView.performSpringBack`). Only a fling faster than 6000px/s changes that: back
+ *   towards the content it flings the overscroll through the edge and the content takes over the
+ *   leftover speed (`performOverScrollingReverseFling`); further out it carries its speed into the
+ *   spring-back (`setCurrVelocityY`);
  * - a fling that runs into the edge carries its leftover speed past it on the same spring, its
  *   overshoot saturating at 37.31% of the window (`calcOverFlingDecelerateDist`);
  * - with [edgeHapticEnabled] (the default, like `couiRecyclerViewEnableVibrator` /
- *   `couiScrollViewEnableVibrator`) both a release while overscrolled and a fling hitting the edge
- *   play the scroll-edge vibration (`performHapticFeedback(307)`).
+ *   `couiScrollViewEnableVibrator`) both a release while overscrolled (unless it was a tap that
+ *   moved less than 10px, `isClickEvent`) and a fling hitting the edge play the scroll-edge
+ *   vibration (`performHapticFeedback(307)`).
+ *
+ * The fling itself is the scrollable's `FlingBehavior`; pass [COUIFlingBehavior] for the COUI
+ * fling curve.
  *
  * The X and Y axes are handled independently. While a [io.github.suqi8.coui.kmp.basic.PullToRefresh]
  * is active the vertical axis is left to it.
@@ -104,6 +112,10 @@ class COUIOverscrollEffect(
 
     private var animationJobX: Job? = null
     private var animationJobY: Job? = null
+
+    // The drag travel of the current gesture, for COUIRecyclerView.isClickEvent.
+    private var dragTravelX = 0f
+    private var dragTravelY = 0f
 
     // Injected by COUIOverscrollEffectNode when attached
     internal var launchAnimation: ((suspend CoroutineScope.() -> Unit) -> Job)? = null
@@ -170,6 +182,8 @@ class COUIOverscrollEffect(
         }
 
         val bypassY = shouldBypassForPullToRefreshY()
+        dragTravelX += delta.x
+        dragTravelY += delta.y
 
         // A drag takes over a running spring from where it is.
         if (!bypassY) animationJobY?.cancel()
@@ -210,6 +224,15 @@ class COUIOverscrollEffect(
         )
     }
 
+    /**
+     * `COUIRecyclerView.performOverScrollingReverseFling` on [axis]: launches its fling back
+     * through the edge, the leftover speed going to [onLeftover] once it crosses.
+     */
+    private fun startReverseFling(axis: COUIOverScrollAxis, velocity: Float, onLeftover: (Float) -> Unit): Job? = launchAnimation?.invoke {
+        onLeftover(axis.flingBack(velocity))
+        updateOverScrollState()
+    }
+
     override suspend fun applyToFling(
         velocity: Velocity,
         performFling: suspend (Velocity) -> Velocity,
@@ -217,41 +240,81 @@ class COUIOverscrollEffect(
         val isActiveY = abs(offsetY) > offsetThreshold
         val isActiveX = abs(offsetX) > offsetThreshold
         val bypassY = shouldBypassForPullToRefreshY() && !isActiveY
+        val handleY = !bypassY && isActiveY
+        // COUIRecyclerView.isClickEvent: a release that barely moved is a tap.
+        val moved = abs(dragTravelX) >= COUIOverScrollRelease.CLICK_OFFSET_THRESHOLD ||
+            abs(dragTravelY) >= COUIOverScrollRelease.CLICK_OFFSET_THRESHOLD
+        dragTravelX = 0f
+        dragTravelY = 0f
 
         animationJobY?.cancel()
         animationJobX?.cancel()
 
-        // COUIRecyclerView.dispatchTouchEvent: a release while overscrolled springs back from rest
-        // (performSpringBack) and vibrates.
-        val releasedOverScrolled = (isActiveY && !bypassY) || isActiveX
-        if (releasedOverScrolled && edgeHapticEnabled) performEdgeHaptic?.invoke()
+        // COUIRecyclerView.dispatchTouchEvent: a release while overscrolled springs back and,
+        // unless it was a tap, vibrates.
+        val releasedOverScrolled = handleY || isActiveX
+        if (releasedOverScrolled && moved && edgeHapticEnabled) performEdgeHaptic?.invoke()
 
+        // COUIRecyclerView.onTouchEvent ACTION_UP while overscrolled: the content only flings
+        // after a fast fling back towards it has carried the overscroll through the edge.
         var performVelocity = velocity
-        if (!bypassY && isActiveY) {
-            animationJobY = startSpringBack(axisY, velocity = 0f, overFling = false, screenSize = scrollRangeV)
-            // A fling back towards the content scrolls it (performOverScrollingReverseFling); one
-            // further out is dropped.
-            if (sign(velocity.y) == sign(offsetY)) performVelocity = Velocity(performVelocity.x, 0f)
+        var reverseJobY: Job? = null
+        var reverseJobX: Job? = null
+        var leftoverY = 0f
+        var leftoverX = 0f
+        if (handleY) {
+            if (COUIOverScrollRelease.isReverseFling(offsetY, velocity.y)) {
+                reverseJobY = startReverseFling(axisY, velocity.y) { leftoverY = it }
+                animationJobY = reverseJobY
+            } else {
+                val carried = COUIOverScrollRelease.springBackVelocity(offsetY, velocity.y)
+                animationJobY = startSpringBack(axisY, velocity = carried, overFling = false, screenSize = scrollRangeV)
+            }
+            performVelocity = Velocity(performVelocity.x, 0f)
         }
         if (isActiveX) {
-            animationJobX = startSpringBack(axisX, velocity = 0f, overFling = false, screenSize = scrollRangeH)
-            if (sign(velocity.x) == sign(offsetX)) performVelocity = Velocity(0f, performVelocity.y)
+            if (COUIOverScrollRelease.isReverseFling(offsetX, velocity.x)) {
+                reverseJobX = startReverseFling(axisX, velocity.x) { leftoverX = it }
+                animationJobX = reverseJobX
+            } else {
+                val carried = COUIOverScrollRelease.springBackVelocity(offsetX, velocity.x)
+                animationJobX = startSpringBack(axisX, velocity = carried, overFling = false, screenSize = scrollRangeH)
+            }
+            performVelocity = Velocity(0f, performVelocity.y)
+        }
+        val reversed = reverseJobY != null || reverseJobX != null
+        if (reversed) {
+            reverseJobY?.join()
+            reverseJobX?.join()
+            // A drag that caught the overscroll mid-fling has taken over.
+            if (reverseJobY?.isCancelled == true || reverseJobX?.isCancelled == true) {
+                updateOverScrollState()
+                return
+            }
+            performVelocity = Velocity(
+                x = if (reverseJobX != null) leftoverX else performVelocity.x,
+                y = if (reverseJobY != null) leftoverY else performVelocity.y,
+            )
         }
 
         val consumed = performFling(performVelocity)
         val remaining = performVelocity - consumed
 
-        // COUINestedScrollView.onOverScrolled: a fling reaching the edge carries on past it.
+        // COUIRecyclerView ViewFlinger: a fling reaching the edge carries on past it.
         var hitEdge = false
-        if (!bypassY && !isActiveY && abs(remaining.y) > MIN_OVER_FLING_VELOCITY) {
+        val restingY = abs(offsetY) <= offsetThreshold && animationJobY?.isActive != true
+        val restingX = abs(offsetX) <= offsetThreshold && animationJobX?.isActive != true
+        if (!bypassY && restingY && abs(remaining.y) > MIN_OVER_FLING_VELOCITY) {
             animationJobY = startSpringBack(axisY, velocity = remaining.y, overFling = true, screenSize = scrollRangeV)
             hitEdge = true
         }
-        if (!isActiveX && abs(remaining.x) > MIN_OVER_FLING_VELOCITY) {
+        if (restingX && abs(remaining.x) > MIN_OVER_FLING_VELOCITY) {
             animationJobX = startSpringBack(axisX, velocity = remaining.x, overFling = true, screenSize = scrollRangeH)
             hitEdge = true
         }
-        if (hitEdge && !releasedOverScrolled && edgeHapticEnabled) performEdgeHaptic?.invoke()
+        // A release that vibrated already covers an edge it is still at; a reverse fling that
+        // reaches the far edge is a new hit.
+        if (hitEdge && (!releasedOverScrolled || reversed) && edgeHapticEnabled) performEdgeHaptic?.invoke()
 
         updateOverScrollState()
     }

@@ -131,9 +131,9 @@ BasicComponent(
 | role              | Role?                              | 无障碍语义角色       | null                                  | 否       |
 | holdDownState     | Boolean                            | 组件是否处于按下状态 | false                                 | 否       |
 | enabled           | Boolean                            | 组件是否可用         | true                                  | 否       |
-| selected          | Boolean                            | 该行是否选中：按压层保持显示，在 CardListGroup 内时该行上下的分隔线隐藏 | false | 否       |
-| startBadge        | Boolean                            | 是否在 startAction 右上角显示红点 | false | 否       |
-| endBadgeCount     | Int?                               | 尾部内容前的红点：null 不显示，0 为纯点，大于 0 显示数字 | null | 否       |
+| selected          | Boolean                            | 该行是否选中：按压层锁定显示、切换时不带动画（`setStateLocked`），在 CardListGroup 内时该行上下的分隔线隐藏 | false | 否       |
+| startBadge        | Boolean                            | 是否在 startAction 右上角显示红点；切换时红点缩放出现 / 消失（520ms） | false | 否       |
+| endBadgeCount     | Int?                               | 尾部内容前的红点：null 不显示，0 为纯点，大于 0 显示数字；在 null 与数值之间切换时缩放出现 / 消失（520ms） | null | 否       |
 | endIcon           | @Composable (() -> Unit)?          | endActions 前的 16dp 图标 | null                                  | 否       |
 | interactionSource | MutableInteractionSource?          | 组件的交互源         | null                                  | 否       |
 
@@ -152,9 +152,9 @@ BasicComponent(
 | role              | Role?                              | 无障碍语义角色       | null                                | 否       |
 | holdDownState     | Boolean                            | 组件是否处于按下状态 | false                               | 否       |
 | enabled           | Boolean                            | 组件是否可用         | true                                | 否       |
-| selected          | Boolean                            | 该行是否选中：按压层保持显示，在 CardListGroup 内时该行上下的分隔线隐藏 | false | 否       |
-| startBadge        | Boolean                            | 是否在 startAction 右上角显示红点 | false | 否       |
-| endBadgeCount     | Int?                               | 尾部内容前的红点：null 不显示，0 为纯点，大于 0 显示数字 | null | 否       |
+| selected          | Boolean                            | 该行是否选中：按压层锁定显示、切换时不带动画（`setStateLocked`），在 CardListGroup 内时该行上下的分隔线隐藏 | false | 否       |
+| startBadge        | Boolean                            | 是否在 startAction 右上角显示红点；切换时红点缩放出现 / 消失（520ms） | false | 否       |
+| endBadgeCount     | Int?                               | 尾部内容前的红点：null 不显示，0 为纯点，大于 0 显示数字；在 null 与数值之间切换时缩放出现 / 消失（520ms） | null | 否       |
 | endIcon           | @Composable (() -> Unit)?          | endActions 前的 16dp 图标 | null                                  | 否       |
 | interactionSource | MutableInteractionSource?          | 组件的交互源         | null                                | 否       |
 | content           | @Composable ColumnScope.() -> Unit | 组件内部的可组合内容 | -                                   | 是       |
@@ -269,7 +269,7 @@ Column {
 ### 在卡片组中使用
 
 在 `Card` 中用 `CardListGroup` 包裹各行，每一行即可获得其卡片列表位置（圆角边缘上 2dp 的首 / 尾内边距）。
-不在分组内的行保持 `CardListPosition.None`，显式传入的 `cardListPosition` 始终优先。分组还会绘制对齐各行标题的行间分隔线，并在 `selected` 行上下隐藏，因此行之间不要再插入 `HorizontalDivider`。详见 [CardListGroup](./cardlistgroup.md)。
+不在分组内的行保持 `CardListPosition.None`，显式传入的 `cardListPosition` 始终优先。分组还会绘制对齐各行标题的行间分隔线，在 `selected` 行上下隐藏、在按压行上下淡出，因此行之间不要再插入 `HorizontalDivider`。详见 [CardListGroup](./cardlistgroup.md)。
 
 ```kotlin
 Card {

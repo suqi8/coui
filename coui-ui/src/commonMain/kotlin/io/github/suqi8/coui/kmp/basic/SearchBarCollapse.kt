@@ -38,12 +38,16 @@ data class SearchBarCollapseGeometry(
  * Computes the collapse geometry for a given [percent].
  *
  * Mirrors `COUISearchBar.setSearchViewAnimateHeightPercent`, `clampSearchViewHeight` and
- * `clampMarginValue`.
+ * `clampMarginValue` of ColorOS 16 (COUI 17 keeps the method only as a deprecated no-op).
  *
  * @param percent 1 when fully expanded, 0 when fully collapsed. Values outside are clamped.
  * @param restingHeight the capsule's resting height, COUI `coui_search_bar_normal_background_height`.
  * @param barHeight the whole bar's resting height, COUI `coui_search_bar_height`.
- * @param horizontalPadding the bar's internal end padding, which the capsule grows into.
+ * @param horizontalPadding the bar's horizontal padding, which the capsule grows into on both sides
+ *   (`mExtraHorizontalBackground = getInternalPaddingEnd() * (1 - clampMarginValue)`), so a fully
+ *   collapsed capsule spans the bar's whole width. Defaults to the compact responsive padding,
+ *   [SearchBarDefaults.HorizontalPaddingCompact]; an [InputField] inside a [SearchBar] uses the
+ *   bar's own resolved padding instead.
  * @param normalColor the capsule's resting fill.
  * @param dividerColor the color the flattened capsule ends up as, COUI `coui_color_divider`.
  * @param minHeight the floor on the capsule height. COUI
@@ -54,7 +58,7 @@ fun searchBarCollapseGeometry(
     percent: Float,
     restingHeight: Dp = SearchBarDefaults.InputFieldMinHeight,
     barHeight: Dp = SearchBarCollapseDefaults.BarHeight,
-    horizontalPadding: Dp = SearchBarDefaults.LeadingIconStartPadding,
+    horizontalPadding: Dp = SearchBarDefaults.HorizontalPaddingCompact,
     normalColor: Color,
     dividerColor: Color,
     minHeight: Dp = SearchBarCollapseDefaults.CollapsedMinHeight,
@@ -73,11 +77,17 @@ fun searchBarCollapseGeometry(
         // Applied unclamped by COUI, which relies on the platform clamping at draw time. Clamp
         // here so callers can feed this straight into a graphicsLayer, which does not.
         contentAlpha = ((p - CONTENT_FADE_START) / (1f - CONTENT_FADE_START)).coerceIn(0f, 1f),
-        extraHorizontalWidth = horizontalPadding * (1f - marginFraction),
+        extraHorizontalWidth = horizontalPadding * searchBarCollapseWidening(p),
         capsuleColor = lerp(dividerColor, normalColor, marginFraction),
         translationY = maxOf(0.dp, (barHeight / 2f) * (1f - p)),
     )
 }
+
+/**
+ * The share of the bar's horizontal padding a collapsing capsule has grown into at [percent]:
+ * `1 - clampMarginValue(percent)`, 0 down to 30% and 1 when fully collapsed.
+ */
+internal fun searchBarCollapseWidening(percent: Float): Float = 1f - (percent.coerceIn(0f, 1f) / MARGIN_RAMP_SPAN).coerceIn(0f, 1f)
 
 /**
  * Converts a scroll offset into the collapse percent that [searchBarCollapseGeometry] takes.

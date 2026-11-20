@@ -48,7 +48,7 @@ Chip(
 
 ## Close Icon, Count and Red Dot
 
-`onClose` shows the COUI close icon (`ic_chip_close`) at the end of the chip; tapping it calls `onClose` instead of `onClick` (`setCloseIconVisible` + `setOnCloseIconClickListener`). `count` draws a secondary-colored number 2dp after the label (`setCountText`), and `showRedDot` draws the 6dp hint red dot after the label (`setShowRedDot`).
+`onClose` shows the COUI close icon (`ic_chip_close`) at the end of the chip; tapping it calls `onClose` instead of `onClick` (`setCloseIconVisible` + `setOnCloseIconClickListener`), and pressing it lays the `press` tint over a 24dp circle behind the icon. Switching `onClose` between `null` and a callback plays COUIChipDrawable's CloseIconAnimation: the chip grows or shrinks by the close icon slot while the icon fades and scales between 0.3 and 1 (response 0.3, bounce 0). `count` draws a secondary-colored number 2dp after the label (`setCountText`), and `showRedDot` draws the 6dp hint red dot after the label (`setShowRedDot`).
 
 ```kotlin
 Chip(
@@ -188,9 +188,10 @@ Same parameters as `Chip` without `selected`; the defaults are `cornerRadius = C
 
 ## Behavior
 
-- Selecting/deselecting cross-fades the capsule, label and icon colors on a critically damped spring (COUIChipDrawable.TintAnimation, response 0.3s / bounce 0).
+- Selecting/deselecting cross-fades the capsule, label and icon colors on a critically damped spring (COUIChipDrawable.TintAnimation, response 0.3s / bounce 0). The colors blend like its `ArgbEvaluator`, in linear light, and are resolved while drawing, so the cross-fade does not recompose the chip.
 - Enabling or disabling the chip switches its colors at once, without the spring (COUIChipDrawable cancels the tint animation).
 - Pressing scales the chip like COUI 17's COUIPressFeedbackHelper: the size-dependent COUIPressAnimatorUnit press (about 0.89 for a 52 x 32dp chip, 0.91 for a 100 x 32dp one) released on an under-damped spring, with no rubber or deformation. The fill takes the `press` tint (COUIMaskEffectDrawable); a quick tap still flashes the tint visibly. Hovering overlays the `hover` tint.
 - Keyboard focus draws a 3dp `focusOutline` ring just outside the capsule (COUIStrokeDrawable, `default_focus_stroke_radius`), fading on the COUI response 0.3 spring.
+- The close icon has its own press, hover and focus layers on the 24dp circle (`closeIconTouchBoundsSize`), and appears or leaves with the CloseIconAnimation described above.
 - Default colors follow COUI 17: the unselected capsule is couiColorContainer8 (#14000000 / #1AFFFFFF) whether enabled or not; the disabled labels are #42000000 / #29FFFFFF (unselected) and #8AFFFFFF / #29FFFFFF (selected).
 - The label is single line and ellipsized beyond `TextMaxWidth`; the whole chip is clamped between `MinWidth` and `MaxWidth`.

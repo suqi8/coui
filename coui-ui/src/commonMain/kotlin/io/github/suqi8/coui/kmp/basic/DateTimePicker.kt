@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -13,14 +11,17 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -52,7 +53,9 @@ val DateValue.dayOfWeek: Int
  * picker is narrower than the date column plus three time columns (the hidden AM/PM column counts
  * in 24-hour mode too). The picker is at most [NumberPickerDefaults.PickersMaxWidth] wide. In
  * 12-hour mode scrolling the hour wheel onto 12 flips AM/PM, and the two hairlines run edge to edge
- * (they are inset 16dp in 24-hour mode).
+ * (they are inset 16dp in 24-hour mode). Like coui_time_picker.xml the wheels keep their
+ * left-to-right order in RTL layouts (only the unit labels mirror), and the first and last wheel
+ * also cover the space left at either side, so a drag anywhere across the picker moves them.
  *
  * @param value The currently selected date and time.
  * @param onValueChange The callback invoked when the selected date or time changes.
@@ -171,6 +174,21 @@ fun DateTimePicker(
     val amPmLabel = remember(amLabel, pmLabel) { { amPm: Int -> if (amPm == 0) amLabel else pmLabel } }
     val minuteLabel = if (minuteFiveStep) FiveStepMinuteLabel else TwoDigitMinuteLabel
 
+    // coui_time_picker.xml lays its wheels out left to right in every layout direction
+    // (android:layoutDirection="ltr") in the order reorderSpinners reads from the best pattern.
+    // Emitting them reversed in RTL keeps that order on screen while the wheels still mirror units.
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val wheels = remember(is24Hour, amPmFirst, isRtl) {
+        val leftToRight = buildList {
+            add(DateTimePickerWheelSlot.Date)
+            if (!is24Hour && amPmFirst) add(DateTimePickerWheelSlot.AmPm)
+            add(DateTimePickerWheelSlot.Hour)
+            add(DateTimePickerWheelSlot.Minute)
+            if (!is24Hour && !amPmFirst) add(DateTimePickerWheelSlot.AmPm)
+        }
+        if (isRtl) leftToRight.reversed() else leftToRight
+    }
+
     BoxWithConstraints(
         modifier = modifier
             .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
@@ -183,69 +201,93 @@ fun DateTimePicker(
         // the AM/PM column counted even when it is hidden in 24-hour mode.
         val total = dateColumnWidth + timeColumnWidth * 3
         val scale = if (maxWidth < total && total > 0.dp) maxWidth / total else 1f
+        val dateWidth = dateColumnWidth * scale
         val timeWidth = timeColumnWidth * scale
 
-        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            NumberPicker(
-                value = selectedDay,
-                onValueChange = onDateChange,
-                modifier = Modifier.width(dateColumnWidth * scale),
-                enabled = enabled,
-                range = firstDay..lastDay,
-                label = dayLabel,
-                wrapAround = false,
-                colors = colors,
-                textStyle = textStyle,
-                itemHeight = itemHeight,
-            )
-            val amPmWheel: @Composable () -> Unit = {
-                NumberPicker(
-                    value = if (hour < 12) 0 else 1,
-                    onValueChange = onAmPmChange,
-                    modifier = Modifier.width(timeWidth),
-                    enabled = enabled,
-                    range = 0..1,
-                    label = amPmLabel,
-                    wrapAround = false,
-                    colors = colors,
-                    textStyle = textStyle,
-                    itemHeight = itemHeight,
-                )
+        // ... and the first and last wheel take the space left at the sides.
+        NumberPickerRow {
+            wheels.forEachIndexed { index, wheel ->
+                val alignment = numberPickerColumnAlignment(index, wheels.size)
+                key(wheel) {
+                    when (wheel) {
+                        DateTimePickerWheelSlot.Date -> NumberPickerWheel(
+                            value = selectedDay,
+                            onValueChange = onDateChange,
+                            modifier = Modifier.width(dateWidth),
+                            enabled = enabled,
+                            range = firstDay..lastDay,
+                            label = dayLabel,
+                            wrapAround = false,
+                            colors = colors,
+                            textStyle = textStyle,
+                            itemHeight = itemHeight,
+                            contentWidth = dateWidth,
+                            contentAlignment = alignment,
+                        )
+
+                        DateTimePickerWheelSlot.AmPm -> NumberPickerWheel(
+                            value = if (hour < 12) 0 else 1,
+                            onValueChange = onAmPmChange,
+                            modifier = Modifier.width(timeWidth),
+                            enabled = enabled,
+                            range = 0..1,
+                            label = amPmLabel,
+                            wrapAround = false,
+                            colors = colors,
+                            textStyle = textStyle,
+                            itemHeight = itemHeight,
+                            contentWidth = timeWidth,
+                            contentAlignment = alignment,
+                        )
+
+                        DateTimePickerWheelSlot.Hour -> NumberPickerWheel(
+                            value = when {
+                                is24Hour -> hour
+                                hour % 12 == 0 -> 12
+                                else -> hour % 12
+                            },
+                            onValueChange = onHourChange,
+                            modifier = Modifier.width(timeWidth),
+                            enabled = enabled,
+                            range = if (is24Hour) 0..23 else 1..12,
+                            label = if (is24Hour) TwoDigitMinuteLabel else PlainHourLabel,
+                            unit = hourUnit,
+                            wrapAround = true,
+                            colors = colors,
+                            textStyle = textStyle,
+                            itemHeight = itemHeight,
+                            contentWidth = timeWidth,
+                            contentAlignment = alignment,
+                        )
+
+                        DateTimePickerWheelSlot.Minute -> NumberPickerWheel(
+                            value = if (minuteFiveStep) minute / 5 else minute,
+                            onValueChange = onMinuteChange,
+                            modifier = Modifier.width(timeWidth),
+                            enabled = enabled,
+                            range = if (minuteFiveStep) 0..11 else 0..59,
+                            label = minuteLabel,
+                            unit = minuteUnit,
+                            wrapAround = true,
+                            colors = colors,
+                            textStyle = textStyle,
+                            itemHeight = itemHeight,
+                            contentWidth = timeWidth,
+                            contentAlignment = alignment,
+                        )
+                    }
+                }
             }
-            if (!is24Hour && amPmFirst) amPmWheel()
-            NumberPicker(
-                value = when {
-                    is24Hour -> hour
-                    hour % 12 == 0 -> 12
-                    else -> hour % 12
-                },
-                onValueChange = onHourChange,
-                modifier = Modifier.width(timeWidth),
-                enabled = enabled,
-                range = if (is24Hour) 0..23 else 1..12,
-                label = if (is24Hour) TwoDigitMinuteLabel else PlainHourLabel,
-                unit = hourUnit,
-                wrapAround = true,
-                colors = colors,
-                textStyle = textStyle,
-                itemHeight = itemHeight,
-            )
-            NumberPicker(
-                value = if (minuteFiveStep) minute / 5 else minute,
-                onValueChange = onMinuteChange,
-                modifier = Modifier.width(timeWidth),
-                enabled = enabled,
-                range = if (minuteFiveStep) 0..11 else 0..59,
-                label = minuteLabel,
-                unit = minuteUnit,
-                wrapAround = true,
-                colors = colors,
-                textStyle = textStyle,
-                itemHeight = itemHeight,
-            )
-            if (!is24Hour && !amPmFirst) amPmWheel()
         }
     }
+}
+
+/** The wheels of a [DateTimePicker]. */
+private enum class DateTimePickerWheelSlot {
+    Date,
+    AmPm,
+    Hour,
+    Minute,
 }
 
 /**

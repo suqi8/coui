@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.menu
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +19,7 @@ import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
 import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
+import io.github.suqi8.coui.kmp.popup.PopupAnchorHoverLock
 import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
 
 /**
@@ -31,6 +33,11 @@ import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
  * popup locator places it below or above the point and keeps it inside the window barriers. Once the
  * long press fires, the rest of the gesture is consumed so [content]'s own click does not run.
  *
+ * When [content] is a list row (a [io.github.suqi8.coui.kmp.basic.BasicComponent] or a preference),
+ * give it and [anchorInteractionSource] the same [MutableInteractionSource]: the row then keeps its
+ * hover layer locked while the menu is showing, as COUI does for an `IListSelectedItem` anchor
+ * (`COUIPopupListWindow.setAnchorHoveredState`), and releases it as the menu starts to leave.
+ *
  * @param entries The menu groups, separated by dividers.
  * @param modifier The modifier to be applied to the wrapper around [content].
  * @param enabled Whether the long press and right click open the menu.
@@ -38,6 +45,9 @@ import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
  * @param maxHeight The maximum height of the menu.
  * @param collapseOnSelection Whether a row click dismisses the menu.
  * @param hapticFeedbackEnabled Whether the long press plays the long-press haptic.
+ * @param anchorInteractionSource The interaction source of the list row in [content], whose hover
+ *   layer is locked while the menu is showing, or `null` (default) to leave [content] untouched.
+ *   Keep it null or non-null for the lifetime of the menu.
  * @param onExpandedChange Called when the menu opens or closes (COUI `MenuShowStateListener`).
  * @param content The content the menu is registered on (COUI `registerForContextMenu`).
  */
@@ -50,6 +60,7 @@ fun WindowContextMenu(
     maxHeight: Dp? = null,
     collapseOnSelection: Boolean = true,
     hapticFeedbackEnabled: Boolean = true,
+    anchorInteractionSource: MutableInteractionSource? = null,
     onExpandedChange: ((Boolean) -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
@@ -62,6 +73,9 @@ fun WindowContextMenu(
     val nonEmptyEntries = remember(entries) { entries.filter { it.items.isNotEmpty() } }
     val hasEntries = nonEmptyEntries.isNotEmpty()
 
+    if (anchorInteractionSource != null) {
+        PopupAnchorHoverLock(locked = expanded, interactionSource = anchorInteractionSource)
+    }
     Box(
         modifier = modifier
             .preciseClickAnchor(preciseClickState)

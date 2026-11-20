@@ -6,7 +6,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 
 /**
  * Which corners of the transitioning top entry the corner-clip effect rounds.
@@ -40,8 +39,12 @@ enum class NavCornerClipMode {
  * @property enableCornerClip whether to clip the transitioning top entry with smooth rounded
  *   corners (per [cornerClipMode]) while it animates over the layer below.
  * @property cornerClipRadius the corner radius used when [enableCornerClip] is on. Defaults to
- *   0.dp (no rounding); pass [rememberNavSystemCornerRadius] to follow the device screen corner
- *   (matching the platform), which still yields no rounding where the platform reports 0.
+ *   [Dp.Unspecified], which follows the device screen corner ([rememberNavSystemCornerRadius]):
+ *   ColorOS rounds the moving page of a page switch with the window corner radius
+ *   (`OplusWindowAnimationManager.loadOplusStyleAnimation` marks the open-enter and close-exit
+ *   animations `setHasRoundedCorners`, and the predictive back rounds the closing page). Platforms
+ *   that report no screen corner (Desktop, Web, iOS) still get no rounding. Pass an explicit radius
+ *   to override it, e.g. `0.dp` for a display that sits in a pane away from the screen corners.
  * @property cornerClipMode which corners to round; [NavCornerClipMode.Leading] for slide-style
  *   transitions, [NavCornerClipMode.All] for card-style ones.
  * @property dimAmount maximum alpha of the fullscreen dim scrim rendered just beneath the
@@ -49,7 +52,9 @@ enum class NavCornerClipMode {
  *   area alike (the reference scrim spans the whole entering surface). Set to 0f to disable.
  *   The curve along the motion is owned by the governing transition
  *   ([io.github.suqi8.coui.kmp.nav.transition.NavTransition.scrimFraction]); this knob only caps
- *   how dark it gets.
+ *   how dark it gets. The default 0.5 is the COUI page switch: the covered page fades to 0.5
+ *   alpha over a black backdrop (`coui_open_slide_exit`, ColorOS `oplus_close_slide_exit`), and
+ *   the ColorOS predictive back scrim starts at 0.5 (`CrossBackAnimationExt`).
  * @property blockInputDuringTransition whether to swallow touch input on non-settled entries while a
  *   transition is in progress, so taps cannot reach a half-animated screen. Off by default.
  * @property backdropColor solid color drawn behind every entry layer. Card-style transitions scale
@@ -61,7 +66,7 @@ enum class NavCornerClipMode {
 @Immutable
 data class NavDisplayEffects(
     val enableCornerClip: Boolean = true,
-    val cornerClipRadius: Dp = 0.dp,
+    val cornerClipRadius: Dp = Dp.Unspecified,
     val cornerClipMode: NavCornerClipMode = NavCornerClipMode.Leading,
     val dimAmount: Float = 0.5f,
     val blockInputDuringTransition: Boolean = false,
@@ -100,7 +105,7 @@ data class NavDisplayEffects(
     }
 
     companion object {
-        /** The default effects (corner clip on, 0.5 dim, input blocking off). */
+        /** The default effects (screen-corner clip on, 0.5 dim, input blocking off). */
         val Default: NavDisplayEffects = NavDisplayEffects()
 
         /** All effects disabled: no corner clip, no dim, no input blocking. */

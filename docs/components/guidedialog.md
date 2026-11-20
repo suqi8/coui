@@ -2,7 +2,7 @@
 
 `GuideDialog` is the paged guide dialog of ColorOS (`COUIGuideDialogBuilder`, `COUIGuideLayoutContentView`): a bottom dialog (centred on large screens) holding a swipeable pager of pages, each an illustration cropped to the full width, a title and a description, with a page indicator and a "Skip" / "Next" button pair.
 
-"Next" turns the page on COUI's 650ms spring curve. Scrolling from the second-to-last page to the last one widens the next button over the fading skip button while its label cross-fades to "Got it", which then calls `onStart`. A single page shows only the "Got it" button and no indicator. Taps outside the panel are ignored; the back gesture calls `onDismissRequest`.
+"Next" turns the page on COUI's 650ms spring curve. A swipe released with a fling settles on the next or previous page in 500–1000ms on the same spring curve, the time following the fling speed (`COUIViewPager2` `FlingScrollConfig`); a slow release settles on the nearest page on the RecyclerView quintic curve. A page whose content outgrows the pager scrolls with 32dp fading edges. Scrolling from the second-to-last page to the last one widens the next button over the fading skip button while its label cross-fades to "Got it", which then calls `onStart`. A single page shows only the "Got it" button and no indicator. Taps outside the panel are ignored; the back gesture calls `onDismissRequest`.
 
 Two variants are provided:
 

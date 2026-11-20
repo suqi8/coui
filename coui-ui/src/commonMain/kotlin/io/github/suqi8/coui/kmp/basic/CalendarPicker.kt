@@ -3,7 +3,6 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
@@ -13,8 +12,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Indication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,8 +30,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,8 +43,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -52,10 +51,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.launch
 
@@ -80,12 +82,20 @@ import kotlinx.coroutines.launch
  * COUIDateMonthView does). Days of the adjacent months fill the first and last rows and can be
  * tapped too. The selected day is a filled primary circle that grows from 80% while fading in
  * (280ms), the previously selected day of the same month fades out (150ms), and today is ringed
- * in the primary color. Tapping the month-year label rotates the arrow, turns the label primary,
- * fades the month buttons out (150ms) and, 120ms later, swaps the grid for a [DatePicker] wheel
- * bounded by [minDate] .. [maxDate] (COUICalendarYearView hosts a COUIDatePicker), cross-fading
- * 280ms in / 150ms out; collapsing fades the buttons back in over 280ms. The picker is at most
- * 724dp wide (calendar_picker_max_width), and every day cell is exposed to accessibility services
- * as a clickable node (COUIDateMonthView's ExploreByTouchHelper).
+ * in the primary color. Every page change, a swipe's settle included, is a 300ms
+ * COUIMoveEaseInterpolator scroll (COUICalendarViewPagerScroller), and the header switches to the
+ * new month when the page is picked: at once for the month buttons, on release for a swipe
+ * (COUICalendarDayPickerView.onPageSelected). Tapping the month-year label
+ * flips the arrow upside down and turns it and the label primary at once (COUIRotateView swaps
+ * two drawables without a transition), fades the month buttons out (150ms) and, 120ms later,
+ * swaps the grid for a [DatePicker] wheel bounded by [minDate] .. [maxDate] (COUICalendarYearView
+ * hosts a COUIDatePicker), cross-fading 280ms in / 150ms out; collapsing fades the buttons back in
+ * over 280ms. The month buttons and the arrow press with a 24dp ripple-like circle
+ * (coui_canlendar_menu_bg), the label itself without feedback. As with
+ * COUIChangeTextUtil.getG3FontSize, the header, weekday and day texts grow to at most 1.15x with the
+ * system font scale. The picker is at most 724dp wide (calendar_picker_max_width), and every day
+ * cell is exposed to accessibility services as a clickable node (COUIDateMonthView's
+ * ExploreByTouchHelper).
  *
  * @param value The selected date. Dates outside [minDate] .. [maxDate] are clamped.
  * @param onValueChange The callback invoked when a day is tapped or the wheel moves.
@@ -156,9 +166,26 @@ fun CalendarPicker(
         }
     }
 
+    // COUICalendarDayPickerView.onPageSelected: the header label and the month buttons follow the
+    // page the ViewPager is heading for, picked at once by the month buttons and on release by a
+    // swipe (the old month stays while the finger is down).
+    val pagerDragged by pagerState.interactionSource.collectIsDraggedAsState()
+    val headerPage = if (pagerDragged) pagerState.settledPage else pagerState.targetPage
     // While the wheel is shown the header follows the wheel, not the hidden pager.
-    val displayedMonth = if (expanded) monthIndex(selected.year, selected.month) else firstMonthIndex + pagerState.currentPage
+    val displayedMonth = if (expanded) monthIndex(selected.year, selected.month) else firstMonthIndex + headerPage
     val dateDescription = rememberDateFormatter(PickerDateFormat.FullDate)
+    // COUICalendarPickerDelegate / COUIDateMonthView size their texts with
+    // COUIChangeTextUtil.getG3FontSize, which stops them growing past 1.15x.
+    val fontScale = LocalDensity.current.fontScale
+    val headerStyle = remember(headerTextStyle, fontScale) { headerTextStyle.calendarFontScaleCapped(fontScale) }
+    val weekdayStyle = remember(weekdayTextStyle, fontScale) { weekdayTextStyle.calendarFontScaleCapped(fontScale) }
+    val dayStyle = remember(dayTextStyle, fontScale) { dayTextStyle.calendarFontScaleCapped(fontScale) }
+    // COUICalendarViewPagerScroller: every page settle, a swipe's included, is a 300ms
+    // COUIMoveEaseInterpolator scroll.
+    val flingBehavior = PagerDefaults.flingBehavior(
+        state = pagerState,
+        snapAnimationSpec = tween(PAGE_SCROLL_DURATION_MILLIS, easing = CalendarPageEasing),
+    )
     Column(
         modifier = modifier
             .widthIn(max = CalendarPickerDefaults.MaxWidth)
@@ -167,8 +194,8 @@ fun CalendarPicker(
         CalendarPickerHeader(
             label = monthYearLabel(displayedMonth / 12, displayedMonth % 12 + 1),
             expanded = expanded,
-            canGoBack = pagerState.currentPage > 0,
-            canGoForward = pagerState.currentPage < pageCount - 1,
+            canGoBack = headerPage > 0,
+            canGoForward = headerPage < pageCount - 1,
             // From the target page, so repeated taps during the scroll keep stepping.
             onBack = {
                 scope.launch {
@@ -191,7 +218,7 @@ fun CalendarPicker(
                 expanded = !expanded
             },
             colors = colors,
-            textStyle = headerTextStyle,
+            textStyle = headerStyle,
         )
         AnimatedContent(
             targetState = expanded,
@@ -225,6 +252,7 @@ fun CalendarPicker(
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxWidth(),
+                    flingBehavior = flingBehavior,
                     key = { it },
                 ) { page ->
                     val month = firstMonthIndex + page
@@ -240,8 +268,8 @@ fun CalendarPicker(
                             weekdayLabel = weekdayLabel,
                             dayLabel = dayLabel,
                             colors = colors,
-                            weekdayTextStyle = weekdayTextStyle,
-                            dayTextStyle = dayTextStyle,
+                            weekdayTextStyle = weekdayStyle,
+                            dayTextStyle = dayStyle,
                             onDaySelected = onDaySelected,
                         )
                         CalendarMonthSemantics(
@@ -274,6 +302,10 @@ private fun CalendarPickerHeader(
     colors: CalendarPickerColors,
     textStyle: TextStyle,
 ) {
+    // coui_canlendar_menu_bg: an unbounded 24dp ripple in couiColorPressBackground behind the
+    // chevrons and the expand arrow.
+    val pressColor = COUITheme.colorScheme.pressBackground
+    val buttonPress = remember(pressColor) { CircularPressIndication(CalendarButtonPressRadius, pressColor) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -282,8 +314,8 @@ private fun CalendarPickerHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        // COUICalendarPickerDelegate.b: the month buttons fade out over 150ms when the wheel opens
-        // and back in over 280ms when it closes.
+        // COUICalendarPickerDelegate: the month buttons fade out over 150ms (COUIEaseInterpolator)
+        // when the wheel opens and back in over 280ms (COUIMoveEaseInterpolator) when it closes.
         val buttonsAlpha by animateFloatAsState(
             targetValue = if (expanded) 0f else 1f,
             animationSpec = if (expanded) {
@@ -298,37 +330,48 @@ private fun CalendarPickerHeader(
             enabled = !expanded,
             fade = { buttonsAlpha },
             color = colors.headerColor,
+            pressIndication = buttonPress,
             onClick = onBack,
         )
-        // COUIRotateView: 180 degree turn over 400ms with PathInterpolator(0.133, 0, 0.3, 1).
-        val arrowRotation by animateFloatAsState(
-            targetValue = if (expanded) 180f else 0f,
-            animationSpec = tween(ARROW_ROTATE_DURATION_MILLIS, easing = ArrowRotateEasing),
-        )
-        val arrowColor by animateColorAsState(
-            targetValue = if (expanded) colors.expandedArrowColor else colors.arrowColor,
-            animationSpec = tween(ARROW_ROTATE_DURATION_MILLIS, easing = ArrowRotateEasing),
-        )
+        // date_picker_header_month_layout has a click listener but no background: the label itself
+        // shows no press feedback.
         Row(
-            modifier = Modifier
-                .clip(CircleShape)
-                .clickable(role = Role.Button, onClick = onToggleExpanded),
+            modifier = Modifier.clickable(
+                interactionSource = null,
+                indication = null,
+                role = Role.Button,
+                onClick = onToggleExpanded,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // COUICalendarPickerDelegate.b: couiColorPrimary while the wheel is open.
+            // COUICalendarPickerDelegate.setCurrentView: couiColorPrimary while the wheel is open.
             Text(
                 text = label,
                 color = if (expanded) colors.expandedHeaderColor else colors.headerColor,
                 style = textStyle,
                 maxLines = 2,
             )
+            // COUIRotateView with its default rotate type does not turn: it swaps
+            // coui_calendar_arrow_collapsed (a down triangle in couiColorSecondNeutral) for
+            // coui_calendar_arrow_expanded (the same triangle upside down in couiColorPrimary)
+            // through an animated-selector without transitions, so the arrow flips at once. The
+            // delegate also makes it clickable, with the menu ripple; TalkBack skips it
+            // (importantForAccessibility="no") as the label already toggles.
+            val arrowColor = if (expanded) colors.expandedArrowColor else colors.arrowColor
             Canvas(
                 modifier = Modifier
-                    .size(CalendarPickerDefaults.ArrowSize)
-                    .rotate(arrowRotation),
+                    .semantics { hideFromAccessibility() }
+                    .clickable(
+                        interactionSource = null,
+                        indication = buttonPress,
+                        onClick = onToggleExpanded,
+                    )
+                    .size(CalendarPickerDefaults.ArrowSize),
             ) {
-                scale(size.width / 16f, size.height / 16f, pivot = Offset.Zero) {
-                    drawPath(path = ArrowPath, color = arrowColor)
+                scale(scaleX = 1f, scaleY = if (expanded) -1f else 1f) {
+                    scale(size.width / 16f, size.height / 16f, pivot = Offset.Zero) {
+                        drawPath(path = ArrowPath, color = arrowColor)
+                    }
                 }
             }
         }
@@ -338,14 +381,16 @@ private fun CalendarPickerHeader(
             enabled = !expanded,
             fade = { buttonsAlpha },
             color = colors.headerColor,
+            pressIndication = buttonPress,
             onClick = onForward,
         )
     }
 }
 
 /**
- * The 24dp coui_ic_chevron_start / _end button with 4dp padding; invisible at the first / last
- * page, faded by [fade] while the wheel is open.
+ * The 24dp coui_ic_chevron_start / _end button with 4dp padding and the coui_canlendar_menu_bg
+ * ripple ([pressIndication]); invisible at the first / last page, faded by [fade] while the wheel
+ * is open.
  */
 @Composable
 private fun CalendarChevronButton(
@@ -354,14 +399,20 @@ private fun CalendarChevronButton(
     enabled: Boolean,
     fade: () -> Float,
     color: Color,
+    pressIndication: Indication,
     onClick: () -> Unit,
 ) {
     val mirrored = forward != (LocalLayoutDirection.current == LayoutDirection.Rtl)
     Box(
         modifier = Modifier
             .graphicsLayer { alpha = if (visible) fade() else 0f }
-            .clip(CircleShape)
-            .clickable(enabled = visible && enabled, role = Role.Button, onClick = onClick)
+            .clickable(
+                interactionSource = null,
+                indication = pressIndication,
+                enabled = visible && enabled,
+                role = Role.Button,
+                onClick = onClick,
+            )
             .semantics { contentDescription = if (forward) "Next month" else "Previous month" }
             .padding(CalendarPickerDefaults.ChevronPadding)
             .size(CalendarPickerDefaults.ChevronSize),
@@ -793,20 +844,37 @@ private const val SELECT_DURATION_MILLIS = 280
 /** COUIDateMonthView deselection animator duration. */
 private const val DESELECT_DURATION_MILLIS = 150
 
-/** COUIRotateView duration. */
-private const val ARROW_ROTATE_DURATION_MILLIS = 400
-
 /** COUIDateMonthView.setDaySelectorColor: a pressed selected day is drawn at alpha 176. */
 private const val SELECTED_PRESSED_ALPHA = 176f / 255f
 
-/** The page scroller and selection interpolator (COUI w0.f: PathInterpolator(0.3, 0, 0.1, 1)). */
+/** COUIChangeTextUtil.getG3FontSize: the largest scale the calendar texts reach (G3, 1.15x). */
+private const val CALENDAR_MAX_FONT_SCALE = 1.15f
+
+/**
+ * The page scroller and selection interpolator (COUIMoveEaseInterpolator: PathInterpolator(0.3, 0,
+ * 0.1, 1), used by COUICalendarViewPagerScroller, COUIDateMonthView and the button fade-in).
+ */
 private val CalendarPageEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
 
-/** The fade-out interpolator (coui_ease / w0.c: PathInterpolator(0.33, 0, 0.67, 1)). */
+/** The fade-out interpolator (coui_ease / COUIEaseInterpolator: PathInterpolator(0.33, 0, 0.67, 1)). */
 private val CalendarFadeOutEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
-/** COUIRotateView interpolator (0.133, 0, 0.3, 1). */
-private val ArrowRotateEasing = CubicBezierEasing(0.133f, 0f, 0.3f, 1f)
+/** coui_calendar_menu_bg_radius: the ripple of the chevrons and the expand arrow. */
+private val CalendarButtonPressRadius = 24.dp
+
+/**
+ * COUIChangeTextUtil.getG3FontSize as the calendar applies it: at a font scale above 1 the text is
+ * `1.15x` its unscaled size whatever the scale, below or at 1 it follows the scale as usual. Sizes
+ * that are not in sp are left alone.
+ */
+internal fun TextStyle.calendarFontScaleCapped(fontScale: Float): TextStyle {
+    if (fontScale <= 1f) return this
+    val factor = CALENDAR_MAX_FONT_SCALE / fontScale
+    return copy(
+        fontSize = if (fontSize.isSp) (fontSize.value * factor).sp else fontSize,
+        lineHeight = if (lineHeight.isSp) (lineHeight.value * factor).sp else lineHeight,
+    )
+}
 
 /** coui_ic_chevron_start in its 24x24 viewport. */
 private val ChevronPath = Path().apply {

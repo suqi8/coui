@@ -69,7 +69,9 @@ fun Modifier.overScrollHorizontal(
  * Overscroll effect when scrolling to the boundary, with the physics of the COUI 17 scroll views
  * (see [COUIOverscrollEffect]): a drag past the edge moves the content by
  * `0.4 * (1 - |overscroll| / window size)` of the finger, a release springs it back on the
- * `SpringOverScroller` RK4 spring (tension multiple 2.15 vertically, 3.2 horizontally), and a fling
+ * `SpringOverScroller` RK4 spring (tension multiple 2.15 vertically, 3.2 horizontally) without
+ * flinging the content, unless it is a fling faster than 6000px/s back towards the content, which
+ * carries the overscroll through the edge and hands the leftover speed to the content. A fling
  * that runs into the edge carries on past it, its overshoot saturating at 37.31% of the window.
  * Unlike [COUIOverscrollEffect] it plays no edge vibration; add [scrollEndHaptic] for that.
  *
@@ -355,13 +357,24 @@ private class OverscrollNode(
         val velocity = if (isVertical) realAvailable.y else realAvailable.x
 
         if (abs(offset) > offsetThreshold) {
-            // COUIRecyclerView: a release while overscrolled springs back from rest.
-            startSpringBack(velocity = 0f, overFling = false)
-            if (sign(velocity) != sign(offset)) {
-                // A fling back towards the content scrolls it (performOverScrollingReverseFling).
-                return parentConsumed
+            if (COUIOverScrollRelease.isReverseFling(offset, velocity)) {
+                // COUIRecyclerView.performOverScrollingReverseFling: the overscroll flings back
+                // through the edge, then the child flings the content with the leftover speed.
+                val flingAxis = axis
+                var leftover = 0f
+                val job = coroutineScope.launch {
+                    leftover = flingAxis.flingBack(velocity)
+                    updateOverScrollState()
+                }
+                animationJob = job
+                job.join()
+                // A drag that caught the overscroll mid-fling has taken over: no child fling.
+                val consumed = if (job.isCancelled) velocity else velocity - leftover
+                return parentConsumed + if (isVertical) Velocity(0f, consumed) else Velocity(consumed, 0f)
             }
-            // A fling further out is dropped.
+            // COUIRecyclerView.performSpringBack: anything slower springs back, from rest or, for a
+            // fast fling further out, carrying its speed (setCurrVelocityY). The fling is dropped.
+            startSpringBack(velocity = COUIOverScrollRelease.springBackVelocity(offset, velocity), overFling = false)
             return parentConsumed + if (isVertical) Velocity(0f, realAvailable.y) else Velocity(realAvailable.x, 0f)
         }
 

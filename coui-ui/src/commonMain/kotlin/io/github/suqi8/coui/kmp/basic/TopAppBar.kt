@@ -3,17 +3,23 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.DecayAnimationSpec
-import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.VectorConverter
+import androidx.compose.animation.core.VectorizedAnimationSpec
 import androidx.compose.animation.core.animateDecay
 import androidx.compose.animation.core.animateTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -34,15 +40,20 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -64,6 +76,7 @@ import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -78,8 +91,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirst
 import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.basic.TopAppBarState.Companion.Saver
+import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -89,7 +107,10 @@ import kotlin.math.roundToInt
  *
  * The [TopAppBar] can be configured with a title, a navigation icon, and action icons.
  * The large title will collapse when the content is scrolled up and expand when
- * the content is scrolled down.
+ * the content is scrolled down. With a [COUIScrollBehavior] the bar trails the scroll with a
+ * spring and snaps to expanded or collapsed when the scroll ends, and while it is not fully
+ * collapsed it can also be dragged by the bar itself, like the COUI 17 collapsable app bar.
+ * A new [title] or [largeTitle] cross-fades in.
  *
  * @param title The title of the [TopAppBar].
  * @param modifier The modifier to be applied to the  [TopAppBar].
@@ -257,7 +278,8 @@ fun TopAppBarSearchSlot(
  *
  * The [SmallTopAppBar] is the standalone, non-collapsing COUI toolbar (`COUIToolbar` with
  * `supportTitleTextAppearance="@style/textAppearanceSecondTitle"`, as the ColorOS 17 settings
- * pages use it). It can be configured with a title, a navigation icon, and action icons.
+ * pages use it). It can be configured with a title, a navigation icon, and action icons. A new
+ * [title] cross-fades in.
  *
  * @param title The title of the [SmallTopAppBar].
  * @param modifier The modifier to be applied to the  [SmallTopAppBar].
@@ -367,7 +389,9 @@ fun SmallTopAppBar(
  *
  * A top app bar that is set up with this [ScrollBehavior] will immediately collapse
  * when the nested content is pulled up, and will expand back the collapsed area when the
- * content is pulled all the way down.
+ * content is pulled all the way down. A bar left between the two when a scroll or fling ends
+ * springs to the nearer one, and a [TopAppBar] that is not fully collapsed can be dragged by the
+ * bar itself while the content is at its top.
  *
  * @param state the state object to be used to control or observe the top app bar's scroll
  *   state. See [rememberTopAppBarState] for a state that is remembered across compositions.
@@ -375,24 +399,37 @@ fun SmallTopAppBar(
  *   [ExitUntilCollapsedScrollBehavior]
  * @param snapAnimationSpec an optional [AnimationSpec] that defines how the top app bar snaps
  *   to either fully collapsed or fully extended state when a fling or a drag scrolled it into
- *   an intermediate position.
- * @param flingAnimationSpec an optional [DecayAnimationSpec] that defined how to fling the top
- *   app bar when the user flings the app bar itself, or the content below it
+ *   an intermediate position. `null` leaves the bar where the scroll stopped.
+ * @param flingAnimationSpec an optional [DecayAnimationSpec] that defines how to fling the top
+ *   app bar with the velocity a fling of the content leaves over. Only used without
+ *   [followScroll]: COUI 17 never flings the bar itself and only snaps it.
+ * @param followScroll whether the bar trails each scroll step with a spring, like COUI 17
+ *   (`COUICollapsableAppBarLayout.ScrollBehavior` with `mUseSpring`): every step moves
+ *   [TopAppBarState.heightOffset] at once, and the bar is drawn at
+ *   [TopAppBarState.displayedHeightOffset], which follows it with a critically damped spring
+ *   (response 0.2s while collapsing, 0.1s while expanding, 0.15s while the bar itself is
+ *   dragged); the content padded below the bar follows with it. `false` draws the bar at the
+ *   scroll position directly.
  */
 @Suppress("ComposableNaming")
 @Composable
 fun COUIScrollBehavior(
     state: TopAppBarState = rememberTopAppBarState(),
     canScroll: () -> Boolean = { true },
-    snapAnimationSpec: AnimationSpec<Float>? = tween(durationMillis = SnapAnimationDuration, easing = SnapAnimationEasing),
+    snapAnimationSpec: AnimationSpec<Float>? = TopAppBarDefaults.SnapAnimationSpec,
     flingAnimationSpec: DecayAnimationSpec<Float>? = rememberSplineBasedDecay(),
-): ScrollBehavior = remember(state, canScroll, snapAnimationSpec, flingAnimationSpec) {
-    ExitUntilCollapsedScrollBehavior(
-        state = state,
-        snapAnimationSpec = snapAnimationSpec,
-        flingAnimationSpec = flingAnimationSpec,
-        canScroll = canScroll,
-    )
+    followScroll: Boolean = true,
+): ScrollBehavior {
+    val followScope = rememberCoroutineScope()
+    return remember(state, canScroll, snapAnimationSpec, flingAnimationSpec, followScroll, followScope) {
+        ExitUntilCollapsedScrollBehavior(
+            state = state,
+            snapAnimationSpec = snapAnimationSpec,
+            flingAnimationSpec = flingAnimationSpec,
+            canScroll = canScroll,
+            followScope = if (followScroll) followScope else null,
+        )
+    }
 }
 
 /**
@@ -443,6 +480,9 @@ class TopAppBarState(
      * The top app bar's current height offset in pixels. This height offset is applied to the fixed
      * height of the app bar to control the displayed height when content is being scrolled.
      *
+     * A [COUIScrollBehavior] with `followScroll` moves this value at once on each scroll step and
+     * draws the bar at [displayedHeightOffset], which catches up with it.
+     *
      * Updates to the [heightOffset] value are coerced between zero and [heightOffsetLimit].
      */
     var heightOffset: Float
@@ -451,6 +491,22 @@ class TopAppBarState(
             _heightOffset.floatValue =
                 newOffset.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
         }
+
+    /**
+     * The height offset the bar is drawn at, in pixels: [heightOffset] once the bar has settled,
+     * and the spring that trails it while a [COUIScrollBehavior] with `followScroll` moves the bar
+     * (COUI 17 `COUIViewOffsetHelper.animateTopAndBottomOffset`: the app bar and the content below
+     * it are offset by a spring that follows every scroll step). Read it rather than
+     * [heightOffset] for anything drawn together with the bar.
+     */
+    val displayedHeightOffset: Float
+        get() {
+            val follow = followOffset
+            return if (follow.isNaN()) heightOffset else follow.coerceIn(minimumValue = heightOffsetLimit, maximumValue = 0f)
+        }
+
+    /** The drawn height offset while the bar trails [heightOffset]; `NaN` once it has caught up. */
+    internal var followOffset by mutableFloatStateOf(Float.NaN)
 
     /**
      * The total offset of the content scrolled under the top app bar.
@@ -528,7 +584,8 @@ class TopAppBarState(
  */
 @Composable
 fun ScrollBehavior.glowScrollOffsetPx(): Float {
-    val heightOffset = state.heightOffset
+    // The drawn offset, so the glow fades in with the bar the content is seen beneath.
+    val heightOffset = state.displayedHeightOffset
     return if (heightOffset != 0f) -heightOffset else -state.contentOffset
 }
 
@@ -652,6 +709,14 @@ object TopAppBarDefaults {
      * COUI `coui_preference_card_margin_horizontal` (16dp).
      */
     val SearchSlotInsideMargin = PaddingValues(horizontal = 16.dp)
+
+    /**
+     * The spring that snaps a [TopAppBar] left between expanded and collapsed to the nearer one
+     * when a scroll or fling ends: COUI 17 `COUICollapsableAppBarLayoutParams` `attachResponse`
+     * 0.25 with `attachBounce` 0 (`COUICollapsableAppBarLayout.ScrollBehavior.animateOffsetWithDuration`
+     * springs the offset with it and ignores the duration).
+     */
+    val SnapAnimationSpec: AnimationSpec<Float> = TouchMotion.spring(response = 0.25f, bounce = 0f, visibilityThreshold = 0.5f)
 }
 
 @Stable
@@ -706,21 +771,81 @@ interface ScrollBehavior {
  *   bar when the user flings the app bar itself, or the content below it
  * @param canScroll a callback used to determine whether scroll events are to be handled by this
  *   [ExitUntilCollapsedScrollBehavior]
+ * @param followScope the scope the bar's follow spring runs in, or `null` to draw the bar at the
+ *   scroll position directly (see `COUIScrollBehavior`'s `followScroll`).
  */
 private class ExitUntilCollapsedScrollBehavior(
     override val state: TopAppBarState,
     override val snapAnimationSpec: AnimationSpec<Float>?,
     override val flingAnimationSpec: DecayAnimationSpec<Float>?,
     val canScroll: () -> Boolean = { true },
+    private val followScope: CoroutineScope? = null,
 ) : ScrollBehavior {
     override val isPinned: Boolean = false
+
+    /** The spring the bar is drawn by while it trails [TopAppBarState.heightOffset]. */
+    private val follower = followScope?.let { TopAppBarFollowSpring(state, it) }
+
+    /**
+     * Moves the bar's height offset to [offset]. Without a follow scope the bar is drawn there at
+     * once; otherwise the drawn offset ([TopAppBarState.displayedHeightOffset]) catches up with
+     * [spec], keeping the velocity of a follow already running
+     * (`COUIViewOffsetHelper.animateTopAndBottomOffset`: `animateToFinalPosition` on the running
+     * spring).
+     */
+    fun moveHeightOffset(offset: Float, spec: AnimationSpec<Float>) {
+        val spring = follower
+        if (spring == null) {
+            state.heightOffset = offset
+            return
+        }
+        val from = state.displayedHeightOffset
+        val previous = state.heightOffset
+        state.heightOffset = offset
+        if (state.heightOffset == previous && (spring.isRunning || from == previous)) return
+        spring.follow(from, spec)
+    }
+
+    /**
+     * Whether a drag on the bar itself may move it now: the bar can collapse and is not fully
+     * collapsed (`COUICollapsableAppBarLayout.ScrollBehavior.canDragView`; a bar only stops short of
+     * collapsed while the content below it is at its top).
+     */
+    fun canDragBar(): Boolean = canScroll() && state.heightOffsetLimit < 0f && state.heightOffset > state.heightOffsetLimit
+
+    /**
+     * Drags the bar itself by [delta] pixels (`COUIHeaderBehavior.onTouchEvent` scrolling the
+     * header, followed with the `followHeaderResponse` spring).
+     */
+    fun dragBar(delta: Float) {
+        moveHeightOffset(state.heightOffset + delta, FollowHeaderSpec)
+    }
+
+    /**
+     * Settles the bar once a scroll, fling or drag of the bar has ended, and returns the velocity it
+     * consumed. With a follow scope it never flings the bar on and only springs a bar left between
+     * expanded and collapsed to the nearer one with [snapAnimationSpec]
+     * (`COUICollapsableAppBarLayout.ScrollBehavior.fling` and `snapToChildIfNeeded`, the midpoint
+     * deciding); otherwise it runs [settleAppBar].
+     */
+    suspend fun settle(velocity: Float): Velocity {
+        if (followScope == null) return settleAppBar(state, velocity, flingAnimationSpec, snapAnimationSpec)
+        val spec = snapAnimationSpec ?: return Velocity.Zero
+        val offset = state.heightOffset
+        val limit = state.heightOffsetLimit
+        if (offset < 0f && offset > limit) {
+            moveHeightOffset(if (state.collapsedFraction < 0.5f) 0f else limit, spec)
+        }
+        return Velocity.Zero
+    }
+
     override var nestedScrollConnection =
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 // Don't intercept if scrolling down.
                 if (!canScroll() || available.y > 0) return Offset.Zero
                 val prevHeightOffset = state.heightOffset
-                state.heightOffset += available.y
+                moveHeightOffset(prevHeightOffset + available.y, FollowCollapseSpec)
                 return if (prevHeightOffset != state.heightOffset) {
                     // We're in the middle of top app bar collapse or expand.
                     // Consume only the scroll on the Y axis.
@@ -741,7 +866,7 @@ private class ExitUntilCollapsedScrollBehavior(
                 if (available.y < 0f || consumed.y < 0f) {
                     // When scrolling up, just update the state's height offset.
                     val oldHeightOffset = state.heightOffset
-                    state.heightOffset += consumed.y
+                    moveHeightOffset(oldHeightOffset + consumed.y, FollowCollapseSpec)
                     return Offset(0f, state.heightOffset - oldHeightOffset)
                 }
 
@@ -749,7 +874,7 @@ private class ExitUntilCollapsedScrollBehavior(
                     // Adjust the height offset in case the consumed delta Y is less than what was
                     // recorded as available delta Y in the pre-scroll.
                     val oldHeightOffset = state.heightOffset
-                    state.heightOffset += available.y
+                    moveHeightOffset(oldHeightOffset + available.y, FollowExpandSpec)
                     return Offset(0f, state.heightOffset - oldHeightOffset)
                 }
                 return Offset.Zero
@@ -762,10 +887,100 @@ private class ExitUntilCollapsedScrollBehavior(
                     state.contentOffset = 0f
                 }
                 val superConsumed = super.onPostFling(consumed, available)
-                return superConsumed +
-                    settleAppBar(state, available.y, flingAnimationSpec, snapAnimationSpec)
+                return superConsumed + settle(available.y)
             }
         }
+}
+
+/**
+ * Draws a top app bar after its [TopAppBarState.heightOffset] (COUI 17
+ * `COUIViewOffsetHelper.mScrollSpringAnimation`): one frame loop in [scope] runs while the drawn
+ * offset, [TopAppBarState.followOffset], has not caught up. Each frame it reads the bar's offset,
+ * and a new offset or a new spec restarts the animation from where the bar is drawn with its
+ * current velocity, like `animateToFinalPosition` on the running spring. For a spring that is
+ * exact, so the bar can follow a scroll that moves its offset every frame.
+ */
+private class TopAppBarFollowSpring(
+    private val state: TopAppBarState,
+    private val scope: CoroutineScope,
+) {
+    private var sourceSpec: AnimationSpec<Float>? = null
+    private var spec: VectorizedAnimationSpec<AnimationVector1D>? = null
+    private var restartPending = false
+    private var value = 0f
+    private var velocity = 0f
+    private var startValue = 0f
+    private var startVelocity = 0f
+    private var target = 0f
+    private var playTimeNanos = 0L
+    private var durationNanos = 0L
+
+    /** Whether a follow is running. */
+    var isRunning = false
+        private set
+
+    /**
+     * Follows the bar's offset with [animationSpec]; a follow that is not running yet starts from
+     * [from], where the bar is drawn now.
+     */
+    fun follow(from: Float, animationSpec: AnimationSpec<Float>) {
+        if (animationSpec !== sourceSpec) {
+            sourceSpec = animationSpec
+            spec = animationSpec.vectorize(Float.VectorConverter)
+            restartPending = true
+        }
+        if (isRunning) return
+        isRunning = true
+        restartPending = true
+        value = from
+        velocity = 0f
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                state.followOffset = value
+                var lastFrameNanos = Long.MIN_VALUE
+                while (true) {
+                    val frameNanos = withFrameNanos { it }
+                    // The first frame only takes the time, like COUIDynamicAnimation's first frame.
+                    if (lastFrameNanos != Long.MIN_VALUE && !step(frameNanos - lastFrameNanos)) break
+                    lastFrameNanos = frameNanos
+                    state.followOffset = value
+                }
+            } finally {
+                isRunning = false
+                state.followOffset = Float.NaN
+            }
+        }
+    }
+
+    /** Advances the follow by [frameNanos]; `false` once it has settled on the bar's offset. */
+    private fun step(frameNanos: Long): Boolean {
+        val vectorized = spec ?: return false
+        val latest = state.heightOffset
+        if (restartPending || latest != target) {
+            restartPending = false
+            startValue = value
+            startVelocity = velocity
+            target = latest
+            playTimeNanos = 0L
+            durationNanos = vectorized.getDurationNanos(
+                AnimationVector1D(startValue),
+                AnimationVector1D(target),
+                AnimationVector1D(startVelocity),
+            )
+        }
+        playTimeNanos += frameNanos
+        if (playTimeNanos >= durationNanos) {
+            value = target
+            velocity = 0f
+            return false
+        }
+        val start = AnimationVector1D(startValue)
+        val end = AnimationVector1D(target)
+        val initialVelocity = AnimationVector1D(startVelocity)
+        value = vectorized.getValueFromNanos(playTimeNanos, start, end, initialVelocity).value
+        velocity = vectorized.getVelocityFromNanos(playTimeNanos, start, end, initialVelocity).value
+        return true
+    }
 }
 
 /**
@@ -854,9 +1069,9 @@ private suspend fun settleAppBar(
  * @param actionIconPadding the end padding of the action icons
  *   ([Dp.Unspecified] = [TopAppBarDefaults.horizontalPadding]).
  * @param scrollBehavior the [ScrollBehavior] that drives the collapse/expand state. The layout
- *   reads its `heightOffset` directly inside the measure pass (so scroll only re-measures, never
- *   recomposes this subtree) and writes the matching `heightOffsetLimit` from the measured
- *   expanded height.
+ *   reads its `displayedHeightOffset` directly inside the measure pass (so scroll only
+ *   re-measures, never recomposes this subtree) and writes the matching `heightOffsetLimit` from
+ *   the measured expanded height. A [COUIScrollBehavior] also lets the bar be dragged.
  * @param modifier the [Modifier] to be applied to this layout.
  * @param largeTitle the large title of the [TopAppBar], if not specified, it will be the same as title.
  * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [TopAppBar].
@@ -894,13 +1109,31 @@ private fun TopAppBarLayout(
     bottomContent: @Composable () -> Unit = {},
 ) {
     // Producer lambdas — reads stay in layout/draw phases so scroll never recomposes this subtree.
+    // The bar is laid out at the drawn offset, which trails the scroll offset with the follow
+    // spring (COUIViewOffsetHelper), so every collapse visual below moves with it.
     val scrolledOffset = remember(scrollBehavior) {
-        { scrollBehavior?.state?.heightOffset ?: 0f }
+        { scrollBehavior?.state?.displayedHeightOffset ?: 0f }
     }
     // Divider progress: COUIDividerAppBarLayout fades the divider in over the whole
-    // collapse range (alpha 0 -> 1, horizontal margin 24dp -> 0dp).
+    // collapse range (alpha 0 -> 1, horizontal margin 24dp -> 0dp), dispatched from the same
+    // animated offset as the bar.
     val dividerFraction = remember(scrollBehavior) {
-        { (scrollBehavior?.state?.collapsedFraction ?: 0f).coerceIn(0f, 1f) }
+        {
+            val state = scrollBehavior?.state
+            if (state == null || state.heightOffsetLimit == 0f) {
+                0f
+            } else {
+                (state.displayedHeightOffset / state.heightOffsetLimit).coerceIn(0f, 1f)
+            }
+        }
+    }
+    // Dragging the bar itself (COUIHeaderBehavior.onTouchEvent): it follows the finger with the
+    // header follow spring and snaps like a scroll on release. Whether a drag may move the bar is
+    // decided when it starts (canDragView, read on ACTION_DOWN).
+    val barDragBehavior = scrollBehavior as? ExitUntilCollapsedScrollBehavior
+    val barDragAllowed = remember { mutableStateOf(false) }
+    val barDragState = rememberDraggableState { delta ->
+        if (barDragAllowed.value) barDragBehavior?.dragBar(delta)
     }
     val updateHeightOffsetLimit = remember(scrollBehavior) {
         { height: Int ->
@@ -966,18 +1199,20 @@ private fun TopAppBarLayout(
             }
             // Collapsed title: only shown once the bar is fully collapsed; until then the
             // large title morphs into it. In fade mode the large title fades away instead, so
-            // this slot stays empty.
+            // this slot stays empty. A new title cross-fades in (switchTitleContentWithAnimation).
             Box(Modifier.layoutId("title")) {
                 if (!fadeLargeTitleOnCollapse) {
-                    Text(
-                        text = title,
-                        color = animatedTitleColor,
-                        fontSize = collapsedTitleTextSize,
-                        fontWeight = TitleFontWeight,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        softWrap = false,
-                    )
+                    TopAppBarTitleCrossfade(text = title) { text ->
+                        Text(
+                            text = text,
+                            color = animatedTitleColor,
+                            fontSize = collapsedTitleTextSize,
+                            fontWeight = TitleFontWeight,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            softWrap = false,
+                        )
+                    }
                 }
             }
             Box(Modifier.layoutId("actionIcons")) {
@@ -986,15 +1221,17 @@ private fun TopAppBarLayout(
             // Expanded title: position and scale are driven by the collapse fraction in the
             // placement pass (CollapsingTextHelper SCALE mode).
             Box(Modifier.layoutId("largeTitle")) {
-                Text(
-                    text = largeTitle,
-                    color = animatedLargeTitleColor,
-                    fontSize = largeTitleFontSize,
-                    fontWeight = TitleFontWeight,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                )
+                TopAppBarTitleCrossfade(text = largeTitle) { text ->
+                    Text(
+                        text = text,
+                        color = animatedLargeTitleColor,
+                        fontSize = largeTitleFontSize,
+                        fontWeight = TitleFontWeight,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false,
+                    )
+                }
             }
             if (subtitle.isNotEmpty()) {
                 // Subtitle: alpha and collapsed position are driven in the placement pass
@@ -1034,16 +1271,39 @@ private fun TopAppBarLayout(
                 detectTapGestures { /* Consume click */ }
             }
             .then(
+                if (barDragBehavior != null) {
+                    Modifier.draggable(
+                        state = barDragState,
+                        orientation = Orientation.Vertical,
+                        onDragStarted = {
+                            barDragAllowed.value = searchState?.isActive != true && barDragBehavior.canDragBar()
+                        },
+                        onDragStopped = { velocity ->
+                            if (barDragAllowed.value) {
+                                barDragAllowed.value = false
+                                barDragBehavior.settle(velocity)
+                            }
+                        },
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .then(
                 if (showDivider) {
                     Modifier.drawWithContent {
                         drawContent()
                         // COUIDividerAppBarLayout: hairline at the app bar's bottom edge,
-                        // alpha 0 -> 1 and horizontal margin 24dp -> 0dp over the collapse.
+                        // alpha 0 -> 1 and horizontal margin 24dp -> 0dp over the collapse. It rides
+                        // the expanded bottom padding up and settles on the edge as the bar
+                        // collapses (COUICollapsableAppBarLayout.adjustPaddingBottom -> translateDivider:
+                        // -(startPaddingBottom + (endPaddingBottom - startPaddingBottom) * fraction)).
                         val fraction = dividerFraction()
                         if (fraction > 0f) {
                             val inset = lerp(DividerExpandedMarginHorizontal.toPx(), 0f, fraction)
                             val stroke = DividerThickness.toPx()
-                            val y = size.height - stroke / 2f
+                            val lift = TopAppBarDefaults.LargeTitleBottomPadding.toPx() * (1f - fraction)
+                            val y = size.height - stroke / 2f - lift
                             drawLine(
                                 color = dividerColor,
                                 start = Offset(inset, y),
@@ -1100,10 +1360,18 @@ private fun TopAppBarLayout(
                 .measure(constraints.copy(minWidth = 0, maxWidth = collapsedTitleMaxWidth, minHeight = 0))
 
         val largeTitleMaxWidth = (constraints.maxWidth - 2 * titlePaddingPx).coerceAtLeast(0)
-        val largeTitlePlaceable =
-            measurables
-                .fastFirst { it.layoutId == "largeTitle" }
-                .measure(constraints.copy(minWidth = 0, maxWidth = largeTitleMaxWidth, minHeight = 0))
+        val largeTitleMeasurable = measurables.fastFirst { it.layoutId == "largeTitle" }
+        val largeTitleConstraints = constraints.copy(minWidth = 0, maxWidth = largeTitleMaxWidth, minHeight = 0)
+        // A large title too long for the expanded bar is laid out again on every step of the morph,
+        // ellipsized to the bounds it is passing through scaled back up, so the shrinking title
+        // never runs past the collapsed slot (COUICollapsingToolbarLayout.updateTextLayoutIfNeed ->
+        // createCouiStaticLayout: width = currentBounds.width / scale, for a title that shows an
+        // ellipsis). A title that fits keeps its expanded layout, measured once here.
+        val ellipsizeWhileMorphing = !fadeLargeTitleOnCollapse &&
+            largeTitleMeasurable.maxIntrinsicWidth(Constraints.Infinity) > largeTitleMaxWidth
+        val fittingLargeTitlePlaceable = if (ellipsizeWhileMorphing) null else largeTitleMeasurable.measure(largeTitleConstraints)
+        // A single line, so its height does not depend on the width it is finally laid out at.
+        val largeTitleHeight = fittingLargeTitlePlaceable?.height ?: largeTitleMeasurable.maxIntrinsicHeight(largeTitleMaxWidth)
 
         val subtitlePlaceable =
             measurables
@@ -1117,7 +1385,7 @@ private fun TopAppBarLayout(
 
         val collapsedHeight = TopAppBarDefaults.CollapsedHeight.roundToPx()
         val largeTitleTop = if (largeTitleBottomMargin.isSpecified) {
-            expandedHeight.roundToPx() - largeTitleBottomMargin.roundToPx() - largeTitlePlaceable.height
+            expandedHeight.roundToPx() - largeTitleBottomMargin.roundToPx() - largeTitleHeight
         } else {
             TopAppBarDefaults.LargeTitleTopPadding.roundToPx()
         }
@@ -1127,7 +1395,7 @@ private fun TopAppBarLayout(
 
         // Expanded bar height (COUICollapsableAppBarLayout.onMeasure): the fixed 107dp grows by
         // the subtitle height, with the 12dp expanded bottom padding folded in.
-        val expandedContentHeight = largeTitleTop + largeTitlePlaceable.height +
+        val expandedContentHeight = largeTitleTop + largeTitleHeight +
             (subtitlePlaceable?.let { subtitleMarginTopPx + it.height } ?: 0)
         val expandedBarHeight = maxOf(
             expandedHeight.roundToPx() + subtitleHeight,
@@ -1143,7 +1411,7 @@ private fun TopAppBarLayout(
         } else {
             0f
         }
-        // The bar height follows the raw scroll offset; only the title morph below is
+        // The bar height follows the drawn offset linearly; only the title morph below is
         // eased (COUIEaseInterpolator on the CollapsingTextHelper position/text size).
         val barHeight = (collapsedHeight + expansion + offsetPx).coerceAtLeast(collapsedHeight)
         val easedFraction = CollapsingTitleEasing.transform(collapseFraction)
@@ -1159,7 +1427,7 @@ private fun TopAppBarLayout(
         }
 
         // Large title morph (CollapsingTextHelper.calculateOffsets): eased lerp between the
-        // expanded and collapsed slots, shifted by the raw scroll offset.
+        // expanded and collapsed slots, shifted by the drawn offset.
         val largeTitleX = lerp(titlePaddingPx.toFloat(), collapsedTitleX.toFloat(), easedFraction)
         val largeTitleY =
             lerp(largeTitleTop.toFloat(), (collapsedTitleY + expansion).toFloat(), easedFraction) + offsetPx
@@ -1173,6 +1441,13 @@ private fun TopAppBarLayout(
         }
         val collapsed = !fadeLargeTitleOnCollapse && collapseFraction >= CollapsedTitleSwapFraction
         val pivotX = if (layoutDirection == LayoutDirection.Rtl) 1f else 0f
+        val largeTitlePlaceable = fittingLargeTitlePlaceable ?: run {
+            // The bounds lerp from the expanded to the collapsed slot with the morph's position
+            // easing (COUICollapsingTextHelper.interpolateBounds).
+            val boundsWidth = lerp(largeTitleMaxWidth.toFloat(), collapsedTitleMaxWidth.toFloat(), easedFraction)
+            val layoutWidth = (boundsWidth / largeTitleScale).roundToInt().coerceIn(0, largeTitleMaxWidth)
+            largeTitleMeasurable.measure(largeTitleConstraints.copy(maxWidth = layoutWidth))
+        }
 
         // Search transition (HomepageImpl.animToEdit): the title area scrolls away above the bottom
         // content, which rises to the top of the bar, while the titles also shrink, fade and move up
@@ -1192,31 +1467,9 @@ private fun TopAppBarLayout(
             // status bar area the layout's top inset padding reserves above this content box.
             glowPlaceable?.placeRelative(x = 0, y = -statusBarInsetPx)
 
-            // Navigation icon
-            navigationIconPlaceable.placeRelativeWithLayer(
-                x = navigationIconPaddingPx,
-                y = verticalCenter - navigationIconPlaceable.height / 2 + areaShift,
-            ) {
-                alpha = searchAlpha
-            }
-
-            // Action icons
-            actionIconsPlaceable.placeRelativeWithLayer(
-                x = constraints.maxWidth - actionIconPaddingPx - actionIconsPlaceable.width,
-                y = verticalCenter - actionIconsPlaceable.height / 2 + areaShift,
-            ) {
-                alpha = searchAlpha
-            }
-
-            // Subtitle (COUICollapsableAppBarLayout.adjustSubtitleIfNeed): rides the scroll 1:1,
-            // lifted by the interpolating bottom padding; fades out only when hideSubtitleOnCollapse.
-            subtitlePlaceable?.placeRelativeWithLayer(
-                x = titlePaddingPx,
-                y = expandedBarHeight - subtitleHeight -
-                    (largeTitleBottomPaddingPx * (1f - collapseFraction)).roundToInt() + offsetPx + titleShift,
-            ) {
-                alpha = (if (hideSubtitleOnCollapse) 1f - collapseFraction else 1f) * searchAlpha
-            }
+            // The titles go beneath the toolbar buttons, which in turn go beneath the subtitle: the
+            // collapsing title is drawn in COUICollapsingToolbarLayout.onDraw, before its toolbar
+            // child, and the subtitle is a later sibling of the collapsing toolbar.
 
             // Large title: translates and scales into the collapsed title; swapped for the
             // dedicated collapsed title only at full collapse.
@@ -1243,6 +1496,32 @@ private fun TopAppBarLayout(
                 scaleX = titleSearchScale
                 scaleY = titleSearchScale
                 alpha = if (collapsed) searchAlpha else 0f
+            }
+
+            // Navigation icon
+            navigationIconPlaceable.placeRelativeWithLayer(
+                x = navigationIconPaddingPx,
+                y = verticalCenter - navigationIconPlaceable.height / 2 + areaShift,
+            ) {
+                alpha = searchAlpha
+            }
+
+            // Action icons
+            actionIconsPlaceable.placeRelativeWithLayer(
+                x = constraints.maxWidth - actionIconPaddingPx - actionIconsPlaceable.width,
+                y = verticalCenter - actionIconsPlaceable.height / 2 + areaShift,
+            ) {
+                alpha = searchAlpha
+            }
+
+            // Subtitle (COUICollapsableAppBarLayout.adjustSubtitleIfNeed): rides the scroll 1:1,
+            // lifted by the interpolating bottom padding; fades out only when hideSubtitleOnCollapse.
+            subtitlePlaceable?.placeRelativeWithLayer(
+                x = titlePaddingPx,
+                y = expandedBarHeight - subtitleHeight -
+                    (largeTitleBottomPaddingPx * (1f - collapseFraction)).roundToInt() + offsetPx + titleShift,
+            ) {
+                alpha = (if (hideSubtitleOnCollapse) 1f - collapseFraction else 1f) * searchAlpha
             }
 
             // Bottom content (pinned, below the bar)
@@ -1338,17 +1617,24 @@ private fun SmallTopAppBarLayout(
             Box(Modifier.layoutId("navigationIcon")) {
                 navigationIcon()
             }
-            // Title: TextAppearance.COUI.Toolbar.SecondTitle (18dp, sans-serif-medium).
+            // Title: TextAppearance.COUI.Toolbar.SecondTitle (18dp, sans-serif-medium). A new
+            // title cross-fades in (ToolbarTextTransitionController.startCrossFade); centered
+            // titles fade about their common center.
             Box(Modifier.layoutId("title")) {
-                Text(
+                TopAppBarTitleCrossfade(
                     text = title,
-                    color = animatedTitleColor,
-                    maxLines = 1,
-                    fontSize = titleTextSize,
-                    fontWeight = SmallTitleFontWeight,
-                    overflow = TextOverflow.Ellipsis,
-                    softWrap = false,
-                )
+                    contentAlignment = if (centerTitle) Alignment.TopCenter else Alignment.TopStart,
+                ) { text ->
+                    Text(
+                        text = text,
+                        color = animatedTitleColor,
+                        maxLines = 1,
+                        fontSize = titleTextSize,
+                        fontWeight = SmallTitleFontWeight,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false,
+                    )
+                }
             }
             Box(Modifier.layoutId("actionIcons")) {
                 actions()
@@ -1541,6 +1827,73 @@ private fun SmallTopAppBarLayout(
 }
 
 /**
+ * Shows [text] through [content] and cross-fades to a new one whenever [text] changes, like the
+ * COUI 17 toolbar title switch (`COUICollapsingToolbarLayout.switchTitleContentWithAnimation` ->
+ * `ToolbarTextTransitionController.startCrossFade`): the old title fades out and the new one fades
+ * in at the same place, both with the response 0.2 / bounce 0 alpha spring. A change while a
+ * cross-fade runs continues the outgoing title from the alpha it had reached.
+ *
+ * The alphas are read in the draw phase, so the fade itself never recomposes the title.
+ *
+ * @param text the title to show.
+ * @param modifier the [Modifier] to be applied to the titles' container.
+ * @param contentAlignment where the two titles sit against each other while they cross-fade.
+ * @param content draws one title.
+ */
+@Composable
+private fun TopAppBarTitleCrossfade(
+    text: String,
+    modifier: Modifier = Modifier,
+    contentAlignment: Alignment = Alignment.TopStart,
+    content: @Composable (String) -> Unit,
+) {
+    var shownText by remember { mutableStateOf(text) }
+    var leavingText by remember { mutableStateOf<String?>(null) }
+    val enterAlpha = remember { Animatable(1f, visibilityThreshold = TitleCrossfadeVisibilityThreshold) }
+    val exitAlpha = remember { Animatable(0f, visibilityThreshold = TitleCrossfadeVisibilityThreshold) }
+    LaunchedEffect(text) {
+        if (text == shownText) return@LaunchedEffect
+        // The outgoing title leaves from the alpha it had reached (startCrossFade continues a view
+        // that is not at rest), the incoming one starts from transparent.
+        val from = enterAlpha.value
+        leavingText = shownText
+        shownText = text
+        exitAlpha.snapTo(from)
+        enterAlpha.snapTo(0f)
+        coroutineScope {
+            launch { exitAlpha.animateTo(0f, TitleCrossfadeSpec) }
+            launch { enterAlpha.animateTo(1f, TitleCrossfadeSpec) }
+        }
+        leavingText = null
+    }
+    val leaving = leavingText
+    val titles = if (leaving != null) listOf(leaving, shownText) else listOf(shownText)
+    Box(modifier = modifier, contentAlignment = contentAlignment) {
+        titles.forEach { title ->
+            // Keyed by the text, so the outgoing title keeps its node and laid-out text as it leaves.
+            key(title) {
+                val isLeaving = title == leaving
+                Box(
+                    if (isLeaving) {
+                        // The outgoing title is decoration only; accessibility reads the new one.
+                        Modifier
+                            .clearAndSetSemantics {}
+                            .graphicsLayer { alpha = exitAlpha.value }
+                    } else {
+                        Modifier.graphicsLayer { alpha = enterAlpha.value }
+                    },
+                ) {
+                    content(title)
+                }
+            }
+        }
+    }
+}
+
+/** The title cross-fade's minimum visible alpha change, `ToolbarGroupTransitionParams` (1/256). */
+private val TitleCrossfadeVisibilityThreshold = 1f / 256f
+
+/**
  * The weight shared by the expanded and the collapsed title. `COUIAppbarTitleStyle.Expanded` is
  * `sans-serif-semibold`; the large title is swapped for the collapsed one at full collapse
  * (`COUICollapsingTextHelper` changes typeface only when the fraction reaches 1), so both use the
@@ -1570,14 +1923,33 @@ private val SmallTitleFontWeight = FontWeight.Medium
  */
 private val CollapsingTitleEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
-/**
- * The duration of the snap animation that settles the bar after a drag or fling
- * (AppBarLayout.BaseBehavior.animateOffsetTo for the app bar's snap distance).
- */
-private val SnapAnimationDuration = 180
+/** The pixel distance at which the bar's follow springs count as settled. */
+private val FollowVisibilityThreshold = 0.5f
 
-/** The DecelerateInterpolator that AppBarLayout.BaseBehavior installs on its offset animator. */
-private val SnapAnimationEasing = Easing { fraction -> 1f - (1f - fraction) * (1f - fraction) }
+/**
+ * The follow spring while a scroll collapses the bar: COUI 17 `COUICollapsableAppBarLayoutParams`
+ * `followListResponseUp` 0.2 with `followBounce` 0 (`ScrollBehavior.scroll` for `dy > 0`).
+ */
+private val FollowCollapseSpec = TouchMotion.spring(response = 0.2f, bounce = 0f, visibilityThreshold = FollowVisibilityThreshold)
+
+/**
+ * The follow spring while a scroll expands the bar: `followListResponseDown` 0.1 with
+ * `followBounce` 0 (`ScrollBehavior.scroll` for `dy < 0`).
+ */
+private val FollowExpandSpec = TouchMotion.spring(response = 0.1f, bounce = 0f, visibilityThreshold = FollowVisibilityThreshold)
+
+/**
+ * The follow spring while the bar itself is dragged: `followHeaderResponse` 0.15 with
+ * `followHeaderBounce` 0 (`ScrollBehavior.scroll` from `COUIHeaderBehavior.onTouchEvent`).
+ */
+private val FollowHeaderSpec = TouchMotion.spring(response = 0.15f, bounce = 0f, visibilityThreshold = FollowVisibilityThreshold)
+
+/**
+ * The title cross-fade spring, both ways: COUI 17 `ToolbarGroupTransitionParams`
+ * `textEnterAlphaSpring` / `textExitAlphaSpring` (response 0.2, bounce 0) with the 1/256 minimum
+ * visible alpha change (`ToolbarTextTransitionController.startCrossFade`).
+ */
+private val TitleCrossfadeSpec = TouchMotion.spring(response = 0.2f, bounce = 0f, visibilityThreshold = TitleCrossfadeVisibilityThreshold)
 
 /**
  * The collapsed fraction at which the morphing large title is swapped for the dedicated

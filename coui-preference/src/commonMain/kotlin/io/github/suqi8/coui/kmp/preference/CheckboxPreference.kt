@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +25,7 @@ import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.preference.internal.StartActionSlot
+import io.github.suqi8.coui.kmp.preference.internal.onTouchDown
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 
@@ -31,7 +33,9 @@ import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
  * A checkbox with a title and a summary.
  *
  * As in `COUICheckBoxPreference`, the whole row is the touch target: the checkbox is drawn without
- * its own press highlight, and toggling plays the COUI 302 haptic.
+ * its own press highlight. The COUI 302 haptic plays as soon as a finger lands on an enabled row,
+ * not when the click completes (`COUICheckBoxPreference.onBindViewHolder` installs an item touch
+ * listener that calls `performHapticFeedback(302)` on `ACTION_DOWN`).
  *
  * @param title The title of the [CheckboxPreference].
  * @param checked The checked state of the [CheckboxPreference].
@@ -75,9 +79,12 @@ fun CheckboxPreference(
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
     val haptic = rememberCouiHaptic()
+    val currentHaptic by rememberUpdatedState(haptic)
+    val onRowTouchDown = remember { { currentHaptic(CouiHapticEffect.Switch) } }
 
     BasicComponent(
-        modifier = modifier,
+        // The item touch listener only runs while the row is enabled (View.dispatchTouchEvent).
+        modifier = modifier.onTouchDown(enabled = enabled && onCheckedChange != null, onTouchDown = onRowTouchDown),
         insideMargin = insideMargin,
         cardListPosition = cardListPosition,
         title = title,
@@ -131,10 +138,7 @@ fun CheckboxPreference(
         },
         bottomAction = bottomAction,
         onClick = {
-            currentOnCheckedChange.takeIf { enabled }?.let {
-                haptic(CouiHapticEffect.Switch)
-                it(!checked)
-            }
+            currentOnCheckedChange.takeIf { enabled }?.invoke(!checked)
         },
         role = Role.Checkbox,
         holdDownState = holdDownState,

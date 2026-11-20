@@ -41,6 +41,21 @@ class SnackbarLayoutTest {
     }
 
     @Test
+    fun singleLineBarSpansTheWidthWithTheActionAtTheEnd() = runComposeUiTest {
+        setContent {
+            COUITheme {
+                Box(Modifier.width(360.dp)) { Snackbar(data("Saved", "Undo")) }
+            }
+        }
+        val message = onNodeWithText("Saved").getUnclippedBoundsInRoot()
+        val action = onNodeWithText("Undo").getUnclippedBoundsInRoot()
+        // coui_snack_bar_item stretches to the width it is offered: the message starts 16dp into the
+        // bar, the action ends 4dp before it (360dp box - 16dp outer margin - 4dp end margin).
+        assertTrue(message.left >= 31.dp && message.left <= 33.dp, "message must start the bar: $message")
+        assertTrue(action.right > 330.dp && action.right <= 340.dp, "action must end the bar: $action")
+    }
+
+    @Test
     fun wrappingMessageMovesTheActionBelowAndToTheEnd() = runComposeUiTest {
         val text = "The file has been moved to the recycle bin and will be deleted permanently after 30 days"
         setContent {

@@ -96,17 +96,17 @@ ExpandableGroupContent(expanded = expanded) {
 | expanded | Boolean  | 是否显示为展开     | -                                    | 是       |
 | modifier | Modifier | 应用于箭头的修饰符 | Modifier                             | 否       |
 | color    | Color    | 箭头颜色           | ExpandableGroupDefaults.arrowColor() | 否       |
-| size     | Dp       | 箭头尺寸           | ExpandableGroupDefaults.ArrowSize    | 否       |
+| size     | Dp       | 箭头旋转所在方框的尺寸 | ExpandableGroupDefaults.ArrowSize | 否       |
 
 ### ExpandableGroupDefaults
 
-| 成员         | 类型  | 默认值                           | COUI 来源                                   |
-| ------------ | ----- | -------------------------------- | ------------------------------------------- |
-| ArrowSize    | Dp    | 24.dp                            | coui_app_expander_close_default             |
-| arrowColor() | Color | COUITheme.colorScheme.dragHandle | coui_color_controls（#29000000 / #40FFFFFF） |
+| 成员         | 类型  | 默认值                               | COUI 来源                                                     |
+| ------------ | ----- | ------------------------------------ | ------------------------------------------------------------- |
+| ArrowSize    | Dp    | 24.dp                                | expandable_list_item_size                                     |
+| arrowColor() | Color | COUITheme.colorScheme.labelSecondary | coui_line_arrow：couiColorLabelSecondary（#8A000000 / #8AFFFFFF） |
 
 ## 行为
 
-- 子项在 400ms 内按 COUIMoveEaseInterpolator (0.3, 0, 0.1, 1) 从零高度伸展到完整高度（或反向收起），透明度等于可见高度比例，与 `ExpandableRecyclerConnector` 的占位视图一致。中途再次切换时从当前高度开始，时长按剩余距离等比缩短。
-- 箭头在 400ms 内按 (0.133, 0, 0.3, 1) 从 0 度转到 180 度（`COUIRotateView`，z 轴旋转类型）。
+- 子项在 400ms 内按 COUIMoveEaseInterpolator (0.3, 0, 0.1, 1) 从零高度伸展到完整高度（或反向收起），透明度等于可见高度比例，与 `ExpandableRecyclerConnector` 的占位视图一致。中途再次切换时从当前高度开始：收起耗时 `当前高度 / 完整高度 × 400ms`，展开始终为完整的 400ms（`ExpandableRecyclerConnector.collapseAnimationStart` / `expandAnimationStart`）。
+- 箭头采用 ColorOS 17 设置中可展开行的箭头（`settings_preference_widget_rotateview.xml`）：`coui_line_arrow` 折线箭头（16 × 24dp）居中于 24dp 方框内，在 400ms 内按 (0.133, 0, 0.3, 1) 从 0 度转到 180 度（`COUIRotateView`，旋转类型 `couiRotateAloneZ`）。
 - 仅在展开或动画进行时组合子项。标题提供展开 / 收起的无障碍操作。

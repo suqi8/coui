@@ -9,32 +9,35 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
-import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
+import io.github.suqi8.coui.kmp.squircle.addLegacySquircleRect
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -184,19 +187,22 @@ private fun BadgeScaleVisibility(
     visible: Boolean,
     content: @Composable (scaleModifier: Modifier) -> Unit,
 ) {
-    val scale by animateFloatAsState(
+    val scale = animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(durationMillis = BadgeDefaults.ScaleAnimDurationMillis, easing = WidthAnimEasing),
         label = "badgeScale",
     )
-    if (!visible && scale == 0f) return
+    // The scale is read in the layer only: composition just follows the ends of the animation.
+    val atRest by remember(scale) { derivedStateOf { scale.value == 1f } }
+    val gone by remember(scale) { derivedStateOf { scale.value == 0f } }
+    if (!visible && gone) return
     content(
-        if (scale == 1f) {
+        if (atRest) {
             Modifier
         } else {
             Modifier.graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                scaleX = scale.value
+                scaleY = scale.value
             }
         },
     )
@@ -281,32 +287,56 @@ private fun CapsuleBadge(
     height: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val width by animateDpAsState(
+    // The width is read in the layout and draw phases only, so the 517ms resize does not recompose.
+    val width = animateDpAsState(
         targetValue = targetWidth,
         animationSpec = tween(durationMillis = WidthAnimDurationMillis, easing = WidthAnimEasing),
         label = "badgeWidth",
     )
-    // drawPointWithNumber clamps couiRoundCornerFULL (72dp) to min(width, height) / 2 and draws the
-    // capsule with the COUIRoundRectUtil Java path (COUIShapePath), not the Oplus superellipse.
-    // drawPointWithStroke passes the unclamped 72dp to the outer path, which folds over itself; the
-    // outer ring uses the clamped radius here, the inner fill the same min / 2 rule as COUI.
-    // A navigation capsule can be narrower than it is tall (12dp x 16dp): the radius clamps to
-    // min(width, height) / 2 like drawPointWithNumber.
-    val cornerRadius = minOf(width, height) / 2
-    val backgroundModifier = if (stroke) {
-        Modifier
-            .background(color = colors.strokeColor, shape = LegacySquircleShape(cornerRadius))
-            .padding(BadgeDefaults.StrokeWidth)
-            .background(color = colors.containerColor, shape = LegacySquircleShape(cornerRadius - BadgeDefaults.StrokeWidth))
-    } else {
-        Modifier.background(color = colors.containerColor, shape = LegacySquircleShape(cornerRadius))
-    }
     val density = LocalDensity.current
     val fontSize = with(density) { BadgeDefaults.TextSize.toSp() }
+    val containerColor = colors.containerColor
+    val strokeColor = colors.strokeColor
     Box(
         modifier = modifier
-            .size(width = width, height = height)
-            .then(backgroundModifier),
+            .layout { measurable, constraints ->
+                val w = constraints.constrainWidth(width.value.roundToPx())
+                val h = constraints.constrainHeight(height.roundToPx())
+                val placeable = measurable.measure(Constraints.fixed(w, h))
+                layout(w, h) { placeable.place(0, 0) }
+            }
+            .drawWithCache {
+                // drawPointWithNumber clamps couiRoundCornerFULL (72dp) to min(width, height) / 2
+                // and draws the capsule with the COUIRoundRectUtil Java path (COUIShapePath), not
+                // the Oplus superellipse. drawPointWithStroke passes the unclamped 72dp to the outer
+                // path, which folds over itself; the outer ring uses the clamped radius here, the
+                // inner fill the same min / 2 rule as COUI. A navigation capsule can be narrower
+                // than it is tall (12dp x 16dp): the radius clamps to min(width, height) / 2.
+                val radius = minOf(size.width, size.height) / 2f
+                val outline = Path().apply { addLegacySquircleRect(size.width, size.height, radius) }
+                val fill = if (stroke) {
+                    val inset = BadgeDefaults.StrokeWidth.toPx()
+                    Path().apply {
+                        addLegacySquircleRect(
+                            width = size.width - 2 * inset,
+                            height = size.height - 2 * inset,
+                            cornerRadius = radius - inset,
+                            left = inset,
+                            top = inset,
+                        )
+                    }
+                } else {
+                    null
+                }
+                onDrawBehind {
+                    if (fill != null) {
+                        drawPath(outline, color = strokeColor)
+                        drawPath(fill, color = containerColor)
+                    } else {
+                        drawPath(outline, color = containerColor)
+                    }
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         Crossfade(

@@ -3,9 +3,13 @@
 package io.github.suqi8.coui.kmp.layout
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.TwoWayConverter
+import androidx.compose.animation.core.VectorizedFiniteAnimationSpec
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -35,8 +39,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableFloatState
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -52,6 +55,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -59,13 +63,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.Velocity
@@ -92,6 +98,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.PI
 import kotlin.math.abs
@@ -106,8 +113,15 @@ import kotlin.math.abs
  *   centered between the top inset and [BottomSheetDefaults.LargeScreenMarginBottom], with all four
  *   corners rounded, entering with a scale 0.8 -> 1 + alpha spring. A handle panel always stays
  *   bottom-anchored (`COUIPanelPercentFrameLayout.getRatio` returns 1 for it).
+ * - The slide covers the part of the panel that is on screen (`getTranslationDistance`) and starts
+ *   once the panel is laid out. A show or hide in flight is turned around from where the panel is
+ *   drawn, keeping its spring and speed (`reversalAnimation`).
  * - The whole panel is draggable (`mGlobalDrag = true`); scrollable content drags it only once it is
- *   scrolled to the top.
+ *   scrolled to the top. A released panel settles with a bounce-0 spring started at the release
+ *   speed, an overshoot past the resting state shown at 0.4 (`panelHeightVerticalMoving`). A panel
+ *   that cannot be dismissed follows the finger down to its collapsed (peek) offset and may rest there.
+ * - Released to close, the panel slides off while the mask fades on its own spring
+ *   (`dismissWithAlphaAnim`), and the keyboard is hidden as soon as the panel starts to leave.
  *
  * @param show Whether the bottom sheet is currently shown.
  * @param backgroundColor The background color of the bottom sheet.
@@ -133,6 +147,7 @@ import kotlin.math.abs
  *   the maximum height and rests in collapsed / half-expanded / expanded states).
  * @param showInMaxHeight Whether the panel takes the maximum height instead of wrapping its content.
  * @param allowDismiss Whether to allow dismissing the sheet via drag, back gesture or outside taps.
+ *   When false, a drag down stops at the collapsed (peek) offset.
  * @param dismissOnClickOutside Whether tapping outside the panel dismisses it.
  * @param draggable Whether the panel follows drag gestures.
  * @param enablePullUp Whether the panel can be pulled above its resting position.
@@ -177,15 +192,11 @@ internal fun BottomSheetContentLayout(
     showHeader: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val animationProgress = remember { Animatable(0f, visibilityThreshold = 0.0001f) }
-    val fadeProgress = remember { Animatable(0f, visibilityThreshold = 0.0001f) }
-    val dragOffsetY = remember { Animatable(0f) }
+    val panel = remember { BottomSheetPanelState() }
     val currentOnDismissFinished by rememberUpdatedState(onDismissFinished)
-    val internalVisible = remember { mutableStateOf(false) }
+    val currentShow by rememberUpdatedState(show)
     val density = LocalDensity.current
     val windowSize = LocalWindowInfo.current.containerDpSize
-    val sheetHeightPx = remember { mutableIntStateOf(0) }
-    val restState = remember { mutableIntStateOf(PanelState.Expanded) }
     val resolvedTopInset = topInset ?: systemTopInset()
     val centered = !handlePanel && windowSize.width >= BottomSheetDefaults.LargeScreenWidthThreshold
     val geometry = SheetGeometry(
@@ -201,73 +212,22 @@ internal fun BottomSheetContentLayout(
     val currentGeometry by rememberUpdatedState(geometry)
 
     LaunchedEffect(show) {
-        // COUI samples the panel/container heights when the animation starts; mirror that
-        // with a one-shot read of the latest geometry.
-        val g = currentGeometry
+        // COUI samples the panel/container heights when the animation starts; mirror that with a
+        // one-shot read of the latest geometry.
         if (show) {
-            internalVisible.value = true
-            if (g.centered) {
-                // COUIBottomSheetDialog.isFadeInCenter: scale 0.8 -> 1 and alpha 0 -> 1, response 0.25.
-                dragOffsetY.snapTo(0f)
-                restState.intValue = PanelState.Expanded
-                coroutineScope {
-                    launch { fadeProgress.animateTo(1f, panelSpring(CenterShowResponse)) }
-                    animationProgress.animateTo(1f, panelSpring(CenterShowResponse))
-                }
-            } else {
-                fadeProgress.snapTo(1f)
-                // COUIBottomSheetDialog.initBehavior: a handle panel opens half-expanded in portrait
-                // and collapsed in landscape; every other panel opens expanded.
-                val initialState = when {
-                    !g.handlePanel -> PanelState.Expanded
-                    g.landscape -> PanelState.Collapsed
-                    else -> PanelState.HalfExpanded
-                }
-                val heightPx = if (g.handlePanel) g.maxHeightPx else sheetHeightPx.intValue.toFloat()
-                val initialOffset = g.offsetFor(initialState, heightPx)
-                restState.intValue = initialState
-                dragOffsetY.snapTo(initialOffset)
-                animationProgress.animateTo(
-                    targetValue = 1f,
-                    animationSpec = couiPanelSlideSpring(
-                        entering = true,
-                        travelPx = if (heightPx > 0f) heightPx - initialOffset else g.windowHeightPx,
-                        containerPx = g.windowHeightPx,
-                        peekPx = g.peekPx,
-                    ),
-                )
-            }
-        } else {
-            if (!internalVisible.value) return@LaunchedEffect
-            if (g.centered) {
-                // Exit: alpha response 0.18, scale response 0.25.
-                coroutineScope {
-                    launch { fadeProgress.animateTo(0f, panelSpring(CenterHideAlphaResponse)) }
-                    animationProgress.animateTo(0f, panelSpring(CenterShowResponse))
-                }
-            } else {
-                // A panel already dragged off-screen still runs this so the mask fades out.
-                val heightPx = sheetHeightPx.intValue.toFloat()
-                val visiblePx = if (heightPx > 0f) (heightPx - dragOffsetY.value).coerceAtLeast(0f) else g.windowHeightPx
-                animationProgress.animateTo(
-                    targetValue = 0f,
-                    animationSpec = couiPanelSlideSpring(
-                        entering = false,
-                        travelPx = visiblePx,
-                        containerPx = g.windowHeightPx,
-                        peekPx = g.peekPx,
-                    ),
-                )
-            }
-            internalVisible.value = false
+            panel.animateShow(currentGeometry)
+        } else if (panel.visible.value) {
+            panel.animateHide(currentGeometry)
+            panel.visible.value = false
+            // The next show measures the panel afresh before it slides in.
+            panel.heightPx.intValue = 0
             currentOnDismissFinished?.invoke()
         }
     }
 
-    if (!show && !internalVisible.value) return
+    if (!show && !panel.visible.value) return
 
-    val coroutineScope = rememberCoroutineScope()
-    val dimAlpha = remember { mutableFloatStateOf(1f) }
+    val scope = rememberCoroutineScope()
     val dragSnapChannel = remember { Channel<Float>(capacity = Channel.CONFLATED) }
     val currentOnDismissRequest by rememberUpdatedState(onDismissRequest)
 
@@ -275,47 +235,50 @@ internal fun BottomSheetContentLayout(
         { currentOnDismissRequest?.invoke() }
     }
 
-    val restOffset: () -> Float = {
-        currentGeometry.offsetFor(restState.intValue, sheetHeightPx.intValue.toFloat())
-    }
-
     val resetGesture: suspend () -> Unit = {
-        dragOffsetY.animateTo(restOffset(), animationSpec = tween(durationMillis = 150))
-        animate(dimAlpha.floatValue, 1f, animationSpec = tween(durationMillis = 150)) { value, _ ->
-            dimAlpha.floatValue = value
+        coroutineScope {
+            launch { panel.animateDimTo(1f, SettleResponse) }
+            panel.dragOffset.animateTo(panel.restOffset(currentGeometry), panelSpring(SettleResponse))
         }
     }
 
-    LaunchedEffect(dragOffsetY) {
-        for (target in dragSnapChannel) dragOffsetY.snapTo(target)
+    // COUI always dismisses here; the panel returns to rest if the caller keeps the sheet shown.
+    val requestDismissFromGesture: () -> Unit = {
+        scope.launch {
+            requestDismiss()
+            repeat(DismissConfirmFrames) { withFrameNanos { } }
+            if (currentShow) resetGesture()
+        }
     }
 
-    popupHost(internalVisible.value) {
+    LaunchedEffect(panel) {
+        for (target in dragSnapChannel) {
+            panel.dragOffset.snapTo(target)
+            if (panel.pendingOffset == target) panel.pendingOffset = Float.NaN
+        }
+    }
+
+    popupHost(panel.visible.value) {
+        // COUIBottomSheetDialog.dismiss(boolean) hides the keyboard as soon as the panel starts to leave.
+        val keyboardController = LocalSoftwareKeyboardController.current
+        val imeInsets = WindowInsets.ime
+        val hostDensity = LocalDensity.current
+        LaunchedEffect(show) {
+            if (!show && imeInsets.getBottom(hostDensity) > 0) keyboardController?.hide()
+        }
+
         val navigationEventState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
         NavigationBackHandler(
             state = navigationEventState,
             isBackEnabled = show,
-            onBackCancelled = { coroutineScope.launch { resetGesture() } },
+            onBackCancelled = { scope.launch { resetGesture() } },
             onBackCompleted = {
                 if (allowDismiss) {
-                    val g = currentGeometry
-                    if (g.centered) {
-                        requestDismiss()
-                    } else {
-                        coroutineScope.launch {
-                            animateDismissOffScreen(
-                                dragOffsetY = dragOffsetY,
-                                travelPx = g.travelPx(sheetHeightPx.intValue.toFloat()),
-                                windowHeightPx = g.windowHeightPx,
-                                peekPx = g.peekPx,
-                                dimAlpha = if (g.handlePanel) null else dimAlpha,
-                            ) {
-                                requestDismiss()
-                            }
-                        }
-                    }
+                    // COUIBottomSheetDialog.onBackPressed -> cancel(): the regular hide animation,
+                    // continued from where the back gesture left the panel.
+                    requestDismissFromGesture()
                 } else {
-                    coroutineScope.launch { resetGesture() }
+                    scope.launch { resetGesture() }
                 }
             },
         )
@@ -329,12 +292,13 @@ internal fun BottomSheetContentLayout(
                         transitionState is NavigationEventTransitionState.InProgress &&
                         transitionState.direction == NavigationEventTransitionState.TRANSITIONING_BACK
                     ) {
-                        val maxOffset = if (sheetHeightPx.intValue > 0) sheetHeightPx.intValue.toFloat() else 500f
+                        val measuredHeight = panel.heightPx.intValue
+                        val maxOffset = if (measuredHeight > 0) measuredHeight.toFloat() else 500f
                         val offset = transitionState.latestEvent.progress * maxOffset
                         val finalOffset = if (!allowDismiss) offset * 0.1f else offset
-                        dragSnapChannel.trySend(restOffset() + finalOffset)
+                        dragSnapChannel.trySend(panel.restOffset(currentGeometry) + finalOffset)
                         if (allowDismiss && !currentGeometry.handlePanel) {
-                            dimAlpha.floatValue = 1f - transitionState.latestEvent.progress
+                            panel.dimAlpha.floatValue = 1f - transitionState.latestEvent.progress
                         }
                     }
                 }
@@ -342,14 +306,18 @@ internal fun BottomSheetContentLayout(
 
         if (enableWindowDim) {
             // COUI drives the mask alpha with the same spring as the panel slide (or the alpha
-            // spring of a floating panel), which multiplying by the progress reproduces here.
+            // spring of a floating panel); after a drag-to-dismiss it fades on its own spring.
             val baseColor = COUITheme.colorScheme.mask
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .drawBehind {
-                        val progress = if (centered) fadeProgress.value else animationProgress.value
-                        drawRect(baseColor.copy(alpha = baseColor.alpha * dimAlpha.floatValue * progress))
+                        val progress = when {
+                            panel.maskFadingOut.value -> 1f
+                            centered -> panel.fade.value
+                            else -> panel.progress.value
+                        }
+                        drawRect(baseColor.copy(alpha = baseColor.alpha * panel.dimAlpha.floatValue * progress))
                     },
             )
         }
@@ -387,17 +355,16 @@ internal fun BottomSheetContentLayout(
             contentAlignment = if (centered) Alignment.Center else Alignment.BottomCenter,
         ) {
             val sheetModifier = modifier.graphicsLayer {
-                val offset = dragOffsetY.value
+                val offset = panel.dragOffset.value
                 if (centered) {
-                    val scale = CenterScaleStart + (1f - CenterScaleStart) * animationProgress.value
+                    val scale = CenterScaleStart + (1f - CenterScaleStart) * panel.progress.value
                     scaleX = scale
                     scaleY = scale
-                    alpha = fadeProgress.value
+                    alpha = panel.fade.value
                     translationY = offset
                 } else {
-                    val currentHeight = sheetHeightPx.intValue.toFloat()
-                    val baseOffset = if (currentHeight > 0) currentHeight else geometry.windowHeightPx
-                    translationY = baseOffset * (1f - animationProgress.value) + offset
+                    // COUIBottomSheetDialog.translateUpdate: the slide covers the visible part of the panel.
+                    translationY = panel.slideTravel.floatValue * (1f - panel.progress.value) + offset
                 }
             }
 
@@ -419,11 +386,9 @@ internal fun BottomSheetContentLayout(
                 draggable = draggable,
                 enablePullUp = enablePullUp,
                 enableNestedScroll = enableNestedScroll,
-                sheetHeightPx = sheetHeightPx,
-                restState = restState,
-                dragOffsetY = dragOffsetY,
-                dimAlpha = dimAlpha,
+                panel = panel,
                 dragSnapChannel = dragSnapChannel,
+                isShown = { currentShow },
                 onDismissRequest = {
                     if (allowDismiss) {
                         requestDismiss()
@@ -474,11 +439,9 @@ private fun BottomSheetContent(
     draggable: Boolean,
     enablePullUp: Boolean,
     enableNestedScroll: Boolean,
-    sheetHeightPx: MutableIntState,
-    restState: MutableIntState,
-    dragOffsetY: Animatable<Float, AnimationVector1D>,
-    dimAlpha: MutableFloatState,
+    panel: BottomSheetPanelState,
     dragSnapChannel: Channel<Float>,
+    isShown: () -> Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     backgroundModifier: Modifier = Modifier,
@@ -487,10 +450,16 @@ private fun BottomSheetContent(
     endAction: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    // Read through a State so the gesture closures below always see the latest window geometry
-    // without being rebuilt (an IME resize must not recreate the handlers mid-gesture).
+    // Read through States so the gesture closures below always see the latest values without being
+    // rebuilt (an IME resize must not recreate the handlers mid-gesture).
     val currentGeometry by rememberUpdatedState(geometry)
-    val coroutineScope = rememberCoroutineScope()
+    val currentIsShown by rememberUpdatedState(isShown)
+    val currentOnDismissRequest by rememberUpdatedState(onDismissRequest)
+    val minFlingVelocityPx = with(LocalDensity.current) { MinFlingVelocity.toPx() }
+    val currentMinFlingVelocityPx by rememberUpdatedState(minFlingVelocityPx)
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val currentKeyboardController by rememberUpdatedState(keyboardController)
+    val scope = rememberCoroutineScope()
 
     val settlingJob = remember { mutableStateOf<Job?>(null) }
     val isSettling = remember { mutableStateOf(false) }
@@ -505,44 +474,60 @@ private fun BottomSheetContent(
             settlingJob.value?.cancel()
             isSettling.value = false
         }
-    }
-
-    val calculateNewOffset = remember(allowDismiss, enablePullUp) {
-        { current: Float, delta: Float ->
-            val maxPullUp = if (enablePullUp) {
-                currentGeometry.maxPullUpPx(sheetHeightPx.intValue.toFloat())
-            } else {
-                0f
-            }
-            when {
-                // Pulling above the resting position: COUIBottomSheetDialog grows the panel by
-                // 0.2 of the finger travel, capped at coui_panel_pull_up_max_offset and the space
-                // left above the panel.
-                delta < 0f && current <= 0f -> minOf(current, maxOf(current + delta * PullUpFriction, -maxPullUp))
-
-                delta < 0f -> {
-                    val next = current + delta
-                    if (next >= 0f) next else maxOf(next * PullUpFriction, -maxPullUp)
-                }
-
-                current < 0f -> (current + delta * PullUpFriction).coerceAtMost(0f)
-
-                !allowDismiss -> (current + delta * NotDismissibleDamping).coerceAtLeast(0f)
-
-                else -> current + delta
-            }
+        if (panel.maskFadingOut.value) {
+            // A panel grabbed again on its way out: the mask follows the drag once more.
+            panel.maskJob?.cancel()
+            panel.maskFadingOut.value = false
         }
     }
 
-    val updateDimAlpha = remember(allowDismiss) {
+    val updateDimAlpha: (Float) -> Unit = remember {
         { offset: Float ->
             val g = currentGeometry
             // COUIBottomSheetBehavior.calculatePanelOutsideAlpha normalizes by the parent height;
             // a handle panel keeps its mask still (setIsNeedOutsideViewAnim(false)).
-            dimAlpha.floatValue = if (g.handlePanel || !allowDismiss || offset <= 0f || g.windowHeightPx <= 0f) {
+            panel.dimAlpha.floatValue = if (g.handlePanel || offset <= 0f || g.containerPx <= 0f) {
                 1f
             } else {
-                1f - (offset / g.windowHeightPx).coerceIn(0f, 1f)
+                1f - (offset / g.containerPx).coerceIn(0f, 1f)
+            }
+        }
+    }
+
+    // Hands a gesture offset to the panel. Gestures compute from the latest value handed over, so
+    // steps that arrive before the snap lands are not lost.
+    val moveTo: (Float) -> Unit = remember {
+        { offset: Float ->
+            panel.pendingOffset = offset
+            dragSnapChannel.trySend(offset)
+            updateDimAlpha(offset)
+        }
+    }
+
+    val calculateNewOffset = remember(allowDismiss, enablePullUp) {
+        { current: Float, delta: Float ->
+            val g = currentGeometry
+            val heightPx = g.panelHeightPx(panel.heightPx.intValue)
+            val maxPullUp = if (enablePullUp) g.maxPullUpPx(heightPx) else 0f
+            val next = when {
+                // Pulling above the resting position: COUIBottomSheetDialog grows the panel by 0.2
+                // of the finger travel, capped at coui_panel_pull_up_max_offset and the space left
+                // above the panel. Moving back down follows the finger again.
+                delta < 0f && current <= 0f -> minOf(current, maxOf(current + delta * PullUpFriction, -maxPullUp))
+
+                delta < 0f -> {
+                    val moved = current + delta
+                    if (moved >= 0f) moved else maxOf(moved * PullUpFriction, -maxPullUp)
+                }
+
+                else -> current + delta
+            }
+            // COUIBottomSheetBehavior.clampViewPositionVertical: a panel that cannot be hidden stops
+            // at its collapsed offset.
+            if (!allowDismiss && next > current) {
+                minOf(next, maxOf(current, g.collapsedOffset(heightPx)))
+            } else {
+                next
             }
         }
     }
@@ -551,63 +536,97 @@ private fun BottomSheetContent(
         { velocity, nested ->
             settlingJob.value?.cancel()
             isSettling.value = true
-            settlingJob.value = coroutineScope.launch {
+            settlingJob.value = scope.launch {
                 val g = currentGeometry
-                val heightPx = if (g.handlePanel) g.maxHeightPx else sheetHeightPx.intValue.toFloat()
-                val currentOffset = dragOffsetY.value
+                val heightPx = g.panelHeightPx(panel.heightPx.intValue)
+                val currentOffset = panel.dragOffset.value
                 try {
                     if (currentOffset < 0f) {
                         // COUIBottomSheetDialog pull-up release: Rebound spring (bounciness 6, speed 42).
-                        dragOffsetY.animateTo(
+                        panel.dragOffset.animateTo(
                             targetValue = 0f,
                             animationSpec = PullUpReboundSpring,
                             initialVelocity = velocity,
                         )
-                        dimAlpha.floatValue = 1f
+                        panel.dimAlpha.floatValue = 1f
                         return@launch
                     }
+                    // COUIViewDragHelper.releaseViewForPointerUp: a release slower than the minimum
+                    // fling speed counts as still.
+                    val releaseVelocity = if (!nested && abs(velocity) < currentMinFlingVelocityPx) 0f else velocity
                     val target = resolveSettleTarget(
                         geometry = g,
                         heightPx = heightPx,
                         offset = currentOffset,
-                        velocity = velocity,
+                        velocity = releaseVelocity,
                         nested = nested,
                         lastNestedDelta = lastNestedDelta.floatValue,
                         pressDownState = pressDownState.intValue,
                         allowDismiss = allowDismiss,
                     )
                     if (target == PanelState.Hidden) {
+                        // COUIBottomSheetBehavior.startSettlingAnimation(STATE_HIDDEN): the keyboard
+                        // goes (mCanHideKeyboard) and the dialog fades the mask out on its own spring
+                        // right away (PullUpToDismissPanelListener -> dismissWithAlphaAnim).
+                        currentKeyboardController?.hide()
                         val travelPx = g.travelPx(heightPx)
-                        if (currentOffset >= travelPx) {
-                            onDismissRequest()
-                        } else {
-                            animateDismissOffScreen(
-                                dragOffsetY = dragOffsetY,
+                        val visiblePx = (travelPx - currentOffset).coerceAtLeast(0f)
+                        panel.fadeOutMask(
+                            scope = this,
+                            response = if (g.centered) {
+                                CenterHideAlphaResponse
+                            } else {
+                                couiPanelResponse(entering = false, travelPx = visiblePx, geometry = g)
+                            },
+                        )
+                        if (currentOffset < travelPx) {
+                            slidePanelOffWindow(
+                                dragOffsetY = panel.dragOffset,
                                 travelPx = travelPx,
-                                windowHeightPx = g.windowHeightPx,
-                                peekPx = g.peekPx,
-                                dimAlpha = if (g.handlePanel) null else dimAlpha,
+                                // COUI settles a hidden panel to the root view height, the top inset
+                                // below the window bottom.
+                                targetPx = travelPx + maxOf(g.topInsetPx, 1f),
+                                containerPx = g.containerPx,
                                 velocity = velocity,
-                                draggedOut = true,
-                            ) {
-                                onDismissRequest()
+                            )
+                        }
+                        currentOnDismissRequest()
+                        // COUI always dismisses here; put the panel back if the caller keeps it shown.
+                        repeat(DismissConfirmFrames) { withFrameNanos { } }
+                        if (currentIsShown()) {
+                            panel.maskJob?.cancel()
+                            panel.maskFadingOut.value = false
+                            coroutineScope {
+                                launch { panel.animateDimTo(1f, SettleResponse) }
+                                panel.dragOffset.animateTo(panel.restOffset(g), panelSpring(SettleResponse))
                             }
                         }
                     } else {
-                        restState.intValue = target
-                        val effectiveVelocity = if (!allowDismiss && velocity > 0) 0f else velocity
-                        // COUIBottomSheetBehavior.startSettleRunnable to a resting state:
-                        // COUISpringForce response 0.4, bounce 0.
-                        dragOffsetY.animateTo(
-                            targetValue = g.offsetFor(target, heightPx),
-                            animationSpec = panelSpring(SettleResponse),
-                            initialVelocity = effectiveVelocity,
-                        ) {
-                            updateDimAlpha(value)
+                        panel.restState.intValue = target
+                        val targetOffset = g.offsetFor(target, heightPx)
+                        if (abs(targetOffset - currentOffset) < 0.5f) {
+                            // COUIViewDragHelper.settleCapturedViewAt: nothing to settle at rest.
+                            panel.dragOffset.snapTo(targetOffset)
+                        } else {
+                            // COUIBottomSheetBehavior.startSettleRunnable: COUISpringForce response 0.4,
+                            // bounce 0, started at the release speed (mYVelocity); an overshoot past the
+                            // resting state in the release direction is damped.
+                            panel.dragOffset.animateTo(
+                                targetValue = targetOffset,
+                                animationSpec = BottomSheetSettleSpec(
+                                    spring = panelSpring(SettleResponse),
+                                    dampUpward = target != PanelState.Collapsed,
+                                    dampDownward = target != PanelState.Expanded,
+                                ),
+                                initialVelocity = velocity,
+                            ) {
+                                updateDimAlpha(value)
+                            }
                         }
+                        updateDimAlpha(targetOffset)
                     }
                 } catch (_: CancellationException) {
-                    // Animation is interrupted
+                    // Interrupted by a new gesture or by the sheet hiding.
                 } finally {
                     isSettling.value = false
                 }
@@ -624,15 +643,15 @@ private fun BottomSheetContent(
                 cancelSettling()
 
                 val delta = available.y
-                // If the sheet is offset, prioritize restoring its position
-                if (delta < 0 && dragOffsetY.value > 0) {
-                    val newOffset = (dragOffsetY.value + delta).coerceAtLeast(0f)
-                    val consumedY = dragOffsetY.value - newOffset
+                val current = panel.currentOffset()
+                // An upward scroll first brings a lowered panel back up to its expanded position.
+                if (delta < 0f && current > 0f) {
+                    val newOffset = (current + delta).coerceAtLeast(0f)
+                    val consumedY = current - newOffset
                     if (consumedY != 0f) {
                         lastNestedDelta.floatValue = delta
-                        dragSnapChannel.trySend(newOffset)
-                        updateDimAlpha(newOffset)
-                        return Offset(0f, consumedY * -1f)
+                        moveTo(newOffset)
+                        return Offset(0f, -consumedY)
                     }
                 }
                 return Offset.Zero
@@ -642,30 +661,41 @@ private fun BottomSheetContent(
                 if (!enableNestedScroll || !draggable || source != NestedScrollSource.UserInput) return Offset.Zero
 
                 val delta = available.y
-                if (delta > 0) {
-                    cancelSettling()
-                    if (dragOffsetY.value == restOffsetOf(restState, currentGeometry, sheetHeightPx)) {
-                        pressDownState.intValue = restState.intValue
-                    }
-                    lastNestedDelta.floatValue = delta
-                    val newOffset = calculateNewOffset(dragOffsetY.value, delta)
-                    dragSnapChannel.trySend(newOffset)
-                    updateDimAlpha(newOffset)
-
-                    // Dismiss immediately if dragged beyond window height
-                    if (newOffset > currentGeometry.windowHeightPx) {
-                        performSettle(0f, true)
-                    }
-                    return available
+                if (delta <= 0f) return Offset.Zero
+                cancelSettling()
+                val g = currentGeometry
+                val current = panel.currentOffset()
+                if (current == panel.restOffset(g)) {
+                    pressDownState.intValue = panel.restState.intValue
                 }
-                return Offset.Zero
+                lastNestedDelta.floatValue = delta
+                if (!allowDismiss) {
+                    // A panel that cannot be hidden stops at its collapsed offset; the rest of the
+                    // step goes back to the content.
+                    val limit = g.collapsedOffset(g.panelHeightPx(panel.heightPx.intValue))
+                    if (current + delta > limit) {
+                        val newOffset = maxOf(current, limit)
+                        moveTo(newOffset)
+                        return Offset(0f, newOffset - current)
+                    }
+                }
+                // A single scroll step beyond 100px moves the panel half as far.
+                val step = if (delta > NestedFastStepPx) delta * 0.5f else delta
+                val newOffset = calculateNewOffset(current, step)
+                moveTo(newOffset)
+
+                // Dismiss immediately if dragged beyond window height
+                if (newOffset > g.windowHeightPx) {
+                    performSettle(0f, true)
+                }
+                return available
             }
 
             override suspend fun onPreFling(available: Velocity): Velocity {
                 if (!enableNestedScroll || isSettling.value) return Velocity.Zero
 
                 // Take over fling if the sheet is away from its resting position
-                if (dragOffsetY.value != restOffsetOf(restState, currentGeometry, sheetHeightPx)) {
+                if (panel.currentOffset() != panel.restOffset(currentGeometry)) {
                     performSettle(available.y, true)
                     return available
                 }
@@ -675,7 +705,7 @@ private fun BottomSheetContent(
             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                 if (!enableNestedScroll || isSettling.value) return Velocity.Zero
 
-                if (dragOffsetY.value != restOffsetOf(restState, currentGeometry, sheetHeightPx)) {
+                if (panel.currentOffset() != panel.restOffset(currentGeometry)) {
                     performSettle(available.y, true)
                     return available
                 }
@@ -685,16 +715,12 @@ private fun BottomSheetContent(
     }
 
     // Whole-panel drag (COUIBottomSheetBehavior mGlobalDrag = true).
-    val onDrag: (Float) -> Unit = remember(allowDismiss, enablePullUp) {
-        { delta ->
-            val newOffset = calculateNewOffset(dragOffsetY.value, delta)
-            dragSnapChannel.trySend(newOffset)
-            updateDimAlpha(newOffset)
-        }
+    val onDrag: (Float) -> Unit = remember(calculateNewOffset) {
+        { delta -> moveTo(calculateNewOffset(panel.currentOffset(), delta)) }
     }
     val onDragStarted: () -> Unit = {
         cancelSettling()
-        pressDownState.intValue = restState.intValue
+        pressDownState.intValue = panel.restState.intValue
     }
     val onDragStopped: (Float) -> Unit = { velocity -> performSettle(velocity, false) }
 
@@ -716,8 +742,7 @@ private fun BottomSheetContent(
         showHeader = showHeader,
         draggable = draggable,
         enableNestedScroll = enableNestedScroll,
-        sheetHeightPx = sheetHeightPx,
-        dragOffsetY = dragOffsetY,
+        panel = panel,
         nestedScrollConnection = nestedScrollConnection,
         onDrag = onDrag,
         onDragStarted = onDragStarted,
@@ -729,14 +754,11 @@ private fun BottomSheetContent(
     )
 }
 
-private fun restOffsetOf(restState: MutableIntState, geometry: SheetGeometry, sheetHeightPx: MutableIntState): Float {
-    val heightPx = if (geometry.handlePanel) geometry.maxHeightPx else sheetHeightPx.intValue.toFloat()
-    return geometry.offsetFor(restState.intValue, heightPx)
-}
-
 /**
  * Resolves where a released panel settles, following `COUIBottomSheetBehavior.onViewReleased`
  * (direct drag) and `onStopNestedScroll` (content drag). Velocities are in px/s, positive downward.
+ * Regular panels and landscape handle panels fit their content (`fitToContents`): no half-expanded
+ * state. A panel that cannot be hidden (`hideable = false`) rests collapsed or expanded instead.
  */
 private fun resolveSettleTarget(
     geometry: SheetGeometry,
@@ -749,56 +771,58 @@ private fun resolveSettleTarget(
     allowDismiss: Boolean,
 ): Int {
     val travelPx = geometry.travelPx(heightPx)
-    if (!geometry.handlePanel) {
-        if (!allowDismiss) return PanelState.Expanded
-        // skipCollapsed panels: shouldHide() is always true.
-        val hide = if (nested) {
-            lastNestedDelta >= 0f
-        } else {
-            velocity >= 0f && (velocity > HideVelocityThreshold || offset > travelPx / 2f)
-        }
-        return if (hide) PanelState.Hidden else PanelState.Expanded
-    }
-    val half = geometry.halfOffset(heightPx)
     val collapsed = geometry.collapsedOffset(heightPx)
-    val shouldHide = allowDismiss &&
-        offset >= collapsed &&
-        abs(offset + velocity * 0.1f - collapsed) / geometry.peekPx > HideThreshold
+    val fitToContents = !geometry.handlePanel || geometry.landscape
+    val half = geometry.halfOffset(heightPx)
+    val shouldHide = when {
+        !allowDismiss -> false
+
+        // A regular panel skips the collapsed state (skipCollapsed): shouldHide() is always true.
+        !geometry.handlePanel -> true
+
+        else -> offset >= collapsed && abs(offset + velocity * 0.1f - collapsed) / geometry.peekPx > HideThreshold
+    }
     val nearest = when {
+        fitToContents -> if (abs(offset) < abs(offset - collapsed)) PanelState.Expanded else PanelState.Collapsed
         offset < half -> if (offset < abs(offset - collapsed)) PanelState.Expanded else PanelState.HalfExpanded
         abs(offset - half) < abs(offset - collapsed) -> PanelState.HalfExpanded
         else -> PanelState.Collapsed
     }
     val inBetween = offset > half && offset < collapsed
-    val downward = if (!(pressDownState == PanelState.HalfExpanded && inBetween) &&
+    val downward = if (
+        !fitToContents &&
+        !(pressDownState == PanelState.HalfExpanded && inBetween) &&
         abs(offset - half) < abs(offset - collapsed)
     ) {
         PanelState.HalfExpanded
     } else {
         PanelState.Collapsed
     }
-    val upward = if (offset > half) PanelState.HalfExpanded else PanelState.Expanded
-    if (nested) {
-        return when {
+    val upward = if (!fitToContents && offset > half) PanelState.HalfExpanded else PanelState.Expanded
+    val target = if (nested) {
+        when {
             lastNestedDelta < 0f -> upward
             shouldHide -> PanelState.Hidden
             lastNestedDelta == 0f -> nearest
             else -> downward
         }
-    }
-    return when {
-        velocity < 0f -> upward
+    } else {
+        when {
+            velocity < 0f -> upward
 
-        shouldHide -> when {
-            velocity > HideVelocityThreshold || offset > travelPx / 2f -> PanelState.Hidden
-            abs(offset) < abs(offset - half) -> PanelState.Expanded
-            else -> PanelState.HalfExpanded
+            shouldHide -> when {
+                velocity > HideVelocityThreshold || offset > travelPx / 2f -> PanelState.Hidden
+                fitToContents || abs(offset) < abs(offset - half) -> PanelState.Expanded
+                else -> PanelState.HalfExpanded
+            }
+
+            velocity == 0f -> nearest
+
+            else -> downward
         }
-
-        velocity == 0f -> nearest
-
-        else -> downward
     }
+    // A panel no taller than its peek height has nothing to collapse.
+    return if (target == PanelState.Collapsed && collapsed <= 0f) PanelState.Expanded else target
 }
 
 // showInMaxHeight is fixed for a sheet's lifetime, so the two content() branches never swap at runtime.
@@ -822,8 +846,7 @@ private fun BottomSheetColumn(
     showHeader: Boolean,
     draggable: Boolean,
     enableNestedScroll: Boolean,
-    sheetHeightPx: MutableIntState,
-    dragOffsetY: Animatable<Float, AnimationVector1D>,
+    panel: BottomSheetPanelState,
     nestedScrollConnection: NestedScrollConnection,
     onDrag: (Float) -> Unit,
     onDragStarted: () -> Unit,
@@ -833,8 +856,6 @@ private fun BottomSheetColumn(
     materialStroke: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val density = LocalDensity.current
-    val imeInsets = WindowInsets.ime
     // COUI grid width, the 540dp panel cap and `sheetMaxWidth` as an additional caller-supplied cap.
     val windowSize = LocalWindowInfo.current.containerDpSize
     val effectiveMaxWidth = remember(windowSize, sheetMaxWidth) {
@@ -869,20 +890,16 @@ private fun BottomSheetColumn(
                         .heightIn(max = maxHeight)
                 },
             )
-            .onGloballyPositioned { coordinates ->
-                // Only capture the natural sheet height while the IME is closed; otherwise the
-                // bottom inset added by imePadding would inflate sheetHeightPx, shifting the
-                // dim threshold and causing translationY jumps mid-animation.
-                if (imeInsets.getBottom(density) == 0) {
-                    sheetHeightPx.intValue = coordinates.size.height
-                }
-            }
+            // The outer height includes the IME lift: it is how far the panel travels to leave the
+            // window (COUIBottomSheetDialog.getTranslationDistance uses the screen bottom while the
+            // keyboard accepts text).
+            .onSizeChanged { size -> panel.heightPx.intValue = size.height }
             .then(if (defaultWindowInsetsPadding) Modifier.imePadding() else Modifier)
             .padding(horizontal = outsideMargin.width)
             .drawBehind {
                 // Pull-up stretch: the panel is translated up by the pull distance and its
                 // surface is extended below its bottom edge, so it reads as growing upward.
-                val pullUp = -dragOffsetY.value
+                val pullUp = -panel.dragOffset.value
                 if (pullUp <= 0f) return@drawBehind
                 if (centered) {
                     val radius = bottomCornerRadius.toPx()
@@ -974,9 +991,6 @@ private val PullUpMaxOffset = 28.dp
 /** COUIBottomSheetDialog pull-up friction: the panel grows by `dy * 0.19999999`. */
 private val PullUpFriction = 0.2f
 
-/** Resistance of a non-dismissible panel dragged downward. */
-private val NotDismissibleDamping = 0.1f
-
 /** COUIBottomSheetBehavior.onViewReleased: downward fling speed (px/s) that hides the panel. */
 private val HideVelocityThreshold = 500f
 
@@ -997,6 +1011,27 @@ private val CenterHideAlphaResponse = 0.18f
 
 /** COUIBottomSheetDialog.DIALOG_SHOW_SCALE_START. */
 private val CenterScaleStart = 0.8f
+
+/**
+ * Android `ViewConfiguration.getScaledMinimumFlingVelocity` (50dp/s): COUIViewDragHelper.clampMag
+ * reports slower releases as still.
+ */
+private val MinFlingVelocity = 50.dp
+
+/** COUIBottomSheetBehavior.onNestedPreScroll: a downward scroll step beyond this (px) moves the panel half as far. */
+private val NestedFastStepPx = 100f
+
+/** COUIBottomSheetBehavior.setShakeHandMovingDirection: release speed (px/s) that gives the settle a direction. */
+private val ShakeHandVelocity = 100f
+
+/** COUIBottomSheetBehavior.SHAKE_HAND_MOVING_FACTOR: share of a settle overshoot that is shown. */
+private val ShakeHandFactor = 0.4f
+
+/** Frames given to the caller to hide the sheet after a dismiss request before the panel goes back. */
+private val DismissConfirmFrames = 2
+
+/** Upper bound for the first layout of a shown panel; the slide then starts with the window height. */
+private val SheetMeasureTimeoutMillis = 400L
 
 /**
  * COUIBottomSheetDialog pull-up rebound: Rebound `SpringConfig.fromBouncinessAndSpeed(6, 42)`,
@@ -1026,8 +1061,14 @@ private class SheetGeometry(
     val peekPx: Float,
     val pullUpMaxPx: Float,
 ) {
+    /** Height of the panel's parent (the COUI coordinator: the window below the top inset). */
+    val containerPx: Float get() = (windowHeightPx - topInsetPx).coerceAtLeast(0f)
+
     /** Height of a panel laid out at the maximum height in the bottom-anchored form. */
-    val maxHeightPx: Float get() = (windowHeightPx - topInsetPx).coerceAtLeast(0f)
+    val maxHeightPx: Float get() = containerPx
+
+    /** Height the gestures work with: a handle panel always fills the maximum height. */
+    fun panelHeightPx(measuredPx: Int): Float = if (handlePanel) maxHeightPx else measuredPx.toFloat()
 
     /** Distance from the resting top edge of the panel to the window bottom. */
     fun travelPx(heightPx: Float): Float {
@@ -1049,8 +1090,8 @@ private class SheetGeometry(
     /** COUIBottomSheetBehavior.calculateHalfExpandedOffset: half of the parent stays visible. */
     fun halfOffset(heightPx: Float): Float = (heightPx - windowHeightPx * HalfExpandedRatio).coerceAtLeast(0f)
 
-    /** Only the peek height stays visible. */
-    fun collapsedOffset(heightPx: Float): Float = (heightPx - peekPx).coerceAtLeast(0f)
+    /** COUIBottomSheetBehavior.calculateCollapsedOffset: only the peek height stays visible. */
+    fun collapsedOffset(heightPx: Float): Float = (travelPx(heightPx) - peekPx).coerceAtLeast(0f)
 
     fun offsetFor(state: Int, heightPx: Float): Float = when (state) {
         PanelState.HalfExpanded -> halfOffset(heightPx)
@@ -1058,6 +1099,217 @@ private class SheetGeometry(
         else -> 0f
     }
 }
+
+/**
+ * Motion state of one panel, shared by the show / hide effect, the gestures and the draw code. The
+ * snapshot-backed fields are read in graphics layers and draw blocks; the plain fields are
+ * bookkeeping that is never read during composition.
+ */
+private class BottomSheetPanelState {
+    /** Slide progress of a bottom-anchored panel, scale progress of a floating one (0 hidden, 1 shown). */
+    val progress = Animatable(0f, visibilityThreshold = 0.0001f)
+
+    /** Alpha progress of a floating panel. */
+    val fade = Animatable(0f, visibilityThreshold = 0.0001f)
+
+    /** Offset below the expanded resting position, driven by drags, settles and the back gesture. */
+    val dragOffset = Animatable(0f)
+
+    /** COUIBottomSheetDialog.getTranslationDistance: how far the slide moves the panel from progress 0 to 1. */
+    val slideTravel = mutableFloatStateOf(0f)
+
+    /** Gesture-driven factor of the mask alpha (drag position, back gesture, drag-to-dismiss fade). */
+    val dimAlpha = mutableFloatStateOf(1f)
+
+    /** Set once a drag or fling hides the panel: the mask then fades on its own spring. */
+    val maskFadingOut = mutableStateOf(false)
+
+    /** Height of the laid-out panel, IME lift included; 0 until the first layout of a show. */
+    val heightPx = mutableIntStateOf(0)
+
+    val restState = mutableIntStateOf(PanelState.Expanded)
+
+    /** Whether the panel is composed: from the start of a show until its hide animation ends. */
+    val visible = mutableStateOf(false)
+
+    /** The mask fade a drag-to-dismiss started. */
+    var maskJob: Job? = null
+
+    /** Gesture offset handed to the panel but not applied yet; NaN when there is none. */
+    var pendingOffset = Float.NaN
+
+    private var slideVelocity = 0f
+    private var slideResponse = 0f
+    private var fadeVelocity = 0f
+    private var fadeResponse = 0f
+
+    fun currentOffset(): Float = if (pendingOffset.isNaN()) dragOffset.value else pendingOffset
+
+    fun restOffset(geometry: SheetGeometry): Float = geometry.offsetFor(restState.intValue, geometry.panelHeightPx(heightPx.intValue))
+
+    suspend fun animateDimTo(target: Float, response: Float) {
+        animate(dimAlpha.floatValue, target, animationSpec = panelSpring(response)) { value, _ ->
+            dimAlpha.floatValue = value
+        }
+    }
+
+    /** COUIBottomSheetDialog.dismissWithAlphaAnim: the mask fades from where the drag left it. */
+    fun fadeOutMask(scope: CoroutineScope, response: Float) {
+        maskJob?.cancel()
+        maskFadingOut.value = true
+        maskJob = scope.launch { animateDimTo(0f, response) }
+    }
+
+    suspend fun animateShow(geometry: SheetGeometry): Unit = coroutineScope {
+        val wasVisible = visible.value
+        maskJob?.cancel()
+        maskFadingOut.value = false
+        if (wasVisible) {
+            if (dimAlpha.floatValue < 1f) launch { animateDimTo(1f, SettleResponse) }
+        } else {
+            progress.snapTo(0f)
+            fade.snapTo(0f)
+            dragOffset.snapTo(0f)
+            dimAlpha.floatValue = 1f
+            slideVelocity = 0f
+            fadeVelocity = 0f
+            pendingOffset = Float.NaN
+            // Parks a bottom-anchored panel below the window until its first layout reports its height.
+            slideTravel.floatValue = geometry.windowHeightPx
+        }
+        visible.value = true
+        if (geometry.centered) {
+            // COUIBottomSheetDialog.isFadeInCenter: scale 0.8 -> 1 and alpha 0 -> 1, response 0.25.
+            restState.intValue = PanelState.Expanded
+            if (dragOffset.value != 0f) launch { dragOffset.animateTo(0f, panelSpring(CenterShowResponse)) }
+            launch { animateFade(1f, CenterShowResponse) }
+            animateProgress(1f, CenterShowResponse)
+        } else {
+            fade.snapTo(1f)
+            // COUIBottomSheetDialog.initBehavior: a handle panel opens half-expanded in portrait
+            // and collapsed in landscape; every other panel opens expanded.
+            val initialState = when {
+                !geometry.handlePanel -> PanelState.Expanded
+                geometry.landscape -> PanelState.Collapsed
+                else -> PanelState.HalfExpanded
+            }
+            // COUIBottomSheetDialog starts the slide on the first pre-draw, once the panel is measured.
+            val measured = if (geometry.handlePanel) geometry.maxHeightPx else awaitHeight()
+            val initialOffset = geometry.offsetFor(initialState, measured)
+            val travel = if (measured > 0f) (measured - initialOffset).coerceAtLeast(0f) else geometry.windowHeightPx
+            restState.intValue = initialState
+            rebaseSlide(travel = travel, offset = initialOffset)
+            animateProgress(1f, couiPanelResponse(entering = true, travelPx = travel, geometry = geometry))
+        }
+    }
+
+    suspend fun animateHide(geometry: SheetGeometry) {
+        if (geometry.centered) {
+            // Exit: alpha response 0.18, scale response 0.25.
+            coroutineScope {
+                launch { animateFade(0f, CenterHideAlphaResponse) }
+                animateProgress(0f, CenterShowResponse)
+            }
+        } else {
+            // Freeze a settle in flight so the slide covers exactly what is still on screen; a panel
+            // already dragged off the window keeps still while the mask fades.
+            dragOffset.stop()
+            val measured = geometry.panelHeightPx(heightPx.intValue)
+            val offset = dragOffset.value
+            val travel = if (measured > 0f) (measured - offset).coerceAtLeast(0f) else geometry.windowHeightPx
+            rebaseSlide(travel = travel, offset = offset)
+            animateProgress(0f, couiPanelResponse(entering = false, travelPx = travel, geometry = geometry))
+        }
+    }
+
+    /** COUIBottomSheetDialog.reversalAnimation: a slide turned around mid-flight keeps its spring and speed. */
+    private suspend fun animateProgress(target: Float, freshResponse: Float) {
+        val response = if (slideVelocity != 0f) slideResponse else freshResponse
+        slideResponse = response
+        progress.animateTo(target, panelSpring(response), initialVelocity = slideVelocity) {
+            slideVelocity = velocity
+        }
+        slideVelocity = 0f
+    }
+
+    private suspend fun animateFade(target: Float, freshResponse: Float) {
+        val response = if (fadeVelocity != 0f) fadeResponse else freshResponse
+        fadeResponse = response
+        fade.animateTo(target, panelSpring(response), initialVelocity = fadeVelocity) {
+            fadeVelocity = velocity
+        }
+        fadeVelocity = 0f
+    }
+
+    /**
+     * Re-expresses where the panel is drawn for a new slide [travel] and resting [offset], so a
+     * retargeted slide starts from the panel's current position at the same speed.
+     */
+    private suspend fun rebaseSlide(travel: Float, offset: Float) {
+        val oldTravel = slideTravel.floatValue
+        val shift = oldTravel * (1f - progress.value) + dragOffset.value - offset
+        val start = if (travel > 0f) (1f - shift / travel).coerceIn(0f, 1f) else progress.value
+        slideVelocity = if (oldTravel > 0f && travel > 0f) slideVelocity * oldTravel / travel else 0f
+        slideTravel.floatValue = travel
+        dragOffset.snapTo(offset)
+        progress.snapTo(start)
+    }
+
+    private suspend fun awaitHeight(): Float {
+        withTimeoutOrNull(SheetMeasureTimeoutMillis) {
+            snapshotFlow { heightPx.intValue }.first { it > 0 }
+        }
+        return heightPx.intValue.toFloat()
+    }
+}
+
+/**
+ * Settle spring of a released panel. COUIBottomSheetBehavior.panelHeightVerticalMoving shows the part
+ * of the spring that overshoots the resting state in the release direction at [ShakeHandFactor]:
+ * upward past an expanded or half-expanded rest, downward past a collapsed or half-expanded one.
+ */
+private class BottomSheetSettleSpec(
+    private val spring: SpringSpec<Float>,
+    private val dampUpward: Boolean,
+    private val dampDownward: Boolean,
+) : FiniteAnimationSpec<Float> {
+    override fun <V : AnimationVector> vectorize(converter: TwoWayConverter<Float, V>): VectorizedFiniteAnimationSpec<V> = BottomSheetSettleVectorizedSpec(spring.vectorize(converter), dampUpward, dampDownward)
+}
+
+private class BottomSheetSettleVectorizedSpec<V : AnimationVector>(
+    private val spring: VectorizedFiniteAnimationSpec<V>,
+    private val dampUpward: Boolean,
+    private val dampDownward: Boolean,
+) : VectorizedFiniteAnimationSpec<V> {
+    override fun getValueFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
+        val raw = spring.getValueFromNanos(playTimeNanos, initialValue, targetValue, initialVelocity).firstValue()
+        val factor = overshootFactor(raw, initialValue, targetValue, initialVelocity)
+        val target = targetValue.firstValue()
+        return vectorOf(if (factor == 1f) raw else target + (raw - target) * factor)
+    }
+
+    override fun getVelocityFromNanos(playTimeNanos: Long, initialValue: V, targetValue: V, initialVelocity: V): V {
+        val velocity = spring.getVelocityFromNanos(playTimeNanos, initialValue, targetValue, initialVelocity).firstValue()
+        val raw = spring.getValueFromNanos(playTimeNanos, initialValue, targetValue, initialVelocity).firstValue()
+        return vectorOf(velocity * overshootFactor(raw, initialValue, targetValue, initialVelocity))
+    }
+
+    override fun getDurationNanos(initialValue: V, targetValue: V, initialVelocity: V): Long = spring.getDurationNanos(initialValue, targetValue, initialVelocity)
+
+    private fun overshootFactor(value: Float, initialValue: V, targetValue: V, initialVelocity: V): Float {
+        val start = initialValue.firstValue()
+        val target = targetValue.firstValue()
+        val releaseVelocity = initialVelocity.firstValue()
+        val upward = dampUpward && releaseVelocity < -ShakeHandVelocity && start > target && value < target
+        val downward = dampDownward && releaseVelocity > ShakeHandVelocity && start < target && value > target
+        return if (upward || downward) ShakeHandFactor else 1f
+    }
+}
+
+private fun AnimationVector.firstValue(): Float = (this as AnimationVector1D).value
+
+@Suppress("UNCHECKED_CAST")
+private fun <V : AnimationVector> vectorOf(value: Float): V = AnimationVector1D(value) as V
 
 /** Status bar / caption bar / display cutout top inset, whichever is largest. */
 @Composable
@@ -1075,21 +1327,43 @@ private fun <T> panelSpring(response: Float): SpringSpec<T> {
 }
 
 /**
- * Spring spec of the COUI panel slide (COUIBottomSheetDialog.getTranslationResponse): bounce 0,
- * response interpolated between 0.25s and 0.45s (enter) / 0.18s and 0.37s (exit) by the travel
- * fraction `(travel - peek) / (container - peek)`.
+ * COUIBottomSheetDialog.getTranslationResponse: bounce-0 slide response interpolated between 0.25s
+ * and 0.45s (enter) / 0.18s and 0.37s (exit) by the travel fraction
+ * `(travel - peek) / (coordinator height - peek)`.
  */
-private fun <T> couiPanelSlideSpring(
-    entering: Boolean,
-    travelPx: Float,
-    containerPx: Float,
-    peekPx: Float,
-): SpringSpec<T> {
+private fun couiPanelResponse(entering: Boolean, travelPx: Float, geometry: SheetGeometry): Float {
     val start = if (entering) 0.25f else 0.18f
     val end = if (entering) 0.45f else 0.37f
-    val denominator = containerPx - peekPx
-    val fraction = if (denominator > 0f) ((travelPx - peekPx) / denominator).coerceIn(0f, 1f) else 1f
-    return panelSpring(start + (end - start) * fraction)
+    val denominator = geometry.containerPx - geometry.peekPx
+    val fraction = if (denominator > 0f) ((travelPx - geometry.peekPx) / denominator).coerceIn(0f, 1f) else 1f
+    return start + (end - start) * fraction
+}
+
+/**
+ * Slides a released panel off the window (COUIBottomSheetBehavior.startSettleRunnable to
+ * STATE_HIDDEN: response `0.18 + 0.19 * visible / parent height`, bounce 0, started at the release
+ * speed) and returns as soon as the panel has left the window.
+ */
+private suspend fun slidePanelOffWindow(
+    dragOffsetY: Animatable<Float, AnimationVector1D>,
+    travelPx: Float,
+    targetPx: Float,
+    containerPx: Float,
+    velocity: Float,
+) {
+    coroutineScope {
+        val visible = (travelPx - dragOffsetY.value).coerceAtLeast(0f)
+        val fraction = if (containerPx > 0f) (visible / containerPx).coerceIn(0f, 1f) else 0f
+        val slide = launch {
+            dragOffsetY.animateTo(
+                targetValue = targetPx,
+                animationSpec = panelSpring(0.18f + 0.19f * fraction),
+                initialVelocity = velocity,
+            )
+        }
+        snapshotFlow { dragOffsetY.value }.first { it >= travelPx }
+        slide.cancel()
+    }
 }
 
 /**
@@ -1142,11 +1416,11 @@ private fun CoroutineScope.animateHandlePressRelease(pressAlpha: Animatable<Floa
 
 /**
  * Drag handle strip at the top of the sheet, matching coui_panel_view_layout.xml: `drag_layout`
- * (coui_panel_drag_view_shadow_margin_top 4dp + coui_panel_drag_view_height 12dp) holding the
- * 36x4dp capsule 8dp below its top, and a 70x20dp press background (`tv_drag_press_bg`) aligned
- * to its top that fades in while the handle is touched. The press background overflows the strip
- * downward, as the `clipChildren="false"` layout lets it. The strip does not consume touches, so
- * the whole-panel drag still runs from it.
+ * (coui_panel_drag_view_shadow_margin_top 4dp + coui_panel_drag_view_height 12dp, 70dp wide) holding
+ * the 36x4dp capsule 8dp below its top, and a 70x20dp press background (`tv_drag_press_bg`) aligned
+ * to its top that fades in while the handle is touched. The drag layout clips the press background
+ * to its 12dp height, and only a touch inside it lights it (COUIPanelContentLayout.setDragViewPressAnim).
+ * The strip does not consume touches, so the whole-panel drag still runs from it.
  */
 @Composable
 private fun DragHandleArea(
@@ -1164,7 +1438,15 @@ private fun DragHandleArea(
             .pointerHoverIcon(PointerIcon.Hand)
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    awaitFirstDown(requireUnconsumed = false)
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val halfWidth = DragHandlePressWidth.toPx() / 2f
+                    val centerX = size.width / 2f
+                    val top = DragHandleMarginTop.toPx()
+                    val onHandle = down.position.x >= centerX - halfWidth &&
+                        down.position.x <= centerX + halfWidth &&
+                        down.position.y >= top &&
+                        down.position.y <= top + DragHandleLayoutHeight.toPx()
+                    if (!onHandle) return@awaitEachGesture
                     coroutineScope.animateHandlePressDown(pressAlpha)
                     do {
                         val event = awaitPointerEvent()
@@ -1175,14 +1457,24 @@ private fun DragHandleArea(
             .drawBehind {
                 val top = DragHandleMarginTop.toPx()
                 val pressWidth = DragHandlePressWidth.toPx()
-                val pressHeight = DragHandlePressHeight.toPx()
-                val pressRadius = DragHandlePressCornerRadius.toPx()
-                drawRoundRect(
-                    color = pressColor.copy(alpha = pressColor.alpha * pressAlpha.value),
-                    topLeft = Offset((size.width - pressWidth) / 2f, top),
-                    size = Size(pressWidth, pressHeight),
-                    cornerRadius = CornerRadius(pressRadius, pressRadius),
-                )
+                val pressLeft = (size.width - pressWidth) / 2f
+                val pressValue = pressAlpha.value
+                if (pressValue > 0f) {
+                    val pressRadius = DragHandlePressCornerRadius.toPx()
+                    clipRect(
+                        left = pressLeft,
+                        top = top,
+                        right = pressLeft + pressWidth,
+                        bottom = top + DragHandleLayoutHeight.toPx(),
+                    ) {
+                        drawRoundRect(
+                            color = pressColor.copy(alpha = pressColor.alpha * pressValue),
+                            topLeft = Offset(pressLeft, top),
+                            size = Size(pressWidth, DragHandlePressHeight.toPx()),
+                            cornerRadius = CornerRadius(pressRadius, pressRadius),
+                        )
+                    }
+                }
                 val barWidth = DragHandleBarWidth.toPx()
                 val barHeight = DragHandleBarHeight.toPx()
                 val barRadius = DragHandleBarCornerRadius.toPx()
@@ -1201,8 +1493,14 @@ private val TitleRowMinHeight = 52.dp
 private val TitleRowPaddingStart = 8.dp
 private val TitleRowPaddingEnd = 11.dp
 
+/** COUIToolbar `supportTitlePaddingTop` / `supportTitlePaddingBottom` of Widget.COUI.Toolbar.Panel. */
+private val TitlePaddingVertical = 12.dp
+
 /** COUI `coui_panel_drag_view_shadow_margin_top`. */
 private val DragHandleMarginTop = 4.dp
+
+/** COUI `coui_panel_drag_view_height`: the drag layout, which clips the press background. */
+private val DragHandleLayoutHeight = 12.dp
 
 /** COUI `coui_panel_drag_view_padding_vertical` (top padding of the capsule image). */
 private val DragHandleBarPaddingTop = 8.dp
@@ -1224,81 +1522,45 @@ private fun TitleAndActionsRow(
     endAction: (@Composable () -> Unit)?,
 ) {
     // Widget.COUI.Toolbar.Panel: minHeight toolbar_min_height 52dp, no vertical padding,
-    // toolbar_normal_menu_padding_left / _right 8dp / 11dp, buttons centered vertically.
-    Box(
+    // toolbar_normal_menu_padding_left / _right 8dp / 11dp, buttons centered vertically. The title
+    // (COUIToolbar.ensureTitleTextView) is one ellipsized line of couiTextHeadlineS, padded 12dp
+    // above and below, centered and kept clear of both buttons.
+    Layout(
+        content = {
+            Box { startAction?.invoke() }
+            Box { endAction?.invoke() }
+            Box {
+                if (title != null) {
+                    Text(
+                        text = title,
+                        modifier = Modifier.padding(vertical = TitlePaddingVertical),
+                        color = COUITheme.colorScheme.labelPrimary,
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 1,
+                        style = COUITheme.textStyles.headlineS,
+                    )
+                }
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = TitleRowMinHeight)
             .padding(start = TitleRowPaddingStart, end = TitleRowPaddingEnd),
-    ) {
-        // Start action (e.g. close button)
-        Box(modifier = Modifier.align(Alignment.CenterStart)) {
-            startAction?.invoke()
-        }
-
-        // Title text
-        title?.let {
-            Text(
-                text = it,
-                modifier = Modifier.align(Alignment.Center),
-                fontSize = COUITheme.textStyles.headlineS.fontSize,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                color = COUITheme.colorScheme.labelPrimary,
-            )
-        }
-
-        // End action (e.g. submit button)
-        Box(modifier = Modifier.align(Alignment.CenterEnd)) {
-            endAction?.invoke()
+    ) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val startPlaceable = measurables[0].measure(loose)
+        val endPlaceable = measurables[1].measure(loose)
+        val width = if (constraints.hasBoundedWidth) constraints.maxWidth else startPlaceable.width + endPlaceable.width
+        val side = maxOf(startPlaceable.width, endPlaceable.width)
+        val titlePlaceable = measurables[2].measure(loose.copy(maxWidth = (width - 2 * side).coerceAtLeast(0)))
+        val height = maxOf(constraints.minHeight, startPlaceable.height, endPlaceable.height, titlePlaceable.height)
+        layout(width, height) {
+            startPlaceable.placeRelative(0, (height - startPlaceable.height) / 2)
+            endPlaceable.placeRelative(width - endPlaceable.width, (height - endPlaceable.height) / 2)
+            titlePlaceable.placeRelative((width - titlePlaceable.width) / 2, (height - titlePlaceable.height) / 2)
         }
     }
-}
-
-/**
- * Animate the sheet off-screen, updating the dim alpha along the way (parent-height normalized,
- * like COUIBottomSheetBehavior.calculatePanelOutsideAlpha; skipped when [dimAlpha] is null).
- * Dismisses as soon as the sheet leaves the viewport (offset >= [travelPx]).
- */
-private suspend fun CoroutineScope.animateDismissOffScreen(
-    dragOffsetY: Animatable<Float, AnimationVector1D>,
-    travelPx: Float,
-    windowHeightPx: Float,
-    peekPx: Float,
-    dimAlpha: MutableFloatState?,
-    velocity: Float = 0f,
-    draggedOut: Boolean = false,
-    onDismiss: () -> Unit,
-) {
-    val visible = (travelPx - dragOffsetY.value).coerceAtLeast(0f)
-    val spec: SpringSpec<Float> = if (draggedOut) {
-        // COUIBottomSheetBehavior.startSettleRunnable(STATE_HIDDEN) after a drag: response
-        // 0.18 + 0.19 * (the part of the sheet still on screen / parent height), bounce 0.
-        val fraction = if (windowHeightPx > 0f) (visible / windowHeightPx).coerceIn(0f, 1f) else 0f
-        panelSpring(0.18f + 0.19f * fraction)
-    } else {
-        couiPanelSlideSpring(
-            entering = false,
-            travelPx = visible,
-            containerPx = windowHeightPx,
-            peekPx = peekPx,
-        )
-    }
-    val settleJob = launch {
-        dragOffsetY.animateTo(
-            targetValue = maxOf(windowHeightPx, travelPx),
-            animationSpec = spec,
-            initialVelocity = velocity,
-        ) {
-            if (dimAlpha != null && windowHeightPx > 0f) {
-                dimAlpha.floatValue = 1f - (value / windowHeightPx).coerceIn(0f, 1f)
-            }
-        }
-    }
-    snapshotFlow { dragOffsetY.value }
-        .first { travelPx > 0 && it >= travelPx }
-    settleJob.cancel()
-    onDismiss()
 }
 
 object BottomSheetDefaults {

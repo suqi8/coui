@@ -30,9 +30,9 @@ SidePaneLayout(
 
 - **分栏模式**（`COUISidePaneUtils.isSplitMode`）：布局宽度不小于 600dp 且窗口高度不小于 480dp 时，侧栏（224dp，`coui_sliding_pane_width`）与内容并排，内容宽度随侧栏变化：`width - paneWidth * progress`。
 - **窄布局**：内容保持全宽，被侧栏推开。`coverStyle = true` 时侧栏改为覆盖内容，内容上的 `coui_color_mask` 遮罩随侧栏淡入，点击内容即收起侧栏（`touchContentEnabled`）。
-- **动画**：483ms，`COUIMoveEaseInterpolator`（cubic-bezier 0.3, 0, 0.1, 1）。动画被打断时只走剩余比例的时长。
+- **动画**：侧栏滑动与内容缩放均为 483ms，`COUIMoveEaseInterpolator`（cubic-bezier 0.3, 0, 0.1, 1）。动画被打断时从当前位置继续，只走剩余比例的时长。
 - **切换图标**：48dp，距顶部 45dp、距起始边 12dp（`coui_sliding_icon_layout`）。内容标题行起始处请留出 72dp（`coui_side_pane_layout_toolbar_margin_start`），避免与图标重叠。
-- `alwaysShowMask = true` 时任何模式下都在内容上绘制遮罩，并在侧栏打开期间吞掉内容上的触摸，但不收起侧栏。
+- `alwaysShowMask = true` 时任何模式下都在内容上绘制遮罩，并在侧栏打开期间吞掉内容上的触摸，但不收起侧栏；每次吞掉触摸都会回调 `onMaskClick`（`setOnMaskClickListener`），可在其中收起侧栏。
 
 常见做法是只在窄布局下覆盖：
 
@@ -63,6 +63,7 @@ BoxWithConstraints {
 | alwaysShowMask      | Boolean                | 侧栏打开时遮罩内容（并吞掉其触摸）           | false                            | 否   |
 | touchContentEnabled | Boolean                | 覆盖样式下点击内容收起侧栏                   | true                             | 否   |
 | showToggleIcon      | Boolean                | 是否显示切换图标                             | true                             | 否   |
+| onMaskClick         | (() -> Unit)?          | 遮罩吞掉内容上的触摸时回调（`alwaysShowMask`） | null                           | 否   |
 | paneWidth           | Dp                     | 侧栏宽度                                     | SidePaneLayoutDefaults.PaneWidth | 否   |
 | maskColor           | Color                  | 完全展开时的遮罩颜色                         | SidePaneLayoutDefaults.maskColor | 否   |
 | toggleIconColor     | Color                  | 切换图标颜色                                 | colorScheme.labelPrimary         | 否   |
@@ -101,3 +102,4 @@ BoxWithConstraints {
 
 - 侧栏不能拖动：`COUISidePaneLayout` 只通过受可滑动标记控制的 `ViewDragHelper` 边缘拖动来拖侧栏，Compose 应用可以自行添加手势。
 - 分栏判断使用布局宽度（COUI 读取 Activity 的 `screenWidthDp`），且忽略多窗口例外，因此在桌面窗口或文档 iframe 中也能自适应。
+- 动画中途反向时从当前位置平滑继续。`COUISidePaneLayout` 以 `setCurrentFraction(slideOffset)` 重启动画器，把缓动后的偏移当作时间比例，因此反向时侧栏会跳变。

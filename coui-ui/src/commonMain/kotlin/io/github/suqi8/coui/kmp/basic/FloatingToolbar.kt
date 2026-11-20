@@ -3,6 +3,9 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -12,18 +15,25 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
@@ -34,8 +44,13 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.IntrinsicMeasurable
+import androidx.compose.ui.layout.IntrinsicMeasureScope
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -75,8 +90,15 @@ import io.github.suqi8.coui.kmp.theme.LocalDismissState
 import io.github.suqi8.coui.kmp.utils.graphicsLayerWithOverflow
 import io.github.suqi8.coui.kmp.utils.layerOverflow
 import io.github.suqi8.coui.kmp.window.WindowListPopup
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * A [FloatingToolbar] capsule around free [content], arranged either horizontally or vertically:
@@ -123,26 +145,73 @@ fun FloatingToolbar(
     showDivider: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    FloatingToolbarCapsule(
+        visible = visible,
+        materialEffect = materialEffect,
+        color = color,
+        cornerRadius = cornerRadius,
+        outSidePadding = outSidePadding,
+        shadowElevation = shadowElevation,
+        showDivider = showDivider,
+        modifier = modifier,
+        content = content,
+    )
+}
+
+/**
+ * The capsule of both [FloatingToolbar]s (`COUIBottomFloatingToolbarMenuView`): the attach /
+ * detach scale springs, the material, the shadow, and a hidden capsule's touch and semantics
+ * blocking.
+ *
+ * @param visible Whether the capsule is shown.
+ * @param materialEffect Whether the COUI 17 bottom-bar material is drawn.
+ * @param color The fill without the material blur.
+ * @param cornerRadius The corner radius.
+ * @param outSidePadding The padding outside the capsule.
+ * @param shadowElevation The blur radius of the drop shadow; 0 disables it.
+ * @param showDivider Whether a divider line runs around the capsule.
+ * @param modifier The modifier applied outside the capsule.
+ * @param cornerWeight The corner weight of the fill, the backdrop and the edge light.
+ *   [COUIRoundCorner.UnspecifiedWeight] resolves it per outline, as `addSmoothRoundRect` without a
+ *   weight does.
+ * @param enterFromHidden Whether the capsule starts hidden and scales in when first shown: a group
+ *   the item toolbar inserts (`createMenuView` starts it at scale 0).
+ * @param onHidden Called each time the capsule finishes scaling out (`handleMenuHide`).
+ * @param content The content of the capsule.
+ */
+@Composable
+internal fun FloatingToolbarCapsule(
+    visible: Boolean,
+    materialEffect: Boolean,
+    color: Color,
+    cornerRadius: Dp,
+    outSidePadding: PaddingValues,
+    shadowElevation: Dp,
+    showDivider: Boolean,
+    modifier: Modifier = Modifier,
+    cornerWeight: Float = COUIRoundCorner.UnspecifiedWeight,
+    enterFromHidden: Boolean = false,
+    onHidden: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
     val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     val dividerColor = COUITheme.colorScheme.divider
 
     // MenuViewAnimatorImpl.updateAttachState: the attach / detach scale spring, restarted from the
     // current scale, about the view centre. There is no fade.
-    val scale = remember { Animatable(if (visible) 1f else 0f) }
+    val scale = remember { Animatable(if (visible && !enterFromHidden) 1f else 0f) }
+    val currentOnHidden by rememberUpdatedState(onHidden)
     LaunchedEffect(visible) {
         scale.animateTo(
             targetValue = if (visible) 1f else 0f,
-            animationSpec = if (visible) {
-                TouchMotion.spring(response = 0.5f, bounce = 0.4f, visibilityThreshold = 0.001f)
-            } else {
-                TouchMotion.spring(response = 0.25f, bounce = 0f, visibilityThreshold = 0.001f)
-            },
+            animationSpec = if (visible) FloatingToolbarAttachSpring else FloatingToolbarDetachSpring,
         )
+        if (!visible) currentOnHidden?.invoke()
     }
 
     val dividerMod = if (showDivider) {
         Modifier
-            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius, weight = COUIRoundCorner.UnspecifiedWeight)
+            .squircleBackground(color = dividerColor, cornerRadius = cornerRadius, weight = cornerWeight)
             .padding(0.75.dp)
     } else {
         Modifier
@@ -157,7 +226,7 @@ fun FloatingToolbar(
     val isDark = COUITheme.colorScheme.isDark
     val backdropModifier = if (backdropProvider != null) {
         val spec = FloatingToolbarDefaults.backdropSpec(isDark)
-        val backdropShape = remember(cornerRadius) { SquircleShape(cornerRadius, COUIRoundCorner.UnspecifiedWeight) }
+        val backdropShape = remember(cornerRadius, cornerWeight) { SquircleShape(cornerRadius, cornerWeight) }
         remember(backdropProvider, spec, backdropShape) { backdropProvider.materialBackdrop(spec, backdropShape) }
     } else {
         null
@@ -181,7 +250,7 @@ fun FloatingToolbar(
         Modifier
             // dispatchTouchEvent -> COUISpotLightEffectDrawable.onTouchEvent, observed only.
             .popupSpotLightInput(spotLight, enabled = visible)
-            .floatingToolbarMaterial(shaders, spotLight, cornerRadius, isDark, squircleEnabled)
+            .floatingToolbarMaterial(shaders, spotLight, cornerRadius, cornerWeight, isDark, squircleEnabled)
     } else {
         Modifier
     }
@@ -198,6 +267,8 @@ fun FloatingToolbar(
             }
             .then(
                 if (visible) {
+                    // COUIBottomFloatingToolbarMenuView.onTouchEvent returns true: touches on the
+                    // capsule never fall through to what lies under it.
                     Modifier.pointerInput(Unit) {
                         detectTapGestures { /* Consume click */ }
                     }
@@ -220,7 +291,7 @@ fun FloatingToolbar(
             .squircleBackground(
                 color = if (backdropModifier != null) Color.Transparent else color,
                 cornerRadius = cornerRadius,
-                weight = COUIRoundCorner.UnspecifiedWeight,
+                weight = cornerWeight,
             )
             // No offscreen layer lies between the fill (or backdrop) above and this draw, so the
             // overlaid edge light lands on them rather than on an empty layer.
@@ -249,6 +320,7 @@ private fun Modifier.floatingToolbarMaterial(
     shaders: FloatingToolbarShaders,
     spotLight: SpotLightState,
     cornerRadius: Dp,
+    cornerWeight: Float,
     isDark: Boolean,
     squircleEnabled: Boolean,
 ): Modifier = drawWithCache {
@@ -257,17 +329,23 @@ private fun Modifier.floatingToolbarMaterial(
     configureFloatingNavigationBarEdge(shaders.shadowPass, size.width, size.height, radius, stroke)
     configureFloatingNavigationBarEdge(shaders.edgePass, size.width, size.height, radius, stroke)
     // The stroke has to trace the fill's outline. COUI always rounds the toolbar fully (radius half
-    // the height, computeMaterialCornerWeight 1.0), but [cornerRadius] may be smaller: then the fill
-    // is a G2 rounded rect, and a weight-1.0 stroke would still draw the full capsule (the shader's
-    // capsule ignores the corner radius), a round rim light inside square-ish corners.
-    val common = ShadowEdgeShader.commonArray(size.width, size.height, radius, floatingToolbarCornerWeight(radius, size.width, size.height, squircleEnabled))
+    // the height, computeMaterialCornerWeight 1.0, 2.0 for a lone item), but [cornerRadius] may be
+    // smaller: then the fill is a G2 rounded rect, and a weight-1.0 stroke would still draw the full
+    // capsule (the shader's capsule ignores the corner radius), a round rim light inside
+    // square-ish corners.
+    val weight = when {
+        cornerWeight == COUIRoundCorner.UnspecifiedWeight -> floatingToolbarCornerWeight(radius, size.width, size.height, squircleEnabled)
+        !squircleEnabled -> COUIRoundCorner.CircularWeight
+        else -> cornerWeight
+    }
+    val common = ShadowEdgeShader.commonArray(size.width, size.height, radius, weight)
     shaders.shadowPass.setFloatUniform("u_commonArray", common)
     shaders.edgePass.setFloatUniform("u_commonArray", common)
     splitFrameworkStroke(shadowPass = shaders.shadowPass, edgePass = shaders.edgePass)
     val shadowBrush = shaders.shadowPass.asBrush()
     val edgeBrush = shaders.edgePass.asBrush()
     val outline = Path().apply {
-        addSquircleRect(size.width, size.height, radius, COUIRoundCorner.UnspecifiedWeight, squircleEnabled)
+        addSquircleRect(size.width, size.height, radius, cornerWeight, squircleEnabled)
     }
     // TYPE_BOTTOM_NAVIGATION resolves to the TYPE_OPAQUE_MEDIUM_2 params (COUISpotLightEffect.getParamsByType).
     val type = SpotLightType.OpaqueMedium2
@@ -313,6 +391,24 @@ private val FloatingToolbarStrokeLight = StrokeEffectParams(0.2f, 2.3f, 0f, 0.1f
 
 /** `COUIMaterialStrokeEffect.FRAMEWORK_CAPSULE_PARAMS_5_DARK`. */
 private val FloatingToolbarStrokeDark = StrokeEffectParams(0.8f, 2.5f, 0f, 0.03f, 1f, 1f)
+
+/** `MenuViewAnimatorImpl` attach spring: response 0.5, bounce 0.4. */
+private val FloatingToolbarAttachSpring = TouchMotion.spring(response = 0.5f, bounce = 0.4f, visibilityThreshold = 0.001f)
+
+/** `MenuViewAnimatorImpl` detach spring (`HIDE_SCALE_SPRING_*`): response 0.25, bounce 0. */
+private val FloatingToolbarDetachSpring = TouchMotion.spring(response = 0.25f, bounce = 0f, visibilityThreshold = 0.001f)
+
+/** `MenuViewAnimatorImpl.mHorizontalAnimation`: a capsule moving to its new place, response 0.5, bounce 0.4. */
+private val FloatingToolbarHorizontalSpring = TouchMotion.spring(response = 0.5f, bounce = 0.4f, visibilityThreshold = 0.5f)
+
+/** `ItemViewAnimatorImpl.mTransitionAnimation`: the items scaling in and out, response 0.5, bounce 0.4. */
+private val FloatingToolbarItemSpring = TouchMotion.spring(response = 0.5f, bounce = 0.4f, visibilityThreshold = 0.0001f)
+
+/** `ItemViewAnimatorImpl.mGapScaleAnimator`: 200ms linear, out to the pending gap and back. */
+private val FloatingToolbarGapSpec = tween<Float>(durationMillis = 200, easing = LinearEasing)
+
+/** `GAP_MAXIMUM_EXTRA_SCALE_RANGE` / `DEFAULT_ANIMATION_RANGE`: the gaps breathe by 75% before the items move. */
+private const val FLOATING_TOOLBAR_MAX_GAP_SCALE = 0.75f
 
 object FloatingToolbarDefaults {
 
@@ -461,7 +557,7 @@ object FloatingToolbarDefaults {
     @Composable
     fun itemColors(
         contentColor: Color = COUITheme.colorScheme.labelPrimary,
-        disabledContentColor: Color = COUITheme.colorScheme.disabledNeutral,
+        disabledContentColor: Color = COUITheme.colorScheme.labelTertiary,
     ): FloatingToolbarItemColors = remember(contentColor, disabledContentColor) {
         FloatingToolbarItemColors(
             contentColor = contentColor,
@@ -484,6 +580,9 @@ object FloatingToolbarDefaults {
  *   ordered by this value.
  * @param enabled Whether the item is enabled. A disabled item ignores taps and hides its red dot.
  * @param showRedDot Whether the item shows a red dot at its top end corner (`setShowRedDot`).
+ * @param key The identity of the item (`setId`), which the toolbar follows when the list changes
+ *   to animate the items that come and go. Unique within its group. Null identifies the item by its
+ *   [icon], [title] and [contentDescription].
  */
 @Stable
 data class FloatingToolbarItem(
@@ -494,6 +593,7 @@ data class FloatingToolbarItem(
     val group: Int = 0,
     val enabled: Boolean = true,
     val showRedDot: Boolean = false,
+    val key: Any? = null,
 )
 
 /**
@@ -538,12 +638,23 @@ data class FloatingToolbarItemColors(
  *   (none for a single item). An icon item is 44 x 40dp around a 24dp icon; a title item is
  *   52-200dp wide with 16dp beside its 16sp medium title. A group shows at most six items; when
  *   more items, or items that do not fit, follow, the last place goes to an overflow item that
- *   opens a menu of the rest (`COUIBottomFloatingToolbarMenuView.onMeasure`).
- * - **Material and motion**: each capsule is a content [FloatingToolbar] (blur from a
+ *   opens a menu of the rest, 8dp above the capsule (`COUIBottomFloatingToolbarMenuView.onMeasure`,
+ *   `coui_popup_list_window_gap_to_navigation_view`).
+ * - **Material and touch**: each capsule is a content [FloatingToolbar] (blur from a
  *   [LocalMaterialBackdrop] provider, `TYPE_FRAMEWORK_CAPSULE_5` stroke, touch spotlight, caustic
- *   shadow, the attach / detach scale springs on [visible]) and takes the `COUITouchMotionAnimator`
- *   press motion as a whole; the items have no press mask of their own
+ *   shadow; a lone item is drawn on a circle, `computeMaterialCornerWeight` 2.0) and takes the
+ *   `COUITouchMotionAnimator` press motion as a whole; the items have no press mask of their own
  *   (`shouldStripPressedForContainerTouch`).
+ * - **Item changes** (`ItemViewAnimatorImpl`): when the items a capsule shows change (items added,
+ *   removed, or moved into or out of the overflow item), the gaps first breathe for 200ms (they
+ *   close up by 75% when the capsule is about to grow, open up by 75% when it is about to shrink),
+ *   then the new items scale and fade in about their centres while the leaving ones scale and fade
+ *   out, on a response 0.5 / bounce 0.4 spring, and the capsule's width follows them. A change undone
+ *   while it runs plays backwards. Items are told apart by [FloatingToolbarItem.key].
+ * - **Groups**: a group that appears scales in (response 0.5, bounce 0.4) and one that goes away
+ *   scales out (response 0.25, bounce 0) where it stood, while the capsules that have to move
+ *   spring to their new places (`MenuViewAnimatorImpl`, response 0.5, bounce 0.4). [visible] scales
+ *   every capsule in or out. A change of the toolbar's width applies at once (`setScreenSwitch`).
  *
  * @param items The items, in order. Items of the same [FloatingToolbarItem.group] form a capsule.
  * @param modifier The modifier applied to the toolbar (the full-width area holding the capsules).
@@ -574,30 +685,52 @@ fun FloatingToolbar(
     val groups = remember(items) {
         items.groupBy { it.group }.toList().sortedBy { it.first }.take(FloatingToolbarDefaults.MaxGroups)
     }
+    val scope = rememberCoroutineScope()
+    val groupsState = remember { FloatingToolbarGroupsState() }
+    // A group the items no longer hold stays composed while it scales out (removeMenuGroup).
+    val slots = groupsState.slots(groups, animate = visible)
+    SideEffect { groupsState.commit(groups, animate = visible) }
     val navigationBars = WindowInsets.navigationBars
     val captionBar = WindowInsets.captionBar
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
         val sidePadding = FloatingToolbarDefaults.horizontalOutSidePadding(maxWidth)
+        val toolbarWidth = constraints.maxWidth
         Layout(
             content = {
-                groups.forEach { (groupId, groupItems) ->
-                    key(groupId) {
-                        FloatingToolbar(
-                            modifier = Modifier.couiTouchMotion(
-                                interactionSource = null,
-                                enabled = visible && groupItems.any { it.enabled },
-                            ),
-                            visible = visible,
+                slots.forEach { slot ->
+                    key(slot.id) {
+                        val shown = visible && !slot.removed
+                        FloatingToolbarCapsule(
+                            visible = shown,
                             materialEffect = materialEffect,
                             color = color,
                             cornerRadius = FloatingToolbarDefaults.CornerRadius,
                             outSidePadding = PaddingValues(0.dp),
                             shadowElevation = shadowElevation,
+                            showDivider = false,
+                            // COUIBottomFloatingToolbarMenuView.dispatchTouchEvent drives its
+                            // COUITouchMotionAnimator whatever its items' states.
+                            modifier = Modifier.couiTouchMotion(interactionSource = null, enabled = shown),
+                            // computeMaterialCornerWeight: the material draws a lone item view on a
+                            // circle; the non-blur fill keeps the plain smooth round rect.
+                            cornerWeight = if (materialEffect && slot.items.size == 1) {
+                                COUIRoundCorner.CircularWeight
+                            } else {
+                                COUIRoundCorner.UnspecifiedWeight
+                            },
+                            enterFromHidden = slot.inserted,
+                            onHidden = if (slot.removed) {
+                                { groupsState.drop(slot.id) }
+                            } else {
+                                null
+                            },
                         ) {
                             FloatingToolbarGroup(
-                                items = groupItems,
+                                items = slot.items,
                                 colors = colors,
                                 overflowContentDescription = overflowContentDescription,
+                                toolbarWidth = toolbarWidth,
+                                interactive = shown,
                             )
                         }
                     }
@@ -608,30 +741,47 @@ fun FloatingToolbar(
             val side = sidePadding.roundToPx()
             val available = max(0, width - side * 2)
             val groupSpace = FloatingToolbarDefaults.MinGroupSpacing.roundToPx()
-            val placeables = measureFloatingToolbarGroups(
-                measurables = measurables,
+            val liveIndices = slots.indices.filter { !slots[it].removed }
+            val measured = measureFloatingToolbarGroups(
+                measurables = liveIndices.map { measurables[it] },
                 available = available,
                 groupSpace = groupSpace,
                 minGroupWidth = FloatingToolbarDefaults.MinGroupWidth.roundToPx(),
             )
-            val bodyHeight = max(FloatingToolbarDefaults.MinHeight.roundToPx(), placeables.maxOfOrNull { it.height } ?: 0)
+            // A group on its way out keeps the width it was given.
+            val leaving = slots.indices.filter { slots[it].removed }.map { index ->
+                val allotted = groupsState.allottedWidth(slots[index].id) ?: available
+                index to measurables[index].measure(Constraints(maxWidth = max(0, allotted)))
+            }
+            val tallest = max(measured.maxOfOrNull { it.placeable.height } ?: 0, leaving.maxOfOrNull { it.second.height } ?: 0)
+            val bodyHeight = max(FloatingToolbarDefaults.MinHeight.roundToPx(), tallest)
             val bottomInset = if (defaultWindowInsetsPadding) navigationBars.getBottom(this) + captionBar.getBottom(this) else 0
             val xs = floatingToolbarGroupPositions(
-                widths = placeables.map { it.width },
+                widths = measured.map { it.placeable.width },
                 start = side,
                 available = available,
                 groupSpace = groupSpace,
                 arrangement = groupArrangement,
             )
             layout(width, bodyHeight + bottomInset) {
-                placeables.forEachIndexed { index, placeable ->
+                val liveIds = liveIndices.map { slots[it].id }
+                val moved = groupsState.beginPlacement(liveIds, width, animate = visible)
+                measured.forEachIndexed { index, group ->
+                    val x = groupsState.placeGroup(liveIds[index], xs[index], group.allotted, moved, scope)
                     // COUIBottomFloatingToolbar.layoutMenuView: centred in the toolbar height.
-                    placeable.placeRelative(xs[index], (bodyHeight - placeable.height) / 2)
+                    group.placeable.placeRelative(x, (bodyHeight - group.placeable.height) / 2)
+                }
+                leaving.forEach { (index, placeable) ->
+                    val x = groupsState.drawnX(slots[index].id) ?: (side + (available - placeable.width) / 2)
+                    placeable.placeRelative(x, (bodyHeight - placeable.height) / 2)
                 }
             }
         }
     }
 }
+
+/** A measured capsule and the most width it was allowed. */
+private class FloatingToolbarMeasuredGroup(val placeable: Placeable, val allotted: Int)
 
 /**
  * `COUIBottomFloatingToolbar.onMeasure`: the capsule widths for one, two or three groups. The
@@ -642,7 +792,7 @@ private fun measureFloatingToolbarGroups(
     available: Int,
     groupSpace: Int,
     minGroupWidth: Int,
-): List<Placeable> {
+): List<FloatingToolbarMeasuredGroup> {
     fun natural(measurable: Measurable): Int = measurable.maxIntrinsicWidth(Constraints.Infinity)
 
     // onMeasureMenuViewTwoMenu: each up to half; when the narrower fits in its half, the wider may
@@ -658,22 +808,25 @@ private fun measureFloatingToolbarGroups(
         return if (a == narrow) a to min(b, wideLimit) else min(a, wideLimit) to b
     }
 
-    fun loose(maxWidth: Int) = Constraints(maxWidth = max(0, maxWidth))
+    fun measureGroup(measurable: Measurable, maxWidth: Int): FloatingToolbarMeasuredGroup {
+        val allotted = max(0, maxWidth)
+        return FloatingToolbarMeasuredGroup(measurable.measure(Constraints(maxWidth = allotted)), allotted)
+    }
     return when (measurables.size) {
         0 -> emptyList()
 
-        1 -> listOf(measurables[0].measure(loose(available)))
+        1 -> listOf(measureGroup(measurables[0], available))
 
         2 -> {
             val (a, b) = twoWidths(measurables[0], measurables[1], available - groupSpace, fillRest = true)
-            listOf(measurables[0].measure(loose(a)), measurables[1].measure(loose(b)))
+            listOf(measureGroup(measurables[0], a), measureGroup(measurables[1], b))
         }
 
         else -> {
             // onMeasureMenuViewThreeMenu: the middle group first, keeping room for two side groups.
-            val middle = measurables[1].measure(loose(available - (groupSpace + minGroupWidth) * 2))
-            val (a, c) = twoWidths(measurables[0], measurables[2], available - middle.width - groupSpace * 2, fillRest = false)
-            listOf(measurables[0].measure(loose(a)), middle, measurables[2].measure(loose(c)))
+            val middle = measureGroup(measurables[1], available - (groupSpace + minGroupWidth) * 2)
+            val (a, c) = twoWidths(measurables[0], measurables[2], available - middle.placeable.width - groupSpace * 2, fillRest = false)
+            listOf(measureGroup(measurables[0], a), middle, measureGroup(measurables[2], c))
         }
     }
 }
@@ -716,6 +869,406 @@ internal fun floatingToolbarGroupPositions(
     return listOf(start, middle, right)
 }
 
+/** One capsule of the item [FloatingToolbar]: a group of items, possibly on its way in or out. */
+private class FloatingToolbarGroupSlot(
+    val id: Int,
+    val items: List<FloatingToolbarItem>,
+    val removed: Boolean,
+    val inserted: Boolean,
+)
+
+/**
+ * The groups of an item [FloatingToolbar] across changes of its items: the groups that leave
+ * (kept until they scaled out, `startMenuViewTransition`), the ones that arrive, and where each
+ * capsule was last drawn, for the horizontal spring of `MenuViewAnimatorImpl.doHorizontalAnim`.
+ */
+private class FloatingToolbarGroupsState {
+    private var initialized = false
+    private var committedIds: List<Int> = emptyList()
+    private var lastItems: Map<Int, List<FloatingToolbarItem>> = emptyMap()
+    private val removing = mutableStateMapOf<Int, List<FloatingToolbarItem>>()
+    private var lastLiveIds: List<Int>? = null
+    private var lastWidth = -1
+    private val drawn = HashMap<Int, Float>()
+    private val allotted = HashMap<Int, Int>()
+    private val offsets = HashMap<Int, Animatable<Float, AnimationVector1D>>()
+
+    /** The capsules to compose: the live groups and, when [animate], the ones scaling out. */
+    fun slots(groups: List<Pair<Int, List<FloatingToolbarItem>>>, animate: Boolean): List<FloatingToolbarGroupSlot> {
+        val liveIds = groups.map { it.first }
+        val result = ArrayList<FloatingToolbarGroupSlot>(groups.size + removing.size)
+        groups.forEach { (id, groupItems) ->
+            // createMenuView: a group inserted after the first layout starts at scale 0.
+            val inserted = initialized && id !in committedIds && !removing.containsKey(id)
+            result += FloatingToolbarGroupSlot(id, groupItems, removed = false, inserted = inserted)
+        }
+        if (animate) {
+            val leavingIds = LinkedHashSet<Int>()
+            committedIds.forEach { if (it !in liveIds) leavingIds += it }
+            removing.keys.forEach { if (it !in liveIds) leavingIds += it }
+            leavingIds.forEach { id ->
+                val groupItems = removing[id] ?: lastItems[id]
+                if (groupItems != null) result += FloatingToolbarGroupSlot(id, groupItems, removed = true, inserted = false)
+            }
+        }
+        result.sortBy { it.id }
+        return result
+    }
+
+    /** Records the composed groups (a side effect of a successful composition). */
+    fun commit(groups: List<Pair<Int, List<FloatingToolbarItem>>>, animate: Boolean) {
+        val liveIds = groups.map { it.first }
+        if (animate) {
+            committedIds.forEach { id ->
+                if (id !in liveIds && !removing.containsKey(id)) lastItems[id]?.let { removing[id] = it }
+            }
+        } else if (removing.isNotEmpty()) {
+            removing.clear()
+        }
+        liveIds.forEach { if (removing.containsKey(it)) removing.remove(it) }
+        committedIds = liveIds
+        lastItems = groups.toMap()
+        initialized = true
+    }
+
+    /** Forgets a group that finished scaling out. */
+    fun drop(id: Int) {
+        if (removing.containsKey(id)) removing.remove(id)
+    }
+
+    fun allottedWidth(id: Int): Int? = allotted[id]
+
+    fun drawnX(id: Int): Int? = drawn[id]?.roundToInt()
+
+    /**
+     * Starts a placement pass of the live groups [liveIds] in a toolbar [width] wide; returns
+     * whether their capsules spring to their new places (a group came or went, with the width
+     * unchanged: `updateRealBounds` with `mDoAnimation`).
+     */
+    fun beginPlacement(liveIds: List<Int>, width: Int, animate: Boolean): Boolean {
+        val previous = lastLiveIds
+        val moved = previous != null && previous != liveIds && width == lastWidth && animate
+        lastLiveIds = liveIds
+        lastWidth = width
+        if (offsets.size > liveIds.size + removing.size) offsets.keys.retainAll(liveIds.toSet())
+        return moved
+    }
+
+    /** The x to place group [id] at: its laid-out [target] plus the spring that carries it there. */
+    fun placeGroup(id: Int, target: Int, allottedWidth: Int, moved: Boolean, scope: CoroutineScope): Int {
+        allotted[id] = allottedWidth
+        if (moved) {
+            val previous = drawn[id]
+            if (previous != null && abs(previous - target) >= 0.5f) {
+                val offset = Animatable(previous - target, visibilityThreshold = 0.5f)
+                offsets[id] = offset
+                scope.launch { offset.animateTo(0f, FloatingToolbarHorizontalSpring) }
+            }
+        }
+        val x = target + (offsets[id]?.value ?: 0f)
+        drawn[id] = x
+        return x.roundToInt()
+    }
+}
+
+/** The overflow item's place in a capsule's key list. */
+private object FloatingToolbarOverflowKey
+
+/** What a [FloatingToolbarItem] without a key is told apart by. */
+private data class FloatingToolbarItemLook(val icon: ImageVector?, val title: String, val contentDescription: String?)
+
+/** The identity of an item in its capsule: its key (or look) and its rank among items that share it. */
+private data class FloatingToolbarItemIdentity(val base: Any, val rank: Int)
+
+/** The identities of [items], in order. */
+private fun floatingToolbarItemKeys(items: List<FloatingToolbarItem>): List<Any> {
+    val seen = HashMap<Any, Int>()
+    return items.map { item ->
+        val base: Any = item.key ?: FloatingToolbarItemLook(item.icon, item.title, item.contentDescription)
+        val rank = seen[base] ?: 0
+        seen[base] = rank + 1
+        FloatingToolbarItemIdentity(base, rank)
+    }
+}
+
+/** An item a capsule composes: a live one, or one the items dropped that is still scaling out. */
+private class FloatingToolbarItemEntry(val key: Any, val item: FloatingToolbarItem, val removed: Boolean)
+
+/**
+ * `COUIBottomFloatingToolbarMenuView.onMeasure`: how many leading items a capsule shows for
+ * [available] pixels between its insets; when that is fewer than all of them, the overflow item
+ * follows. At most [maxVisible] items show unless the last one fits in its place.
+ */
+internal fun floatingToolbarShownCount(
+    widths: IntArray,
+    overflowWidth: Int,
+    spacing: Int,
+    available: Long,
+    maxVisible: Int,
+): Int {
+    var remaining = available
+    var shown = 0
+    for (index in widths.indices) {
+        val space = if (shown == 0) 0 else spacing
+        val isLast = index == widths.lastIndex
+        val width = widths[index].toLong()
+        if (!isLast && width + spacing + space + overflowWidth <= remaining && shown < maxVisible) {
+            remaining -= width + space
+            shown++
+        } else if (!isLast || width + space > remaining) {
+            return index
+        } else {
+            remaining -= width + space
+            shown++
+        }
+    }
+    return widths.size
+}
+
+private const val FLOATING_TOOLBAR_ITEM_APPEARING = 1
+private const val FLOATING_TOOLBAR_ITEM_STAYING = 0
+private const val FLOATING_TOOLBAR_ITEM_DISAPPEARING = -1
+
+private const val FLOATING_TOOLBAR_PHASE_IDLE = 0
+private const val FLOATING_TOOLBAR_PHASE_PENDING = 1
+private const val FLOATING_TOOLBAR_PHASE_RUNNING = 2
+
+/**
+ * `ItemViewAnimatorImpl`: the item change of one capsule. The measure pass hands it the items the
+ * capsule should show ([update]); it answers with the layout of the change while it runs.
+ *
+ * A change first runs the pending phase (`STATE_PENDING`): the gaps between the items shown so far
+ * scale by 75% over 200ms, closing up when the capsule will grow and opening up when it will shrink,
+ * while the arriving items wait at scale 0. Then (`STATE_RUNNING`) the arriving items scale and fade
+ * in and the leaving ones out on a response 0.5 / bounce 0.4 spring, as the gaps return over 200ms.
+ */
+private class FloatingToolbarItemsAnimator(private val scope: CoroutineScope) {
+    /** The keys the capsule shows at rest (`mChildList`). */
+    var committed: List<Any> = emptyList()
+        private set
+
+    /** The inset beside the committed keys (`mMenuViewItemBgInsetHorizontal`). */
+    var committedInset = 0
+        private set
+
+    var phase = FLOATING_TOOLBAR_PHASE_IDLE
+        private set
+
+    /** `mAnimatingViews`: the new keys with the leaving ones after the last key they followed. */
+    var animating: List<Any> = emptyList()
+        private set
+
+    /** `mAnimatingState`: appearing, staying or disappearing. */
+    var roles: Map<Any, Int> = emptyMap()
+        private set
+    var appearingFirst: Any? = null
+        private set
+    var appearingLast: Any? = null
+        private set
+    var disappearingFirst: Any? = null
+        private set
+    var disappearingLast: Any? = null
+        private set
+
+    /** `mItemCountIdle`: the menu's child count when the change began. */
+    var idleCount = 0
+        private set
+    var insetFrom = 0
+        private set
+    var insetTo = 0
+        private set
+
+    /** `mIsGapEnlarging`: whether the pending gaps open up (the capsule shrinks). */
+    var gapEnlarging = false
+        private set
+    var gapScale = Animatable(0f)
+        private set
+    var progress = Animatable(0f)
+        private set
+
+    private var target: List<Any>? = null
+    private var lastToolbarWidth = Int.MIN_VALUE
+    private var fromKeys: List<Any> = emptyList()
+    private var toKeys: List<Any> = emptyList()
+    private var rollingBack = false
+    private var job: Job? = null
+    private var lastItems: Map<Any, FloatingToolbarItem> = emptyMap()
+    private val settleCount = mutableIntStateOf(0)
+
+    /** Bumped each time the capsule settles; read by composition to drop the items a change kept. */
+    val settled: Int
+        get() = settleCount.intValue
+
+    /** [phase], read through the settle counter so a measure pass runs again once the capsule settles. */
+    val phaseNow: Int
+        get() = if (settleCount.intValue >= 0) phase else FLOATING_TOOLBAR_PHASE_IDLE
+
+    /** Whether [key] is among the items the capsule is showing or about to show. */
+    fun isTargetShown(key: Any): Boolean = target?.contains(key) == true
+
+    private fun keysOnScreen(): Collection<Any> = if (phase == FLOATING_TOOLBAR_PHASE_IDLE) committed else animating
+
+    /** The items to compose: [items] (identified by [liveKeys]) and the dropped ones still on screen. */
+    fun entries(items: List<FloatingToolbarItem>, liveKeys: List<Any>): List<FloatingToolbarItemEntry> {
+        val live = liveKeys.toHashSet()
+        val result = ArrayList<FloatingToolbarItemEntry>(items.size + 1)
+        items.forEachIndexed { index, item -> result += FloatingToolbarItemEntry(liveKeys[index], item, removed = false) }
+        keysOnScreen().forEach { key ->
+            if (key !in live && key != FloatingToolbarOverflowKey) {
+                lastItems[key]?.let { result += FloatingToolbarItemEntry(key, it, removed = true) }
+            }
+        }
+        return result
+    }
+
+    /** Keeps the data of the composed items, for the ones the next item list drops. */
+    fun rememberItems(entries: List<FloatingToolbarItemEntry>) {
+        lastItems = entries.associate { it.key to it.item }
+    }
+
+    /**
+     * Hands the animator the keys the capsule should show, from a measure pass.
+     *
+     * @param newTarget The keys to show, the overflow key last when present.
+     * @param inset The inset beside them.
+     * @param growing Whether the capsule is wider with them (`onMenuViewWidthChanged`).
+     * @param toolbarWidth The width of the whole toolbar; a change of it applies at once.
+     * @param animate Whether changes animate (false while the capsule is hidden).
+     */
+    fun update(newTarget: List<Any>, inset: Int, growing: Boolean, toolbarWidth: Int, animate: Boolean) {
+        val previous = target
+        target = newTarget
+        val widthChanged = toolbarWidth != lastToolbarWidth
+        lastToolbarWidth = toolbarWidth
+        if (previous == null || !animate || widthChanged) {
+            // The first layout, a hidden capsule or a resized toolbar (setScreenSwitch): no animation.
+            if (phase != FLOATING_TOOLBAR_PHASE_IDLE || committed != newTarget || committedInset != inset) snapTo(newTarget, inset)
+            return
+        }
+        if (newTarget == previous) return
+        if (phase != FLOATING_TOOLBAR_PHASE_IDLE) {
+            when (newTarget) {
+                // rollbackCheck: going back to where the change started reverses it.
+                fromKeys -> if (!rollingBack) runTransition(forward = false)
+
+                toKeys -> if (rollingBack) runTransition(forward = true)
+
+                else -> {
+                    // A third list while a change runs: land the change, then start the new one.
+                    if (rollingBack) snapTo(fromKeys, insetFrom) else snapTo(toKeys, insetTo)
+                    start(newTarget, inset, growing)
+                }
+            }
+            return
+        }
+        start(newTarget, inset, growing)
+    }
+
+    private fun snapTo(keys: List<Any>, inset: Int) {
+        job?.cancel()
+        job = null
+        val dropsKeys = keysOnScreen().any { it !in keys }
+        phase = FLOATING_TOOLBAR_PHASE_IDLE
+        rollingBack = false
+        committed = keys
+        committedInset = inset
+        animating = emptyList()
+        if (dropsKeys) scope.launch { settleCount.intValue++ }
+    }
+
+    /** `setItemList` / `setItemData`: builds the change from the committed keys to [to]. */
+    private fun start(to: List<Any>, inset: Int, growing: Boolean) {
+        val from = committed
+        val merged = ArrayList<Any>(to.size + from.size)
+        merged.addAll(to)
+        val roleMap = HashMap<Any, Int>(to.size + from.size)
+        to.forEach { roleMap[it] = FLOATING_TOOLBAR_ITEM_APPEARING }
+        // A leaving key goes right after the last key it followed that stays.
+        val leaving = ArrayList<Pair<Any, Any?>>()
+        var lastStaying: Any? = null
+        for (key in from) {
+            if (roleMap.containsKey(key)) {
+                roleMap[key] = FLOATING_TOOLBAR_ITEM_STAYING
+                lastStaying = key
+            } else {
+                leaving += key to lastStaying
+            }
+        }
+        for (index in leaving.indices.reversed()) {
+            val (key, after) = leaving[index]
+            merged.add(if (after == null) 0 else merged.indexOf(after) + 1, key)
+            roleMap[key] = FLOATING_TOOLBAR_ITEM_DISAPPEARING
+        }
+        // The overflow item always closes the row.
+        if (merged.remove(FloatingToolbarOverflowKey)) merged.add(FloatingToolbarOverflowKey)
+        // The ends that change: their outer gaps open or close with the progress.
+        var dFirst: Any? = from.firstOrNull()
+        var dLast: Any? = from.lastOrNull()
+        var aFirst: Any? = to.firstOrNull()
+        var aLast: Any? = to.lastOrNull()
+        if (dFirst == aFirst) {
+            dFirst = null
+            aFirst = null
+        }
+        if (dLast == aLast) {
+            dLast = null
+            aLast = null
+        }
+        appearingFirst = aFirst
+        appearingLast = aLast
+        disappearingFirst = dFirst
+        disappearingLast = dLast
+        animating = merged
+        roles = roleMap
+        // The menu already holds the new children when setItemData counts them.
+        idleCount = to.size
+        fromKeys = from
+        toKeys = to
+        insetFrom = committedInset
+        insetTo = inset
+        gapEnlarging = !growing
+        phase = FLOATING_TOOLBAR_PHASE_PENDING
+        gapScale = Animatable(0f)
+        progress = Animatable(0f)
+        runTransition(forward = true)
+    }
+
+    private fun runTransition(forward: Boolean) {
+        job?.cancel()
+        rollingBack = !forward
+        val gap = gapScale
+        val prog = progress
+        job = scope.launch {
+            if (phase == FLOATING_TOOLBAR_PHASE_PENDING) {
+                if (!forward) {
+                    // Undone before the items moved: the gaps settle back.
+                    gap.animateTo(0f, FloatingToolbarGapSpec)
+                    settle(fromKeys, insetFrom)
+                    return@launch
+                }
+                gap.animateTo(FLOATING_TOOLBAR_MAX_GAP_SCALE, FloatingToolbarGapSpec)
+                phase = FLOATING_TOOLBAR_PHASE_RUNNING
+            }
+            coroutineScope {
+                // gapScaleAnimBack runs alongside the transition spring.
+                launch { gap.animateTo(0f, FloatingToolbarGapSpec) }
+                prog.animateTo(if (forward) 1f else 0f, FloatingToolbarItemSpring)
+            }
+            if (forward) settle(toKeys, insetTo) else settle(fromKeys, insetFrom)
+        }
+    }
+
+    private fun settle(keys: List<Any>, inset: Int) {
+        phase = FLOATING_TOOLBAR_PHASE_IDLE
+        rollingBack = false
+        committed = keys
+        committedInset = inset
+        animating = emptyList()
+        job = null
+        settleCount.intValue++
+    }
+}
+
 /** What a group's measure pass decided about its overflow, read when the overflow menu opens. */
 private class FloatingToolbarOverflowHolder {
     var hiddenItems: List<FloatingToolbarItem> = emptyList()
@@ -723,39 +1276,70 @@ private class FloatingToolbarOverflowHolder {
 
 /**
  * The items of one capsule (`COUIBottomFloatingToolbarMenuView`): the visible items, then the
- * overflow item when some do not fit.
+ * overflow item when some do not fit, animating as they change ([FloatingToolbarItemsAnimator]).
  */
 @Composable
 private fun FloatingToolbarGroup(
     items: List<FloatingToolbarItem>,
     colors: FloatingToolbarItemColors,
     overflowContentDescription: String,
+    toolbarWidth: Int,
+    interactive: Boolean,
 ) {
+    val scope = rememberCoroutineScope()
+    val animator = remember { FloatingToolbarItemsAnimator(scope) }
     val holder = remember { FloatingToolbarOverflowHolder() }
     var showOverflow by remember { mutableStateOf(false) }
+    val liveKeys = remember(items) { floatingToolbarItemKeys(items) }
+    val settled = animator.settled
+    // Items the list dropped stay composed while they scale out of the capsule.
+    val entries = remember(items, liveKeys, settled) { animator.entries(items, liveKeys) }
+    SideEffect { animator.rememberItems(entries) }
+    val measurePolicy = remember(entries, liveKeys, toolbarWidth, interactive) {
+        FloatingToolbarGroupMeasurePolicy(
+            entries = entries,
+            liveKeys = liveKeys,
+            items = items,
+            animator = animator,
+            holder = holder,
+            toolbarWidth = toolbarWidth,
+            animate = interactive,
+        )
+    }
     Layout(
         content = {
-            items.forEach { item ->
-                FloatingToolbarItemView(
-                    onClick = item.onClick,
-                    icon = item.icon,
-                    title = item.title,
-                    contentDescription = item.contentDescription,
-                    enabled = item.enabled,
-                    showRedDot = item.showRedDot,
-                    colors = colors,
-                )
+            entries.forEach { entry ->
+                key(entry.key) {
+                    val item = entry.item
+                    FloatingToolbarItemView(
+                        // A leaving item, or one moving into the overflow menu, no longer clicks.
+                        onClick = { if (animator.isTargetShown(entry.key)) item.onClick() },
+                        icon = item.icon,
+                        title = item.title,
+                        contentDescription = item.contentDescription,
+                        enabled = item.enabled,
+                        showRedDot = item.showRedDot,
+                        colors = colors,
+                        interactive = interactive && !entry.removed,
+                    )
+                }
             }
-            Box {
+            // The anchor spans the capsule height, so the menu keeps
+            // coui_popup_list_window_gap_to_navigation_view (8dp) from the capsule itself.
+            Box(
+                modifier = Modifier.height(FloatingToolbarDefaults.CapsuleHeight),
+                contentAlignment = Alignment.Center,
+            ) {
                 // createOverflowItem: an icon item showing coui_floating_toolbar_more.
                 FloatingToolbarItemView(
-                    onClick = { showOverflow = true },
+                    onClick = { if (animator.isTargetShown(FloatingToolbarOverflowKey)) showOverflow = true },
                     icon = COUIIcons.Basic.More,
                     title = "",
                     contentDescription = overflowContentDescription,
                     enabled = true,
                     showRedDot = false,
                     colors = colors,
+                    interactive = interactive,
                 )
                 WindowListPopup(
                     show = showOverflow,
@@ -782,48 +1366,203 @@ private fun FloatingToolbarGroup(
                 }
             }
         },
-    ) { measurables, constraints ->
-        val count = items.size
+        measurePolicy = measurePolicy,
+    )
+}
+
+/**
+ * The measure policy of a capsule's items. The intrinsic widths give the capsule's width at rest
+ * for all of its items; the measure pass picks the items that fit, hands them to the [animator]
+ * and lays out what it draws: the items at rest, or the change in progress
+ * (`ItemViewAnimatorImpl.updateAllAnimatingViews`) with the capsule spanning the items it draws
+ * (`updateAndDrawBackgroundRect`).
+ */
+private class FloatingToolbarGroupMeasurePolicy(
+    private val entries: List<FloatingToolbarItemEntry>,
+    private val liveKeys: List<Any>,
+    private val items: List<FloatingToolbarItem>,
+    private val animator: FloatingToolbarItemsAnimator,
+    private val holder: FloatingToolbarOverflowHolder,
+    private val toolbarWidth: Int,
+    private val animate: Boolean,
+) : MeasurePolicy {
+
+    private fun keyAt(index: Int): Any = if (index < entries.size) entries[index].key else FloatingToolbarOverflowKey
+
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
         val spacing = FloatingToolbarDefaults.ItemSpacing.roundToPx()
         // computeMenuViewItemBgInsetHorizontal: no capsule beside a single item.
-        val inset = if (count > 1) FloatingToolbarDefaults.CapsuleInnerPadding.roundToPx() else 0
-        val itemPlaceables = measurables.take(count).map { it.measure(Constraints()) }
-        val overflowPlaceable = measurables[count].measure(Constraints())
-        val overflowWidth = overflowPlaceable.width
-        var remaining = if (constraints.hasBoundedWidth) (constraints.maxWidth - inset * 2).toLong() else Long.MAX_VALUE / 4
-        val shown = ArrayList<Placeable>(count + 1)
-        var hiddenFrom = count
-        for (index in 0 until count) {
-            val placeable = itemPlaceables[index]
-            val space = if (shown.isEmpty()) 0 else spacing
-            val isLast = index == count - 1
-            val width = placeable.width.toLong()
-            if (!isLast && width + spacing + space + overflowWidth <= remaining && shown.size < FloatingToolbarDefaults.MaxVisibleItems) {
-                remaining -= width + space
-                shown += placeable
-            } else if (!isLast || width + space > remaining) {
-                remaining -= overflowWidth + space
-                shown += overflowPlaceable
-                hiddenFrom = index
-                break
-            } else {
-                remaining -= width + space
-                shown += placeable
+        val inset = if (liveKeys.size > 1) FloatingToolbarDefaults.CapsuleInnerPadding.roundToPx() else 0
+        val placeables = HashMap<Any, Placeable>(measurables.size)
+        measurables.forEachIndexed { index, measurable -> placeables[keyAt(index)] = measurable.measure(Constraints()) }
+        val overflowWidth = placeables[FloatingToolbarOverflowKey]?.width ?: 0
+        val available = if (constraints.hasBoundedWidth) (constraints.maxWidth - inset * 2).toLong() else Long.MAX_VALUE / 4
+        val shown = floatingToolbarShownCount(
+            widths = IntArray(liveKeys.size) { placeables[liveKeys[it]]?.width ?: 0 },
+            overflowWidth = overflowWidth,
+            spacing = spacing,
+            available = available,
+            maxVisible = FloatingToolbarDefaults.MaxVisibleItems,
+        )
+        val overflowShown = shown < liveKeys.size
+        val target = if (overflowShown) liveKeys.subList(0, shown) + FloatingToolbarOverflowKey else liveKeys
+        val hidden = if (overflowShown) items.subList(shown, items.size).toList() else emptyList()
+
+        fun widthOf(keys: List<Any>, keysInset: Int): Int {
+            if (keys.isEmpty()) return 0
+            return keysInset * 2 + keys.sumOf { placeables[it]?.width ?: 0 } + spacing * (keys.size - 1)
+        }
+        animator.update(
+            newTarget = target,
+            inset = inset,
+            growing = widthOf(target, inset) >= widthOf(animator.committed, animator.committedInset),
+            toolbarWidth = toolbarWidth,
+            animate = animate,
+        )
+        val height = max(FloatingToolbarDefaults.CapsuleHeight.roundToPx(), placeables.values.maxOfOrNull { it.height } ?: 0)
+        if (animator.phaseNow == FLOATING_TOOLBAR_PHASE_IDLE) {
+            val keys = animator.committed.filter { placeables.containsKey(it) }
+            val keysInset = animator.committedInset
+            return layout(widthOf(keys, keysInset).coerceAtMost(constraints.maxWidth), height) {
+                // Written on placement only, so the intrinsic passes of the toolbar leave it alone.
+                holder.hiddenItems = hidden
+                var x = keysInset
+                keys.forEach { key ->
+                    val placeable = placeables.getValue(key)
+                    placeable.placeRelative(x, (height - placeable.height) / 2)
+                    x += placeable.width + spacing
+                }
             }
         }
-        val contentWidth = shown.sumOf { it.width } + spacing * max(0, shown.size - 1)
-        val width = contentWidth + inset * 2
-        val height = max(FloatingToolbarDefaults.CapsuleHeight.roundToPx(), shown.maxOfOrNull { it.height } ?: 0)
-        layout(width, height) {
-            // Written on placement only, so the intrinsic passes of the toolbar leave it alone.
-            holder.hiddenItems = if (hiddenFrom < count) items.subList(hiddenFrom, count).toList() else emptyList()
-            var x = inset
-            shown.forEach { placeable ->
-                placeable.placeRelative(x, (height - placeable.height) / 2)
-                x += placeable.width + spacing
+        return layoutChange(placeables, spacing, height, constraints, hidden)
+    }
+
+    /**
+     * `updateAllAnimatingViews`: each key in order takes its scaled width and half a gap on either
+     * side, scaled with it; the outer gap of an end that changes opens or closes with the
+     * progress; a leaving key past its end (the spring's overshoot) pulls its neighbours in five
+     * times as far. The capsule then spans the first and last key (`updateAndDrawBackgroundRect`).
+     * Computed left to right and mirrored by `placeRelative`, as COUI walks right-to-left layouts
+     * from the end.
+     */
+    private fun MeasureScope.layoutChange(
+        placeables: Map<Any, Placeable>,
+        spacing: Int,
+        height: Int,
+        constraints: Constraints,
+        hidden: List<FloatingToolbarItem>,
+    ): MeasureResult {
+        val keys = animator.animating
+        val count = keys.size
+        if (count == 0) {
+            return layout(0, height) { holder.hiddenItems = hidden }
+        }
+        val running = animator.phaseNow == FLOATING_TOOLBAR_PHASE_RUNNING
+        val progress = if (running) animator.progress.value else 0f
+        val clamped = progress.coerceIn(0f, 1f)
+        val gapScale = (if (animator.gapEnlarging) 1f else -1f) * animator.gapScale.value
+        val gap = spacing * (1f + gapScale)
+        // setProgress: the inset follows the progress while the change runs.
+        val inset = if (running) {
+            (animator.insetFrom + (animator.insetTo - animator.insetFrom) * clamped).roundToInt()
+        } else {
+            animator.insetFrom
+        }
+        val xs = FloatArray(count)
+        val scales = FloatArray(count)
+        var x = inset - spacing * gapScale * (animator.idleCount - 1) / 2f
+        for (index in 0 until count) {
+            val key = keys[index]
+            val width = placeables[key]?.width ?: 0
+            val role = animator.roles[key] ?: FLOATING_TOOLBAR_ITEM_STAYING
+            // handleItemState: arriving keys wait at scale 0 until the change runs.
+            val state: Float
+            val scale: Float
+            if (!running) {
+                state = 1f
+                scale = if (role == FLOATING_TOOLBAR_ITEM_APPEARING) 0f else 1f
+            } else if (role == FLOATING_TOOLBAR_ITEM_STAYING) {
+                state = 1f
+                scale = 1f
+            } else {
+                state = if (role == FLOATING_TOOLBAR_ITEM_APPEARING) progress else 1f - progress
+                scale = max(0f, state)
+            }
+            var leftGap = scale * gap / 2f
+            var rightGap = leftGap
+            if (state < 0f) {
+                leftGap = 5f * state * gap
+                rightGap = leftGap
+            }
+            when (key) {
+                animator.appearingFirst -> leftGap *= 1f - clamped
+                animator.disappearingFirst -> leftGap *= clamped
+                animator.appearingLast -> rightGap *= 1f - clamped
+                animator.disappearingLast -> rightGap *= clamped
+            }
+            x += leftGap
+            if (index == 0) x -= leftGap
+            var viewX = x - width * (1f - scale) / 2f
+            x += width * scale + rightGap
+            if (index == count - 1 && state < 0f) viewX += rightGap
+            xs[index] = viewX
+            scales[index] = scale
+        }
+        val firstWidth = placeables[keys[0]]?.width ?: 0
+        val lastWidth = placeables[keys[count - 1]]?.width ?: 0
+        val lastScale = scales[count - 1]
+        val left = xs[0] + firstWidth * max(0f, 1f - scales[0]) / 2f - inset
+        val right = if (lastScale <= 0f) {
+            xs[count - 1] + lastWidth * (1f - lastScale) / 2f + inset
+        } else {
+            xs[count - 1] + lastWidth - lastWidth * (1f - lastScale) / 2f + inset
+        }
+        val width = ceil(right - left).toInt().coerceIn(0, constraints.maxWidth)
+        return layout(width, height) {
+            holder.hiddenItems = hidden
+            for (index in 0 until count) {
+                val placeable = placeables[keys[index]] ?: continue
+                val scale = scales[index]
+                placeable.placeRelativeWithLayer((xs[index] - left).roundToInt(), (height - placeable.height) / 2) {
+                    scaleX = scale
+                    scaleY = scale
+                    alpha = scale.coerceIn(0f, 1f)
+                }
             }
         }
     }
+
+    /** The capsule's width at rest with all of its items: the toolbar shares its width by it. */
+    private fun IntrinsicMeasureScope.naturalWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int {
+        val spacing = FloatingToolbarDefaults.ItemSpacing.roundToPx()
+        val inset = if (liveKeys.size > 1) FloatingToolbarDefaults.CapsuleInnerPadding.roundToPx() else 0
+        // The live items come first in the content, the overflow item last.
+        val widths = IntArray(liveKeys.size) { measurables.getOrNull(it)?.maxIntrinsicWidth(height) ?: 0 }
+        val overflowWidth = measurables.lastOrNull()?.maxIntrinsicWidth(height) ?: 0
+        val shown = floatingToolbarShownCount(widths, overflowWidth, spacing, Long.MAX_VALUE / 4, FloatingToolbarDefaults.MaxVisibleItems)
+        var content = 0
+        for (index in 0 until shown) content += widths[index]
+        var count = shown
+        if (shown < liveKeys.size) {
+            content += overflowWidth
+            count++
+        }
+        if (count == 0) return 0
+        return content + spacing * (count - 1) + inset * 2
+    }
+
+    private fun IntrinsicMeasureScope.naturalHeight(measurables: List<IntrinsicMeasurable>, width: Int): Int = max(
+        FloatingToolbarDefaults.CapsuleHeight.roundToPx(),
+        measurables.maxOfOrNull { it.maxIntrinsicHeight(width) } ?: 0,
+    )
+
+    override fun IntrinsicMeasureScope.maxIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int = naturalWidth(measurables, height)
+
+    override fun IntrinsicMeasureScope.minIntrinsicWidth(measurables: List<IntrinsicMeasurable>, height: Int): Int = naturalWidth(measurables, height)
+
+    override fun IntrinsicMeasureScope.maxIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int): Int = naturalHeight(measurables, width)
+
+    override fun IntrinsicMeasureScope.minIntrinsicHeight(measurables: List<IntrinsicMeasurable>, width: Int): Int = naturalHeight(measurables, width)
 }
 
 /**
@@ -839,21 +1578,26 @@ private fun FloatingToolbarItemView(
     enabled: Boolean,
     showRedDot: Boolean,
     colors: FloatingToolbarItemColors,
+    interactive: Boolean,
 ) {
     val contentColor = colors.contentColor(enabled)
     val label = contentDescription ?: title
     Layout(
-        modifier = Modifier
-            .clickable(
-                interactionSource = null,
-                indication = null,
-                enabled = enabled,
-                role = Role.Button,
-                onClick = onClick,
-            )
-            .semantics(mergeDescendants = true) {
-                if (label.isNotEmpty()) this.contentDescription = label
-            },
+        modifier = if (interactive) {
+            Modifier
+                .clickable(
+                    interactionSource = null,
+                    indication = null,
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                )
+                .semantics(mergeDescendants = true) {
+                    if (label.isNotEmpty()) this.contentDescription = label
+                }
+        } else {
+            Modifier.clearAndSetSemantics { }
+        },
         content = {
             if (icon != null) {
                 Image(

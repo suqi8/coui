@@ -61,7 +61,7 @@ CircularProgressIndicator()
 
 传入进度值时移植自 `COUICircularProgressBar`：中性色圆弧叠在分割线色轨道上，进度变化走临界阻尼弹簧（阻尼比 1、刚度 50）。与原版一样，布局尺寸为 `size + 2 × 4dp`，圆环外径为 `size − 2 × 4dp`：默认大号档（40dp，描边 5dp）是 48dp 的框、32dp 的圆环；中号档（30dp，描边 3dp）是 38dp 的框、22dp 的圆环。
 
-不传进度时移植自 `COUILoadingView`：18dp 圆环（描边 2.67dp），主色圆弧（`#0080FF` / `#1A8CFF`）叠在主色淡染轨道（`#260080FF` / `#401A8CFF`）上，即 `ProgressIndicatorDefaults.loadingViewColors()`。
+不传进度时移植自 `COUILoadingView`：18dp 圆环（描边 2.67dp），主色圆弧（`#0080FF` / `#1A8CFF`）叠在主色淡染轨道（`#260080FF` / `#401A8CFF`）上，即 `ProgressIndicatorDefaults.loadingViewColors()`。圆弧每秒转一圈；与在 `onDraw` 里读取时钟的 `COUILoadingView` 一样，它的相位取自帧时钟，所以同屏的所有加载圈同步旋转。
 
 #### 状态与类型
 
@@ -101,11 +101,12 @@ InfiniteProgressIndicator()
 RotatingProgressIndicator()
 ```
 
-它提供默认（26dp）和小号（16dp）两档尺寸，分别对应 `coui_lottie_loading_view_large_*` 与 `coui_lottie_loading_view_small_*`：
+它提供默认（26dp）和小号（16dp）两档尺寸，分别对应 `coui_lottie_loading_view_large_*` 与 `coui_lottie_loading_view_small_*`。小号即 `Widget.COUI.COUILottieLoadingView` 加载圈，其资源（`coui_lottie_loading_small.json`）还把整个图层降到 30% 不透明度，所以圆弧实际为 64 / 255（`#40000000` / `#40FFFFFF`）：
 
 ```kotlin
 // 小号旋转加载指示器
 RotatingProgressIndicator(
+    color = ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor(),
     size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
     ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
     strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth
@@ -203,6 +204,7 @@ CircularProgressIndicator(progress = null)
 | 属性名    | 类型                      | 说明                               | 默认值                                                     | 是否必须 |
 | --------- | ------------------------- | ---------------------------------- | ---------------------------------------------------------- | -------- |
 | modifier  | Modifier                  | 应用于指示器的修饰符               | Modifier                                                   | 否       |
+| paused    | Boolean                   | 让旋转动画停在当前帧               | false                                                      | 否       |
 | type      | CompProgressIndicatorType | 布局类型                           | CompProgressIndicatorType.Large                            | 否       |
 | text      | String?                   | 提示文字，仅 `...WithText...` 类型绘制 | null                                                   | 否       |
 | color     | Color                     | 旋转圆弧的颜色                     | ProgressIndicatorDefaults.rotatingProgressIndicatorColor() | 否       |
@@ -223,6 +225,7 @@ CircularProgressIndicator(progress = null)
 | 属性名       | 类型     | 说明                     | 默认值                                                                 | 是否必须 |
 | ------------ | -------- | ------------------------ | ---------------------------------------------------------------------- | -------- |
 | modifier     | Modifier | 应用于指示器的修饰符     | Modifier                                                               | 否       |
+| paused       | Boolean  | 停在当前帧（`pauseAnimation`），取消暂停后从该帧继续 | false                                      | 否       |
 | color        | Color    | 圆弧的颜色               | ProgressIndicatorDefaults.rotatingProgressIndicatorColor()             | 否       |
 | size         | Dp       | 指示器方形视图框的大小   | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize         | 否       |
 | ringDiameter | Dp       | 圆弧描边中心线的直径     | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter | 否       |
@@ -265,6 +268,7 @@ ProgressIndicatorDefaults 对象提供了进度指示器组件的默认值和颜
 | circularProgressIndicatorColors() | ProgressIndicatorColors | 创建确定进度环形指示器的默认颜色配置 |
 | loadingViewColors()               | ProgressIndicatorColors | 创建不确定进度环形指示器的主色配置 |
 | rotatingProgressIndicatorColor()  | Color                   | 旋转加载指示器的默认圆弧色（85% 不透明度） |
+| smallRotatingProgressIndicatorColor() | Color               | 小号旋转加载指示器的圆弧色（64 / 255）     |
 
 ### ProgressIndicatorColors 类
 

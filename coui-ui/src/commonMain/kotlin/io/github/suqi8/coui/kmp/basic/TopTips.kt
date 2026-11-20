@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -45,6 +43,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -642,7 +641,8 @@ private fun Modifier.revealHeight(progress: () -> Float): Modifier = layout { me
 
 /**
  * The close button, redrawn from COUI 17 ic_embedded_top_tips_close: a 24dp icon holding a
- * radius-10 couiColorLabelTertiary circle with a white rounded cross.
+ * radius-10 couiColorLabelTertiary circle with a white rounded cross. Like the official close
+ * `ImageView` (no background, a plain vector without a pressed state) it shows no press feedback.
  */
 @Composable
 private fun TopTipsCloseButton(
@@ -655,8 +655,7 @@ private fun TopTipsCloseButton(
     Box(
         modifier = modifier
             .size(TopTipsDefaults.IconSize)
-            .clip(CircleShape)
-            .clickable(onClick = onClick)
+            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
             .semantics { contentDescription = "Close" },
         contentAlignment = Alignment.Center,
     ) {

@@ -101,7 +101,11 @@ fun SnackbarHost(
 
 大多数情况下，可以直接使用默认的 `content`，即内置的 `Snackbar` 视觉样式。
 
-手指按住 Snackbar 时自动消失计时暂停，松手后按完整时长重新计时（COUISnackBar `onTouchEvent`：DOWN / MOVE 取消，UP / CANCEL 重新计时）。滑动关闭、多条堆叠与关闭图标为本库扩展，COUI 无对应。
+每条 Snackbar 的显示与关闭同 COUI 17 `COUISnackBar.animateSpring`：显示时由 0.8 缩放到 1 并淡入，关闭时缩回 0.8 并淡出，均为无回弹弹簧（显示 response 0.3，关闭 0.25）。
+
+手指按住 Snackbar 时自动消失计时暂停，松手后按完整时长重新计时（COUISnackBar `onTouchEvent`：DOWN / MOVE 取消，UP / CANCEL 重新计时）。滑动关闭、多条堆叠与关闭图标为本库扩展，COUI 无对应（COUI 同一时间只显示一条）。
+
+滑动关闭沿用 COUI 中唯一可滑动的 `COUINotificationSnackBar`：拖动超过触摸阈值且以横向为主时拾起 Snackbar 并跟手；松手时超过自身宽度八分之一则以每毫秒 1.75px 沿 COUI move-ease 曲线滑出屏幕后关闭，否则弹回（response 0.35、bounce 0）。内容自带滑动时（如 `NotificationSnackbar`、`CustomSnackbar`）请关闭 `canSwipeToDismiss`。
 
 ## Snackbar
 
@@ -128,7 +132,7 @@ fun Snackbar(
 | icon                   | (@Composable () -> Unit)? | 可选前置图标，布局在 30.dp 容器内（通过 `SnackbarHost` 的 `content` 插槽传入） | null | 否       |
 | cornerRadius           | Dp             | 垂直（多行）布局的圆角半径，按 `default_g2_weight` 2.45 绘制 | SnackbarDefaults.CornerRadius     | 否       |
 | singleLineCornerRadius | Dp             | 单行布局的圆角半径；`Dp.Unspecified` 按高度一半取圆角（COUI 17 软胶囊） | SnackbarDefaults.SingleLineCornerRadius | 否 |
-| maxWidth               | Dp             | Snackbar 的最大宽度（不含两侧 16.dp 外边距）；`Dp.Unspecified` 取消上限 | SnackbarDefaults.maxWidth() | 否       |
+| maxWidth               | Dp             | Snackbar 的最大宽度（不含两侧 16.dp 外边距）；Snackbar 在此上限内铺满可用宽度，`Dp.Unspecified` 取消上限 | SnackbarDefaults.maxWidth() | 否       |
 | colors                 | SnackbarColors | Snackbar 的颜色配置      | SnackbarDefaults.snackbarColors() | 否       |
 | insideMargin           | PaddingValues  | Snackbar 内容区域的内边距（单行布局中操作按钮位于尾部时，末端内边距收窄为 4.dp） | SnackbarDefaults.InsideMargin | 否       |
 
@@ -139,7 +143,7 @@ fun Snackbar(
 - **单行**：图标、消息、操作按钮与关闭图标排在一行，各自垂直居中，外形为胶囊。
 - **垂直**：消息换行（或含换行符）或整行超出可用宽度时，消息距顶部 12.dp，操作按钮移到消息下方（间距 10.dp）并贴右，末端边距 4.dp、底部边距 9.dp，圆角降为 `cornerRadius`（16.dp）。
 - **操作按钮**：操作文字带水平 12.dp、垂直 4.dp 的内边距作为胶囊按压区（COUI `text_ripple_bg_padding_*`），与消息间隔 16.dp，末端边距 4.dp。
-- **宽度**：Snackbar 按内容自适应宽度，上限为 `maxWidth`。默认取当前窗口 COUI 响应式栅格（小边距）的 6 列宽度：紧凑窗口（宽度小于 600.dp）只有 4 列，因此可铺满窗口减去两侧 16.dp；中等窗口（8 列、边距 24.dp、间距 8.dp）与展开窗口（12 列、边距 40.dp、间距 12.dp）上居中显示为 6 列宽。
+- **宽度**：Snackbar 铺满可用宽度，上限为 `maxWidth`；图标与消息在起始端，操作按钮（及关闭图标）在末端。COUI `coui_snack_bar_item` 虽是 `wrap_content` 的 `RelativeLayout`，但操作按钮贴父布局末端（alignParentEnd），会把整条撑满可用宽度。`maxWidth` 默认取当前窗口 COUI 响应式栅格（小边距）的 6 列宽度：紧凑窗口（宽度小于 600.dp）只有 4 列，因此铺满窗口减去两侧 16.dp；中等窗口（8 列、边距 24.dp、间距 8.dp）与展开窗口（12 列、边距 40.dp、间距 12.dp）上居中显示为 6 列宽。
 
 容器色为 `backgroundTop`（浅色 `#FFFFFF` / 深色 `#333333`），操作文字为 `primaryTextOnPopup`（`#0080FF` / `#5C9DFF`）。阴影以柔和投影近似 COUI `ShadowUtils` 3 级阴影，深色模式更浓（COUI 阴影 alpha 由 40/255 升至 120/255）。
 
@@ -349,4 +353,4 @@ SnackbarHost(state = snackbarHostState, canSwipeToDismiss = false) { data ->
 ### 布局与滑动
 
 - **布局**：图片距起始、顶部与底部各 16dp，与文字间隔 8dp；标题 14sp 中粗，副文本 12sp、位于标题下方 2dp；小号按钮（内边距 12dp x 4dp，最宽 120dp、最多两行）垂直居中；20dp 关闭按钮距顶部与末端各 6dp。
-- **滑动**：拖动超过触摸阈值（touch slop）后决定方向（COUI 在移动第一个像素时就决定，这里保留阈值，以免轻微移动的点按失效、抢走可滚动父布局的手势）。横向时卡片跟手，超过自身宽度的八分之一后以每毫秒 1.75px 的速度沿 COUI move-ease 曲线滑出屏幕并回调 `onDismiss`，否则弹回（response 0.35、bounce 0）。向下滑动超过宽度八分之一同样关闭；拖动开始后向上最多偏离原位宽度的八分之一。一开始就向上的拖动交给父布局处理。
+- **滑动**：拖动超过触摸阈值（touch slop）后决定方向（COUI 在移动第一个像素时就决定，这里保留阈值，以免轻微移动的点按失效、抢走可滚动父布局的手势）。横向时卡片跟手，超过自身宽度（含两侧外边距）的八分之一后以每毫秒 1.75px 的速度沿 COUI move-ease 曲线恰好滑出屏幕并回调 `onDismiss`，否则弹回（response 0.35、bounce 0）。向下超过同一阈值时，卡片下移「自身底边位置 + 自身高度」，时长按整段距离 / 1.75 计算（`startDismissAnimationY`），是一段前快后慢的长滑动；卡片离开窗口即回调 `onDismiss`。拖动开始后向上最多偏离原位宽度的八分之一。一开始就向上的拖动交给父布局处理。

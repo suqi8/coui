@@ -48,6 +48,8 @@ enum class CompProgressIndicatorType {
  * `coui_loading_textview_bottom_margin`).
  *
  * @param modifier The modifier to be applied to the indicator.
+ * @param paused Whether the spinner holds its current frame (`getAnimationView().pauseAnimation()`,
+ *   as COUILoadingPreferenceCategory does in its PAUSE state); see [RotatingProgressIndicator].
  * @param type The [CompProgressIndicatorType] layout.
  * @param text The loading tip (`loadingTips`). Only the `...WithText...` types draw it.
  * @param color The color of the spinner arc.
@@ -57,6 +59,7 @@ enum class CompProgressIndicatorType {
 @Composable
 fun CompProgressIndicator(
     modifier: Modifier = Modifier,
+    paused: Boolean = false,
     type: CompProgressIndicatorType = CompProgressIndicatorType.Large,
     text: String? = null,
     color: Color = ProgressIndicatorDefaults.rotatingProgressIndicatorColor(),
@@ -67,6 +70,7 @@ fun CompProgressIndicator(
     val size = if (large) CompProgressIndicatorDefaults.LargeSize else CompProgressIndicatorDefaults.SmallSize
     val spinner: @Composable () -> Unit = {
         RotatingProgressIndicator(
+            paused = paused,
             color = color,
             size = size,
             ringDiameter = size * RotatingSpinnerRingRatio,
@@ -74,9 +78,15 @@ fun CompProgressIndicator(
         )
     }
     val tip = text?.takeIf { it.isNotEmpty() }
+    // COUICompProgressIndicator is a LinearLayout with setGravity(CENTER): the content stays centered
+    // on both axes when the modifier makes the indicator larger than it.
     when (type) {
         CompProgressIndicatorType.Large, CompProgressIndicatorType.Small -> {
-            Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) { spinner() }
+            Column(
+                modifier = modifier,
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) { spinner() }
         }
 
         CompProgressIndicatorType.SmallWithTextHorizontal -> {

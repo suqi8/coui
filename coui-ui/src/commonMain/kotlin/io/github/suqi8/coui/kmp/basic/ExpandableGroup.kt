@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,7 +34,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
-import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -127,14 +127,17 @@ fun ExpandableGroupHeader(
 }
 
 /**
- * The expand / collapse arrow of a COUI expandable group header: the filled triangle of COUI
- * coui_app_expander_close_default (24dp, couiColorControls) turned by COUIRotateView with
- * `supportRotateType` "z": 0 to 180 degrees over 400ms on PathInterpolator(0.133, 0, 0.3, 1).
+ * The expand / collapse arrow of a COUI expandable group header, as ColorOS 17 Settings draws its
+ * expandable rows (`settings_preference_widget_rotateview.xml`): a COUIRotateView of
+ * `expandable_list_item_size` (24dp) showing the `coui_line_arrow` chevron (16 x 24dp,
+ * couiColorLabelSecondary) with `supportRotateType` couiRotateAloneZ, which turns the view from 0 to
+ * 180 degrees over 400ms on PathInterpolator(0.133, 0, 0.3, 1).
  *
  * @param expanded Whether the arrow points at the expanded state.
  * @param modifier The modifier to be applied to the arrow.
  * @param color The color of the arrow.
- * @param size The size of the arrow.
+ * @param size The size of the box the arrow turns in; the chevron keeps its 2:3 aspect ratio and is
+ *   centered in it.
  */
 @Composable
 fun ExpandableGroupArrow(
@@ -164,7 +167,8 @@ fun ExpandableGroupArrow(
  * ExpandableRecyclerConnector animates a placeholder view from 0 to the children's total height
  * (expanding) or back (collapsing) in 400ms on COUIMoveEaseInterpolator (0.3, 0, 0.1, 1), with
  * the placeholder alpha equal to `height / totalHeight`. An animation that interrupts a running
- * one starts from the current height and is shortened in proportion to the distance left. The
+ * one starts from the current height: a collapse lasts `height / totalHeight * 400ms`, while an
+ * expand always takes the full 400ms (`expandAnimationStart` is handed the total height). The
  * children are only composed while the group is expanded or animating.
  *
  * @param expanded Whether the group is expanded.
@@ -180,11 +184,17 @@ fun ExpandableGroupContent(
     val fraction = remember { Animatable(if (expanded) 1f else 0f) }
     LaunchedEffect(expanded) {
         val target = if (expanded) 1f else 0f
-        val distance = abs(target - fraction.value)
-        if (distance > 0f) {
+        if (fraction.value != target) {
+            // ExpandableRecyclerConnector.collapseAnimationStart scales the duration by
+            // dummyHeight / totalHeight; expandAnimationStart passes totalHeight, so it keeps 400ms.
+            val duration = if (expanded) {
+                EXPAND_DURATION_MILLIS
+            } else {
+                (EXPAND_DURATION_MILLIS * fraction.value).roundToInt()
+            }
             fraction.animateTo(
                 targetValue = target,
-                animationSpec = tween((EXPAND_DURATION_MILLIS * distance).roundToInt(), easing = MoveEase),
+                animationSpec = tween(duration, easing = MoveEase),
             )
         }
     }
@@ -214,23 +224,25 @@ fun ExpandableGroupContent(
 
 /** Contains default values used by the COUI expandable group. */
 object ExpandableGroupDefaults {
-    /** The size of the arrow (COUI coui_app_expander_close_default, 24dp). */
+    /** The size of the box the arrow turns in (COUI expandable_list_item_size, 24dp). */
     val ArrowSize = 24.dp
 
-    /** The arrow color (COUI coui_color_controls #29000000 / #40FFFFFF). */
+    /** The arrow color (COUI coui_line_arrow: couiColorLabelSecondary #8A000000 / #8AFFFFFF). */
     @Composable
-    fun arrowColor(): Color = COUITheme.colorScheme.dragHandle
+    fun arrowColor(): Color = COUITheme.colorScheme.labelSecondary
 }
 
-/** The downward triangle of COUI coui_app_expander_close_default.xml (72 x 72 viewport). */
+/** The downward chevron of COUI coui_line_arrow_collapsed.xml (16 x 24dp, 16 x 24 viewport). */
 private val ExpanderArrowIcon: ImageVector by lazy {
-    ImageVector.Builder("ExpanderArrow", 24.dp, 24.dp, 72f, 72f).apply {
+    ImageVector.Builder("ExpanderArrow", 16.dp, 24.dp, 16f, 24f).apply {
         addPath(
             pathData = addPathNodes(
-                "M 25.6 28 L 46.4 28 C 47.3 28 48 28.7 48 29.6 C 48 30 47.9 30.3 47.6 30.6 L 37.6 43.2 " +
-                    "C 36.9 44.1 35.7 44.2 34.8 43.5 L 34.5 43.2 L 24.4 30.6 C 23.8 29.9 24 28.9 24.6 28.3 " +
-                    "C 24.9 28.1 25.2 28 25.6 28 Z",
+                "M8.595,13.743C8.751,13.901 8.829,13.981 8.921,14.003C8.973,14.016 9.027,14.016 9.079,14.003" +
+                    "C9.171,13.981 9.249,13.901 9.405,13.743L15.035,8L16,8.975L9.795,15.202" +
+                    "C9.489,15.509 9.336,15.663 9.154,15.707C9.053,15.731 8.947,15.731 8.846,15.707" +
+                    "C8.664,15.663 8.511,15.509 8.205,15.202L2,8.975L2.966,8L8.595,13.743Z",
             ),
+            pathFillType = PathFillType.EvenOdd,
             fill = SolidColor(Color.Black),
         )
     }.build()

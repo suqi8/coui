@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -63,6 +64,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
 import io.github.suqi8.coui.kmp.effect.FrameworkEdgeBlendMode
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
 import io.github.suqi8.coui.kmp.effect.LocalMaterialBackdrop
@@ -76,6 +78,7 @@ import io.github.suqi8.coui.kmp.effect.StrokeEffectParams
 import io.github.suqi8.coui.kmp.effect.couiFocusStroke
 import io.github.suqi8.coui.kmp.effect.couiTouchMotion
 import io.github.suqi8.coui.kmp.effect.splitFrameworkStroke
+import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.asBrush
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
@@ -164,8 +167,9 @@ fun FloatingActionButton(
 ) {
     // animationFloatingButtonEnlarge / animationFloatingButtonShrink: 1 = shown, 0 = hidden.
     val shown = remember { Animatable(if (visible) 1f else 0f) }
+    val showHideMillis = LocalFabShowHideMillis.current
     LaunchedEffect(visible) {
-        shown.animateTo(if (visible) 1f else 0f, tween(FAB_SHOW_HIDE_MILLIS, easing = FabCollapseEasing))
+        shown.animateTo(if (visible) 1f else 0f, tween(showHideMillis, easing = FabCollapseEasing))
     }
     // Derived so that the running animation only redraws the layer instead of recomposing.
     val gone by remember { derivedStateOf { shown.value == 0f && shown.targetValue == 0f } }
@@ -589,11 +593,13 @@ fun rememberFloatingActionButtonScrollState(
  *
  * @param icon The icon of the child button, drawn in its content color.
  * @param onClick Called when the child button or its label is clicked (COUI `onActionSelected`).
- *   The menu stays open, as in COUI; collapse it from here when needed.
+ *   The menu then collapses, as COUI closes it after an action its listener does not consume; see
+ *   [ExpandableFloatingActionButton]'s `collapseOnItemClick`.
  * @param label The text of the label capsule, or null for a bare child button.
  * @param enabled Whether the child button and its label are enabled.
  * @param containerColor The fill of the child button; [Color.Unspecified] takes the theme primary
- *   color (COUI `couiColorPrimary`).
+ *   color (COUI `couiColorPrimary`). A specified color also tints the label's shadow
+ *   (`COUIFloatingButtonLabel.setShadowColor`).
  * @param labelContainerColor The fill of the label capsule; [Color.Unspecified] takes the theme
  *   primary color (COUI `couiColorPrimary`).
  * @param labelColor The label text color; [Color.Unspecified] takes white
@@ -630,30 +636,42 @@ class FloatingActionButtonItem(
  *   starts first, each next one 50ms later; it slides back into the main button over 300ms on
  *   COUIMoveEaseInterpolator while scaling to 0.6 and fading out, the label over 200ms from its
  *   bottom end corner.
+ * - **While it runs** (`mCOUIFloatingButtonAnimationIsRun`): clicks on the main button and on the
+ *   items are ignored until the last item has arrived; `toggle` and the action listener are off.
  * - **Main button**: the content rotates by [rotation] (45 degrees) over 300ms
- *   (`rotateForward` / `rotateBackward`).
- * - **Material**: the main and child buttons take the [FloatingActionButton] material
- *   (`TYPE_FRAMEWORK_FAB` blur, `TYPE_FRAMEWORK_CIRCLE_2` stroke); the labels take the primary
- *   button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke) through
- *   [Button].
+ *   (`rotateForward` / `rotateBackward`). Without the material, the main button keeps its press
+ *   mask while the menu is open (`setTouchEnterStateLocked`).
+ * - **Items**: a click on a child button or its label runs the item's action and collapses the
+ *   menu ([collapseOnItemClick]). The child buttons take the [FloatingActionButton] touch motion,
+ *   material and shadow but play no haptic (COUI never calls the label's press feedback). The
+ *   labels have no touch motion or press tint (a `MaterialCardView` with a transparent ripple);
+ *   they are capsules with circular ends drawn with the primary-button material
+ *   (`TYPE_CONTENT_PRIMARY_BUTTON` blur from a [LocalMaterialBackdrop] provider,
+ *   `TYPE_CONTENT_CAPSULE_1` stroke) and the floating-button light-source shadow, white unless
+ *   the item has its own [FloatingActionButtonItem.containerColor].
+ * - **Hiding** (`ScrollViewBehavior.behaviorAnimate`): hiding an open menu through [visible]
+ *   collapses it on the slide-out timing: the items slide 56dp further, behind the main button,
+ *   over 250ms, while the main button shrinks and turns back in 150ms.
  *
  * The component measures as the main button alone and places the items above it, outside its own
  * bounds, the way the collapsed COUI menu keeps its labels hidden behind the main button: in a
  * [Scaffold] `floatingActionButton` slot the main button keeps its place (with any [FabPosition])
  * and the snack bar does not jump when the menu opens. Leave room above the button and do not clip
- * its parent there. Like COUI, the menu has no scrim and does not close on an outside touch; an
- * item click is ignored while the menu is collapsing.
+ * its parent there. Like COUI, the menu has no scrim and does not close on an outside touch.
  *
  * @param expanded Whether the items are shown.
- * @param onExpandedChange Called with the new expanded state when the main button is clicked.
+ * @param onExpandedChange Called with the new expanded state when the main button is clicked, when
+ *   an item collapses the menu, or when hiding the button closes it.
  * @param items The child actions, index 0 nearest to the main button.
  * @param modifier The modifier to be applied to the [ExpandableFloatingActionButton].
  * @param enabled Whether the main button is enabled.
  * @param visible Whether the main button is shown, see [FloatingActionButton]. Hiding an expanded
- *   menu also collapses it through [onExpandedChange] (`ScrollViewBehavior` closes the menu as it
- *   slides the button out).
+ *   menu also collapses it through [onExpandedChange].
  * @param material Whether the buttons draw the COUI 17 material, see [FloatingActionButton].
- * @param hapticFeedbackEnabled Whether a touch down on a button plays the press haptic.
+ * @param hapticFeedbackEnabled Whether a touch down on the main button plays the press haptic
+ *   (COUI `fabNeedVibrate`).
+ * @param collapseOnItemClick Whether an item click also collapses the menu. COUI closes the menu
+ *   unless the action listener consumes the click; pass `false` for actions that keep it open.
  * @param containerColor The fill of the main button.
  * @param disabledContainerColor The fill of the main button when disabled.
  * @param contentColor The content color of the main button.
@@ -670,31 +688,67 @@ fun ExpandableFloatingActionButton(
     visible: Boolean = true,
     material: Boolean = LocalCOUIMaterialEffectEnabled.current,
     hapticFeedbackEnabled: Boolean = true,
+    collapseOnItemClick: Boolean = true,
     containerColor: Color = COUITheme.colorScheme.primary,
     disabledContainerColor: Color = FloatingActionButtonDefaults.disabledContainerColor(),
     contentColor: Color = COUITheme.colorScheme.onPrimary,
     rotation: Float = FloatingActionButtonDefaults.ExpandedRotation,
     content: @Composable () -> Unit,
 ) {
-    // The items stay composed until the last one has slid back into the main button.
+    val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
+    val currentExpanded by rememberUpdatedState(expanded)
+    val currentCollapseOnItemClick by rememberUpdatedState(collapseOnItemClick)
+
+    // ScrollViewBehavior.behaviorAnimate: an open menu that hides closes on the slide-out timing
+    // (closeFloatingButtonMenu(true, 250, true)).
+    var slideOut by remember { mutableStateOf(false) }
+    LaunchedEffect(visible) {
+        if (!visible && currentExpanded) {
+            slideOut = true
+            currentOnExpandedChange(false)
+        }
+    }
+
+    // The items stay composed until the last one has slid back into the main button, and
+    // mCOUIFloatingButtonAnimationIsRun keeps the clicks off while the menu moves.
     var itemsComposed by remember { mutableStateOf(expanded) }
+    var menuAnimating by remember { mutableStateOf(false) }
+    var settledExpanded by remember { mutableStateOf(expanded) }
     LaunchedEffect(expanded, items.size) {
         if (expanded) {
             itemsComposed = true
-        } else {
-            delay((items.size - 1).coerceAtLeast(0) * FAB_ITEM_STAGGER_MILLIS + FAB_MENU_DURATION_MILLIS)
-            itemsComposed = false
+            slideOut = false
         }
+        val changed = expanded != settledExpanded
+        if (changed || !expanded) {
+            menuAnimating = changed
+            delay(fabMenuDurationMillis(items.size, slideOut && !expanded))
+            settledExpanded = expanded
+        }
+        menuAnimating = false
+        if (!expanded) itemsComposed = false
     }
     val contentRotation by animateFloatAsState(
         targetValue = if (expanded) rotation else 0f,
-        animationSpec = tween(durationMillis = FAB_MENU_DURATION_MILLIS.toInt(), easing = FabExpandEasing),
+        animationSpec = tween(
+            // The slide-out AnimatorSet runs rotateBackward in 150ms.
+            durationMillis = if (slideOut && !expanded) FAB_SLIDE_OUT_MAIN_MILLIS else FAB_MENU_DURATION_MILLIS.toInt(),
+            easing = FabExpandEasing,
+        ),
         label = "fabRotation",
     )
-    val currentOnExpandedChange by rememberUpdatedState(onExpandedChange)
-    val currentExpanded by rememberUpdatedState(expanded)
-    LaunchedEffect(visible) {
-        if (!visible && currentExpanded) currentOnExpandedChange(false)
+    // COUIFloatingButton.animatePress / visibilitySetup: without the material blur the main
+    // button's mask stays pressed while the menu is open.
+    val mainInteractionSource = remember { MutableInteractionSource() }
+    HoldDownObserver(holdDownState = expanded && items.isNotEmpty(), interactionSource = mainInteractionSource)
+    val onItemClick: (FloatingActionButtonItem) -> Unit = remember {
+        { item ->
+            // COUIFloatingButton drops the action listener while the menu moves.
+            if (currentExpanded && !menuAnimating) {
+                item.onClick()
+                if (currentCollapseOnItemClick) currentOnExpandedChange(false)
+            }
+        }
     }
 
     Layout(
@@ -707,28 +761,34 @@ fun ExpandableFloatingActionButton(
                         index = index,
                         count = items.size,
                         expanded = expanded,
+                        slideOut = slideOut && !expanded,
                         material = material,
-                        hapticFeedbackEnabled = hapticFeedbackEnabled,
+                        onItemClick = onItemClick,
                     )
                 }
             }
             // Wrapped so the layout always has a main measurable, also once the button is hidden.
             Box {
-                FloatingActionButton(
-                    onClick = { currentOnExpandedChange(!currentExpanded) },
-                    enabled = enabled,
-                    visible = visible,
-                    material = material,
-                    hapticFeedbackEnabled = hapticFeedbackEnabled,
-                    containerColor = containerColor,
-                    disabledContainerColor = disabledContainerColor,
-                    contentColor = contentColor,
-                ) {
-                    Box(
-                        modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
-                        contentAlignment = Alignment.Center,
+                // The slide-out AnimatorSet shrinks the main button in 150ms.
+                val showHideMillis = if (!visible && expanded) FAB_SLIDE_OUT_MAIN_MILLIS else FAB_SHOW_HIDE_MILLIS
+                CompositionLocalProvider(LocalFabShowHideMillis provides showHideMillis) {
+                    FloatingActionButton(
+                        onClick = { if (!menuAnimating) currentOnExpandedChange(!currentExpanded) },
+                        enabled = enabled,
+                        visible = visible,
+                        material = material,
+                        hapticFeedbackEnabled = hapticFeedbackEnabled,
+                        containerColor = containerColor,
+                        disabledContainerColor = disabledContainerColor,
+                        contentColor = contentColor,
+                        interactionSource = mainInteractionSource,
                     ) {
-                        content()
+                        Box(
+                            modifier = Modifier.graphicsLayer { rotationZ = contentRotation },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            content()
+                        }
                     }
                 }
             }
@@ -760,6 +820,12 @@ fun ExpandableFloatingActionButton(
     }
 }
 
+/** How long the menu moves for: the stagger of every item but the first, plus one item's run. */
+private fun fabMenuDurationMillis(count: Int, slideOut: Boolean): Long {
+    val itemMillis = if (slideOut) FAB_SLIDE_OUT_ITEM_MILLIS.toLong() else FAB_MENU_DURATION_MILLIS
+    return (count - 1).coerceAtLeast(0) * FAB_ITEM_STAGGER_MILLIS + itemMillis
+}
+
 /** One label + child button row of an [ExpandableFloatingActionButton] (`COUIFloatingButtonLabel`). */
 @Composable
 private fun ExpandableFabItem(
@@ -767,12 +833,15 @@ private fun ExpandableFabItem(
     index: Int,
     count: Int,
     expanded: Boolean,
+    slideOut: Boolean,
     material: Boolean,
-    hapticFeedbackEnabled: Boolean,
+    onItemClick: (FloatingActionButtonItem) -> Unit,
 ) {
     val density = LocalDensity.current
     // getTotalLabelHeight: 88dp for the first item, 72dp more for each next one.
     val collapsedOffset = with(density) { (FabFirstItemTravel + FabItemTravel * index).toPx() }
+    // animationFloatingButtonMenuClose(..., true): sliding out, the items also pass the main button.
+    val slideOutOffset = collapsedOffset + with(density) { FloatingActionButtonDefaults.MinHeight.toPx() }
     val translation = remember { Animatable(collapsedOffset) }
     val scale = remember { Animatable(FAB_ITEM_COLLAPSED_SCALE) }
     val buttonAlpha = remember { Animatable(0f) }
@@ -788,11 +857,12 @@ private fun ExpandableFabItem(
             scale.animateTo(1f, tween(FAB_MENU_DURATION_MILLIS.toInt(), easing = FabExpandEasing))
         } else {
             growing = false
+            val duration = if (slideOut) FAB_SLIDE_OUT_ITEM_MILLIS else FAB_MENU_DURATION_MILLIS.toInt()
             delay(index * FAB_ITEM_STAGGER_MILLIS)
-            launch { translation.animateTo(collapsedOffset, tween(FAB_MENU_DURATION_MILLIS.toInt(), easing = FabCollapseEasing)) }
+            launch { translation.animateTo(if (slideOut) slideOutOffset else collapsedOffset, tween(duration, easing = FabCollapseEasing)) }
             launch { labelAlpha.animateTo(0f, tween(FAB_LABEL_FADE_OUT_MILLIS, easing = FabExpandEasing)) }
-            launch { buttonAlpha.animateTo(0f, tween(FAB_MENU_DURATION_MILLIS.toInt(), easing = FabCollapseEasing)) }
-            scale.animateTo(FAB_ITEM_COLLAPSED_SCALE, tween(FAB_MENU_DURATION_MILLIS.toInt(), easing = FabCollapseEasing))
+            launch { buttonAlpha.animateTo(0f, tween(duration, easing = FabCollapseEasing)) }
+            scale.animateTo(FAB_ITEM_COLLAPSED_SCALE, tween(duration, easing = FabCollapseEasing))
         }
     }
 
@@ -802,11 +872,12 @@ private fun ExpandableFabItem(
     val buttonColor = item.containerColor.takeOrElse { primary }
     val labelFill = item.labelContainerColor.takeOrElse { primary }
     val labelText = item.labelColor.takeOrElse { Color.White }
-    // COUIFloatingButton drops the action listener while the menu closes: a click on an item that
-    // is sliding back into the main button does nothing.
-    val currentExpanded by rememberUpdatedState(expanded)
+    // setElevationToFloatingActionButton(label, ..., mShadowColor): white unless the item sets
+    // its own button colour (setShadowColor).
+    val labelShadow = item.containerColor.takeOrElse { Color.White }
     val currentItem by rememberUpdatedState(item)
-    val onItemClick = remember { { if (currentExpanded) currentItem.onClick() } }
+    val currentOnItemClick by rememberUpdatedState(onItemClick)
+    val onClick = remember { { currentOnItemClick(currentItem) } }
 
     Row(
         modifier = Modifier
@@ -815,47 +886,33 @@ private fun ExpandableFabItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!item.label.isNullOrEmpty()) {
-            Button(
-                onClick = onItemClick,
+            ExpandableFabLabel(
+                text = item.label,
+                onClick = onClick,
+                enabled = item.enabled,
+                fill = if (item.enabled) labelFill else labelFill.copy(alpha = labelFill.alpha * FAB_LABEL_DISABLED_ALPHA),
+                textColor = when {
+                    item.enabled -> labelText
+                    isDark -> FabLabelDisabledTextColorDark
+                    else -> FabLabelDisabledTextColorLight
+                },
+                shadowColor = labelShadow,
+                material = material,
                 modifier = Modifier
                     // The fade renders offscreen at the layer bounds: the overflow keeps the
                     // shadow from being cut off while the label fades.
-                    .graphicsLayerWithOverflow(FabLabelLayerOverflow) {
+                    .graphicsLayerWithOverflow(FabItemLayerOverflow) {
                         scaleX = scale.value
                         scaleY = scale.value
                         alpha = labelAlpha.value
                         // The label grows from its top end corner and shrinks to its bottom end one.
                         transformOrigin = TransformOrigin(if (isRtl) 0f else 1f, if (growing) 0f else 1f)
-                    }
-                    .dropShadow(CircleShape) {
-                        radius = FloatingActionButtonDefaults.shadowPenumbra(FabLabelShadowElevation).toPx()
-                        offset = Offset(0f, FabLabelShadowOffsetY.toPx())
-                        color = labelFill.copy(alpha = FloatingActionButtonDefaults.ShadowAlpha)
                     },
-                enabled = item.enabled,
-                minWidth = 0.dp,
-                minHeight = 0.dp,
-                colors = ButtonDefaults.buttonColorsPrimary(
-                    color = labelFill,
-                    disabledColor = labelFill.copy(alpha = labelFill.alpha * FAB_LABEL_DISABLED_ALPHA),
-                    contentColor = labelText,
-                    disabledContentColor = if (isDark) FabLabelDisabledTextColorDark else FabLabelDisabledTextColorLight,
-                ),
-                insideMargin = FabLabelInsideMargin,
-                material = if (material) ButtonMaterial.Primary else ButtonMaterial.None,
-            ) {
-                Text(
-                    text = item.label,
-                    fontSize = FabLabelTextSize,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = FabLabelMaxWidth),
-                )
-            }
+            )
             Spacer(modifier = Modifier.width(FabLabelSpacing))
         }
         FloatingActionButton(
-            onClick = onItemClick,
+            onClick = onClick,
             modifier = Modifier.graphicsLayerWithOverflow(FabItemLayerOverflow) {
                 scaleX = scale.value
                 scaleY = scale.value
@@ -863,7 +920,9 @@ private fun ExpandableFabItem(
             },
             enabled = item.enabled,
             material = material,
-            hapticFeedbackEnabled = hapticFeedbackEnabled,
+            // COUIFloatingButtonLabel.animatePress, the only caller of its performHapticFeedback,
+            // is never invoked: the child buttons stay silent.
+            hapticFeedbackEnabled = false,
             containerColor = buttonColor,
         ) {
             item.icon()
@@ -871,11 +930,130 @@ private fun ExpandableFabItem(
     }
 }
 
+/**
+ * The label of an [ExpandableFloatingActionButton] item (`COUIFloatingButtonLabel`'s
+ * `MaterialCardView`): no touch motion, press tint or spotlight (its ripple colour is
+ * transparent and it has no touch animator), a capsule with circular ends (the outline
+ * `setRoundRect(..., min / 2)`, material corner weight 2.0), the primary-button material
+ * (`TYPE_CONTENT_PRIMARY_BUTTON` blur from a [LocalMaterialBackdrop] provider, else [fill];
+ * `TYPE_CONTENT_CAPSULE_1` stroke, enabled or not) and the floating-button light-source shadow in
+ * [shadowColor] (`setElevationToFloatingActionButton`, 60dp at alpha 86).
+ */
+@Composable
+private fun ExpandableFabLabel(
+    text: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    fill: Color,
+    textColor: Color,
+    shadowColor: Color,
+    material: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val isDark = COUITheme.colorScheme.isDark
+    val shadersSupported = remember { isRuntimeShaderSupported() }
+    val materialActive = material && shadersSupported
+    val backdropProvider = LocalMaterialBackdrop.current
+    val backdropSpec = if (materialActive && backdropProvider != null) {
+        ContentButtonMaterialType.Primary.backdropSpec(isDark, enabled, fill)
+    } else {
+        null
+    }
+    val backdropModifier = if (backdropProvider != null && backdropSpec != null) {
+        remember(backdropProvider, backdropSpec) { backdropProvider.materialBackdrop(backdropSpec, CircleShape) }
+    } else {
+        null
+    }
+    val centerYInWindow = remember { mutableFloatStateOf(Float.NaN) }
+    Box(
+        modifier = modifier
+            .onGloballyPositioned { centerYInWindow.floatValue = it.positionInWindow().y + it.size.height / 2f }
+            .dropShadow(CircleShape) {
+                val elevation = FloatingActionButtonDefaults.ShadowElevation.toPx()
+                val centerY = centerYInWindow.floatValue.takeUnless { it.isNaN() } ?: 0f
+                radius = FloatingActionButtonDefaults.shadowPenumbra(FloatingActionButtonDefaults.ShadowElevation).toPx()
+                offset = Offset(
+                    x = 0f,
+                    y = fabSpotShadowOffsetY(
+                        centerY = centerY,
+                        elevation = elevation,
+                        lightY = FloatingActionButtonDefaults.ShadowLightY.toPx(),
+                        lightZ = FloatingActionButtonDefaults.ShadowLightZ.toPx(),
+                    ),
+                )
+                color = shadowColor.copy(alpha = FloatingActionButtonDefaults.ShadowAlpha)
+            }
+            .then(backdropModifier ?: Modifier)
+            .clip(CircleShape)
+            .background(if (backdropModifier != null) Color.Transparent else fill)
+            .then(if (materialActive) Modifier.fabLabelMaterialStroke(isDark) else Modifier)
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(FabLabelInsideMargin),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.widthIn(max = FabLabelMaxWidth),
+            color = textColor,
+            fontSize = FabLabelTextSize,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * The `TYPE_CONTENT_CAPSULE_1` stroke of a FAB label: the capsule edge light and inner shadow of
+ * the framework stroke, traced with circular ends (`OplusMaterialCornerParams(min / 2, 2.0f)`).
+ * `COUIFloatingButtonLabel.ensureStrokeEffect` keeps the enabled preset when the label is disabled.
+ */
+@Composable
+private fun Modifier.fabLabelMaterialStroke(isDark: Boolean): Modifier {
+    val shadowPass = remember { RuntimeShader(ShadowEdgeShader.Source) }
+    val edgePass = remember { RuntimeShader(ShadowEdgeShader.Source) }
+    val params = if (isDark) ShadowEdgePresets.ContentCapsule1Dark else ShadowEdgePresets.ContentCapsule1Light
+    return this.drawWithCache {
+        val radius = min(size.width, size.height) / 2f
+        configureFloatingNavigationBarEdge(shadowPass, size.width, size.height, radius, params)
+        configureFloatingNavigationBarEdge(edgePass, size.width, size.height, radius, params)
+        val common = ShadowEdgeShader.commonArray(size.width, size.height, radius, weight = FabCornerWeight)
+        shadowPass.setFloatUniform("u_commonArray", common)
+        edgePass.setFloatUniform("u_commonArray", common)
+        splitFrameworkStroke(shadowPass = shadowPass, edgePass = edgePass)
+        val shadowBrush = shadowPass.asBrush()
+        val edgeBrush = edgePass.asBrush()
+        onDrawWithContent {
+            // The edge shader carries its own SDF mask.
+            drawRect(shadowBrush)
+            drawRect(edgeBrush, blendMode = FrameworkEdgeBlendMode)
+            drawContent()
+        }
+    }
+}
+
+/**
+ * How long the floating action button's show / hide runs. [ExpandableFloatingActionButton]
+ * shortens it for the slide-out of an open menu.
+ */
+private val LocalFabShowHideMillis = compositionLocalOf { FAB_SHOW_HIDE_MILLIS }
+
 /** COUIFloatingButton `ACTION_ANIM_DELAY`: the stagger between two items. */
 private const val FAB_ITEM_STAGGER_MILLIS = 50L
 
 /** The expand / collapse duration of an item and the main button rotation. */
 private const val FAB_MENU_DURATION_MILLIS = 300L
+
+/** `ScrollViewBehavior.behaviorAnimate`: an item's collapse when an open menu slides out. */
+private const val FAB_SLIDE_OUT_ITEM_MILLIS = 250
+
+/** `ScrollViewBehavior.behaviorAnimate`: the main button's shrink and turn when an open menu slides out. */
+private const val FAB_SLIDE_OUT_MAIN_MILLIS = 150
 
 /** COUIFloatingButton `DEFAULT_ENLARGE_ANIMATION_DURATION`: the label fade-in. */
 private const val FAB_LABEL_FADE_IN_MILLIS = 350
@@ -886,7 +1064,7 @@ private const val FAB_LABEL_FADE_OUT_MILLIS = 200
 /** COUIFloatingButton `DEFAULT_SCALE_ANIMATION_MIN_VALUE`. */
 private const val FAB_ITEM_COLLAPSED_SCALE = 0.6f
 
-/** The label fill alpha when disabled. */
+/** The label fill alpha when disabled (`TYPE_CONTENT_DISABLED_PRIMARY_BUTTON`, 77/255). */
 private const val FAB_LABEL_DISABLED_ALPHA = 0.3f
 
 /** COUIFloatingButton `DEFAULT_ENLARGE_ANIMATION_DURATION`: the show / hide animation. */
@@ -937,17 +1115,8 @@ private val FabLabelDisabledTextColorLight = Color(0x26000000)
 /** COUI coui_floating_button_label_text_color_disable (values-night). */
 private val FabLabelDisabledTextColorDark = Color(0x26FFFFFF)
 
-/** The label elevation: `setElevationToFloatingActionButton(label, support_shadow_size_level_three)`. */
-private val FabLabelShadowElevation = 12.dp
-
-/** The downward offset of the label shadow. */
-private val FabLabelShadowOffsetY = 2.dp
-
 /**
- * How far the child button shadow reaches past the button: the ~12dp penumbra of the 60dp
+ * How far a child button or label shadow reaches past it: the ~12dp penumbra of the 60dp
  * elevation over its Gaussian reach, plus the light-source offset (about 10dp at the screen bottom).
  */
 private val FabItemLayerOverflow = 32.dp
-
-/** How far the label shadow reaches past the label: the ~2.4dp penumbra plus the 2dp offset. */
-private val FabLabelLayerOverflow = 8.dp

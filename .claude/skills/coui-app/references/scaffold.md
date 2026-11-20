@@ -180,8 +180,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -199,9 +197,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
@@ -231,6 +229,7 @@ import io.github.suqi8.coui.kmp.icon.extended.Back
 import io.github.suqi8.coui.kmp.interfaces.ExperimentalScrollBarApi
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.overScrollVertical
+import io.github.suqi8.coui.kmp.utils.rememberCOUIFlingBehavior
 import io.github.suqi8.coui.kmp.utils.scrollEndHaptic
 
 /** The top bar layouts a [CouiPageScaffold] can use. */
@@ -341,15 +340,10 @@ fun CouiPageScaffold(
         floatingToolbarPosition = floatingToolbarPosition,
         snackbarHost = { if (snackbarHostState != null) SnackbarHost(state = snackbarHostState) },
     ) { innerPadding ->
-        val layoutDirection = LocalLayoutDirection.current
         val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        val top = innerPadding.calculateTopPadding() + 12.dp
-        val bottom = max(innerPadding.calculateBottomPadding(), navBottom)
-        val start = innerPadding.calculateStartPadding(layoutDirection)
-        val end = innerPadding.calculateEndPadding(layoutDirection)
-        val padding = remember(top, bottom, start, end) {
-            PaddingValues(start = start, top = top, end = end, bottom = bottom)
-        }
+        // Read the scaffold padding while the list lays out, not here: reading it during
+        // composition makes the list trail the collapsing top bar by one frame.
+        val padding = remember(innerPadding, navBottom) { PageContentPadding(innerPadding, navBottom) }
         val scope = remember(padding, scrollBehavior, backdrop) {
             CouiPageContentScope(padding, scrollBehavior, backdrop)
         }
@@ -362,6 +356,21 @@ fun CouiPageScaffold(
             }
         }
     }
+}
+
+/** The page content padding: the scaffold padding plus a 12dp top gap, read lazily. */
+@Stable
+private class PageContentPadding(
+    private val innerPadding: PaddingValues,
+    private val navBottom: Dp,
+) : PaddingValues {
+    override fun calculateLeftPadding(layoutDirection: LayoutDirection): Dp = innerPadding.calculateLeftPadding(layoutDirection)
+
+    override fun calculateTopPadding(): Dp = innerPadding.calculateTopPadding() + 12.dp
+
+    override fun calculateRightPadding(layoutDirection: LayoutDirection): Dp = innerPadding.calculateRightPadding(layoutDirection)
+
+    override fun calculateBottomPadding(): Dp = max(innerPadding.calculateBottomPadding(), navBottom)
 }
 
 /**
@@ -402,6 +411,8 @@ fun CouiPage(
                 state = listState,
                 modifier = Modifier.couiPageScroll(scope),
                 contentPadding = scope.contentPadding,
+                // COUI lists fling through SpringOverScroller, longer than Compose's default spline.
+                flingBehavior = rememberCOUIFlingBehavior(),
             ) {
                 content()
                 item(key = "coui_page_tail") { Spacer(Modifier.height(32.dp)) }

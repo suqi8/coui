@@ -46,10 +46,12 @@ fun ListWithScrollBar() {
 - 滑块矩形宽 14dp（`coui_scrollbar_wight`），长度至少 48dp（`coui_scrollbar_min_height`）。可见滑块绘制在矩形内部，距起点 8dp、距终点 16dp（`coui_scrollbar_margin_top` / `_bottom`），距边缘 5.5dp，因此宽 3dp、至少长 24dp。
 - 内容一滚动就立即出现，最后一次滚动或拖动后停留 2000ms（`SCROLLER_FADE_TIMEOUT`，首次出现时为平台延迟的 4 倍），然后在 250ms 内线性淡出。
 - 滑块可见时可以抓住拖动：按下立即变宽到 6dp（按下内边距 4dp），拖动时滚动内容，松手后重新计时淡出。
+- 与 `COUIScrollBar` 一样（它长在被滚动的视图内部，只拦截落在可见滑块上的触摸），滚动条不占用其他触摸：它下方的内容在条带范围内照常滚动、点击；滑块隐藏时条带也不能拖动。
+- 从右到左布局中竖向滑块位于左边缘（`mIsRTL`）。给滚动条更宽的最小尺寸（例如叠在内容上用 `Modifier.matchParentSize()`）时，它会铺满该区域，滑块仍贴在末端边缘。
 - 滑块颜色 `#29000000` / `#40FFFFFF`（`coui_scrollbar_color`），按下时不变。
 
 ::: info 库扩展
-`COUIScrollBar` 只处理竖向、也不绘制轨道。`HorizontalScrollBar`、`ScrollBarColors.trackColor`（默认隐藏）以及鼠标悬停时滑块加宽是本库的扩展。
+`COUIScrollBar` 只处理竖向、也不绘制轨道。`HorizontalScrollBar`、`ScrollBarColors.trackColor`（默认隐藏）以及鼠标悬停在 14dp 条带上时滑块加宽是本库的扩展。
 :::
 
 ## 属性

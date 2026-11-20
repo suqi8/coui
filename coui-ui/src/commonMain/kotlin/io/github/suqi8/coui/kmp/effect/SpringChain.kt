@@ -22,13 +22,21 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.Velocity
+import io.github.suqi8.coui.kmp.utils.COUIOverScrollAxis
+import io.github.suqi8.coui.kmp.utils.HorizontalSpringBackTensionMultiple
+import io.github.suqi8.coui.kmp.utils.VerticalSpringBackTensionMultiple
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+import kotlin.math.sign
 
 /**
  * The edge a spring chain is pulled from, after COUI `COUIGridSpringChain` `BACK_TO_TOP` /
@@ -129,6 +137,7 @@ fun rememberSpringChainState(
 ): SpringChainState {
     val scope = rememberCoroutineScope()
     val layoutDirection = LocalLayoutDirection.current
+    val windowSize = LocalWindowInfo.current.containerSize
     val state = remember(lazyListState, scope) {
         SpringChainState(
             scrollableState = lazyListState,
@@ -157,6 +166,7 @@ fun rememberSpringChainState(
             transCalculator = transCalculator,
             accumulate = accumulate,
             layoutDirection = layoutDirection,
+            windowSize = windowSize,
         )
     }
     return state
@@ -181,6 +191,7 @@ fun rememberSpringChainState(
 ): SpringChainState {
     val scope = rememberCoroutineScope()
     val layoutDirection = LocalLayoutDirection.current
+    val windowSize = LocalWindowInfo.current.containerSize
     val state = remember(lazyGridState, scope) {
         SpringChainState(
             scrollableState = lazyGridState,
@@ -214,6 +225,7 @@ fun rememberSpringChainState(
             transCalculator = transCalculator,
             accumulate = accumulate,
             layoutDirection = layoutDirection,
+            windowSize = windowSize,
         )
     }
     return state
@@ -224,7 +236,10 @@ fun rememberSpringChainState(
  * `LazyVerticalGrid` itself and give every item [springChainItem].
  *
  * The chain only reacts to touch drags, as COUI's `COUIGridSpringChainScrollView.onEdgeSpringEvent`
- * reads raw `MotionEvent`s: a fling or a mouse wheel that reaches the edge leaves it at rest.
+ * reads raw `MotionEvent`s: a fling, a mouse wheel or a mouse drag that reaches the edge leaves it
+ * at rest. A pull at the edge belongs to the chain and its scroll view: it does not scroll an
+ * enclosing list, and the list's own overscroll is replaced by the scroll view's (see
+ * [SpringChainState]).
  */
 fun Modifier.springChain(state: SpringChainState): Modifier = this
     .pointerInput(state) {
@@ -235,7 +250,7 @@ fun Modifier.springChain(state: SpringChainState): Modifier = this
                 var pressed = 0
                 val changes = event.changes
                 for (i in changes.indices) {
-                    if (changes[i].pressed) pressed++
+                    if (changes[i].pressed && changes[i].type != PointerType.Mouse) pressed++
                 }
                 if (pointers == 0 && pressed > 0) {
                     state.onTouchDown()
@@ -280,7 +295,12 @@ internal interface SpringChainTarget {
  * - **Pull**: while a finger drags a list that cannot scroll further, the drag is damped by
  *   `getFormalDistance` (each move closes `1 - |distance| / (2 x viewport)` of the gap to the raw
  *   finger travel) and every row from the pulled edge is translated by the accumulated
- *   [SpringChainTransCalculator] steps, so the rows fan out from the edge.
+ *   [SpringChainTransCalculator] steps, so the rows fan out from the edge. The scroll view still
+ *   gets every event (`COUIGridSpringChainScrollView.onTouchEvent` calls `super.onTouchEvent`), so
+ *   the same pull overscrolls the whole list under the rows: `0.4 * (1 - |overscroll| / range)`
+ *   of the move, the range being 0.3 of the window (`setCustomOverScrollDistFactor(0.3f)`), with
+ *   no edge vibration (`setEnableVibrator(false)`), springing back on release on the
+ *   `SpringOverScroller` spring (tension multiple 2.15, 3.2 horizontally).
  * - **Rebound**: on release a chain of Rebound springs (`COUISpringChain`) returns the rows: the
  *   control spring at the pulled edge animates to 0 on the main config, and every other spring
  *   chases the current value of its neighbour towards the edge on the attachment config. The springs
@@ -355,6 +375,21 @@ class SpringChainState internal constructor(
     private var hasReleasedSpring = false
     private var pulling = false
 
+    /** Whether the last release ended a pull, whose fling the scroll view does not run. */
+    private var releasedFromPull = false
+
+    // COUIGridSpringChainScrollView is a COUIScrollView, and the pull overscrolls it as well: the
+    // whole list moves under the chain, within 0.3 of the screen (setCustomOverScrollDistFactor)
+    // and without the edge vibration (setEnableVibrator(false)). In start-edge-positive pixels.
+    private val overScrollY = COUIOverScrollAxis(VerticalSpringBackTensionMultiple) { frame++ }
+    private val overScrollX = COUIOverScrollAxis(HorizontalSpringBackTensionMultiple) { frame++ }
+    private var overScrollRange = 0f
+    private var overScrollSign = 1f
+    private var overScrollJob: Job? = null
+
+    private val overScroll: COUIOverScrollAxis
+        get() = if (isVertical) overScrollY else overScrollX
+
     /** Whether the list scrolls vertically, read by [springChainItem]. */
     var isVertical: Boolean = true
         private set
@@ -363,15 +398,18 @@ class SpringChainState internal constructor(
     val isRunning: Boolean get() = reboundJob?.isActive == true
 
     /**
-     * The translation of the item on [row] along the scroll axis, in pixels. Reading it inside a
-     * layer or draw block subscribes that block to every chain frame.
+     * The translation of the item on [row] along the scroll axis, in pixels: its chain offset plus
+     * the overscroll of the whole list. Reading it inside a layer or draw block subscribes that
+     * block to every chain frame.
      */
     fun translationOf(row: Int): Float {
         // Subscribe the reader to chain frames.
         frame
-        val edge = arrayEdge ?: return 0f
+        val overScrollTranslation = overScroll.offset * overScrollSign
+        val edge = arrayEdge ?: return overScrollTranslation
         val rank = if (edge == SpringChainEdge.Start) row else arrayLastRow - row
-        return if (rank in 0 until rows) current[rank] * axisSign else 0f
+        val chainTranslation = if (rank in 0 until rows) current[rank] * axisSign else 0f
+        return chainTranslation + overScrollTranslation
     }
 
     internal fun configure(
@@ -383,6 +421,7 @@ class SpringChainState internal constructor(
         transCalculator: SpringChainTransCalculator,
         accumulate: Boolean,
         layoutDirection: LayoutDirection,
+        windowSize: IntSize,
     ) {
         this.mainTension = tensionFromOrigami(mainTension.toDouble())
         this.mainFriction = frictionFromOrigami(mainFriction.toDouble())
@@ -392,6 +431,8 @@ class SpringChainState internal constructor(
         this.accumulate = accumulate
         this.rtl = layoutDirection == LayoutDirection.Rtl
         this.isVertical = target.isVertical()
+        // COUIScrollView.setCustomOverScrollDistFactor(0.3f) on the screen-sized overscroll distance.
+        overScrollRange = (if (isVertical) windowSize.height else windowSize.width) * OVER_SCROLL_DIST_FACTOR
         val newCapacity = maxRows.coerceAtLeast(1)
         if (newCapacity != capacity && !isRunning) resize(newCapacity)
     }
@@ -425,47 +466,76 @@ class SpringChainState internal constructor(
             if (screenDelta == 0f) return Offset.Zero
             val reverse = target.isReverseLayout() != (!vertical && rtl)
             val sign = if (reverse) -1f else 1f
+            val pullDelta = screenDelta * sign
             // ACTION_MOVE: the raw finger travel since downY, damped by getFormalDistance.
-            rawDistance += screenDelta * sign
+            rawDistance += pullDelta
             curDistance = formalDistance(rawDistance, curDistance)
-            val consumed = when {
-                curDistance > 0f && !scrollableState.canScrollBackward -> {
-                    axisSign = sign
-                    updateMoveTranslation(curDistance, SpringChainEdge.Start)
-                    pulling = true
-                    true
-                }
-
-                curDistance < 0f && !scrollableState.canScrollForward -> {
-                    axisSign = sign
-                    updateMoveTranslation(curDistance, SpringChainEdge.End)
-                    pulling = true
-                    true
-                }
-
-                else -> {
-                    // downY = y: the pull restarts from here.
-                    rawDistance = 0f
-                    if (hasReleasedSpring || pulling) {
-                        // COUI only resets here after an interrupted rebound; a pull that crosses
-                        // back over the edge is settled too so no rows are left offset.
-                        updateMoveTranslation(0f, null)
-                    }
-                    val wasPulling = pulling
-                    pulling = false
-                    wasPulling
-                }
+            val edge = when {
+                curDistance > 0f && !scrollableState.canScrollBackward -> SpringChainEdge.Start
+                curDistance < 0f && !scrollableState.canScrollForward -> SpringChainEdge.End
+                else -> null
             }
-            return if (consumed) available else Offset.Zero
+            val consumedByChain = if (edge != null) {
+                axisSign = sign
+                updateMoveTranslation(curDistance, edge)
+                pulling = true
+                true
+            } else {
+                // downY = y: the pull restarts from here.
+                rawDistance = 0f
+                if (hasReleasedSpring || pulling) {
+                    // COUI only resets here after an interrupted rebound; a pull that crosses
+                    // back over the edge is settled too so no rows are left offset.
+                    updateMoveTranslation(0f, null)
+                }
+                val wasPulling = pulling
+                pulling = false
+                wasPulling
+            }
+            val consumedByOverScroll = overScrollBy(pullDelta, sign, edge)
+            return if (consumedByChain || consumedByOverScroll) available else Offset.Zero
+        }
+
+        // COUIScrollView ACTION_UP while overscrolled springs back instead of flinging, so a pull
+        // released at the edge does not run into it again as a fling.
+        override suspend fun onPreFling(available: Velocity): Velocity = if (releasedFromPull) available else Velocity.Zero
+    }
+
+    /**
+     * COUIScrollView.onTouchEvent ACTION_MOVE at the edge: the move overscrolls the list by
+     * `calcRealOverScrollDist` within [overScrollRange], or first takes an overscroll back.
+     * Returns whether the move went to the overscroll.
+     */
+    private fun overScrollBy(pullDelta: Float, screenSign: Float, edge: SpringChainEdge?): Boolean {
+        val axis = overScroll
+        val offset = axis.offset
+        val outward = (edge == SpringChainEdge.Start && pullDelta > 0f) || (edge == SpringChainEdge.End && pullDelta < 0f)
+        return when {
+            offset != 0f && sign(pullDelta) != sign(offset) -> {
+                overScrollJob?.cancel()
+                axis.dragBack(pullDelta, overScrollRange)
+                true
+            }
+
+            outward -> {
+                overScrollJob?.cancel()
+                overScrollSign = screenSign
+                axis.drag(pullDelta, overScrollRange)
+                true
+            }
+
+            else -> false
         }
     }
 
-    /** COUI ACTION_DOWN. */
+    /** COUI ACTION_DOWN. The scroll view's `abortAnimation` freezes its overscroll too. */
     internal fun onTouchDown() {
         touching = true
         rawDistance = 0f
         curDistance = 0f
         pulling = false
+        releasedFromPull = false
+        overScrollJob?.cancel()
         hasReleasedSpring = isRunning
         if (hasReleasedSpring) releaseSpring()
     }
@@ -475,7 +545,7 @@ class SpringChainState internal constructor(
         rawDistance = curDistance
     }
 
-    /** COUI ACTION_UP / ACTION_CANCEL. */
+    /** COUI ACTION_UP / ACTION_CANCEL; the scroll view springs its overscroll back (springBack). */
     internal fun onTouchUp() {
         if (!touching) return
         touching = false
@@ -485,7 +555,13 @@ class SpringChainState internal constructor(
             curDistance < 0f && !scrollableState.canScrollForward && pulling -> startRebound(SpringChainEdge.End)
             hasReleasedSpring -> startRebound(null)
         }
+        val axis = overScroll
+        releasedFromPull = pulling || axis.offset != 0f
         pulling = false
+        if (axis.offset != 0f) {
+            overScrollJob?.cancel()
+            overScrollJob = scope.launch { axis.springBack(velocity = 0f, overFling = false, screenSize = 0f) }
+        }
     }
 
     /** COUIGridSpringChainScrollView.getFormalDistance. */
@@ -761,6 +837,9 @@ class SpringChainState internal constructor(
     private companion object {
         const val MAX_DISTANCE_RATIO = 0.5f
         const val MAX_DISTANCE_FACTOR = 0.25f
+
+        /** COUIGridSpringChainScrollView `OVER_SCROLL_FACTOR` (setCustomOverScrollDistFactor). */
+        const val OVER_SCROLL_DIST_FACTOR = 0.3f
         const val REST_THRESHOLD = 0.1
         const val MAX_DELTA_TIME_SEC = 0.064
         const val SOLVER_TIMESTEP_SEC = 0.001

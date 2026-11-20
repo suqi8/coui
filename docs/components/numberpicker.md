@@ -4,7 +4,8 @@
 
 - Each row is drawn twice and hard-clipped at a 48dp band around the center (center ± 24dp): inside the band the text is 20dp in the selected color, outside it is 16dp in the unselected color. A row crossing the band edge is split; there is no gradual blend.
 - Text sizes are in dp, so they do not follow the system font scale.
-- A fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s), lands on a whole row and finishes with a 300ms snap. Android uses these raw px/s values like COUI. Other platforms treat them as px on a 3.5x reference phone and scale them by the actual density (`value * density / 3.5`), so a flick travels as far as it does on the phone.
+- A fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s). Like COUINumberPicker.fling it travels whole rows counted from the value shown at release (not from the finger), over the spline duration x 1.5; a flick shorter than a row keeps its fraction and the 300ms snap that follows picks the row. A wheel that does not wrap stops dead at its first or last row instead of easing into it. Android uses these raw px/s values like COUI. Other platforms treat them as px on a 3.5x reference phone and scale them by the actual density (`value * density / 3.5`), so a flick travels as far as it does on the phone.
+- A label wider than the wheel is drawn from its start edge instead of centered; like COUI the decision is made once, at the unselected size, for both passes.
 - `onValueChange` fires on every value change while the wheel moves, not only when it stops.
 - Every value change plays a haptic tick whose intensity follows the wheel speed (50% at rest to 100% at 5000 px/s, COUI's "crisp" RichTap curve), at most one every 25ms. On Android 11+ apps with the `VIBRATE` permission it is a scaled `VibrationEffect` composition primitive; otherwise the fixed OPLUS 308 tick (or the standard haptic off Android).
 - On Android every value change also plays COUI's `coui_numberpicker_click.ogg` while the system "touch sounds" setting is on; other platforms are silent.
@@ -59,7 +60,7 @@ With `wrapAround` (the default, COUI `mWrapSelectorWheelPreferred = true`), the 
 
 ### Optional Value
 
-`ignorable = true` adds a placeholder row, drawn as two short bars, after the last value. Selecting it reports `NumberPickerDefaults.IgnoredValue` (COUI `setIgnorable`, used by the optional year of `DatePicker`).
+`ignorable = true` adds a placeholder row, drawn as two short bars a little below the row center (COUI draws them 33.75px under it), after the last value. Selecting it reports `NumberPickerDefaults.IgnoredValue` (COUI `setIgnorable`, used by the optional year of `DatePicker`).
 
 ```kotlin
 var year by remember { mutableIntStateOf(NumberPickerDefaults.IgnoredValue) }

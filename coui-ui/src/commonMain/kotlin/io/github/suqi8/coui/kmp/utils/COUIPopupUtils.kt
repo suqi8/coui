@@ -8,10 +8,12 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -71,6 +73,19 @@ class COUIPopupUtils {
         var dimEnterTransition by mutableStateOf<EnterTransition?>(null)
         var dimExitTransition by mutableStateOf<ExitTransition?>(null)
         var content by mutableStateOf<@Composable () -> Unit>({})
+
+        /**
+         * Whether the host takes the touches over the whole window (`PopupWindow.setTouchable`). A
+         * list popup clears it as soon as it starts to leave, as `COUIPopupListWindow.dismiss` does,
+         * so the page beneath takes touches again while the menu animates out.
+         */
+        internal var touchable by mutableStateOf(true)
+
+        /**
+         * Whether the host follows [touchable]; its touch blocker then comes and goes without an
+         * animation of its own, as the popup content runs its own enter and exit.
+         */
+        internal var followsTouchable by mutableStateOf(false)
     }
 
     @Stable
@@ -101,6 +116,10 @@ class COUIPopupUtils {
             fadeIn(animationSpec = tween(300, easing = SinOutEasing))
         private val PopupDimExit: ExitTransition =
             fadeOut(animationSpec = tween(150, easing = SinOutEasing))
+
+        /** The `AnimatedVisibility` defaults the invisible touch blocker of a popup has always used. */
+        private val PopupBlockerEnter: EnterTransition = fadeIn() + expandIn()
+        private val PopupBlockerExit: ExitTransition = fadeOut() + shrinkOut()
 
         @Composable
         private fun rememberDefaultDialogEnterTransition(largeScreen: Boolean): EnterTransition = remember(largeScreen) {
@@ -259,6 +278,75 @@ class COUIPopupUtils {
             renderInRootScaffold: Boolean = true,
             content: (@Composable () -> Unit)? = null,
         ) {
+            PopupLayoutImpl(
+                visible = visible,
+                touchable = null,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                enableWindowDim = enableWindowDim,
+                enableBackHandler = enableBackHandler,
+                dimEnterTransition = dimEnterTransition,
+                dimExitTransition = dimExitTransition,
+                renderInRootScaffold = renderInRootScaffold,
+                content = content,
+            )
+        }
+
+        /**
+         * [PopupLayout] for a popup that runs its own enter and exit animation inside the host and
+         * stops taking touches as soon as it starts to leave, as `COUIPopupListWindow.dismiss` makes
+         * its window untouchable (`setTouchable(false)`) before the exit animation: while [touchable]
+         * is false the host's full-window touch blocker is gone, so the page beneath takes touches
+         * during the exit. The blocker appears and disappears without an animation of its own.
+         *
+         * @param visible The show state controller for this specific popup.
+         * @param touchable Whether the popup takes the touches over the whole window.
+         * @param enterTransition Optional, custom enter animation for popup content.
+         * @param exitTransition Optional, custom exit animation for popup content.
+         * @param enableWindowDim Whether to dim the window behind the popup.
+         * @param enableBackHandler Whether the host handles back to hide the popup.
+         * @param renderInRootScaffold Whether to render the popup in the root (outermost) [Scaffold].
+         * @param content The [Composable] content of the popup.
+         */
+        @Composable
+        internal fun PopupLayout(
+            visible: MutableState<Boolean>,
+            touchable: Boolean,
+            enterTransition: EnterTransition? = null,
+            exitTransition: ExitTransition? = null,
+            enableWindowDim: Boolean = true,
+            enableBackHandler: Boolean = true,
+            renderInRootScaffold: Boolean = true,
+            content: (@Composable () -> Unit)? = null,
+        ) {
+            PopupLayoutImpl(
+                visible = visible,
+                touchable = touchable,
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                enableWindowDim = enableWindowDim,
+                enableBackHandler = enableBackHandler,
+                dimEnterTransition = null,
+                dimExitTransition = null,
+                renderInRootScaffold = renderInRootScaffold,
+                content = content,
+            )
+        }
+
+        /** The shared body of both [PopupLayout]s; a null [touchable] leaves the blocker as it was. */
+        @Composable
+        private fun PopupLayoutImpl(
+            visible: MutableState<Boolean>,
+            touchable: Boolean?,
+            enterTransition: EnterTransition?,
+            exitTransition: ExitTransition?,
+            enableWindowDim: Boolean,
+            enableBackHandler: Boolean,
+            dimEnterTransition: EnterTransition?,
+            dimExitTransition: ExitTransition?,
+            renderInRootScaffold: Boolean,
+            content: (@Composable () -> Unit)?,
+        ) {
             if (content == null) {
                 if (visible.value) visible.value = false
                 return
@@ -281,6 +369,7 @@ class COUIPopupUtils {
             val latestDimEnter by rememberUpdatedState(dimEnterTransition)
             val latestDimExit by rememberUpdatedState(dimExitTransition)
             val latestContent by rememberUpdatedState(content)
+            val latestTouchable by rememberUpdatedState(touchable)
 
             SideEffect {
                 state.enterTransition = latestEnter
@@ -290,6 +379,8 @@ class COUIPopupUtils {
                 state.dimEnterTransition = latestDimEnter
                 state.dimExitTransition = latestDimExit
                 state.content = latestContent
+                state.followsTouchable = latestTouchable != null
+                state.touchable = latestTouchable ?: true
             }
 
             LaunchedEffect(visible.value) {
@@ -472,43 +563,23 @@ class COUIPopupUtils {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            var i = 0
-                                            val n = event.changes.size
-                                            while (i < n) {
-                                                event.changes[i].consume()
-                                                i++
-                                            }
-                                        }
-                                    }
-                                }
+                                .popupTouchBlocker(popupState.touchable)
                                 .background(COUITheme.colorScheme.mask),
                         )
                     }
                 } else {
+                    // A popup that follows `touchable` animates itself: its invisible blocker comes
+                    // and goes at once, so nothing outlives the popup's own exit.
                     AnimatedVisibility(
                         visibleState = visibleState,
                         modifier = Modifier.zIndex(popupState.zIndex - 0.002f),
+                        enter = if (popupState.followsTouchable) EnterTransition.None else PopupBlockerEnter,
+                        exit = if (popupState.followsTouchable) ExitTransition.None else PopupBlockerExit,
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .pointerInput(Unit) {
-                                    awaitPointerEventScope {
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            var i = 0
-                                            val n = event.changes.size
-                                            while (i < n) {
-                                                event.changes[i].consume()
-                                                i++
-                                            }
-                                        }
-                                    }
-                                },
+                                .popupTouchBlocker(popupState.touchable),
                         )
                     }
                 }
@@ -585,6 +656,28 @@ class COUIPopupUtils {
                         !it.showState.value
                     }
                     // nextZIndex = 1f // Allow Z to continue stacking.
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Swallows every touch on this node while [enabled]. Disabled, the node has no pointer input at all,
+ * so it takes no part in hit testing and touches reach whatever lies beneath it.
+ */
+private fun Modifier.popupTouchBlocker(enabled: Boolean): Modifier = if (!enabled) {
+    this
+} else {
+    pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent()
+                var i = 0
+                val n = event.changes.size
+                while (i < n) {
+                    event.changes[i].consume()
+                    i++
                 }
             }
         }

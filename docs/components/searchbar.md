@@ -22,9 +22,13 @@ material (filtered backdrop, shadow, edge lighting, touch spotlight and press/dr
 back to the opaque bar colour (`#FAFAFA` light, `#1E1E1E` dark) where the blend modes are missing.
 Entering and leaving the edit state runs on a spring (response 0.5, bounce 0.25): the capsule
 narrows while the cancel button grows in from half size, the two merging like metaballs while
-they move. Pressing or dragging the capsule scales and stretches it and lights a touch spotlight,
-the clear button included; a gesture that starts on another clickable element inside it (your own
-icon buttons) leaves the capsule still and dark.
+they move, and on the way back the capsule overshoots its normal width by a few pixels before it
+settles. Until those springs settle the cancel button takes no press scale or drag deformation.
+The expanded `content` (the search results) fades in on a response 0.35 spring and drops out on a
+response 0.1 one, as the ColorOS 17 settings search brings its results in and out. Pressing or
+dragging the capsule scales and stretches it and lights a touch spotlight, the clear button
+included (which also shows its own 18dp circular press highlight); a gesture that starts on another
+clickable element inside it (your own icon buttons) leaves the capsule still and dark.
 
 ## Basic Usage
 
@@ -68,7 +72,7 @@ SearchBar(
 | outerPrimaryButton | @Composable (() -> Unit)?        | 40dp button 12dp after the capsule              | null                | No       |
 | outerSecondaryButton | @Composable (() -> Unit)?      | Second outer button; an `Instant` bar shows an outer button only while it is the only one | null                | No       |
 | outsideEndAction | @Composable (() -> Unit)?          | Functional button shown when expanded, typically a `CancelButton`; `null` hides it | null                | No       |
-| content          | @Composable ColumnScope.() -> Unit | Content shown when expanded                     | -                   | Yes      |
+| content          | @Composable ColumnScope.() -> Unit | Content shown when expanded; fades in (response 0.35) and out (response 0.1) | -                   | Yes      |
 
 ### InputField Properties
 
@@ -148,7 +152,8 @@ The SearchBarDefaults object provides default values for SearchBar and InputFiel
 
 ### CancelButton Properties
 
-`CancelButton` is the COUI 17 functional button: a 40dp glass capsule with a 14sp medium label.
+`CancelButton` is the COUI 17 functional button: a 40dp glass capsule with a 14sp medium label that
+follows the system font scale only up to the 1.15 step (`COUIChangeTextUtil` G2).
 Inside `outsideEndAction` it follows the edit-state spring both ways: it scales between half and full
 size, its glass capsule comes out of (or dissolves into) a blur of up to 30px and is opaque for all
 but the first fifth of the progress, and its label fades with the progress. In a `NonInstant` bar it

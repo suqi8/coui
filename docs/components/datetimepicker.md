@@ -2,7 +2,7 @@
 
 `DateTimePicker` selects a date and a time of day with one date wheel and hour / minute wheels, mirroring ColorOS's COUITimePicker. The date wheel shows the weekday, month and day ("Today" for the current date) and does not wrap; the hour and minute wheels wrap. In 12-hour mode an AM/PM wheel is added, and scrolling the hour wheel onto 12 flips AM/PM as COUI does.
 
-The wheels follow [NumberPicker](./numberpicker). The date column is 150dp wide (174dp outside Chinese and English), the time columns 62dp, and all columns shrink proportionally when the picker is narrower than their sum. The two hairlines around the selected row are inset 16dp in 24-hour mode and run edge to edge in 12-hour mode.
+The wheels follow [NumberPicker](./numberpicker). The date column is 150dp wide (174dp outside Chinese and English), the time columns 62dp, and all columns shrink proportionally when the picker is narrower than their sum. The two hairlines around the selected row are inset 16dp in 24-hour mode and run edge to edge in 12-hour mode. Like coui_time_picker.xml the wheels keep their left-to-right order in RTL layouts (only the unit labels mirror), and the first and last wheel also cover the space left at either side, so a drag anywhere across the picker moves them.
 
 <div style="position: relative; height: 320px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=dateTimePicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

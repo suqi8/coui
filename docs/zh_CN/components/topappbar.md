@@ -204,12 +204,25 @@ Scaffold(
             .overScrollVertical()
             // 绑定 TopAppBar 滚动事件
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
+        // 直接传入脚手架给的 padding：列表在布局阶段读取它，与折叠中的顶栏同一帧移动。
+        // 把 calculateTopPadding() 复制进新的 PaddingValues 会在组合阶段读取，内容会落后一帧。
+        contentPadding = paddingValues
     ) {
         // 列表内容
     }
 }
 ```
+
+### 动效
+
+`COUIScrollBehavior` 按 COUI 17 可折叠顶栏的方式移动顶栏：
+
+- **跟随弹簧**：每一步滚动立即改变 `TopAppBarState.heightOffset`，顶栏则绘制在 `TopAppBarState.displayedHeightOffset`，以临界阻尼弹簧追随它（折叠时 response 0.2s，展开时 0.1s），栏下按 padding 排布的内容随之移动。传 `followScroll = false` 则顶栏直接绘制在滚动位置。
+- **吸附**：滚动或惯性滑动结束时停在展开与折叠之间的顶栏，弹回较近的一端（`TopAppBarDefaults.SnapAnimationSpec`，response 0.25，无回弹）。
+- **拖动**：顶栏未完全折叠时可直接拖动顶栏本身，以 0.15s 弹簧跟手，松手后吸附。
+- **标题切换**：新的 `title` / `largeTitle` 交叉淡入（两路透明度都用 response 0.2 的弹簧），`SmallTopAppBar` 同样如此。
+
+需要与顶栏同步移动的绘制请读 `displayedHeightOffset`，不要读 `heightOffset`。
 
 ## 自定义样式
 
@@ -374,6 +387,7 @@ TopAppBarDefaults 对象提供了 TopAppBar 和 SmallTopAppBar 组件的默认�
 | ActionItemSpacing          | Dp   | 相邻操作图标之间的水平间距        | 10.dp  |
 | SearchSlotHeight           | Dp   | TopAppBarSearchSlot 行高度        | 52.dp  |
 | SearchSlotInsideMargin     | PaddingValues | 搜索胶囊的水平页边距     | PaddingValues(horizontal = 16.dp) |
+| SnapAnimationSpec          | AnimationSpec\<Float> | 滚动结束时把顶栏吸附到展开或折叠的弹簧（`attachResponse`） | response 0.25，bounce 0 |
 
 #### 函数
 
@@ -400,8 +414,11 @@ val scrollBehavior = COUIScrollBehavior(
 | ------------------ | --------------------------- | -------------------------- | -------------------------- |
 | state              | TopAppBarState              | rememberTopAppBarState()   | 控制滚动状态的状态对象     |
 | canScroll          | () -> Boolean               | { true }                   | 控制是否允许滚动的回调     |
-| snapAnimationSpec  | AnimationSpec\<Float>?      | 180ms 减速 tween           | 定义滚动停在中间态时吸附到全展开/全折叠的动画 |
-| flingAnimationSpec | DecayAnimationSpec\<Float>? | rememberSplineBasedDecay() | 定义顶部栏滑动的衰减动画   |
+| snapAnimationSpec  | AnimationSpec\<Float>?      | TopAppBarDefaults.SnapAnimationSpec | 定义滚动停在中间态时吸附到全展开/全折叠的动画；`null` 关闭吸附 |
+| flingAnimationSpec | DecayAnimationSpec\<Float>? | rememberSplineBasedDecay() | 用内容惯性滑动剩余的速度继续滑动顶栏的衰减动画；仅在 `followScroll = false` 时使用 |
+| followScroll       | Boolean                     | true                       | 顶栏以 COUI 17 跟随弹簧追随每一步滚动（见「动效」） |
+
+`TopAppBarState.displayedHeightOffset` 是顶栏实际绘制所在的偏移；顶栏稳定后与 `heightOffset` 相等。
 
 ## 进阶用法
 

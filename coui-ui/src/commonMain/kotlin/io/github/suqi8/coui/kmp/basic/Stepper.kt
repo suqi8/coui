@@ -232,7 +232,10 @@ private fun StepperButton(
             }
             .focusable(enabled = enabled, interactionSource = interactionSource)
             // COUIStateEffectDrawable.enableScaleEffect -> COUIPressFeedbackHelper: press scale only.
-            .couiPressScale(pressed = pressed, enabled = enabled)
+            // A disabled button is never pressed, and when a held button reaches its bound and turns
+            // disabled, COUIStateEffectDrawable.onStateChange releases the scale on its spring
+            // (executeFeedbackAnimator(false)) instead of snapping it back.
+            .couiPressScale(pressed = pressed)
             .size(StepperDefaults.ButtonSize)
             // COUIStepperView: a TYPE_OUTER COUIStrokeDrawable around each circular button.
             .couiFocusStroke(interactionSource = interactionSource, shape = CircleShape, enabled = enabled)
@@ -286,8 +289,10 @@ private fun StepperButton(
             },
         contentAlignment = Alignment.Center,
     ) {
-        // The COUIMaskEffectDrawable press / hover mask is a background layer, under the glyph.
-        Box(Modifier.matchParentSize().indication(interactionSource, LocalIndication.current))
+        // The COUIMaskEffectDrawable press / hover mask is a background layer, under the glyph. A
+        // disabled button draws none: onViewStateChanged(state_enabled) drops the press, hover and
+        // focus masks at once (animateToProgress(0, false)), e.g. when a held button hits its bound.
+        Box(Modifier.matchParentSize().indication(interactionSource, if (enabled) LocalIndication.current else null))
         // COUI ic_minus_sign / ic_plus_sign: a 1.6dp round-cap stroke spanning 15.2dp
         // (8.4..23.6) inside the 32dp button, drawn directly to avoid an icon dependency.
         Canvas(modifier = Modifier.size(StepperDefaults.GlyphSize)) {

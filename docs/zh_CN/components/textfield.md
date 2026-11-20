@@ -148,7 +148,7 @@ Card {
 
 ## 错误状态
 
-设置 `isError = true` 会让描边 / 下划线在 217ms 内过渡到错误色，并用它（30% 透明度）染色文本选区；若输入框处于聚焦状态，还会播放一次水平抖动动画。450ms 的错误动画结束后会全选文本，使红色选区罩住整段文字（COUIErrorEditTextHelper）。标签颜色保持不变。与 COUIEditText 一致，默认错误色为 `couiColorErrorTextBg`（`errorTextBg`：浅色为 30% 透明度红 `#4DE82A18`，深色为 `#EA3939`），因此浅色下的错误线是淡红色；需要更醒目时可向 `textFieldColors()` 传入 `errorColor`。禁用状态的描边 / 下划线与标签使用 `disabledTextFieldBorder`（`#19000000` / `#19FFFFFF`）：
+设置 `isError = true` 会让描边 / 下划线在 217ms 内过渡到错误色（线宽变为 1dp），并用它（30% 透明度）染色文本选区；若输入框处于聚焦状态，还会播放一次水平抖动动画；与 COUI 一致，取消错误时立即恢复正常颜色。450ms 的错误动画结束后会全选文本，使红色选区罩住整段文字（COUIErrorEditTextHelper）。标签颜色保持不变。与 COUIEditText 一致，默认错误色为 `couiColorErrorTextBg`（`errorTextBg`：浅色为 30% 透明度红 `#4DE82A18`，深色为 `#EA3939`），因此浅色下的错误线是淡红色；需要更醒目时可向 `textFieldColors()` 传入 `errorColor`。禁用状态的描边 / 下划线与标签使用 `disabledTextFieldBorder`（`#19000000` / `#19FFFFFF`）：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -178,7 +178,7 @@ TextField(
 
 ## 清除按钮
 
-设置 `showClearButton = true` 会在输入框聚焦且非空时显示清除（快速删除）按钮，点按后清空全部文本：
+设置 `showClearButton = true` 会在输入框聚焦且非空时显示清除（快速删除）按钮；与 COUI 的删除图标一样，它直接出现 / 消失，按下时没有按压反馈。点按后清空全部文本：
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -193,7 +193,7 @@ TextField(
 
 ## 密码可见切换
 
-设置 `showPasswordToggle = true` 会显示一个眼睛按钮用于切换密码可见性，斜线在 300ms 内画入 / 画出。隐藏时文本以圆点掩码显示。密码初始为掩码；传入 `initialPasswordVisible = true` 则初始为明文（`InputView` 即如此，与 COUIInputView 默认的 `couiPasswordType` OPEN 一致）。输入框禁用时，眼睛按钮同步禁用并使用 `disabledIconColor`：
+设置 `showPasswordToggle = true` 会显示一个眼睛按钮用于切换密码可见性：隐藏密码时斜线在 300ms 内划过眼睛，显示密码时斜线沿同一方向在 200ms 内被擦除（对应 COUI 的眼睛动画矢量图）。隐藏时文本以圆点掩码显示。密码初始为掩码；传入 `initialPasswordVisible = true` 则初始为明文（`InputView` 即如此，与 COUIInputView 默认的 `couiPasswordType` OPEN 一致）。输入框禁用时，眼睛按钮同步禁用并使用 `disabledIconColor`：
 
 ```kotlin
 var password by remember { mutableStateOf("") }

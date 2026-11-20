@@ -21,7 +21,7 @@ private data object MotionRouteB : NavKey
 /**
  * Settle physics must come from the governing transition of the topmost presented entry: a
  * per-route motion override (a fast 64ms programmatic tween) settles a push far sooner than the
- * default 500ms curve would.
+ * default 350ms COUI page curve would.
  */
 @OptIn(ExperimentalTestApi::class)
 class NavMotionResolutionTest {
@@ -49,7 +49,7 @@ class NavMotionResolutionTest {
         mainClock.advanceTimeByFrame()
         backStack.add(MotionRouteB)
         // 200ms after the push: the 64ms override tween is long settled, while the default
-        // 500ms curve would still be mid-flight (depth ≈ -0.16 at this point).
+        // 350ms COUI page curve would still be mid-flight (depth ≈ -0.16 at this point).
         mainClock.advanceTimeBy(200)
         assertTrue(
             lastTopDepth > -0.01f && lastTopDepth <= 0f,

@@ -193,6 +193,16 @@ OverlayDropdownPreference(
 )
 ```
 
+## Interaction
+
+The row follows COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`:
+
+- **Opens at the finger**: the touch-down point is recorded (`PreciseClickHelper`) and the menu is placed at that point rather than at the edge of the row. An accessibility click, which has no touch point, falls back to the row.
+- **Soft keyboard**: if the keyboard is showing, a tap hides it first and the menu opens 100ms later (240ms on windows at least 840dp tall), so it is placed against the final window.
+- **Anchor row**: while the menu is showing, the row keeps its hover layer locked (`COUIPopupListWindow.setAnchorHoveredState`); the layer is released as soon as the menu starts to leave.
+- **Arrow**: the up-down arrow is `couiColorLabelTertiary`, and `couiColorLabelQuaternary` while the row is disabled.
+- **Selected value**: shown as the COUI assignment text (`TextAppearance.COUI.List.Assignment.End`): 13sp with the body_s line spacing, end aligned, at most two lines, 4dp before the arrow.
+
 ## Properties
 
 ### OverlayDropdownPreference Properties

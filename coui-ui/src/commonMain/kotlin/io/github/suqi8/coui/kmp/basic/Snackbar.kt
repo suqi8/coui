@@ -13,11 +13,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -29,7 +24,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -62,7 +56,6 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.AccessibilityManager
 import androidx.compose.ui.platform.LocalAccessibilityManager
@@ -79,7 +72,6 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import io.github.suqi8.coui.kmp.icon.COUIIcons
@@ -99,7 +91,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 /**
  * Possible durations of the [Snackbar].
@@ -161,12 +152,6 @@ interface SnackbarData {
 
     /** Perform the action of the Snackbar. */
     suspend fun performAction()
-}
-
-private enum class SnackbarSwipeToDismissValue {
-    StartToEnd,
-    EndToStart,
-    Settled,
 }
 
 /**
@@ -287,9 +272,21 @@ internal fun SnackbarDuration.toMillis(
 /**
  * Host for [Snackbar]s to be shown.
  *
+ * Every snack bar shows and dismisses like COUI 17 `COUISnackBar.animateSpring`: it scales
+ * 0.8 -> 1 while fading in, and back to 0.8 while fading out, on bounce-free springs (response 0.3
+ * to show, 0.25 to dismiss). Touching it pauses its timeout, which restarts in full on release.
+ *
+ * Stacking several snack bars and the sideways swipe are library extensions: COUI shows one snack
+ * bar at a time and only its notification snack bar can be swiped. The swipe follows that one
+ * (`COUINotificationSnackBar.onTouchEvent`): past the touch slop a mostly sideways drag picks the
+ * bar up and it follows the finger; released past an eighth of its width it slides off screen at
+ * 1.75px per ms on the COUI move-ease curve and is dismissed, otherwise it springs back
+ * (response 0.35, bounce 0).
+ *
  * @param state state of the [SnackbarHost]
  * @param modifier modifier to be applied to the [SnackbarHost]
- * @param canSwipeToDismiss flag of can be dismissed by swipe of the current [SnackbarHost]
+ * @param canSwipeToDismiss whether the snack bars can be swiped away sideways. Turn it off for
+ *   content with its own swipe, such as [NotificationSnackbar] or [CustomSnackbar]
  * @param content content of the [SnackbarHost]
  */
 @Composable
@@ -313,12 +310,14 @@ fun SnackbarHost(
             itemsIndexed(state.currentSnackbars, key = { _, entry -> entry.id }) { index, entry ->
                 val visibleState = remember { MutableTransitionState(false) }
                 val accessibilityManager = LocalAccessibilityManager.current
-
-                val anchoredDraggableState = remember {
-                    AnchoredDraggableState(
-                        initialValue = SnackbarSwipeToDismissValue.Settled,
-                    )
-                }
+                val currentEntry by rememberUpdatedState(entry)
+                val swipeScope = rememberCoroutineScope()
+                // The sideways swipe offset (COUINotificationSnackBar translationX).
+                val swipeOffset = remember { Animatable(0f) }
+                // Set once a swipe is released past the threshold: the bar is sliding off screen.
+                var swipedAway by remember { mutableStateOf(false) }
+                val windowWidth = LocalWindowInfo.current.containerSize.width
+                val currentWindowWidth by rememberUpdatedState(windowWidth)
                 // COUISnackBar.onTouchEvent: DOWN / MOVE cancel the auto-dismiss timer, UP / CANCEL
                 // restart it with the full duration.
                 var isTouched by remember { mutableStateOf(false) }
@@ -337,14 +336,67 @@ fun SnackbarHost(
                     )
                     delay(duration)
 
-                    if (anchoredDraggableState.currentValue != SnackbarSwipeToDismissValue.Settled) return@LaunchedEffect
+                    // A bar sliding off screen is dismissed when it gets there.
+                    if (swipedAway) return@LaunchedEffect
                     entry.data.dismiss()
                 }
 
-                LaunchedEffect(anchoredDraggableState.currentValue) {
-                    if (anchoredDraggableState.currentValue != SnackbarSwipeToDismissValue.Settled) {
-                        entry.data.dismiss()
+                val swipeModifier = if (canSwipeToDismiss) {
+                    Modifier.pointerInput(Unit) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            if (!currentEntry.visible || swipedAway) return@awaitEachGesture
+                            val touchSlop = viewConfiguration.touchSlop
+                            var pendingDrag = Offset.Zero
+                            var dragging = false
+                            // Tracked here: the launched snaps run later, so reading the
+                            // Animatable back per event would drop the moves of the same frame.
+                            var dragX = swipeOffset.value
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                                if (!change.pressed) break
+                                if (!dragging) {
+                                    // COUI picks the bar up on the first moved pixel; past the touch
+                                    // slop instead, so a tap on the action still clicks, and only a
+                                    // mostly sideways drag, so a scrolling parent keeps the rest.
+                                    if (change.isConsumed) break
+                                    pendingDrag += change.positionChange()
+                                    if (pendingDrag.getDistance() < touchSlop) continue
+                                    if (abs(pendingDrag.x) <= abs(pendingDrag.y)) break
+                                    dragging = true
+                                    change.consume()
+                                    continue
+                                }
+                                dragX += change.positionChange().x
+                                change.consume()
+                                val x = dragX
+                                swipeScope.launch { swipeOffset.snapTo(x) }
+                            }
+                            if (!dragging) return@awaitEachGesture
+                            // The item spans the bar and its 16dp side margins, like the COUI root.
+                            val width = size.width.toFloat()
+                            val x = dragX
+                            swipeScope.launch {
+                                if (abs(x) > width / 8f) {
+                                    // startDismissAnimationX: off screen at 1.75px per ms, then dismiss.
+                                    swipedAway = true
+                                    val screenWidth = maxOf(currentWindowWidth.toFloat(), width)
+                                    val distance = (screenWidth - width) / 2f + width
+                                    val duration = ((distance - abs(x)) / NOTIFICATION_SLIDING_SPEED).toInt().coerceAtLeast(0)
+                                    swipeOffset.animateTo(
+                                        targetValue = if (x < 0f) -distance else distance,
+                                        animationSpec = tween(durationMillis = duration, easing = NotificationMoveEase),
+                                    )
+                                    currentEntry.data.dismiss()
+                                } else {
+                                    swipeOffset.animateTo(0f, NotificationSpringBack)
+                                }
+                            }
+                        }
                     }
+                } else {
+                    Modifier
                 }
 
                 AnimatedVisibility(
@@ -358,33 +410,8 @@ fun SnackbarHost(
                                 }
                             }
                         }
-                        .onSizeChanged { size ->
-                            val width = size.width.toFloat()
-
-                            val anchors = DraggableAnchors {
-                                SnackbarSwipeToDismissValue.Settled at 0f
-                                SnackbarSwipeToDismissValue.StartToEnd at width
-                                SnackbarSwipeToDismissValue.EndToStart at -width
-                            }
-                            anchoredDraggableState.updateAnchors(anchors)
-                        }
-                        .anchoredDraggable(
-                            state = anchoredDraggableState,
-                            orientation = Orientation.Horizontal,
-                            enabled = entry.visible && canSwipeToDismiss,
-                            flingBehavior = AnchoredDraggableDefaults.flingBehavior(
-                                state = anchoredDraggableState,
-                                positionalThreshold = { distance: Float -> distance * 0.5f },
-                            ),
-                        )
-                        .offset {
-                            val offset = try {
-                                anchoredDraggableState.requireOffset()
-                            } catch (_: IllegalStateException) {
-                                0f
-                            }
-                            IntOffset(offset.roundToInt(), 0)
-                        }
+                        .then(swipeModifier)
+                        .graphicsLayer { translationX = swipeOffset.value }
                         .zIndex((state.currentSnackbars.size - index).toFloat())
                         .then(if (entry.visible) Modifier.animateItem() else Modifier)
                         // The fade renders offscreen at the layer bounds: grow them so the shadow
@@ -393,8 +420,8 @@ fun SnackbarHost(
                     visibleState = visibleState,
                     // COUISnackBar.setSnackBarProgress: show scales 0.8 -> 1 and fades 0 -> 1,
                     // dismiss scales 1 -> 0.8 and fades 1 -> 0; there is no translation animation.
-                    enter = fadeIn(SnackbarShowAnimationSpec) + scaleIn(SnackbarShowAnimationSpec, initialScale = 0.8f),
-                    exit = fadeOut(SnackbarDismissAnimationSpec) + scaleOut(SnackbarDismissAnimationSpec, targetScale = 0.8f),
+                    enter = fadeIn(SnackbarShowAnimationSpec) + scaleIn(SnackbarShowScaleSpec, initialScale = 0.8f),
+                    exit = fadeOut(SnackbarDismissAnimationSpec) + scaleOut(SnackbarDismissScaleSpec, targetScale = 0.8f),
                 ) {
                     Box(modifier = Modifier.layerOverflowInner(SnackbarShadowOverflow)) {
                         content(entry.data)
@@ -411,6 +438,9 @@ fun SnackbarHost(
  * Follows COUI 17 `COUISnackBar`: the message, optional icon and action sit on one capsule line;
  * once the message wraps or the line does not fit, the snack bar switches to the vertical layout
  * with the action below the message, aligned to the end, and the corners drop to [cornerRadius].
+ * The bar takes the whole width it is given, up to [maxWidth], with the message at the start and
+ * the action at the end: `coui_snack_bar_item` is a `wrap_content` `RelativeLayout`, but its action
+ * is aligned to the parent end, which stretches it to the width it is offered.
  * The dismiss icon is a library extension with no COUI counterpart.
  *
  * @param data data of the [Snackbar]
@@ -421,9 +451,9 @@ fun SnackbarHost(
  *   the ColorOS default smoothing weight ([COUIRoundCorner.UnspecifiedWeight])
  * @param singleLineCornerRadius corner radius of the [Snackbar] in the single-line layout;
  *   [Dp.Unspecified] (the default) rounds it at half its height, the COUI 17 soft capsule
- * @param maxWidth the maximum width of the [Snackbar], excluding its 16dp outer margins;
- *   [Dp.Unspecified] removes the cap. The default follows the COUI responsive grid, see
- *   [SnackbarDefaults.maxWidth]
+ * @param maxWidth the maximum width of the [Snackbar], excluding its 16dp outer margins; the bar
+ *   fills the width it is given up to this cap, and [Dp.Unspecified] removes the cap. The default
+ *   follows the COUI responsive grid, see [SnackbarDefaults.maxWidth]
  * @param colors colors of the [Snackbar]
  * @param insideMargin margin inside the [Snackbar]; in the single-line layout the end margin is
  *   replaced by a 4dp action margin when the action button is the trailing element
@@ -570,22 +600,23 @@ fun Snackbar(
                     actionPlaceable?.let { top + it.height + bottom } ?: 0,
                     dismissPlaceable?.let { top + it.height + bottom } ?: 0,
                 ).coerceIn(constraints.minHeight, constraints.maxHeight)
-                val width = (start + iconWidth + message.width + actionWidth + dismissWidth + horizontalEnd)
-                    .coerceIn(constraints.minWidth, maxWidth)
+                val contentWidth = start + iconWidth + message.width + actionWidth + dismissWidth + horizontalEnd
+                val width = (if (constraints.hasBoundedWidth) maxWidth else contentWidth).coerceIn(constraints.minWidth, maxWidth)
                 layout(width, height) {
-                    // COUISnackBar.layoutHorizontally: every child is centred on the bar height.
+                    // COUISnackBar.layoutHorizontally: every child is centred on the bar height. The
+                    // icon and the message start the line, the action (and the dismiss icon) end it.
                     var x = start
                     iconPlaceable?.let {
                         it.placeRelative(x, (height - it.height) / 2)
                         x += iconWidth
                     }
                     message.placeRelative(x, (height - message.height) / 2)
-                    x += message.width
-                    actionPlaceable?.let {
-                        it.placeRelative(x + actionSpacing, (height - it.height) / 2)
-                        x += actionWidth
+                    var endX = width - horizontalEnd
+                    dismissPlaceable?.let {
+                        endX -= it.width
+                        it.placeRelative(endX, (height - it.height) / 2)
                     }
-                    dismissPlaceable?.let { it.placeRelative(x, (height - it.height) / 2) }
+                    actionPlaceable?.let { it.placeRelative(endX - it.width, (height - it.height) / 2) }
                 }
             } else {
                 // COUISnackBar.layoutVertically: the message (and icon) start 12dp from the top,
@@ -602,10 +633,11 @@ fun Snackbar(
                         verticalTop + rowHeight + bottom
                     }
                     ).coerceIn(constraints.minHeight, constraints.maxHeight)
-                val width = maxOf(
+                val contentWidth = maxOf(
                     start + iconWidth + message.width + dismissWidth + end,
                     actionPlaceable?.let { start + it.width + actionEnd } ?: 0,
-                ).coerceIn(constraints.minWidth, maxWidth)
+                )
+                val width = (if (constraints.hasBoundedWidth) maxWidth else contentWidth).coerceIn(constraints.minWidth, maxWidth)
                 layout(width, height) {
                     var x = start
                     iconPlaceable?.let {
@@ -657,7 +689,7 @@ object SnackbarDefaults {
     /**
      * The default maximum width: six columns of the COUI responsive layout grid with the small
      * margin type, measured on the current window (`COUISnackBar.getMaxWidth`). On compact
-     * windows (narrower than 600dp) the grid has only four columns, so the snack bar may span the
+     * windows (narrower than 600dp) the grid has only four columns, so the snack bar spans the
      * whole window minus its 16dp margins; on larger windows it stays centred at six columns.
      */
     @Composable
@@ -794,6 +826,16 @@ private val SnackbarShowAnimationSpec = spring<Float>(dampingRatio = 1f, stiffne
 private val SnackbarDismissAnimationSpec = spring<Float>(dampingRatio = 1f, stiffness = 631.65f)
 
 /**
+ * The show spring for the scale. COUI springs a 0..10000 progress that settles within 0.75 of its
+ * end, so the 0.8 -> 1 scale runs out smoothly; the default 0.01 threshold would snap the last
+ * percent of the scale, a visible jump on a full-width bar.
+ */
+private val SnackbarShowScaleSpec = spring(dampingRatio = 1f, stiffness = 438.65f, visibilityThreshold = 0.001f)
+
+/** The dismiss spring for the scale, settled as finely as [SnackbarShowScaleSpec]. */
+private val SnackbarDismissScaleSpec = spring(dampingRatio = 1f, stiffness = 631.65f, visibilityThreshold = 0.001f)
+
+/**
  * The shape of the leading image of a [NotificationSnackbar] (COUINotificationSnackBar `ImageType`).
  */
 enum class NotificationSnackbarIconType {
@@ -823,10 +865,13 @@ enum class NotificationSnackbarIconType {
  * - **Swipe** (`COUINotificationSnackBar.onTouchEvent`): a drag past the touch slop picks an axis
  *   (COUI picks it on the first pixel, which would cancel every slightly moving tap on the buttons
  *   and steal a scrolling parent's gestures). Sideways the card follows the finger; past an eighth
- *   of its width it slides off screen at 1.75px per ms (`SLIDING_SPEED`, COUIMoveEaseInterpolator)
- *   and [onDismiss] runs, otherwise it springs back (response 0.35, bounce 0). Downwards it follows
- *   the finger and dismisses the same way past an eighth of its width; once dragged it is held to an
- *   eighth of its width above its place. A drag that starts upwards is left to the parent.
+ *   of its width (side margins included) it slides just off screen at 1.75px per ms
+ *   (`SLIDING_SPEED`, COUIMoveEaseInterpolator) and [onDismiss] runs, otherwise it springs back
+ *   (response 0.35, bounce 0). Downwards it follows the finger and, past the same threshold, slides
+ *   down by its bottom position plus its height in that distance / 1.75 ms (`startDismissAnimationY`),
+ *   a long, front-loaded slide; [onDismiss] runs once the card has left the window. Once dragged it
+ *   is held to an eighth of its width above its place. A drag that starts upwards is left to the
+ *   parent.
  *
  * Show it through the `content` lambda of [SnackbarHost] to get the host's show / dismiss animation
  * and timeout (COUI clamps the duration to 4s..10s, [SnackbarDuration.Short] /
@@ -880,6 +925,8 @@ fun NotificationSnackbar(
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 val touchSlop = viewConfiguration.touchSlop
+                // getMeasuredWidth() of the COUI root: the card and its 16dp side margins.
+                val rootWidth = size.width + 2 * NotificationSideMargin.toPx()
                 var axis = SwipeAxis.None
                 var pendingDrag = Offset.Zero
                 // The drag position is tracked here: the launched snaps run later, so reading the
@@ -917,20 +964,22 @@ fun NotificationSnackbar(
                         scope.launch { offsetX.snapTo(x) }
                     } else {
                         // Upwards the card is held to an eighth of its width.
-                        dragY = (dragY + delta.y).let { if (it < 0f) maxOf(-size.width / 8f, it) else it }
+                        dragY = (dragY + delta.y).let { if (it < 0f) maxOf(-rootWidth / 8f, it) else it }
                         val y = dragY
                         scope.launch { offsetY.snapTo(y) }
                     }
                 }
-                val threshold = size.width / 8f
-                val cardWidth = size.width.toFloat()
+                // checkSwipedFarEnoughByX / ByY: an eighth of getMeasuredWidth().
+                val threshold = rootWidth / 8f
                 val cardHeight = size.height.toFloat()
                 when (axis) {
                     SwipeAxis.Horizontal -> scope.launch {
                         val x = offsetX.value
                         if (abs(x) > threshold) {
-                            // startDismissAnimationX: off screen, (distance - |x|) / 1.75 ms.
-                            val distance = (currentWindowSize.width - cardWidth) / 2f + cardWidth
+                            // startDismissAnimationX: (screen width - width) / 2 + width, so the card
+                            // ends just off screen, in (distance - |x|) / 1.75 ms.
+                            val screenWidth = maxOf(currentWindowSize.width.toFloat(), rootWidth)
+                            val distance = (screenWidth - rootWidth) / 2f + rootWidth
                             val duration = ((distance - abs(x)) / NOTIFICATION_SLIDING_SPEED).toInt().coerceAtLeast(0)
                             offsetX.animateTo(
                                 targetValue = if (x < 0f) -distance else distance,
@@ -945,16 +994,29 @@ fun NotificationSnackbar(
                     SwipeAxis.Vertical -> scope.launch {
                         val y = offsetY.value
                         if (y > threshold) {
-                            // startDismissAnimationY: past the window bottom, distance / 1.75 ms.
-                            val distance = (currentWindowSize.height - cardTopInWindow[0]).coerceAtLeast(cardHeight) + cardHeight
+                            // startDismissAnimationY: translationY runs to getBottom() +
+                            // getMeasuredHeight() (the card's bottom in its parent plus its height)
+                            // in that whole distance / 1.75 ms, so the card leaves at the speed of
+                            // that long slide. It is out of the window well before the end:
+                            // onDismiss runs then instead of after the invisible rest.
+                            val top = cardTopInWindow[0]
+                            val windowHeight = currentWindowSize.height.toFloat()
+                            val offscreen = windowHeight - top
+                            val target = maxOf(top + 2 * cardHeight, offscreen)
+                            var dismissed = false
                             offsetY.animateTo(
-                                targetValue = distance,
+                                targetValue = target,
                                 animationSpec = tween(
-                                    durationMillis = (distance / NOTIFICATION_SLIDING_SPEED).toInt(),
+                                    durationMillis = (target / NOTIFICATION_SLIDING_SPEED).toInt().coerceAtLeast(0),
                                     easing = NotificationMoveEase,
                                 ),
-                            )
-                            currentOnDismiss()
+                            ) {
+                                if (!dismissed && windowHeight > 0f && value >= offscreen) {
+                                    dismissed = true
+                                    currentOnDismiss()
+                                }
+                            }
+                            if (!dismissed) currentOnDismiss()
                         } else {
                             offsetY.animateTo(0f, NotificationSpringBack)
                         }
@@ -971,7 +1033,7 @@ fun NotificationSnackbar(
     Surface(
         modifier = modifier
             .semantics { liveRegion = LiveRegionMode.Polite }
-            .padding(horizontal = 16.dp, vertical = SnackbarItemVerticalMargin)
+            .padding(horizontal = NotificationSideMargin, vertical = SnackbarItemVerticalMargin)
             .widthIn(max = maxWidth)
             .fillMaxWidth()
             .onGloballyPositioned { cardTopInWindow[0] = it.positionInWindow().y }
@@ -1162,6 +1224,9 @@ private enum class SwipeAxis { None, Horizontal, Vertical }
 
 /** The gap after the image and after the text (COUI coui_notification_snack_bar_icon_end). */
 private val NotificationContentEndMargin = 8.dp
+
+/** The side margins of the card (grid_guide_column_card_margin_start, as the snack bar). */
+private val NotificationSideMargin = 16.dp
 
 /** The maximum width of the action button (COUI coui_snack_bar_button_width, compact windows). */
 private val NotificationButtonMaxWidth = 120.dp

@@ -13,7 +13,7 @@ popupHost: COUIPopupHost
 
 `OverlayBottomSheet` 对应 COUI 面板（`COUIBottomSheetDialog`）。窗口宽度小于 600dp 时从底部滑入并贴底显示；从 600dp 起改为居中浮窗，距窗口底部 64dp、四角圆角，以缩放（0.8 → 1）+ 淡入入场。宽度跟随 COUI 栅格，且不超过 540dp。整个面板都可拖动；可滚动内容先滚动，滚到顶后继续下拉才带动面板。
 
-松手时向下速度超过 500px/s 或拖过面板一半高度即关闭（经由内容拖动时，只要最后一次移动方向向下就关闭）。上拉时面板按手指位移的 0.2 拉伸，最多 28dp，松手回弹。
+松手时向下速度超过 500px/s 或拖过面板一半高度即关闭（经由内容拖动时，只要最后一次移动方向向下就关闭）；此时遮罩立即按自身弹簧淡出、面板滑出屏幕，已弹出的键盘随之收起。其余情况松手后以 0.4s 弹簧、带着松手速度回到静止位置，冲过静止位置的部分只显示 40%。上拉时面板按手指位移的 0.2 拉伸，最多 28dp，松手回弹。`allowDismiss = false` 时面板只跟手下拉到仅剩 82dp 露出高度为止，随后停在收起态或弹回。面板仍在运动时切换显示 / 隐藏，动画会从面板当前位置掉头。
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=overlayBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -77,7 +77,7 @@ Scaffold {
 | showDragHandle             | Boolean                   | 是否显示拖拽把手（COUI 普通面板隐藏把手，顶部保留 10dp 间距） | false                      | 否       |
 | handlePanel                | Boolean                   | COUI 把手面板：显示把手、占满最大高度，竖屏以半展开、横屏以 82dp 收起态打开，拖动后停在收起 / 半展开 / 展开三态之一 | false | 否 |
 | showInMaxHeight            | Boolean                   | 以最大高度显示，而不是自适应内容高度         | false                                      | 否       |
-| allowDismiss               | Boolean                   | 是否允许通过拖拽、返回手势或点击外部关闭抽屉 | true                                       | 否       |
+| allowDismiss               | Boolean                   | 是否允许通过拖拽、返回手势或点击外部关闭抽屉；为 false 时下拉止于 82dp 露出高度（COUI 不可取消面板） | true | 否       |
 | dismissOnClickOutside      | Boolean                   | 点击面板外部是否关闭（需 `allowDismiss` 为 true） | true                                  | 否       |
 | draggable                  | Boolean                   | 面板是否跟随拖拽手势                         | true                                       | 否       |
 | enablePullUp               | Boolean                   | 面板能否被上拉超过静止位置                   | true                                       | 否       |

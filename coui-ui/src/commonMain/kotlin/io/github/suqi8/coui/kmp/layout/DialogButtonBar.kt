@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.layout
 
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,12 +11,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -23,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import io.github.suqi8.coui.kmp.basic.ButtonColors
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.CouiButton
@@ -110,6 +117,10 @@ fun DialogButtonBar(
     recommendedColors: TextButtonColors = DialogButtonBarDefaults.recommendedButtonColors(),
     textStyle: TextStyle = COUITheme.textStyles.buttonL,
 ) {
+    // COUIButtonBarLayout.onInterceptTouchEvent + getChildDrawingOrder: the cell touched last draws
+    // above the others, so the rubber band and deformation of its button are never covered by a
+    // neighbour, also while it springs back after the release.
+    val touchedSlot = remember { mutableStateOf<BarSlot?>(null) }
     if (negative == null && positive == null && neutral == null) return
 
     BoxWithConstraints(modifier) {
@@ -155,6 +166,7 @@ fun DialogButtonBar(
                 textStyle = textStyle,
                 textMeasurer = textMeasurer,
                 density = density,
+                touchedSlot = touchedSlot,
             )
         } else {
             RowButtonBar(
@@ -166,6 +178,7 @@ fun DialogButtonBar(
                 neutralColors = neutralColors,
                 recommendedColors = recommendedColors,
                 textStyle = textStyle,
+                touchedSlot = touchedSlot,
             )
         }
     }
@@ -218,6 +231,7 @@ private fun RowButtonBar(
     neutralColors: TextButtonColors,
     recommendedColors: TextButtonColors,
     textStyle: TextStyle,
+    touchedSlot: MutableState<BarSlot?>,
 ) {
     // COUI resortButton brings negative, then neutral, then positive to the front in a row.
     val slots = listOfNotNull(
@@ -246,6 +260,7 @@ private fun RowButtonBar(
                 textStyle = textStyle,
                 modifier = Modifier
                     .weight(1f)
+                    .barCellDrawOrder(slot = slot, touchedSlot = touchedSlot)
                     .padding(
                         start = if (isFirst) DialogButtonBarDefaults.CellPaddingEdge else DialogButtonBarDefaults.CellPaddingCentral,
                         top = DialogButtonBarDefaults.CellPaddingTop,
@@ -276,6 +291,7 @@ private fun StackedButtonBar(
     textStyle: TextStyle,
     textMeasurer: TextMeasurer,
     density: Density,
+    touchedSlot: MutableState<BarSlot?>,
 ) {
     // COUI resortButton brings neutral, then positive, then negative to the front when stacking.
     val slots = listOfNotNull(
@@ -310,6 +326,7 @@ private fun StackedButtonBar(
                 textStyle = textStyle,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .barCellDrawOrder(slot = slot, touchedSlot = touchedSlot)
                     .padding(
                         horizontal = DialogButtonBarDefaults.CellPaddingEdge,
                     )
@@ -378,6 +395,23 @@ private fun BarButton(
 
 /** The COUI button roles, kept apart because the two tiers order them differently. */
 private enum class BarSlot { Neutral, Positive, Negative }
+
+/**
+ * Draws the cell of [slot] above its siblings once a touch lands in it, and keeps it there until
+ * another cell is touched (`COUIButtonBarLayout.findTouchedButtonParentIndex` on `ACTION_DOWN` +
+ * `getChildDrawingOrder`). The down is only observed, never consumed.
+ */
+private fun Modifier.barCellDrawOrder(
+    slot: BarSlot,
+    touchedSlot: MutableState<BarSlot?>,
+): Modifier = this
+    .zIndex(if (touchedSlot.value == slot) 1f else 0f)
+    .pointerInput(slot, touchedSlot) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            touchedSlot.value = slot
+        }
+    }
 
 object DialogButtonBarDefaults {
     /**

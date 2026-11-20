@@ -4,7 +4,6 @@ package io.github.suqi8.coui.kmp.menu
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -57,6 +56,10 @@ fun OverlayIconDropdownMenu(
 
 /**
  * An [IconButton] wrapper that opens an [OverlayDropdownPopup] for one or more [DropdownEntry] groups.
+ *
+ * Like the COUI 17 toolbar overflow button (`COUIActionMenuView` → `COUIPopupListWindow.show`), the
+ * button plays its normal press and release and is not held while the menu is showing:
+ * `COUIPopupListWindow.setAnchorHoveredState` only locks list-row anchors.
  */
 @Composable
 fun OverlayIconDropdownMenu(
@@ -75,7 +78,6 @@ fun OverlayIconDropdownMenu(
     content: @Composable () -> Unit,
 ) {
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
@@ -92,9 +94,6 @@ fun OverlayIconDropdownMenu(
         {
             if (actualEnabled) {
                 setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                }
             }
         }
     }
@@ -103,7 +102,6 @@ fun OverlayIconDropdownMenu(
         IconButton(
             onClick = handleClick,
             enabled = actualEnabled,
-            holdDownState = isHoldDown.value,
             backgroundColor = backgroundColor,
             cornerRadius = cornerRadius,
             minHeight = minHeight,
@@ -115,7 +113,7 @@ fun OverlayIconDropdownMenu(
                 entries = nonEmptyEntries,
                 show = isDropdownExpanded.value,
                 onDismiss = { setExpanded(false) },
-                onDismissFinished = { isHoldDown.value = false },
+                onDismissFinished = {},
                 maxHeight = maxHeight,
                 dropdownColors = dropdownColors,
                 renderInRootScaffold = renderInRootScaffold,

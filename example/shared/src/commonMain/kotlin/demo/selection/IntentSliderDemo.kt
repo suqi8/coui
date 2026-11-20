@@ -3,6 +3,7 @@
 package demo.selection
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import catalog.Demo
@@ -342,7 +345,8 @@ private fun LoadingIntentSlider() {
 /**
  * The fixed palette over media content: with a backdrop provider the COUI 17 blur-blend replaces
  * the translucent background fill, and the conic light style trails the progress while playing or
- * dragging.
+ * dragging. Holding the photo stands in for a player's hold-to-speed-up gesture (the cone light
+ * takes its dragging shape while playing), and the label rides the bar's rubber band.
  */
 @Composable
 private fun MediaIntentSlider() {
@@ -350,6 +354,8 @@ private fun MediaIntentSlider() {
     val provider = rememberMaterialBackdropProvider(backdrop)
     var value by remember { mutableFloatStateOf(0.35f) }
     var playback by remember { mutableStateOf(IntentSliderPlaybackState.Playing) }
+    var speedingUp by remember { mutableStateOf(false) }
+    var labelOffset by remember { mutableFloatStateOf(0f) }
     Box(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -361,14 +367,25 @@ private fun MediaIntentSlider() {
             contentDescription = null,
             modifier = Modifier
                 .matchParentSize()
-                .layerBackdrop(backdrop),
+                .layerBackdrop(backdrop)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            speedingUp = true
+                            tryAwaitRelease()
+                            speedingUp = false
+                        },
+                    )
+                },
             contentScale = ContentScale.Crop,
         )
         CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
             Column(modifier = Modifier.padding(vertical = 16.dp)) {
                 Text(
                     text = stringResource(Res.string.demo_intent_slider_variant_media_label),
-                    modifier = Modifier.padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .graphicsLayer { translationX = labelOffset },
                     style = COUITheme.textStyles.bodyS,
                     // Fixed white over the photo, like the fixed slider palette.
                     color = Color.White,
@@ -380,8 +397,10 @@ private fun MediaIntentSlider() {
                     followSystemTheme = false,
                     conicLight = true,
                     loadingDragReturn = true,
+                    holdToSpeedUp = speedingUp,
                     playbackState = playback,
                     secondaryValue = 0.7f,
+                    onDragHorizontalOffsetChange = { labelOffset = it },
                     size = IntentSliderSize.Large,
                 )
                 TextButton(

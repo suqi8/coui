@@ -42,14 +42,14 @@ SwitchLoadingPreference(
 ```
 
 ::: tip 按压反馈
-按在开关本身上时整行也会进入按压态：开关继续处理手势（点按或拖动），同时整行绘制按压蒙层，与 COUI 17 的 `COUISwitchTouchEventDelegate` 一致。
+整行（包括开关）都是触摸目标：与 COUI 的 `coui_preference_widget_switchload` 一致，开关本身不可点击、不可拖动，按在开关上就是按下并点击整行。点击行本身不触发振动；之后 `checked` 真正翻转时才播放 COUI 切换振动（302），与 COUI 开关在加载结束时的反馈一致。
 :::
 
 ## 组件状态
 
 ### 加载状态
 
-加载中时，点击整行和开关都会被忽略（COUISwitch 在加载样式下会吞掉触摸事件）：
+加载中时点击整行会被忽略，也不会调用 `onCheckedChange`：
 
 ```kotlin
 SwitchLoadingPreference(

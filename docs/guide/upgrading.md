@@ -18,6 +18,65 @@ Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
 
 The shapes changed with the new drawings, so check icon sizes in your layouts after upgrading.
 
+### Motion and touch follow COUI 17
+
+Every component's motion was compared with the COUI 17 code again. Most of it needs no change on your
+side; the points below change behaviour you may rely on, or add API.
+
+**Behaviour changes**
+
+- Press feedback starts at touch-down for list rows, cards and buttons, also inside scrolling lists, and a
+  release keeps the momentum of the press. `couiPressScale(enabled = false)` springs back instead of
+  snapping.
+- Popup menus deform and follow the finger for the whole press-and-slide, also after the list inside starts
+  scrolling, and stretch from the side that faces the anchor. Popup row titles are 15sp (`couiTextBodyL`).
+- Collapsing top bars follow the scroll on a spring and snap on a spring (`TopAppBarDefaults.SnapAnimationSpec`
+  is the new default `snapAnimationSpec`). `COUIScrollBehavior(followScroll = false)` restores the 1:1
+  movement; `TopAppBarState.displayedHeightOffset` is the position the bar is drawn at.
+- A release while overscrolled only springs back; a fling faster than 6000px/s still carries its speed past
+  the edge.
+- The default page switch of `NavDisplay` (coui-navigation3-ui) and `NavTransitions.COUIDefault` (coui-nav)
+  runs 350ms on the COUI curve, the covered page shifts 30%, and predictive back settles on springs. In
+  coui-nav, `NavDisplayEffects.cornerClipRadius` now follows the screen corner by default.
+- With `allowDismiss = false` a bottom sheet follows the finger down to its 82dp peek and the scrim dims with
+  it, as in COUI.
+- `ListPreference` and `MultiSelectListPreference` open the COUI choice dialog instead of a bottom sheet,
+  their rows end in the jump arrow, and opening no longer vibrates. `ListPreferenceDefaults.CheckIconSize`,
+  `ButtonBarTopPadding` and `ButtonBarBottomPadding` are no longer read.
+- `SwitchLoadingPreference`: a touch on the switch clicks the row (the switch has no tap or drag of its own),
+  and the haptic plays when `checked` flips. `CheckboxPreference` vibrates at touch-down.
+- Snackbars fill the width they get: the window minus 16dp on each side on phones, six grid columns on wide
+  windows.
+- The `Switch` thumb follows the finger 1:1 while dragged.
+- `searchBarCollapseGeometry` widens the capsule by 16dp (was 12dp).
+- The calendar picker arrow swaps without rotating, like the COUI rotate view.
+- Disabled jump and dropdown arrows use `labelQuaternary`.
+- `NavigationRailItem` takes the COUI rail colours (`NavigationRailDefaults.itemColors()`);
+  `NavigationRailDefaults.SelectedPressedAlpha`, `UnselectedPressedAlpha` and `UnselectedAlpha` are removed.
+
+**New API**
+
+- `CircularPressIndication(radius, color, hoverColor, focusColor)` is public, with
+  `rememberCircularPressIndication(...)` for the theme colours.
+- `COUITouchInteraction` and `Modifier.couiTouchFeedback(interactionSource, enabled)` report a touch at
+  touch-down.
+- `couiSpring(response, bounce, threshold)` and `COUISpringEasing(response, bounce)`.
+- `COUIFlingBehavior` / `rememberCOUIFlingBehavior()`: the COUI 17 list fling (`SpringOverScroller`).
+- `paused` on `RotatingProgressIndicator`, `CompProgressIndicator` and `LoadingPreferenceCategory`;
+  `ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor()`; `InstallLoadProgress(hapticFeedbackEnabled)`.
+- `NavigationBar(targetState) { state -> }` animates a switch of the whole menu; `NavigationRailItem(badge,
+  colors)` with `NavigationRailItemColors`; `FloatingAccessoryNavigationBar(visible)` — `visible` follows
+  `backgroundModifier`, so pass it by name.
+- `ChipTabContent` (the COUI chip-tab page transition) and `ChipGroup(animationsEnabled)`.
+- Floating toolbar items take a `key`; `ExpandableFloatingActionButton(collapseOnItemClick = true)` closes the
+  menu after an item tap.
+- `IntentSlider(holdToSpeedUp, onDragHorizontalOffsetChange)`.
+- `OverlayContextMenu` / `WindowContextMenu(anchorInteractionSource)`.
+- `ArrowPreference(selected, startBadge, endBadgeCount, endIcon)`.
+- `SidePaneLayout(onMaskClick)`.
+- coui-nav: `COUIPageMotion`, `COUIPageEasing`, `COUI_PAGE_DURATION_MILLIS`, `COUI_COVERED_SHIFT_FRACTION`,
+  `COUI_GESTURE_COVERED_SHIFT_FRACTION`.
+
 ## 1.1.0 → 2.0.0
 
 2.0.0 moves COUI from the ColorOS 16 design (COUI 1.x) to ColorOS 17 (COUI 17). Coming from Miuix instead? Start with [Migrating from Miuix](./migration.md).

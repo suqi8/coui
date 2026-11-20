@@ -50,6 +50,10 @@ val state = rememberChipGroupState(
 
 `collapsable = true` 且行数多于 `collapsedMaxRows` 时，组内显示 28dp 圆形的展开 / 收起按钮（`IconChip`）。折叠时只显示前 `collapsedMaxRows` 行，最后一行为展开按钮预留位置；展开后收起按钮跟在最后一个 Chip 之后。高度变化使用 COUI 弹簧（response 0.35，bounce 0）。
 
+## 动画
+
+`animationsEnabled` 开启时（默认，对应 COUI `setChipGroupAnimationsEnabled`），Chip 的运动对齐 COUIChip 的 `ChipGroupAnimatorImpl`：位置变化的 Chip 以弹簧移到新位置（response 0.3，bounce 0）；组不再显示的 Chip（折叠时）在原位淡出，重新显示的 Chip 淡入（透明度弹簧，response 0.2）；新加入组的 Chip 还会从 0.8 放大；展开与收起按钮是两个 Chip，相互交叉淡化。首次布局与可用宽度变化后不播放动画。Chip 有 `Modifier.layoutId` 时按它跟踪，否则按下标跟踪；在中间插入或移除 Chip 时请为其设置稳定的 `layoutId`。
+
 ```kotlin
 val state = rememberChipGroupState(initialCollapsed = true)
 
@@ -85,6 +89,7 @@ ChipGroup(
 | horizontalSpacing    | Dp                     | 同一行 Chip 之间的间距   | ChipGroupDefaults.HorizontalSpacing | 否   |
 | verticalSpacing      | Dp                     | 行与行之间的间距         | ChipGroupDefaults.VerticalSpacing   | 否   |
 | collapseButtonColors | ChipColors             | 展开 / 收起按钮的颜色    | ChipDefaults.chipColors()           | 否   |
+| animationsEnabled    | Boolean                | 布局变化时 Chip 是否播放动画 | true                            | 否   |
 | content              | @Composable () -> Unit | 组内的 Chip              | -                                   | 是   |
 
 ### ChipGroupState

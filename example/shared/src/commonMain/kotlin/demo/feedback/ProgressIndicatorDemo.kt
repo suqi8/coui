@@ -169,6 +169,7 @@ private fun ColumnScope.ProgressIndicatorPlayground() {
 
                 else -> if (sizeIndex == 0) {
                     RotatingProgressIndicator(
+                        color = ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor(),
                         size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
                         ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
                         strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,
@@ -319,6 +320,7 @@ private fun LoadingVariantsContent() {
         RotatingProgressIndicator(modifier = Modifier.align(Alignment.CenterVertically))
         RotatingProgressIndicator(
             modifier = Modifier.align(Alignment.CenterVertically),
+            color = ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor(),
             size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
             ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
             strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,

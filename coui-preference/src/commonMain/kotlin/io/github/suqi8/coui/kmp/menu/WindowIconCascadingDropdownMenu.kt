@@ -4,7 +4,6 @@ package io.github.suqi8.coui.kmp.menu
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -60,6 +59,10 @@ fun WindowIconCascadingDropdownMenu(
  * An [IconButton] wrapper that opens a [WindowCascadingListPopup] for one or more
  * [DropdownEntry] groups. Items whose [io.github.suqi8.coui.kmp.basic.DropdownItem.children] is
  * non-empty become submenu triggers; cascading depth is limited to 2.
+ *
+ * Like the COUI 17 toolbar overflow button (`COUIActionMenuView` → `COUIPopupListWindow.show`), the
+ * button plays its normal press and release and is not held while the menu is showing:
+ * `COUIPopupListWindow.setAnchorHoveredState` only locks list-row anchors.
  */
 @Composable
 fun WindowIconCascadingDropdownMenu(
@@ -77,7 +80,6 @@ fun WindowIconCascadingDropdownMenu(
     content: @Composable () -> Unit,
 ) {
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
@@ -94,9 +96,6 @@ fun WindowIconCascadingDropdownMenu(
         {
             if (actualEnabled) {
                 setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                }
             }
         }
     }
@@ -105,7 +104,6 @@ fun WindowIconCascadingDropdownMenu(
         IconButton(
             onClick = handleClick,
             enabled = actualEnabled,
-            holdDownState = isHoldDown.value,
             backgroundColor = backgroundColor,
             cornerRadius = cornerRadius,
             minHeight = minHeight,
@@ -117,7 +115,6 @@ fun WindowIconCascadingDropdownMenu(
                 show = isDropdownExpanded.value,
                 entries = nonEmptyEntries,
                 onDismissRequest = { setExpanded(false) },
-                onDismissFinished = { isHoldDown.value = false },
                 maxHeight = maxHeight,
                 dropdownColors = dropdownColors,
                 collapseOnSelection = collapseOnSelection,

@@ -95,6 +95,8 @@ OverlayMultiChoiceDialog(
 
 三种对话框点击后都不会自行隐藏, 需要把 `show` 设为 false 来关闭。
 
+按下选择行时，行背景在 180ms 内淡入 `pressBackground`，松手后 360ms 淡出（`coui_list_selector_background`），不带触感反馈（`ChoiceListAdapter`）。列表滚动到边缘时有 46dp 渐隐（`coui_alert_dialog_list_layout`）。
+
 ## 属性
 
 ### ListDialogItem
@@ -153,6 +155,7 @@ Window 变体的属性相同, 但没有 `renderInRootScaffold`。
 | 属性名                      | 类型 | 说明                                                   |
 | --------------------------- | ---- | ------------------------------------------------------ |
 | ListPanelMarginTop          | Dp   | 列表对话框列表上边距 (16.dp, `coui_list_dialog_list_panel_margin_top`) |
+| ScrollFadeLength            | Dp   | 列表的渐隐长度 (46.dp, `coui_full_page_dialog_scroll_fade_length`) |
 | SummaryMaxHeight            | Dp   | 列表上方消息最大高度 (60.dp)                           |
 | ItemSummaryFontSize         | TextUnit | 列表项摘要字号 (12.sp)                             |
 | ItemSummaryLineHeight       | TextUnit | 列表项摘要行高 (1.35.em)                           |
@@ -178,3 +181,4 @@ Window 变体的属性相同, 但没有 `renderInRootScaffold`。
 | summaryColor         | Color | 项目摘要 (`?couiColorSecondNeutral`)          |
 | disabledSummaryColor | Color | 禁用项目摘要                                  |
 | dividerColor         | Color | 选择行之间的分隔线 (`?couiColorDivider`)      |
+| pressedBackgroundColor | Color | 按下选择行时淡入的背景 (`?couiColorPressBackground`)；`Color.Unspecified` 取主题的 `pressBackground` |

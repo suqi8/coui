@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -45,10 +46,8 @@ import io.github.suqi8.coui.kmp.basic.Button
 import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Checkbox
-import io.github.suqi8.coui.kmp.basic.FullPageStatementDefaults
 import io.github.suqi8.coui.kmp.basic.HorizontalDivider
 import io.github.suqi8.coui.kmp.basic.Text
-import io.github.suqi8.coui.kmp.basic.verticalFadingEdges
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
 /**
@@ -98,6 +97,12 @@ object IndividualStatementDialogDefaults {
     /** Default exit label (COUI `coui_reject_text`). */
     val ExitText = "Exit"
 }
+
+/**
+ * Fading edge length of the statement scroll views (coui_component_statement_content_item.xml,
+ * coui_component_full_page_function_privacy.xml: coui_full_page_statement_scroll_fade_length).
+ */
+private val StatementScrollFadeLength = 32.dp
 
 /** Start padding of the user statement content (coui_component_statement_panel_start_padding). */
 private val UserPanelStartPadding = 24.dp
@@ -194,6 +199,13 @@ private val IndividualButtonWidth = 280.dp
 /** Confirm button vertical margins in coui_component_full_page_function_privacy.xml. */
 private val IndividualButtonMarginVertical = 16.dp
 
+/**
+ * Padding of the exit text inside its press ripple (COUITextViewCompatUtil.setPressRippleDrawable:
+ * text_ripple_bg_padding_horizontal / _vertical).
+ */
+private val ExitTextRipplePaddingHorizontal = 12.dp
+private val ExitTextRipplePaddingVertical = 4.dp
+
 /** Side-by-side buttons in small landscape windows (small_land_button_layout). */
 private val SmallLandButtonPaddingHorizontal = 24.dp
 private val SmallLandButtonSpacing = 8.dp
@@ -254,7 +266,7 @@ internal fun UserStatementDialogContent(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .verticalFadingEdges(headerScrollState, FullPageStatementDefaults.ScrollFadeLength)
+                    .dialogFadingEdges(headerScrollState, StatementScrollFadeLength)
                     .verticalScroll(headerScrollState)
                     .padding(
                         top = when {
@@ -332,7 +344,7 @@ internal fun UserStatementDialogContent(
                         .heightIn(
                             max = if (messageOnly && compact) UserStatementMaxHeightMessageOnly else UserStatementMaxHeight,
                         )
-                        .verticalFadingEdges(statementScrollState, FullPageStatementDefaults.ScrollFadeLength)
+                        .dialogFadingEdges(statementScrollState, StatementScrollFadeLength)
                         .verticalScroll(statementScrollState),
                 ) {
                     Text(
@@ -374,7 +386,15 @@ private fun UserStatementListRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+            // coui_component_statement_list_item has no background: a tap reports the row with no
+            // press highlight (ListItemViewHolder.bindListener).
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+                } else {
+                    Modifier
+                },
+            )
             .padding(horizontal = ListItemMarginHorizontal),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -459,7 +479,7 @@ internal fun IndividualStatementDialogContent(
                 .weight(1f, fill = false)
                 .fillMaxWidth()
                 .heightIn(max = IndividualScrollMaxHeight)
-                .verticalFadingEdges(scrollState, FullPageStatementDefaults.ScrollFadeLength)
+                .dialogFadingEdges(scrollState, StatementScrollFadeLength)
                 .verticalScroll(scrollState)
                 .padding(top = if (hasItems) IndividualPaddingTopWithItems else IndividualPaddingTop),
         ) {
@@ -546,7 +566,11 @@ internal fun IndividualStatementDialogContent(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(bottom = StatementBottomMargin)
-                    .clickable(role = Role.Button, onClick = onExit),
+                    // COUITextViewCompatUtil.setPressRippleDrawable: the press mask is a capsule
+                    // around the label, padded by text_ripple_bg_padding_horizontal / _vertical.
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onExit)
+                    .padding(horizontal = ExitTextRipplePaddingHorizontal, vertical = ExitTextRipplePaddingVertical),
                 style = COUITheme.textStyles.buttonL,
                 color = COUITheme.colorScheme.primary,
                 textAlign = TextAlign.Center,

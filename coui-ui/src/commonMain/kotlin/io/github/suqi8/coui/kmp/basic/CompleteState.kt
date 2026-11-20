@@ -29,7 +29,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -230,8 +229,12 @@ private fun DrawScope.drawFailed(frame: Float, color: Color) {
 
 /**
  * complete_page_wait_anim.json: a 40% track ring and a ring that unwinds (12..92) and winds back
- * (92..179), an hour hand growing out of the pivot (0..12) and a minute hand revealed by a mask
- * (2..12) that turns twice around the pivot (12..179).
+ * (92..179), an hour hand growing out of the pivot (0..12) and a minute hand that appears whole at
+ * frame 2 and turns twice around the pivot (12..179).
+ *
+ * The minute hand layer carries an animated mask, but in mode `"n"` (None), which the animation
+ * renderer skips (BaseLayer.applyMasks draws the layer unmasked when every mask is None, and
+ * intersectBoundsWithMask ignores it), so the hand is never clipped or revealed.
  */
 private fun DrawScope.drawWaiting(frame: Float, color: Color) {
     val ringStroke = RoundStroke
@@ -283,9 +286,9 @@ private fun DrawScope.drawWaiting(frame: Float, color: Color) {
             cap = StrokeCap.Round,
         )
     }
-    // Minute hand: a 15x76.5 capsule clipped by an animated mask, rotating about the pivot.
+    // Minute hand (layer in point 2): a 15x76.5 capsule, 69.3 above the pivot and 7.2 below it,
+    // rotating about the pivot with its null parent.
     if (frame >= 2f) {
-        val maskTop = keyframe(frame, 2f, 12f, -2.052f, -50.625f, LottieRevealEasing)
         val rotation = when {
             frame <= 12f -> 0f
             frame <= 92f -> keyframe(frame, 12f, 92f, 0f, 360f, LottieLinearishEasing)
@@ -293,14 +296,12 @@ private fun DrawScope.drawWaiting(frame: Float, color: Color) {
         }
         rotate(degrees = rotation, pivot = HandPivot) {
             translate(left = HandPivot.x, top = HandPivot.y - 6.281f) {
-                clipRect(left = -17.25f, top = maskTop, right = 9.882f, bottom = 14.042f) {
-                    drawRoundRect(
-                        color = color,
-                        topLeft = Offset(-7.674f, -63f),
-                        size = Size(15f, 76.499f),
-                        cornerRadius = CornerRadius(7.5f, 7.5f),
-                    )
-                }
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(-7.674f, -63f),
+                    size = Size(15f, 76.499f),
+                    cornerRadius = CornerRadius(7.5f, 7.5f),
+                )
             }
         }
     }
@@ -437,7 +438,7 @@ private val LottieEaseOut = CubicBezierEasing(0.001f, 0f, 0.1f, 1f)
 /** The shake and wait fade-in easing: out (0.33, 0), in (0.67, 1). */
 private val LottieStandardEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
-/** The wait hand reveal easing: out (0.3, 0), in (0.1, 1). */
+/** The wait hour hand's trim easing: out (0.3, 0), in (0.1, 1). */
 private val LottieRevealEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
 
 /** The near-linear After Effects default easing: out (0.167, 0.167), in (0.833, 0.833). */

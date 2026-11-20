@@ -27,7 +27,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
@@ -126,6 +128,9 @@ fun LoadingButton(
         // the horizontal margins.
         val minInnerWidth = minWidth - insideMargin.calculateStartPadding(layoutDirection) -
             insideMargin.calculateEndPadding(layoutDirection)
+        // COUIButton caps its text size at the G4 font scale; the loading text is drawn with the
+        // same paint.
+        val labelStyle = buttonLabelStyle(textStyle)
         Layout(
             content = {
                 // COUILoadingButton clears the label while loading; keep it measured at alpha 0
@@ -133,13 +138,13 @@ fun LoadingButton(
                 Text(
                     text = text,
                     modifier = Modifier.graphicsLayer { alpha = if (isLoading) 0f else 1f },
-                    style = textStyle,
+                    style = labelStyle,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (isLoading) {
                     LoadingDots()
-                    if (loadingText != null) LoadingTextWithDots(loadingText, textStyle)
+                    if (loadingText != null) LoadingTextWithDots(loadingText, labelStyle)
                 }
             },
         ) { measurables, constraints ->
@@ -178,34 +183,37 @@ object LoadingButtonDefaults {
 /**
  * The three pulsing loading dots (COUILoadingButton.drawLoadingCircles): circles of
  * [LoadingButtonDefaults.DotRadius] spaced by [LoadingButtonDefaults.DotSpacing], drawn with the
- * content color and per-dot animated alpha. The wave runs in reading direction, so the first and
- * third alphas swap in RTL like the original.
+ * content color and per-dot animated alpha. The original sets the alpha on the label paint
+ * (`paint.setAlpha`), so the wave replaces the color's own alpha instead of multiplying it. The wave
+ * runs in reading direction, so the first and third alphas swap in RTL like the original.
  */
 @Composable
 private fun LoadingDots() {
     val color = LocalContentColor.current
     val transition = rememberInfiniteTransition(label = "loadingButtonDots")
-    val firstAlpha by transition.loadingDotAlpha(0)
-    val secondAlpha by transition.loadingDotAlpha(1)
-    val thirdAlpha by transition.loadingDotAlpha(2)
+    val firstAlpha = transition.loadingDotAlpha(0)
+    val secondAlpha = transition.loadingDotAlpha(1)
+    val thirdAlpha = transition.loadingDotAlpha(2)
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val radius = LoadingButtonDefaults.DotRadius
     val spacing = LoadingButtonDefaults.DotSpacing
+    // The alphas are read in the draw phase, so the wave redraws the dots without recomposing.
     Canvas(modifier = Modifier.size(width = radius * 6 + spacing * 2, height = radius * 2)) {
         val r = radius.toPx()
         val step = r * 2 + spacing.toPx()
         val cy = size.height / 2f
-        val startAlpha = if (isRtl) thirdAlpha else firstAlpha
-        val endAlpha = if (isRtl) firstAlpha else thirdAlpha
-        drawCircle(color = color, radius = r, center = Offset(r, cy), alpha = startAlpha)
-        drawCircle(color = color, radius = r, center = Offset(r + step, cy), alpha = secondAlpha)
-        drawCircle(color = color, radius = r, center = Offset(r + 2 * step, cy), alpha = endAlpha)
+        val startAlpha = if (isRtl) thirdAlpha.value else firstAlpha.value
+        val endAlpha = if (isRtl) firstAlpha.value else thirdAlpha.value
+        drawCircle(color = color.copy(alpha = startAlpha), radius = r, center = Offset(r, cy))
+        drawCircle(color = color.copy(alpha = secondAlpha.value), radius = r, center = Offset(r + step, cy))
+        drawCircle(color = color.copy(alpha = endAlpha), radius = r, center = Offset(r + 2 * step, cy))
     }
 }
 
 /**
  * The loading label followed by three animated dot glyphs (COUILoadingButton with
- * isShowLoadingText): each "." carries the same staggered alpha wave as the plain dots.
+ * isShowLoadingText): each "." carries the same staggered alpha wave as the plain dots, again in
+ * place of the label color's alpha (`drawClipDot` sets it on the paint).
  */
 @Composable
 private fun LoadingTextWithDots(loadingText: String, textStyle: TextStyle) {
@@ -213,25 +221,27 @@ private fun LoadingTextWithDots(loadingText: String, textStyle: TextStyle) {
     val firstAlpha = transition.loadingDotAlpha(0)
     val secondAlpha = transition.loadingDotAlpha(1)
     val thirdAlpha = transition.loadingDotAlpha(2)
+    val glyphColor = textStyle.color.takeOrElse { LocalContentColor.current }.copy(alpha = 1f)
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = loadingText,
             modifier = Modifier.alignByBaseline(),
             style = textStyle,
         )
-        LoadingDotGlyph(textStyle) { firstAlpha.value }
-        LoadingDotGlyph(textStyle) { secondAlpha.value }
-        LoadingDotGlyph(textStyle) { thirdAlpha.value }
+        LoadingDotGlyph(textStyle, glyphColor) { firstAlpha.value }
+        LoadingDotGlyph(textStyle, glyphColor) { secondAlpha.value }
+        LoadingDotGlyph(textStyle, glyphColor) { thirdAlpha.value }
     }
 }
 
 @Composable
-private fun RowScope.LoadingDotGlyph(textStyle: TextStyle, alpha: () -> Float) {
+private fun RowScope.LoadingDotGlyph(textStyle: TextStyle, color: Color, alpha: () -> Float) {
     Text(
         text = ".",
         modifier = Modifier
             .alignByBaseline()
             .graphicsLayer { this.alpha = alpha() },
+        color = color,
         style = textStyle,
     )
 }

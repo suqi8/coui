@@ -3,7 +3,9 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.snap
@@ -42,18 +44,24 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.launch
+import kotlin.math.min
 
 /**
  * A [Checkbox] component with COUI style, supporting three states: On, Off, and Indeterminate.
  *
  * Like `COUICheckBox`, the box itself never scales on press: an interactive checkbox shows a 40dp
  * circular press highlight (`checkbox_ripple_bg_radius` 20dp, couiColorPress) behind the 24dp
- * drawable. Pass `onClick = null` when a surrounding row handles the click, as the COUI checkbox
- * preference does, so only the row shows its press state. COUICheckBox plays no haptic feedback.
+ * drawable, and the same circle takes the hover and keyboard-focus layers of its
+ * `COUIMaskRippleDrawable`. Pass `onClick = null` when a surrounding row handles the click, as the
+ * COUI checkbox preference does, so only the row shows its press state. COUICheckBox plays no
+ * haptic feedback.
  *
- * State changes replay the COUI AVDs while enabled. A disabled checkbox jumps to its new state,
- * except between indeterminate and checked (`coui_checkbox_part_to_selected_for_disabled` and
- * `coui_checkbox_selected_to_part_for_disabled`).
+ * State changes replay the COUI AVDs while enabled: the fill fades, the checkmark draws or erases
+ * itself, the indeterminate bar grows from or retracts to its left end, and the layers pop
+ * 1 -> 1.08 -> 1 (the checkmark stays unscaled between indeterminate and checked). A disabled
+ * checkbox jumps to its new state, except between indeterminate and checked
+ * (`coui_checkbox_part_to_selected_for_disabled` and `coui_checkbox_selected_to_part_for_disabled`).
  *
  * @param state The current [ToggleableState] of the [Checkbox].
  * @param onClick The callback to be called when the [Checkbox] is clicked. The caller is
@@ -103,7 +111,8 @@ fun Checkbox(
         label = "CheckFraction",
     ) { if (it == ToggleableState.On) 1f else 0f }
 
-    // Indeterminate bar reveal from the part AVD clip-path morphs.
+    // Indeterminate bar reveal from the part AVD clip-path morphs. A growing bar is the overlap of a
+    // clip on the checkbox easing and a fill path morphed linearly, both from the left.
     val barFractionState = transition.animateFloat(
         transitionSpec = {
             when {
@@ -112,8 +121,10 @@ fun Checkbox(
                 targetState == ToggleableState.Indeterminate && initialState == ToggleableState.On ->
                     keyframes {
                         durationMillis = 300
-                        0f at 100 using CouiCheckboxEasing
+                        0f at 100 using CouiCheckboxBarGrowEasing
                     }
+
+                targetState == ToggleableState.Indeterminate -> tween(durationMillis = 300, easing = CouiCheckboxBarGrowEasing)
 
                 targetState == ToggleableState.On -> tween(durationMillis = 200, easing = CouiCheckboxEasing)
 
@@ -123,8 +134,11 @@ fun Checkbox(
         label = "BarFraction",
     ) { if (it == ToggleableState.Indeterminate) 1f else 0f }
 
-    // Center pop played by every COUI checkbox AVD on each state change.
-    val popScale = remember { Animatable(1f) }
+    // The 1 -> 1.08 -> 1 pop of the COUI checkbox AVDs, per layer group: the box (ring and fill),
+    // the checkmark and the indeterminate bar, each with the easings of its own AVD targets.
+    val boxPop = remember { Animatable(1f) }
+    val markPop = remember { Animatable(1f) }
+    val barPop = remember { Animatable(1f) }
     var skipInitialPop by remember { mutableStateOf(true) }
     // The state the last pop effect saw; only written from the effect.
     val previousState = remember { arrayOf(state) }
@@ -135,10 +149,32 @@ fun Checkbox(
             skipInitialPop = false
             return@LaunchedEffect
         }
-        popScale.snapTo(1f)
+        boxPop.snapTo(1f)
+        markPop.snapTo(1f)
+        barPop.snapTo(1f)
         if (!checkboxAnimates(enabled, from, state)) return@LaunchedEffect
-        popScale.animateTo(PopPeakScale, tween(PopHalfDurationMillis, easing = CouiCheckboxEasing))
-        popScale.animateTo(1f, tween(PopHalfDurationMillis, easing = CouiCheckboxEasing))
+        launch { boxPop.checkboxPop(CouiCheckboxEasing, CouiCheckboxEasing) }
+        when {
+            // coui_checkbox_unselected_to_selected: the check settles on its own easing.
+            from == ToggleableState.Off && state == ToggleableState.On ->
+                launch { markPop.checkboxPop(CouiCheckboxEasing, CouiCheckboxMarkSettleEasing) }
+
+            from == ToggleableState.On && state == ToggleableState.Off ->
+                launch { markPop.checkboxPop(CouiCheckboxEasing, CouiCheckboxEasing) }
+
+            // coui_checkbox_part_to_selected / selected_to_part leave the checkmark unscaled.
+            else -> Unit
+        }
+        when {
+            // coui_checkbox_part_to_unselected / part_to_selected: the bar pops on a quicker rise.
+            from == ToggleableState.Indeterminate ->
+                launch { barPop.checkboxPop(CouiCheckboxBarRiseEasing, CouiCheckboxEasing) }
+
+            state == ToggleableState.Indeterminate ->
+                launch { barPop.checkboxPop(CouiCheckboxEasing, CouiCheckboxEasing) }
+
+            else -> Unit
+        }
     }
 
     // COUI crossfades layers instead of morphing colors.
@@ -152,6 +188,7 @@ fun Checkbox(
 
     val checkPath = remember { Path() }
     val pressColor = COUITheme.colorScheme.press
+    // The COUIMaskRippleDrawable circle: the press ripple, with its hover and focus layers.
     val pressIndication = remember(pressColor) { CircularPressIndication(CheckboxPressRadius, pressColor) }
 
     val finalModifier = if (onClick != null) {
@@ -221,7 +258,7 @@ fun Checkbox(
                 val restFillTopLeft = fillTopLeft.copy(y = fillTopLeft.y + restOffset)
 
                 onDrawBehind {
-                    scale(scale = popScale.value) {
+                    scale(scale = boxPop.value) {
                         val fillFraction = fillFractionState.value
                         if (fillFraction < 1f) {
                             if (ringFillColor.alpha > 0f) {
@@ -249,6 +286,8 @@ fun Checkbox(
                                 alpha = fillFraction,
                             )
                         }
+                    }
+                    scale(scale = markPop.value) {
                         drawTrimmedCheckmark(
                             color = markColor,
                             fraction = checkFractionState.value,
@@ -256,8 +295,10 @@ fun Checkbox(
                             cache = checkCache,
                             stroke = checkStroke,
                         )
-                        val barFraction = barFractionState.value
-                        if (barFraction > 0f) {
+                    }
+                    val barFraction = barFractionState.value
+                    if (barFraction > 0f) {
+                        scale(scale = barPop.value) {
                             drawRect(
                                 color = markColor,
                                 topLeft = barTopLeft,
@@ -268,6 +309,12 @@ fun Checkbox(
                 }
             },
     ) {}
+}
+
+/** One AVD pop: 1 -> [PopPeakScale] on [rise], then back to 1 on [settle], 150ms each. */
+private suspend fun Animatable<Float, AnimationVector1D>.checkboxPop(rise: Easing, settle: Easing) {
+    animateTo(PopPeakScale, tween(PopHalfDurationMillis, easing = rise))
+    animateTo(1f, tween(PopHalfDurationMillis, easing = settle))
 }
 
 private class CheckmarkCache(
@@ -475,7 +522,22 @@ private fun checkboxAnimates(enabled: Boolean, from: ToggleableState, to: Toggle
 // Shared easing of the COUI checkbox AVDs: cubic-bezier(0.3, 0, 0.1, 1).
 private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
 
-// Every COUI checkbox AVD pops all layers 1 -> 1.08 -> 1 (150ms up + 150ms down).
+// The checkmark's settle back to 1 in coui_checkbox_unselected_to_selected: c0.3,0 0.633,1.
+private val CouiCheckboxMarkSettleEasing = CubicBezierEasing(0.3f, 0f, 0.633f, 1f)
+
+// The bar's rise to 1.08 when it leaves the indeterminate state (part_to_unselected /
+// part_to_selected): c0.167,0 0.1,1.
+private val CouiCheckboxBarRiseEasing = CubicBezierEasing(0.167f, 0f, 0.1f, 1f)
+
+/**
+ * The reveal of a growing indeterminate bar (unselected_to_part, selected_to_part): the AVD morphs
+ * a clip path on [CouiCheckboxEasing] and the bar's own path on a linear interpolator
+ * (`c0.167,0.167 0.833,0.833`), both growing from the left, so the visible bar is the narrower of
+ * the two: it starts on the easing and continues linearly after about 17% of the time.
+ */
+private val CouiCheckboxBarGrowEasing = Easing { fraction -> min(CouiCheckboxEasing.transform(fraction), fraction) }
+
+// Every COUI checkbox AVD pops its layers 1 -> 1.08 -> 1 (150ms up + 150ms down).
 private val PopPeakScale = 1.08f
 private val PopHalfDurationMillis = 150
 

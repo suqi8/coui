@@ -92,7 +92,7 @@ CheckboxPreference(
 
 ### CheckboxPreference Properties
 
-As in COUI's `COUICheckBoxPreference`, the whole row is the touch target: the checkbox itself is not clickable and shows no press highlight of its own, and toggling the row plays the COUI toggle haptic.
+As in COUI's `COUICheckBoxPreference`, the whole row is the touch target: the checkbox itself is not clickable and shows no press highlight of its own. The COUI toggle haptic (302) plays as soon as a finger lands on an enabled row, not when the click completes (COUI's item touch listener reacts to `ACTION_DOWN`).
 
 | Property Name    | Type                               | Description                          | Default Value                         | Required |
 |------------------|------------------------------------|--------------------------------------|---------------------------------------|----------|

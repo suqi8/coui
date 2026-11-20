@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -157,14 +159,22 @@ class SwipeActionItemState {
      */
     suspend fun close() {
         if (isDeleting) return
-        val duration = min((abs(revealOffset) * 3f).roundToInt(), SHRINK_MAX_DURATION_MILLIS)
-        animateRevealTo(0f, tween(duration, easing = SlideEase))
+        scrollRevealTo(0f)
     }
 
     /** Opens the menu on the release spring (damping 1, stiffness 200). */
     suspend fun open() {
         if (isDeleting || menuWidth <= 0f) return
         animateRevealTo(menuWidth, SettleSpring)
+    }
+
+    /**
+     * COUISlideView.smoothScrollTo: a Scroller run to [target] on the (0.133, 0, 0.3, 1) curve,
+     * three milliseconds per pixel of travel and at most 200ms.
+     */
+    internal suspend fun scrollRevealTo(target: Float) {
+        val duration = min((abs(target - revealOffset) * 3f).roundToInt(), SHRINK_MAX_DURATION_MILLIS)
+        animateRevealTo(target, tween(duration, easing = SlideEase))
     }
 
     /** Jumps back to the closed, fully expanded rest state without animation. */
@@ -192,18 +202,32 @@ class SwipeActionItemState {
 
     /**
      * Applies a drag delta, in reveal direction. Within the menu the content follows the finger
-     * 1:1; beyond it COUISlideView's onTouchEvent damps the delta with
-     * `COUIPhysicalAnimationUtil.calcRealOffset`: `delta * (1 - min(over / (width - menu), 1)) * 2 / 5`.
+     * 1:1; once it is at or past the full menu COUISlideView's onTouchEvent damps every delta, on
+     * the way out and on the way back, with `COUIPhysicalAnimationUtil.calcRealOffset`:
+     * `delta * (1 - min(over / (width - menu), 1)) * 2 / 5`.
      */
     internal fun dragBy(delta: Float) {
         if (isDeleting) return
         var effective = delta
         val menu = menuWidth
-        if (revealOffset >= menu && delta > 0f) {
+        if (revealOffset >= menu) {
             val range = (itemWidth - menu).coerceAtLeast(1f)
             effective = delta * (1f - min((revealOffset - menu) / range, 1f)) * OVER_SLIDE_DAMPING
         }
         revealOffset = (revealOffset + effective).coerceAtLeast(0f)
+    }
+
+    /**
+     * The step COUISlideView.onInterceptTouchEvent makes when it takes the gesture: the content
+     * moves by 4/7 of the [travel] so far (in reveal direction, touch slop included), or by 3/7
+     * once it is at or past the full menu or the menu holds a single action, and stays between
+     * closed and the full menu.
+     */
+    internal fun pickUp(travel: Float, actionCount: Int) {
+        if (isDeleting) return
+        val menu = menuWidth
+        val ratio = if (revealOffset >= menu || actionCount == 1) PICKUP_STEP_PAST_MENU else PICKUP_STEP
+        revealOffset = (revealOffset + travel * ratio).coerceIn(0f, menu.coerceAtLeast(0f))
     }
 
     /** Plays the COUISlideDeleteAnimation: the content slides out while the row collapses. */
@@ -236,13 +260,16 @@ fun rememberSwipeActionItemState(): SwipeActionItemState = remember { SwipeActio
  * A [SwipeActionItem] component with COUI style.
  *
  * A list row that slides sideways to reveal a menu of actions behind it, mirroring ColorOS's
- * COUISlideView. Dragging towards the start reveals the actions at the end edge; past the full
- * menu the drag is damped and, in [SwipeActionMenuStyle.Rect], the actions spread apart
- * proportionally. [SwipeActionMenuStyle.RoundRect] draws every action as its own rounded
- * rectangle instead and keeps the menu packed. On release the row settles open or closed on a
- * damping-1 / stiffness-200 spring, choosing by fling direction (beyond 1000 px/s) or by
+ * COUISlideView. Dragging towards the start reveals the actions at the end edge: when the row
+ * takes the gesture it steps 4/7 of the travel so far (3/7 past the full menu or with a single
+ * action), then follows the finger; at or past the full menu every move, out or back, is damped
+ * and, in [SwipeActionMenuStyle.Rect], the actions spread apart proportionally.
+ * [SwipeActionMenuStyle.RoundRect] draws every action as its own rounded rectangle instead and
+ * keeps the menu packed. On release the row settles open or closed on a damping-1 /
+ * stiffness-200 spring started at rest, choosing by fling direction (beyond 1000 px/s) or by
  * whether more than half of the menu is showing. Tapping the content while the menu is open
- * closes it.
+ * closes it. Inside a [CardListGroup] the dividers on both sides of the row are hidden while its
+ * menu is out.
  *
  * With [onDelete], the end-most action is the built-in delete action (a trash icon on
  * couiColorError, COUISlideView.setDeleteEnable). Clicking it plays COUISlideDeleteAnimation:
@@ -319,22 +346,37 @@ fun SwipeActionItem(
     }
 
     val dragModifier = if (enabled && actionCount > 0) {
-        Modifier.pointerInput(state, isRtl, fastDelete) {
+        Modifier.pointerInput(state, isRtl, fastDelete, actionCount) {
             // Positive values point in the reveal direction (towards the start edge).
             val toReveal = if (isRtl) 1f else -1f
             detectSwipeGestures(
                 canStart = { dx -> !state.isDeleting && (state.revealOffset > 0f || dx * toReveal > 0f) },
-                onDragStart = {
+                onDragStart = { travel ->
                     // Undispatched, so a running settle animation stops before the first delta.
                     scope.launch(start = CoroutineStart.UNDISPATCHED) { state.stopAnimation() }
+                    state.pickUp(travel * toReveal, actionCount)
                 },
                 onDrag = { dx -> state.dragBy(dx * toReveal) },
                 onDragEnd = { velocityX -> settle(state, velocityX * toReveal, fastDelete, scope, startDelete, density) },
-                onDragCancel = { settle(state, 0f, fastDelete, scope, startDelete, density) },
+                onDragCancel = { settleAfterCancel(state, scope) },
             )
         }
     } else {
         Modifier
+    }
+
+    // COUISlideView.drawDivider (ICOUIDividerDecoration): inside a CardListGroup the dividers on both
+    // sides of the row disappear while its menu is out and while it is deleted. Dialogs and popups
+    // reset LocalCardListPosition, so a SwipeActionItem in one leaves the row behind it alone.
+    val listItem = if (LocalCardListPosition.current != CardListPosition.None) LocalCardListItem.current else null
+    if (listItem != null) {
+        LaunchedEffect(listItem, state) {
+            try {
+                snapshotFlow { state.isOpen || state.isDeleting }.collect { listItem.dividerSuppressed = it }
+            } finally {
+                listItem.dividerSuppressed = false
+            }
+        }
     }
 
     Layout(
@@ -518,11 +560,12 @@ private fun DrawScope.drawRoundRectMirrored(
  * gives it up for good once the vertical travel passes the slop first, so a mostly vertical drag
  * keeps scrolling the parent list. Unlike the View, a closed row also leaves drags towards the
  * end edge to its parent ([canStart] returns false), so it does not block a horizontal pager.
- * The first delta excludes the slop, like COUISlideView offsetting mLastMotionX by mTouchSlop.
+ * [onDragStart] receives the whole horizontal travel at pickup (for the pickup step); the first
+ * delta excludes the slop, like COUISlideView offsetting mLastMotionX by mTouchSlop.
  */
 private suspend fun PointerInputScope.detectSwipeGestures(
     canStart: (dx: Float) -> Boolean,
-    onDragStart: () -> Unit,
+    onDragStart: (travelX: Float) -> Unit,
     onDrag: (dx: Float) -> Unit,
     onDragEnd: (velocityX: Float) -> Unit,
     onDragCancel: () -> Unit,
@@ -552,7 +595,7 @@ private suspend fun PointerInputScope.detectSwipeGestures(
     val velocityTracker = VelocityTracker()
     velocityTracker.addPointerInputChange(slopChange)
     slopChange.consume()
-    onDragStart()
+    onDragStart(total.x)
     onDrag(total.x - sign(total.x) * slop)
     val lifted = horizontalDrag(slopChange.id) { change ->
         velocityTracker.addPointerInputChange(change)
@@ -589,7 +632,19 @@ private fun settle(
         reveal - menu * 0.5f > 0f -> menu
         else -> 0f
     }
-    scope.launch { state.animateRevealTo(target, SettleSpring, velocity) }
+    // COUISlideView.animationScrollTo starts its SpringAnimation without a start velocity: the
+    // fling only picks the end, so the row settles without overshooting it.
+    scope.launch { state.animateRevealTo(target, SettleSpring) }
+}
+
+/**
+ * COUISlideView's ACTION_CANCEL (the parent took the gesture over): back to the nearer end, open
+ * past half of the menu, on the Scroller curve of smoothScrollTo rather than the release spring.
+ */
+private fun settleAfterCancel(state: SwipeActionItemState, scope: CoroutineScope) {
+    if (state.isDeleting) return
+    val target = if (state.revealOffset - state.menuWidth * 0.5f > 0f) state.menuWidth else 0f
+    scope.launch { state.scrollRevealTo(target) }
 }
 
 @Composable
@@ -737,6 +792,12 @@ private val SettleSpring = spring<Float>(dampingRatio = 1f, stiffness = 200f)
 
 /** COUISlideView.onInterceptTouchEvent starts a drag only when `|dx| * 0.5 > |dy|`. */
 private const val PICKUP_RATIO = 0.5f
+
+/** COUISlideView DAMPING_2: the pickup step while the menu is not fully out (`travel * 4 / 7`). */
+private const val PICKUP_STEP = 4f / 7f
+
+/** COUISlideView DAMPING_1: the pickup step past the full menu or with one action (`travel * 3 / 7`). */
+private const val PICKUP_STEP_PAST_MENU = 3f / 7f
 
 /** COUISlideView's fling threshold on VelocityTracker units of 1000 (px/s). */
 private const val FLING_VELOCITY = 1000f

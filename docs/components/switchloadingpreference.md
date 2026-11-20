@@ -42,14 +42,14 @@ SwitchLoadingPreference(
 ```
 
 ::: tip Press feedback
-Pressing the switch itself also presses the row: the switch keeps handling the gesture (tap or drag) while the row draws its press layer, as COUI 17's `COUISwitchTouchEventDelegate` does.
+The whole row is the touch target, the switch included: as in COUI's `coui_preference_widget_switchload`, the switch is neither clickable nor draggable, so a touch on it presses and clicks the row. A row click plays no haptic by itself; the COUI toggle haptic (302) plays once `checked` actually flips afterwards, as the COUI switch does when loading stops.
 :::
 
 ## Component States
 
 ### Loading State
 
-While loading, clicks on the row and the switch are ignored (COUISwitch swallows touch while its loading style is active):
+While loading, clicks on the row are ignored and `onCheckedChange` is not invoked:
 
 ```kotlin
 SwitchLoadingPreference(

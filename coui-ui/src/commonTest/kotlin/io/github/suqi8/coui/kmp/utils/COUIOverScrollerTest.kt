@@ -61,6 +61,58 @@ class COUIOverScrollerTest {
     }
 
     @Test
+    fun onlyAFastFlingBackFlingsTheContentFromAnOverscroll() {
+        // Pulled down at the top (positive offset): an upward fling is negative.
+        assertTrue(COUIOverScrollRelease.isReverseFling(offset = 120f, velocity = -6500f))
+        assertFalse(COUIOverScrollRelease.isReverseFling(offset = 120f, velocity = -5000f), "slow flings only spring back")
+        assertFalse(COUIOverScrollRelease.isReverseFling(offset = 120f, velocity = 9000f), "a fling further out is not reversed")
+        assertTrue(COUIOverScrollRelease.isReverseFling(offset = -80f, velocity = 7000f))
+        assertFalse(COUIOverScrollRelease.isReverseFling(offset = 0f, velocity = -9000f))
+    }
+
+    @Test
+    fun onlyAFastFlingFurtherOutCarriesItsSpeedIntoTheSpringBack() {
+        assertEquals(9000f, COUIOverScrollRelease.springBackVelocity(offset = 120f, velocity = 9000f))
+        assertEquals(0f, COUIOverScrollRelease.springBackVelocity(offset = 120f, velocity = 3000f))
+        assertEquals(0f, COUIOverScrollRelease.springBackVelocity(offset = 120f, velocity = -9000f))
+        assertEquals(-7000f, COUIOverScrollRelease.springBackVelocity(offset = -40f, velocity = -7000f))
+    }
+
+    @Test
+    fun aSpringBackCarryingAFlingRunsOnBeforeReturning() {
+        val scroller = COUIReboundOverScroller(springBackTensionMultiple = 2.15f)
+        scroller.notifyEdgeReached(start = 100, edge = 0, min = 0, max = 0)
+        scroller.velocity = 8000.0
+        var peak = scroller.position
+        var time = 0L
+        var frames = 0
+        while (scroller.update(time, 1f / 120f)) {
+            peak = maxOf(peak, scroller.position)
+            time += 8
+            frames++
+            assertTrue(frames < 2000, "spring-back never settled")
+        }
+        assertTrue(peak > 150.0, "the carried speed should push the overscroll further first, peaked at $peak")
+        assertTrue(abs(scroller.position) < 0.5, "settled at ${scroller.position}")
+    }
+
+    @Test
+    fun aFlingBackFromAnOverscrollCrossesTheEdgeAtSpeed() {
+        // The curve flingBack follows: from 200px out, 8000px/s back towards the content.
+        val scroller = COUIReboundOverScroller(springBackTensionMultiple = 2.15f)
+        scroller.fling(200, -8000, 0L, 1f / 120f)
+        var time = 0L
+        var frames = 0
+        while (scroller.update(time, 1f / 120f) && scroller.position > 0.0) {
+            time += 8
+            frames++
+            assertTrue(frames < 100, "never reached the edge")
+        }
+        assertTrue(scroller.position <= 0.0, "stopped at ${scroller.position} before the edge")
+        assertTrue(scroller.velocity < -3000.0, "should hand on most of its speed, had ${scroller.velocity}")
+    }
+
+    @Test
     fun springInterpolatorIsNormalized() {
         val curve = COUISpringInterpolator(40.0, 1.15, 5000.0, 1f, 15000f, true)
         assertEquals(0f, curve.getInterpolation(0f), 1e-4f)

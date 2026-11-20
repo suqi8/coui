@@ -130,7 +130,7 @@ InputView(
 ## 行为
 
 - 内部输入框完全无装饰（`TextFieldMode.None`，COUIEditText MODE_BACKGROUND_NO_LINE）——无下划线也无描边，与 ColorOS 设置的卡片输入一致。
-- `maxCount > 0` 时输入被硬性限制在上限内；计数（如显示）为 `当前/上限`。单行计数达到上限时立即变为 `couiColorError`（COUIInputView）；多行计数以 250ms 动画切换为错误色并在 1 秒后恢复（COUICardMultiInputView）。
+- `maxCount > 0` 时输入被硬性限制在上限内；计数（如显示）为 `当前/上限`。单行计数达到上限时立即变为 `couiColorError`（COUIInputView）；多行计数以 250ms 动画切换为错误色，并在最后一次触及上限的编辑 1 秒后恢复，因此超出上限后每多输入一个字符都会再次闪红（COUICardMultiInputView）。
 - 设置非空 `errorMessage` 时在卡片下方显示提示（217ms 淡入 / 283ms 淡出，COUI ease 0.33, 0, 0.67, 1），输入框处于聚焦状态时同时播放 COUI 错误抖动。淡出过程中保留最后一条非空消息。
 - ColorOS 17 上两种卡片输入都由 COUIInputListSelectedItemLayout 绘制卡片，平滑圆角路径下使用 24dp 卡片列表圆角（coui_round_corner_xl_radius_normal_16_1）。
 - 输入区内边距对齐 COUICardSingleInputView：无标题上下各 15dp；有标题时顶部 0dp、底部 12dp。多行卡片在固定 152dp 的输入区内顶部留 13dp，有计数时文字区直接止于计数上沿（无计数时为 13dp + 12dp）。

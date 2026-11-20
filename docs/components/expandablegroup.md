@@ -96,17 +96,17 @@ ExpandableGroupContent(expanded = expanded) {
 | expanded | Boolean  | Whether the arrow shows expanded  | -                                    | Yes      |
 | modifier | Modifier | Modifier applied to the arrow     | Modifier                             | No       |
 | color    | Color    | Arrow color                       | ExpandableGroupDefaults.arrowColor() | No       |
-| size     | Dp       | Arrow size                        | ExpandableGroupDefaults.ArrowSize    | No       |
+| size     | Dp       | Size of the box the arrow turns in | ExpandableGroupDefaults.ArrowSize   | No       |
 
 ### ExpandableGroupDefaults
 
-| Member       | Type  | Default Value                      | COUI Source                                         |
-| ------------ | ----- | ---------------------------------- | --------------------------------------------------- |
-| ArrowSize    | Dp    | 24.dp                              | coui_app_expander_close_default                     |
-| arrowColor() | Color | COUITheme.colorScheme.dragHandle   | coui_color_controls (#29000000 / #40FFFFFF)         |
+| Member       | Type  | Default Value                        | COUI Source                                                  |
+| ------------ | ----- | ------------------------------------ | ------------------------------------------------------------ |
+| ArrowSize    | Dp    | 24.dp                                | expandable_list_item_size                                    |
+| arrowColor() | Color | COUITheme.colorScheme.labelSecondary | coui_line_arrow: couiColorLabelSecondary (#8A000000 / #8AFFFFFF) |
 
 ## Behavior
 
-- The children grow from zero to their full height (or shrink back) in 400ms on COUIMoveEaseInterpolator (0.3, 0, 0.1, 1), with their alpha equal to the visible height fraction, like `ExpandableRecyclerConnector`'s placeholder view. An interrupting toggle starts from the current height and is shortened in proportion to the distance left.
-- The arrow turns from 0 to 180 degrees over 400ms on (0.133, 0, 0.3, 1) (`COUIRotateView`, rotate type z).
+- The children grow from zero to their full height (or shrink back) in 400ms on COUIMoveEaseInterpolator (0.3, 0, 0.1, 1), with their alpha equal to the visible height fraction, like `ExpandableRecyclerConnector`'s placeholder view. An interrupting toggle starts from the current height: collapsing then takes `height / fullHeight × 400ms`, expanding always the full 400ms (`ExpandableRecyclerConnector.collapseAnimationStart` / `expandAnimationStart`).
+- The arrow is the ColorOS 17 Settings expandable-row arrow (`settings_preference_widget_rotateview.xml`): the `coui_line_arrow` chevron (16 × 24dp) centered in a 24dp box, turned from 0 to 180 degrees over 400ms on (0.133, 0, 0.3, 1) (`COUIRotateView`, rotate type `couiRotateAloneZ`).
 - The children are composed only while the group is expanded or animating. The header exposes the expand / collapse accessibility actions.

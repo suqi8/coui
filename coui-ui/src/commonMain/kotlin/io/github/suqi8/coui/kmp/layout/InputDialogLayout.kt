@@ -74,7 +74,10 @@ internal fun InputDialogContentLayout(
         customContentPaddingBottom = 0.dp,
         customContent = {
             val focusRequester = remember { FocusRequester() }
-            // Animation.COUI.Dialog.AutoShowKeyboard: the input dialogs open with the keyboard up.
+            // COUIEditTextPreferenceDialogFragment.onResume: the field takes the focus and the window
+            // asks for the keyboard (SOFT_INPUT_STATE_VISIBLE). The dialog keeps the regular
+            // COUIAlertDialog.BottomAssignment slide; no COUI code uses the
+            // Animation.COUI.Dialog.AutoShowKeyboard window animation.
             LaunchedEffect(focusRequester) {
                 runCatching { focusRequester.requestFocus() }
             }

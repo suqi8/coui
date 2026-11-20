@@ -5,8 +5,11 @@ package io.github.suqi8.coui.kmp.layout
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.ScrollScope
+import androidx.compose.foundation.gestures.TargetedFlingBehavior
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
@@ -49,6 +52,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -67,9 +71,14 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.exp
+import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * One page of a guide dialog (`COUIGuidePageItem`): an illustration over a title and a
@@ -200,6 +209,10 @@ private fun GuideDialogBody(
     val multiple = pageCount > 1
     // COUIGuideDialogBuilder.show builds a new dialog each time: the pager starts on page 0.
     val pagerState = rememberPagerState { pageCount }
+    val minFlingVelocity = with(LocalDensity.current) { GuideMinFlingVelocity.toPx() }
+    val flingBehavior = remember(pagerState, minFlingVelocity) {
+        GuideFlingBehavior(pagerState = pagerState, minFlingVelocity = minFlingVelocity)
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,9 +223,10 @@ private fun GuideDialogBody(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f, fill = false),
+            verticalAlignment = Alignment.Top,
+            flingBehavior = flingBehavior,
             // initAfterAdapterSet: a single page cannot be swiped.
             userScrollEnabled = multiple,
-            verticalAlignment = Alignment.Top,
         ) { page ->
             GuidePage(
                 page = pages[page],
@@ -256,10 +270,14 @@ private fun GuidePage(
     imagePadding: PaddingValues,
     colors: GuideDialogColors,
 ) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
+            // coui_guide_page_item: a COUINestedScrollView fading its scrolled edges over
+            // bottom_dialog_scroll_fading_edge_length.
+            .dialogFadingEdges(scrollState, DialogDefaults.ScrollFadeLength)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         page.image?.let { image ->
@@ -657,3 +675,108 @@ private val GuideSpringEasing = Easing { fraction ->
 
 /** `createGuideDialogConfig`: the program scroll runs 650ms on [GuideSpringEasing]. */
 private val ProgramScrollSpec = tween<Float>(durationMillis = 650, easing = GuideSpringEasing)
+
+/**
+ * The settle after a swipe of the guide pager, after `COUIViewPager2` with the guide dialog's
+ * `createGuideDialogConfig`:
+ *
+ * - A release faster than the minimum fling velocity snaps through
+ *   `PagerSnapHelperImpl.createScroller`: a forward fling goes to the first page past the pager
+ *   start, a backward one to the last page before it (`PagerSnapHelper.findTargetSnapPosition`),
+ *   over `FlingScrollConfig(500, 1000, COUISpringInterpolator(0.6, 0), 2500, 6000, 2)`: the
+ *   velocity is softened past 2500px/s (`2500 + sqrt(min(6000, v - 2500) * 1000)`) and the duration
+ *   is `2 * distance / velocity`, clamped to 500..1000ms.
+ * - A slower release settles on the nearest page through `SnapHelper.snapToTargetExistingView`,
+ *   `COUIRecyclerView.smoothScrollBy`: `(distance / width + 1) * 300ms` (at most 2000ms) on
+ *   `RecyclerView.sQuinticInterpolator`.
+ *
+ * The velocity and the thresholds are raw pixels per second, as in COUI.
+ */
+private class GuideFlingBehavior(
+    private val pagerState: PagerState,
+    private val minFlingVelocity: Float,
+) : TargetedFlingBehavior {
+    override suspend fun ScrollScope.performFling(
+        initialVelocity: Float,
+        onRemainingDistanceUpdated: (Float) -> Unit,
+    ): Float {
+        val layoutInfo = pagerState.layoutInfo
+        val pageExtent = (layoutInfo.pageSize + layoutInfo.pageSpacing).toFloat()
+        val pageCount = pagerState.pageCount
+        if (pageExtent <= 0f || pageCount <= 0) return initialVelocity
+        // The scroll position in pages; a positive velocity scrolls towards the next page.
+        val position = pagerState.currentPage + pagerState.currentPageOffsetFraction
+        val fling = abs(initialVelocity) > minFlingVelocity
+        val targetPage = when {
+            !fling -> position.roundToInt()
+            initialVelocity > 0f -> ceil(position).toInt()
+            else -> floor(position).toInt()
+        }.coerceIn(0, pageCount - 1)
+        val distance = (targetPage - position) * pageExtent
+        if (abs(distance) < 0.5f) {
+            onRemainingDistanceUpdated(0f)
+            return 0f
+        }
+        val spec = if (fling) {
+            tween<Float>(durationMillis = guideFlingDurationMillis(distance, initialVelocity), easing = GuideSpringEasing)
+        } else {
+            val settleMillis = ((abs(distance) / pageExtent + 1f) * GUIDE_SETTLE_DURATION_UNIT_MILLIS).toInt()
+            tween<Float>(durationMillis = min(settleMillis, GUIDE_SETTLE_MAX_DURATION_MILLIS), easing = QuinticEasing)
+        }
+        var consumed = 0f
+        onRemainingDistanceUpdated(distance)
+        animate(initialValue = 0f, targetValue = distance, animationSpec = spec) { value, _ ->
+            consumed += scrollBy(value - consumed)
+            onRemainingDistanceUpdated(distance - consumed)
+        }
+        return 0f
+    }
+}
+
+/**
+ * `PagerSnapHelperImpl.calculateTimeFromVelocity` with the guide `FlingScrollConfig`, clamped to its
+ * minimum and maximum durations.
+ */
+private fun guideFlingDurationMillis(distance: Float, velocity: Float): Int {
+    var speed = abs(velocity)
+    if (speed > GUIDE_FLING_VELOCITY_THRESHOLD) {
+        val excess = min(GUIDE_FLING_MAX_EXCESS, speed - GUIDE_FLING_VELOCITY_THRESHOLD)
+        speed = min(speed, GUIDE_FLING_VELOCITY_THRESHOLD + sqrt(excess * 1000f))
+    }
+    val millis = if (speed > 0f) {
+        ceil(GUIDE_FLING_TIME_IN_VELOCITY_RATIO * abs(distance) / speed * 1000f).toInt()
+    } else {
+        GUIDE_FLING_MIN_DURATION_MILLIS
+    }
+    return millis.coerceIn(GUIDE_FLING_MIN_DURATION_MILLIS, GUIDE_FLING_MAX_DURATION_MILLIS)
+}
+
+/** `COUIGuideLayoutContentView.FLING_SCROLL_MIN_DURATION_MS`. */
+private const val GUIDE_FLING_MIN_DURATION_MILLIS = 500
+
+/** `COUIGuideLayoutContentView.FLING_SCROLL_MAX_DURATION_MS`. */
+private const val GUIDE_FLING_MAX_DURATION_MILLIS = 1000
+
+/** `COUIGuideLayoutContentView.FLING_VELOCITY_THRESHOLD`, px/s. */
+private const val GUIDE_FLING_VELOCITY_THRESHOLD = 2500f
+
+/** `COUIGuideLayoutContentView.FLING_MAX_VELOCITY`, the largest velocity excess considered, px/s. */
+private const val GUIDE_FLING_MAX_EXCESS = 6000f
+
+/** `COUIGuideLayoutContentView.FLING_VELOCITY_DECAY_FACTOR` (`mTimeInVelocityRatio`). */
+private const val GUIDE_FLING_TIME_IN_VELOCITY_RATIO = 2f
+
+/** `COUIRecyclerView.ViewFlinger.computeScrollDuration` without a velocity: 300ms per page plus 300ms. */
+private const val GUIDE_SETTLE_DURATION_UNIT_MILLIS = 300f
+
+/** `COUIRecyclerView.ViewFlinger.computeScrollDuration` cap. */
+private const val GUIDE_SETTLE_MAX_DURATION_MILLIS = 2000
+
+/** `ViewConfiguration.getScaledMinimumFlingVelocity`: 50dp/s. */
+private val GuideMinFlingVelocity = 50.dp
+
+/** `RecyclerView.sQuinticInterpolator`: `(t - 1)^5 + 1`. */
+private val QuinticEasing = Easing { fraction ->
+    val t = fraction - 1f
+    t * t * t * t * t + 1f
+}

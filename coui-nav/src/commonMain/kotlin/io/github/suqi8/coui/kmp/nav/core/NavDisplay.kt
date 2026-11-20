@@ -27,13 +27,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker1D
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.takeOrElse
 import androidx.compose.ui.util.fastForEach
 import androidx.lifecycle.Lifecycle
 import androidx.navigationevent.NavigationEventDispatcher
@@ -73,6 +76,7 @@ import io.github.suqi8.coui.kmp.squircle.absoluteSquircleClip
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlin.reflect.KClass
+import kotlin.time.TimeSource
 
 /**
  * Metadata key under which a per-route [NavTransition] override is stored on a built [NavEntry].
@@ -421,24 +425,27 @@ private fun NavDisplayLayout(
     PredictiveBackHandler(
         enabled = backStack.size > 1,
         onProgress = { events ->
-            // Per-gesture trackers: the initial touch anchors vertical-follow transitions, the
-            // last two timestamped events estimate the release velocity (depth-units/sec).
+            // Per-gesture trackers: the initial touch anchors vertical-follow transitions; a
+            // least-squares velocity tracker over the timestamped progress stream estimates the
+            // release velocity (progress-units/sec), as the reference feeds a velocity tracker
+            // (`CrossBackAnimationExt.mVelocityTracker`) rather than a two-sample difference into
+            // its commit spring. A single jittery frame interval no longer spikes the seed.
             var initialTouchY = Float.NaN
-            var lastProgress = 0f
+            val velocityTracker = VelocityTracker1D(isDataDifferential = false)
             var lastTimeMillis = 0L
+            val gestureClock = TimeSource.Monotonic.markNow()
+            var lastEventNanos = 0L
             drivePredictiveBack(
                 // Mirror each event into the live gesture context for gesture-aware transitions
                 // (touch-following shifts etc.); NavBackEvent and NavGesture share field semantics.
                 events = events.onEach { event ->
                     if (initialTouchY.isNaN()) initialTouchY = event.touchY
-                    if (event.frameTimeMillis > lastTimeMillis && lastTimeMillis != 0L) {
-                        val progressVelocity = (event.progress - lastProgress) * 1000f / (event.frameTimeMillis - lastTimeMillis)
-                        presentation.pendingSettleVelocity = -progressVelocity
-                    }
-                    if (event.frameTimeMillis != 0L) {
-                        lastProgress = event.progress
+                    if (event.frameTimeMillis > lastTimeMillis) {
+                        velocityTracker.addDataPoint(event.frameTimeMillis, event.progress)
                         lastTimeMillis = event.frameTimeMillis
+                        presentation.pendingSettleVelocity = -velocityTracker.calculateVelocity()
                     }
+                    lastEventNanos = gestureClock.elapsedNow().inWholeNanoseconds
                     presentation.gesture = NavGesture(
                         progress = event.progress,
                         swipeEdge = event.swipeEdge,
@@ -449,6 +456,13 @@ private fun NavDisplayLayout(
                 animatedTop = presentation.animatedTop,
                 topIndex = topIndex,
             )
+            // The stream completed: the gesture commits next. Progress events only arrive while
+            // the finger moves, so a finger that rested before lifting would still carry the last
+            // move's speed; treat such a release as a calm drop instead of a fling.
+            val restNanos = gestureClock.elapsedNow().inWholeNanoseconds - lastEventNanos
+            if (restNanos > PREDICTIVE_BACK_REST_MILLIS * NANOS_PER_MILLI) {
+                presentation.pendingSettleVelocity = 0f
+            }
         },
         onCommit = {
             // Pop synchronously; convergence is owned by the renderer. The pop retargets
@@ -526,6 +540,10 @@ private fun NavDisplayLayout(
     var layoutSize by remember { mutableStateOf(IntSize.Zero) }
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
+    // An unspecified clip radius follows the screen corner, as ColorOS rounds the moving page of a
+    // page switch with the window corner radius; 0 where the platform reports no screen corner.
+    val systemCornerRadius = rememberNavSystemCornerRadius()
+    val cornerClipRadius = effects.cornerClipRadius.takeOrElse { systemCornerRadius }
 
     Box(
         // The unified swipe recognizer lives on the DISPLAY CONTAINER, not on the top entry's host:
@@ -667,6 +685,7 @@ private fun NavDisplayLayout(
                         upperTransition = upperTransition,
                         change = presentation.change,
                         effects = effects,
+                        cornerClipRadius = cornerClipRadius,
                         layoutSize = layoutSize,
                         layoutDirection = layoutDirection,
                         density = density,
@@ -696,6 +715,15 @@ private const val BLOCK_INPUT_KEY = "io.github.suqi8.coui.kmp.nav.blockInput"
 private const val OPAQUE_INPUT_KEY = "io.github.suqi8.coui.kmp.nav.opaqueInput"
 
 /**
+ * A back-gesture finger that rests this long before lifting releases without a fling: the gap the
+ * pointer velocity trackers treat as "pointer stopped" (AOSP `VelocityTracker` and Compose
+ * `VelocityTracker1D` both assume the pointer stopped after 40ms without movement).
+ */
+private const val PREDICTIVE_BACK_REST_MILLIS = 40L
+
+private const val NANOS_PER_MILLI = 1_000_000L
+
+/**
  * Renders one presented entry as a pure function of [NavPresentation.animatedTop].
  *
  * Per-frame reads of the driving float happen **only** inside deferred `graphicsLayer { }` blocks
@@ -716,6 +744,8 @@ private const val OPAQUE_INPUT_KEY = "io.github.suqi8.coui.kmp.nav.opaqueInput"
  *
  * @param stateHolder the single saveable-state holder created once in [NavDisplayLayout] and shared
  *   across all hosts (stable identity, §0.4).
+ * @param cornerClipRadius the resolved corner-clip radius ([NavDisplayEffects.cornerClipRadius], or
+ *   the screen corner when it is unspecified).
  */
 @Composable
 private fun NavEntryHost(
@@ -728,6 +758,7 @@ private fun NavEntryHost(
     upperTransition: NavTransition,
     change: NavChange,
     effects: NavDisplayEffects,
+    cornerClipRadius: Dp,
     layoutSize: IntSize,
     layoutDirection: LayoutDirection,
     density: Density,
@@ -796,11 +827,11 @@ private fun NavEntryHost(
     }
 
     val clipModifier = if ((depthBuckets and DEPTH_BUCKET_CLIP_CORNERS) != 0) {
-        // Squircle-clip the transitioning top entry. The radius comes from the effects, so callers
-        // can follow the platform screen corner (e.g. rememberNavSystemCornerRadius); the corner
-        // set follows the effects' clip mode. absoluteSquircleClip uses physical corners (never
-        // flipped by layout direction), so the leading side is picked per layout direction.
-        val r = effects.cornerClipRadius
+        // Squircle-clip the transitioning top entry. The radius comes from the effects (the
+        // platform screen corner unless the caller set one); the corner set follows the effects'
+        // clip mode. absoluteSquircleClip uses physical corners (never flipped by layout
+        // direction), so the leading side is picked per layout direction.
+        val r = cornerClipRadius
         when (effects.cornerClipMode) {
             // Card-style transitions scale the whole page: every corner meets visible background.
             NavCornerClipMode.All -> Modifier.absoluteSquircleClip(topLeft = r, topRight = r, bottomRight = r, bottomLeft = r)

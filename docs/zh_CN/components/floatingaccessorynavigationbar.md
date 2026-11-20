@@ -74,6 +74,7 @@ FloatingNavigationBarAccessory(
 | -------------------------- | ------------------------- | ---------------------------------------- | --------------------------------------------------- | -------- |
 | modifier                   | Modifier                  | 应用于导航栏容器的修饰符                 | Modifier                                            | 否       |
 | backgroundModifier         | Modifier                  | 应用于胶囊内部、填充之上                 | Modifier                                            | 否       |
+| visible                    | Boolean                   | 是否显示胶囊；变化时播放菜单视图的 COUI 17 显隐弹簧，附件保持不变 | true                       | 否       |
 | startAccessoryVisible      | Boolean                   | 是否显示起始侧附件                       | true                                                | 否       |
 | endAccessoryVisible        | Boolean                   | 是否显示末尾侧附件                       | true                                                | 否       |
 | materialEffect             | Boolean                   | 是否绘制 COUI 17 材质与融球连接          | `LocalCOUIMaterialEffectEnabled.current` | 否       |
@@ -115,5 +116,7 @@ FloatingNavigationBarAccessory(
 
 - 设置了的附件无论是否显示都会预留 56dp 位置和 12dp 间距，因此显示或隐藏附件都不会移动胶囊。
 - 宽度小于 600dp 时导航栏两侧保留 16dp 内边距，起始附件贴起始边、末尾附件贴末尾边，胶囊在二者之间居中；更宽时没有两侧内边距，附件与胶囊作为一组居中。
-- 隐藏的附件位于胶囊起始或末尾边缘内侧。显示时它滑出并从 0.5 缩放到 1，弹簧 response 0.55、bounce 0.35；透明度随胶囊遮住它的比例变化，两者相接时像融球一样连在一起。已停稳的隐藏附件不接收触摸。
-- 附件具有与胶囊相同的触摸动效（按压缩放、橡皮筋拖动、形变）、边缘光与焦散阴影，以及 `TYPE_BOTTOM_NAVIGATION` 触摸聚光；没有按压遮罩。
+- 隐藏的附件位于胶囊起始或末尾边缘内侧。显示时它滑出并从 0.5 缩放到 1，弹簧 response 0.55、bounce 0.35；透明度随胶囊遮住它的比例变化，两者相接时像融球一样连在一起。隐藏时一旦胶囊完全遮住附件，滑动立即停止（`finishCollapseTranslationIfFullyOverlapped`）。已停稳的隐藏附件不接收触摸。
+- 附件具有与胶囊相同的触摸动效（按压缩放、橡皮筋拖动、形变）、边缘光与焦散阴影，以及 `TYPE_BOTTOM_NAVIGATION` 触摸聚光；没有按压遮罩。导航栏滑入或滑出附件期间，附件的触摸动效关闭（`setExpansionViewTouchMotionAnimEnabled`）。
+- 若上一次图标切换让即将离开的图标几乎不可见（透明度 × 缩放低于 0.05），再次切换图标时新图标直接显示，不做交叉过渡（`ICON_BLANK_WEIGHT_THRESHOLD`）。
+- `visible` 以 COUI 17 弹簧隐藏胶囊（透明度、0.8 <-> 1 缩放，开启材质时还有 30px 模糊）；胶囊保留占位，附件各自保持显隐。

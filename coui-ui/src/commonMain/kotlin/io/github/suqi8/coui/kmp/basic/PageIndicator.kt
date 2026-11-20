@@ -38,6 +38,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
@@ -242,13 +243,20 @@ private val PageIndicatorEase = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
 
 private fun ease(fraction: Float): Float = PageIndicatorEase.transform(fraction.coerceIn(0f, 1f))
 
-/** `ArgbEvaluator`: a per-channel blend of the gamma-encoded ARGB values. */
-private fun argbEvaluate(fraction: Float, start: Color, end: Color): Color = Color(
-    red = start.red + (end.red - start.red) * fraction,
-    green = start.green + (end.green - start.green) * fraction,
-    blue = start.blue + (end.blue - start.blue) * fraction,
-    alpha = start.alpha + (end.alpha - start.alpha) * fraction,
-)
+/**
+ * `android.animation.ArgbEvaluator`: the alpha mixes linearly, the colour channels in linear light
+ * (decoded with gamma 2.2 and encoded again), as `drawTrace` blends the dot and trace colours.
+ */
+private fun argbEvaluate(fraction: Float, start: Color, end: Color): Color {
+    fun toLinear(channel: Float) = channel.toDouble().pow(2.2).toFloat()
+    fun toGamma(channel: Float) = channel.coerceIn(0f, 1f).toDouble().pow(1.0 / 2.2).toFloat()
+    return Color(
+        red = toGamma(toLinear(start.red) + (toLinear(end.red) - toLinear(start.red)) * fraction),
+        green = toGamma(toLinear(start.green) + (toLinear(end.green) - toLinear(start.green)) * fraction),
+        blue = toGamma(toLinear(start.blue) + (toLinear(end.blue) - toLinear(start.blue)) * fraction),
+        alpha = (start.alpha + (end.alpha - start.alpha) * fraction).coerceIn(0f, 1f),
+    )
+}
 
 /**
  * `COUIPageIndicator.PageIndicatorModel`: the dot sizes, the visible window and the trace path for

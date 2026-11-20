@@ -273,7 +273,8 @@ private val ItemToolbarDone = 100
 
 /**
  * The item toolbar: the first group grows past what fits so the overflow item appears; the second
- * group is a single title item.
+ * group is a single title item that can be taken away and brought back. Changing the items plays
+ * the COUI 17 item-change and group animations.
  */
 @Composable
 private fun ItemToolbarSample(modifier: Modifier = Modifier) {
@@ -282,11 +283,13 @@ private fun ItemToolbarSample(modifier: Modifier = Modifier) {
     var itemCount by rememberSaveable { mutableIntStateOf(3) }
     var packed by rememberSaveable { mutableStateOf(false) }
     var visible by rememberSaveable { mutableStateOf(true) }
+    var doneGroup by rememberSaveable { mutableStateOf(true) }
     val names = ItemToolbarNames.map { stringResource(it) }
     val titles = List(itemCount) { index ->
         stringResource(Res.string.demo_floating_toolbar_item_title, names[index % names.size], index + 1)
     }
     val done = stringResource(Res.string.common_done)
+    // The keys let the toolbar follow each item as the list changes.
     val items = List(itemCount) { index ->
         FloatingToolbarItem(
             onClick = { lastAction = index },
@@ -294,8 +297,13 @@ private fun ItemToolbarSample(modifier: Modifier = Modifier) {
             title = titles[index],
             showRedDot = index == 1,
             enabled = index != 2,
+            key = index,
         )
-    } + FloatingToolbarItem(onClick = { lastAction = ItemToolbarDone }, title = done, group = 1)
+    } + if (doneGroup) {
+        listOf(FloatingToolbarItem(onClick = { lastAction = ItemToolbarDone }, title = done, group = 1, key = ItemToolbarDone))
+    } else {
+        emptyList()
+    }
     val lastActionText = when (lastAction) {
         -1 -> "-"
         ItemToolbarDone -> done
@@ -333,6 +341,12 @@ private fun ItemToolbarSample(modifier: Modifier = Modifier) {
             TextButton(
                 text = stringResource(if (visible) Res.string.common_hide else Res.string.common_show),
                 onClick = { visible = !visible },
+                modifier = Modifier.weight(1f),
+            )
+            // Takes the second group away (it scales out) and brings it back (it scales in).
+            TextButton(
+                text = if (doneGroup) "- $done" else "+ $done",
+                onClick = { doneGroup = !doneGroup },
                 modifier = Modifier.weight(1f),
             )
         }

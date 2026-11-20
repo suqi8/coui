@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -57,11 +58,12 @@ import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
-import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
+import io.github.suqi8.coui.kmp.utils.rememberCouiScaledHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -74,7 +76,9 @@ import kotlin.math.roundToInt
  * in 12dp medium couiColorSecondNeutral and centered in a 39dp wide column. Touching or
  * dragging along the bar selects the key under the finger, highlights it with
  * couiColorPrimaryTextOnPopup, reports it through [onKeySelected], ticks a haptic and shows a
- * 48dp bubble with the key 8.5dp beside the bar. The bubble grows from 0.8 and fades in over
+ * 48dp bubble with the key 8.5dp beside the bar. Like COUITouchSearchView's adaptive vibrator the
+ * tick grows from half to full strength as the drag speeds up to 8000px/s, at most one every 25ms
+ * (full ticks where the device cannot scale them). The bubble grows from 0.8 and fades in over
  * 350ms, and hides again (to 0.8, transparent, 300ms) one second after the finger lifts.
  *
  * Keys outside [availableKeys] cannot be selected: touching one selects the closest available
@@ -99,7 +103,8 @@ import kotlin.math.roundToInt
  * @param keys The index keys, top to bottom (COUI normal_touchsearch_keys without the star).
  * @param availableKeys The keys that can be selected, or `null` for all of them.
  * @param showCollectKey Whether the favorites star leads the keys (COUI couiFirstIsCharacter false).
- * @param hapticFeedbackEnabled Whether moving to another key ticks a haptic.
+ * @param hapticFeedbackEnabled Whether moving to another key ticks a haptic, scaled by the drag
+ *   speed.
  * @param colors The [AlphabetIndexBarColors] of the bar and its bubble.
  */
 @Composable
@@ -120,8 +125,10 @@ fun AlphabetIndexBar(
         BooleanArray(allKeys.size) { availableKeys == null || allKeys[it] in availableKeys }
     }
     val currentOnKeySelected by rememberUpdatedState(onKeySelected)
-    // COUITouchSearchView.performFeedback: GRANULAR_SHORT_VIBRATE_SYNC (308), falling back to 302.
-    val haptic by rememberUpdatedState(rememberCouiHaptic())
+    // COUITouchSearchView.performFeedback: with couiAdaptiveVibrator (on by default) a tick whose
+    // strength follows the drag speed (performAdaptiveFeedback), else GRANULAR_SHORT_VIBRATE_SYNC
+    // (308) falling back to 302.
+    val haptic by rememberUpdatedState(rememberCouiScaledHaptic())
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
     val scope = rememberCoroutineScope()
     val textMeasurer = rememberTextMeasurer(cacheSize = allKeys.size + 2)
@@ -144,13 +151,20 @@ fun AlphabetIndexBar(
                 }
             }
             .pointerInput(allKeys, hasValue, showCollectKey) {
-                fun handle(rows: IndexRows, y: Float, isMove: Boolean) {
+                // COUITouchSearchView.computeVelocityWithTouchEvent: the drag speed for the haptic.
+                val velocityTracker = VelocityTracker()
+                var lastHapticMillis = -1L
+                fun handle(rows: IndexRows, y: Float, isMove: Boolean, uptimeMillis: Long) {
                     val hit = rows.select(y, hasValue) ?: return
                     val key = allKeys[hit.originalIndex]
                     if (key == state.displayKey) return
                     state.displayKey = key
-                    if (hit.rowIndex != state.selectedRow && currentHapticEnabled) {
-                        haptic(CouiHapticEffect.Strength)
+                    // VibrateUtils.filterVibrator: at most one tick every 25ms.
+                    if (hit.rowIndex != state.selectedRow && currentHapticEnabled &&
+                        (lastHapticMillis < 0L || uptimeMillis - lastHapticMillis >= INDEX_BAR_MIN_VIBRATE_INTERVAL_MILLIS)
+                    ) {
+                        lastHapticMillis = uptimeMillis
+                        haptic(CouiHapticEffect.Strength, indexBarHapticIntensity(abs(velocityTracker.calculateVelocity().y)))
                     }
                     state.selectedRow = hit.rowIndex
                     val row = rows.rows[hit.rowIndex]
@@ -163,6 +177,8 @@ fun AlphabetIndexBar(
                 awaitEachGesture {
                     val down = awaitFirstDown()
                     down.consume()
+                    velocityTracker.resetTracking()
+                    velocityTracker.addPosition(down.uptimeMillis, down.position)
                     // The rows only depend on the height, so build them once per gesture.
                     val rows = buildIndexRows(allKeys.size, showCollectKey, size.height.toFloat(), this)
                     // Touches take over from selectedKey: start from the row it highlights.
@@ -171,7 +187,7 @@ fun AlphabetIndexBar(
                     state.inTouch = true
                     state.resetForTouch(scope)
                     try {
-                        handle(rows, down.position.y, isMove = false)
+                        handle(rows, down.position.y, isMove = false, uptimeMillis = down.uptimeMillis)
                         while (true) {
                             val event = awaitPointerEvent()
                             val change = event.changes.firstOrNull { it.id == down.id } ?: break
@@ -180,7 +196,8 @@ fun AlphabetIndexBar(
                                 break
                             }
                             change.consume()
-                            handle(rows, change.position.y, isMove = true)
+                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                            handle(rows, change.position.y, isMove = true, uptimeMillis = change.uptimeMillis)
                         }
                     } finally {
                         state.inTouch = false
@@ -704,3 +721,30 @@ private const val BUBBLE_DISMISS_DELAY_MILLIS = 1000L
 
 /** COUIMoveEaseInterpolator. */
 private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+/** VibrateUtils.MIN_VIBRATOR_TIME, the shortest gap between two ticks (filterVibrator). */
+private const val INDEX_BAR_MIN_VIBRATE_INTERVAL_MILLIS = 25L
+
+/**
+ * COUITouchSearchView mTrackerMaxVelocity (PhysicsAnimationHandler.MAX_VELOCITY): the drag speed,
+ * in px/s, at which the tick reaches full strength.
+ */
+private const val INDEX_BAR_TRACKER_MAX_VELOCITY = 8000f
+
+/** VibrateUtils.VIBRATE_CRISP_MIN_INTENSITY, the strength of a still finger. */
+private const val INDEX_BAR_MIN_HAPTIC_INTENSITY = 50
+
+/** VibrateUtils.VIBRATE_CRISP_MAX_INTENSITY, the strength at [INDEX_BAR_TRACKER_MAX_VELOCITY]. */
+private const val INDEX_BAR_MAX_HAPTIC_INTENSITY = 100
+
+/**
+ * COUITouchSearchView.performAdaptiveFeedback: the RichTap transient intensity
+ * (VibrateUtils.getVibratorValueWithLimit over the crisp range 50..100, level 0) for a drag of
+ * [speed] px/s, as a 0..1 strength.
+ */
+internal fun indexBarHapticIntensity(speed: Float): Float {
+    val fraction = (speed / INDEX_BAR_TRACKER_MAX_VELOCITY).coerceIn(0f, 1f)
+    val range = INDEX_BAR_MAX_HAPTIC_INTENSITY - INDEX_BAR_MIN_HAPTIC_INTENSITY
+    val intensity = (fraction * range + INDEX_BAR_MIN_HAPTIC_INTENSITY).toInt()
+    return intensity.coerceIn(INDEX_BAR_MIN_HAPTIC_INTENSITY, INDEX_BAR_MAX_HAPTIC_INTENSITY) / 100f
+}

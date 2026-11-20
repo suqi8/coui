@@ -4,22 +4,14 @@ package io.github.suqi8.coui.kmp.preference
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
@@ -30,12 +22,15 @@ import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.DropdownItem
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
-import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
 import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
+import io.github.suqi8.coui.kmp.popup.DropdownValueText
 import io.github.suqi8.coui.kmp.popup.OverlayDropdownDialog
 import io.github.suqi8.coui.kmp.popup.OverlayDropdownPopup
-import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.popup.PopupAnchorHoverLock
+import io.github.suqi8.coui.kmp.popup.dropdownArrowColor
+import io.github.suqi8.coui.kmp.popup.dropdownValueColor
+import io.github.suqi8.coui.kmp.popup.rememberClickSelectMenuOpener
 
 /**
  * A spinner component with COUI style. (Popup Mode)
@@ -183,12 +178,9 @@ fun OverlaySpinnerPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = rememberSaveable { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     // COUI wires the dropdown preference row through PreciseClickHelper, so the menu opens at
     // the finger rather than centred on the row.
     val preciseClickState = rememberPreciseClickState()
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
@@ -198,34 +190,28 @@ fun OverlaySpinnerPreference(
             }
         }
     }
+    // COUIClickSelectMenu: a showing soft keyboard is hidden before the menu opens. Opening plays
+    // no haptic (COUIPopupListWindow.show, PreciseClickHelper and COUIMenuPreference have none).
+    val openMenu = rememberClickSelectMenuOpener { setExpanded(true) }
 
     val nonEmptyEntries = entries.filter { it.items.isNotEmpty() }
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
 
-    val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelTertiary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
-    val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelSecondary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
+    val actionColor = dropdownArrowColor(actualEnabled)
+    val valueColor = dropdownValueColor(actualEnabled)
 
-    val handleClick = remember(actualEnabled) {
+    val handleClick = remember(actualEnabled, openMenu) {
         {
             if (actualEnabled) {
-                setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                    currentHapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                }
+                if (isDropdownExpanded.value) setExpanded(false) else openMenu()
             }
         }
     }
 
+    // COUIPopupListWindow.setAnchorHoveredState: the row's hover layer stays locked while the menu
+    // is showing and is released as soon as it starts to leave.
+    PopupAnchorHoverLock(locked = isDropdownExpanded.value, interactionSource = interactionSource)
     BasicComponent(
         modifier = modifier.preciseClickAnchor(preciseClickState),
         interactionSource = interactionSource,
@@ -246,17 +232,7 @@ fun OverlaySpinnerPreference(
                 .joinToString("\n")
                 .ifBlank { null }
             if (showValue && hasEntries && !selectedValueText.isNullOrBlank()) {
-                Text(
-                    text = selectedValueText,
-                    modifier = Modifier
-                        .widthIn(max = 162.dp)
-                        .padding(end = 4.dp)
-                        .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.bodyS.fontSize,
-                    color = valueColor,
-                    textAlign = TextAlign.End,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                DropdownValueText(text = selectedValueText, color = valueColor)
             }
             DropdownArrowEndAction(
                 actionColor = actionColor,
@@ -266,7 +242,9 @@ fun OverlaySpinnerPreference(
                     entries = nonEmptyEntries,
                     show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
-                    onDismissFinished = { isHoldDown.value = false },
+                    // PreciseClickHelper falls back to the anchor without a fresh touch point (TalkBack):
+                    // forget this one once the menu has gone.
+                    onDismissFinished = { preciseClickState.clear() },
                     maxHeight = maxHeight,
                     dropdownColors = spinnerColors,
                     renderInRootScaffold = renderInRootScaffold,
@@ -278,7 +256,6 @@ fun OverlaySpinnerPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
 }
@@ -433,9 +410,6 @@ fun OverlaySpinnerPreference(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
@@ -450,25 +424,15 @@ fun OverlaySpinnerPreference(
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
 
-    val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelTertiary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
-    val valueColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelSecondary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
+    val actionColor = dropdownArrowColor(actualEnabled)
+    val valueColor = dropdownValueColor(actualEnabled)
 
+    // The row of a COUI list dialog (COUIListPreference) plays its normal press and release: a
+    // dialog locks no anchor state and opening it plays no haptic.
     val handleClick = remember(actualEnabled) {
         {
             if (actualEnabled) {
                 setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                    currentHapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
-                }
             }
         }
     }
@@ -493,17 +457,7 @@ fun OverlaySpinnerPreference(
                 .joinToString("\n")
                 .ifBlank { null }
             if (showValue && hasEntries && !selectedValueText.isNullOrBlank()) {
-                Text(
-                    text = selectedValueText,
-                    modifier = Modifier
-                        .widthIn(max = 162.dp)
-                        .padding(end = 4.dp)
-                        .weight(1f, fill = false),
-                    fontSize = COUITheme.textStyles.bodyS.fontSize,
-                    color = valueColor,
-                    textAlign = TextAlign.End,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                DropdownValueText(text = selectedValueText, color = valueColor)
             }
             DropdownArrowEndAction(
                 actionColor = actionColor,
@@ -515,7 +469,7 @@ fun OverlaySpinnerPreference(
                     dialogButtonString = dialogButtonString,
                     show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
-                    onDismissFinished = { isHoldDown.value = false },
+                    onDismissFinished = {},
                     dropdownColors = spinnerColors,
                     popupModifier = popupModifier,
                     renderInRootScaffold = renderInRootScaffold,
@@ -526,7 +480,6 @@ fun OverlaySpinnerPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
 }

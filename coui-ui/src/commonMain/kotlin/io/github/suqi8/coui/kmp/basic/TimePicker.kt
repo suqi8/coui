@@ -2,25 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 
@@ -50,7 +49,10 @@ data class TimeValue(
  * are drawn after the selected value on its baseline, matching the COUI unit
  * text. Two hairlines frame the selected row at the center ± 24dp, inset 16dp
  * from both sides, the AM/PM wheel uses an 18dp unselected text size, and the
- * picker is at most [NumberPickerDefaults.PickersMaxWidth] wide.
+ * picker is at most [NumberPickerDefaults.PickersMaxWidth] wide. As in
+ * COUITimeLimitPicker, the wheels keep their left-to-right order in RTL layouts
+ * (only the unit labels mirror), and the first and last wheel also cover the
+ * space left at either side, so a drag anywhere across the picker moves them.
  *
  * @param value The currently selected time. The hour is always in 24-hour form.
  * @param onValueChange The callback invoked when the selected time changes.
@@ -144,101 +146,94 @@ fun TimePicker(
         else -> coercedHour % 12
     }
     val showAmPm = !is24Hour
+    // coui_time_limit_picker.xml lays its wheels out left to right in every layout direction
+    // (android:layoutDirection="ltr"), with AM/PM moved first or last by reorderSpinners. Emitting
+    // them reversed in RTL keeps that order on screen while the wheels still mirror their units.
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val wheels = remember(showAmPm, amPmFirst, isRtl) {
+        val leftToRight = buildList {
+            if (showAmPm && amPmFirst) add(TimePickerWheelSlot.AmPm)
+            add(TimePickerWheelSlot.Hour)
+            add(TimePickerWheelSlot.Minute)
+            if (showAmPm && !amPmFirst) add(TimePickerWheelSlot.AmPm)
+        }
+        if (isRtl) leftToRight.reversed() else leftToRight
+    }
 
-    Row(
+    // COUITimeLimitPicker.onMeasure: the first and last wheel take the space left at the sides.
+    NumberPickerRow(
         modifier = modifier
             .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (showAmPm && amPmFirst) {
-            AmPmWheel(
-                value = if (coercedHour < 12) 0 else 1,
-                onValueChange = onAmPmChange,
-                enabled = enabled,
-                label = amPmLabel,
-                visibleItemCount = visibleItemCount,
-                columnWidth = amPmColumnWidth,
-                colors = colors,
-                textStyle = textStyle,
-                itemHeight = itemHeight,
-            )
-        }
-        NumberPicker(
-            value = displayHour,
-            onValueChange = onHourChange,
-            modifier = Modifier.width(hourColumnWidth),
-            enabled = enabled,
-            range = hourRange,
-            label = hourLabel,
-            unit = hourUnit,
-            visibleItemCount = visibleItemCount,
-            wrapAround = true,
-            colors = colors,
-            textStyle = textStyle,
-            itemHeight = itemHeight,
-        )
-        NumberPicker(
-            value = coercedMinute,
-            onValueChange = onMinuteChange,
-            modifier = Modifier.width(minuteColumnWidth),
-            enabled = enabled,
-            range = 0..59,
-            label = TwoDigitLabel,
-            unit = minuteUnit,
-            visibleItemCount = visibleItemCount,
-            wrapAround = true,
-            longPressStepInterval = TimePickerDefaults.MinuteStepInterval,
-            colors = colors,
-            textStyle = textStyle,
-            itemHeight = itemHeight,
-        )
-        if (showAmPm && !amPmFirst) {
-            AmPmWheel(
-                value = if (coercedHour < 12) 0 else 1,
-                onValueChange = onAmPmChange,
-                enabled = enabled,
-                label = amPmLabel,
-                visibleItemCount = visibleItemCount,
-                columnWidth = amPmColumnWidth,
-                colors = colors,
-                textStyle = textStyle,
-                itemHeight = itemHeight,
-            )
+        wheels.forEachIndexed { index, wheel ->
+            val alignment = numberPickerColumnAlignment(index, wheels.size)
+            key(wheel) {
+                when (wheel) {
+                    TimePickerWheelSlot.AmPm -> NumberPickerWheel(
+                        value = if (coercedHour < 12) 0 else 1,
+                        onValueChange = onAmPmChange,
+                        modifier = Modifier.width(amPmColumnWidth),
+                        enabled = enabled,
+                        range = 0..1,
+                        label = amPmLabel,
+                        visibleItemCount = visibleItemCount,
+                        wrapAround = false,
+                        colors = colors,
+                        textStyle = textStyle,
+                        unselectedTextSize = TimePickerDefaults.AmPmUnselectedTextSize,
+                        itemHeight = itemHeight,
+                        contentWidth = amPmColumnWidth,
+                        contentAlignment = alignment,
+                    )
+
+                    TimePickerWheelSlot.Hour -> NumberPickerWheel(
+                        value = displayHour,
+                        onValueChange = onHourChange,
+                        modifier = Modifier.width(hourColumnWidth),
+                        enabled = enabled,
+                        range = hourRange,
+                        label = hourLabel,
+                        unit = hourUnit,
+                        visibleItemCount = visibleItemCount,
+                        wrapAround = true,
+                        colors = colors,
+                        textStyle = textStyle,
+                        itemHeight = itemHeight,
+                        contentWidth = hourColumnWidth,
+                        contentAlignment = alignment,
+                    )
+
+                    TimePickerWheelSlot.Minute -> NumberPickerWheel(
+                        value = coercedMinute,
+                        onValueChange = onMinuteChange,
+                        modifier = Modifier.width(minuteColumnWidth),
+                        enabled = enabled,
+                        range = 0..59,
+                        label = TwoDigitLabel,
+                        unit = minuteUnit,
+                        visibleItemCount = visibleItemCount,
+                        wrapAround = true,
+                        longPressStepInterval = TimePickerDefaults.MinuteStepInterval,
+                        colors = colors,
+                        textStyle = textStyle,
+                        itemHeight = itemHeight,
+                        contentWidth = minuteColumnWidth,
+                        contentAlignment = alignment,
+                    )
+                }
+            }
         }
     }
 }
 
-@Composable
-@NonRestartableComposable
-private fun AmPmWheel(
-    value: Int,
-    onValueChange: (Int) -> Unit,
-    enabled: Boolean,
-    label: (Int) -> String,
-    visibleItemCount: Int,
-    columnWidth: Dp,
-    colors: NumberPickerColors,
-    textStyle: TextStyle,
-    itemHeight: Dp,
-) {
-    NumberPicker(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.width(columnWidth),
-        enabled = enabled,
-        range = 0..1,
-        label = label,
-        visibleItemCount = visibleItemCount,
-        wrapAround = false,
-        colors = colors,
-        textStyle = textStyle,
-        unselectedTextSize = TimePickerDefaults.AmPmUnselectedTextSize,
-        itemHeight = itemHeight,
-    )
+/** The wheels of a [TimePicker]. */
+private enum class TimePickerWheelSlot {
+    AmPm,
+    Hour,
+    Minute,
 }
 
 /**

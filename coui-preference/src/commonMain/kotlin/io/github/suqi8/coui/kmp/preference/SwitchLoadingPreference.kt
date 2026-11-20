@@ -2,11 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.NonRestartableComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -22,15 +21,24 @@ import io.github.suqi8.coui.kmp.basic.Switch
 import io.github.suqi8.coui.kmp.basic.SwitchColors
 import io.github.suqi8.coui.kmp.basic.SwitchDefaults
 import io.github.suqi8.coui.kmp.preference.internal.EndActionsSlot
-import io.github.suqi8.coui.kmp.preference.internal.forwardPressTo
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 
 /**
  * A switch with a title, a summary and a loading state, mirroring COUISwitchLoadingPreference.
  *
- * While [isLoading] is `true` the switch thumb shows the COUI loading spinner and neither the
- * row nor the switch can be toggled. The usual flow is: the user taps the row, [onCheckedChange]
- * fires, the caller flips [isLoading] on, performs the asynchronous work, then updates [checked]
- * and turns [isLoading] off again.
+ * While [isLoading] is `true` the switch thumb shows the COUI loading spinner and the row cannot be
+ * toggled. The usual flow is: the user taps the row, [onCheckedChange] fires, the caller flips
+ * [isLoading] on, performs the asynchronous work, then updates [checked] and turns [isLoading] off
+ * again.
+ *
+ * As in COUI, the whole row is the touch target, the switch included: the switch of
+ * `coui_preference_widget_switchload` is neither clickable nor focusable and, unlike
+ * [SwitchPreference], gets no `COUISwitchTouchEventDelegate`, so a touch on it presses and clicks the
+ * row and the thumb cannot be dragged. A row click plays no haptic by itself
+ * (`COUISwitchLoadingPreference.onClick` only arms the switch's tactile feedback and starts loading);
+ * the COUI 302 haptic plays once [checked] actually flips afterwards, as `COUISwitch.stopLoading`
+ * toggles the switch and `setChecked` performs the armed feedback.
  *
  * @param checked The checked state of the [SwitchLoadingPreference].
  * @param onCheckedChange The callback when the checked state of the [SwitchLoadingPreference] is
@@ -53,7 +61,6 @@ import io.github.suqi8.coui.kmp.preference.internal.forwardPressTo
  * @param enabled Whether the [SwitchLoadingPreference] is clickable.
  */
 @Composable
-@NonRestartableComposable
 fun SwitchLoadingPreference(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -73,10 +80,21 @@ fun SwitchLoadingPreference(
     enabled: Boolean = true,
 ) {
     val currentOnCheckedChange by rememberUpdatedState(onCheckedChange)
-    val rowInteractionSource = remember { MutableInteractionSource() }
+    val couiHaptic = rememberCouiHaptic()
+    val feedback = remember { SwitchLoadingPreferenceFeedback(checked) }
+    // COUISwitch.setChecked -> performFeedBack: the feedback armed by the row click plays when the
+    // switch flips, i.e. once the caller has finished loading and updated `checked`.
+    SideEffect {
+        if (feedback.lastChecked != checked) {
+            feedback.lastChecked = checked
+            if (feedback.armed) {
+                feedback.armed = false
+                couiHaptic(CouiHapticEffect.Switch)
+            }
+        }
+    }
     BasicComponent(
         modifier = modifier,
-        interactionSource = rowInteractionSource,
         insideMargin = insideMargin,
         cardListPosition = cardListPosition,
         title = title,
@@ -86,18 +104,22 @@ fun SwitchLoadingPreference(
         startAction = startAction,
         endActions = {
             EndActionsSlot(endSpacing = 8.dp) { endActions() }
-            SwitchLoadingPreferenceEndActions(
-                rowInteractionSource = rowInteractionSource,
+            // coui_preference_widget_switchload: a passive COUISwitch (clickable / focusable false).
+            Switch(
                 checked = checked,
-                onCheckedChange = currentOnCheckedChange,
+                onCheckedChange = null,
                 enabled = enabled,
                 isLoading = isLoading,
-                switchColors = switchColors,
+                colors = switchColors,
             )
         },
         bottomAction = bottomAction,
         onClick = {
-            currentOnCheckedChange.takeIf { enabled && !isLoading }?.invoke(!checked)
+            if (enabled && !isLoading) {
+                // COUISwitchLoadingPreference.onClick: setTactileFeedbackEnabled(true) + startLoading().
+                feedback.armed = true
+                currentOnCheckedChange(!checked)
+            }
         },
         role = Role.Switch,
         holdDownState = holdDownState,
@@ -105,22 +127,10 @@ fun SwitchLoadingPreference(
     )
 }
 
-@Composable
-private fun SwitchLoadingPreferenceEndActions(
-    rowInteractionSource: MutableInteractionSource,
-    checked: Boolean,
-    onCheckedChange: ((Boolean) -> Unit)?,
-    enabled: Boolean,
-    isLoading: Boolean,
-    switchColors: SwitchColors,
-) {
-    Switch(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        // COUI 17 COUISwitchTouchEventDelegate: pressing the switch also presses the row.
-        modifier = Modifier.forwardPressTo(rowInteractionSource, enabled = enabled && onCheckedChange != null),
-        enabled = enabled,
-        isLoading = isLoading,
-        colors = switchColors,
-    )
+/**
+ * The tactile feedback a row click arms (`COUISwitch.setTactileFeedbackEnabled(true)`), consumed by
+ * the next change of the checked state, and the checked state that change is measured against.
+ */
+private class SwitchLoadingPreferenceFeedback(var lastChecked: Boolean) {
+    var armed: Boolean = false
 }

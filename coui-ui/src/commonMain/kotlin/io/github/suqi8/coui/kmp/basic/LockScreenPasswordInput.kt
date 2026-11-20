@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -319,28 +320,36 @@ private fun PasswordField(
                     Modifier
                 },
             )
-            .padding(horizontal = LockScreenPasswordInputDefaults.FieldPadding),
+            // The eye's button_layout hangs 12dp into the card's end padding
+            // (coui_input_lock_screen_pwd_view.xml layout_marginEnd -12dp).
+            .padding(
+                start = LockScreenPasswordInputDefaults.FieldPadding,
+                end = LockScreenPasswordInputDefaults.FieldPadding - if (showPasswordToggle) EyeMarginEnd else 0.dp,
+            ),
         contentAlignment = Alignment.CenterStart,
     ) {
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            backgroundMode = TextFieldMode.None,
-            insideMargin = DpSize(0.dp, LockScreenPasswordInputDefaults.FieldPaddingVertical),
-            colors = TextFieldDefaults.textFieldColors(
-                labelColor = colors.hintColor,
-                iconColor = colors.eyeColor,
-            ),
-            label = label,
-            enabled = enabled,
-            isError = isError,
-            showPasswordToggle = showPasswordToggle,
-            textStyle = TextFieldDefaults.textStyle(TextFieldMode.None).merge(TextStyle(color = colors.textColor)),
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            singleLine = true,
-        )
+        // checkbox_password is wrap_content: the eye keeps the 34dp size of its coui_btn_eye drawables.
+        CompositionLocalProvider(LocalTextFieldPasswordToggleSize provides EyeSize) {
+            TextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                backgroundMode = TextFieldMode.None,
+                insideMargin = DpSize(0.dp, LockScreenPasswordInputDefaults.FieldPaddingVertical),
+                colors = TextFieldDefaults.textFieldColors(
+                    labelColor = colors.hintColor,
+                    iconColor = colors.eyeColor,
+                ),
+                label = label,
+                enabled = enabled,
+                isError = isError,
+                showPasswordToggle = showPasswordToggle,
+                textStyle = TextFieldDefaults.textStyle(TextFieldMode.None).merge(TextStyle(color = colors.textColor)),
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
+                singleLine = true,
+            )
+        }
     }
 }
 
@@ -518,6 +527,12 @@ private val NextArrowIcon: ImageVector by lazy {
 }
 
 private val DesktopTertiary = Color(0x4DFFFFFF)
+
+/** The eye's intrinsic size (`coui_btn_eye_on` / `_off`, and the `_desktop` variants: 34dp). */
+private val EyeSize = 34.dp
+
+/** How far the eye reaches into the field's end padding (`button_layout` marginEnd -12dp). */
+private val EyeMarginEnd = 12.dp
 
 private const val ERROR_APPEAR_MS = 217
 private const val ERROR_DISAPPEAR_MS = 283

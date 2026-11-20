@@ -17,9 +17,9 @@ import io.github.suqi8.coui.kmp.basic.TabRowWithContour // Contour style (segmen
 
 ### Standard Style
 
-The standard style matches `COUITabLayout`: a 48dp row of 14sp labels (medium weight when selected), a 2dp track inset 24dp from both edges, and a 2dp neutral indicator as wide as the selected label (at least 32dp). Changing the selection slides the indicator over `min(300, 50 × Δtabs + 150)` ms with `CubicBezierEasing(0.33f, 0f, 0.67f, 1f)` while the label colors crossfade. Each tab has an 8dp press mask, and touching an unselected tab plays a haptic tick.
+The standard style matches `COUITabLayout`: a 48dp row of 14sp labels (medium weight when selected), a 2dp track inset 24dp from both edges, and a 2dp neutral indicator as wide as the selected label (at least 32dp). Changing the selection slides the indicator over `min(300, 50 × Δtabs + 150)` ms with `CubicBezierEasing(0.33f, 0f, 0.67f, 1f)` while the label colors crossfade. Each tab has an 8dp press mask, and touching an unselected tab plays a haptic tick; like `COUITabView`, both start on touch down, also when the row sits in a scrolling page.
 
-Labels that fit into the 360dp content width are spread with equal gaps, labels that fit into the row are centered with `itemSpacing` between them, and otherwise the row scrolls with 58dp fading edges and keeps the selected tab centered. The scrolling row has the `COUIHorizontalScrollView` motion: a drag past either end follows at 40% and stiffens towards a screen width, a fling that hits an end overshoots by up to 37% of the screen width and springs back, and reaching an end plays an edge haptic.
+Labels that fit into the 360dp content width are spread with equal gaps, labels that fit into the row are centered with `itemSpacing` between them, and otherwise the row scrolls with 58dp fading edges and keeps the selected tab centered. The scrolling row has the `COUIHorizontalScrollView` motion: a drag past either end follows at 40% and stiffens towards a screen width, and a fling that hits an end overshoots by up to 37% of the screen width and springs back. The row itself never vibrates: `COUITabLayoutBaseStyle` turns the tab layout's own haptics off, so neither the scroll edges nor a pager swipe tick.
 
 ```kotlin
 val tabs = listOf("Recommended", "Following", "Popular", "Featured")
@@ -56,7 +56,9 @@ TabRow(
 
 ### Contour Style
 
-The contour style matches the ColorOS segment button: a 40dp capsule container with a 4dp inset around the sliding indicator. Segments are measured from their label width (at least 52dp) and distributed to fill the row.
+The contour style matches the ColorOS segment button: a 40dp capsule container with a 4dp inset around the sliding indicator. Segments are measured from their label width (at least 52dp, every label in the medium `couiTextButtonM`) and distributed to fill the row.
+
+The indicator moves on the COUI 17 segment button springs shared with [SegmentButton](./segmentbutton): position (response 0.4, bounce 0.1), width (response 0.6 → 0.4 and bounce 0.5 → 0.1 by how different the two widths are) and a height that dips towards 90% and springs back. A touched segment shrinks with the COUI 17 press scale from the touch down, and pressing the selected segment presses the indicator in. `SegmentButton` adds dragging the indicator between segments and the COUI 17 material.
 
 ```kotlin
 val tabs = listOf("All", "Photos", "Videos", "Documents")
@@ -234,8 +236,9 @@ TabRowWithContour(
 
 Pass the `PagerState` as `pagerState` and the row follows the pager while the user drags it, like
 `COUITabLayout.setScrollPosition`: the indicator slides between the two labels, the label colors
-crossfade over the second half of the drag and the row scrolls along. A page change made by
-swiping plays a haptic; a tab click keeps its own indicator animation.
+crossfade over the second half of the way to the next page (page by page when one drag crosses
+several) and the row scrolls along. A page change made by swiping does not vibrate; a tab click
+keeps its own indicator animation.
 
 ```kotlin
 val tabs = listOf("Page 1", "Page 2", "Page 3")

@@ -44,7 +44,15 @@ Row {
 
 ### Selected State
 
-`NavigationRailItem` automatically handles the visual style of the selected item, highlighting the icon and text. Labels always use medium font weight (`sans-serif-medium`).
+`NavigationRailItem` takes COUI's rail colors (`coui_navigation_rail_icon_tint_color_selector` / `coui_navigation_rail_label_tint_color_selector`): `?couiColorSecondNeutral` at rest, `?couiColorLabelPrimary` when selected or pressed, `?couiColorDisabledNeutral` when disabled. The colors switch at once. Labels always use medium font weight (`sans-serif-medium`) and take at most two lines.
+
+### Hover and Focus
+
+A pointer hovering an item, or keyboard focus on it, fades in COUI's hover / focus mask behind the icon and the label: an 8dp rounded rectangle 4dp in from the item's sides (`COUINavigationRailItemView`, `?couiColorHover` / `?couiColorFocus`, each on a response 0.3 spring). A tap shows no mask.
+
+### Badge
+
+`badge` puts COUI's red dot on the icon, placed as on `NavigationBarItem`: `0` a 6dp dot 1dp past the icon's top end corner, a positive number a number badge whose end edge lies 8dp past the icon (-2dp under 10, +1dp from 100 to 999) and 5dp above it.
 
 ## Properties
 
@@ -71,6 +79,17 @@ Row {
 | label         | String      | Label of the item                | -             | Yes      |
 | modifier      | Modifier    | Modifier applied to the item     | Modifier      | No       |
 | enabled       | Boolean     | Whether the item is enabled      | true          | No       |
+| badge         | Int?        | Red dot on the icon: `null` none, `0` a dot, a positive number a number badge. Not shown in `TextOnly` or on a disabled item | null | No |
+| colors        | NavigationRailItemColors | Content colors of the icon and the label | NavigationRailDefaults.itemColors() | No |
+
+### NavigationRailItemColors
+
+| Property Name   | Type  | Description                              |
+| --------------- | ----- | ---------------------------------------- |
+| selectedColor   | Color | Color of the selected item               |
+| unselectedColor | Color | Color of an unselected item              |
+| pressedColor    | Color | Color of a pressed item, selected or not |
+| disabledColor   | Color | Color of a disabled item                 |
 
 ### NavigationRailDefaults Object
 
@@ -89,11 +108,17 @@ The NavigationRailDefaults object provides default values for NavigationRail and
 | IconTextSpacing        | Dp       | Spacing between icon and text              | 2.dp          |
 | ItemVerticalPadding    | Dp       | Space above the icon and below the label (`coui_navigation_margin_vertical`) | 12.dp |
 | LabelFontSize          | Dp       | Label text size, in dp (does not follow the font scale) | 10.dp |
+| LabelMaxLines          | Int      | Most lines a label takes                   | 2             |
+| ItemMaskCornerRadius   | Dp       | Corner radius of the hover / focus mask    | 8.dp          |
+| ItemMaskHorizontalInset | Dp      | How far the hover / focus mask keeps from the item's sides | 4.dp |
 | TextOnlyFontSize       | TextUnit | Font size in TextOnly mode                 | 14.sp         |
 | TextOnlyVerticalPadding| Dp       | Vertical padding in TextOnly mode          | 4.dp          |
-| SelectedPressedAlpha   | Float    | Alpha for selected pressed item            | 0.5f          |
-| UnselectedPressedAlpha | Float    | Alpha for unselected pressed item          | 0.6f          |
-| UnselectedAlpha        | Float    | Alpha for unselected item                  | 0.4f          |
+
+#### Functions
+
+| Function Name | Return Type              | Description |
+| ------------- | ------------------------ | ----------- |
+| itemColors()  | NavigationRailItemColors | COUI's rail colors: selected `?couiColorLabelPrimary`, at rest `?couiColorSecondNeutral`, pressed `?couiColorPrimaryNeutral`, disabled `?couiColorDisabledNeutral` |
 
 ### NavigationRailDisplayMode
 

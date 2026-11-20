@@ -2,49 +2,37 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.preference
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.BasicComponent
 import io.github.suqi8.coui.kmp.basic.BasicComponentColors
 import io.github.suqi8.coui.kmp.basic.BasicComponentDefaults
-import io.github.suqi8.coui.kmp.basic.ButtonDefaults
 import io.github.suqi8.coui.kmp.basic.CardListPosition
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxColors
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
 import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
-import io.github.suqi8.coui.kmp.basic.TextButton
-import io.github.suqi8.coui.kmp.overlay.OverlayBottomSheet
-import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.layout.DialogButtonBar
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
+import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 
 /**
- * A multi-select list preference with a multi-choice selection panel, mirroring
- * COUIMultiSelectListPreference.
+ * A multi-select list preference with a multi-choice selection dialog, mirroring
+ * COUIMultiSelectListPreference and COUIMultiSelectListPreferenceDialogFragment.
  *
- * The preference row shows the selected entries as trailing assignment text and opens a bottom
- * sheet multi-choice panel when clicked. Toggling rows only updates a pending selection; the
- * confirm button commits it, while the cancel button or an outside tap dismisses the panel
+ * The row is a jump row (`Preference.COUI.DialogPreference`: the `coui_btn_next` arrow) that shows the
+ * selected entries as trailing assignment text. A click opens the COUI multi-choice dialog
+ * (`COUIAlertDialog.BottomAssignment` built with a `ChoiceListAdapter` of
+ * `coui_select_dialog_multichoice` rows: label, optional summary and an end checkbox, a divider
+ * between rows) with a cancel and a confirm button. Toggling rows only updates a pending selection;
+ * the confirm button commits it, while the cancel button or an outside tap dismisses the dialog
  * without changes.
  *
  * @param entries The list of [ListPreferenceEntry] to choose from.
@@ -52,14 +40,14 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * @param onSelectedIndicesChange The callback with the new selection when the confirm button
  *   is clicked.
  * @param title The title of the [MultiSelectListPreference].
- * @param confirmButtonText The label of the confirm (positive) button of the panel.
- * @param cancelButtonText The label of the cancel (negative) button of the panel.
+ * @param confirmButtonText The label of the confirm (positive) button of the dialog.
+ * @param cancelButtonText The label of the cancel (negative) button of the dialog.
  * @param modifier The modifier to be applied to the [MultiSelectListPreference].
  * @param titleColor The color of the title.
  * @param summary The summary of the [MultiSelectListPreference].
  * @param summaryColor The color of the summary.
- * @param dialogTitle The title of the selection panel. Defaults to [title].
- * @param colors The [ListPreferenceColors] used by the selection panel rows.
+ * @param dialogTitle The title of the selection dialog. Defaults to [title].
+ * @param colors The [ListPreferenceColors] used by the dialog rows.
  * @param checkboxColors The [CheckboxColors] of the row checkboxes.
  * @param startAction The [Composable] content on the start side of the [MultiSelectListPreference].
  * @param bottomAction The [Composable] content at the bottom of the [MultiSelectListPreference].
@@ -68,8 +56,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param enabled Whether the [MultiSelectListPreference] is clickable.
  * @param showValue Whether to show the selected entries as trailing assignment text.
- * @param renderInRootScaffold Whether to render the panel in the root (outermost) Scaffold.
- * @param onExpandedChange The callback when the panel is shown or dismissed.
+ * @param renderInRootScaffold Whether to render the dialog in the root (outermost) Scaffold.
+ * @param onExpandedChange The callback when the dialog is shown or dismissed.
  */
 // The staged selection mirrors the public Set<Int> API; boxing is bounded by the entry count.
 @Suppress("ktlint:compose:mutable-state-autoboxing")
@@ -97,18 +85,16 @@ fun MultiSelectListPreference(
     renderInRootScaffold: Boolean = true,
     onExpandedChange: ((Boolean) -> Unit)? = null,
 ) {
-    val isSheetShown = remember { mutableStateOf(false) }
+    val isDialogShown = remember { mutableStateOf(false) }
     val isHoldDown = remember { mutableStateOf(false) }
     val pendingSelection = remember { mutableStateOf(selectedIndices) }
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val currentSelectedIndices by rememberUpdatedState(selectedIndices)
     val currentOnSelectedIndicesChange by rememberUpdatedState(onSelectedIndicesChange)
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
-            if (isSheetShown.value != expanded) {
-                isSheetShown.value = expanded
+            if (isDialogShown.value != expanded) {
+                isDialogShown.value = expanded
                 currentOnExpandedChange.value?.invoke(expanded)
             }
         }
@@ -120,11 +106,11 @@ fun MultiSelectListPreference(
     val handleClick = remember(actualEnabled) {
         {
             if (actualEnabled) {
-                // Restart the pending selection from the committed one on every open.
+                // COUIMultiSelectListPreferenceDialogFragment seeds the checkbox states from the
+                // committed values every time the dialog opens.
                 pendingSelection.value = currentSelectedIndices
                 setExpanded(true)
                 isHoldDown.value = true
-                currentHapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
             }
         }
     }
@@ -159,21 +145,14 @@ fun MultiSelectListPreference(
     )
 
     if (hasEntries) {
-        OverlayBottomSheet(
-            show = isSheetShown.value,
+        OverlayDialog(
+            show = isDialogShown.value,
             title = dialogTitle,
             onDismissRequest = { setExpanded(false) },
             onDismissFinished = { isHoldDown.value = false },
-            insideMargin = ListPreferenceDefaults.PanelInsideMargin,
             renderInRootScaffold = renderInRootScaffold,
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                ) {
+            customContent = {
+                PreferenceChoiceList {
                     entries.forEachIndexed { index, entry ->
                         val checked = index in pendingSelection.value
                         SelectPanelItem(
@@ -192,7 +171,8 @@ fun MultiSelectListPreference(
                                 }
                             },
                         ) {
-                            // The row itself handles the toggle interaction.
+                            // The row handles the toggle (coui_select_dialog_multichoice: the
+                            // COUICheckBox is neither clickable nor focusable).
                             Checkbox(
                                 state = ToggleableState(checked),
                                 onClick = null,
@@ -202,38 +182,18 @@ fun MultiSelectListPreference(
                         }
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = ListPreferenceDefaults.ButtonBarTopPadding,
-                            bottom = ListPreferenceDefaults.ButtonBarBottomPadding,
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TextButton(
-                        text = cancelButtonText,
-                        onClick = { setExpanded(false) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.textButtonColorsBorderless(),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(20.dp)
-                            .background(COUITheme.colorScheme.divider),
-                    )
-                    TextButton(
-                        text = confirmButtonText,
-                        onClick = {
-                            currentOnSelectedIndicesChange(pendingSelection.value)
-                            setExpanded(false)
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.textButtonColorsBorderless(),
-                    )
-                }
-            }
+            },
+        ) {
+            DialogButtonBar(
+                negative = DialogButtonBarAction(text = cancelButtonText, onClick = { setExpanded(false) }),
+                positive = DialogButtonBarAction(
+                    text = confirmButtonText,
+                    onClick = {
+                        currentOnSelectedIndicesChange(pendingSelection.value)
+                        setExpanded(false)
+                    },
+                ),
+            )
         }
     }
 }

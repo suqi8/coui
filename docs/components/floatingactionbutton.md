@@ -272,20 +272,23 @@ The component measures as the main button alone and places the items above it, o
 bounds: as the `Scaffold` floating action button the main button keeps its place with any
 `FabPosition` and the snack bar does not move when the menu opens. Leave room above the button and
 do not clip its parent there. As in COUI there is no scrim and an outside touch does not close the
-menu; clicks on items that are sliding back into the main button are ignored.
+menu. An item click runs the item's action and collapses the menu (COUI closes it unless the action
+listener consumes the click; pass `collapseOnItemClick = false` to keep it open). While the menu
+expands or collapses, clicks on the main button and on the items are ignored.
 
 ### ExpandableFloatingActionButton Properties
 
 | Property Name          | Type                           | Description                                                  | Default Value                                         | Required |
 | ---------------------- | ------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------- | -------- |
 | expanded               | Boolean                        | Whether the items are shown                                  | -                                                     | Yes      |
-| onExpandedChange       | (Boolean) -> Unit              | Called with the new state when the main button is clicked    | -                                                     | Yes      |
+| onExpandedChange       | (Boolean) -> Unit              | Called with the new state when the main button is clicked, an item collapses the menu or hiding closes it | -          | Yes      |
 | items                  | List\<FloatingActionButtonItem> | Child actions, index 0 nearest to the main button            | -                                                     | Yes      |
 | modifier               | Modifier                       | Modifier applied to the main button slot                     | Modifier                                              | No       |
 | enabled                | Boolean                        | Whether the main button is enabled                           | true                                                  | No       |
 | visible                | Boolean                        | Whether the main button is shown; hiding also collapses the menu | true                                              | No       |
 | material               | Boolean                        | Whether the buttons and labels draw the COUI 17 material     | `LocalCOUIMaterialEffectEnabled.current` | No       |
-| hapticFeedbackEnabled  | Boolean                        | Whether a touch down plays the press haptic                  | true                                                  | No       |
+| hapticFeedbackEnabled  | Boolean                        | Whether a touch down on the main button plays the press haptic (child buttons never do) | true                       | No       |
+| collapseOnItemClick    | Boolean                        | Whether an item click also collapses the menu                | true                                                  | No       |
 | containerColor         | Color                          | Fill of the main button                                      | COUITheme.colorScheme.primary                         | No       |
 | disabledContainerColor | Color                          | Fill of the disabled main button                             | FloatingActionButtonDefaults.disabledContainerColor() | No       |
 | contentColor           | Color                          | Content color of the main button                             | COUITheme.colorScheme.onPrimary                       | No       |
@@ -297,10 +300,10 @@ menu; clicks on items that are sliding back into the main button are ignored.
 | Property Name       | Type                   | Description                                                               | Default Value     |
 | ------------------- | ---------------------- | ------------------------------------------------------------------------- | ----------------- |
 | icon                | @Composable () -> Unit | Icon of the child button                                                  | -                 |
-| onClick             | () -> Unit             | Called when the child button or its label is clicked; the menu stays open | -                 |
+| onClick             | () -> Unit             | Called when the child button or its label is clicked; the menu then collapses (`collapseOnItemClick`) | -     |
 | label               | String?                | Text of the label capsule; null shows a bare child button                 | null              |
 | enabled             | Boolean                | Whether the child button and label are enabled                            | true              |
-| containerColor      | Color                  | Fill of the child button; Unspecified takes the theme primary             | Color.Unspecified |
+| containerColor      | Color                  | Fill of the child button; Unspecified takes the theme primary. A specified color also tints the label's shadow | Color.Unspecified |
 | labelContainerColor | Color                  | Fill of the label capsule; Unspecified takes the theme primary            | Color.Unspecified |
 | labelColor          | Color                  | Label text color; Unspecified takes white                                 | Color.Unspecified |
 
@@ -309,6 +312,9 @@ menu; clicks on items that are sliding back into the main button are ignored.
 - **Layout**: index 0 sits 32dp above the main button, the next ones 16dp apart; every child button is 56dp with its label 12dp before it. Labels are 12sp, at most two lines and 220dp wide, padded 8dp x 4dp.
 - **Expand**: the farthest item starts first, each next one 50ms later. An item springs up from the main button (stiffness 500, damping ratio 0.8) while the child button and label scale from 0.6; the child fades in over 300ms and the label over 350ms on `PathInterpolator(0.25, 0.1, 0.25, 1)`, the label growing from its top end corner.
 - **Collapse**: the nearest item starts first, each next one 50ms later; it slides back into the main button over 300ms on the COUI move-ease curve while scaling to 0.6 and fading out (the label over 200ms, from its bottom end corner).
-- **Main button**: its content rotates by 45 degrees over 300ms.
+- **While it moves**: until the last item has arrived, clicks on the main button and on the items are ignored (`mCOUIFloatingButtonAnimationIsRun`).
+- **Main button**: its content rotates by 45 degrees over 300ms. Without the material, the main button keeps its press mask while the menu is open.
+- **Hiding an open menu**: hiding the button through `visible` (for example on scroll) collapses the menu on the slide-out timing: the items slide 56dp further, behind the main button, over 250ms, while the main button shrinks and turns back in 150ms.
+- **Child buttons**: the `FloatingActionButton` touch motion, material and shadow, but no haptic.
+- **Labels**: no touch motion, press tint or spotlight (COUI's label is a card with a transparent ripple). They are capsules with circular ends drawn with the primary button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke) and the floating-button light-source shadow (60dp, alpha 86), white unless the item sets its own `containerColor`.
 - **Fading shadows**: the fading child buttons and labels keep their shadows (their layers are grown past the shadow reach).
-- **Material**: the main and child buttons draw the `FloatingActionButton` material; the labels draw the primary button material (`TYPE_CONTENT_PRIMARY_BUTTON` blur, `TYPE_CONTENT_CAPSULE_1` stroke).

@@ -12,7 +12,7 @@ popupHost: None
 
 `WindowBottomSheet` 是窗口级的底部抽屉组件。它使用平台 `Dialog` 渲染，不依赖 `Scaffold` 或 `COUIPopupHost`。支持系统返回手势关闭，以及在内容内部通过组合局部请求关闭。
 
-它遵循 COUI 面板（`COUIBottomSheetDialog`）：窗口宽度小于 600dp 时从底部滑入并贴底；从 600dp 起改为居中浮窗，距窗口底部 64dp、四角圆角，以缩放（0.8 → 1）+ 淡入入场。宽度不超过 540dp。整个面板都可拖动，可滚动内容滚到顶后继续下拉才带动面板。松手时向下速度超过 500px/s 或拖过面板一半高度即关闭；上拉最多拉伸 28dp。
+它遵循 COUI 面板（`COUIBottomSheetDialog`）：窗口宽度小于 600dp 时从底部滑入并贴底；从 600dp 起改为居中浮窗，距窗口底部 64dp、四角圆角，以缩放（0.8 → 1）+ 淡入入场。宽度不超过 540dp。整个面板都可拖动，可滚动内容滚到顶后继续下拉才带动面板。松手时向下速度超过 500px/s 或拖过面板一半高度即关闭（遮罩立即淡出，已弹出的键盘随之收起）；其余情况松手后以 0.4s 弹簧、带着松手速度回到静止位置。上拉最多拉伸 28dp。面板仍在运动时切换显示 / 隐藏，动画会从面板当前位置掉头。
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=windowBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -80,7 +80,7 @@ WindowBottomSheet(
 | showDragHandle             | Boolean                   | 是否显示拖拽把手（COUI 普通面板隐藏把手，顶部保留 10dp 间距） | false                       | 否       |
 | handlePanel                | Boolean                   | COUI 把手面板：显示把手、占满最大高度，竖屏以半展开、横屏以 82dp 收起态打开，拖动后停在收起 / 半展开 / 展开三态之一 | false | 否 |
 | showInMaxHeight            | Boolean                   | 以最大高度显示，而不是自适应内容高度         | false                                       | 否       |
-| allowDismiss               | Boolean                   | 是否允许通过拖拽、返回手势或点击外部关闭抽屉 | true                                        | 否       |
+| allowDismiss               | Boolean                   | 是否允许通过拖拽、返回手势或点击外部关闭抽屉；为 false 时下拉止于 82dp 露出高度（COUI 不可取消面板） | true | 否       |
 | dismissOnClickOutside      | Boolean                   | 点击面板外部是否关闭（需 `allowDismiss` 为 true） | true                                   | 否       |
 | draggable                  | Boolean                   | 面板是否跟随拖拽手势                         | true                                        | 否       |
 | enablePullUp               | Boolean                   | 面板能否被上拉超过静止位置                   | true                                        | 否       |
@@ -172,7 +172,7 @@ WindowBottomSheet(
 
 ### 禁止手势关闭
 
-设置 `allowDismiss = false` 可忽略下拉拖拽与返回手势关闭，此时抽屉只能通过代码关闭：
+设置 `allowDismiss = false` 可忽略下拉拖拽与返回手势关闭，此时抽屉只能通过代码关闭。下拉只会把面板收起到 82dp 露出高度，与 COUI 不可取消面板一致：
 
 ```kotlin
 var showBottomSheet by remember { mutableStateOf(false) }

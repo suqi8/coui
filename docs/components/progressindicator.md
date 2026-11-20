@@ -61,7 +61,7 @@ CircularProgressIndicator()
 
 With a progress value the indicator ports `COUICircularProgressBar`: a neutral arc on a divider track that follows progress changes on a critically damped spring (damping ratio 1, stiffness 50). Like the original it lays out at `size + 2 × 4dp` and draws a ring of outer diameter `size − 2 × 4dp`: the default large tier (40dp, stroke 5dp) is a 48dp box around a 32dp ring, the medium tier (30dp, stroke 3dp) a 38dp box around a 22dp ring.
 
-Without a progress it ports `COUILoadingView`: an 18dp ring (stroke 2.67dp) with an accent arc (`#0080FF` / `#1A8CFF`) on an accent-tinted track (`#260080FF` / `#401A8CFF`), `ProgressIndicatorDefaults.loadingViewColors()`.
+Without a progress it ports `COUILoadingView`: an 18dp ring (stroke 2.67dp) with an accent arc (`#0080FF` / `#1A8CFF`) on an accent-tinted track (`#260080FF` / `#401A8CFF`), `ProgressIndicatorDefaults.loadingViewColors()`. The arc turns once a second; like `COUILoadingView`, which reads the clock in `onDraw`, it takes its phase from the frame clock, so all loading views on a screen spin in step.
 
 #### State and Type
 
@@ -101,11 +101,12 @@ InfiniteProgressIndicator()
 RotatingProgressIndicator()
 ```
 
-It ships a default (26dp) and a small (16dp) tier, matching `coui_lottie_loading_view_large_*` and `coui_lottie_loading_view_small_*`:
+It ships a default (26dp) and a small (16dp) tier, matching `coui_lottie_loading_view_large_*` and `coui_lottie_loading_view_small_*`. The small tier is the `Widget.COUI.COUILottieLoadingView` spinner, whose asset (`coui_lottie_loading_small.json`) also dims the whole layer to 30%, so its arc renders at 64 / 255 (`#40000000` / `#40FFFFFF`):
 
 ```kotlin
 // Small rotating spinner
 RotatingProgressIndicator(
+    color = ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor(),
     size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
     ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
     strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth
@@ -203,6 +204,7 @@ CircularProgressIndicator(progress = null)
 | Property Name | Type                      | Description                                  | Default Value                                              | Required |
 | ------------- | ------------------------- | -------------------------------------------- | ---------------------------------------------------------- | -------- |
 | modifier      | Modifier                  | Modifier applied to the indicator            | Modifier                                                   | No       |
+| paused        | Boolean                   | Holds the spinner on its current frame       | false                                                      | No       |
 | type          | CompProgressIndicatorType | The layout                                   | CompProgressIndicatorType.Large                            | No       |
 | text          | String?                   | The tip, drawn by the `...WithText...` types | null                                                       | No       |
 | color         | Color                     | Color of the spinner arc                     | ProgressIndicatorDefaults.rotatingProgressIndicatorColor() | No       |
@@ -223,6 +225,7 @@ CircularProgressIndicator(progress = null)
 | Property Name | Type     | Description                                            | Default Value                                                            | Required |
 | ------------- | -------- | ------------------------------------------------------ | ------------------------------------------------------------------------ | -------- |
 | modifier      | Modifier | Modifier applied to the indicator                      | Modifier                                                                 | No       |
+| paused        | Boolean  | Holds the current frame (`pauseAnimation`); unpausing continues from it | false                                   | No       |
 | color         | Color    | Color of the arc                                       | ProgressIndicatorDefaults.rotatingProgressIndicatorColor()               | No       |
 | size          | Dp       | Size of the indicator's square view box                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize           | No       |
 | ringDiameter  | Dp       | Diameter of the arc's stroke centerline                | ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter   | No       |
@@ -265,6 +268,7 @@ The ProgressIndicatorDefaults object provides default values and color configura
 | circularProgressIndicatorColors() | ProgressIndicatorColors | Creates default color configuration for the determinate circular indicator |
 | loadingViewColors()               | ProgressIndicatorColors | Creates the accent color configuration for the indeterminate circular indicator |
 | rotatingProgressIndicatorColor()  | Color                   | Default arc color of the rotating spinner (85% opacity)          |
+| smallRotatingProgressIndicatorColor() | Color               | Arc color of the small rotating tier (64 / 255)                  |
 
 ### ProgressIndicatorColors Class
 

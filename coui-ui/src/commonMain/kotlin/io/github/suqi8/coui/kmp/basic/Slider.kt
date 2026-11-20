@@ -155,7 +155,9 @@ import kotlin.math.sqrt
  * @param colors The [SliderColors] of the [Slider].
  * @param hapticEffect The haptic feedback of the [Slider]. [SliderDefaults.SliderHapticEffect.Step]
  *   (the default) is the `COUISeekBar` feedback: a vibration at each end, a tick for every 1% a
- *   drag moves a continuous slider, and a tick for every section of a stepped one.
+ *   drag moves a continuous slider, and a tick for every section of a stepped one. Like COUI, only
+ *   drags and section taps vibrate: taps and flings of a continuous slider and the snap of a stepped
+ *   one after a release are silent.
  * @param showKeyPoints Whether to draw the key points: the section marks of a stepped slider
  *   (always drawn by `COUISectionSeekBar`, hence `true` by default) or [keyPoints].
  * @param keyPoints Custom key point values to display on the slider. If null, uses step positions from [steps] parameter.
@@ -272,6 +274,10 @@ fun Slider(
     val currentStartFromMiddle by rememberUpdatedState(startFromMiddle)
     val spotLightEnabled by rememberUpdatedState(spotLightShader != null)
 
+    // Reports a value with its VibrationFeedbackHandler feedback. COUISeekBarAdvanced only runs the
+    // feedback for drag moves (onTouchEvent / trackTouchEvent) and section taps
+    // (performVibrationForSection): a tap or a fling of a continuous slider and the release snap of
+    // a stepped one call onValueChange alone.
     val reportValue: (Float, Boolean) -> Unit = { newValue, dragging ->
         onValueChangeState(newValue)
         feedback.perform(
@@ -383,10 +389,12 @@ fun Slider(
                                     scope.launch { motion.spotLight.extinguish() }
                                     if (tapPosition != null) {
                                         // COUISeekBarAdvanced.startClickTransitionAnim: the progress
-                                        // springs to the tapped position.
+                                        // springs to the tapped position, silently; a section tap
+                                        // ticks (COUISectionSeekBar.startClickTransitionAnim).
                                         val visualFraction = horizontalVisualFraction(tapPosition.x, layoutWidth, trackHeight)
                                         val fractionForValue = if (currentReverse) 1f - visualFraction else visualFraction
-                                        reportValue(currentFractionToValue(fractionForValue), false)
+                                        val tapped = currentFractionToValue(fractionForValue)
+                                        if (currentSteps > 0) reportValue(tapped, false) else onValueChangeState(tapped)
                                         onValueChangeFinishedState?.invoke()
                                     }
                                 },
@@ -431,9 +439,10 @@ fun Slider(
                                 val capInset = trackHeight * TrackCapInsetRatio
                                 val trackLength = layoutWidth - 2f * capInset
                                 if (currentSteps > 0) {
-                                    // COUISectionSeekBar.handleMotionEventUp: settle on a section.
+                                    // COUISectionSeekBar.handleMotionEventUp: settle on a section
+                                    // (snapToNearestSection notifies the change without feedback).
                                     val target = section.release(currentSteps + 1, scope)
-                                    reportValue(sectionValue(target, currentSteps, currentValueRange), false)
+                                    onValueChangeState(sectionValue(target, currentSteps, currentValueRange))
                                     onValueChangeFinishedState?.invoke()
                                 } else if (trackLength > 0f && abs(velocity) >= FlingMinVelocity) {
                                     motion.flingJob = scope.launch {
@@ -447,7 +456,8 @@ fun Slider(
                                             ) { visualFraction, trackVelocity ->
                                                 val fractionForValue = if (currentReverse) 1f - visualFraction else visualFraction
                                                 val newValue = currentFractionToValue(fractionForValue)
-                                                reportValue(newValue, false)
+                                                // onPhysicsFlingUpdate runs no feedback.
+                                                onValueChangeState(newValue)
                                                 motion.onFlingStep(
                                                     fraction = valueToFraction(newValue, currentValueRange),
                                                     velocity = trackVelocity,
@@ -681,7 +691,9 @@ fun VerticalSlider(
                                 onMove = { _, _ -> },
                                 onRelease = { tapPosition ->
                                     if (tapPosition != null) {
-                                        reportValue(currentFractionToValue(pointerFraction(tapPosition.y)), false)
+                                        // animForClick runs no feedback; a stepped tap still ticks.
+                                        val tapped = currentFractionToValue(pointerFraction(tapPosition.y))
+                                        if (currentSteps > 0) reportValue(tapped, false) else onValueChangeState(tapped)
                                         onValueChangeFinishedState?.invoke()
                                     }
                                 },
@@ -716,7 +728,8 @@ fun VerticalSlider(
                                                 reverseDirection = currentReverse,
                                             ) { visualFraction, _ ->
                                                 val fractionForValue = if (currentReverse) 1f - visualFraction else visualFraction
-                                                reportValue(currentFractionToValue(fractionForValue), false)
+                                                // The physics update runs no feedback.
+                                                onValueChangeState(currentFractionToValue(fractionForValue))
                                             }
                                             onValueChangeFinishedState?.invoke()
                                         } finally {
@@ -1306,12 +1319,18 @@ private fun SliderTrack(
             squircleEnabled = squircleEnabled,
         )
 
+        val thumbCenter = Offset(thumbCenterX, centerY)
+        val thumbRadius = trackHeight * ThumbRadiusRatio * thumbScale
+
         if (showKeyPoints && stepFractions.isNotEmpty()) {
             val keyPointRadius = SliderDefaults.KeyPointRadius.toPx()
             for (i in stepFractions.indices) {
                 val stepFraction = stepFractions[i]
                 val effectiveStep = if (reverseDirection) 1f - stepFraction else stepFraction
                 val x = capInset + effectiveStep * availableWidth
+                // SectionProgressRenderer.drawMarkIfVisible: a mark the thumb covers whole is not
+                // drawn, so none shows through the pressed glass thumb.
+                if (x - keyPointRadius >= thumbCenterX - thumbRadius && x + keyPointRadius <= thumbCenterX + thumbRadius) continue
                 val isSelected = x >= progressLeft + halfTrack && x <= progressRight - halfTrack
                 val kpColor = if (isSelected) keyPointForegroundColor else keyPointColor
                 drawCircle(
@@ -1322,8 +1341,6 @@ private fun SliderTrack(
             }
         }
 
-        val thumbCenter = Offset(thumbCenterX, centerY)
-        val thumbRadius = trackHeight * ThumbRadiusRatio * thumbScale
         val textureAlpha = if (effects != null && effects.glass) effects.motion.texture.value else 0f
         if (textureAlpha > 0f) {
             drawGlassThumb(
@@ -1346,14 +1363,19 @@ private fun SliderTrack(
 
         // GlitterEffectRenderer: a white gradient over the progress, brightest at the end the
         // progress ran into (updateGradient: the start end when a middle-start slider ran into it).
+        // The gradient keeps the span the progress had at that end (it is only rebuilt while the
+        // scale is at the end), so backing off uncovers its fading, dimmer part.
         val glitterAlpha = sliderGlitterAlpha(effects.motion.glitter.value)
         if (glitterAlpha > 0f && progressSize.width > 0f) {
             val towardsStart = reverseDirection != effects.motion.glitterAtMinimum
+            val trackMiddle = capInset + availableWidth / 2f
+            val glitterStart = if (startFromMiddle && !towardsStart) trackMiddle - halfTrack else capInset - halfTrack
+            val glitterEnd = if (startFromMiddle && towardsStart) trackMiddle + halfTrack else barWidth - capInset + halfTrack
             drawSquircleRect(
                 brush = Brush.horizontalGradient(
                     colors = if (towardsStart) GlitterColorsReversed else GlitterColors,
-                    startX = progressLeft,
-                    endX = progressRight,
+                    startX = glitterStart,
+                    endX = glitterEnd,
                 ),
                 cornerRadius = halfTrack,
                 topLeft = Offset(progressLeft, centerY - halfTrack),

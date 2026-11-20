@@ -11,8 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -168,7 +166,8 @@ fun OverlayDropdownDialog(
  * Overlay dialog for one or more [DropdownEntry] groups.
  *
  * Groups are separated by dividers. Item clicks call [io.github.suqi8.coui.kmp.basic.DropdownItem.onClick], and [collapseOnSelection]
- * controls whether the dialog is dismissed after a click.
+ * controls whether the dialog is dismissed after a click. Like a COUI list dialog
+ * (`COUIListPreferenceDialogFragment` / `ChoiceListAdapter`), a click plays no haptic.
  */
 @Composable
 fun OverlayDropdownDialog(
@@ -183,14 +182,11 @@ fun OverlayDropdownDialog(
     renderInRootScaffold: Boolean = true,
     collapseOnSelection: Boolean = entries.size <= 1,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
     val currentEntries by rememberUpdatedState(entries)
     val currentCollapseOnSelection by rememberUpdatedState(collapseOnSelection)
     val currentOnDismiss by rememberUpdatedState(onDismiss)
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
     val onItemClicked: (Int, Int) -> Unit = remember {
         { entryIdx, itemIdx ->
-            currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
             currentEntries.getOrNull(entryIdx)?.let { entry ->
                 entry.items.getOrNull(itemIdx)?.onClick?.invoke()
             }

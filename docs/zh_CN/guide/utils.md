@@ -59,7 +59,7 @@ COUI 以修饰符和主题默认 `OverscrollEffect` 两种形式提供 COUI 17 �
 
 - 拖过边缘时，内容只跟随手指的 `0.4 × (1 − |越界量| / 窗口尺寸)`（`COUIPhysicalAnimationUtil.calcRealOverScrollDist`），起始 40%，越拉越紧。
 - 松手后按 `SpringOverScroller` 的 RK4 弹簧回弹（摩擦 12.19，张力竖向 16 × 2.15、横向 16 × 3.2，origami 单位，略过阻尼）。
-- 快速滑动撞到边缘时，剩余速度带着内容冲过边缘再由同一弹簧拉回，冲出距离最多为窗口的 37.31%（`calcOverFlingDecelerateDist`）。越界状态下朝内容方向快速滑动会滚动内容，朝外的则被丢弃。
+- 快速滑动撞到边缘时，剩余速度带着内容冲过边缘再由同一弹簧拉回，冲出距离最多为窗口的 37.31%（`calcOverFlingDecelerateDist`）。越界状态下松手只回弹、不让内容惯性滚动（`COUIRecyclerView.performSpringBack`）。只有速度超过 6000px/s 的快速滑动例外：朝内容方向时，越界部分先沿 COUI 惯性曲线冲回边缘，再把剩余速度交给内容继续惯性滚动（`performOverScrollingReverseFling`）；朝外时，该速度带入回弹弹簧（`setCurrVelocityY`）。
 
 ### 垂直越界回弹
 
@@ -106,7 +106,7 @@ LazyColumn(
 
 ### 通过 OverscrollFactory（主题级集成）
 
-`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的物理效果，但以主题级别集成。与 `COUIRecyclerView` / `COUINestedScrollView`（`couiRecyclerViewEnableVibrator`，默认开启）一样，快速滑动撞到边缘、或在越界状态下松手时，它会播放滚动边缘振动（`performHapticFeedback(307)`）；如需关闭可创建 `COUIOverscrollEffect(edgeHapticEnabled = false)`。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 COUI 越界回弹效果。
+`COUIOverscrollFactory` 实现了 Compose 的 `OverscrollFactory` 接口，与 `overScrollVertical()` 提供完全相同的物理效果，但以主题级别集成。与 `COUIRecyclerView` / `COUINestedScrollView`（`couiRecyclerViewEnableVibrator`，默认开启）一样，快速滑动撞到边缘、或在越界状态下松手时（移动不足 10px 的轻点除外，`isClickEvent`），它会播放滚动边缘振动（`performHapticFeedback(307)`）；如需关闭可创建 `COUIOverscrollEffect(edgeHapticEnabled = false)`。两个 `COUITheme` 重载均已将其设置为默认工厂，因此所有标准 Compose 可滚动组件（`LazyColumn`、`LazyRow`、`verticalScroll`、`horizontalScroll` 等）无需任何额外修饰符即可自动使用 COUI 越界回弹效果。
 
 ```kotlin
 // 无需额外修饰符 —— COUITheme 已自动提供越界回弹效果
@@ -156,6 +156,14 @@ LazyColumn(
 | 需要逐个组件手动添加修饰符 | ✅ | ❌ |
 
 > **限制说明：** `COUIOverscrollFactory` 通过接收可滚动组件到达滚动边界后无法消耗的剩余 delta 来工作。如果内容未超出容器高度（例如 `LazyColumn` 的所有条目均能在屏幕内完整显示），可滚动组件不会到达真正的边界，`applyToScroll` 不会收到非零剩余量，越界回弹效果将**无法触发**。此类场景请改用 `overScrollVertical()`。
+
+### COUI 惯性滚动（COUIFlingBehavior）
+
+越界回弹只接管惯性滚动结束之后的部分；惯性滚动本身由可滚动组件的 `FlingBehavior` 决定，而 Compose 没有主题级的默认值。传入 `rememberCOUIFlingBehavior()` 即可获得 `COUIRecyclerView` / `COUINestedScrollView`（`SpringOverScroller`）的惯性滚动：距离与时长由松手速度的摩擦模拟得出，随速度从 2000 升到 20000px/s，距离按 1 → 0.8 → 0.4、时长按 1.3 → 0.8 → 0.5 缩放，内容在这段时间内沿 `COUISpringInterpolator`（刚度 40、阻尼比 1.15）运动——比 Android 默认惯性滑得更远、减速更柔和。滑到尽头时剩余速度交给 COUI 越界回弹。
+
+```kotlin
+LazyColumn(flingBehavior = rememberCOUIFlingBehavior()) { /* ... */ }
+```
 
 ## 滚动到边界触觉反馈 (Modifier.scrollEndHaptic())
 

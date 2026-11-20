@@ -77,6 +77,8 @@ fun TwoTextButton(
         material = material,
         materialBackdrop = materialBackdrop,
     ) {
+        // Both labels are drawn with the button's own paint, capped at the G4 font scale.
+        val labelStyle = buttonLabelStyle(textStyle)
         Box(
             // Announce the label that is currently the more visible one.
             modifier = Modifier.clearAndSetSemantics {
@@ -87,14 +89,14 @@ fun TwoTextButton(
             Text(
                 text = startText,
                 modifier = Modifier.graphicsLayer { alpha = startTextAlpha().coerceIn(0f, 1f) },
-                style = textStyle,
+                style = labelStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = nextText,
                 modifier = Modifier.graphicsLayer { alpha = nextTextAlpha().coerceIn(0f, 1f) },
-                style = textStyle,
+                style = labelStyle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

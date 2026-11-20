@@ -88,6 +88,7 @@ WindowDialog(
 | CornerRadius  | Dp     | 对话框面板圆角（45.dp，`coui_round_corner_xxxxl_radius_large_16_1`） |
 | MaxWidth      | Dp     | 面板可见最大宽度（360.dp：`coui_dialog_max_width` 392dp 减去左右各 16dp 内缩） |
 | CustomContentPaddingBottom | Dp | `customContent` 下方内边距（8.dp，`coui_alert_dialog_customer_layout_padding_bottom`） |
+| ScrollFadeLength | Dp | 标题 / 消息滚动区的渐隐长度（32.dp，`center_dialog_scroll_fading_edge_length`） |
 | MaxHeight     | Dp     | 面板最大高度（600.dp：`coui_dialog_max_height` 632dp 减去 32dp 底部边距） |
 | outsideMargin | DpSize | 对话框外部默认边距（16, 32）；高度为无导航栏时的底部间距 |
 | MarginBottomWithNavigationBar | Dp | 三键导航下底部对话框与屏幕底边的间距（60.dp） |

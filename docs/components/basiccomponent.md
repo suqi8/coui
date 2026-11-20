@@ -131,9 +131,9 @@ BasicComponent(
 | role              | Role?                              | Semantic role for accessibility services              | null                                  | No       |
 | holdDownState     | Boolean                            | Whether the component is in the pressed state         | false                                 | No       |
 | enabled           | Boolean                            | Whether the component is enabled                      | true                                  | No       |
-| selected          | Boolean                            | Whether the row is selected: the press layer stays on and, inside a CardListGroup, the dividers above and below the row hide | false | No       |
-| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction | false | No       |
-| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number | null | No       |
+| selected          | Boolean                            | Whether the row is selected: the press layer is locked on, switched without animation (`setStateLocked`), and inside a CardListGroup the dividers above and below the row hide | false | No       |
+| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction; toggling it scales the dot in or out (520ms) | false | No       |
+| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number; switching to or from null scales it in or out (520ms) | null | No       |
 | endIcon           | @Composable (() -> Unit)?          | 16dp icon right before endActions                     | null                                  | No       |
 | interactionSource | MutableInteractionSource?          | Interaction source of the component                   | null                                  | No       |
 
@@ -152,9 +152,9 @@ BasicComponent(
 | role              | Role?                              | Semantic role for accessibility services              | null                                | No       |
 | holdDownState     | Boolean                            | Whether the component is in the pressed state         | false                               | No       |
 | enabled           | Boolean                            | Whether the component is enabled                      | true                                | No       |
-| selected          | Boolean                            | Whether the row is selected: the press layer stays on and, inside a CardListGroup, the dividers above and below the row hide | false | No       |
-| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction | false | No       |
-| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number | null | No       |
+| selected          | Boolean                            | Whether the row is selected: the press layer is locked on, switched without animation (`setStateLocked`), and inside a CardListGroup the dividers above and below the row hide | false | No       |
+| startBadge        | Boolean                            | Whether a red dot sits on the top end corner of startAction; toggling it scales the dot in or out (520ms) | false | No       |
+| endBadgeCount     | Int?                               | Red dot before the end content: null hidden, 0 a plain dot, > 0 a number; switching to or from null scales it in or out (520ms) | null | No       |
 | endIcon           | @Composable (() -> Unit)?          | 16dp icon right before endActions                     | null                                  | No       |
 | interactionSource | MutableInteractionSource?          | Interaction source of the component                   | null                                | No       |
 | content           | @Composable ColumnScope.() -> Unit | Composable content of the component                   | -                                   | Yes      |
@@ -273,7 +273,8 @@ Column {
 Inside a `Card`, wrap the rows in a `CardListGroup` so each row gets its card list position (the
 2dp head / tail padding on the rounded edges). Rows outside a group keep `CardListPosition.None`,
 and an explicit `cardListPosition` always wins. The group also draws the row dividers, aligned with
-each row's title and hidden around `selected` rows, so do not add `HorizontalDivider`s between them.
+each row's title, hidden around `selected` rows and faded out around a pressed row, so do not add
+`HorizontalDivider`s between them.
 See [CardListGroup](./cardlistgroup.md).
 
 ```kotlin

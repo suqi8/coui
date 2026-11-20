@@ -84,5 +84,6 @@ LoadingButton(
 - While `isLoading` is `true` the label is hidden but stays measured, so the button keeps its width; clicks are swallowed while the COUI press feedback (scale + tint) still plays.
 - The three dots pulse 20% -> 50% -> 100% -> 50% -> 20% alpha on a linear curve; each dot is delayed by 333ms and the whole 1332ms wave loops, matching the COUILoadingButton animator set.
 - With `loadingText` set, the loading state shows that label followed by three animated dot glyphs instead of the plain dot indicator (COUIButton `isShowLoadingText`). When the text and its dots are wider than the button minus its padding, the plain dots are drawn instead (`COUILoadingButton.onDraw`).
-- The dots are drawn with the button's content color, like COUILoadingButton draws them with the label paint.
+- The dots are drawn with the button's content color, like COUILoadingButton draws them with the label paint. The wave sets the dots' alpha outright (`paint.setAlpha`) instead of multiplying the color's own alpha.
+- Like every `COUIButton`, the label and the loading text stop growing past a 1.35 font scale (`COUIChangeTextUtil.adaptFontSize(this, G4)`).
 - Geometry, colors and the COUI 17 press feedback come from `Button`: a height-derived capsule, 132dp minimum width and a single-line label.

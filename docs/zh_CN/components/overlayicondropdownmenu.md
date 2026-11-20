@@ -249,6 +249,10 @@ Scaffold {
 }
 ```
 
+## 交互
+
+与 COUI 17 工具栏溢出按钮一致，图标按钮点击时只播放正常的按下与抬起，菜单显示期间不会保持按下状态：`COUIPopupListWindow.setAnchorHoveredState` 只锁定列表行锚点。
+
 ## 属性
 
 ### OverlayIconDropdownMenu 属性（Entries 重载）

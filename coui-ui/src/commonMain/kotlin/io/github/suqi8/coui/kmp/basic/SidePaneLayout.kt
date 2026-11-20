@@ -15,6 +15,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -38,7 +39,13 @@ import kotlin.math.roundToInt
 
 /**
  * The open state of a [SidePaneLayout], animated like `COUISidePaneLayout`: 483ms on the COUI
- * move-ease curve (`COUIMoveEaseInterpolator`, cubic-bezier 0.3, 0, 0.1, 1).
+ * move-ease curve (`COUIMoveEaseInterpolator`, cubic-bezier 0.3, 0, 0.1, 1) for both the pane
+ * slide and the content resize (`mTranlateAnimator` / `mSlideAnimator`, `initAnimator`).
+ *
+ * An interrupted move continues from where the pane is, over the remaining share of the duration.
+ * `COUISidePaneLayout` instead restarts its animators at `setCurrentFraction(slideOffset)`, which
+ * reads the eased offset as a time fraction and makes the pane jump when a move is reversed
+ * mid-way; that jump is not reproduced.
  *
  * @param initialOpen Whether the pane starts open (`setDefaultShowPane`, true by default).
  */
@@ -117,6 +124,9 @@ fun rememberSidePaneState(initialOpen: Boolean = true): SidePaneState = remember
  * @param touchContentEnabled `setTouchContentEnable`: in [coverStyle], touching the content
  *   closes the pane.
  * @param showToggleIcon `setCreateIcon`: whether the toggle icon is shown.
+ * @param onMaskClick `setOnMaskClickListener` (`PanelMaskListener.clickMask`): called when a touch
+ *   on the masked content is swallowed with [alwaysShowMask] while the pane is open; the pane
+ *   stays open unless this closes it.
  * @param paneWidth `firstPaneWidth` / `expandPaneWidth` (`coui_sliding_pane_width`).
  * @param maskColor The mask color at full opening (`coui_color_mask`).
  * @param toggleIconColor The toggle icon tint (`couiColorLabelPrimary`).
@@ -131,6 +141,7 @@ fun SidePaneLayout(
     alwaysShowMask: Boolean = false,
     touchContentEnabled: Boolean = true,
     showToggleIcon: Boolean = true,
+    onMaskClick: (() -> Unit)? = null,
     paneWidth: Dp = SidePaneLayoutDefaults.PaneWidth,
     maskColor: Color = SidePaneLayoutDefaults.maskColor,
     toggleIconColor: Color = COUITheme.colorScheme.labelPrimary,
@@ -139,14 +150,20 @@ fun SidePaneLayout(
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val windowHeight = with(density) { LocalWindowInfo.current.containerSize.height.toDp() }
+    val currentOnMaskClick by rememberUpdatedState(onMaskClick)
     val maskActive = state.isOpen && (alwaysShowMask || (coverStyle && touchContentEnabled))
     val maskModifier = if (maskActive) {
         Modifier.pointerInput(alwaysShowMask, state) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
-                // onInterceptTouchEvent: the mask swallows the touch; a cover pane also closes.
+                // onInterceptTouchEvent: the mask swallows the touch; with alwaysShowMask it reports
+                // the click (PanelMaskListener.clickMask), otherwise a cover pane closes.
                 down.consume()
-                if (!alwaysShowMask) scope.launch { state.close() }
+                if (alwaysShowMask) {
+                    currentOnMaskClick?.invoke()
+                } else {
+                    scope.launch { state.close() }
+                }
             }
         }
     } else {
@@ -237,7 +254,10 @@ fun SidePaneLayout(
 /** Default values of [SidePaneLayout]. */
 object SidePaneLayoutDefaults {
 
-    /** `COUISidePaneLayout`'s pane animators: 483ms. */
+    /**
+     * `COUISidePaneLayout`'s pane animators: the pane slide (`mTranlateAnimator`) and the content
+     * resize (`mSlideAnimator`) both run 483ms (`initAnimator`).
+     */
     const val ANIMATION_DURATION_MILLIS: Int = 483
 
     /** `COUIMoveEaseInterpolator`: cubic-bezier(0.3, 0, 0.1, 1). */

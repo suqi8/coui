@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
@@ -44,6 +45,7 @@ import io.github.suqi8.coui.kmp.basic.LocalCardListPosition
 import io.github.suqi8.coui.kmp.basic.PopupGravityPath
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
+import io.github.suqi8.coui.kmp.basic.popupEnterPivot
 import io.github.suqi8.coui.kmp.basic.popupGravityPathFor
 import io.github.suqi8.coui.kmp.basic.rememberListPopupLayoutInfo
 import io.github.suqi8.coui.kmp.basic.rememberPopupSurface
@@ -208,12 +210,13 @@ internal fun ListPopupLayout(
     )
 
     // COUI PopupMenuDomain.computeMainMenuPopupPathAnchorOffset: the menu centre starts on the
-    // anchor's edge and travels the gravity Bezier to its resting place.
+    // anchor's edge and travels the gravity Bezier to its resting place. The same domain gives the
+    // enter pivot the menu's touch deformation stretches about (getMainMenuEnterPivotX / Y).
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
-    val gravityPath = remember(anchorBounds, popupContentSize, layoutInfo, popupPositionProvider, alignment, layoutDirection, density) {
+    val motionGeometry = remember(anchorBounds, popupContentSize, layoutInfo, popupPositionProvider, alignment, layoutDirection, density) {
         if (popupContentSize == IntSize.Zero) {
-            PopupGravityPath.None
+            PopupGravityPath.None to TransformOrigin.Center
         } else {
             val menuOffset = popupPositionProvider.calculatePosition(
                 anchorBounds,
@@ -223,9 +226,12 @@ internal fun ListPopupLayout(
                 layoutInfo.popupMargin,
                 alignment,
             )
-            popupGravityPathFor(anchorBounds, menuOffset, popupContentSize, density.density)
+            popupGravityPathFor(anchorBounds, menuOffset, popupContentSize, density.density) to
+                popupEnterPivot(anchorBounds, menuOffset, popupContentSize)
         }
     }
+    val gravityPath = motionGeometry.first
+    val enterPivot = motionGeometry.second
 
     val requestDismiss: () -> Unit = remember {
         { currentOnDismiss?.invoke() }
@@ -277,11 +283,20 @@ internal fun ListPopupLayout(
                     .onGloballyPositioned { coordinates ->
                         hostPositionInWindow = coordinates.positionInWindow()
                     }
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { requestDismiss() },
-                        )
-                    }
+                    // Outside taps dismiss while the popup shows. Once it starts to leave the window
+                    // takes no touches (COUIPopupListWindow.dismiss → setTouchable(false)): without
+                    // a pointer input here the page beneath gets them during the exit.
+                    .then(
+                        if (show) {
+                            Modifier.pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = { requestDismiss() },
+                                )
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                     .layout { measurable, constraints ->
                         val windowBounds = layoutInfo.windowBounds
                         val popupMargin = layoutInfo.popupMargin
@@ -334,6 +349,7 @@ internal fun ListPopupLayout(
                     backgroundColor = surface.color,
                     backgroundModifier = surface.backgroundModifier,
                     materialEffect = surface.materialEffect,
+                    touchMotionOrigin = { enterPivot },
                     content = {
                         CompositionLocalProvider(
                             LocalDismissState provides requestDismiss,

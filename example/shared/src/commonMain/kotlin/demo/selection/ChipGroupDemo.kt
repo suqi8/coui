@@ -54,6 +54,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_title
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_variant_collapsable
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_variant_single_line
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_group_variant_single_select
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_page_indicator_animated
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_battery
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_bluetooth
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_display
@@ -118,6 +119,7 @@ private fun LazyListScope.chipGroupPage() {
         var singleLine by rememberSaveable { mutableStateOf(false) }
         var collapsable by rememberSaveable { mutableStateOf(true) }
         var collapsedRows by rememberSaveable { mutableIntStateOf(2) }
+        var animationsEnabled by rememberSaveable { mutableStateOf(true) }
         // A new state whenever the selection rules change, as rememberChipGroupState keys on them.
         val state = rememberChipGroupState(
             singleSelection = singleSelection,
@@ -136,6 +138,7 @@ private fun LazyListScope.chipGroupPage() {
                 singleLine = singleLine,
                 collapsable = collapsable,
                 collapsedMaxRows = collapsedRows,
+                animationsEnabled = animationsEnabled,
             )
             val selected = state.selectedIndices.filter { it < count }.sorted()
             ValueCaption(
@@ -204,6 +207,13 @@ private fun LazyListScope.chipGroupPage() {
                     enabled = collapsable && !singleLine,
                 )
             }
+            item {
+                SwitchPreference(
+                    checked = animationsEnabled,
+                    onCheckedChange = { animationsEnabled = it },
+                    title = stringResource(Res.string.demo_page_indicator_animated),
+                )
+            }
         }
     }
     variant(key = "singleSelect", title = Res.string.demo_chip_group_variant_single_select) {
@@ -244,6 +254,7 @@ private fun LabeledChipGroup(
     singleLine: Boolean = false,
     collapsable: Boolean = false,
     collapsedMaxRows: Int = 3,
+    animationsEnabled: Boolean = true,
 ) {
     ChipGroup(
         modifier = modifier,
@@ -251,6 +262,7 @@ private fun LabeledChipGroup(
         singleLine = singleLine,
         collapsable = collapsable,
         collapsedMaxRows = collapsedMaxRows,
+        animationsEnabled = animationsEnabled,
     ) {
         labels.forEachIndexed { index, label ->
             Chip(

@@ -65,7 +65,7 @@ Stepper(
 ## Behavior
 
 - A tap on − or + changes the value by `step` when the finger lifts, clamped to `[minValue, maxValue]`.
-- Holding a button steps once after the long-press timeout, then every 100ms until the finger lifts or the bound is reached.
+- Holding a button steps once after the long-press timeout, then every 100ms until the finger lifts or the bound is reached. There is no acceleration (`LongPressProxy`). When the held button reaches its bound and turns disabled, its press scale springs back while the finger is still down and its press mask goes at once, as `COUIStateEffectDrawable` does.
 - A button is automatically disabled when the value reaches its bound; only its glyph turns to the disabled color. The value text never dims, also when `enabled = false`.
 - The buttons are flat `couiColorContainer8` circles with the `couiColorPress` press mask and a size-derived press scale (about 0.88 for 32dp). They have no material, rubber band or deformation.
 - The value area has a fixed width: the widest digit repeated once per character of `maxValue`, and at least 44dp. The row does not change width as the value changes.

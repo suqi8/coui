@@ -166,9 +166,9 @@ Card {
 
 ## Error State
 
-Setting `isError = true` blends the border / underline to the error color over 217ms, tints the
-text selection with it (30% alpha), and, if the field is focused, plays a one-shot horizontal shake
-animation. When the 450ms animation ends the whole text is selected, so the red selection covers it
+Setting `isError = true` blends the border / underline to the error color over 217ms (thickened to
+1dp), tints the text selection with it (30% alpha), and, if the field is focused, plays a one-shot
+horizontal shake animation; clearing the error restores the normal colors at once, as COUI does. When the 450ms animation ends the whole text is selected, so the red selection covers it
 (COUIErrorEditTextHelper). The label keeps its color. As in COUIEditText, the default error color is
 `couiColorErrorTextBg` (`errorTextBg`: red at 30% alpha `#4DE82A18` in light mode, `#EA3939` in
 dark mode), so the light error line is a soft red; pass `errorColor` to `textFieldColors()` for a
@@ -206,7 +206,8 @@ TextField(
 ## Clear Button
 
 Setting `showClearButton = true` shows a clear (fast delete) button while the field is
-focused and not empty. Tapping it clears the whole text:
+focused and not empty. Like COUI's delete icon it appears and disappears at once and shows no
+press feedback. Tapping it clears the whole text:
 
 ```kotlin
 var text by remember { mutableStateOf("") }
@@ -222,7 +223,8 @@ TextField(
 ## Password Toggle
 
 Setting `showPasswordToggle = true` shows an eye button that switches the password
-visibility; the slash draws in or out over 300ms. While hidden, the text is masked with
+visibility: hiding the password draws the slash across the eye over 300ms, showing it wipes the
+slash away in the same direction over 200ms (COUI's eye animated vectors). While hidden, the text is masked with
 bullets. The password starts masked; pass `initialPasswordVisible = true` to start visible
 (`InputView` does, following COUIInputView's default `couiPasswordType` OPEN). A disabled field disables the
 toggle and tints it with `disabledIconColor`:

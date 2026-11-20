@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -22,8 +23,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,13 +94,20 @@ import kotlin.math.roundToInt
  *   capsule's start or end edge (`computeInactiveFakeBounds`). Showing slides it out on a spring
  *   (response 0.55, bounce 0.35) while it scales 0.5 -> 1 on the same spring; its alpha follows how
  *   much of it the capsule still covers (fully opaque until half of it is covered), and the two
- *   shapes merge like metaballs while they touch. Hiding reverses it.
+ *   shapes merge like metaballs while they touch. Hiding reverses it, and the slide stops as soon as
+ *   the capsule covers the accessory (`finishCollapseTranslationIfFullyOverlapped`). A
+ *   [FloatingNavigationBarAccessory] takes no touch motion while it slides
+ *   (`setExpansionViewTouchMotionAnimEnabled`).
  * - **Capsule**: identical to [FloatingNavigationBar]: slide-to-select, touch motion, the
  *   `TYPE_FRAMEWORK_BOTTOM_BAR` material through [LocalMaterialBackdrop], the
- *   `TYPE_FRAMEWORK_CAPSULE_3` edge light and the item count springs.
+ *   `TYPE_FRAMEWORK_CAPSULE_3` edge light, the item count springs and, with [visible], the COUI 17
+ *   show / hide springs of the menu view (`doMenuViewShowOrHideAnim`); the accessories stay.
  *
  * @param modifier The modifier applied to the bar's container (the full-width area holding the capsule).
  * @param backgroundModifier Applied inside the capsule clip, above [color] and below the items.
+ * @param visible Whether the capsule is shown. Changes animate with the COUI 17 show / hide springs
+ *   (alpha, scale 0.8 <-> 1 and, with [materialEffect], the foreground blur); a hidden capsule keeps
+ *   its space but takes no touches. The accessories follow their own visibility.
  * @param startAccessoryVisible Whether [startAccessory] is shown (`showStartAccessoryView` /
  *   `hideStartAccessoryView`).
  * @param endAccessoryVisible Whether [endAccessory] is shown (`showEndAccessoryView` /
@@ -123,6 +133,7 @@ import kotlin.math.roundToInt
 fun FloatingAccessoryNavigationBar(
     modifier: Modifier = Modifier,
     backgroundModifier: Modifier = Modifier,
+    visible: Boolean = true,
     startAccessoryVisible: Boolean = true,
     endAccessoryVisible: Boolean = true,
     materialEffect: Boolean = LocalCOUIMaterialEffectEnabled.current,
@@ -147,6 +158,8 @@ fun FloatingAccessoryNavigationBar(
 
     // The capsule bounds and the accessory slots chase their layout targets on the melt-ball
     // springs; a new container width snaps (onConfigurationChanged: mSkipNextLayoutAnimation).
+    // A hiding accessory stops sliding once the capsule covers it
+    // (AccessorySideExpansionController.finishCollapseTranslationIfFullyOverlapped).
     LaunchedEffect(state) {
         var last: FloatingAccessoryBarTargets? = null
         snapshotFlow { state.targets }.filterNotNull().collect { target ->
@@ -161,8 +174,20 @@ fun FloatingAccessoryNavigationBar(
             } else {
                 if (previous.menuLeft != target.menuLeft) launch { menuState.menuLeft.animateTo(target.menuLeft, AccessoryBoundsSpring) }
                 if (previous.menuWidth != target.menuWidth) launch { menuState.menuWidth.animateTo(target.menuWidth, AccessoryBoundsSpring) }
-                if (previous.startLeft != target.startLeft) launch { state.startLeft.animateTo(target.startLeft, AccessoryBoundsSpring) }
-                if (previous.endLeft != target.endLeft) launch { state.endLeft.animateTo(target.endLeft, AccessoryBoundsSpring) }
+                if (previous.startLeft != target.startLeft) {
+                    launch {
+                        state.startLeft.animateToUntilCovered(target.startLeft, AccessoryBoundsSpring) {
+                            !target.startActive && state.accessoryOverlapRatio(state.start, state.startLeft.value) >= 1f
+                        }
+                    }
+                }
+                if (previous.endLeft != target.endLeft) {
+                    launch {
+                        state.endLeft.animateToUntilCovered(target.endLeft, AccessoryBoundsSpring) {
+                            !target.endActive && state.accessoryOverlapRatio(state.end, state.endLeft.value) >= 1f
+                        }
+                    }
+                }
             }
         }
     }
@@ -229,7 +254,7 @@ fun FloatingAccessoryNavigationBar(
             Box(Modifier.layoutId(ACCESSORY_BAR_CAPSULE_ID)) {
                 FloatingNavigationBarCapsule(
                     state = menuState,
-                    visible = true,
+                    visible = visible,
                     materialEffect = materialEffect,
                     showDivider = showDivider,
                     color = fill,
@@ -244,16 +269,22 @@ fun FloatingAccessoryNavigationBar(
             Box(
                 modifier = Modifier
                     .layoutId(ACCESSORY_BAR_LARGE_ICON_ID)
-                    .pointerInput(menuState) {
-                        detectTapGestures {
-                            menuState.largeIconItem()?.takeIf { it.enabled }?.onClick?.invoke()
-                        }
-                    },
+                    .then(
+                        if (visible) {
+                            Modifier.pointerInput(menuState) {
+                                detectTapGestures {
+                                    menuState.largeIconItem()?.takeIf { it.enabled }?.onClick?.invoke()
+                                }
+                            }
+                        } else {
+                            Modifier
+                        },
+                    ),
             )
             if (startAccessory != null) {
                 AccessorySlot(
                     side = state.start,
-                    left = { state.startLeft.value },
+                    slot = state.startLeft,
                     state = state,
                     active = startActive,
                     layoutId = ACCESSORY_BAR_START_ID,
@@ -263,7 +294,7 @@ fun FloatingAccessoryNavigationBar(
             if (endAccessory != null) {
                 AccessorySlot(
                     side = state.end,
-                    left = { state.endLeft.value },
+                    slot = state.endLeft,
                     state = state,
                     active = endActive,
                     layoutId = ACCESSORY_BAR_END_ID,
@@ -309,6 +340,8 @@ fun FloatingAccessoryNavigationBar(
             menuWidth = menuWidth.toFloat(),
             startLeft = startTarget.toFloat(),
             endLeft = endTarget.toFloat(),
+            startActive = startActive,
+            endActive = endActive,
         )
         if (state.targets != target) state.targets = target
 
@@ -359,7 +392,7 @@ fun FloatingAccessoryNavigationBar(
 @Composable
 private fun AccessorySlot(
     side: FloatingAccessorySide,
-    left: () -> Float,
+    slot: Animatable<Float, AnimationVector1D>,
     state: FloatingAccessoryBarState,
     active: Boolean,
     layoutId: String,
@@ -373,11 +406,15 @@ private fun AccessorySlot(
                 val scale = side.scale.value
                 scaleX = scale
                 scaleY = scale
-                alpha = state.accessoryAlpha(side, left())
+                alpha = state.accessoryAlpha(side, slot.value)
             }
             .then(if (active) Modifier else Modifier.clearAndSetSemantics { }),
     ) {
-        content()
+        // setExpansionViewTouchMotionAnimEnabled: off from the start of a hide until a show has slid
+        // the accessory all the way out.
+        CompositionLocalProvider(LocalFloatingNavigationAccessoryTouchMotion provides (active && !slot.isRunning)) {
+            content()
+        }
     }
 }
 
@@ -448,10 +485,12 @@ fun FloatingNavigationBarAccessory(
         icons.replace(icon, fullEffect = materialEffect)
     }
 
+    // Off while a floating bar slides this accessory in or out (IExpansionViewTouchMotionAnimHost).
+    val touchMotionEnabled = enabled && LocalFloatingNavigationAccessoryTouchMotion.current
     Box(
         modifier = modifier
             .size(FloatingAccessoryNavigationBarDefaults.AccessorySize)
-            .couiTouchMotion(interactionSource = interactionSource, enabled = enabled)
+            .couiTouchMotion(interactionSource = interactionSource, enabled = touchMotionEnabled)
             .then(if (shadowElevation > 0.dp) Modifier.dropShadow(shape = CircleShape, shadow = floatingNavigationBarShadow(shadowElevation)) else Modifier)
             .then(backdropModifier)
             .clip(CircleShape)
@@ -599,13 +638,18 @@ internal fun floatingAccessoryBarPositions(
     }
 }
 
-/** The layout targets the bar's springs chase, in pixels, before right-to-left mirroring. */
+/**
+ * The layout targets the bar's springs chase, in pixels, before right-to-left mirroring, and which
+ * accessories are shown.
+ */
 internal data class FloatingAccessoryBarTargets(
     val availableWidth: Int,
     val menuLeft: Float,
     val menuWidth: Float,
     val startLeft: Float,
     val endLeft: Float,
+    val startActive: Boolean,
+    val endActive: Boolean,
 )
 
 /** One accessory side (`AccessorySideExpansionController`). */
@@ -659,10 +703,10 @@ internal class FloatingAccessoryBarState(private val menu: FloatingNavigationBar
     }
 
     /**
-     * `updateAccessoryViewAlphaByOverlap`: the accessory's alpha from how much of its scaled bounds
-     * the drawn capsule covers (`BottomFloatingOverlapHelper.alphaFromOverlapRatio`, 50%).
+     * `computeOverlapRatioWithMenu`: how much of the accessory's scaled bounds, its slot starting at
+     * [slotLeft], the drawn capsule covers, from 0 to 1; 0 while the accessory has no size.
      */
-    fun accessoryAlpha(side: FloatingAccessorySide, slotLeft: Float): Float {
+    fun accessoryOverlapRatio(side: FloatingAccessorySide, slotLeft: Float): Float {
         val view = accessoryRect(side, slotLeft)
         val area = view.width * view.height
         if (area <= 0f) return 0f
@@ -672,7 +716,17 @@ internal class FloatingAccessoryBarState(private val menu: FloatingNavigationBar
         val bounds = Rect(left, capsuleRect.top, left + drawnWidth, capsuleRect.bottom)
         val overlapWidth = max(0f, min(view.right, bounds.right) - max(view.left, bounds.left))
         val overlapHeight = max(0f, min(view.bottom, bounds.bottom) - max(view.top, bounds.top))
-        return floatingNavigationExpansionAlpha(min(1f, overlapWidth * overlapHeight / area))
+        return min(1f, overlapWidth * overlapHeight / area)
+    }
+
+    /**
+     * `updateAccessoryViewAlphaByOverlap`: the accessory's alpha from how much of its scaled bounds
+     * the drawn capsule covers (`BottomFloatingOverlapHelper.alphaFromOverlapRatio`, 50%).
+     */
+    fun accessoryAlpha(side: FloatingAccessorySide, slotLeft: Float): Float {
+        val view = accessoryRect(side, slotLeft)
+        if (view.width * view.height <= 0f) return 0f
+        return floatingNavigationExpansionAlpha(accessoryOverlapRatio(side, slotLeft))
     }
 }
 
@@ -694,6 +748,18 @@ private class FloatingAccessoryIcons(initial: ImageVector) {
             outgoing = current
             outgoingAlpha.snapTo(incomingAlpha.value)
             outgoingScale.snapTo(if (fullEffect) incomingScale.value else 1f)
+        }
+        // prepareOutgoingLayerForInterruptReplace: a leaving layer that is all but invisible is not
+        // worth a cross-fade, the new icon shows at once (applyIconDrawableInstant).
+        val leavingWeight = outgoingAlpha.value * if (fullEffect) outgoingScale.value else 1f
+        if (leavingWeight < ACCESSORY_ICON_BLANK_WEIGHT) {
+            outgoing = null
+            outgoingAlpha.snapTo(0f)
+            outgoingScale.snapTo(0f)
+            current = icon
+            incomingAlpha.snapTo(1f)
+            incomingScale.snapTo(1f)
+            return
         }
         current = icon
         incomingAlpha.snapTo(0f)
@@ -724,3 +790,12 @@ private class FloatingAccessoryIcons(initial: ImageVector) {
 
 /** `EXPANSION_VIEW_MIN_SCALE`. */
 private const val ACCESSORY_HIDDEN_SCALE = 0.5f
+
+/** `ICON_BLANK_WEIGHT_THRESHOLD`: below this alpha x scale a leaving icon counts as gone. */
+private const val ACCESSORY_ICON_BLANK_WEIGHT = 0.05f
+
+/**
+ * Whether a [FloatingNavigationBarAccessory] takes its touch motion. A floating bar turns it off while
+ * it slides the accessory in or out (`IExpansionViewTouchMotionAnimHost.setExpansionViewTouchMotionAnimEnabled`).
+ */
+internal val LocalFloatingNavigationAccessoryTouchMotion = compositionLocalOf { true }

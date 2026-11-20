@@ -126,7 +126,7 @@ WindowSpinnerPreference(
 
 ### Standalone Dropdown Dialog
 
-The dialog behind dialog mode is public as `WindowDropdownDialog` (`io.github.suqi8.coui.kmp.popup`). Use it to open the same option dialog from your own trigger instead of a preference row. It is a window-layer `WindowDialog` (no `Scaffold` needed) with the `DropdownEntry` list as its list panel and one full-width button at the bottom that dismisses it. Item clicks play a confirm haptic, call `DropdownItem.onClick`, and close the dialog when `collapseOnSelection` is true.
+The dialog behind dialog mode is public as `WindowDropdownDialog` (`io.github.suqi8.coui.kmp.popup`). Use it to open the same option dialog from your own trigger instead of a preference row. It is a window-layer `WindowDialog` (no `Scaffold` needed) with the `DropdownEntry` list as its list panel and one full-width button at the bottom that dismisses it. Item clicks call `DropdownItem.onClick` and close the dialog when `collapseOnSelection` is true; like a COUI list dialog, they play no haptic.
 
 ```kotlin
 var show by remember { mutableStateOf(false) }
@@ -236,6 +236,17 @@ WindowSpinnerPreference(
     onSelectedIndexChange = { selectedIndex = it }
 )
 ```
+
+## Interaction
+
+The row follows COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`:
+
+- **Opens at the finger**: the touch-down point is recorded (`PreciseClickHelper`) and the menu is placed at that point rather than at the edge of the row. An accessibility click, which has no touch point, falls back to the row.
+- **Soft keyboard**: if the keyboard is showing, a tap hides it first and the menu opens 100ms later (240ms on windows at least 840dp tall), so it is placed against the final window.
+- **Anchor row**: while the menu is showing, the row keeps its hover layer locked (`COUIPopupListWindow.setAnchorHoveredState`); the layer is released as soon as the menu starts to leave.
+- **Arrow**: the up-down arrow is `couiColorLabelTertiary`, and `couiColorLabelQuaternary` while the row is disabled.
+- **Selected value**: shown as the COUI assignment text (`TextAppearance.COUI.List.Assignment.End`): 13sp with the body_s line spacing, end aligned, at most two lines, 4dp before the arrow.
+- **Haptics and dialog mode**: opening the menu plays no haptic, as in COUI. In dialog mode the row plays its normal press and release (a COUI list dialog locks no anchor state), and picking an option plays no haptic either.
 
 ## Properties
 

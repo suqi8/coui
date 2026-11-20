@@ -90,6 +90,10 @@ Scaffold {
 | onClick       | (() -> Unit)?                   | Callback triggered on click      | null                                  | No       |
 | holdDownState | Boolean                         | Whether component is held down   | false                                 | No       |
 | enabled       | Boolean                         | Whether component is interactive | true                                  | No       |
+| selected      | Boolean                         | Selected row (COUI `setSelected`): the press layer stays on and the card-group dividers next to the row are hidden | false | No |
+| startBadge    | Boolean                         | Red dot on the top end corner of `startAction` (COUI `iconRedDotMode`) | false | No |
+| endBadgeCount | Int?                            | Red dot before the end content (COUI `endRedDotMode` / `endRedDotNum`): `null` hides it, `0` is a plain dot, a positive value shows the number | null | No |
+| endIcon       | @Composable (() -> Unit)?       | 16dp icon right before the end content (COUI `coui_assign_icon`) | null | No |
 
 ### ArrowPreferenceDefaults Object
 
@@ -105,7 +109,7 @@ The ArrowPreferenceDefaults object provides default color configuration for the 
 
 - The trailing arrow icon is always shown and tinted automatically.
 - Tint uses `COUITheme.colorScheme.labelTertiary` when `enabled = true`.
-- Tint uses `COUITheme.colorScheme.disabledNeutral` when `enabled = false`.
+- Tint uses `COUITheme.colorScheme.labelQuaternary` when `enabled = false` (COUI `coui_btn_next_disabled`).
 
 ## Advanced Usage
 

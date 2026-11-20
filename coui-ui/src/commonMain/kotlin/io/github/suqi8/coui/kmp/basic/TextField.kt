@@ -2,16 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
@@ -26,7 +21,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -53,9 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -70,6 +64,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -79,6 +74,8 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
@@ -803,16 +800,33 @@ object TextFieldDefaults {
     /** Horizontal amplitude of the error shake animation (COUI coui_edit_text_shake_amplitude). */
     internal val ShakeAmplitude = 5.33.dp
 
-    /** Spacing before the trailing counter / buttons (COUI coui_input_button_layout_margin_start). */
+    /**
+     * Spacing before the trailing counter and the clear button (COUI
+     * coui_input_button_layout_margin_start on input_count / delete_button).
+     */
     internal val CounterPadding = 8.dp
 
-    /** The circular touch target size of the built-in trailing buttons. */
-    internal val TrailingButtonTouchTarget = 36.dp
+    /**
+     * Spacing before the password eye (COUI coui_card_input_password_margin_start on
+     * checkbox_password).
+     */
+    internal val PasswordButtonPaddingStart = 2.dp
 
-    /** The size of the clear button icon (ic_edit_text_delete: 22dp vector, 18dp circle at 2..20). */
+    /**
+     * The end padding of the built-in buttons in [TextFieldMode.Rectangle] (COUI
+     * Widget.COUI.EditText.HintAnim.Rectangle android:paddingRight, which the delete icon sits in).
+     */
+    internal val RectButtonEndPadding = 10.dp
+
+    /**
+     * The size of the clear button (ic_edit_text_delete: a 22dp vector with an 18dp circle at
+     * 2..20, laid out at its intrinsic size like the COUIEditText compound drawable and the
+     * COUIInputView wrap_content delete_button). Touches near it still reach it through the
+     * minimum touch target expansion.
+     */
     internal val ClearButtonVisualSize = 22.dp
 
-    /** The visual size of the password eye icon (COUI coui_inputview_password_size). */
+    /** The size of the password eye toggle (COUI coui_inputview_password_size). */
     internal val PasswordIconSize = 28.dp
 
     /**
@@ -946,8 +960,11 @@ private val LabelAnimDuration = 200
 /** Total duration of the error shake animation (COUIErrorEditTextHelper ShakeInterpolator TOTAL_DURATION). */
 private val ShakeDuration = 450
 
-/** Duration of the password eye slash animation (coui_btn_eye_off_anim / coui_btn_eye_on_anim). */
-private val PasswordEyeAnimDuration = 300
+/** Duration of the slash drawn over the eye when the password is hidden (coui_btn_eye_off_anim). */
+private val PasswordEyeOffAnimDuration = 300
+
+/** Duration of the slash wiped off the eye when the password is shown (coui_btn_eye_on_anim). */
+private val PasswordEyeOnAnimDuration = 200
 
 /**
  * `-ascent / textSize` of the collapsed label paint, COUICollapseTextHelper.getCollapsedTextHeight
@@ -1044,40 +1061,37 @@ private fun TextFieldChrome(
     isFocused: Boolean,
     innerTextField: @Composable () -> Unit,
 ) {
-    // Rectangle mode: the stroke keeps the 0.33dp couiStrokeWidth when focused, only its color
-    // changes (COUIEditText.applyBoxAttributes / updateTextInputBoxState); the 1dp
-    // couiFocusStrokeWidth is only used by COUIErrorEditTextHelper.drawModeBackgroundRect in error
-    // state. Disabled fields use couiDisabledStrokeColor.
-    val borderWidth = if (enabled && isError) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth
-    val borderColorState = animateColorAsState(
-        when {
-            !enabled -> colors.disabledBorderColor
-            isError -> colors.errorColor
-            isFocused -> colors.borderColor
-            else -> colors.unfocusedBorderColor
-        },
-        animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
-    )
-    // Line mode: base underline (0.33dp, thickened to the 1dp focused width in error state)
-    // plus a focused overlay expanding from the start edge. With justShowFocusLine
-    // (COUIInputPreference couiJustShowFocusLine) the resting underline is not drawn.
-    // A disabled field draws the resting underline with couiDisabledStrokeColor (COUIEditText draw).
-    val underlineBaseColor = animateColorAsState(
-        when {
-            !enabled -> colors.disabledBorderColor
-            isError -> colors.errorColor
-            else -> colors.unfocusedBorderColor
-        },
-        animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
-    )
-    val underlineBaseWidth = animateDpAsState(
-        if (isError && enabled) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth,
-        animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
-    )
-    val underlineFocusColor = animateColorAsState(
-        if (isError) colors.errorColor else colors.borderColor,
-        animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
-    )
+    // Error blend (COUIErrorEditTextHelper.mHintColorChangeProgress): when the error turns on, the
+    // border / underline blends from its current color to the error color over 217ms with
+    // COUIEaseInterpolator (getGradientColor, a per-channel ARGB blend); when it turns off,
+    // setErrorStateEnd(false) restores the normal drawing at once.
+    val errorProgress = remember { Animatable(if (isError) 1f else 0f) }
+    LaunchedEffect(isError) {
+        if (!isError) {
+            errorProgress.snapTo(0f)
+        } else if (errorProgress.value < 1f) {
+            errorProgress.snapTo(0f)
+            errorProgress.animateTo(1f, tween(ErrorColorAnimDuration, easing = CouiEaseEasing))
+        }
+    }
+    val errorActive = isError && enabled
+    // The error stroke is the 1dp couiFocusStrokeWidth from the start of the blend
+    // (COUIErrorEditTextHelper.init gets mStrokeWidthFocused); outside the error state the rect
+    // border keeps the 0.33dp couiStrokeWidth even when focused, only its color changes.
+    val borderWidth = if (errorActive) TextFieldDefaults.BorderWidth else TextFieldDefaults.UnfocusedBorderWidth
+    // Rectangle mode: the stroke color switches at once with the focus and enabled state
+    // (COUIEditText.updateTextInputBoxState -> applyBoxAttributes); disabled fields use
+    // couiDisabledStrokeColor.
+    val rectStrokeColor = when {
+        !enabled -> colors.disabledBorderColor
+        isFocused -> colors.borderColor
+        else -> colors.unfocusedBorderColor
+    }
+    // Line mode: base underline (0.33dp, the 1dp focused width in error state) plus a focused
+    // overlay expanding from the start edge. With justShowFocusLine (COUIInputPreference
+    // couiJustShowFocusLine) the resting underline is not drawn. A disabled field draws the resting
+    // underline with couiDisabledStrokeColor (COUIEditText.draw).
+    val underlineBaseColor = if (enabled) colors.unfocusedBorderColor else colors.disabledBorderColor
     val lineFraction = remember { Animatable(if (isFocused) 1f else 0f) }
     val lineAlpha = remember { Animatable(if (isFocused) 1f else 0f) }
     if (backgroundMode == TextFieldMode.Line) {
@@ -1127,19 +1141,24 @@ private fun TextFieldChrome(
 
     // COUI never tints the label in error state: COUIErrorEditTextHelper.drawCollapseText has
     // no caller, so the hint keeps its color. A disabled field draws the collapsed and expanded
-    // hint in couiDisabledStrokeColor (COUIEditText.updateLabelState).
-    val labelColorState = animateColorAsState(
-        if (enabled) colors.labelColor else colors.disabledBorderColor,
-        animationSpec = tween(ErrorColorAnimDuration, easing = CouiEaseEasing),
-    )
+    // hint in couiDisabledStrokeColor, set at once by COUIEditText.updateLabelState.
+    val labelColor = if (enabled) colors.labelColor else colors.disabledBorderColor
     // Label collapse: 200ms with COUIMoveEaseInterpolator
     // (COUIEditText LABEL_SCALE_ANIMATION_DURATION / mPathInterpolator1).
     val labelFraction = animateFloatAsState(
         if (labelState == LabelAnimState.Floating) 1f else 0f,
         animationSpec = tween(LabelAnimDuration, easing = CouiMoveEaseEasing),
     )
-    val labelFontSize = labelNormalFontSize +
-        (TextFieldDefaults.LabelFontSizeFloating.value - labelNormalFontSize) * labelFraction.value
+    // COUICollapseTextHelper draws a collapsing label at its expanded size and scales the canvas
+    // (mScale = size / expandedTextSize, the size interpolated linearly); only once it rests at the
+    // collapsed size is it laid out at that size. The label is therefore measured at the expanded
+    // size while it moves and scaled in its layer, so the animation never recomposes per frame.
+    val labelCollapsedAtRest by remember { derivedStateOf { labelFraction.value >= 1f } }
+    val labelMeasuredFontSize = if (labelCollapsedAtRest) TextFieldDefaults.LabelFontSizeFloating.value else labelNormalFontSize
+    val labelScale: () -> Float = {
+        val size = labelNormalFontSize + (TextFieldDefaults.LabelFontSizeFloating.value - labelNormalFontSize) * labelFraction.value
+        size / labelMeasuredFontSize
+    }
 
     // Vertical geometry. With the HintAnim floating label COUIEditText.getModePaddingTop reserves
     // room above the text: in line mode coui_textinput_line_padding_top + the collapsed label
@@ -1184,13 +1203,11 @@ private fun TextFieldChrome(
     // soon as the label starts collapsing, and closed as soon as it starts expanding.
     val cutout = remember { LabelCutout() }
     val cutoutOpen = floatingLabel && backgroundMode == TextFieldMode.Rectangle && labelState == LabelAnimState.Floating
-    // COUI only switches the collapsed label to sans-serif-medium in rect mode
-    // (COUIEditText initHintMode: setTypefaces for couiBackgroundMode == 2).
-    val labelFontWeight = if (labelState == LabelAnimState.Floating && backgroundMode == TextFieldMode.Rectangle) {
-        FontWeight.Medium
-    } else {
-        FontWeight.Normal
-    }
+    // In rect mode COUI sets sans-serif-medium on the collapse helper's paint itself
+    // (COUIEditText.initHintMode: setTypefaces for couiBackgroundMode == 2 ->
+    // COUIChangeTextUtil.adaptBoldAndMediumFont), so the label is medium both expanded and
+    // collapsed; the other modes keep the regular hint.
+    val labelFontWeight = if (backgroundMode == TextFieldMode.Rectangle) FontWeight.Medium else FontWeight.Normal
 
     val backgroundModifier = when (backgroundMode) {
         // A stroke-only round rect (GradientDrawable / COUICutoutDrawable with no fill and plain
@@ -1204,9 +1221,14 @@ private fun TextFieldChrome(
             val boxHeight = size.height - top - strokePx
             if (boxWidth <= 0f || boxHeight <= 0f) return@drawBehind
             val radius = (cornerRadius.toPx() - half).coerceAtLeast(0f)
+            val strokeColor = if (errorActive) {
+                lerpArgb(rectStrokeColor, colors.errorColor, errorProgress.value)
+            } else {
+                rectStrokeColor
+            }
             val drawBorder: DrawScope.() -> Unit = {
                 drawRoundRect(
-                    color = borderColorState.value,
+                    color = strokeColor,
                     topLeft = Offset(half, top + half),
                     size = Size(boxWidth, boxHeight),
                     cornerRadius = CornerRadius(radius),
@@ -1225,10 +1247,13 @@ private fun TextFieldChrome(
         }
 
         TextFieldMode.Line -> Modifier.drawBehind {
-            if (!justShowFocusLine || (isError && enabled)) {
-                val baseWidth = underlineBaseWidth.value.toPx()
+            val blend = if (errorActive) errorProgress.value else 0f
+            if (!justShowFocusLine || errorActive) {
+                // COUIErrorEditTextHelper.drawModeBackgroundLine: the resting line, 1dp in error
+                // state, blended towards the error color.
+                val baseWidth = borderWidth.toPx()
                 drawRect(
-                    color = underlineBaseColor.value,
+                    color = lerpArgb(underlineBaseColor, colors.errorColor, blend),
                     topLeft = Offset(0f, size.height - baseWidth),
                     size = Size(size.width, baseWidth),
                 )
@@ -1237,7 +1262,7 @@ private fun TextFieldChrome(
             if (alpha > 0f) {
                 val focusWidth = TextFieldDefaults.BorderWidth.toPx()
                 drawRect(
-                    color = underlineFocusColor.value,
+                    color = lerpArgb(colors.borderColor, colors.errorColor, blend),
                     topLeft = Offset(0f, size.height - focusWidth),
                     size = Size(size.width * lineFraction.value, focusWidth),
                     alpha = alpha,
@@ -1249,11 +1274,18 @@ private fun TextFieldChrome(
     }
 
     val hasBuiltinTrailing = counterText != null || onClearText != null || passwordVisible != null
+    val hasBuiltinButtons = onClearText != null || passwordVisible != null
     val builtinTrailing: (@Composable () -> Unit)? = if (!hasBuiltinTrailing) {
         null
     } else {
         {
-            val clusterEndPadding = if (onClearText != null || passwordVisible != null) 0.dp else insideMargin.width
+            // The buttons sit at the field end: flush in the line / bare modes (paddingRight 0)
+            // and within the 10dp paddingRight of the rect mode.
+            val clusterEndPadding = when {
+                !hasBuiltinButtons -> insideMargin.width
+                backgroundMode == TextFieldMode.Rectangle -> minOf(TextFieldDefaults.RectButtonEndPadding, insideMargin.width)
+                else -> 0.dp
+            }
             Row(
                 modifier = Modifier.padding(end = clusterEndPadding),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1268,14 +1300,14 @@ private fun TextFieldChrome(
                         modifier = Modifier.padding(start = TextFieldDefaults.CounterPadding),
                     )
                 }
-                if (onClearText != null) {
-                    AnimatedVisibility(
-                        visible = clearButtonVisible,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        TextFieldClearButton(color = colors.iconColor, onClear = onClearText)
-                    }
+                // The clear button pops in and out with no transition: COUIEditText posts
+                // setCompoundDrawables and COUIInputView.updateDeleteButton flips the visibility.
+                if (onClearText != null && clearButtonVisible) {
+                    TextFieldClearButton(
+                        color = colors.iconColor,
+                        onClear = onClearText,
+                        modifier = Modifier.padding(start = TextFieldDefaults.CounterPadding),
+                    )
                 }
                 if (passwordVisible != null) {
                     TextFieldPasswordToggle(
@@ -1283,6 +1315,7 @@ private fun TextFieldChrome(
                         enabled = enabled,
                         tint = if (enabled) colors.iconColor else colors.disabledIconColor,
                         onToggle = onPasswordToggle,
+                        modifier = Modifier.padding(start = TextFieldDefaults.PasswordButtonPaddingStart),
                     )
                 }
             }
@@ -1300,10 +1333,11 @@ private fun TextFieldChrome(
     TextFieldDecorationBox(
         label = label,
         labelVisible = labelState != LabelAnimState.Hidden && labelState != LabelAnimState.Placeholder,
-        labelFontSize = labelFontSize,
+        labelFontSize = labelMeasuredFontSize,
         labelFontWeight = labelFontWeight,
-        labelColor = labelColorState.value,
+        labelColor = labelColor,
         labelFraction = { labelFraction.value },
+        labelScale = labelScale,
         collapsedLabelTop = labelGeometry.collapsedTop,
         legacyFloatOffset = insideMargin.height / 2,
         textOffset = textOffset,
@@ -1349,7 +1383,8 @@ private class LabelCutout {
  * centered vertically in a box at least [minHeight] tall (EditText gravity center_vertical within
  * its min height), and places the label: expanded on the text start, collapsed at
  * [collapsedLabelTop] (or [legacyFloatOffset] above the text start when null), interpolated by
- * [labelFraction]. Records the collapsed label span in [cutout] for the rect border.
+ * [labelFraction]. The label is measured at [labelFontSize] and scaled by [labelScale] from its
+ * top start corner. Records the collapsed label span in [cutout] for the rect border.
  */
 @Composable
 private fun TextFieldDecorationBox(
@@ -1359,6 +1394,7 @@ private fun TextFieldDecorationBox(
     labelFontWeight: FontWeight,
     labelColor: Color,
     labelFraction: () -> Float,
+    labelScale: () -> Float,
     collapsedLabelTop: Dp?,
     legacyFloatOffset: Dp,
     textOffset: Dp,
@@ -1403,12 +1439,21 @@ private fun TextFieldDecorationBox(
                 Box(modifier = Modifier.layoutId(DecorationSlot.Trailing), contentAlignment = Alignment.Center) { trailingIcon() }
             }
             if (labelVisible) {
+                // Scaled from its start edge, which stays on the text start while it moves.
+                val labelOrigin = if (LocalLayoutDirection.current == LayoutDirection.Rtl) LabelOriginRtl else LabelOriginLtr
                 Text(
                     text = label,
                     fontSize = labelFontSize.sp,
                     color = labelColor,
                     fontWeight = labelFontWeight,
-                    modifier = Modifier.layoutId(DecorationSlot.Label),
+                    modifier = Modifier
+                        .layoutId(DecorationSlot.Label)
+                        .graphicsLayer {
+                            val scale = labelScale()
+                            scaleX = scale
+                            scaleY = scale
+                            transformOrigin = labelOrigin
+                        },
                     textAlign = TextAlign.Start,
                 )
             }
@@ -1478,63 +1523,71 @@ private fun TextFieldDecorationBox(
 private enum class DecorationSlot { Leading, Field, BuiltinTrailing, Trailing, Label }
 
 /**
- * Clear (fast delete) button: a 36dp circular touch target holding the 22dp ic_edit_text_delete
- * icon, a 9dp-radius circle tinted couiColorLabelSecondary with the cross knocked out of it, so
- * the surface behind shows through the cross. The cross arms are 1.6dp round-capped strokes whose
- * cap centers sit 2.97dp from the center on each axis.
+ * Clear (fast delete) button: the 22dp ic_edit_text_delete icon laid out at its intrinsic size, a
+ * 9dp-radius circle tinted couiColorLabelSecondary with the cross knocked out of it, so the surface
+ * behind shows through the cross. The cross arms are 1.6dp round-capped strokes whose cap centers
+ * sit 2.97dp from the center on each axis. Like the COUIEditText compound drawable and the
+ * COUIInputView delete_button (background @null), pressing it shows no feedback.
  */
 @Composable
 private fun TextFieldClearButton(
     color: Color,
     onClear: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val currentOnClear by rememberUpdatedState(onClear)
-    Box(
-        modifier = Modifier
-            .size(TextFieldDefaults.TrailingButtonTouchTarget)
-            .clip(CircleShape)
-            .clickable { currentOnClear() }
-            .semantics { contentDescription = "Clear text" },
-        contentAlignment = Alignment.Center,
+    Canvas(
+        modifier = modifier
+            .size(TextFieldDefaults.ClearButtonVisualSize)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Button,
+            ) { currentOnClear() }
+            .semantics { contentDescription = "Clear text" }
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
     ) {
-        Canvas(
-            modifier = Modifier
-                .size(TextFieldDefaults.ClearButtonVisualSize)
-                .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
-        ) {
-            // ic_edit_text_delete: 22dp viewport, circle centered at (11, 11) with radius 9.
-            val s = size.width / 22f
-            drawCircle(color = color, radius = 9f * s)
-            val arm = 2.97f * s
-            val stroke = 1.6f * s
-            // BlendMode.Clear punches the cross out of the circle; the color only feeds the mask.
-            drawLine(
-                color = color,
-                start = Offset(center.x - arm, center.y - arm),
-                end = Offset(center.x + arm, center.y + arm),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round,
-                blendMode = BlendMode.Clear,
-            )
-            drawLine(
-                color = color,
-                start = Offset(center.x - arm, center.y + arm),
-                end = Offset(center.x + arm, center.y - arm),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round,
-                blendMode = BlendMode.Clear,
-            )
-        }
+        // ic_edit_text_delete: 22dp viewport, circle centered at (11, 11) with radius 9.
+        val s = size.width / 22f
+        drawCircle(color = color, radius = 9f * s)
+        val arm = 2.97f * s
+        val stroke = 1.6f * s
+        // BlendMode.Clear punches the cross out of the circle; the color only feeds the mask.
+        drawLine(
+            color = color,
+            start = Offset(center.x - arm, center.y - arm),
+            end = Offset(center.x + arm, center.y + arm),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+            blendMode = BlendMode.Clear,
+        )
+        drawLine(
+            color = color,
+            start = Offset(center.x - arm, center.y + arm),
+            end = Offset(center.x + arm, center.y - arm),
+            strokeWidth = stroke,
+            cap = StrokeCap.Round,
+            blendMode = BlendMode.Clear,
+        )
     }
 }
 
 /**
- * Password visibility toggle: a 36dp circular touch target holding a 28dp eye icon
- * (COUI coui_inputview_password_size) redrawn from the coui_btn_eye_on / coui_btn_eye_off
- * 34dp vectors, tinted couiColorLabelSecondary (couiColorLabelQuaternary and not clickable when
- * disabled, coui_btn_eye_*_disabled). Toggling draws the slash in or out over 300ms with the
- * (0.3, 0, 0.1, 1) path interpolator, like the coui_btn_eye_off_anim / coui_btn_eye_on_anim
- * transitions of coui_edittext_password_icon.
+ * The size of the password eye toggle of a [TextField]: [TextFieldDefaults.PasswordIconSize]
+ * (coui_inputview_password_size). [LockScreenPasswordInput] provides the 34dp intrinsic size of
+ * the coui_btn_eye drawables, which its wrap_content checkbox_password uses.
+ */
+internal val LocalTextFieldPasswordToggleSize = staticCompositionLocalOf { TextFieldDefaults.PasswordIconSize }
+
+/**
+ * Password visibility toggle: the eye icon redrawn from the coui_btn_eye_on / coui_btn_eye_off
+ * 34dp vectors at [LocalTextFieldPasswordToggleSize], tinted couiColorLabelSecondary
+ * (couiColorLabelQuaternary and not clickable when disabled, coui_btn_eye_*_disabled), with no
+ * press feedback (checkbox_password background @null). Toggling replays the transitions of the
+ * coui_edittext_password_icon animated-selector with the (0.3, 0, 0.1, 1) path interpolator:
+ * hiding the password draws the slash from its top start to its end in 300ms, cutting its gap in
+ * the eye as it goes (coui_btn_eye_off_anim); showing it wipes the slash and the gap away in the
+ * same direction in 200ms (coui_btn_eye_on_anim).
  */
 @Composable
 private fun TextFieldPasswordToggle(
@@ -1542,64 +1595,104 @@ private fun TextFieldPasswordToggle(
     enabled: Boolean,
     tint: Color,
     onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val currentOnToggle by rememberUpdatedState(onToggle)
     val description = if (visible) "Hide password" else "Show password"
-    val slashProgress = animateFloatAsState(
-        if (visible) 0f else 1f,
-        animationSpec = tween(PasswordEyeAnimDuration, easing = CouiMoveEaseEasing),
-    )
-    Box(
-        modifier = Modifier
-            .size(TextFieldDefaults.TrailingButtonTouchTarget)
-            .clip(CircleShape)
-            .clickable(enabled = enabled) { currentOnToggle() }
+    // The slash covers [slashTail, slashHead] of its line, as fractions from its top start: all of
+    // it while the password is hidden, none of it while shown.
+    val slashTail = remember { Animatable(if (visible) 1f else 0f) }
+    val slashHead = remember { Animatable(1f) }
+    LaunchedEffect(visible) {
+        // The transitions are not reversible: a toggle mid-way first jumps to the end of the
+        // running one, as AnimatedStateListDrawable does.
+        if (visible) {
+            if (slashTail.value >= 1f) return@LaunchedEffect
+            slashHead.snapTo(1f)
+            slashTail.animateTo(1f, tween(PasswordEyeOnAnimDuration, easing = CouiMoveEaseEasing))
+        } else {
+            if (slashTail.value <= 0f && slashHead.value >= 1f) return@LaunchedEffect
+            slashTail.snapTo(0f)
+            slashHead.snapTo(0f)
+            slashHead.animateTo(1f, tween(PasswordEyeOffAnimDuration, easing = CouiMoveEaseEasing))
+        }
+    }
+    Canvas(
+        modifier = modifier
+            .size(LocalTextFieldPasswordToggleSize.current)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                enabled = enabled,
+                role = Role.Button,
+            ) { currentOnToggle() }
             .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
     ) {
-        Canvas(modifier = Modifier.size(TextFieldDefaults.PasswordIconSize)) {
-            // Geometry from the 34dp coui_btn_eye_on vector: almond eye from (6,17) to (28,17)
-            // with cubic bulges to y 27.716 / 6.286, pupil ring r 5.02 and dot r 3.016 at (17,17).
-            val s = size.width / 34f
-            val eyeCenter = Offset(17f * s, 17f * s)
-            val eye = Path().apply {
-                fillType = PathFillType.EvenOdd
-                moveTo(6f * s, 17f * s)
-                cubicTo(12f * s, 27.716f * s, 22f * s, 27.716f * s, 28f * s, 17f * s)
-                cubicTo(22f * s, 6.286f * s, 12f * s, 6.286f * s, 6f * s, 17f * s)
+        // Geometry from the 34dp coui_btn_eye_on vector: almond eye from (6,17) to (28,17)
+        // with cubic bulges to y 27.716 / 6.286, pupil ring r 5.02 and dot r 3.016 at (17,17).
+        val s = size.width / 34f
+        val eyeCenter = Offset(17f * s, 17f * s)
+        val eye = Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(6f * s, 17f * s)
+            cubicTo(12f * s, 27.716f * s, 22f * s, 27.716f * s, 28f * s, 17f * s)
+            cubicTo(22f * s, 6.286f * s, 12f * s, 6.286f * s, 6f * s, 17f * s)
+            close()
+            addOval(Rect(center = eyeCenter, radius = 5.02f * s))
+            addOval(Rect(center = eyeCenter, radius = 3.016f * s))
+        }
+        val tail = slashTail.value
+        val head = slashHead.value
+        if (head <= tail) {
+            drawPath(eye, color = tint)
+        } else {
+            // coui_btn_eye_off: the same eye cut along a 45-degree slash from (6.7,6.7) to
+            // (27.2,27.3) with a small gap, plus the 2dp rounded slash stroke. While animating,
+            // only the [tail, head] part of the slash and of the gap it cuts is drawn.
+            val lineStart = Offset(6.7f * s, 6.73f * s)
+            val lineVector = Offset(27.24f * s, 27.27f * s) - lineStart
+            val slashStart = lineStart + lineVector * tail
+            val slashEnd = lineStart + lineVector * head
+            val normal = Offset(-0.7071f, 0.7071f)
+            val halfBand = 2.8f * s
+            val band = Path().apply {
+                moveTo(slashStart.x + normal.x * halfBand, slashStart.y + normal.y * halfBand)
+                lineTo(slashEnd.x + normal.x * halfBand, slashEnd.y + normal.y * halfBand)
+                lineTo(slashEnd.x - normal.x * halfBand, slashEnd.y - normal.y * halfBand)
+                lineTo(slashStart.x - normal.x * halfBand, slashStart.y - normal.y * halfBand)
                 close()
-                addOval(Rect(center = eyeCenter, radius = 5.02f * s))
-                addOval(Rect(center = eyeCenter, radius = 3.016f * s))
             }
-            val progress = slashProgress.value
-            if (progress <= 0f) {
+            clipPath(band, clipOp = ClipOp.Difference) {
                 drawPath(eye, color = tint)
-            } else {
-                // coui_btn_eye_off: the same eye cut along a 45-degree slash from (6.7,6.7)
-                // to (27.2,27.3) with a small gap, plus the 2dp rounded slash stroke. While
-                // animating, the slash (and the gap it cuts) grows from its start point.
-                val slashStart = Offset(6.7f * s, 6.73f * s)
-                val slashEnd = slashStart + (Offset(27.24f * s, 27.27f * s) - slashStart) * progress
-                val normal = Offset(-0.7071f, 0.7071f)
-                val halfBand = 2.8f * s
-                val band = Path().apply {
-                    moveTo(slashStart.x + normal.x * halfBand, slashStart.y + normal.y * halfBand)
-                    lineTo(slashEnd.x + normal.x * halfBand, slashEnd.y + normal.y * halfBand)
-                    lineTo(slashEnd.x - normal.x * halfBand, slashEnd.y - normal.y * halfBand)
-                    lineTo(slashStart.x - normal.x * halfBand, slashStart.y - normal.y * halfBand)
-                    close()
-                }
-                clipPath(band, clipOp = ClipOp.Difference) {
-                    drawPath(eye, color = tint)
-                }
-                drawLine(
-                    color = tint,
-                    start = slashStart,
-                    end = slashEnd,
-                    strokeWidth = 2f * s,
-                    cap = StrokeCap.Round,
-                )
             }
+            drawLine(
+                color = tint,
+                start = slashStart,
+                end = slashEnd,
+                strokeWidth = 2f * s,
+                cap = StrokeCap.Round,
+            )
         }
     }
 }
+
+/**
+ * Blends [start] into [stop] channel by channel, like COUIErrorEditTextHelper.getGradientColor
+ * (a straight ARGB interpolation, not the perceptual blend of [androidx.compose.ui.graphics.lerp]).
+ */
+private fun lerpArgb(start: Color, stop: Color, fraction: Float): Color = when {
+    fraction <= 0f -> start
+
+    fraction >= 1f -> stop
+
+    else -> Color(
+        red = start.red + (stop.red - start.red) * fraction,
+        green = start.green + (stop.green - start.green) * fraction,
+        blue = start.blue + (stop.blue - start.blue) * fraction,
+        alpha = start.alpha + (stop.alpha - start.alpha) * fraction,
+    )
+}
+
+/** The scale origin of the label: its top start corner. */
+private val LabelOriginLtr = TransformOrigin(0f, 0f)
+private val LabelOriginRtl = TransformOrigin(1f, 0f)

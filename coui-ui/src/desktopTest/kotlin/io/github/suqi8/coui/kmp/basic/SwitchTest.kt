@@ -110,14 +110,31 @@ class SwitchTest {
         }
         onNodeWithTag("switch").performTouchInput {
             down(centerRight - Offset(8f, 0f))
-            // Past the touch slop, but less than half the travel.
-            repeat(5) { moveBy(Offset(-width * 0.06f, 0f)) }
+            // Past the touch slop, but less than half the travel: the thumb follows the finger one
+            // to one, so 18% of the 44dp track is 8dp of the 20dp travel.
+            repeat(5) { moveBy(Offset(-width * 0.036f, 0f)) }
         }
         mainClock.advanceTimeBy(1000)
         onNodeWithTag("switch").performTouchInput { up() }
         mainClock.advanceTimeBy(2000)
         assertTrue(checked, "a drag released nearer the on end must leave the switch on")
         assertEquals(0, calls, "neither the drag nor a tap may report a change")
+    }
+
+    @Test
+    fun theThumbFollowsTheFingerOneToOne() = runComposeUiTest {
+        var checked by mutableStateOf(false)
+        setDraggableSwitch(initial = { checked }) { checked = it }
+        onNodeWithTag("switch").performTouchInput {
+            down(centerLeft + Offset(8f, 0f))
+            // 27.5% of the 44dp track is 12dp: past the middle of the 20dp travel
+            // (COUISpringDragHelper positions the thumb from the raw finger delta).
+            repeat(5) { moveBy(Offset(width * 0.055f, 0f)) }
+        }
+        mainClock.advanceTimeBy(1000)
+        onNodeWithTag("switch").performTouchInput { up() }
+        mainClock.advanceTimeBy(2000)
+        assertTrue(checked, "a drag over more than half the travel must settle on the on end")
     }
 
     private fun ComposeUiTest.setDraggableSwitch(initial: () -> Boolean, onCheckedChange: (Boolean) -> Unit) {

@@ -404,15 +404,15 @@ fun NumericKeyboard(
                             drawLockInnerBorder(circle, alpha = alpha)
                         }
                         val layout = numberLayouts[index] ?: continue
-                        scale(scale, scale, pivot = center) {
-                            drawText(
-                                textLayoutResult = layout,
-                                topLeft = Offset(
-                                    center.x - layout.size.width / 2f,
-                                    center.y - layout.size.height / 2f - numberOffsetY,
-                                ),
-                                alpha = alpha,
-                            )
+                        val textTopLeft = Offset(
+                            center.x - layout.size.width / 2f,
+                            center.y - layout.size.height / 2f - numberOffsetY,
+                        )
+                        // drawCell scales the digit's text size with the key but keeps the baseline
+                        // of the unscaled font metrics, so a pressed digit shrinks towards its
+                        // baseline, not the key center.
+                        scale(scale, scale, pivot = Offset(center.x, textTopLeft.y + layout.firstBaseline)) {
+                            drawText(textLayoutResult = layout, topLeft = textTopLeft, alpha = alpha)
                         }
                     }
                     if (pressEffect == NumericKeyboardPressEffect.Light) {

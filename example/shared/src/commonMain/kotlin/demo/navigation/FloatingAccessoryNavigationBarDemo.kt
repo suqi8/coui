@@ -34,6 +34,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_count
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_material
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_search
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_show_divider
+import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_end
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_end_summary
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_floating_accessory_navigation_bar_search_terms
@@ -60,6 +61,7 @@ internal val FloatingAccessoryNavigationBarDemo = Demo(
         playground {
             var selected by rememberSaveable { mutableIntStateOf(0) }
             var countIndex by rememberSaveable { mutableIntStateOf(1) }
+            var capsuleShown by rememberSaveable { mutableStateOf(true) }
             var startShown by rememberSaveable { mutableStateOf(true) }
             var endShown by rememberSaveable { mutableStateOf(true) }
             var searching by rememberSaveable { mutableStateOf(false) }
@@ -70,6 +72,7 @@ internal val FloatingAccessoryNavigationBarDemo = Demo(
             PlaygroundPreview {
                 ImageBackdropBox(enabled = imageBackground) {
                     FloatingAccessoryNavigationBar(
+                        visible = capsuleShown,
                         startAccessoryVisible = startShown,
                         endAccessoryVisible = endShown,
                         materialEffect = material,
@@ -105,6 +108,14 @@ internal val FloatingAccessoryNavigationBarDemo = Demo(
                 }
             }
             PlaygroundControls {
+                item {
+                    // The capsule alone: the COUI 17 show / hide springs, the accessories stay.
+                    SwitchPreference(
+                        title = stringResource(Res.string.common_visible),
+                        checked = capsuleShown,
+                        onCheckedChange = { capsuleShown = it },
+                    )
+                }
                 item {
                     SwitchPreference(
                         title = stringResource(Res.string.demo_floating_accessory_navigation_bar_start),

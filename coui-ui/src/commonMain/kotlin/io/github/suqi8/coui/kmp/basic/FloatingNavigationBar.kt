@@ -3,11 +3,14 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,6 +114,7 @@ import io.github.suqi8.coui.kmp.utils.layerOverflow
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -122,12 +126,14 @@ import kotlin.math.roundToInt
  *
  * - **Selection**: tapping an item selects it, and sliding a finger across the capsule selects the
  *   item under it as it goes (the selection follows the finger); the item the finger ends on is
- *   committed with its `onClick` when the finger lifts, wherever it lifts
- *   (`COUIBottomFloatingNavigationBarMenuView.onMenuTouchMove` / `dispatchTouchEvent`). There is no
- *   indicator and no haptic feedback: the selected item simply switches to the selected colors.
+ *   committed with its `onClick` when the finger lifts, wherever it lifts, and also when a scrolling
+ *   parent takes the gesture over (`COUIBottomFloatingNavigationBarMenuView.onMenuTouchMove` /
+ *   `dispatchTouchEvent`). There is no indicator and no haptic feedback: the selected item simply
+ *   switches to the selected colors.
  * - **Touch motion**: the whole capsule takes the `COUITouchMotionAnimator` press scale, rubber-band
- *   drag-follow and drag deformation (`BaseBottomFloatingMenuView.initTouchMotionAnim`); the items
- *   have no press mask of their own.
+ *   drag-follow and drag deformation (`BaseBottomFloatingMenuView.initTouchMotionAnim`), except while
+ *   it slides sideways (`doHorizontalMoveAnim`); the items have no press mask of their own, only
+ *   COUI's hover / focus mask for a pointer or the keyboard.
  * - **Material**: COUI 17 draws the capsule with the framework bottom-bar material
  *   (`TYPE_FRAMEWORK_BOTTOM_BAR`, a 25px backdrop blur, see [FloatingNavigationBarDefaults.backdropSpec]),
  *   the `TYPE_FRAMEWORK_CAPSULE_3` edge lighting and inner shadow, and a `TYPE_OPAQUE_MEDIUM_2` touch
@@ -142,7 +148,10 @@ import kotlin.math.roundToInt
  *   while [expansionVisible]. Showing it slides it out from behind the capsule's end on a spring
  *   (response 0.55, bounce 0.35) while it scales 0.5 -> 1 and the capsule makes room; its alpha
  *   follows how much of it the capsule still covers, and the two shapes merge like metaballs while
- *   they touch. Hiding reverses it (`showExpansionView` / `hideExpansionView`).
+ *   they touch. Hiding reverses it and stops the slide as soon as the capsule covers the view
+ *   (`showExpansionView` / `hideExpansionView`, `finishCollapseTranslationIfFullyOverlapped`). A
+ *   [FloatingNavigationBarAccessory] used as the expansion view only takes its touch motion once it
+ *   has slid out (`setExpansionViewTouchMotionAnimEnabled`).
  * - **Show / hide**: [visible] runs the COUI 17 springs: alpha (response 0.2), scale 0.8 <-> 1
  *   (response 0.35, bounce 0.35) and, with [materialEffect], a 30px foreground blur (response 0.3)
  *   (`doMenuViewShowOrHideAnim`). A hidden capsule keeps its space but takes no touches.
@@ -216,7 +225,16 @@ fun FloatingNavigationBar(
             } else {
                 if (previous.menuLeft != target.menuLeft) launch { state.menuLeft.animateTo(target.menuLeft, BoundsSpring) }
                 if (previous.menuWidth != target.menuWidth) launch { state.menuWidth.animateTo(target.menuWidth, BoundsSpring) }
-                if (previous.slotLeft != target.slotLeft) launch { state.slotLeft.animateTo(target.slotLeft, BoundsSpring) }
+                if (previous.slotLeft != target.slotLeft) {
+                    launch {
+                        // finishCollapseTranslationIfFullyOverlapped: once the capsule covers the
+                        // hiding view completely, the slide ends at its target, so the bounce
+                        // cannot carry the view back out.
+                        state.slotLeft.animateToUntilCovered(target.slotLeft, BoundsSpring) {
+                            !target.expansionActive && state.expansionOverlapRatio() >= 1f
+                        }
+                    }
+                }
             }
         }
     }
@@ -332,7 +350,13 @@ fun FloatingNavigationBar(
                             }
                             .then(if (expansionActive) Modifier else Modifier.clearAndSetSemantics { }),
                     ) {
-                        expansion()
+                        // setExpansionViewTouchMotionAnimEnabled: a FloatingNavigationBarAccessory
+                        // shown here only takes its touch motion once it has slid out.
+                        CompositionLocalProvider(
+                            LocalFloatingNavigationAccessoryTouchMotion provides (expansionActive && !state.slotLeft.isRunning),
+                        ) {
+                            expansion()
+                        }
                     }
                 }
             },
@@ -368,6 +392,7 @@ fun FloatingNavigationBar(
                 menuLeft = menuLeft.toFloat(),
                 menuWidth = menuWidth.toFloat(),
                 slotLeft = slotLeft.toFloat(),
+                expansionActive = expansionActive,
             )
             if (state.targets != target) state.targets = target
 
@@ -569,8 +594,15 @@ internal fun FloatingNavigationBarCapsule(
                 val radius = blur.value
                 renderEffect = if (radius > 0.01f) BlurEffect(radius, radius, TileMode.Clamp) else null
             }
-            // A hidden capsule is INVISIBLE: no touches, nothing for accessibility.
-            .then(if (visible) Modifier.couiTouchMotion(interactionSource = null) else Modifier.clearAndSetSemantics { })
+            // A hidden capsule is INVISIBLE: no touches, nothing for accessibility. doHorizontalMoveAnim
+            // turns the touch motion off while the capsule slides sideways.
+            .then(
+                if (visible) {
+                    Modifier.couiTouchMotion(interactionSource = null, enabled = !state.menuLeft.isRunning)
+                } else {
+                    Modifier.clearAndSetSemantics { }
+                },
+            )
             .then(if (shadowElevation > 0.dp) Modifier.dropShadow(shape = shape, shadow = floatingNavigationBarShadow(shadowElevation)) else Modifier)
             .then(
                 if (visible) {
@@ -586,8 +618,7 @@ internal fun FloatingNavigationBarCapsule(
                             while (true) {
                                 val event = awaitPointerEvent()
                                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                                // A scrolling parent took the gesture (ACTION_CANCEL): neither the
-                                // slide nor the tap is committed.
+                                // A scrolling parent took the gesture (ACTION_CANCEL).
                                 if (change.isConsumed && change.positionChangedIgnoreConsumed()) {
                                     cancelled = true
                                     break
@@ -612,10 +643,11 @@ internal fun FloatingNavigationBarCapsule(
                             }
                             if (spot) scope.launch { spotlight.extinguish() }
                             // A slide commits the item it ended on, wherever the finger lifts; a plain
-                            // tap clicks the item under the finger. A gesture a scrolling parent took
-                            // over commits nothing.
+                            // tap clicks the item under the finger. When a scrolling parent takes the
+                            // gesture over (ACTION_CANCEL) the tap is dropped, but an item the slide has
+                            // already selected is still committed (dispatchPendingSlideItemClickIfNeeded).
                             val target = if (cancelled) {
-                                null
+                                slideItem?.takeIf { it.enabled }
                             } else {
                                 slideItem ?: upPosition?.let { position ->
                                     state.itemAt(position)?.takeIf { it === downItem && it.enabled }
@@ -700,7 +732,10 @@ internal fun FloatingNavigationBarCapsule(
  * [largeIcon] a 40dp icon rising 14dp above the item (`STYLE_NAVI_LARGE_ICON`). The icon and label
  * switch instantly between [FloatingNavigationBarColors.selectedColor] and
  * [FloatingNavigationBarColors.unselectedColor]; there is no press mask (COUI strips the pressed state
- * of navigation items, the capsule's touch motion is the press feedback).
+ * of navigation items, the capsule's touch motion is the press feedback). A pointer hovering a normal
+ * item or keyboard focus on it fades in COUI's hover / focus mask behind the icon and the label, a
+ * pill reaching 8dp past the item's sides (`COUIMaskRippleDrawable`). The selected item offers no
+ * click action to accessibility services (`setupItemAccessibility`).
  *
  * Put the items directly in the [FloatingNavigationBar] content: the bar lays them out and drives
  * their taps and slide-to-select gestures.
@@ -798,6 +833,16 @@ fun FloatingNavigationBarItem(
         modifier = Modifier
             .layoutId(handle)
             .then(modifier)
+            // STYLE_NAVI_VERTICAL: the COUIMaskRippleDrawable hover / focus mask, reaching
+            // coui_bottom_floating_navigation_bar_item_bg_horizontal_padding past the item's sides
+            // with fully round ends. The large icon style turns the drawable off.
+            .navigationItemStateMask(
+                interactionSource = interactionSource,
+                enabled = enabled && !largeIcon,
+                cornerRadius = FloatingNavigationBarDefaults.ItemHeight / 2,
+                horizontalInset = -FloatingNavigationBarDefaults.ItemMaskHorizontalOutset,
+            )
+            .hoverable(interactionSource = interactionSource, enabled = enabled)
             .focusable(enabled = enabled, interactionSource = interactionSource)
             .onKeyEvent { event ->
                 val activate = event.key == Key.Enter || event.key == Key.NumPadEnter || event.key == Key.Spacebar
@@ -811,9 +856,12 @@ fun FloatingNavigationBarItem(
             .semantics(mergeDescendants = true) {
                 role = Role.Tab
                 this.selected = shownSelected
-                onClick {
-                    if (enabled) currentOnClick()
-                    enabled
+                // setupItemAccessibility: the selected item offers no click action.
+                if (!shownSelected) {
+                    onClick {
+                        if (enabled) currentOnClick()
+                        enabled
+                    }
                 }
                 if (!enabled) disabled()
             },
@@ -965,6 +1013,12 @@ object FloatingNavigationBarDefaults {
 
     /** The item height (coui_bottom_floating_navigation_bar_item_height), centred in the capsule. */
     val ItemHeight = 48.dp
+
+    /**
+     * How far an item's hover / focus mask reaches past its sides
+     * (coui_bottom_floating_navigation_bar_item_bg_horizontal_padding); its ends are fully round.
+     */
+    val ItemMaskHorizontalOutset = 8.dp
 
     /** The icon size (coui_floating_toolbar_item_icon_width / _height). */
     val IconSize = 24.dp
@@ -1252,13 +1306,14 @@ internal fun floatingNavigationExpansionAlpha(overlapRatio: Float): Float {
     return if (overlapRatio <= start) 1f else (1f - (overlapRatio - start) / (1f - start)).coerceIn(0f, 1f)
 }
 
-/** The layout targets the bar's bounds springs chase, in pixels. */
+/** The layout targets the bar's bounds springs chase, in pixels, and whether the expansion view is shown. */
 @Immutable
 internal data class FloatingNavigationBarTargets(
     val availableWidth: Int,
     val menuLeft: Float,
     val menuWidth: Float,
     val slotLeft: Float,
+    val expansionActive: Boolean,
 )
 
 /** What the [FloatingNavigationBar] knows about one of its [FloatingNavigationBarItem]s. */
@@ -1385,10 +1440,10 @@ internal class FloatingNavigationBarState {
     }
 
     /**
-     * `updateExpansionViewAlphaByOverlap`: the expansion view's alpha from how much of its scaled
-     * bounds the capsule covers.
+     * `computeExpansionOverlapRatioWithMenu`: how much of the expansion view's scaled bounds the
+     * drawn capsule covers, from 0 to 1; 0 while the view has no size.
      */
-    fun expansionAlpha(): Float {
+    fun expansionOverlapRatio(): Float {
         val view = expansionRect(expansionScale.value)
         val area = view.width * view.height
         if (area <= 0f) return 0f
@@ -1398,9 +1453,41 @@ internal class FloatingNavigationBarState {
         val menu = Rect(left, capsuleRect.top, left + menuWidthValue, capsuleRect.bottom)
         val overlapWidth = max(0f, min(view.right, menu.right) - max(view.left, menu.left))
         val overlapHeight = max(0f, min(view.bottom, menu.bottom) - max(view.top, menu.top))
-        return floatingNavigationExpansionAlpha(min(1f, overlapWidth * overlapHeight / area))
+        return min(1f, overlapWidth * overlapHeight / area)
+    }
+
+    /**
+     * `updateExpansionViewAlphaByOverlap`: the expansion view's alpha from how much of its scaled
+     * bounds the capsule covers.
+     */
+    fun expansionAlpha(): Float {
+        val view = expansionRect(expansionScale.value)
+        if (view.width * view.height <= 0f) return 0f
+        return floatingNavigationExpansionAlpha(expansionOverlapRatio())
     }
 }
+
+/**
+ * Springs to [target] like `animateTo`, but jumps straight to it once [covered] holds: the hiding
+ * expansion or accessory view is then entirely behind the capsule, and COUI ends its slide there
+ * (`finishCollapseTranslationIfFullyOverlapped`) so the spring's bounce cannot show it again.
+ */
+internal suspend fun Animatable<Float, AnimationVector1D>.animateToUntilCovered(
+    target: Float,
+    animationSpec: AnimationSpec<Float>,
+    covered: () -> Boolean,
+) {
+    try {
+        animateTo(target, animationSpec) {
+            if (covered()) throw FloatingNavigationCoveredException()
+        }
+    } catch (_: FloatingNavigationCoveredException) {
+        snapTo(target)
+    }
+}
+
+/** Stops [animateToUntilCovered]'s spring once the capsule covers the moving view. */
+private class FloatingNavigationCoveredException : CancellationException("The capsule covers the hiding view")
 
 private fun Rect.containsInclusive(position: Offset): Boolean = position.x >= left && position.x <= right && position.y >= top && position.y <= bottom
 

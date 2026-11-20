@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -11,6 +12,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -265,6 +269,94 @@ class FloatingNavigationBarTest {
         val hidden = onNodeWithTag("classic").getBoundsInRoot()
         assertTrue(half.bottom - half.top in 1.dp..(shown.bottom - shown.top), "hiding shrinks the layout gradually: ${half.bottom - half.top}")
         assertClose(0.dp, hidden.bottom - hidden.top, "hidden height")
+    }
+
+    @Test
+    fun aSlideTakenOverByAParentStillCommitsItsItem() = runComposeUiTest {
+        val clicks = mutableListOf<Int>()
+        var steal = false
+        setContent {
+            COUITheme {
+                // A parent that takes the gesture over once `steal` is set, as a scrolling parent would.
+                Box(
+                    Modifier
+                        .width(400.dp)
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                do {
+                                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                                    if (steal) event.changes.forEach { if (it.positionChanged()) it.consume() }
+                                } while (event.changes.any { it.pressed })
+                            }
+                        },
+                ) {
+                    FloatingNavigationBar(modifier = Modifier.testTag("bar"), defaultWindowInsetsPadding = false) {
+                        repeat(4) { index ->
+                            FloatingNavigationBarItem(
+                                selected = index == 0,
+                                onClick = { clicks += index },
+                                icon = COUIIcons.Basic.Check,
+                                label = "Item $index",
+                                modifier = Modifier.testTag("item$index"),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        mainClock.autoAdvance = false
+        val first = onNodeWithTag("item0").getBoundsInRoot()
+        val second = onNodeWithTag("item1").getBoundsInRoot()
+        val third = onNodeWithTag("item2").getBoundsInRoot()
+        val y = with(density) { ((first.top + first.bottom) / 2).toPx() }
+        onNodeWithTag("bar").performTouchInput {
+            down(Offset(with(density) { ((first.left + first.right) / 2).toPx() }, y))
+            moveTo(Offset(with(density) { ((second.left + second.right) / 2).toPx() }, y))
+        }
+        mainClock.advanceTimeByFrame()
+        onNodeWithTag("item1").assertIsSelected()
+        steal = true
+        onNodeWithTag("bar").performTouchInput {
+            moveTo(Offset(with(density) { ((third.left + third.right) / 2).toPx() }, y))
+        }
+        mainClock.advanceTimeByFrame()
+        // ACTION_CANCEL drops a tap but commits the item the slide had already selected.
+        assertEquals(listOf(1), clicks)
+    }
+
+    @Test
+    fun theClassicBarSwitchesMenusTheCouiWay() = runComposeUiTest {
+        var count by mutableIntStateOf(2)
+        setContent {
+            COUITheme {
+                Box(Modifier.width(400.dp)) {
+                    NavigationBar(targetState = count, defaultWindowInsetsPadding = false) { items ->
+                        repeat(items) { index ->
+                            NavigationBarItem(
+                                selected = index == 0,
+                                onClick = {},
+                                icon = COUIIcons.Basic.Check,
+                                label = "Tab $index",
+                                modifier = Modifier.testTag("tab$index"),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        mainClock.advanceTimeBy(500)
+        val settled = onNodeWithTag("tab0").getBoundsInRoot().top
+        mainClock.autoAdvance = false
+        count = 3
+        mainClock.advanceTimeBy(50)
+        // The old menu fades out first.
+        onNodeWithTag("tab2").assertDoesNotExist()
+        mainClock.advanceTimeBy(150)
+        // Then the new menu rises from the bar's bottom edge.
+        val rising = onNodeWithTag("tab2").getBoundsInRoot().top
+        assertTrue(rising > settled + 1.dp, "the new items must rise into place: $settled vs $rising")
+        mainClock.advanceTimeBy(1000)
+        assertClose(settled, onNodeWithTag("tab2").getBoundsInRoot().top, "settled new item")
     }
 
     @Test

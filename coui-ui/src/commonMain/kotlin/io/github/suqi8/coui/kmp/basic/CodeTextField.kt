@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
@@ -43,6 +45,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import io.github.suqi8.coui.kmp.squircle.LegacySquircleShape
 import io.github.suqi8.coui.kmp.squircle.addLegacySquircleRect
 import io.github.suqi8.coui.kmp.theme.COUITheme
@@ -334,14 +337,23 @@ private fun CodeCell(
                 )
             }
         } else if (displayDigit.isNotEmpty()) {
+            // CodeItemView scales an appearing digit around the start of its baseline
+            // (canvas.scale(scale, scale, drawTextStartX, drawTextStartY)), so it grows up and
+            // towards the end from its bottom start corner rather than from its center.
+            val baselinePivot = remember { mutableFloatStateOf(1f) }
             Text(
                 text = displayDigit,
                 style = textStyle,
                 color = colors.textColor,
+                onTextLayout = { result ->
+                    val height = result.size.height
+                    if (height > 0) baselinePivot.floatValue = result.firstBaseline / height
+                },
                 modifier = Modifier.graphicsLayer {
                     alpha = digitAlpha.value
                     scaleX = digitScale.value
                     scaleY = digitScale.value
+                    transformOrigin = TransformOrigin(0f, baselinePivot.floatValue)
                 },
             )
         }
@@ -405,13 +417,17 @@ object CodeTextFieldDefaults {
     /**
      * The default text style of a cell digit: 30dp regular. COUI coui_code_input_cell_text_size is a
      * dp dimen set straight on the digit paint (COUICodeInputView.CodeItemView), so the digit does not
-     * follow the font scale, and the paint keeps the default regular typeface.
+     * follow the font scale, and the paint keeps the default regular typeface. The paint draws a bare
+     * line with no extra spacing whose ascent / descent box is centered in the cell
+     * (getDrawTextStartY), so the line height is the font metrics height alone.
      */
     @Composable
     fun textStyle(): TextStyle {
         val main = COUITheme.textStyles.bodyXL
         val fontSize = with(LocalDensity.current) { CellTextSize.toSp() }
-        return remember(main, fontSize) { main.copy(fontSize = fontSize, fontWeight = FontWeight.Normal) }
+        return remember(main, fontSize) {
+            main.copy(fontSize = fontSize, fontWeight = FontWeight.Normal, lineHeight = CellLineHeight)
+        }
     }
 
     /**
@@ -462,6 +478,12 @@ data class CodeTextFieldColors(
 
 /** COUI coui_code_input_cell_text_size. */
 private val CellTextSize = 30.dp
+
+/**
+ * The digit line height: the font metrics height (ascent + descent, 1.1719em for the system font)
+ * with no line spacing, as drawn by CodeItemView's bare paint.
+ */
+private val CellLineHeight = 1.1719f.em
 
 /** COUIMoveEaseInterpolator (0.3, 0, 0.1, 1) used by all cell animations. */
 private val CodeMoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)

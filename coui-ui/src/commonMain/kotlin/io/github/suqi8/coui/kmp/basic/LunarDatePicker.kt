@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.basic
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -14,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -37,7 +34,8 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  * month and day wheels stop wrapping and only offer the values on the reachable side while the
  * date sits exactly on [minDate] or [maxDate]. Two hairlines frame the selected row and the wheels
  * follow the locale's date field order, like [DatePicker]. The picker is at most
- * [NumberPickerDefaults.PickersMaxWidth] wide (COUILunarDatePicker.onMeasure).
+ * [NumberPickerDefaults.PickersMaxWidth] wide, and its first and last wheel also cover the space
+ * left at either side, so a drag anywhere across the picker moves them (COUILunarDatePicker.onMeasure).
  *
  * @param value The selected Gregorian date. It is clamped to [minDate] .. [maxDate].
  * @param onValueChange The callback invoked with the new Gregorian date when a wheel moves.
@@ -155,19 +153,20 @@ fun LunarDatePicker(
         }
     }
 
-    Row(
+    // COUILunarDatePicker.onMeasure: the first and last wheel take the space left at the sides.
+    NumberPickerRow(
         modifier = modifier
             .widthIn(max = NumberPickerDefaults.PickersMaxWidth)
             .fillMaxWidth()
             .numberPickerDividers(dividerColor)
             .padding(insideMargin),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        for (field in fieldOrder.fields) {
+        val fields = fieldOrder.fields
+        fields.forEachIndexed { index, field ->
+            val alignment = numberPickerColumnAlignment(index, fields.size)
             key(field) {
                 when (field) {
-                    DateField.Year -> NumberPicker(
+                    DateField.Year -> NumberPickerWheel(
                         value = lunar.year,
                         onValueChange = onYearChange,
                         modifier = Modifier.width(columnWidth),
@@ -179,9 +178,11 @@ fun LunarDatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = columnWidth,
+                        contentAlignment = alignment,
                     )
 
-                    DateField.Month -> NumberPicker(
+                    DateField.Month -> NumberPickerWheel(
                         value = monthIndex,
                         onValueChange = onMonthChange,
                         modifier = Modifier.width(columnWidth),
@@ -193,9 +194,11 @@ fun LunarDatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = columnWidth,
+                        contentAlignment = alignment,
                     )
 
-                    DateField.Day -> NumberPicker(
+                    DateField.Day -> NumberPickerWheel(
                         value = lunar.day,
                         onValueChange = onDayChange,
                         modifier = Modifier.width(columnWidth),
@@ -207,6 +210,8 @@ fun LunarDatePicker(
                         colors = colors,
                         textStyle = textStyle,
                         itemHeight = itemHeight,
+                        contentWidth = columnWidth,
+                        contentAlignment = alignment,
                     )
                 }
             }

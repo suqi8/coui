@@ -119,12 +119,12 @@
     <string name="demo_list_preference_follow_system">Follow system</string>
     <string name="demo_list_preference_follow_system_summary">Switch with the system dark mode</string>
     <string name="demo_list_preference_theme">Theme</string>
-    <string name="demo_list_preference_single_summary">Single choice bottom panel</string>
+    <string name="demo_list_preference_single_summary">Single choice dialog</string>
     <string name="demo_list_preference_documents">Documents</string>
     <string name="demo_list_preference_contacts_summary">Contacts and call logs</string>
     <string name="demo_list_preference_system_settings">System settings</string>
     <string name="demo_list_preference_sync_items">Sync items</string>
-    <string name="demo_list_preference_multi_summary">Multi choice bottom panel</string>
+    <string name="demo_list_preference_multi_summary">Multi choice dialog</string>
 
     <!-- SlideSelectPreference -->
     <string name="demo_slide_select_preference_standard">Standard</string>

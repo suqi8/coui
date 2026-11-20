@@ -226,6 +226,7 @@ private fun SidePaneSample(
     val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
     val folders = folderNames()
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
     BoxWithConstraints(modifier = modifier) {
         val split = SidePaneLayoutDefaults.isSplitMode(maxWidth, windowHeight)
         SidePaneLayout(
@@ -255,6 +256,9 @@ private fun SidePaneSample(
             alwaysShowMask = alwaysShowMask,
             touchContentEnabled = touchContentEnabled,
             showToggleIcon = showToggleIcon,
+            // With alwaysShowMask the mask swallows touches on the content; this sample closes the
+            // pane from the mask click (COUI `setOnMaskClickListener`).
+            onMaskClick = { scope.launch { state.close() } },
             paneWidth = paneWidth,
         ) {
             Column(

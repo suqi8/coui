@@ -3,13 +3,17 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectableGroup
@@ -28,6 +32,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -39,6 +44,7 @@ import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.key.Key
@@ -123,6 +129,10 @@ import kotlin.math.roundToInt
  * segment pulls the indicator on a rubber band (stiffness 0.12, response 0.6). The whole control
  * follows the `COUIViewTouchAnimator` press scale, rubber band and drag deformation.
  *
+ * Each segment carries the `COUIMaskEffectDrawable` of `initStateEffectBackground`: a mouse
+ * hovering over it fades a capsule of the theme `hover` colour over the segment (response 0.3,
+ * bounce 0), and keyboard focus draws the inner focus stroke.
+ *
  * Segment widths follow `onMeasure`: each segment is its label plus 12dp a side, at least 52dp.
  * A fixed width (for example `Modifier.fillMaxWidth()`), or labels wider than the available
  * width, distributes the width with `calculateChildrenWidths`: segments narrower than an equal
@@ -176,6 +186,7 @@ fun SegmentButton(
     val currentOnSelectedIndexChange by rememberUpdatedState(onSelectedIndexChange)
     val currentHapticEnabled by rememberUpdatedState(hapticFeedbackEnabled)
     val isDark = COUITheme.colorScheme.isDark
+    val hoverColor = COUITheme.colorScheme.hover
     val squircleEnabled = isSquircleEnabled()
 
     // selectSegmentAt from outside: the indicator follows the hoisted selection. A touch moves
@@ -267,9 +278,11 @@ fun SegmentButton(
                             false
                         }
                         .focusable(enabled = enabled, interactionSource = itemInteractionSource)
+                        .hoverable(interactionSource = itemInteractionSource, enabled = enabled)
                         .couiPressScale(pressed = state.pressed[index] == true, enabled = enabled)
-                        // initStateEffectBackground: a TYPE_INNER COUIStrokeDrawable on each segment,
-                        // a capsule of the segment bounds.
+                        // initStateEffectBackground: the hover mask of a COUIMaskEffectDrawable and a
+                        // TYPE_INNER COUIStrokeDrawable on each segment, capsules of its bounds.
+                        .segmentHoverMask(interactionSource = itemInteractionSource, color = hoverColor, enabled = enabled)
                         .couiFocusStroke(interactionSource = itemInteractionSource, shape = CircleShape, enabled = enabled, inner = true)
                         .padding(horizontal = SegmentButtonDefaults.SegmentPaddingHorizontal),
                     contentAlignment = Alignment.Center,
@@ -409,33 +422,16 @@ fun SegmentButton(
                         val radius = rect.height / 2f
                         indicatorPath.rewind()
                         indicatorPath.addSquircleRect(rect, radius, COUIRoundCorner.CapsuleWeight, squircleEnabled)
-                        // drawShadowWithGradient: below the indicator, outside its outline.
-                        clipPath(indicatorPath, ClipOp.Difference) {
-                            val shadowTopLeft = Offset(rect.left, rect.top + shadowOffset)
-                            val shadowSize = Size(rect.width, size.height - shadowTopLeft.y)
-                            if (shadowSize.height > 0f) {
-                                if (isDark) {
-                                    drawRoundRect(
-                                        color = colors.indicatorShadowColor,
-                                        topLeft = shadowTopLeft,
-                                        size = shadowSize,
-                                        cornerRadius = CornerRadius(radius),
-                                    )
-                                } else {
-                                    drawRoundRect(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(colors.indicatorShadowColor, colors.indicatorShadowEndColor),
-                                            center = rect.center,
-                                            radius = rect.width / 2f,
-                                            tileMode = TileMode.Clamp,
-                                        ),
-                                        topLeft = shadowTopLeft,
-                                        size = shadowSize,
-                                        cornerRadius = CornerRadius(radius),
-                                    )
-                                }
-                            }
-                        }
+                        drawSegmentIndicatorShadow(
+                            rect = rect,
+                            radius = radius,
+                            indicatorPath = indicatorPath,
+                            bottom = size.height,
+                            offset = shadowOffset,
+                            shadowColor = colors.indicatorShadowColor,
+                            shadowEndColor = colors.indicatorShadowEndColor,
+                            isDark = isDark,
+                        )
                         drawPath(indicatorPath, colors.indicatorColor)
                         if (shaders != null) {
                             // drawIndicatorShadowEdge: the AGSL COUIShadowEdgeDrawable, edge only,
@@ -578,6 +574,76 @@ private fun Density.configureStroke(
 }
 
 /**
+ * `drawShadowWithGradient`: the indicator shadow, a round rect of the indicator [radius] from
+ * [offset] below the indicator top down to [bottom] (the track bottom), clipped outside the
+ * [indicatorPath]. The light scheme fills it with a radial gradient from [shadowColor] at the
+ * indicator centre to [shadowEndColor] at half the indicator width; the dark scheme with a solid
+ * [shadowColor].
+ */
+internal fun DrawScope.drawSegmentIndicatorShadow(
+    rect: Rect,
+    radius: Float,
+    indicatorPath: Path,
+    bottom: Float,
+    offset: Float,
+    shadowColor: Color,
+    shadowEndColor: Color,
+    isDark: Boolean,
+) {
+    if (rect.width <= 0f || rect.height <= 0f) return
+    val topLeft = Offset(rect.left, rect.top + offset)
+    val shadowSize = Size(rect.width, bottom - topLeft.y)
+    if (shadowSize.height <= 0f) return
+    clipPath(indicatorPath, ClipOp.Difference) {
+        if (isDark) {
+            drawRoundRect(color = shadowColor, topLeft = topLeft, size = shadowSize, cornerRadius = CornerRadius(radius))
+        } else {
+            drawRoundRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(shadowColor, shadowEndColor),
+                    center = rect.center,
+                    radius = rect.width / 2f,
+                    tileMode = TileMode.Clamp,
+                ),
+                topLeft = topLeft,
+                size = shadowSize,
+                cornerRadius = CornerRadius(radius),
+            )
+        }
+    }
+}
+
+/**
+ * The hover layer of a segment's `COUIMaskEffectDrawable` (`MASK_EFFECT_TYPE_WIDGET_WITH_BACKGROUND`):
+ * [color] over the segment bounds as a capsule of radius `min(width, height) / 2` (`mRoundStyle`),
+ * faded on a response 0.3 / bounce 0 spring and cleared at once when disabled. Its press layer
+ * never shows: `COUISegmentButtonLayout` gives the segments their press scale itself and never
+ * marks them touched.
+ */
+@Composable
+private fun Modifier.segmentHoverMask(
+    interactionSource: MutableInteractionSource,
+    color: Color,
+    enabled: Boolean,
+): Modifier {
+    val hovered by interactionSource.collectIsHoveredAsState()
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(hovered, enabled) {
+        if (!enabled) {
+            progress.snapTo(0f)
+        } else {
+            progress.animateTo(if (hovered) 1f else 0f, SegmentMaskSpring)
+        }
+    }
+    return drawBehind {
+        val alpha = progress.value
+        if (alpha > 0f) {
+            drawRoundRect(color = color, cornerRadius = CornerRadius(size.minDimension / 2f), alpha = alpha.coerceAtMost(1f))
+        }
+    }
+}
+
+/**
  * `COUISegmentButtonLayout.calculateChildrenWidths`: segments narrower than an equal share of
  * [total] keep their [lengths]; the others split what is left equally. When every segment is
  * narrower than the first equal share, all of them take that share; leftover width after the
@@ -628,11 +694,13 @@ private fun dynamicWidthParam(from: Float, to: Float, base: Float, min: Float, e
 }
 
 /**
- * The indicator and touch state of one [SegmentButton]: the `FloatValueHolder`s the COUI springs
- * drive (centre, width, height, press scale) and the touch bookkeeping of `dispatchTouchEvent`.
+ * The indicator and touch state of one [SegmentButton] (and of [TabRowWithContour], which draws the
+ * same COUI segment button): the `FloatValueHolder`s the COUI springs drive (centre, width, height,
+ * press scale) and the touch bookkeeping of `dispatchTouchEvent`. Positions are in the coordinates
+ * of the track the owner passes to [onLayout].
  */
 @Stable
-private class SegmentButtonState {
+internal class SegmentButtonState {
     // Layout, written during placement.
     private var lefts = FloatArray(0)
     private var rights = FloatArray(0)
@@ -1054,6 +1122,9 @@ data class SegmentButtonColors(
 
 /** `COUIMoveEaseInterpolator`, the label color fade. */
 private val MoveEase = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
+
+/** The `COUIMaskEffectDrawable` hover spring: `COUISpringForce` response 0.3, bounce 0. */
+private val SegmentMaskSpring = spring<Float>(dampingRatio = 1f, stiffness = 438.65f)
 
 /** `COLOR_ANIMATOR_TIME`. */
 private val TextColorDurationMillis = 300

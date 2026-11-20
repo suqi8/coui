@@ -36,9 +36,22 @@ Box(Modifier.fillMaxSize()) {
 
 - **Layout**: 16dp from the sides below 600dp, 24dp below 840dp, 40dp from there; the capsules are centred in at least 76dp. Two groups sit at the edges (`Spread`) or side by side 16dp apart (`Packed`); a third sits in the middle.
 - **Capsules**: 44dp high, items 4dp apart with 6dp of capsule beside the first and last (none around a single item). Icon items are 44 x 40dp with a 24dp icon; an item without an icon shows its title (16sp medium, 52-200dp wide, 16dp side padding).
-- **Overflow**: a group shows at most six items. When more follow, or the items do not fit, the last place becomes a "more" item that opens a popup listing the rest.
+- **Overflow**: a group shows at most six items. When more follow, or the items do not fit, the last place becomes a "more" item that opens a popup listing the rest, 8dp above the capsule.
 - **Red dot**: a 6dp dot whose centre sits 12dp in from the item's top end corner; disabled items hide it.
-- **Touch**: each capsule takes the COUI press motion and touch spotlight as a whole; items have no press mask of their own.
+- **Touch**: each capsule takes the COUI press motion and touch spotlight as a whole, whatever its items' states; items have no press mask of their own. A lone item is drawn on a circle by the material.
+- **Item changes** (`ItemViewAnimatorImpl`): when the items a capsule shows change (added, removed, or moved into or out of the overflow item), the gaps first breathe for 200ms (closing up by 75% before the capsule grows, opening up by 75% before it shrinks), then the arriving items scale and fade in about their centres while the leaving ones scale and fade out (response 0.5 / bounce 0.4) and the capsule's width follows them. A change undone while it runs plays backwards. Give items a `key` when their icon, title and description do not tell them apart.
+- **Groups**: a group that appears scales in (response 0.5 / bounce 0.4), one that goes away scales out where it stood (response 0.25 / bounce 0), and the capsules that have to move spring to their new places (response 0.5 / bounce 0.4). A change of the toolbar's width applies at once.
+
+```kotlin
+var editing by remember { mutableStateOf(false) }
+FloatingToolbar(
+    items = buildList {
+        add(FloatingToolbarItem(onClick = { /* Share */ }, icon = COUIIcons.Share, title = "Share", key = "share"))
+        if (editing) add(FloatingToolbarItem(onClick = { /* Delete */ }, icon = COUIIcons.Delete, title = "Delete", key = "delete"))
+        add(FloatingToolbarItem(onClick = { editing = !editing }, title = if (editing) "Done" else "Edit", group = 1, key = "mode"))
+    },
+)
+```
 
 ## Content Capsule
 
@@ -91,6 +104,7 @@ Scaffold(
 | group              | Int          | The group (capsule) of the item, ordered by value                           | 0             |
 | enabled            | Boolean      | Whether the item is enabled                                                 | true          |
 | showRedDot         | Boolean      | Whether a red dot is shown                                                  | false         |
+| key                | Any?         | The identity the toolbar follows to animate items that come and go (`setId`), unique within the group; null uses the icon, title and description | null |
 
 ### FloatingToolbar (Content Capsule) Properties
 

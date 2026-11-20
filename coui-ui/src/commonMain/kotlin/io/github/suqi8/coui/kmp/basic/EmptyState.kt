@@ -61,14 +61,15 @@ enum class EmptyStateSizeType {
  * The illustration is hidden for Small and shown at full size otherwise
  * (COUIEmptyStateView.getAnimTargetSize: `sizeType != SMALL ? 1.0 : 0.0` in COUI 17).
  * The title is capped at two lines and the subtitle at three; both are 280dp wide and scroll
- * once they exceed 92dp together (COUIMaxHeightScrollView).
+ * once they exceed 92dp together (COUIMaxHeightScrollView). Text that fits neither scrolls nor
+ * rubber-bands, so a drag on it moves the page behind instead.
  *
  * COUI fills the illustration with a Lottie animation or an image resource; here [illustration]
  * is a slot drawn inside a box of the resolved illustration size.
  *
  * @param title The title (COUI couiTextHeadlineXS 16sp medium, couiColorLabelPrimary). Hidden when empty.
  * @param modifier The modifier to be applied to the [EmptyState].
- * @param subtitle The subtitle (COUI couiTextDescription 12sp, couiColorLabelSecondary). Hidden when null or empty.
+ * @param subtitle The subtitle (COUI couiTextBodyXS 12sp, couiColorLabelSecondary). Hidden when null or empty.
  * @param actionText The label of the action text button (COUI couiTextButtonM 14sp medium, primary color).
  *   Hidden when null or empty.
  * @param onActionClick The callback invoked when the action text button is clicked.
@@ -160,10 +161,14 @@ private fun EmptyStateGroup(
         }
         val hasSubtitle = !subtitle.isNullOrEmpty()
         if (title.isNotEmpty() || hasSubtitle) {
+            val textScrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .heightIn(max = EmptyStateDefaults.TextMaxHeight)
-                    .verticalScroll(rememberScrollState()),
+                    // COUIMaxHeightScrollView (a COUIScrollView, overScrollMode ifContentScrolls)
+                    // clamps the overscroll of text that fits: only an overflowing text block
+                    // scrolls and rubber-bands; otherwise drags go to the page behind it.
+                    .verticalScroll(textScrollState, enabled = textScrollState.maxValue > 0),
             ) {
                 if (title.isNotEmpty()) {
                     Text(

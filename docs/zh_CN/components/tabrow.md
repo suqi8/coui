@@ -17,9 +17,9 @@ import io.github.suqi8.coui.kmp.basic.TabRowWithContour // 带轮廓样式（分
 
 ### 标准样式
 
-标准样式与 `COUITabLayout` 一致：48dp 高，标签文字 14sp（选中时为 Medium 字重），底部是左右各内缩 24dp 的 2dp 轨道，以及与选中标签文字等宽（至少 32dp）的 2dp 中性色指示器。切换选中项时，指示器以 `CubicBezierEasing(0.33f, 0f, 0.67f, 1f)` 在 `min(300, 50 × Δ标签数 + 150)` ms 内滑动，标签颜色同步渐变。每个标签带 8dp 圆角的按压遮罩，按下未选中的标签时触发一次触感反馈。
+标准样式与 `COUITabLayout` 一致：48dp 高，标签文字 14sp（选中时为 Medium 字重），底部是左右各内缩 24dp 的 2dp 轨道，以及与选中标签文字等宽（至少 32dp）的 2dp 中性色指示器。切换选中项时，指示器以 `CubicBezierEasing(0.33f, 0f, 0.67f, 1f)` 在 `min(300, 50 × Δ标签数 + 150)` ms 内滑动，标签颜色同步渐变。每个标签带 8dp 圆角的按压遮罩，按下未选中的标签时触发一次触感反馈；两者都与 `COUITabView` 一样在手指按下时立即开始，标签行位于可滚动页面中时也不例外。
 
-标签总宽能放进 360dp 内容宽度时等间距铺开；能放进整行时以 `itemSpacing` 为间距居中；否则整行可滚动，两端带 58dp 渐隐边缘，并让选中标签保持居中。可滚动时沿用 `COUIHorizontalScrollView` 的手感：拖过两端时只跟随 40% 并随越界距离（以屏宽为上限）逐渐变硬；惯性滑到端点会越界最多屏宽的 37% 再回弹；到达端点时有一次触感反馈。
+标签总宽能放进 360dp 内容宽度时等间距铺开；能放进整行时以 `itemSpacing` 为间距居中；否则整行可滚动，两端带 58dp 渐隐边缘，并让选中标签保持居中。可滚动时沿用 `COUIHorizontalScrollView` 的手感：拖过两端时只跟随 40% 并随越界距离（以屏宽为上限）逐渐变硬；惯性滑到端点会越界最多屏宽的 37% 再回弹。标签行本身不振动：`COUITabLayoutBaseStyle` 关闭了标签布局自身的触感反馈，因此滚动到端点和滑动 Pager 翻页都不会振动。
 
 ```kotlin
 val tabs = listOf("推荐", "关注", "热门", "精选")
@@ -54,7 +54,9 @@ TabRow(
 
 ### 带轮廓样式
 
-带轮廓样式与 ColorOS 分段按钮一致：40dp 高的胶囊容器，四边 4dp 内缩的滑动指示器。分段宽度由文字自然宽度（至少 52dp）计算后铺满整行。
+带轮廓样式与 ColorOS 分段按钮一致：40dp 高的胶囊容器，四边 4dp 内缩的滑动指示器。分段宽度由文字自然宽度（至少 52dp，所有标签都用 Medium 字重的 `couiTextButtonM`）计算后铺满整行。
+
+指示器沿用与 [SegmentButton](./segmentbutton) 相同的 COUI 17 分段按钮弹簧：位置（response 0.4，bounce 0.1）、宽度（按新旧宽度差异在 response 0.6 → 0.4、bounce 0.5 → 0.1 之间取值），以及先压到 90% 再弹回的高度。按下的分段从手指按下起以 COUI 17 按压缩放收缩，按住选中分段时指示器也一起压下。拖动指示器切换分段和 COUI 17 材质效果见 `SegmentButton`。
 
 ```kotlin
 val tabs = listOf("全部", "照片", "视频", "文档")
@@ -227,7 +229,7 @@ TabRowWithContour(
 
 ### 与 Pager 结合使用
 
-把 `PagerState` 传给 `pagerState`，用户拖动 Pager 时标签行会像 `COUITabLayout.setScrollPosition` 一样跟随：指示器在两个标签之间滑动，标签颜色在拖动的后半程渐变，标签行同步滚动。滑动翻页时触发一次触感反馈；点击标签仍使用自身的指示器动画。
+把 `PagerState` 传给 `pagerState`，用户拖动 Pager 时标签行会像 `COUITabLayout.setScrollPosition` 一样跟随：指示器在两个标签之间滑动，标签颜色在驶向下一页的后半程渐变（一次拖过多页时逐页渐变），标签行同步滚动。滑动翻页不触发触感反馈；点击标签仍使用自身的指示器动画。
 
 ```kotlin
 val tabs = listOf("页面1", "页面2", "页面3")

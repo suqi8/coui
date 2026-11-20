@@ -167,13 +167,17 @@ fun Banner(
             .distinctUntilChanged()
             .collect { currentOnPageChange?.invoke(it) }
     }
-    // startLoopTask: post the next scroll after loopDuration + duration. A touch removes the
-    // pending task (dispatchTouchEvent ACTION_DOWN) but not a scroll already running: a tap
-    // must not leave the pager stopped between two pages. A drag takes over the scroll anyway.
+    // startLoopTask: post the next scroll after loopDuration + duration. The task re-posts itself
+    // as soon as it starts a scroll, so scrolls start loopDuration + duration apart: a page rests
+    // for loopDuration once the scroll that brought it has settled. A touch removes the pending
+    // task (dispatchTouchEvent ACTION_DOWN) but not a scroll already running: a tap must not
+    // leave the pager stopped between two pages. A drag takes over the scroll anyway.
     if (autoLoop && loop && !touching) {
         LaunchedEffect(pagerState, pageCount, loopDurationMillis, scrollDurationMillis) {
             while (true) {
                 delay(loopDurationMillis + scrollDurationMillis)
+                // COUIViewPager2SlideHelper: no new fake drag while one is still running.
+                if (autoScrolling) continue
                 scrollScope.launch {
                     if (pagerState.currentPage >= pageCount + 1) pagerState.scrollToPage(1)
                     // COUIViewPager2SlideHelper.e: a fake drag of one page (the pager width less
@@ -189,7 +193,7 @@ fun Banner(
                     } finally {
                         autoScrolling = false
                     }
-                }.join()
+                }
             }
         }
     }

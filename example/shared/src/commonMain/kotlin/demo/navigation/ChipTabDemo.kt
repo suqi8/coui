@@ -27,9 +27,11 @@ import demo.framework.PlaygroundPreview
 import demo.framework.playground
 import demo.framework.variant
 import io.github.suqi8.coui.kmp.basic.ChipTab
+import io.github.suqi8.coui.kmp.basic.ChipTabContent
 import io.github.suqi8.coui.kmp.basic.ChipTabMaterialType
 import io.github.suqi8.coui.kmp.basic.ChipTabRow
 import io.github.suqi8.coui.kmp.basic.Icon
+import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Check
 import io.github.suqi8.coui.kmp.icon.basic.Search
@@ -61,6 +63,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_variant
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_chip_tab_variant_single
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_image_background
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_image_background_summary
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_tab_row_content
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_music
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_photos
 import io.github.suqi8.coui.kmp.shared.generated.resources.sample_videos
@@ -159,14 +162,26 @@ internal val ChipTabDemo = Demo(
                 }
             }
         }
+        // The scrolling row over its pages: the page of the selected chip fades in after the old one
+        // fades out (COUIChipTabGroupFragmentMediator).
         variant(key = "scrolling", title = Res.string.demo_chip_tab_variant_scrolling) {
             var selected by rememberSaveable { mutableIntStateOf(0) }
-            ChipTabRow(
-                tabs = ChipTabDemoTabs.map { stringResource(it) },
-                selectedTabIndex = selected,
-                onTabSelected = { selected = it },
-                modifier = Modifier.padding(vertical = 8.dp),
-            )
+            val tabs = ChipTabDemoTabs.map { stringResource(it) }
+            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                ChipTabRow(
+                    tabs = tabs,
+                    selectedTabIndex = selected,
+                    onTabSelected = { selected = it },
+                )
+                ChipTabContent(
+                    selectedTabIndex = selected,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                ) { index ->
+                    Text(text = stringResource(Res.string.demo_tab_row_content, tabs[index]))
+                }
+            }
         }
         variant(key = "leading_icon", title = Res.string.demo_chip_tab_variant_leading_icon) {
             var selected by rememberSaveable { mutableIntStateOf(1) }

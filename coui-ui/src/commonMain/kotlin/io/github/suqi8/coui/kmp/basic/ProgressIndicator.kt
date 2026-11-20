@@ -12,18 +12,26 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
+import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.LongState
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -53,6 +61,7 @@ import io.github.suqi8.coui.kmp.anim.COUIMoveEaseEasing
 import io.github.suqi8.coui.kmp.anim.COUIOutEaseEasing
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.exp
@@ -168,7 +177,9 @@ fun LinearProgressIndicator(
  *
  * Without a [progress] it ports COUILoadingView, a ring across the whole [size] whose arc and track
  * use the theme accent (couiColorPrimary on couiColorSecondary), so the default [colors], [size]
- * and [strokeWidth] depend on [progress]. [state] and [type] only apply with a [progress].
+ * and [strokeWidth] depend on [progress]. Its arc turns once a second and, like COUILoadingView,
+ * which reads `uptimeMillis` in `onDraw`, takes its phase from the frame clock, so every loading
+ * view on screen spins in step. [state] and [type] only apply with a [progress].
  *
  * @param modifier The modifier to be applied to the indicator.
  * @param progress The current progress value between 0.0f and 1.0f, or null for indeterminate state.
@@ -207,18 +218,10 @@ fun CircularProgressIndicator(
     val currentForegroundColor = colors.foregroundColor(true)
 
     if (progress == null) {
-        val transition = rememberInfiniteTransition()
-
-        // COUILoadingView.onDraw: the arc angle is derived from a wall clock as
-        // (uptimeMillis % 1000) * 360 / 1000, i.e. one full turn per 1000 ms, linear.
-        val cycle by transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1000, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
-        )
+        // COUILoadingView.onDraw derives the arc from the clock, not from its animator (which only
+        // invalidates): (uptimeMillis % 1000) * 360 / 1000, one linear turn per second. Reading the
+        // frame clock the same way keeps every loading view on screen in the same phase.
+        val frameTimeMillis = rememberLoadingViewFrameTime()
 
         Canvas(
             modifier = modifier
@@ -228,26 +231,28 @@ fun CircularProgressIndicator(
             val strokeWidthPx = strokeWidth.toPx()
             val radius = (size.toPx() - strokeWidthPx) / 2
             val center = Offset(size.toPx() / 2, size.toPx() / 2)
+            // COUILoadingView.drawBackgroundCircle and the arc go straight onto the canvas with the
+            // default blending (no layer, unlike COUICircularProgressDrawable): the arc covers the track.
+            drawCircularBackground(currentBackgroundColor, radius, center, strokeWidthPx)
+            val time = frameTimeMillis.longValue
+            // The first frame is drawn before the clock has ticked; show the track alone rather than
+            // an arc at a phase it would jump away from.
+            if (time < 0L) return@Canvas
+            val cycle = (time % LoadingViewTurnMillis) * 360f / LoadingViewTurnMillis
             // COUILoadingView: drawArc(rect, cycle - 30, (2 - |180 - cycle| / 180) * 60, ...)
             // on a canvas pre-rotated by -90 degrees; the sweep pulses 60 -> 120 -> 60
             // within a single rotation.
             val sweepAngle = (2f - abs(180f - cycle) / 180f) * 60f
             val startAngle = cycle - 30f - 90f
-
-            withSrcCompositingLayer {
-                drawCircularBackground(currentBackgroundColor, radius, center, strokeWidthPx)
-
-                drawArc(
-                    color = currentForegroundColor,
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    useCenter = false,
-                    topLeft = Offset(strokeWidthPx / 2, strokeWidthPx / 2),
-                    size = Size(2 * radius, 2 * radius),
-                    style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
-                    blendMode = BlendMode.Src,
-                )
-            }
+            drawArc(
+                color = currentForegroundColor,
+                startAngle = startAngle,
+                sweepAngle = sweepAngle,
+                useCenter = false,
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(2 * radius, 2 * radius),
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+            )
         }
     } else {
         val progressValue = progress.coerceIn(0f, 1f)
@@ -476,6 +481,26 @@ private fun progressGaussianCdf(x: Float): Float {
     return if (x >= 0f) 0.5f * (1f + erf) else 0.5f * (1f - erf)
 }
 
+/**
+ * The frame time in milliseconds, updated on every frame while composed, or -1 before the first
+ * frame. Compose frame times come from the platform's monotonic frame clock (the Choreographer
+ * frame time on Android, the time base of `SystemClock.uptimeMillis`), so a phase derived from it
+ * is shared by every indicator reading it, like COUILoadingView's `uptimeMillis % 1000`.
+ */
+@Composable
+private fun rememberLoadingViewFrameTime(): LongState {
+    val frameTime = remember { mutableLongStateOf(-1L) }
+    LaunchedEffect(frameTime) {
+        while (true) {
+            withInfiniteAnimationFrameMillis { frameTime.longValue = it }
+        }
+    }
+    return frameTime
+}
+
+/** COUILoadingView ONE_THOUSAND_INT: the duration of one turn of the loading view. */
+private val LoadingViewTurnMillis = 1000L
+
 /** COUICircularProgressDrawable.initSpring: SpringForce(dampingRatio = 1.0, stiffness = 50). */
 private val CircularProgressSpring = spring(dampingRatio = 1f, stiffness = 50f, visibilityThreshold = 0.001f)
 
@@ -553,8 +578,12 @@ fun InfiniteProgressIndicator(
  * here with a single [drawArc] and needs no Lottie runtime.
  *
  * @param modifier The modifier to be applied to the indicator.
+ * @param paused Whether the spinner holds its current frame (`EffectiveAnimationView.pauseAnimation`,
+ *   as COUILoadingPreferenceCategory does in its PAUSE state). It continues from that frame when
+ *   unpaused (`resumeAnimation`).
  * @param color The color of the arc. Defaults to
- *   [ProgressIndicatorDefaults.rotatingProgressIndicatorColor], the asset's 85% stroke opacity.
+ *   [ProgressIndicatorDefaults.rotatingProgressIndicatorColor], the asset's 85% stroke opacity; the
+ *   small tier's asset is dimmer, [ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor].
  * @param size The size (the square view box) of the indicator.
  * @param ringDiameter The diameter of the arc's stroke centerline, centered inside [size].
  * @param strokeWidth The width of the arc stroke.
@@ -562,22 +591,13 @@ fun InfiniteProgressIndicator(
 @Composable
 fun RotatingProgressIndicator(
     modifier: Modifier = Modifier,
+    paused: Boolean = false,
     color: Color = ProgressIndicatorDefaults.rotatingProgressIndicatorColor(),
     size: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorSize,
     ringDiameter: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorRingDiameter,
     strokeWidth: Dp = ProgressIndicatorDefaults.DefaultRotatingProgressIndicatorStrokeWidth,
 ) {
-    val transition = rememberInfiniteTransition()
-    // coui_rotating_loading.json: fr = 60, ip = 0, op = 76, so the 76 frames play in 1266.7 ms and
-    // repeat forever. The keyframes end at frame 75, which holds for the last frame.
-    val frame by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = RotatingSpinnerFrameCount,
-        animationSpec = infiniteRepeatable(
-            animation = tween(RotatingSpinnerCycleMillis, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-    )
+    val frame = rememberRotatingSpinnerFrame(paused)
 
     Canvas(
         modifier = modifier
@@ -587,7 +607,7 @@ fun RotatingProgressIndicator(
         val strokeWidthPx = strokeWidth.toPx()
         val diameterPx = ringDiameter.toPx()
         val inset = (this.size.minDimension - diameterPx) / 2
-        val cycle = min(frame, RotatingSpinnerLastKeyframe) / RotatingSpinnerLastKeyframe
+        val cycle = min(frame.floatValue, RotatingSpinnerLastKeyframe) / RotatingSpinnerLastKeyframe
 
         // `Trim Paths 1` pins `end` at 100% and animates `start`, so the arc's trailing edge is
         // fixed while its leading edge swings; both the sweep and the start angle derive from it.
@@ -607,8 +627,47 @@ fun RotatingProgressIndicator(
     }
 }
 
-/** The cycle duration of [RotatingProgressIndicator] (coui_rotating_loading.json: 76 frames at 60 fps). */
-private val RotatingSpinnerCycleMillis = 1267
+/**
+ * The current frame of coui_rotating_loading.json: `fr = 60`, `ip = 0`, `op = 76`, so the 76 frames
+ * play in 1266.7 ms and repeat forever (the keyframes end at frame 75, which holds for the last
+ * frame). While [paused] the frame stays where it is (`pauseAnimation`); unpausing continues from it
+ * (`resumeAnimation`). Like InfiniteTransition, the playback follows the [MotionDurationScale]; with
+ * animations switched off the spinner rests on its last frame, as a Lottie view does.
+ */
+@Composable
+private fun rememberRotatingSpinnerFrame(paused: Boolean): FloatState {
+    val frame = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(paused) {
+        if (paused) return@LaunchedEffect
+        var originFrame = frame.floatValue
+        var originNanos = Long.MIN_VALUE
+        var scale = 1f
+        while (true) {
+            withInfiniteAnimationFrameNanos { frameTimeNanos ->
+                val currentScale = coroutineContext[MotionDurationScale]?.scaleFactor ?: 1f
+                if (originNanos == Long.MIN_VALUE || currentScale != scale) {
+                    // Start, or restart the timing from the current frame when the scale changes.
+                    originFrame = frame.floatValue
+                    originNanos = frameTimeNanos
+                    scale = currentScale
+                }
+                frame.floatValue = if (scale == 0f) {
+                    RotatingSpinnerLastKeyframe
+                } else {
+                    val elapsedFrames = (frameTimeNanos - originNanos) / (RotatingSpinnerFrameNanos * scale)
+                    ((originFrame + elapsedFrames) % RotatingSpinnerFrameCount).toFloat()
+                }
+            }
+            if (scale == 0f) {
+                snapshotFlow { coroutineContext[MotionDurationScale]?.scaleFactor ?: 1f }.first { it > 0f }
+            }
+        }
+    }
+    return frame
+}
+
+/** coui_rotating_loading.json `fr`: the duration of one frame at 60 frames per second. */
+private val RotatingSpinnerFrameNanos = 1_000_000_000.0 / 60.0
 
 /** coui_rotating_loading.json `op`: the frames of one cycle. */
 private val RotatingSpinnerFrameCount = 76f
@@ -825,7 +884,9 @@ object ProgressIndicatorDefaults {
 
     /**
      * The size of the small [RotatingProgressIndicator] tier
-     * (COUI coui_lottie_loading_view_small_width/height).
+     * (COUI coui_lottie_loading_view_small_width/height): the `Widget.COUI.COUILottieLoadingView`
+     * spinner, which plays coui_lottie_loading_small.json. Draw it with
+     * [smallRotatingProgressIndicatorColor], as that asset dims its whole layer.
      */
     val SmallRotatingProgressIndicatorSize = 16.dp
 
@@ -859,6 +920,18 @@ object ProgressIndicatorDefaults {
      */
     @Composable
     fun rotatingProgressIndicatorColor(): Color = COUITheme.colorScheme.labelPrimary.copy(alpha = RotatingSpinnerOpacity)
+
+    /**
+     * The arc color of the small [RotatingProgressIndicator] tier.
+     *
+     * coui_lottie_loading_small.json (light) and coui_lottie_loading_small_night.json (dark) are the
+     * same animation as the default spinner, but their layer opacity is 30 on top of the 85 stroke
+     * opacity. The animation renderer multiplies the two in integer steps (BaseLayer.draw, then
+     * BaseStrokeContent.draw): (int) (0.30 * 255) = 76, then (int) (76 * 0.85) = 64, so the arc
+     * renders as #40000000 / #40FFFFFF.
+     */
+    @Composable
+    fun smallRotatingProgressIndicatorColor(): Color = COUITheme.colorScheme.labelPrimary.copy(alpha = SmallRotatingSpinnerOpacity)
 
     /**
      * The default [ProgressIndicatorColors] used by [LinearProgressIndicator]
@@ -927,6 +1000,9 @@ object ProgressIndicatorDefaults {
 
 /** The stroke opacity of coui_rotating_loading.json (`"o": 85`). */
 private val RotatingSpinnerOpacity = 0.85f
+
+/** The rendered arc alpha of coui_lottie_loading_small.json: layer opacity 30 times stroke opacity 85. */
+private val SmallRotatingSpinnerOpacity = 64f / 255f
 
 /**
  * The colors of the progress indicators.

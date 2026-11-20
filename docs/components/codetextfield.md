@@ -113,7 +113,7 @@ CodeTextField(
 - `onValueChange` always receives the sanitized code: whitespace stripped and truncated to `cellCount`.
 - A multi-character insertion (paste) replaces the whole code and is distributed into the cells, like COUICodeInputView's TextWatcher.
 - The active cell (first empty one, or the last cell when full) shows a 1.6dp stroke while focused; the stroke fades in over 100ms with a 33ms delay and fades out over 100ms (COUI move ease 0.3, 0, 0.1, 1).
-- Digits appear with a 0.6 -> 1.0 scale + fade over 100ms and fade out with a 33ms delay; security mode skips digit animations, mirroring COUI.
+- Digits appear with a 0.6 -> 1.0 scale + fade over 100ms, growing from the start of their baseline as COUI's `CodeItemView` scales them, and fade out with a 33ms delay; security mode skips digit animations, mirroring COUI. The digit's ascent / descent box is centered in the cell.
 - On windows narrower than 360dp the cells shrink by `windowWidth / 360dp` (COUICodeInputView scales by the screen width, not the component width). Each cell then gets a per-side margin of `round((width - n * cellWidth - 2 * 16dp) / (2n - 2))` clamped to 2..8dp, so the gap between cells adapts within 4dp and 16dp.
 
 ## Advanced Usage

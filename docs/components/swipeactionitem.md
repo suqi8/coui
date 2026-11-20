@@ -145,8 +145,10 @@ scope.launch { state.close() }
 ## Behavior
 
 - The row takes a drag once it moves past the touch slop horizontally while moving more than twice as far horizontally as vertically (`COUISlideView.onInterceptTouchEvent`); a mostly vertical drag keeps scrolling the parent list. A closed row leaves drags towards the end edge to its parent, so it works inside a horizontal pager.
-- Within the menu the content follows the finger 1:1. Past it the drag is damped by `delta x (1 - min(over / (width - menu), 1)) x 2 / 5` and, in the rect style, the actions spread apart, action `k` (counted from the start) moving by `k x over / (count + 1)`.
-- On release, a fling faster than 1000 px/s opens or closes the menu; otherwise it opens when more than half of the menu shows. It settles on a damping 1 / stiffness 200 spring. With fast delete only the half-menu rule applies.
+- When the row takes the drag it steps by 4/7 of the travel so far, or by 3/7 when the menu is already fully out or holds a single action, without passing the full menu; from then on the content follows the finger.
+- Within the menu the content follows the finger 1:1. At or past the full menu every move, outwards and back, is damped by `delta x (1 - min(over / (width - menu), 1)) x 2 / 5` and, in the rect style, the actions spread apart, action `k` (counted from the start) moving by `k x over / (count + 1)`.
+- On release, a fling faster than 1000 px/s opens or closes the menu; otherwise it opens when more than half of the menu shows. It settles on a damping 1 / stiffness 200 spring started at rest (`COUISlideView.animationScrollTo` sets no start velocity), so it never overshoots. With fast delete only the half-menu rule applies. When the parent takes the gesture over, the row returns to the nearer end on the `close()` curve instead.
+- Inside a [CardListGroup](./cardlistgroup.md) the dividers above and below the row are hidden while its menu is out or it is being deleted (`COUISlideView.drawDivider`).
 - In the round rect style the menu width also counts the gaps and both margins, so the half-menu, damping and fast delete thresholds all use it. Over-sliding leaves the actions packed against the content. When the delete runs and no action has its own color, a single rounded fill grows from the content edge to the end margin; with own colors each action keeps its own rounded rectangle.
 - A label wider than 80dp widens its action to `text + 2 x 12dp`.
 - Tapping the content while the menu is open closes it. Clicking a non-delete action keeps the menu open, like COUI.

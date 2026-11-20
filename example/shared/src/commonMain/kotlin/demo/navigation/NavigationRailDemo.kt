@@ -33,6 +33,7 @@ import io.github.suqi8.coui.kmp.shared.generated.resources.common_search
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_selected_value
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_show_divider
 import io.github.suqi8.coui.kmp.shared.generated.resources.common_visible
+import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_badges
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_header
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_hint
 import io.github.suqi8.coui.kmp.shared.generated.resources.demo_navigation_rail_search_terms
@@ -66,6 +67,7 @@ private fun NavigationRailDemoPage(onBack: () -> Unit) {
     var countIndex by rememberSaveable { mutableIntStateOf(3) }
     var showHeader by rememberSaveable { mutableStateOf(true) }
     var showDivider by rememberSaveable { mutableStateOf(true) }
+    var badges by rememberSaveable { mutableStateOf(true) }
     var selected by rememberSaveable { mutableIntStateOf(0) }
     val itemCount = countIndex + NavigationDemoMinCount
     val shownSelected = selected.coerceAtMost(itemCount - 1)
@@ -95,6 +97,12 @@ private fun NavigationRailDemoPage(onBack: () -> Unit) {
                         onClick = { selected = index },
                         icon = NavigationDemoIcons[index],
                         label = stringResource(NavigationDemoLabels[index]),
+                        badge = when {
+                            !badges -> null
+                            index == 1 -> 0
+                            index == 3 -> 8
+                            else -> null
+                        },
                     )
                 }
             }
@@ -149,6 +157,13 @@ private fun NavigationRailDemoPage(onBack: () -> Unit) {
                                 title = stringResource(Res.string.common_show_divider),
                                 checked = showDivider,
                                 onCheckedChange = { showDivider = it },
+                            )
+                        }
+                        item {
+                            SwitchPreference(
+                                title = stringResource(Res.string.demo_navigation_badges),
+                                checked = badges,
+                                onCheckedChange = { badges = it },
                             )
                         }
                     }

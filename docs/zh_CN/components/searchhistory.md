@@ -34,6 +34,8 @@ SearchHistory(
 
 设置 `maxLinesFolded` 后，超出该行数的记录会被折叠：圆形展开按钮占据最后一个折叠行的末尾（放不下时替换该行最后一条记录）。展开后最多显示 `maxLinesExpanded` 行，并在最后一行末尾显示收起按钮。`expandable = false` 时面板固定显示 `maxLinesFolded` 行，不显示按钮。
 
+记录条目是 COUI 建议型标签（`SuggestionChip`）：按下时缩放并叠加按压色，快速轻点也会等按压色足够明显后再褪去；文字只随系统字体缩放放大到 1.35（`COUIChangeTextUtil` G4）。展开与收起按钮按下时在 200ms 内缩到 0.9、松手后 340ms 恢复；快速轻点时会先让缩小动画走完 200ms 的 80% 再恢复（`COUIPressFeedbackImageView`）。
+
 ## 属性
 
 ### SearchHistory

@@ -164,6 +164,10 @@ Scaffold {
 Cascading depth is capped at 2. Items at the secondary level cannot have their own `children`; deeper trees are ignored, and a warning is logged once when such a submenu is expanded.
 :::
 
+## Interaction
+
+Like the COUI 17 toolbar overflow button, the icon button plays its normal press and release when tapped and is not held while the menu is showing: `COUIPopupListWindow.setAnchorHoveredState` only locks list-row anchors.
+
 ## Properties
 
 ### OverlayIconCascadingDropdownMenu Properties (Entries Overload)

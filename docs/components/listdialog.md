@@ -95,6 +95,8 @@ OverlayMultiChoiceDialog(
 
 None of the three hides by itself on a click; set `show` to false to close it.
 
+A pressed choice row fades in `pressBackground` over 180ms and fades it out over 360ms (`coui_list_selector_background`), with no haptic feedback (`ChoiceListAdapter`). The lists fade out over 46dp at a scrolled edge (`coui_alert_dialog_list_layout`).
+
 ## Properties
 
 ### ListDialogItem
@@ -153,6 +155,7 @@ The window variants take the same properties without `renderInRootScaffold`.
 | Property Name               | Type | Description                                                      |
 | --------------------------- | ---- | ---------------------------------------------------------------- |
 | ListPanelMarginTop          | Dp   | Top margin of the list dialog list (16.dp, `coui_list_dialog_list_panel_margin_top`) |
+| ScrollFadeLength            | Dp   | Fading edge length of the lists (46.dp, `coui_full_page_dialog_scroll_fade_length`) |
 | SummaryMaxHeight            | Dp   | Max message height above a list (60.dp)                          |
 | ItemSummaryFontSize         | TextUnit | Summary text size below a list item (12.sp)                  |
 | ItemSummaryLineHeight       | TextUnit | Summary line height below a list item (1.35.em)              |
@@ -178,3 +181,4 @@ The window variants take the same properties without `renderInRootScaffold`.
 | summaryColor         | Color | Item summary (`?couiColorSecondNeutral`)            |
 | disabledSummaryColor | Color | Disabled item summary                               |
 | dividerColor         | Color | Divider between choice rows (`?couiColorDivider`)   |
+| pressedBackgroundColor | Color | Background a pressed choice row fades in (`?couiColorPressBackground`); `Color.Unspecified` takes the theme's `pressBackground` |

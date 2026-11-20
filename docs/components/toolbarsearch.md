@@ -27,7 +27,9 @@ background stays). The search glyph sits 2dp from the capsule start
 (`coui_search_bar_icon_expand_search_icon_start_gap`), so it starts centred in that circle.
 
 While the bar folds back it ignores touches; tapping the search icon then expands it again, and a
-touch in the last 5% of the collapse first completes the collapse at once.
+touch in the last 5% of the collapse first completes the collapse at once. Until the expansion has
+settled, touching the capsule or the cancel button lights the spotlight but starts no press scale,
+rubber band or deformation.
 
 The expansion runs on a response 0.55 / bounce 0.2 spring (0.5 / 0.2 back), the toolbar icons on
 0.4 / 0.3 (0.5 / 0.2 back, growing from 0.5).

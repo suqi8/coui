@@ -92,6 +92,7 @@ Scaffold {
 | CornerRadius  | Dp     | 对话框面板圆角（45.dp，`coui_round_corner_xxxxl_radius_large_16_1`） |
 | MaxWidth      | Dp     | 面板可见最大宽度（360.dp：`coui_dialog_max_width` 392dp 减去左右各 16dp 内缩） |
 | CustomContentPaddingBottom | Dp | `customContent` 下方内边距（8.dp，`coui_alert_dialog_customer_layout_padding_bottom`） |
+| ScrollFadeLength | Dp | 标题 / 消息滚动区的渐隐长度（32.dp，`center_dialog_scroll_fading_edge_length`） |
 | MaxHeight     | Dp     | 面板最大高度（600.dp：`coui_dialog_max_height` 632dp 减去 32dp 底部边距） |
 | outsideMargin | DpSize | 对话框外部默认边距（16, 32）；高度为无导航栏时的底部间距 |
 | MarginBottomWithNavigationBar | Dp | 三键导航下底部对话框与屏幕底边的间距（60.dp） |
@@ -141,7 +142,9 @@ OverlayDialog(
 
 ### 长内容
 
-标题超过 80 / 120 / 160dp（随窗口高度，`coui_alert_dialog_builder_title_scroll_max_height`）后可滚动；过长的摘要或 `customContent` 在 600dp 面板内滚动，`content` 中的按钮栏始终可见。
+同时有标题和摘要时，两者超出面板后会作为一个整体一起滚动（COUI 把消息并入标题的滚动容器，`COUIAlertDialogMaxLinearLayout` 的消息合并），长消息滚动时标题随之滚走，而不是固定在顶部。只有标题时，标题超过 80 / 120 / 160dp（随窗口高度，`coui_alert_dialog_builder_title_scroll_max_height`）后单独滚动。过长的摘要或 `customContent` 在 600dp 面板内滚动，`content` 中的按钮栏始终可见。所有可滚动边缘都有 32dp 渐隐（`DialogDefaults.ScrollFadeLength`）。
+
+键盘弹出时，对话框贴着键盘，只保留 COUI 在导航栏之上留的间距（手势导航为 32dp 减导航条高度，三键导航为 60dp 减导航栏高度），与 COUI `adjustResize` 窗口止于键盘顶部一致。
 
 ### 居中呈现（大屏）
 

@@ -1,6 +1,6 @@
 # EmptyState
 
-`EmptyState` 是空页面占位组件，对应 ColorOS 的 COUIEmptyStateView：插画槽位、标题、副标题和无边框的操作文字按钮自上而下居中排列。高度有界时，整组位于剩余高度的 45% 处（Small 尺寸类型为 50%）。插画在 `Small` 下隐藏，`Medium` 与 `Large` 均为原尺寸（COUI 17 两档缩放均为 1.0）；`Auto` 在高度低于 200dp 时取 Small，宽度低于 320dp 或高度低于 480dp 时取 Medium，否则取 Large。标题最多两行、副标题最多三行，二者宽 280dp，合计超过 92dp 时可滚动。
+`EmptyState` 是空页面占位组件，对应 ColorOS 的 COUIEmptyStateView：插画槽位、标题、副标题和无边框的操作文字按钮自上而下居中排列。高度有界时，整组位于剩余高度的 45% 处（Small 尺寸类型为 50%）。插画在 `Small` 下隐藏，`Medium` 与 `Large` 均为原尺寸（COUI 17 两档缩放均为 1.0）；`Auto` 在高度低于 200dp 时取 Small，宽度低于 320dp 或高度低于 480dp 时取 Medium，否则取 Large。标题最多两行、副标题最多三行，二者宽 280dp，合计超过 92dp 时可滚动；放得下时拖动文字既不滚动也不回弹，手势交给后面的页面。
 
 COUI 用 Lottie 动画或图片填充插画；这里的 `illustration` 是一个可组合槽位，绘制在按尺寸类型换算后的插画区域内。
 

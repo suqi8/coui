@@ -8,6 +8,8 @@ import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -64,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.isSupported
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -120,6 +123,7 @@ import io.github.suqi8.coui.kmp.shader.RuntimeShader
 import io.github.suqi8.coui.kmp.shader.isRuntimeShaderSupported
 import io.github.suqi8.coui.kmp.squircle.SquircleShape
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
+import io.github.suqi8.coui.kmp.theme.COUIFontScale
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.theme.LocalContentColor
@@ -158,9 +162,14 @@ import kotlin.math.roundToInt
  * @param outsideEndAction the functional button shown while the bar is expanded, typically a
  *   [CancelButton]; `null` hides it (COUI `setHideFunctionalButton`). On a [SearchBarType.Instant]
  *   bar it is placed 12dp after the capsule and grows in with the COUI 17 edit-state spring (scale
- *   0.5 to 1, fading in) while the capsule narrows to make room. On a [SearchBarType.NonInstant]
- *   bar it moves inside the capsule, after a 1dp x 16dp divider.
- * @param content the content to be shown when the [SearchBar] is expanded.
+ *   0.5 to 1, fading in) while the capsule narrows to make room, and the capsule overshoots its
+ *   width a little on the way back. Until those springs settle the button takes no press scale or
+ *   drag deformation (`updateButtonTouchDeformation(false)`). On a [SearchBarType.NonInstant] bar
+ *   it moves inside the capsule, after a 1dp x 16dp divider.
+ * @param content the content to be shown when the [SearchBar] is expanded, typically the search
+ *   results. It fades in on a response 0.35 spring and drops out on a response 0.1 one, both
+ *   without bounce, as the ColorOS 17 settings search brings its results panel in and out
+ *   (`mSearchResultSpringForce`).
  */
 @Composable
 fun SearchBar(
@@ -198,6 +207,9 @@ fun SearchBar(
     // mOuterBtnSpringAnimation: the outer buttons run on their own spring, whose force and scale
     // depend on the direction.
     val outerProgress = remember { Animatable(if (expanded || iconExpand != null) 1f else 0f) }
+    // changeStateWithAnimation switches the buttons' touch deformation off until every state spring
+    // has ended (checkAllStateAnimationsEnded).
+    val stateAnimating: () -> Boolean = remember { { progress.isRunning || outerProgress.isRunning } }
     var outerToEdit by remember { mutableStateOf(expanded) }
     LaunchedEffect(expanded, iconExpand != null, nonInstant) {
         val target = if (expanded || iconExpand != null) 1f else 0f
@@ -221,6 +233,13 @@ fun SearchBar(
     val innerAction = if (nonInstant && expanded) outsideEndAction else null
     val actionInMotion by remember { derivedStateOf { progress.value != 0f } }
     val actionShown = outsideAction != null && (expanded || actionInMotion)
+    // The InputField keeps its edit frame's measure stable while the capsule changes width with this
+    // progress (SearchBarBackgroundView.updateEditFrameClip).
+    val stateProgressReader: () -> Float = remember { { progress.value } }
+    val capsuleResizes = outsideAction != null && iconExpand == null
+    SideEffect {
+        capsuleInfo.stateProgress = if (capsuleResizes) stateProgressReader else null
+    }
 
     Column(
         modifier = modifier,
@@ -228,7 +247,7 @@ fun SearchBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .searchBarHorizontalPadding(insideMargin.width, windowHeight)
+                .searchBarHorizontalPadding(insideMargin.width, windowHeight, capsuleInfo)
                 .onGloballyPositioned { geometry.rowRootX = it.positionInRoot().x }
                 .then(
                     if (fadeExpand) {
@@ -274,6 +293,30 @@ fun SearchBar(
                 modifier = Modifier
                     .weight(1f)
                     .onPlaced { geometry.inputRect = Rect(it.positionInParent(), it.size.toSize()) }
+                    .then(
+                        if (outsideAction != null && iconExpand == null) {
+                            // doWidthChangedAnimate: the capsule's end edge rides the state spring
+                            // between its normal and its edit width, so the undershoot of a
+                            // collapse (progress below 0) carries it a little past its normal width,
+                            // into the room the action slot has already given back.
+                            Modifier.layout { measurable, constraints ->
+                                val overshoot = if (constraints.hasBoundedWidth) {
+                                    (capsuleInfo.actionReachPx * -progress.value).roundToInt().coerceAtLeast(0)
+                                } else {
+                                    0
+                                }
+                                val placeable = if (overshoot > 0) {
+                                    val width = constraints.maxWidth + overshoot
+                                    measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+                                } else {
+                                    measurable.measure(constraints)
+                                }
+                                layout(placeable.width - overshoot, placeable.height) { placeable.placeRelative(0, 0) }
+                            }
+                        } else {
+                            Modifier
+                        },
+                    )
                     .then(
                         if (expandMotion == null) {
                             Modifier
@@ -325,6 +368,9 @@ fun SearchBar(
                 outerPrimaryButton == null -> outerSecondaryButton
                 else -> null
             }
+            SideEffect {
+                if (instantOuterButton == null) capsuleInfo.outerReachPx = 0
+            }
             if (instantOuterButton != null) {
                 val outerShown by remember { derivedStateOf { outerProgress.value != 1f } }
                 if (outerShown) {
@@ -339,7 +385,9 @@ fun SearchBar(
                                 // gap + outer button) to its edit width (beside gap + functional
                                 // button) on the state spring; this slot gives up the outer share.
                                 val fraction = 1f - progress.value
-                                val width = ((size + SearchBarDefaults.OuterButtonGap.roundToPx()) * fraction).roundToInt().coerceAtLeast(0)
+                                val reach = size + SearchBarDefaults.OuterButtonGap.roundToPx()
+                                capsuleInfo.outerReachPx = reach
+                                val width = (reach * fraction).roundToInt().coerceAtLeast(0)
                                 layout(width, size) {
                                     // layoutOuterButtonBackToNormal: the button keeps its normal-state
                                     // place against the end edge, over the action slot growing beside it.
@@ -394,7 +442,9 @@ fun SearchBar(
                                 val buttonWidth = placeable.width - 2 * overflow
                                 val buttonHeight = placeable.height - 2 * overflow
                                 val fraction = max(progress.value, 0f)
-                                val width = ((buttonWidth + ActionStartGap.roundToPx()) * fraction).roundToInt()
+                                val reach = buttonWidth + ActionStartGap.roundToPx()
+                                capsuleInfo.actionReachPx = reach
+                                val width = (reach * fraction).roundToInt()
                                 val rtl = layoutDirection == LayoutDirection.Rtl
                                 val direction = if (rtl) -1f else 1f
                                 // Slot-local bounds; the slot origin shifts them into the row.
@@ -436,7 +486,10 @@ fun SearchBar(
                             }
                             .layerOverflowInner(actionOverflow),
                     ) {
-                        CompositionLocalProvider(LocalSearchBarActionTextAlpha provides actionTextAlpha) {
+                        CompositionLocalProvider(
+                            LocalSearchBarActionTextAlpha provides actionTextAlpha,
+                            LocalSearchBarStateAnimating provides stateAnimating,
+                        ) {
                             outsideAction()
                         }
                     }
@@ -444,8 +497,12 @@ fun SearchBar(
             }
         }
 
+        // The settings search results panel (mSearchResultSpringAnim): alpha p on a response 0.35
+        // spring in, response 0.1 out, no bounce.
         AnimatedVisibility(
             visible = expanded,
+            enter = fadeIn(ResultsEnterSpring),
+            exit = fadeOut(ResultsExitSpring),
         ) {
             content()
         }
@@ -576,15 +633,22 @@ private val SearchIconCenterInset = 20.dp
 
 /**
  * Applies a [SearchBar]'s horizontal inside margin: [padding] when it is specified, else COUI's
- * responsive padding for the bar's own width (`configResponsive`, from `getMeasuredWidth()`).
+ * responsive padding for the bar's own width (`configResponsive`, from `getMeasuredWidth()`). The
+ * resolved padding goes to [capsuleInfo] before the content measures, for a collapsing capsule to
+ * grow into.
  */
-private fun Modifier.searchBarHorizontalPadding(padding: Dp, windowHeight: Dp): Modifier = layout { measurable, constraints ->
+private fun Modifier.searchBarHorizontalPadding(
+    padding: Dp,
+    windowHeight: Dp,
+    capsuleInfo: SearchBarCapsuleInfo,
+): Modifier = layout { measurable, constraints ->
     val paddingPx = if (padding.isSpecified) {
         padding.roundToPx()
     } else {
         val width = if (constraints.hasBoundedWidth) constraints.maxWidth.toDp() else 0.dp
         SearchBarDefaults.responsiveHorizontalPadding(width, windowHeight).roundToPx()
     }
+    capsuleInfo.horizontalPaddingPx = paddingPx
     val placeable = measurable.measure(constraints.offset(horizontal = -2 * paddingPx))
     layout(placeable.width + 2 * paddingPx, placeable.height) {
         placeable.placeRelative(paddingPx, 0)
@@ -619,7 +683,9 @@ private fun Modifier.searchBarHorizontalPadding(padding: Dp, windowHeight: Dp): 
  *   field in different states. See [SearchBarDefaults.searchBarColors].
  * @param collapsePercent how far through its scroll-driven collapse the bar is: 1 fully expanded,
  *   0 flattened to a divider line. See [searchBarCollapsePercent] for turning a scroll offset into
- *   this value, and [searchBarCollapseGeometry] for what it drives.
+ *   this value, and [searchBarCollapseGeometry] for what it drives. Inside a [SearchBar] the capsule
+ *   widens into the bar's own horizontal padding, so the flattened line spans the bar, and the
+ *   [hints] stop rotating until the bar is fully expanded again.
  * @param leadingIcon the leading icon to be displayed at the start of the input field, in place of
  *   the default search icon (COUI `couiSearchIcon`).
  * @param innerPrimaryButton a button inside the capsule after the text, in a 36dp slot, typically a
@@ -688,6 +754,13 @@ fun InputField(
     var innerButtonPressed by remember { mutableStateOf(false) }
     val quickDeleteDown = remember { arrayOfNulls<PointerId>(1) }
     val iconExpandFullWidth = remember { IntArray(1) }
+    // How far the edit frame reaches past its clip this frame, in pixels (see searchBarEditFrame).
+    val editFrameOverflow = remember { IntArray(1) }
+    val clearInteractionSource = remember { MutableInteractionSource() }
+    val clearPressColor = COUITheme.colorScheme.press
+    val clearIndication = remember(clearPressColor) {
+        CircularPressIndication(SearchBarDefaults.InnerButtonSize / 2, clearPressColor)
+    }
 
     // A non-instant SearchBar's functional button, shown inside the capsule while expanded.
     val innerAction = LocalSearchBarInnerAction.current
@@ -714,7 +787,9 @@ fun InputField(
         val showClear = query.isNotEmpty()
         if (showClear) {
             // Clear button: a 36dp circular touch target holding an 18dp filled circle with a
-            // white cross (ic_edit_text_delete_search_view).
+            // white cross (ic_edit_text_delete_search_view). Its press feedback is
+            // COUIRippleDrawableUtil.setIconPressRippleDrawable(view, 18dp): a COUIMaskRippleDrawable
+            // circle of half the inner icon size in couiColorPress.
             val clearCircleColor = colors.clearIconColor
             Box(
                 modifier = Modifier
@@ -727,7 +802,12 @@ fun InputField(
                             quickDeleteDown[0] = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial).id
                         }
                     }
-                    .clickable(enabled = enabled) { currentOnQueryChange("") }
+                    .clickable(
+                        enabled = enabled,
+                        role = Role.Button,
+                        interactionSource = clearInteractionSource,
+                        indication = clearIndication,
+                    ) { currentOnQueryChange("") }
                     // coui_search_clear_button_description.
                     .semantics { contentDescription = "Clear text" },
                 contentAlignment = Alignment.Center,
@@ -858,11 +938,17 @@ fun InputField(
                         } else {
                             // The capsule shrinks and simultaneously widens past its own edges,
                             // tinting to the divider color, so a fully collapsed bar reads as the
-                            // list's divider line.
+                            // list's divider line. Inside a SearchBar it grows into the bar's own
+                            // padding (mExtraHorizontalBackground = getInternalPaddingEnd() * ...).
                             Modifier
                                 .height(collapse.capsuleHeight)
                                 .layout { measurable, constraints ->
-                                    val extra = collapse.extraHorizontalWidth.roundToPx()
+                                    val barPadding = capsuleInfo?.horizontalPaddingPx ?: -1
+                                    val extra = if (barPadding >= 0) {
+                                        (barPadding * searchBarCollapseWidening(collapsePercent)).roundToInt()
+                                    } else {
+                                        collapse.extraHorizontalWidth.roundToPx()
+                                    }
                                     val placeable = measurable.measure(
                                         constraints.offset(horizontal = extra * 2),
                                     )
@@ -927,8 +1013,11 @@ fun InputField(
                                 interactionSource = internalInteractionSource,
                                 cornerRadius = COUIRoundCorner.Full,
                                 motionEnabled = enabled,
-                                spotLightSuppressed = { innerButtonPressed || iconExpand?.interactive?.invoke() == false },
-                                touchMotionSuppressed = { innerButtonPressed || iconExpand?.interactive?.invoke() == false },
+                                // setSpotLightEnabled(enabled && isEnabled()): a disabled capsule stays dark.
+                                spotLightSuppressed = { !enabled || innerButtonPressed || iconExpand?.interactive?.invoke() == false },
+                                // showInToolBar / hideInToolBar keep the capsule still under a finger
+                                // until the icon expansion has settled.
+                                touchMotionSuppressed = { innerButtonPressed || iconExpand?.touchMotionEnabled?.invoke() == false },
                             )
                         } else {
                             Modifier.background(
@@ -974,6 +1063,13 @@ fun InputField(
                             .weight(1f)
                             // coui_search_bar_edittext_end_gap after the edit frame.
                             .padding(end = SearchBarDefaults.EditTextEndGap)
+                            .then(
+                                if (capsuleInfo == null) {
+                                    Modifier
+                                } else {
+                                    Modifier.searchBarEditFrame(capsuleInfo, editFrameOverflow)
+                                },
+                            )
                             .heightIn(min = SearchBarDefaults.InputFieldMinHeight)
                             .then(
                                 if (expandMotion == null) {
@@ -1003,6 +1099,9 @@ fun InputField(
                             SearchBarHintCarousel(
                                 hints = hints,
                                 active = query.isEmpty(),
+                                // setSearchViewAnimateHeightPercent pauses the hints below 1 and
+                                // resumes them at 1.
+                                paused = collapsePercent < 1f,
                                 repeatCount = hintRepeatCount,
                                 style = mergedLabelStyle,
                                 color = hintColor,
@@ -1037,6 +1136,43 @@ fun InputField(
     }
 }
 
+/**
+ * Keeps the [InputField]'s edit frame (text and hints) measured at a stable width while a
+ * [SearchBar] capsule changes width with its state spring, and clips it to the width it has
+ * (`SearchBarBackgroundView.updateEditFrameClip`, see [searchBarEditFrameMeasureWidth]); at rest it
+ * measures as usual. [overflow] carries how far the frame reaches past the clip from the layout to
+ * the draw of the same frame.
+ */
+private fun Modifier.searchBarEditFrame(capsuleInfo: SearchBarCapsuleInfo, overflow: IntArray): Modifier = this
+    .drawWithContent {
+        if (overflow[0] > 0) {
+            clipRect { this@drawWithContent.drawContent() }
+        } else {
+            drawContent()
+        }
+    }
+    .layout { measurable, constraints ->
+        val progress = capsuleInfo.stateProgress?.invoke()
+        val width = if (progress == null || progress == 0f || progress == 1f || !constraints.hasBoundedWidth) {
+            constraints.maxWidth
+        } else {
+            searchBarEditFrameMeasureWidth(
+                currentWidth = constraints.maxWidth,
+                shrinkPx = capsuleInfo.actionReachPx - capsuleInfo.outerReachPx,
+                progress = progress,
+            )
+        }
+        if (!constraints.hasBoundedWidth || width == constraints.maxWidth) {
+            overflow[0] = 0
+            val placeable = measurable.measure(constraints)
+            layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+        } else {
+            val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+            overflow[0] = (placeable.width - constraints.maxWidth).coerceAtLeast(0)
+            layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(0, 0) }
+        }
+    }
+
 /** A 36dp slot for an inner button of the [InputField] (`coui_search_bar_inner_search_icon_size`). */
 @Composable
 private fun SearchBarInnerButtonSlot(button: @Composable () -> Unit) {
@@ -1056,6 +1192,7 @@ private fun SearchBarInnerButtonSlot(button: @Composable () -> Unit) {
 private fun SearchBarHintCarousel(
     hints: List<String>,
     active: Boolean,
+    paused: Boolean,
     repeatCount: Int,
     style: TextStyle,
     color: Color,
@@ -1077,9 +1214,16 @@ private fun SearchBarHintCarousel(
     LaunchedEffect(hints, active) {
         if (!active) stopped = true
     }
+    // pauseHintsAnimation keeps the current hint on screen; resumeHintsAnimation runs
+    // setHintsAnimation again, which restarts the rotation even after typing had stopped it.
+    val wasPaused = remember { booleanArrayOf(paused) }
+    LaunchedEffect(paused) {
+        if (wasPaused[0] && !paused && active) stopped = false
+        wasPaused[0] = paused
+    }
 
-    LaunchedEffect(hints, active, stopped, repeatCount) {
-        if (!active || stopped || hints.size < 2) {
+    LaunchedEffect(hints, active, stopped, paused, repeatCount) {
+        if (!active || stopped || paused || hints.size < 2) {
             previous = -1
             inProgress.snapTo(1f)
             return@LaunchedEffect
@@ -1484,7 +1628,8 @@ enum class SearchBarType {
  *
  * On COUI 17 `SearchBarFunctionButton` is its own 40dp capsule: the same top-bar glass material as
  * the search capsule (`?couiColorBar` without it), 16dp horizontal text padding and a 14sp medium
- * couiColorLabelPrimary label. It appears as soon as the bar expands, whether or not a query has
+ * couiColorLabelPrimary label that follows the font scale only up to the 1.15 step
+ * (`COUIChangeTextUtil` G2). It appears as soon as the bar expands, whether or not a query has
  * been typed, and the class deliberately leaves the click unwired — the host decides. Settings
  * collapses the bar, and collapsing clears the query, so the net effect there is clear + collapse +
  * hide the keyboard.
@@ -1517,6 +1662,7 @@ fun CancelButton(
     val interactionSource = remember { MutableInteractionSource() }
     val textAlpha = LocalSearchBarActionTextAlpha.current
     val iconExpand = LocalSearchBarIconExpand.current
+    val stateAnimating = LocalSearchBarStateAnimating.current
     val inCapsule = LocalSearchBarActionInCapsule.current
     // coui_search_function_button_text_color: couiColorLabelPrimary, disabled couiColorLabelTertiary.
     val labelColor = if (enabled) colors.cancelTextColor else colors.disabledCancelTextColor
@@ -1540,8 +1686,13 @@ fun CancelButton(
                         interactionSource = interactionSource,
                         cornerRadius = COUIRoundCorner.Full,
                         motionEnabled = enabled,
-                        spotLightSuppressed = { iconExpand?.interactive?.invoke() == false },
-                        touchMotionSuppressed = { iconExpand?.interactive?.invoke() == false },
+                        // SearchBarFunctionButton.setSpotLightEnabled: no spotlight while disabled.
+                        spotLightSuppressed = { !enabled || iconExpand?.interactive?.invoke() == false },
+                        // updateButtonTouchDeformation(false) while the edit-state springs or the
+                        // toolbar icon expansion run.
+                        touchMotionSuppressed = {
+                            iconExpand?.touchMotionEnabled?.invoke() == false || stateAnimating?.invoke() == true
+                        },
                     )
                 } else {
                     Modifier.background(color = colors.backgroundColor, shape = capsuleShape)
@@ -1575,7 +1726,9 @@ fun CancelButton(
                 Modifier.graphicsLayer { alpha = textAlpha() }
             },
             color = labelColor,
-            fontSize = SearchBarDefaults.CancelFontSize,
+            // initFunctionButton: COUIChangeTextUtil.getSuitableFontSize(size, fontScale, G2), so the
+            // label grows at most to the 1.15 font scale step.
+            fontSize = COUIFontScale.cappedFontSize(SearchBarDefaults.CancelFontSize, COUIFontScale.G2),
             fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -1597,6 +1750,18 @@ private val LocalSearchBarInnerAction = staticCompositionLocalOf<(@Composable ()
 
 /** Whether a [CancelButton] sits inside a non-instant capsule rather than beside the capsule. */
 private val LocalSearchBarActionInCapsule = staticCompositionLocalOf { false }
+
+/**
+ * Whether the [SearchBar]'s edit-state springs are running, read by its [CancelButton] when a touch
+ * goes down; `null` outside a [SearchBar].
+ */
+private val LocalSearchBarStateAnimating = staticCompositionLocalOf<(() -> Boolean)?> { null }
+
+/** `mSearchResultSpringForce` entering the search: response 0.35, no bounce. */
+private val ResultsEnterSpring = TouchMotion.spring(response = 0.35f, bounce = 0f, visibilityThreshold = 0.001f)
+
+/** `mSearchResultSpringForce` leaving the search (`animToNormal`): response 0.1, no bounce. */
+private val ResultsExitSpring = TouchMotion.spring(response = 0.1f, bounce = 0f, visibilityThreshold = 0.001f)
 
 /** COUI 17 `StateChangedToEditParamsHigh` / `StateChangedToNormalParamsHigh`: response 0.5, bounce 0.25. */
 internal val StateChangeSpring = TouchMotion.spring(response = 0.5f, bounce = 0.25f, visibilityThreshold = 0.001f)

@@ -13,7 +13,7 @@ popupHost: COUIPopupHost
 
 `OverlayBottomSheet` is the COUI panel (`COUIBottomSheetDialog`). On windows narrower than 600dp it slides up from the bottom edge; from 600dp on it floats centered, 64dp above the window bottom, with all four corners rounded and a scale (0.8 → 1) + fade entrance. Its width follows the COUI grid and never exceeds 540dp. The whole panel can be dragged; scrollable content scrolls first and drags the panel once it reaches the top.
 
-Dragging down dismisses the panel when released with a downward fling faster than 500px/s or past half of its height (content drags dismiss whenever the last move was downward). Pulling up stretches the panel by 0.2 of the finger travel, at most 28dp, and springs back.
+Dragging down dismisses the panel when released with a downward fling faster than 500px/s or past half of its height (content drags dismiss whenever the last move was downward); the dim then fades out right away while the panel slides off, and an open keyboard is hidden. Any other release settles with a 0.4s spring started at the release speed, an overshoot past the resting position shown at 40%. Pulling up stretches the panel by 0.2 of the finger travel, at most 28dp, and springs back. With `allowDismiss = false` the panel follows the finger down only until its 82dp peek is left, then rests collapsed or springs back. Showing or hiding the sheet while it is still moving turns the animation around from where the panel is.
 
 <div style="position: relative; height: 240px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../compose/index.html?id=overlayBottomSheet" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>
@@ -77,7 +77,7 @@ Scaffold {
 | showDragHandle             | Boolean                   | Whether to show the drag handle (COUI hides it on regular panels and keeps a 10dp gap) | false                    | No       |
 | handlePanel                | Boolean                   | COUI handle panel: shows the handle, fills the maximum height, rests half-expanded (portrait) or collapsed to 82dp (landscape) and settles between collapsed / half-expanded / expanded | false | No |
 | showInMaxHeight            | Boolean                   | Take the maximum height instead of wrapping the content        | false                                      | No       |
-| allowDismiss               | Boolean                   | Whether to allow dismissing the sheet via drag, back gesture or outside taps | true                         | No       |
+| allowDismiss               | Boolean                   | Whether to allow dismissing the sheet via drag, back gesture or outside taps; when false, dragging down stops at the 82dp peek (COUI non-cancelable panel) | true | No       |
 | dismissOnClickOutside      | Boolean                   | Whether tapping outside dismisses the sheet (with `allowDismiss`) | true                                    | No       |
 | draggable                  | Boolean                   | Whether the panel follows drag gestures                        | true                                       | No       |
 | enablePullUp               | Boolean                   | Whether the panel can be pulled above its resting position     | true                                       | No       |

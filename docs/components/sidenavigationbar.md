@@ -41,7 +41,7 @@ The mode compares the screen tier of the bar's size (`COUIResponsiveUtils`: smal
 | Mode    | When                                    | Drawer width                    | Content                              |
 | ------- | --------------------------------------- | ------------------------------- | ------------------------------------ |
 | Docked  | window weight > content weight          | `min(280dp, width × 0.382)`     | Shrinks beside the drawer, no mask   |
-| Overlay | otherwise (e.g. narrower than 600dp)    | 300dp                           | Covered by the drawer and a `coui_color_mask` scrim; tapping it closes the drawer |
+| Overlay | otherwise (e.g. narrower than 600dp)    | 300dp                           | Covered by the drawer and a `coui_color_mask` scrim; a tap on it (released within the touch slop of the press) closes the drawer |
 
 A 0.33dp `couiColorDivider` line follows the drawer's end edge in both modes. `state.mode` exposes the current mode, so the content can, for example, close the drawer after a selection only in overlay mode.
 
@@ -51,7 +51,7 @@ The drawer moves like a `DrawerLayout` settle: 512ms for a full move (`ViewDragH
 
 ## Edit Mode
 
-`editMode = true` (`setIsInEditState`) masks the content beside a docked drawer with a 300ms fade and stops it from taking touches; in overlay mode it keeps the scrim from closing the drawer. `editModeMask = false` (`setHandlerEditModeMask`) skips the mask.
+`editMode = true` (`setIsInEditState`) masks the content beside a docked drawer with a 300ms fade on the framework's accelerate-decelerate curve and stops it from taking touches; leaving edit mode, or changing your mind halfway, plays the fade back from where it is. Like the scrim, the mask scales with how far the drawer is open. In overlay mode edit mode keeps the scrim from closing the drawer. `editModeMask = false` (`setHandlerEditModeMask`) skips the mask.
 
 ## Properties
 
@@ -91,6 +91,7 @@ The drawer moves like a `DrawerLayout` settle: 512ms for a full move (`ViewDragH
 | DockedDrawerWidthFraction    | Float   | Docked share of the width                        | 0.382                    |
 | DividerThickness             | Dp      | `coui_side_navigation_drawer_divider_width`      | 0.33.dp                  |
 | EDIT_MASK_DURATION_MILLIS    | Int     | Edit mask fade                                   | 300                      |
+| EditMaskEasing               | Easing  | Edit mask curve: `AccelerateDecelerateInterpolator`, `cos((t + 1)π) / 2 + 0.5` | - |
 | SettleEasing                 | Easing  | `ViewDragHelper` interpolator `(t - 1)^5 + 1`    | -                        |
 | maskColor                    | Color   | `coui_color_mask` (`colorScheme.mask`)  | #33000000 / #99000000    |
 | drawerMode(width, height, parentChildHierarchy) | SideNavigationBarMode | Mode of a bar size | -          |

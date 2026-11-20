@@ -10,6 +10,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.ChipTab
+import io.github.suqi8.coui.kmp.basic.ChipTabContent
 import io.github.suqi8.coui.kmp.basic.ChipTabRow
 import io.github.suqi8.coui.kmp.basic.ChipTabDefaults
 import io.github.suqi8.coui.kmp.basic.ChipTabMaterialType
@@ -28,6 +29,26 @@ ChipTabRow(
 ```
 
 点击已选中的标签不会有任何变化（`COUIChipTabGroup` 始终保持一个标签选中）。当行可以向某一侧滚动时，该侧的标签在 16dp 内边距处被裁切并在 12dp 内渐隐；点击被可见边缘截断的标签时，会把它滚动到可见区域。
+
+## 切换页面
+
+`ChipTabContent` 按 `COUIChipTabGroupFragmentMediator` 的转场显示选中标签对应的页面：离开的页面以 COUISpringForce（response 0.2，bounce 0）淡出，新页面延迟 150ms 后以 response 0.3 的弹簧淡入。首个页面直接淡入、不延迟；页面隐藏期间保留各自的可保存状态，与中介器保留 Fragment 一致。
+
+```kotlin
+val tabs = listOf("全部", "照片", "视频")
+var selectedIndex by remember { mutableIntStateOf(0) }
+
+Column {
+    ChipTabRow(
+        tabs = tabs,
+        selectedTabIndex = selectedIndex,
+        onTabSelected = { selectedIndex = it },
+    )
+    ChipTabContent(selectedTabIndex = selectedIndex) { index ->
+        Text("${tabs[index]}的内容")
+    }
+}
+```
 
 ## 前置图标标签
 
@@ -145,6 +166,14 @@ ChipTab(
 | onLeadingIconClick | () -> Unit                | 点击前置图标标签的回调                                 | {}                              | 否       |
 | leadingIcon        | (@Composable () -> Unit)? | 始终选中的前置标签的图标                               | null                            | 否       |
 
+### ChipTabContent
+
+| 属性名           | 类型                             | 说明                                   | 默认值   | 是否必须 |
+| ---------------- | -------------------------------- | -------------------------------------- | -------- | -------- |
+| selectedTabIndex | Int                              | 要显示的页面，通常是标签行的选中索引   | -        | 是       |
+| modifier         | Modifier                         | 应用于页面容器的修饰符                 | Modifier | 否       |
+| content          | @Composable (index: Int) -> Unit | 某个索引对应的页面                     | -        | 是       |
+
 ### ChipTabDefaults
 
 | 常量名                              | 类型          | 默认值                            | COUI 来源                                             |
@@ -197,5 +226,5 @@ ChipTab(
 - 开启材质：背景（在提供者之下）以 `ArgbEvaluator` 混合未选中与选中预设；`TYPE_NO_EFFECT_BASE_1` → `TYPE_FRAMEWORK_CAPSULE_2` 边缘光与内阴影随选中增强；`TYPE_CHIP_TAB` 触摸聚光跟随手指（浅色 PLUS 0.2，深色 SRC_OVER 0.3），并取代按压与悬停遮罩。
 - 关闭材质：选中标签绘制 0.6dp 选中描边，按压或悬停时用 `press` / `hover` 着色胶囊。
 - 选中标签投射 `ShadowUtils` 5 级（`SHADOW_LV3_A`）光源阴影，其高度（100dp）随选中进度缩放。
-- 按压时按 COUI 17 与尺寸相关的按压缩放；键盘焦点绘制 3dp `focusOutline` 外环。
+- 按压时按 COUI 17 与尺寸相关的按压缩放；键盘焦点绘制 3dp `focusOutline` 外环。与 `COUIChip.handleActionDown` 一致，按压缩放和按压遮罩在手指按下时立即开始，在可滚动的 `ChipTabRow` 中也是如此。
 - 文字单行，超出 `TextMaxWidth` 时省略，并在加宽至 `MinWidth` 的标签中居中。

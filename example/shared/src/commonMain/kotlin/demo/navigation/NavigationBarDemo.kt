@@ -147,7 +147,8 @@ private fun NavigationBarDemoPage(onBack: () -> Unit) {
 /**
  * The tab bar of the demo. With [blur] on and a page backdrop provided (the material setting is on
  * and runtime shaders exist), the bar turns see-through over a 25px blur of the page tinted with
- * the page colour at 80%; otherwise it keeps COUI's opaque `?couiColorBar`.
+ * the page colour at 80%; otherwise it keeps COUI's opaque `?couiColorBar`. Changing [itemCount]
+ * switches the menu with the COUI animation.
  */
 @Composable
 private fun DemoNavigationBar(
@@ -188,13 +189,16 @@ private fun DemoNavigationBar(
                 onClick = {},
             ),
     ) {
+        // A new item count is a new menu: the bar switches it with the COUI switchToMenu animation
+        // (the old items fade out, the new ones rise from the bottom edge).
         NavigationBar(
+            targetState = itemCount,
             visible = visible,
             color = barColor,
             showDivider = showDivider,
             mode = mode,
-        ) {
-            repeat(itemCount) { index ->
+        ) { shownCount ->
+            repeat(shownCount) { index ->
                 NavigationBarItem(
                     selected = selected == index,
                     onClick = { onSelect(index) },

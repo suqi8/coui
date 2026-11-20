@@ -4,8 +4,7 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Easing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -26,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -37,7 +37,9 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
 import kotlinx.coroutines.launch
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -213,20 +215,38 @@ fun SideNavigationBar(
         state.applyMode(mode, currentEditMode)
     }
     val docked = state.mode == SideNavigationBarMode.Docked
-    // setIsInEditState animates the scrim colour in docked mode (default ValueAnimator: 300ms).
-    val editMaskFraction by animateFloatAsState(
-        targetValue = if (editMode && editModeMask && docked) 1f else 0f,
-        animationSpec = tween(SideNavigationBarDefaults.EDIT_MASK_DURATION_MILLIS, easing = FastOutSlowInEasing),
-        label = "SideNavigationBarEditMask",
-    )
+    // setIsInEditState: in docked mode a ValueAnimator (300ms, the framework's default
+    // AccelerateDecelerateInterpolator) takes the scrim colour from transparent to coui_color_mask
+    // and back. A change of mind restarts it from the fraction it last drew (setCurrentFraction), so
+    // the linear progress is kept here and eased when drawn.
+    val editMask = remember { Animatable(0f) }
+    val editMaskShown = editMode && editModeMask && docked
+    LaunchedEffect(editMaskShown) {
+        val target = if (editMaskShown) 1f else 0f
+        if (editMask.value == target) return@LaunchedEffect
+        editMask.snapTo(SideNavigationBarDefaults.EditMaskEasing.transform(editMask.value))
+        val duration = (abs(target - editMask.value) * SideNavigationBarDefaults.EDIT_MASK_DURATION_MILLIS).roundToInt()
+        editMask.animateTo(target, tween(durationMillis = duration, easing = LinearEasing))
+    }
     val scrimActive = if (docked) editMode else state.isOpen
     val scrimModifier = if (scrimActive) {
         Modifier.pointerInput(docked, editMode, state) {
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
                 down.consume()
-                // onTouchEvent: a tap outside an overlay drawer closes it, unless editing.
-                if (!docked && !editMode) scope.launch { state.close() }
+                var up: PointerInputChange? = null
+                while (true) {
+                    val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
+                    change.consume()
+                    if (!change.pressed) {
+                        up = change
+                        break
+                    }
+                }
+                // onTouchEvent: a release within the touch slop of the press (a tap, not a drag)
+                // beside an overlay drawer closes it, unless editing.
+                val tapped = up != null && (up.position - down.position).getDistance() < viewConfiguration.touchSlop
+                if (tapped && !docked && !editMode) scope.launch { state.close() }
             }
         }
     } else {
@@ -241,7 +261,13 @@ fun SideNavigationBar(
                     Modifier
                         .then(scrimModifier)
                         .drawBehind {
-                            val alpha = if (state.mode == SideNavigationBarMode.Docked) editMaskFraction else state.progress
+                            // DrawerLayout scales the scrim colour by how far the drawer is on
+                            // screen (mScrimOpacity), docked edit mask included.
+                            val alpha = if (state.mode == SideNavigationBarMode.Docked) {
+                                SideNavigationBarDefaults.EditMaskEasing.transform(editMask.value) * state.progress
+                            } else {
+                                state.progress
+                            }
                             if (alpha > 0f) drawRect(maskColor.copy(alpha = maskColor.alpha * alpha))
                         },
                 )
@@ -304,6 +330,12 @@ object SideNavigationBarDefaults {
 
     /** The edit-mode mask fade: the default `ValueAnimator` duration. */
     const val EDIT_MASK_DURATION_MILLIS: Int = 300
+
+    /**
+     * The edit-mode mask curve: the framework's default `ValueAnimator` interpolator,
+     * `AccelerateDecelerateInterpolator`, `cos((t + 1) x PI) / 2 + 0.5`.
+     */
+    val EditMaskEasing: Easing = Easing { t -> (cos((t + 1f) * PI) / 2.0 + 0.5).toFloat() }
 
     /** `ViewDragHelper`'s settle interpolator: `(t - 1)^5 + 1`. */
     val SettleEasing: Easing = Easing { t ->

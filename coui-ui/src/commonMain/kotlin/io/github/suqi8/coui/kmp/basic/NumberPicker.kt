@@ -20,6 +20,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
@@ -31,8 +32,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -44,10 +45,14 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
 import io.github.suqi8.coui.kmp.utils.rememberCouiScaledHaptic
@@ -61,6 +66,7 @@ import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.roundToInt
 import kotlin.math.sign
+import kotlin.math.truncate
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
@@ -72,10 +78,12 @@ import kotlin.time.TimeSource
  * - every row is drawn twice and hard-clipped at the center band (center ± 24dp): the part
  *   inside the band uses [selectedTextSize] and the selected color, the part outside uses
  *   [unselectedTextSize] and the unselected color. There is no gradual blend.
- * - a fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s),
- *   lands on a whole row and finishes with a 300ms snap. Android uses these raw px/s values like
- *   COUI; other platforms treat them as px on a 3.5x reference phone and scale them by the actual
- *   density, so a flick feels the same.
+ * - a fling uses the Android spline at 1.6x the release velocity (clamped to 750..5000 px/s). As in
+ *   COUINumberPicker.fling it travels whole rows counted from the value shown at release (a flick
+ *   shorter than a row keeps its fraction and the 300ms snap that follows picks the row), and a
+ *   wheel that does not wrap stops dead at its first or last row. Android uses these raw px/s
+ *   values like COUI; other platforms treat them as px on a 3.5x reference phone and scale them by
+ *   the actual density, so a flick feels the same.
  * - [onValueChange] fires on every value change while the wheel moves, not only when it settles.
  *   Each change also plays a haptic tick whose intensity follows the wheel speed (50..100% up to
  *   5000 px/s, at most one every 25ms, like COUI's VibrateUtils) and, on Android with touch
@@ -83,7 +91,9 @@ import kotlin.time.TimeSource
  * - tapping the row above or below the center steps by one; holding it repeats the step every
  *   [longPressStepInterval] milliseconds.
  *
- * Text sizes are in dp, not sp, so they do not follow the system font scale (like COUI).
+ * Text sizes are in dp, not sp, so they do not follow the system font scale (like COUI). A label
+ * wider than the wheel is drawn from its start edge instead of centered, decided once from the
+ * unselected size for both passes as COUINumberPicker.onDraw does.
  *
  * Without a width from [modifier] the wheel is 80dp wide (COUINumberPicker internalMinWidth).
  * Accessibility services can step the wheel forward and backward (COUINumberPicker's
@@ -102,8 +112,8 @@ import kotlin.time.TimeSource
  *   scrolling, COUI mWrapSelectorWheelPreferred, on by default). As in COUI, wrapping only
  *   applies when the range has more items than [visibleItemCount].
  * @param ignorable Whether the wheel has an extra placeholder row after the last value, drawn as
- *   two short bars and reported as [NumberPickerDefaults.IgnoredValue] (COUINumberPicker
- *   setIgnorable, used for an optional year).
+ *   two short bars a little below the row center and reported as
+ *   [NumberPickerDefaults.IgnoredValue] (COUINumberPicker setIgnorable, used for an optional year).
  * @param longPressStepInterval The interval, in milliseconds, between auto-repeated steps while a
  *   row above or below the center is held.
  * @param colors The [NumberPickerColors] for this [NumberPicker].
@@ -131,6 +141,55 @@ fun NumberPicker(
     selectedTextSize: Dp = NumberPickerDefaults.SelectedTextSize,
     unselectedTextSize: Dp = NumberPickerDefaults.UnselectedTextSize,
     itemHeight: Dp = NumberPickerDefaults.ItemHeight,
+) {
+    NumberPickerWheel(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        enabled = enabled,
+        range = range,
+        label = label,
+        unit = unit,
+        visibleItemCount = visibleItemCount,
+        wrapAround = wrapAround,
+        ignorable = ignorable,
+        longPressStepInterval = longPressStepInterval,
+        colors = colors,
+        textStyle = textStyle,
+        selectedTextSize = selectedTextSize,
+        unselectedTextSize = unselectedTextSize,
+        itemHeight = itemHeight,
+    )
+}
+
+/**
+ * The wheel behind [NumberPicker], with two extra knobs the multi-wheel pickers need.
+ *
+ * When [contentWidth] is specified and the wheel is laid out wider (the outer wheels of a
+ * [NumberPickerRow]), the rows are drawn in a [contentWidth]-wide column placed by
+ * [contentAlignment], while the whole width still takes touches: COUINumberPicker's
+ * numberPickerPaddingLeft / Right.
+ */
+@Composable
+internal fun NumberPickerWheel(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    range: IntRange = 0..10,
+    label: (Int) -> String = { it.toString() },
+    unit: String = "",
+    visibleItemCount: Int = 3,
+    wrapAround: Boolean = true,
+    ignorable: Boolean = false,
+    longPressStepInterval: Long = NumberPickerDefaults.LongPressStepInterval,
+    colors: NumberPickerColors = NumberPickerDefaults.colors(),
+    textStyle: TextStyle = COUITheme.textStyles.headlineM,
+    selectedTextSize: Dp = NumberPickerDefaults.SelectedTextSize,
+    unselectedTextSize: Dp = NumberPickerDefaults.UnselectedTextSize,
+    itemHeight: Dp = NumberPickerDefaults.ItemHeight,
+    contentWidth: Dp = Dp.Unspecified,
+    contentAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
 ) {
     require(visibleItemCount % 2 == 1 && visibleItemCount >= 3) {
         "visibleItemCount must be odd and at least 3, but was $visibleItemCount"
@@ -169,6 +228,8 @@ fun NumberPicker(
     val velocityScale = numberPickerVelocityScale(density.density)
     val minFlingVelocity = NumberPickerMinFlingVelocity * velocityScale
     val maxFlingVelocity = NumberPickerMaxFlingVelocity * velocityScale
+    // COUI keeps the placeholder-bar offset in raw px too, so it scales like the velocities.
+    val ignoreBarOffset = NumberPickerIgnoreBarOffsetPx * velocityScale
     val latestMaxFlingVelocity by rememberUpdatedState(maxFlingVelocity)
     val latestRowPx by rememberUpdatedState(with(density) { itemHeight.toPx() })
     val latestRangeStart by rememberUpdatedState(range.first)
@@ -187,6 +248,23 @@ fun NumberPicker(
 
     fun valueAt(index: Int): Int = if (index == latestIgnoredIndex) NumberPickerDefaults.IgnoredValue else latestRangeStart + index
 
+    // COUINumberPicker.scrollBy -> setValueInternal: the value changes once the wheel has moved 0.95
+    // of a row, and every change notifies the listener and plays the feedback (performFeedback and
+    // the click sound).
+    fun report(current: Float, now: TimeSource.Monotonic.ValueTimeMark) {
+        val next = numberPickerHysteresisIndex(tracker.reported, current)
+        if (next == tracker.reported) return
+        tracker.reported = next
+        if (tracker.takeHapticSlot(now)) {
+            latestPerformHaptic(
+                CouiHapticEffect.Strength,
+                numberPickerHapticIntensity(tracker.speed, latestMaxFlingVelocity),
+            )
+        }
+        latestPlayClick()
+        latestOnValueChange(valueAt(wrapIndex(next)))
+    }
+
     // Follow external value / range changes while the wheel is at rest.
     LaunchedEffect(currentIndex, itemCount, canWrap) {
         if (!pressed && animationJob?.isActive != true && (wrapIndex(tracker.reported) != currentIndex || position.value != currentIndex.toFloat())) {
@@ -194,26 +272,12 @@ fun NumberPicker(
         }
     }
 
-    // COUINumberPicker.scrollBy: the value changes once the wheel has moved 0.95 of a row, and every
-    // change notifies the listener and plays the feedback (setValueInternal -> performFeedback).
     LaunchedEffect(Unit) {
         snapshotFlow { position.value }.collect {
             val now = TimeSource.Monotonic.markNow()
             val current = position.value
             tracker.trackSpeed(current, now, latestRowPx, latestMaxFlingVelocity)
-            if (tracker.rebasing) return@collect
-            val next = numberPickerHysteresisIndex(tracker.reported, current)
-            if (next != tracker.reported) {
-                tracker.reported = next
-                if (tracker.takeHapticSlot(now)) {
-                    latestPerformHaptic(
-                        CouiHapticEffect.Strength,
-                        numberPickerHapticIntensity(tracker.speed, latestMaxFlingVelocity),
-                    )
-                }
-                latestPlayClick()
-                latestOnValueChange(valueAt(wrapIndex(next)))
-            }
+            if (!tracker.rebasing) report(current, now)
         }
     }
 
@@ -224,6 +288,9 @@ fun NumberPicker(
         if (position.value != target) {
             position.animateTo(target, tween(NumberPickerSnapDurationMillis, easing = NumberPickerSnapEasing))
         }
+        // The collector may not have seen the last frame yet (a fling that hit the end of the
+        // wheel stops within one frame): report it here so normalising never swallows a change.
+        report(position.value, TimeSource.Monotonic.markNow())
         val index = wrapIndex(position.value.roundToInt())
         if (position.value != index.toFloat() || tracker.reported != index) {
             tracker.rebase(index) { position.snapTo(index.toFloat()) }
@@ -246,14 +313,23 @@ fun NumberPicker(
         }
     }
 
-    fun fling(velocity: Float, rowPx: Float, from: Float) {
+    // COUINumberPicker.fling: whole rows from the value shown at release, over the spline duration
+    // x 1.5 on the fling scroller, then the adjust scroller snaps whatever fraction is left.
+    fun fling(velocity: Float, rowPx: Float, from: Float, lastMovePx: Float) {
         val fling = numberPickerFling(velocity, density.density)
         val rows = numberPickerQuantisedRows(fling.distance, rowPx)
-        // A downward finger (positive velocity) reveals the previous values.
-        val target = clampPosition((from - sign(velocity) * rows).roundToInt().toFloat())
+        val reported = numberPickerHysteresisIndex(tracker.reported, from)
+        val target = numberPickerFlingTarget(reported, from, lastMovePx / rowPx, velocity, rows)
         launchAnimation {
-            if (position.value != target) {
-                position.animateTo(target, tween(fling.durationMillis.coerceAtLeast(1), easing = NumberPickerFlingEasing))
+            // COUINumberPicker.scrollBy pins a wheel that does not wrap at its first / last row while
+            // the fling scroller runs on, so the wheel stops dead there instead of easing into it.
+            if (!latestCanWrap) position.updateBounds(lowerBound = 0f, upperBound = (latestItemCount - 1).toFloat())
+            try {
+                if (position.value != target) {
+                    position.animateTo(target, tween(fling.durationMillis.coerceAtLeast(1), easing = NumberPickerFlingEasing))
+                }
+            } finally {
+                position.updateBounds(lowerBound = null, upperBound = null)
             }
             settle()
         }
@@ -285,7 +361,6 @@ fun NumberPicker(
     val selectedColor = colors.selectedTextColor
     val unselectedColor = colors.unselectedTextColor
     val latestLabel by rememberUpdatedState(label)
-    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
 
     val displayValue = if (isIgnored) NumberPickerIgnoredDescription else label(coercedValue)
     Spacer(
@@ -346,6 +421,9 @@ fun NumberPicker(
                             var dragging = false
                             var dragPosition = position.value
                             var lastY = down.position.y
+                            // COUINumberPicker.mDeltaMoveY: the last finger move while dragging,
+                            // which the fling extrapolates from.
+                            var lastMoveDelta = 0f
                             var upY = down.position.y
                             var upTime = down.uptimeMillis
                             var released = false
@@ -365,7 +443,8 @@ fun NumberPicker(
                                     animationJob?.cancel()
                                     dragPosition = position.value
                                 } else if (dragging) {
-                                    dragPosition = clampPosition(dragPosition - (change.position.y - lastY) / rowPx)
+                                    lastMoveDelta = change.position.y - lastY
+                                    dragPosition = clampPosition(dragPosition - lastMoveDelta / rowPx)
                                     val target = dragPosition
                                     scope.launch { position.snapTo(target) }
                                 }
@@ -379,8 +458,12 @@ fun NumberPicker(
                                 .coerceIn(-maxFlingVelocity, maxFlingVelocity)
                             val stepping = animationJob?.isActive == true
                             when {
-                                released && abs(velocity) > minFlingVelocity ->
-                                    fling(velocity * NumberPickerFlingVelocityRatio, rowPx, if (dragging) dragPosition else position.value)
+                                released && abs(velocity) > minFlingVelocity -> fling(
+                                    velocity = velocity * NumberPickerFlingVelocityRatio,
+                                    rowPx = rowPx,
+                                    from = if (dragging) dragPosition else position.value,
+                                    lastMovePx = lastMoveDelta,
+                                )
 
                                 !released ||
                                     abs(upY - down.position.y) > touchSlop ||
@@ -400,6 +483,10 @@ fun NumberPicker(
                 },
             )
             .drawBehind {
+                // The column the rows are centered in: the whole wheel, or the inner part of an
+                // outer wheel that also covers the space at the side of its picker.
+                val columnWidth = if (contentWidth.isSpecified) contentWidth.toPx().coerceIn(0f, size.width) else size.width
+                val columnStart = contentAlignment.align(columnWidth.roundToInt(), size.width.roundToInt(), layoutDirection)
                 drawNumberPickerRows(
                     textMeasurer = textMeasurer,
                     position = position.value,
@@ -409,17 +496,73 @@ fun NumberPicker(
                     wrap = canWrap,
                     labelOf = { latestLabel(range.first + it) },
                     unit = unit,
-                    isRtl = isRtl,
+                    centerX = columnStart + columnWidth / 2f,
+                    isRtl = layoutDirection == LayoutDirection.Rtl,
                     selectedStyle = selectedStyle,
                     unselectedStyle = unselectedStyle,
                     unitStyle = unitStyle,
                     fontCenter = fontCenter,
                     ignoreBarScale = unselectedTextSize / selectedTextSize,
+                    ignoreBarOffset = ignoreBarOffset,
                     selectedColor = selectedColor,
                     unselectedColor = unselectedColor,
                 )
             },
     )
+}
+
+/**
+ * Lays picker wheels out side by side as a centered group and stretches the first and the last
+ * wheel over the space left at either side, as COUIDatePicker, COUITimePicker, COUITimeLimitPicker
+ * and COUILunarDatePicker do in onMeasure (setNumberPickerPaddingLeft / Right): the columns stay
+ * where a centered row would put them, but the whole width of the picker drags the outer wheels.
+ *
+ * Every wheel is first asked for the width its own modifier gives it (its max intrinsic width,
+ * e.g. `Modifier.width(76.dp)`); the outer wheels then have to draw their rows on their inner side
+ * ([NumberPickerWheel] `contentWidth` / `contentAlignment`, see [numberPickerColumnAlignment]).
+ * Children are placed relative to the layout direction, so the first wheel is the start one.
+ */
+@Composable
+internal fun NumberPickerRow(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Layout(content = content, modifier = modifier) { measurables, constraints ->
+        val count = measurables.size
+        if (count == 0) return@Layout layout(constraints.minWidth, constraints.minHeight) {}
+        val widths = IntArray(count) { measurables[it].maxIntrinsicWidth(constraints.maxHeight) }
+        val columnsWidth = widths.sum()
+        val extra = if (constraints.hasBoundedWidth) ((constraints.maxWidth - columnsWidth) / 2).coerceAtLeast(0) else 0
+        val placeables = measurables.mapIndexed { index, measurable ->
+            var wheelWidth = widths[index]
+            if (index == 0) wheelWidth += extra
+            if (index == count - 1) wheelWidth += extra
+            measurable.measure(Constraints(minWidth = wheelWidth, maxWidth = wheelWidth, minHeight = 0, maxHeight = constraints.maxHeight))
+        }
+        val rowWidth = placeables.sumOf { it.width }
+        val width = constraints.constrainWidth(rowWidth)
+        val height = constraints.constrainHeight(placeables.maxOf { it.height })
+        layout(width, height) {
+            // Centered even when the columns do not fit (COUI's paddings then turn negative).
+            var x = (width - rowWidth) / 2
+            placeables.forEach { placeable ->
+                placeable.placeRelative(x, (height - placeable.height) / 2)
+                x += placeable.width
+            }
+        }
+    }
+}
+
+/**
+ * Where the wheel at [index] of [count] draws its rows inside a [NumberPickerRow]: the start wheel
+ * on its end side and the end wheel on its start side (both next to their neighbours), a single
+ * wheel or a middle one centered.
+ */
+internal fun numberPickerColumnAlignment(index: Int, count: Int): Alignment.Horizontal = when {
+    count <= 1 -> Alignment.CenterHorizontally
+    index == 0 -> Alignment.End
+    index == count - 1 -> Alignment.Start
+    else -> Alignment.CenterHorizontally
 }
 
 private fun DrawScope.drawNumberPickerRows(
@@ -431,12 +574,14 @@ private fun DrawScope.drawNumberPickerRows(
     wrap: Boolean,
     labelOf: (Int) -> String,
     unit: String,
+    centerX: Float,
     isRtl: Boolean,
     selectedStyle: TextStyle,
     unselectedStyle: TextStyle,
     unitStyle: TextStyle,
     fontCenter: Float,
     ignoreBarScale: Float,
+    ignoreBarOffset: Float,
     selectedColor: Color,
     unselectedColor: Color,
 ) {
@@ -458,7 +603,7 @@ private fun DrawScope.drawNumberPickerRows(
         }
         val rowCenter = centerY + (row - position) * rowPx
         if (index == ignoredIndex) {
-            drawIgnoreBars(rowCenter, (rowCenter - centerY) / rowPx, ignoreBarScale, unselectedColor)
+            drawIgnoreBars(centerX, rowCenter + ignoreBarOffset, (rowCenter - centerY) / rowPx, ignoreBarScale, unselectedColor)
             continue
         }
         val text = labelOf(index)
@@ -467,12 +612,17 @@ private fun DrawScope.drawNumberPickerRows(
         // Both passes share one baseline: (2 * rowTop + rowHeight - top - bottom) / 2 with the
         // default typeface metrics at the normal size, as in COUINumberPicker.onDraw.
         val baseline = rowCenter - fontCenter
+        // COUINumberPicker.onDraw measures the label once at the normal size: a label at least as
+        // wide as the wheel is drawn from the left edge in both passes, any other one centered.
+        val tooWide = normal.size.width >= size.width
 
         clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Difference) {
-            drawText(normal, color = unselectedColor, topLeft = Offset(rowTextX(normal), baseline - normal.firstBaseline))
+            val x = if (tooWide) 0f else centerX - normal.size.width / 2f
+            drawText(normal, color = unselectedColor, topLeft = Offset(x, baseline - normal.firstBaseline))
         }
         clipRect(top = bandTop, bottom = bandBottom, clipOp = ClipOp.Intersect) {
-            drawText(focus, color = selectedColor, topLeft = Offset(rowTextX(focus), baseline - focus.firstBaseline))
+            val x = if (tooWide) 0f else centerX - focus.size.width / 2f
+            drawText(focus, color = selectedColor, topLeft = Offset(x, baseline - focus.firstBaseline))
         }
     }
 
@@ -481,38 +631,36 @@ private fun DrawScope.drawNumberPickerRows(
         // plus a 4dp margin (coui_number_picker_text_width / _text_margin_start).
         val baseline = centerY - fontCenter - NumberPickerUnitMarginBottom.toPx()
         val unitLayout = measureRow(textMeasurer, unit, unitStyle)
-        val start = size.width / 2f + (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
+        val gap = (NumberPickerSelectedValueWidth / 2 + NumberPickerUnitMarginStart).toPx()
         // COUINumberPicker.onDraw mirrors the unit to the left of the value in RTL.
-        val x = if (isRtl) size.width - start - unitLayout.size.width else start
+        val x = if (isRtl) centerX - gap - unitLayout.size.width else centerX + gap
         drawText(unitLayout, color = selectedColor, topLeft = Offset(x, baseline - unitLayout.firstBaseline))
     }
 }
 
 /**
  * The placeholder row of an ignorable wheel (COUINumberPicker.onDraw, SELECTOR_INDEX_IGNORE): two
- * bars in the unselected color, scaled like the text from [minScale] (normal / focus size) up to
- * full size as the row nears the center, where [rowOffset] is its distance from it in rows.
+ * bars in the unselected color around [centerX], centered on [barCenterY], scaled like the text
+ * from [minScale] (normal / focus size) up to full size as the row nears the center, where
+ * [rowOffset] is the row's distance from it in rows.
  */
-private fun DrawScope.drawIgnoreBars(rowCenter: Float, rowOffset: Float, minScale: Float, color: Color) {
+private fun DrawScope.drawIgnoreBars(centerX: Float, barCenterY: Float, rowOffset: Float, minScale: Float, color: Color) {
     val distance = abs(rowOffset)
     val scale = if (distance < 0.5f) 1f - (1f - minScale) * 2f * distance else minScale
     val barWidth = NumberPickerIgnoreBarWidth.toPx() * scale
     val barHeight = NumberPickerIgnoreBarHeight.toPx() * scale
     val pitch = (NumberPickerIgnoreBarWidth + NumberPickerIgnoreBarSpacing).toPx() * scale
     for (side in floatArrayOf(-0.5f, 0.5f)) {
-        val x = size.width / 2f + pitch * side
+        val x = centerX + pitch * side
         drawRect(
             color = color,
-            topLeft = Offset(x - barWidth / 2f, rowCenter - barHeight / 2f),
+            topLeft = Offset(x - barWidth / 2f, barCenterY - barHeight / 2f),
             size = Size(barWidth, barHeight),
         )
     }
 }
 
 private fun measureRow(textMeasurer: TextMeasurer, text: String, style: TextStyle): TextLayoutResult = textMeasurer.measure(text = text, style = style, softWrap = false, maxLines = 1)
-
-// COUI centers the text, or left-aligns it when it is wider than the wheel.
-private fun DrawScope.rowTextX(layout: TextLayoutResult): Float = if (layout.size.width >= size.width) 0f else (size.width - layout.size.width) / 2f
 
 /**
  * Tracks the index reported to the caller. [rebase] moves the wheel without notifying, so the
@@ -601,6 +749,25 @@ internal fun numberPickerQuantisedRows(distance: Float, rowPx: Float): Float {
     return if (rows > 1f) floor(rows) else rows
 }
 
+/**
+ * Where COUINumberPicker.fling sends the wheel, in rows: [rows] (whole rows, or a fraction for a
+ * short flick) counted from the [reported] row rather than from the finger. COUI works on the
+ * scroll offset from the reported row (positive towards lower values) and drops the part of a row
+ * the drag had already covered, after nudging it by the last finger move [lastMoveRows] (positive
+ * downwards): forwards for a downward fling, backwards for an upward one, exactly as the original
+ * `(mCurrentScrollOffset ± mDeltaMoveY) % rowHeight` does. [velocity] only gives the direction
+ * (positive = finger moving down, towards lower values).
+ */
+internal fun numberPickerFlingTarget(reported: Int, position: Float, lastMoveRows: Float, velocity: Float, rows: Float): Float {
+    val offset = reported - position
+    val landing = if (velocity >= 0f) {
+        truncate(offset + lastMoveRows) + rows
+    } else {
+        truncate(offset - lastMoveRows) - rows
+    }
+    return reported - landing
+}
+
 /** Advances [reported] towards [position] once the wheel has moved 0.95 of a row past it. */
 internal fun numberPickerHysteresisIndex(reported: Int, position: Float): Int {
     var index = reported
@@ -634,6 +801,10 @@ private val NumberPickerUnitMarginBottom = 2.dp
 private val NumberPickerIgnoreBarWidth = 17.67.dp
 private val NumberPickerIgnoreBarHeight = 1.67.dp
 private val NumberPickerIgnoreBarSpacing = 4.67.dp
+
+// COUINumberPicker.onDraw draws the placeholder bars a raw 33.75px below the row center (a little
+// under the text baseline on a 3.5x phone); px on Android, scaled from the 3.5x reference elsewhere.
+private val NumberPickerIgnoreBarOffsetPx = 33.75f
 
 private val NumberPickerIgnoredDescription = "--"
 

@@ -75,6 +75,7 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -90,10 +91,13 @@ import kotlin.math.abs
  *
  * Unlike [Slider], dragging moves the progress by the finger's travel instead of jumping to it
  * (`couiSeekBarIsFollowThumb = false`, move type 2); pass [followThumb] to make the progress chase
- * the finger instead. A tap springs the progress to the tapped position
- * (`COUISeekBarAdvanced.startClickTransitionAnim`), a fast release keeps it gliding
+ * the finger instead. Either way the drawn progress trails the dragged value on the response 0.15
+ * follow-hand spring (`FlexibleFollowHandHandler`). A tap springs the progress to the tapped
+ * position (`COUISeekBarAdvanced.startClickTransitionAnim`), a fast release keeps it gliding
  * (`PhysicsAnimationHandler`), and while a finger drags the whole bar follows it horizontally on the
- * COUI 17 touch-motion rubber band (`TouchMotionEffectRenderer`, translateX only).
+ * COUI 17 touch-motion rubber band (`TouchMotionEffectRenderer`, translateX only), reported through
+ * [onDragHorizontalOffsetChange]. Only drags vibrate (`VibrationFeedbackHandler`): taps and flings
+ * are silent.
  *
  * [playbackState] drives the playback visuals (`COUIIntentSeekBar.resolveVisualState`): while
  * [IntentSliderPlaybackState.LoadingInitial] a white light sweeps across the whole bar instead of
@@ -134,6 +138,9 @@ import kotlin.math.abs
  * @param loadingDragReturn Whether a drag that starts while
  *   [IntentSliderPlaybackState.LoadingInitial] shows the progress and, on release, springs it back to
  *   the start of [valueRange] (`setLoadingDragReturnEnabled`, `LoadingDragReturnHandler`).
+ * @param holdToSpeedUp Whether a hold-to-speed-up gesture of the player is active
+ *   (`setHoldToSpeedUpConeLightActive`). While [IntentSliderPlaybackState.Playing] with the [conicLight]
+ *   style, the cone light takes its dragging shape, as during a drag; it has no effect otherwise.
  * @param playbackState The playback state (`couiIntentSeekBarPlaybackState`).
  * @param valueRange The range of values the bar can take.
  * @param secondaryValue The secondary (buffered) value, drawn under the progress; null hides it
@@ -142,6 +149,10 @@ import kotlin.math.abs
  *   drag, a fling or a tap.
  * @param onLoadingDragReturnComplete Called when a [loadingDragReturn] spring has brought the
  *   progress back to the start (`OnLoadingDragReturnCompleteListener`).
+ * @param onDragHorizontalOffsetChange Called with the horizontal offset, in pixels, of the touch-motion
+ *   rubber band every frame it moves the bar, including the spring back after a release
+ *   (`OnDragHorizontalOffsetChangeListener`), for content that should move along with the bar, such
+ *   as time labels.
  * @param size The track and thumb sizes ([IntentSliderSize], `couiIntentSeekBarSize`).
  * @param horizontalPadding The inset of the track from both ends of the bar
  *   (`couiSeekBarProgressPaddingHorizontal`); the thumb and the rubber band reach into it.
@@ -161,11 +172,13 @@ fun IntentSlider(
     materialBackdrop: Boolean = true,
     conicLight: Boolean = false,
     loadingDragReturn: Boolean = false,
+    holdToSpeedUp: Boolean = false,
     playbackState: IntentSliderPlaybackState = IntentSliderPlaybackState.Idle,
     valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
     secondaryValue: Float? = null,
     onValueChangeFinished: (() -> Unit)? = null,
     onLoadingDragReturnComplete: (() -> Unit)? = null,
+    onDragHorizontalOffsetChange: ((Float) -> Unit)? = null,
     size: IntentSliderSize = IntentSliderSize.Default,
     horizontalPadding: Dp = IntentSliderDefaults.HorizontalPadding,
     colors: IntentSliderColors = if (followSystemTheme) IntentSliderDefaults.intentSliderColors() else IntentSliderDefaults.fixedColors(),
@@ -189,10 +202,15 @@ fun IntentSlider(
     LaunchedEffect(enabled) {
         if (!enabled) touchMotion.translationX.animateTo(0f)
     }
-
-    // COUISeekBarCore.setProgress draws a programmatic value right away (media playback updates
-    // every frame); only the gestures pick a spring for the values they report.
-    LaunchedEffect(coercedValue) { state.showValue(coercedValue) }
+    // COUIIntentSeekBar: TouchMotionEffectRenderer.setOnTranslationXChangeListener forwards every
+    // rubber-band frame to OnDragHorizontalOffsetChangeListener.
+    val onOffsetChangeState by rememberUpdatedState(onDragHorizontalOffsetChange)
+    val reportsOffset = onDragHorizontalOffsetChange != null
+    LaunchedEffect(touchMotion, reportsOffset) {
+        if (reportsOffset) {
+            snapshotFlow { touchMotion.translationX.value }.drop(1).collect { onOffsetChangeState?.invoke(it) }
+        }
+    }
 
     val trackHeightPx = with(density) { size.trackHeight.toPx() }
     val maxTrackHeightPx = with(density) { size.maxTrackHeight.toPx() }
@@ -215,17 +233,19 @@ fun IntentSlider(
         state.animateThumb(touched, paused, showThumb, thumbRadiusPx, thumbMaxRadiusPx)
     }
 
+    // isConicLightProgressStyle: couiIntentSeekBarConicLight && !followSystemTheme; the system
+    // material switches it also checks (isConicLightCapabilitySupported) are on on ColorOS 17.
+    val conicStyle = conicLight && !followSystemTheme
+
     // COUIIntentSeekBar.resolveVisualState.
     val visualState = resolveIntentVisualState(
         dragging = state.isDragging,
         loadingReturnInProgress = state.draggingDuringLoading || state.loadingReturning,
+        holdToSpeedUp = holdToSpeedUp && conicStyle,
         playbackState = playbackState,
     )
     LaunchedEffect(visualState) { state.loading.onVisualStateChanged(visualState) }
 
-    // isConicLightProgressStyle: couiIntentSeekBarConicLight && !followSystemTheme; the system
-    // material switches it also checks (isConicLightCapabilitySupported) are on on ColorOS 17.
-    val conicStyle = conicLight && !followSystemTheme
     val conicMode = if (conicStyle) {
         when (visualState) {
             IntentVisualState.PlayingConeLight -> ConicLightMode.Playing
@@ -272,6 +292,15 @@ fun IntentSlider(
     val currentLoadingDragReturn by rememberUpdatedState(loadingDragReturn)
     val currentPlaybackState by rememberUpdatedState(playbackState)
 
+    // COUISeekBarCore.setProgress draws a programmatic value right away (media playback updates
+    // every frame); only the gestures pick a spring for the values they report. One collector
+    // starts each update while the previous spring still runs, so a spring retargeted on every
+    // drag frame keeps its velocity, as with animateFloatAsState (a restarted effect would cancel
+    // the spring first, and a cancelled Animatable drops its velocity).
+    LaunchedEffect(state) {
+        snapshotFlow { currentValue }.collect { target -> launch { state.showValue(target) } }
+    }
+
     fun fractionToValue(fraction: Float): Float {
         val range = currentValueRange
         return range.start + fraction.coerceIn(0f, 1f) * (range.endInclusive - range.start)
@@ -288,13 +317,17 @@ fun IntentSlider(
         // An unchanged value draws nothing, so its spring must not linger for the next update.
         state.pendingSpec = if (newValue != currentValue) spec else null
         onValueChangeState(newValue)
-        feedback.perform(
-            fraction = valueToIntentFraction(newValue, currentValueRange),
-            sections = 0,
-            dragging = state.isDragging,
-            effect = currentHapticEffect,
-            haptic = couiHaptic,
-        )
+        // COUISeekBarAdvanced runs VibrationFeedbackHandler for drag moves only:
+        // startClickTransitionAnim and onPhysicsFlingUpdate are silent.
+        if (state.isDragging) {
+            feedback.perform(
+                fraction = valueToIntentFraction(newValue, currentValueRange),
+                sections = 0,
+                dragging = true,
+                effect = currentHapticEffect,
+                haptic = couiHaptic,
+            )
+        }
     }
 
     val minHeight = max(
@@ -361,7 +394,10 @@ fun IntentSlider(
                                     val travel = state.dragDelta / length
                                     fractionToValue(state.dragStartFraction + if (currentRtl) -travel else travel)
                                 }
-                                report(newValue, if (currentFollowThumb) IntentFollowHandAnimationSpec else null)
+                                // COUISeekBarAdvanced.trackTouchEvent hands every move type to
+                                // FlexibleFollowHandHandler, whose spring frames redraw the progress
+                                // after the touch event wrote it: the drawn progress trails the finger.
+                                report(newValue, IntentFollowHandAnimationSpec)
                             },
                             onDragStarted = { offset ->
                                 state.isDragging = true
@@ -401,7 +437,13 @@ fun IntentSlider(
                                             trackLength = length,
                                             reverseDirection = currentRtl,
                                         ) { visualFraction, _ ->
-                                            report(fractionToValue(if (currentRtl) 1f - visualFraction else visualFraction), null)
+                                            // Like Slider, the drawn progress keeps chasing on the
+                                            // follow-hand spring rather than jumping from its lag to the
+                                            // fling (flingBehaviorAfterEndDrag starts from the progress).
+                                            report(
+                                                fractionToValue(if (currentRtl) 1f - visualFraction else visualFraction),
+                                                IntentFollowHandAnimationSpec,
+                                            )
                                         }
                                         onValueChangeFinishedState?.invoke()
                                     }
@@ -698,17 +740,22 @@ private enum class IntentVisualState {
 }
 
 /**
- * `COUIIntentSeekBar.resolveVisualState`. The programmatic-seek and hold-to-speed-up cone light
- * overrides (`collapseConeLightForSeek`, `setHoldToSpeedUpConeLightActive`) are not ported.
+ * `COUIIntentSeekBar.resolveVisualState`. [holdToSpeedUp] is `mHoldToSpeedUpConeLightActive` already
+ * combined with the conic light style (`shouldPlayingAuxiliaryEffectsUseDraggingConeLightVisual`).
+ * The programmatic-seek override (`collapseConeLightForSeek`, held until an animated `setProgress`
+ * ends) is not ported, as programmatic values are drawn at once.
  */
 private fun resolveIntentVisualState(
     dragging: Boolean,
     loadingReturnInProgress: Boolean,
+    holdToSpeedUp: Boolean,
     playbackState: IntentSliderPlaybackState,
 ): IntentVisualState = when {
     dragging && (playbackState == IntentSliderPlaybackState.Playing || playbackState == IntentSliderPlaybackState.LoadingBuffering) -> IntentVisualState.DraggingConeLight
 
     loadingReturnInProgress -> IntentVisualState.Static
+
+    holdToSpeedUp && playbackState == IntentSliderPlaybackState.Playing -> IntentVisualState.DraggingConeLight
 
     else -> when (playbackState) {
         IntentSliderPlaybackState.Idle, IntentSliderPlaybackState.Paused -> IntentVisualState.Static

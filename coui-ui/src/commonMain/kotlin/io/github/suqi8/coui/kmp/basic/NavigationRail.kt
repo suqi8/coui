@@ -3,7 +3,6 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -31,19 +29,21 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -166,12 +166,24 @@ fun NavigationRail(
 /**
  * A [NavigationRailItem] that is suitable for [NavigationRail].
  *
+ * The icon and the label take [NavigationRailItemColors] as COUI's rail selectors do
+ * (`coui_navigation_rail_icon_tint_color_selector` / `coui_navigation_rail_label_tint_color_selector`):
+ * `?couiColorSecondNeutral` at rest, `?couiColorLabelPrimary` when selected or pressed, and
+ * `?couiColorDisabledNeutral` when disabled; they switch at once. A pointer hovering the item or
+ * keyboard focus on it fades in COUI's hover / focus mask behind the icon and the label, an 8dp
+ * rounded rectangle 4dp in from the item's sides (`COUINavigationRailItemView`). Labels take at most
+ * two lines.
+ *
  * @param selected Whether the item is selected.
  * @param onClick The callback when the item is clicked.
  * @param icon The icon of the item.
  * @param label The label of the item.
  * @param modifier The modifier to be applied to the [NavigationRailItem].
  * @param enabled Whether the item is enabled.
+ * @param badge The red dot on the icon (`COUIHintRedDot` of the rail item): `null` for none, 0 for a
+ *   plain 6dp dot, a positive number for a number badge, placed as on [NavigationBarItem]. Not shown
+ *   in [NavigationRailDisplayMode.TextOnly], which has no icon to anchor it, nor on a disabled item.
+ * @param colors The content colors of the item.
  */
 @Composable
 fun NavigationRailItem(
@@ -181,22 +193,14 @@ fun NavigationRailItem(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    badge: Int? = null,
+    colors: NavigationRailItemColors = NavigationRailDefaults.itemColors(),
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    val onSurfaceContainerColor = COUITheme.colorScheme.labelPrimary
-    val tint = when {
-        isPressed -> if (selected) {
-            onSurfaceContainerColor.copy(alpha = NavigationRailDefaults.SelectedPressedAlpha)
-        } else {
-            onSurfaceContainerColor.copy(alpha = NavigationRailDefaults.UnselectedPressedAlpha)
-        }
-
-        selected -> onSurfaceContainerColor
-
-        else -> onSurfaceContainerColor.copy(NavigationRailDefaults.UnselectedAlpha)
-    }
+    val tint = colors.contentColor(enabled = enabled, selected = selected, pressed = isPressed)
+    val shownBadge = badge.takeIf { enabled }
     // coui_navigation_rail_item_layout: the labels are sans-serif-medium in every state.
     val fontWeight = FontWeight.Medium
     val mode = LocalNavigationRailDisplayMode.current
@@ -207,6 +211,14 @@ fun NavigationRailItem(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // COUIMaskEffectDrawable(MASK_EFFECT_TYPE_CONTAINER_WIDGET) over the item rect less its
+            // coui_side_navigation_item_gap margins.
+            .navigationItemStateMask(
+                interactionSource = interactionSource,
+                enabled = enabled,
+                cornerRadius = NavigationRailDefaults.ItemMaskCornerRadius,
+                horizontalInset = NavigationRailDefaults.ItemMaskHorizontalInset,
+            )
             .selectable(
                 selected = selected,
                 onClick = onClick,
@@ -222,12 +234,7 @@ fun NavigationRailItem(
     ) {
         when (mode) {
             NavigationRailDisplayMode.IconAndText -> {
-                Image(
-                    modifier = Modifier.size(NavigationRailDefaults.IconSize),
-                    imageVector = icon,
-                    contentDescription = label,
-                    colorFilter = ColorFilter.tint(tint),
-                )
+                NavigationBarItemIcon(icon = icon, tint = tint, label = label, badge = shownBadge)
                 Spacer(modifier = Modifier.height(NavigationRailDefaults.IconTextSpacing))
                 Text(
                     text = label,
@@ -235,16 +242,13 @@ fun NavigationRailItem(
                     textAlign = TextAlign.Center,
                     fontSize = labelFontSize,
                     fontWeight = fontWeight,
+                    maxLines = NavigationRailDefaults.LabelMaxLines,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
             NavigationRailDisplayMode.IconWithSelectedLabel -> {
-                Image(
-                    modifier = Modifier.size(NavigationRailDefaults.IconSize),
-                    imageVector = icon,
-                    contentDescription = label,
-                    colorFilter = ColorFilter.tint(tint),
-                )
+                NavigationBarItemIcon(icon = icon, tint = tint, label = label, badge = shownBadge)
                 if (selected) {
                     Spacer(modifier = Modifier.height(NavigationRailDefaults.IconTextSpacing))
                     Text(
@@ -253,6 +257,8 @@ fun NavigationRailItem(
                         textAlign = TextAlign.Center,
                         fontSize = labelFontSize,
                         fontWeight = fontWeight,
+                        maxLines = NavigationRailDefaults.LabelMaxLines,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -265,18 +271,40 @@ fun NavigationRailItem(
                     textAlign = TextAlign.Center,
                     fontSize = NavigationRailDefaults.TextOnlyFontSize,
                     fontWeight = fontWeight,
+                    maxLines = NavigationRailDefaults.LabelMaxLines,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
             else -> {
-                Image(
-                    modifier = Modifier.size(NavigationRailDefaults.IconSize),
-                    imageVector = icon,
-                    contentDescription = label,
-                    colorFilter = ColorFilter.tint(tint),
-                )
+                NavigationBarItemIcon(icon = icon, tint = tint, label = label, badge = shownBadge)
             }
         }
+    }
+}
+
+/**
+ * The content colors of a [NavigationRailItem], applied to its icon and its label.
+ *
+ * @param selectedColor The color of the selected item.
+ * @param unselectedColor The color of an unselected item.
+ * @param pressedColor The color of a pressed item, selected or not.
+ * @param disabledColor The color of a disabled item.
+ */
+@Immutable
+data class NavigationRailItemColors(
+    val selectedColor: Color,
+    val unselectedColor: Color,
+    val pressedColor: Color,
+    val disabledColor: Color,
+) {
+    /** The selector order of COUI's rail tint lists: disabled, pressed, selected, rest. */
+    @Stable
+    internal fun contentColor(enabled: Boolean, selected: Boolean, pressed: Boolean): Color = when {
+        !enabled -> disabledColor
+        pressed -> pressedColor
+        selected -> selectedColor
+        else -> unselectedColor
     }
 }
 
@@ -316,20 +344,50 @@ object NavigationRailDefaults {
      */
     val LabelFontSize = 10.dp
 
+    /** The most lines a label takes (coui_navigation_rail_item_layout `maxLines`). */
+    val LabelMaxLines = 2
+
+    /** The corner radius of the hover / focus mask behind an item (coui_side_navigation_item_background_radius). */
+    val ItemMaskCornerRadius = 8.dp
+
+    /**
+     * How far the hover / focus mask keeps from the item's sides: the item's
+     * coui_side_navigation_item_gap margins around its 64dp root (coui_navigation_rail_menu_width).
+     */
+    val ItemMaskHorizontalInset = 4.dp
+
     /** The font size in [NavigationRailDisplayMode.TextOnly] mode. */
     val TextOnlyFontSize = 14.sp
 
     /** The vertical padding in [NavigationRailDisplayMode.TextOnly] mode. */
     val TextOnlyVerticalPadding = 4.dp
 
-    /** The alpha value for the selected item when pressed. */
-    val SelectedPressedAlpha = 0.5f
-
-    /** The alpha value for an unselected item when pressed. */
-    val UnselectedPressedAlpha = 0.6f
-
-    /** The alpha value for an unselected item. */
-    val UnselectedAlpha = 0.4f
+    /**
+     * The item colors of COUI's rail selectors (`coui_navigation_rail_icon_tint_color_selector`,
+     * `coui_navigation_rail_label_tint_color_selector`): selected `?couiColorLabelPrimary`
+     * (`#E6000000` / `#E6FFFFFF`), at rest `?couiColorSecondNeutral` (`#8A000000` / `#8AFFFFFF`),
+     * pressed `?couiColorPrimaryNeutral` (`#E6000000` / `#E6FFFFFF`) and disabled
+     * `?couiColorDisabledNeutral` (`#42000000` / `#4DFFFFFF`).
+     *
+     * @param selectedColor The color of the selected item.
+     * @param unselectedColor The color of an unselected item.
+     * @param pressedColor The color of a pressed item, selected or not.
+     * @param disabledColor The color of a disabled item.
+     */
+    @Composable
+    fun itemColors(
+        selectedColor: Color = COUITheme.colorScheme.labelPrimary,
+        unselectedColor: Color = COUITheme.colorScheme.labelSecondary,
+        pressedColor: Color = COUITheme.colorScheme.labelPrimary,
+        disabledColor: Color = COUITheme.colorScheme.disabledNeutral,
+    ): NavigationRailItemColors = remember(selectedColor, unselectedColor, pressedColor, disabledColor) {
+        NavigationRailItemColors(
+            selectedColor = selectedColor,
+            unselectedColor = unselectedColor,
+            pressedColor = pressedColor,
+            disabledColor = disabledColor,
+        )
+    }
 }
 
 /**

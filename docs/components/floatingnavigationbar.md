@@ -45,7 +45,7 @@ Scaffold(
 
 ### Selected State
 
-`FloatingNavigationBarItem` switches its icon and label instantly between the selected color (`#E6000000`) and the unselected color (`#B8000000`); there is no indicator, press mask or haptic feedback.
+`FloatingNavigationBarItem` switches its icon and label instantly between the selected color (`#E6000000`) and the unselected color (`#B8000000`); there is no indicator, press mask or haptic feedback. A pointer hovering a normal item, or keyboard focus on it, fades in COUI's hover / focus mask behind the icon and the label: a pill reaching 8dp past the item's sides (`COUIMaskRippleDrawable`, `?couiColorHover` / `?couiColorFocus`, each on a response 0.3 spring); the large icon item has none. The selected item offers no click action to accessibility services, as in `setupItemAccessibility`.
 
 ### Item Changes and Labels
 
@@ -53,11 +53,11 @@ When the items stop fitting or their count changes, the capsule width and positi
 
 ### Expansion View
 
-With `expansion` and `expansionVisible`, the expansion view slides out from behind the capsule's end on a spring (response 0.55, bounce 0.35) while it scales 0.5 -> 1 and the capsule shrinks to make room. Its alpha follows how much of it the capsule still covers (opaque up to half covered, then fading linearly), and with `materialEffect` the two shapes merge like metaballs while they touch. Hiding reverses it; a settled hidden expansion view is not placed and takes no touches.
+With `expansion` and `expansionVisible`, the expansion view slides out from behind the capsule's end on a spring (response 0.55, bounce 0.35) while it scales 0.5 -> 1 and the capsule shrinks to make room. Its alpha follows how much of it the capsule still covers (opaque up to half covered, then fading linearly), and with `materialEffect` the two shapes merge like metaballs while they touch. Hiding reverses it, and the slide stops at its target as soon as the capsule covers the view entirely, so the spring's bounce cannot show it again (`finishCollapseTranslationIfFullyOverlapped`); a settled hidden expansion view is not placed and takes no touches. A `FloatingNavigationBarAccessory` used as the expansion view takes its touch motion only once it has slid out (`setExpansionViewTouchMotionAnimEnabled`).
 
 ### Slide to Select
 
-In a `FloatingNavigationBar`, sliding a finger across the capsule selects the item under it as it moves, so the selection follows the finger. The item the slide ends on is committed through its `onClick` when the finger lifts, wherever it lifts; disabled items are skipped. A plain tap calls the tapped item's `onClick`. While the finger is down, the whole capsule takes the COUI 17 touch motion (press scale, rubber-band follow and drag deformation) and, with `materialEffect`, a touch spotlight.
+In a `FloatingNavigationBar`, sliding a finger across the capsule selects the item under it as it moves, so the selection follows the finger. The item the slide ends on is committed through its `onClick` when the finger lifts, wherever it lifts; disabled items are skipped. A plain tap calls the tapped item's `onClick`. When a scrolling parent takes the gesture over, the tap is dropped but an item the slide has already selected is still committed (`dispatchPendingSlideItemClickIfNeeded`). While the finger is down, the whole capsule takes the COUI 17 touch motion (press scale, rubber-band follow and drag deformation) and, with `materialEffect`, a touch spotlight; the touch motion pauses while the capsule slides sideways (`doHorizontalMoveAnim`).
 
 ## Properties
 
@@ -111,6 +111,7 @@ The FloatingNavigationBarDefaults object provides default values for FloatingNav
 | ItemSpacing              | Dp    | Spacing between items               | 8.dp          |
 | ItemMaxWidth             | Dp    | Item width; items shrink equally when they do not fit | 70.dp |
 | ItemHeight               | Dp    | Item height, centred in the capsule | 48.dp         |
+| ItemMaskHorizontalOutset | Dp    | How far an item's hover / focus mask reaches past its sides | 8.dp |
 | IconSize                 | Dp    | Icon size                           | 24.dp         |
 | IconTopPadding           | Dp    | Distance from the item top to the icon | 4.dp       |
 | LabelTopSpacing          | Dp    | Gap between icon and label          | 2.dp          |

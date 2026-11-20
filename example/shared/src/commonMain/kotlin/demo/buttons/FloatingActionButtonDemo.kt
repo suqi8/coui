@@ -149,31 +149,23 @@ private fun FloatingActionButtonPage(
         stringResource(Res.string.common_share),
         stringResource(Res.string.demo_floating_action_button_scan),
     )
+    // An item click collapses the menu by itself (collapseOnItemClick).
     val items = remember(actionLabels) {
         listOf(
             FloatingActionButtonItem(
                 icon = { Icon(imageVector = COUIIcons.Edit, contentDescription = null) },
-                onClick = {
-                    lastAction = 0
-                    expanded = false
-                },
+                onClick = { lastAction = 0 },
                 label = actionLabels[0],
             ),
             FloatingActionButtonItem(
                 icon = { Icon(imageVector = COUIIcons.Share, contentDescription = null) },
-                onClick = {
-                    lastAction = 1
-                    expanded = false
-                },
+                onClick = { lastAction = 1 },
                 label = actionLabels[1],
             ),
             // A bare child button without a label.
             FloatingActionButtonItem(
                 icon = { Icon(imageVector = COUIIcons.Scan, contentDescription = actionLabels[2]) },
-                onClick = {
-                    lastAction = 2
-                    expanded = false
-                },
+                onClick = { lastAction = 2 },
             ),
         )
     }

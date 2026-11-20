@@ -164,6 +164,10 @@ Scaffold {
 级联深度上限为 2。二级菜单中的项不会再处理自己的 `children`；更深层的子树会被忽略，并在展开这类子菜单时输出一次警告日志。
 :::
 
+## 交互
+
+与 COUI 17 工具栏溢出按钮一致，图标按钮点击时只播放正常的按下与抬起，菜单显示期间不会保持按下状态：`COUIPopupListWindow.setAnchorHoveredState` 只锁定列表行锚点。
+
 ## 属性
 
 ### OverlayIconCascadingDropdownMenu 属性（Entries 重载）

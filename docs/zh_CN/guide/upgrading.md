@@ -17,6 +17,54 @@ Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
 
 新图标的形状有变化，升级后请检查布局中的图标尺寸。
 
+### 动效与触摸对齐 COUI 17
+
+所有组件的动效又和 COUI 17 源码逐项对照了一遍。大部分改动无需你调整代码；下面列出的是会改变现有行为、或新增 API 的部分。
+
+**行为变化**
+
+- 列表行、卡片和按钮在手指按下时就显示按压反馈（滚动列表里也是），松手时保留按下的动量。`couiPressScale(enabled = false)`
+  改为弹簧回弹，不再瞬间复位。
+- 弹出菜单在整个按住滑动过程中都会跟手形变，内部列表开始滚动后也不中断，并从朝向锚点的一侧伸展。弹出菜单行标题为 15sp（`couiTextBodyL`）。
+- 可折叠顶栏用弹簧跟随滚动，吸附也改用弹簧（`snapAnimationSpec` 默认值改为 `TopAppBarDefaults.SnapAnimationSpec`）。
+  `COUIScrollBehavior(followScroll = false)` 可恢复 1:1 跟手；`TopAppBarState.displayedHeightOffset` 是顶栏实际绘制的位置。
+- 越界状态下松手只回弹；速度超过 6000px/s 的快速滑动仍会把速度带过边缘。
+- `NavDisplay`（coui-navigation3-ui）与 `NavTransitions.COUIDefault`（coui-nav）的默认翻页改为 COUI 曲线 350ms，被覆盖页平移
+  30%，预测性返回用弹簧收尾。coui-nav 的 `NavDisplayEffects.cornerClipRadius` 默认跟随屏幕圆角。
+- `allowDismiss = false` 时，底部面板可以跟手下拉到 82dp 的收起态，遮罩随之变暗，与 COUI 一致。
+- `ListPreference` / `MultiSelectListPreference` 改为弹出 COUI 选择对话框，不再是底部面板；行末改为跳转箭头，打开时不再振动。
+  `ListPreferenceDefaults.CheckIconSize`、`ButtonBarTopPadding`、`ButtonBarBottomPadding` 不再被读取。
+- `SwitchLoadingPreference`：按在开关上即点击整行（开关不再单独点按或拖动），`checked` 翻转时才振动。`CheckboxPreference`
+  在手指按下时振动。
+- Snackbar 撑满可用宽度：手机上为窗口两侧各留 16dp，宽屏上为 6 列栅格。
+- 拖动 `Switch` 时滑块 1:1 跟手。
+- `searchBarCollapseGeometry` 的胶囊加宽量改为 16dp（原为 12dp）。
+- 日历选择器的箭头直接切换，不再旋转，与 COUI 的 rotate view 一致。
+- 禁用态的跳转箭头和下拉箭头改用 `labelQuaternary`。
+- `NavigationRailItem` 改用 COUI 导航栏配色（`NavigationRailDefaults.itemColors()`），移除
+  `NavigationRailDefaults.SelectedPressedAlpha`、`UnselectedPressedAlpha`、`UnselectedAlpha`。
+
+**新增 API**
+
+- `CircularPressIndication(radius, color, hoverColor, focusColor)` 改为公开，另有使用主题色的
+  `rememberCircularPressIndication(...)`。
+- `COUITouchInteraction` 与 `Modifier.couiTouchFeedback(interactionSource, enabled)`：在手指按下时上报触摸。
+- `couiSpring(response, bounce, threshold)` 与 `COUISpringEasing(response, bounce)`。
+- `COUIFlingBehavior` / `rememberCOUIFlingBehavior()`：COUI 17 列表惯性滚动（`SpringOverScroller`）。
+- `RotatingProgressIndicator`、`CompProgressIndicator`、`LoadingPreferenceCategory` 新增 `paused`；
+  `ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor()`；`InstallLoadProgress(hapticFeedbackEnabled)`。
+- `NavigationBar(targetState) { state -> }` 为整组菜单切换加动画；`NavigationRailItem(badge, colors)` 与
+  `NavigationRailItemColors`；`FloatingAccessoryNavigationBar(visible)`——`visible` 位于 `backgroundModifier`
+  之后，请按名称传参。
+- `ChipTabContent`（COUI 胶囊标签切页转场）与 `ChipGroup(animationsEnabled)`。
+- 浮动工具栏的项可传 `key`；`ExpandableFloatingActionButton(collapseOnItemClick = true)` 点按项后收起菜单。
+- `IntentSlider(holdToSpeedUp, onDragHorizontalOffsetChange)`。
+- `OverlayContextMenu` / `WindowContextMenu(anchorInteractionSource)`。
+- `ArrowPreference(selected, startBadge, endBadgeCount, endIcon)`。
+- `SidePaneLayout(onMaskClick)`。
+- coui-nav：`COUIPageMotion`、`COUIPageEasing`、`COUI_PAGE_DURATION_MILLIS`、`COUI_COVERED_SHIFT_FRACTION`、
+  `COUI_GESTURE_COVERED_SHIFT_FRACTION`。
+
 ## 1.1.0 → 2.0.0
 
 2.0.0 把 COUI 从 ColorOS 16 设计（COUI 1.x）升级到 ColorOS 17（COUI 17）。如果是从 Miuix 迁移过来，请先看[从 Miuix 迁移](./migration.md)。

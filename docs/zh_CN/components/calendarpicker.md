@@ -1,6 +1,6 @@
 # CalendarPicker
 
-`CalendarPicker` 是月历网格日期选择器，对应 ColorOS 的日历选择器家族（COUICalendarDayPickerView / COUIDateMonthView / COUICalendarYearView）。顶部一行包含上一月 / 下一月按钮，以及带展开箭头的年月标题；主体是可横向翻页的月份网格。选中日为主色实心圆，从 80% 放大并淡入（280ms），同月中之前选中的日期淡出（150ms），今天以主色圆环标记。首末行用相邻月份的日期补齐，同样可以点击。点击年月标题会旋转箭头、标题变为主色、翻页按钮 150ms 淡出，并在 120ms 后以 280ms 淡入 / 150ms 淡出切换为受 `minDate` .. `maxDate` 约束的 [DatePicker](./datepicker) 滚轮；收起时按钮 280ms 淡入。标题与星期文字随语言变化（英文 "October 2026" / S M T W T F S，中文 "2026年10月" / 日 一 二 三 四 五 六），选择器最大宽度 724dp，每个日期格都作为可点击节点暴露给无障碍服务。
+`CalendarPicker` 是月历网格日期选择器，对应 ColorOS 的日历选择器家族（COUICalendarDayPickerView / COUIDateMonthView / COUICalendarYearView）。顶部一行包含上一月 / 下一月按钮，以及带展开箭头的年月标题；主体是可横向翻页的月份网格。选中日为主色实心圆，从 80% 放大并淡入（280ms），同月中之前选中的日期淡出（150ms），今天以主色圆环标记。首末行用相邻月份的日期补齐，同样可以点击。每次翻页（包括手指滑动后的归位）都是 300ms 的 COUIMoveEaseInterpolator 滚动（COUICalendarViewPagerScroller）；标题在目标页确定时立即切换到新月份：点翻页按钮时立刻切换，手指滑动时在松手时切换。点击年月标题时，箭头立即上下翻转，箭头与标题同时变为主色（COUIRotateView 直接切换两张图，没有过渡动画），翻页按钮 150ms 淡出，并在 120ms 后以 280ms 淡入 / 150ms 淡出切换为受 `minDate` .. `maxDate` 约束的 [DatePicker](./datepicker) 滚轮；收起时按钮 280ms 淡入。翻页按钮和箭头按下时显示 24dp 半径、`pressBackground` 颜色的圆形水波（coui_canlendar_menu_bg），标题文字本身没有按压反馈。与 COUIChangeTextUtil.getG3FontSize 一致，标题、星期和日期文字随系统字体放大时最多放大到 1.15 倍。标题与星期文字随语言变化（英文 "October 2026" / S M T W T F S，中文 "2026年10月" / 日 一 二 三 四 五 六），选择器最大宽度 724dp，每个日期格都作为可点击节点暴露给无障碍服务。
 
 日期由纯数据类 `DateValue` 表示，不依赖任何日期时间库。
 

@@ -90,6 +90,10 @@ Scaffold {
 | onClick       | (() -> Unit)?                   | 点击时触发的回调           | null                                  | 否       |
 | holdDownState | Boolean                         | 组件是否处于按下状态       | false                                 | 否       |
 | enabled       | Boolean                         | 组件是否可交互             | true                                  | 否       |
+| selected      | Boolean                         | 选中行（COUI `setSelected`）：按压蒙层常亮，卡片组中该行两侧的分割线隐藏 | false | 否 |
+| startBadge    | Boolean                         | `startAction` 右上角的红点（COUI `iconRedDotMode`） | false | 否 |
+| endBadgeCount | Int?                            | 行末内容前的红点（COUI `endRedDotMode` / `endRedDotNum`）：`null` 不显示，`0` 为纯红点，正数显示数字 | null | 否 |
+| endIcon       | @Composable (() -> Unit)?       | 行末内容前的 16dp 图标（COUI `coui_assign_icon`） | null | 否 |
 
 ### ArrowPreferenceDefaults 对象
 
@@ -105,7 +109,7 @@ ArrowPreferenceDefaults 对象提供右侧箭头图标的默认颜色配置。
 
 - 右侧箭头图标始终显示，并根据 `enabled` 自动着色。
 - 当 `enabled = true` 时使用 `COUITheme.colorScheme.labelTertiary`。
-- 当 `enabled = false` 时使用 `COUITheme.colorScheme.disabledNeutral`。
+- 当 `enabled = false` 时使用 `COUITheme.colorScheme.labelQuaternary`（COUI `coui_btn_next_disabled`）。
 
 ## 进阶用法
 

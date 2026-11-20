@@ -42,7 +42,11 @@ The group draws the COUI row dividers (`COUIPreferenceItemDecoration`):
 - The divider starts at the row's title, so it lines up past a start icon, and ends 16dp
   (`DividerDefaults.CardInset`) before the card edge. Color `DividerDefaults.DividerColor`, thickness
   `DividerDefaults.Thickness` rounded to whole pixels with a one-pixel floor.
-- It is hidden while that row or the row below it is `selected`; pressing a row does not hide it.
+- It is hidden while that row or the row below it is `selected`, or has the menu of a
+  [SwipeActionItem](./swipeactionitem.md) out (`COUISlideView.drawDivider`).
+- Pressing a row fades the dividers above and below it out, and back in once the press ends, on a
+  response 0.15 / bounce 0 spring (`COUIRecyclerDividerManager`, on by default in `COUIRecyclerView`).
+  Disabled rows do not react, and a `holdDownState` row keeps its dividers.
 
 Do not add `HorizontalDivider`s between grouped rows.
 

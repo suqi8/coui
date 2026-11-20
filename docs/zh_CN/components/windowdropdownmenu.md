@@ -202,6 +202,15 @@ WindowDropdownMenu(
 
 当所有 `DropdownEntry` 都不包含任何条目时，菜单也会被隐式禁用。
 
+## 交互
+
+该行遵循 COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`：
+
+- **在手指处弹出**：记录按下点（`PreciseClickHelper`），菜单在该点处弹出，而不是贴着行的边缘。无障碍点击没有触点，退回以整行定位。
+- **软键盘**：键盘显示时，点击会先收起键盘，100ms 后（窗口高度不小于 840dp 时为 240ms）再弹出菜单，使菜单按最终窗口定位。
+- **锚点行**：菜单显示期间该行的悬停层保持锁定（`COUIPopupListWindow.setAnchorHoveredState`），菜单开始退出时即释放。
+- **箭头**：上下箭头为 `couiColorLabelTertiary`，行禁用时为 `couiColorLabelQuaternary`。
+
 ## 属性
 
 ### WindowDropdownMenu 属性（Entries 重载）

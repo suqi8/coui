@@ -10,6 +10,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.ChipTab
+import io.github.suqi8.coui.kmp.basic.ChipTabContent
 import io.github.suqi8.coui.kmp.basic.ChipTabRow
 import io.github.suqi8.coui.kmp.basic.ChipTabDefaults
 import io.github.suqi8.coui.kmp.basic.ChipTabMaterialType
@@ -28,6 +29,26 @@ ChipTabRow(
 ```
 
 Clicking the selected chip changes nothing (`COUIChipTabGroup` always keeps one chip selected). When the row can scroll towards an edge, the chips are cut at the 16dp inset there and fade out over 12dp; a chip that the visible edge cuts through is scrolled into view when clicked.
+
+## Switching Pages
+
+`ChipTabContent` shows the page of the selected chip with the transition of `COUIChipTabGroupFragmentMediator`: the page that is left fades out on a COUISpringForce(response 0.2, bounce 0) spring, and the new page fades in on a response 0.3 spring after a 150ms delay. The first page fades in without the delay, and every page keeps its saveable state while it is hidden, as the mediator keeps its fragments.
+
+```kotlin
+val tabs = listOf("All", "Photos", "Videos")
+var selectedIndex by remember { mutableIntStateOf(0) }
+
+Column {
+    ChipTabRow(
+        tabs = tabs,
+        selectedTabIndex = selectedIndex,
+        onTabSelected = { selectedIndex = it },
+    )
+    ChipTabContent(selectedTabIndex = selectedIndex) { index ->
+        Text("Content of ${tabs[index]}")
+    }
+}
+```
 
 ## Leading Icon Chip
 
@@ -145,6 +166,14 @@ The icon-only overload takes `icon: @Composable () -> Unit` instead of `label`/`
 | onLeadingIconClick | () -> Unit                | Callback when the leading icon chip is clicked                   | {}                              | No       |
 | leadingIcon        | (@Composable () -> Unit)? | Icon of the always-selected leading chip                         | null                            | No       |
 
+### ChipTabContent
+
+| Property         | Type                           | Description                                         | Default Value | Required |
+| ---------------- | ------------------------------ | --------------------------------------------------- | ------------- | -------- |
+| selectedTabIndex | Int                            | Page to show, usually the selected chip of the row  | -             | Yes      |
+| modifier         | Modifier                       | Modifier applied to the page container              | Modifier      | No       |
+| content          | @Composable (index: Int) -> Unit | The page of an index                              | -             | Yes      |
+
 ### ChipTabDefaults
 
 | Constant                            | Type          | Default Value                     | COUI Source                                           |
@@ -197,5 +226,5 @@ The icon-only overload takes `icon: @Composable () -> Unit` instead of `label`/`
 - Material on: the backdrop (under a provider) mixes the unselected and selected presets with an `ArgbEvaluator`; the `TYPE_NO_EFFECT_BASE_1` → `TYPE_FRAMEWORK_CAPSULE_2` edge light and inner shadow grow with the selection; the `TYPE_CHIP_TAB` touch spotlight follows the finger (PLUS 0.2 light, SRC_OVER 0.3 dark) and replaces the press and hover masks.
 - Material off: the selected chip draws the 0.6dp checked stroke, and pressing or hovering tints the capsule with `press` / `hover`.
 - The selected chip casts the `ShadowUtils` level 5 (`SHADOW_LV3_A`) light-source shadow, its elevation (100dp) scaled by the selection.
-- Pressing scales the chip with the COUI 17 size-dependent press scale; keyboard focus draws the 3dp `focusOutline` ring.
+- Pressing scales the chip with the COUI 17 size-dependent press scale; keyboard focus draws the 3dp `focusOutline` ring. Like `COUIChip.handleActionDown`, the press scale and the press mask start on touch down, also inside the scrolling `ChipTabRow`.
 - Labels are single line, ellipsized beyond `TextMaxWidth`, and centered in chips widened to `MinWidth`.

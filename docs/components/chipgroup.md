@@ -50,6 +50,10 @@ val state = rememberChipGroupState(
 
 With `collapsable = true` and more rows than `collapsedMaxRows`, the group shows the 28dp round expand / collapse button (`IconChip`). Collapsed, only the first `collapsedMaxRows` rows are shown and the last of them keeps room for the expand button; expanded, the collapse button follows the last chip. Height changes run on the COUI spring (response 0.35, bounce 0).
 
+## Animations
+
+With `animationsEnabled` (the default, COUI `setChipGroupAnimationsEnabled`) the chips move like COUIChip's `ChipGroupAnimatorImpl`: a chip whose place changes springs there (response 0.3, bounce 0); a chip the group stops showing (collapsing) fades out where it was, and one it shows again fades back in (alpha springs, response 0.2); a chip added to the group also grows from 0.8; the expand and collapse buttons are two chips that cross-fade. Nothing animates on the first layout or after the available width changes. A chip is followed by its `Modifier.layoutId` when it has one, by its index otherwise, so give chips a stable `layoutId` when you insert or remove them in the middle.
+
 ```kotlin
 val state = rememberChipGroupState(initialCollapsed = true)
 
@@ -85,6 +89,7 @@ ChipGroup(
 | horizontalSpacing    | Dp                     | Spacing between chips of a row                     | ChipGroupDefaults.HorizontalSpacing | No       |
 | verticalSpacing      | Dp                     | Spacing between rows                               | ChipGroupDefaults.VerticalSpacing   | No       |
 | collapseButtonColors | ChipColors             | Colors of the expand / collapse button             | ChipDefaults.chipColors()           | No       |
+| animationsEnabled    | Boolean                | Whether chips animate when the layout changes      | true                                | No       |
 | content              | @Composable () -> Unit | The chips                                          | -                                   | Yes      |
 
 ### ChipGroupState

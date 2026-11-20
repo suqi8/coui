@@ -5,7 +5,6 @@ package io.github.suqi8.coui.kmp.menu
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -19,8 +18,12 @@ import io.github.suqi8.coui.kmp.basic.DropdownArrowEndAction
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownDefaults
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
+import io.github.suqi8.coui.kmp.basic.preciseClickAnchor
+import io.github.suqi8.coui.kmp.basic.rememberPreciseClickState
+import io.github.suqi8.coui.kmp.popup.PopupAnchorHoverLock
 import io.github.suqi8.coui.kmp.popup.WindowDropdownPopup
-import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.popup.dropdownArrowColor
+import io.github.suqi8.coui.kmp.popup.rememberClickSelectMenuOpener
 
 /**
  * A [BasicComponent] wrapper that opens a [WindowDropdownPopup] for a single [DropdownEntry].
@@ -63,6 +66,10 @@ fun WindowDropdownMenu(
 
 /**
  * A [BasicComponent] wrapper that opens a [WindowDropdownPopup] for one or more [DropdownEntry] groups.
+ *
+ * The row is a COUI 17 click-select menu (`COUIMenuPreference` / `COUIClickSelectMenu`): the menu
+ * opens at the finger (`PreciseClickHelper`), after hiding a showing soft keyboard first, and the
+ * row keeps its hover layer locked while the menu is showing (`COUIPopupListWindow.setAnchorHoveredState`).
  */
 @Composable
 fun WindowDropdownMenu(
@@ -83,7 +90,8 @@ fun WindowDropdownMenu(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isDropdownExpanded = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
+    // COUIClickSelectMenu wires the row through PreciseClickHelper, so the menu opens at the finger.
+    val preciseClickState = rememberPreciseClickState()
     val currentOnExpandedChange = rememberUpdatedState(onExpandedChange)
     val setExpanded: (Boolean) -> Unit = remember {
         { expanded ->
@@ -93,29 +101,24 @@ fun WindowDropdownMenu(
             }
         }
     }
+    val openMenu = rememberClickSelectMenuOpener { setExpanded(true) }
 
     val nonEmptyEntries = entries.filter { it.items.isNotEmpty() }
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
-    val actionColor = if (actualEnabled) {
-        COUITheme.colorScheme.labelTertiary
-    } else {
-        COUITheme.colorScheme.disabledNeutral
-    }
+    val actionColor = dropdownArrowColor(actualEnabled)
 
-    val handleClick = remember(actualEnabled) {
+    val handleClick = remember(actualEnabled, openMenu) {
         {
             if (actualEnabled) {
-                setExpanded(!isDropdownExpanded.value)
-                if (isDropdownExpanded.value) {
-                    isHoldDown.value = true
-                }
+                if (isDropdownExpanded.value) setExpanded(false) else openMenu()
             }
         }
     }
 
+    PopupAnchorHoverLock(locked = isDropdownExpanded.value, interactionSource = interactionSource)
     BasicComponent(
-        modifier = modifier,
+        modifier = modifier.preciseClickAnchor(preciseClickState),
         interactionSource = interactionSource,
         insideMargin = insideMargin,
         title = title,
@@ -130,17 +133,19 @@ fun WindowDropdownMenu(
                     entries = nonEmptyEntries,
                     show = isDropdownExpanded.value,
                     onDismiss = { setExpanded(false) },
-                    onDismissFinished = { isHoldDown.value = false },
+                    // PreciseClickHelper falls back to the anchor without a fresh touch point (TalkBack):
+                    // forget this one once the menu has gone.
+                    onDismissFinished = { preciseClickState.clear() },
                     maxHeight = maxHeight,
                     dropdownColors = dropdownColors,
                     collapseOnSelection = collapseOnSelection,
+                    preciseClickState = preciseClickState,
                 )
             }
         },
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
         enabled = actualEnabled,
     )
 }

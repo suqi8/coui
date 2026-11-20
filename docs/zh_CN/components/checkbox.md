@@ -100,9 +100,9 @@ CheckboxDefaults 对象提供了 Checkbox 组件的默认颜色配置。
 
 ### 按压反馈
 
-与 `COUICheckBox` 一致，按压时方框不缩小。可交互的复选框（`onClick != null`）会在 24dp 方框背后绘制直径 40dp 的圆形 `press` 高亮（#1F000000 / #33FFFFFF），节奏与平台水波纹一致。若外层行负责点击（如 `CheckboxPreference`），请传入 `onClick = null`，只由行显示按压态。与 `COUICheckBox` 一致，独立复选框不播放振动。
+与 `COUICheckBox` 一致，按压时方框不缩小。可交互的复选框（`onClick != null`）会在 24dp 方框背后绘制直径 40dp 的圆形 `press` 高亮（#1F000000 / #33FFFFFF），节奏与平台水波纹一致；同一圆内还有 COUI `COUIMaskRippleDrawable` 的 `hover` 悬停层与键盘焦点（`focus`）层，以 response 0.3 弹簧淡入淡出。若外层行负责点击（如 `CheckboxPreference`），请传入 `onClick = null`，只由行显示按压态。与 `COUICheckBox` 一致，独立复选框不播放振动。
 
-只有启用时状态切换才播放 COUI 动画；禁用时直接跳到新状态，半选与选中之间除外（COUI 禁用时也为其播放动画）。静止的半选状态按 COUI 静态资源绘制：方框比其他状态低 0.666dp，横线 1.6dp 粗（禁用时 1.5dp）。
+状态切换重放 COUI 的 AVD：填充淡入淡出，对勾逐笔绘出或擦除，半选横线从左端伸出或缩回（伸出时是缓动裁剪与线性路径变形的交集，几乎匀速），方框、对勾与横线各自按自己的缓动做 1 -> 1.08 -> 1 的弹跳（半选与选中之间对勾不缩放）。只有启用时状态切换才播放 COUI 动画；禁用时直接跳到新状态，半选与选中之间除外（COUI 禁用时也为其播放动画）。静止的半选状态按 COUI 静态资源绘制：方框比其他状态低 0.666dp，横线 1.6dp 粗（禁用时 1.5dp）。
 
 ## 进阶用法
 

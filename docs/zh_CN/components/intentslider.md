@@ -94,6 +94,7 @@ CompositionLocalProvider(LocalMaterialBackdrop provides provider) {
 - 进度使用 `IntentSliderColors.conicLightColor`（#F87796），末端叠加一段白色渐变（`IntentConicProgressRenderer`）：`Playing` 时为轨道的五分之一，拖动时为十分之一，靠近起点时覆盖整段进度；渐变以 response 0.5 的弹簧淡入淡出。
 - `Playing` 时以及播放中拖动时，两道光锥拖尾于进度末端，越往后纵向越散（`ConicLightEffectRenderer`，AGSL `ConicLightShaderParams`，以 `BlendMode.Screen` 绘制并裁剪在进度条内）。进入播放时形状以 response 0.9、透明度以 0.3 的弹簧进入；拖动与淡出使用 0.4。
 - 光效需要运行时着色器（Android 13+ 及所有 Skia 平台），其他情况下跳过；进度样式在所有平台绘制。
+- 播放器的长按倍速手势进行中时传 `holdToSpeedUp = true`（`setHoldToSpeedUpConeLightActive`）：`Playing` 时光锥改用拖动时的形态，取消后回到播放形态。
 
 ```kotlin
 IntentSlider(
@@ -101,6 +102,7 @@ IntentSlider(
     onValueChange = { position = it },
     followSystemTheme = false,
     conicLight = true,
+    holdToSpeedUp = isSpeedingUp,
     playbackState = IntentSliderPlaybackState.Playing,
 )
 ```
@@ -110,9 +112,10 @@ IntentSlider(
 `IntentSlider` 遵循 COUI 17 `COUIIntentSeekBar`：
 
 - 按下时轨道以 response 0.5 / bounce 0 的弹簧从静止高度变为按压高度（见 `IntentSliderSize`），松手后收回。松手会等到轨道已增高 2dp（`getMinEnlargeHeight`）后再收回，因此快速点击也有反馈。
-- 拖动时进度按手指移动的距离从当前位置开始移动（`couiSeekBarIsFollowThumb = false`）；`followThumb = true` 时进度改为追随手指（response 0.15）。
+- 拖动时进度按手指移动的距离从当前位置开始移动（`couiSeekBarIsFollowThumb = false`）；`followThumb = true` 时进度改为追随手指。两种方式下绘制的进度都以 response 0.15 的跟手弹簧（`FlexibleFollowHandHandler`）追随拖动值。
 - 点击会让进度以弹簧动画移到点击位置（response 0.3）；快速松手（至少 100px/s）会让进度继续滑行。
-- 拖动时整个进度条沿触摸跟手橡皮筋（`TouchMotionEffectRenderer`）水平跟随手指，松手后弹回。
+- 只有拖动会振动：点击和滑行不振动，`startClickTransitionAnim` 与 `onPhysicsFlingUpdate` 都不触发反馈。
+- 拖动时整个进度条沿触摸跟手橡皮筋（`TouchMotionEffectRenderer`）水平跟随手指，松手后弹回。`onDragHorizontalOffsetChange` 每帧收到这个偏移（`OnDragHorizontalOffsetChangeListener`），可让时间标签等随进度条一起移动。
 - 滑块带回弹（0.3）放大到按压半径，轨道开始收回后，暂停时回到静止半径，否则消失（response 0.4）。
 - 代码设置的 `value` 立即绘制（播放进度每帧更新），只有手势会产生动画。
 - `IntentSlider` 没有触摸聚光与闪光效果：`COUIIntentSeekBar.initAdvancedFeatures` 覆写了基类初始化，不启用这两项。
@@ -133,11 +136,13 @@ IntentSlider(
 | materialBackdrop      | Boolean                           | 模糊混合背景能否替代填充（仅在关闭 followSystemTheme 且有提供者时） | true                                | 否       |
 | conicLight            | Boolean                           | 是否使用锥形光进度样式（仅在关闭 followSystemTheme 时）          | false                                  | 否       |
 | loadingDragReturn     | Boolean                           | LoadingInitial 时拖动是否显示进度并在松手后回弹到起点            | false                                  | 否       |
+| holdToSpeedUp         | Boolean                           | 长按倍速手势是否进行中；Playing 且开启 conicLight 时光锥改用拖动形态 | false                               | 否       |
 | playbackState         | IntentSliderPlaybackState         | 播放状态：Idle、LoadingInitial、Playing、Paused 或 LoadingBuffering | IntentSliderPlaybackState.Idle      | 否       |
 | valueRange            | ClosedFloatingPointRange\<Float\> | 取值范围                                                         | 0f..1f                                 | 否       |
 | secondaryValue        | Float?                            | 绘制在进度下方的次级（缓冲）值；null 时隐藏                      | null                                   | 否       |
 | onValueChangeFinished | (() -> Unit)?                     | 拖动、滑行或点击结束时回调                                       | null                                   | 否       |
 | onLoadingDragReturnComplete | (() -> Unit)?               | 加载中拖动回弹到起点后回调                                       | null                                   | 否       |
+| onDragHorizontalOffsetChange | ((Float) -> Unit)?       | 触摸跟手橡皮筋每帧移动进度条时回调其水平偏移（px）               | null                                   | 否       |
 | size                  | IntentSliderSize                  | 轨道与滑块尺寸                                                   | IntentSliderSize.Default               | 否       |
 | horizontalPadding     | Dp                                | 轨道距两端的内边距                                               | IntentSliderDefaults.HorizontalPadding | 否       |
 | colors                | IntentSliderColors                | 进度条颜色                                                       | intentSliderColors() / fixedColors()   | 否       |

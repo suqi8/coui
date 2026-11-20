@@ -2,7 +2,7 @@
 
 `DateTimePicker` 用一个日期滚轮加时 / 分滚轮选择日期和时间，对应 ColorOS 的 COUITimePicker。日期滚轮显示星期、月和日（当天显示「今天」），不循环；时、分滚轮循环滚动。12 小时制下会增加上午/下午滚轮，并与 COUI 一样在小时滚到 12 时切换上午/下午。
 
-滚轮本身的行为见 [NumberPicker](./numberpicker)。日期列宽 150dp（中文、英文以外的语言为 174dp），时间列宽 62dp；选择器比各列总宽窄时，所有列按比例缩小。选中行上下的两条细线在 24 小时制下左右内缩 16dp，12 小时制下通栏绘制。
+滚轮本身的行为见 [NumberPicker](./numberpicker)。日期列宽 150dp（中文、英文以外的语言为 174dp），时间列宽 62dp；选择器比各列总宽窄时，所有列按比例缩小。选中行上下的两条细线在 24 小时制下左右内缩 16dp，12 小时制下通栏绘制。与 coui_time_picker.xml 一致，RTL 布局下各滚轮仍保持从左到右的顺序（只有单位标签镜像），首末两列的触摸区域会延伸到两侧留白，在选择器任意位置拖动都能滚动它们。
 
 <div style="position: relative; height: 320px; border-radius: 10px; overflow: hidden; border: 1px solid #777;">
     <iframe id="demoIframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;" src="../../compose/index.html?id=dateTimePicker" title="Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe>

@@ -91,6 +91,7 @@ fun ProgressIndicatorDemo() {
                 RotatingProgressIndicator(
                     modifier = Modifier
                         .align(alignment = Alignment.CenterVertically),
+                    color = ProgressIndicatorDefaults.smallRotatingProgressIndicatorColor(),
                     size = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorSize,
                     ringDiameter = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorRingDiameter,
                     strokeWidth = ProgressIndicatorDefaults.SmallRotatingProgressIndicatorStrokeWidth,

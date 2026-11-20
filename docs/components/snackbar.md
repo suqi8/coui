@@ -101,7 +101,11 @@ fun SnackbarHost(
 
 In most cases you can keep the default `content` which uses the built‑in `Snackbar` composable.
 
-While a Snackbar is touched, its auto-dismiss timer is paused; on release the timer restarts with the full duration (COUISnackBar `onTouchEvent`: DOWN / MOVE cancel, UP / CANCEL re-post). Swipe-to-dismiss, stacking several Snackbars and the dismiss icon are library extensions with no COUI counterpart.
+Each Snackbar shows and dismisses like COUI 17 `COUISnackBar.animateSpring`: it scales 0.8 -> 1 while fading in and back to 0.8 while fading out, on bounce-free springs (response 0.3 to show, 0.25 to dismiss).
+
+While a Snackbar is touched, its auto-dismiss timer is paused; on release the timer restarts with the full duration (COUISnackBar `onTouchEvent`: DOWN / MOVE cancel, UP / CANCEL re-post). Swipe-to-dismiss, stacking several Snackbars and the dismiss icon are library extensions with no COUI counterpart (COUI shows one snack bar at a time).
+
+The swipe follows the only COUI snack bar that can be swiped, `COUINotificationSnackBar`: past the touch slop a mostly sideways drag picks the Snackbar up and it follows the finger; released past an eighth of its width it slides off screen at 1.75px per ms on the COUI move-ease curve and is dismissed, otherwise it springs back (response 0.35, bounce 0). Turn `canSwipeToDismiss` off for content with its own swipe, such as `NotificationSnackbar` or `CustomSnackbar`.
 
 ## Snackbar
 
@@ -128,7 +132,7 @@ fun Snackbar(
 | icon                   | (@Composable () -> Unit)? | Optional leading icon shown in a 30.dp box (pass it through the `content` lambda of `SnackbarHost`) | null | No       |
 | cornerRadius           | Dp             | Corner radius of the vertical (multi-line) layout, drawn at `default_g2_weight` 2.45 | SnackbarDefaults.CornerRadius           | No       |
 | singleLineCornerRadius | Dp             | Corner radius of the single-line layout; `Dp.Unspecified` rounds it at half its height (the COUI 17 soft capsule) | SnackbarDefaults.SingleLineCornerRadius | No       |
-| maxWidth               | Dp             | Maximum width of the Snackbar, excluding its 16.dp outer margins; `Dp.Unspecified` removes the cap | SnackbarDefaults.maxWidth() | No       |
+| maxWidth               | Dp             | Maximum width of the Snackbar, excluding its 16.dp outer margins; the Snackbar fills the width it is given up to this cap, `Dp.Unspecified` removes the cap | SnackbarDefaults.maxWidth() | No       |
 | colors                 | SnackbarColors | Color configuration for the Snackbar                       | SnackbarDefaults.snackbarColors()       | No       |
 | insideMargin           | PaddingValues  | Inner padding of the Snackbar content (the end padding collapses to 4.dp when the action button is the trailing element of the single-line layout) | SnackbarDefaults.InsideMargin | No       |
 
@@ -139,7 +143,7 @@ Following COUI 17 `COUISnackBar.adjustLayout`:
 - **Single line**: the icon, message, action and dismiss icon sit on one line, each centered vertically, inside a capsule.
 - **Vertical**: once the message wraps (or contains a line break) or the line is wider than the available width, the message starts 12.dp from the top, the action moves below it (10.dp gap), aligned to the end with a 4.dp end margin and a 9.dp bottom margin, and the corners drop to `cornerRadius` (16.dp).
 - **Action**: the action label is padded 12.dp horizontally and 4.dp vertically for its capsule press area (COUI `text_ripple_bg_padding_*`), keeps a 16.dp gap after the message and a 4.dp end margin.
-- **Width**: the Snackbar wraps its content, up to `maxWidth`. By default this is six columns of the COUI responsive layout grid (small margin) of the current window: on compact windows (narrower than 600.dp) the grid only has four columns, so the Snackbar may span the window minus its 16.dp margins; on medium (8 columns, 24.dp margin, 8.dp gutter) and expanded (12 columns, 40.dp margin, 12.dp gutter) windows it stays centered at six columns.
+- **Width**: the Snackbar takes the whole width it is given, up to `maxWidth`, with the icon and message at the start and the action (and dismiss icon) at the end. COUI `coui_snack_bar_item` is a `wrap_content` `RelativeLayout`, but its action is aligned to the parent end, which stretches the bar to the width it is offered. By default `maxWidth` is six columns of the COUI responsive layout grid (small margin) of the current window: on compact windows (narrower than 600.dp) the grid only has four columns, so the Snackbar spans the window minus its 16.dp margins; on medium (8 columns, 24.dp margin, 8.dp gutter) and expanded (12 columns, 40.dp margin, 12.dp gutter) windows it stays centered at six columns.
 
 The container is `backgroundTop` (`#FFFFFF` light / `#333333` dark) and the action label is `primaryTextOnPopup` (`#0080FF` / `#5C9DFF`). The shadow approximates COUI `ShadowUtils` level 3 with a soft drop shadow, denser in the dark scheme (the COUI shadow alpha rises from 40/255 to 120/255).
 
@@ -351,4 +355,4 @@ The `SnackbarData` overload takes `data` instead of `title`, `actionLabel`, `onA
 ### Layout and Swipe
 
 - **Layout**: the image sits 16dp from the start, top and bottom edges and 8dp before the text; the title is 14sp medium and the subtitle 12sp, 2dp below it; the small button (12dp x 4dp padding, at most 120dp wide and two lines) is vertically centred; the 20dp close button sits 6dp from the top and end edges.
-- **Swipe**: a drag past the touch slop picks an axis (COUI picks it on the first pixel; the slop keeps taps on the buttons and a scrolling parent's gestures working). Sideways the card follows the finger; past an eighth of its width it slides off screen at 1.75px per ms on the COUI move-ease curve and `onDismiss` runs, otherwise it springs back (response 0.35, bounce 0). Downwards it dismisses the same way past an eighth of its width; once dragged it is held to an eighth of its width above its place. A drag that starts upwards is left to the parent.
+- **Swipe**: a drag past the touch slop picks an axis (COUI picks it on the first pixel; the slop keeps taps on the buttons and a scrolling parent's gestures working). Sideways the card follows the finger; past an eighth of its width (side margins included) it slides just off screen at 1.75px per ms on the COUI move-ease curve and `onDismiss` runs, otherwise it springs back (response 0.35, bounce 0). Downwards, past the same threshold, it slides down by its bottom position plus its height in that whole distance / 1.75 ms (`startDismissAnimationY`), a long, front-loaded slide, and `onDismiss` runs once the card has left the window. Once dragged it is held to an eighth of its width above its place. A drag that starts upwards is left to the parent.

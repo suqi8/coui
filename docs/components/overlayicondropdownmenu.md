@@ -251,6 +251,10 @@ Scaffold {
 }
 ```
 
+## Interaction
+
+Like the COUI 17 toolbar overflow button, the icon button plays its normal press and release when tapped and is not held while the menu is showing: `COUIPopupListWindow.setAnchorHoveredState` only locks list-row anchors.
+
 ## Properties
 
 ### OverlayIconDropdownMenu Properties (Entries Overload)

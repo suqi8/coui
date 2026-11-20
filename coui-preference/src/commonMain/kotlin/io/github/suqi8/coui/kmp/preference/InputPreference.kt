@@ -45,9 +45,10 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
 /**
  * A card list row that holds an inline single-line input field, mirroring COUIInputPreference.
  *
- * COUI inflates `coui_input_preference.xml`: a `COUICardListSelectedItemLayout` (which never shows
- * a press state, `consumeDispatchingEventForState(true)`) padded 32dp from the screen edges, i.e.
- * 16dp inside the card, around a `COUICardListItemInputView`. That input view puts the optional
+ * COUI inflates `coui_input_preference.xml`: a `COUICardListSelectedItemLayout` (its press mask
+ * follows every touch inside the row through `consumeDispatchingEventForState(true)` while the
+ * preference is selectable; this row is not a click target and draws none) padded 32dp from the
+ * screen edges, i.e. 16dp inside the card, around a `COUICardListItemInputView`. That input view puts the optional
  * [title] above the field (couiTextAppearanceHeadline6, 10dp top / 4dp bottom padding, 22dp min
  * height) and draws the field as a `COUIScrolledEditText` in `Widget.COUI.InputPreference`
  * (couiTextBodyL, single line, quick delete through the external delete button, hint in the theme

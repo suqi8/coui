@@ -53,7 +53,9 @@ import io.github.suqi8.coui.kmp.theme.COUITheme
  *
  * Like the COUI layout, the statement body grows with its text up to [statementMaxHeight] (and
  * shrinks when the available height is short) and the buttons follow right below it; any height
- * the [modifier] adds beyond that stays empty at the bottom. On small landscape windows (smallest
+ * the [modifier] adds beyond that stays empty at the bottom. A title or body that fits is not
+ * draggable, so it does not rubber-band (`disableTitleScrollBeforeMaxHeight`, and COUIScrollView's
+ * overscroll clamp under `overScrollMode="ifContentScrolls"`). On small landscape windows (smallest
  * width < 480dp) the exit and confirm actions sit side by side as two buttons
  * (button_layout_land).
  *
@@ -117,7 +119,9 @@ fun FullPageStatement(
                 .padding(horizontal = FullPageStatementDefaults.TitleMarginHorizontal)
                 .heightIn(max = FullPageStatementDefaults.titleMaxHeight(windowSize.height))
                 .verticalFadingEdges(titleScrollState, FullPageStatementDefaults.ScrollFadeLength)
-                .verticalScroll(titleScrollState),
+                // disableTitleScrollBeforeMaxHeight: a title below its max height swallows touches,
+                // so it neither scrolls nor rubber-bands.
+                .verticalScroll(titleScrollState, enabled = titleScrollState.maxValue > 0),
         ) {
             Text(
                 text = title,
@@ -135,7 +139,9 @@ fun FullPageStatement(
                 .fillMaxWidth()
                 .heightIn(max = statementMaxHeight)
                 .verticalFadingEdges(scrollState, FullPageStatementDefaults.ScrollFadeLength)
-                .verticalScroll(scrollState),
+                // COUIScrollView.onOverScrolled clamps the overscroll of content that fits
+                // (overScrollMode ifContentScrolls), so short statements do not rubber-band.
+                .verticalScroll(scrollState, enabled = scrollState.maxValue > 0),
         ) {
             Text(
                 text = content,

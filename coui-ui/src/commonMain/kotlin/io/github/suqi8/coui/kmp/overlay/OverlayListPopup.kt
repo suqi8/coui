@@ -83,6 +83,9 @@ fun OverlayListPopup(
             visibleState.value = visible
             PopupLayout(
                 visible = visibleState,
+                // COUIPopupListWindow.dismiss makes the window untouchable before the exit
+                // animation, so the page takes touches again while the menu leaves.
+                touchable = show,
                 enableWindowDim = false,
                 enableBackHandler = false,
                 enterTransition = EnterTransition.None,

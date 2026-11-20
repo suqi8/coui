@@ -1,6 +1,6 @@
 # LunarDatePicker
 
-`LunarDatePicker` 是三列滚轮的农历日期选择器，对应 ColorOS 的 COUILunarDatePicker。与 COUI 一致，它持有公历日期（`value` / `onValueChange`），并以农历滚轮展示：农历年、农历月（有闰月的年份共 13 项，闰月显示为 `闰` + 对应月份）和农历日（初一 .. 三十）。滚动年份时保留农历月和日（仅当新年份的闰月相同时才保留闰月标记）；滚动月或年时日会收敛到新月份的天数。与 COUILunarDatePicker.updateSpinners 一致，当日期恰好位于 `minDate` 或 `maxDate` 时，月与日滚轮停止循环，只提供可到达一侧的值。滚轮行为见 [NumberPicker](./numberpicker)，分隔细线与按语言排列字段的方式同 [DatePicker](./datepicker)。
+`LunarDatePicker` 是三列滚轮的农历日期选择器，对应 ColorOS 的 COUILunarDatePicker。与 COUI 一致，它持有公历日期（`value` / `onValueChange`），并以农历滚轮展示：农历年、农历月（有闰月的年份共 13 项，闰月显示为 `闰` + 对应月份）和农历日（初一 .. 三十）。滚动年份时保留农历月和日（仅当新年份的闰月相同时才保留闰月标记）；滚动月或年时日会收敛到新月份的天数。与 COUILunarDatePicker.updateSpinners 一致，当日期恰好位于 `minDate` 或 `maxDate` 时，月与日滚轮停止循环，只提供可到达一侧的值。滚轮行为见 [NumberPicker](./numberpicker)，分隔细线与按语言排列字段的方式同 [DatePicker](./datepicker)；同样，首末两列的触摸区域会延伸到两侧留白（COUILunarDatePicker.onMeasure）。
 
 换算使用 `LunarCalendar`，它是 COUILunarUtil 的纯 Kotlin 移植（数据表覆盖农历 1900..2100 年）。
 

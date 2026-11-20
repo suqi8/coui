@@ -45,7 +45,7 @@ Scaffold(
 
 ### 选中状态
 
-`FloatingNavigationBarItem` 的图标与标签在选中色（`#E6000000`）和未选中色（`#B8000000`）之间瞬时切换，没有指示器、按压遮罩或振动反馈。
+`FloatingNavigationBarItem` 的图标与标签在选中色（`#E6000000`）和未选中色（`#B8000000`）之间瞬时切换，没有指示器、按压遮罩或振动反馈。指针悬停在普通导航项上或键盘焦点落在其上时，图标与标签后方会淡入 COUI 的悬停 / 焦点蒙层：向导航项左右各延伸 8dp 的胶囊形（`COUIMaskRippleDrawable`，`?couiColorHover` / `?couiColorFocus`，各自走 response 0.3 弹簧）；大图标导航项没有蒙层。与 `setupItemAccessibility` 一致，选中项不向无障碍服务提供点击操作。
 
 ### 导航项变化与标签
 
@@ -53,11 +53,11 @@ Scaffold(
 
 ### 扩展视图
 
-提供 `expansion` 且 `expansionVisible` 时，扩展视图以弹簧（response 0.55，bounce 0.35）从胶囊末端后方滑出，同时由 0.5 缩放到 1，胶囊收窄让位。其透明度跟随被胶囊遮挡的比例（遮挡一半以内不透明，之后线性淡出）；开启 `materialEffect` 时两者接触处以融球效果相连。隐藏时反向；隐藏并静止后不再放置，也不响应触摸。
+提供 `expansion` 且 `expansionVisible` 时，扩展视图以弹簧（response 0.55，bounce 0.35）从胶囊末端后方滑出，同时由 0.5 缩放到 1，胶囊收窄让位。其透明度跟随被胶囊遮挡的比例（遮挡一半以内不透明，之后线性淡出）；开启 `materialEffect` 时两者接触处以融球效果相连。隐藏时反向，一旦扩展视图被胶囊完全遮住，滑动立即停在目标位置，弹簧回弹不会让它再次露出（`finishCollapseTranslationIfFullyOverlapped`）；隐藏并静止后不再放置，也不响应触摸。用作扩展视图的 `FloatingNavigationBarAccessory` 要等完全滑出后才响应触摸形变（`setExpansionViewTouchMotionAnimEnabled`）。
 
 ### 滑动选择
 
-在 `FloatingNavigationBar` 中，手指在胶囊上滑动时会随手指选中其下方的导航项，选中态跟随手指移动。手指抬起时（无论在何处抬起）提交滑动结束时所在项的 `onClick`；禁用项会被跳过。普通点按调用被点项的 `onClick`。按下期间整个胶囊带有 COUI 17 触摸形变（按压缩放、橡皮筋跟随与拖拽形变），开启 `materialEffect` 时还有触摸聚光。
+在 `FloatingNavigationBar` 中，手指在胶囊上滑动时会随手指选中其下方的导航项，选中态跟随手指移动。手指抬起时（无论在何处抬起）提交滑动结束时所在项的 `onClick`；禁用项会被跳过。普通点按调用被点项的 `onClick`。滚动父布局接管手势时，点按会被丢弃，但滑动已选中的项仍会提交（`dispatchPendingSlideItemClickIfNeeded`）。按下期间整个胶囊带有 COUI 17 触摸形变（按压缩放、橡皮筋跟随与拖拽形变），开启 `materialEffect` 时还有触摸聚光；胶囊横向移动期间触摸形变暂停（`doHorizontalMoveAnim`）。
 
 ## 属性
 
@@ -111,6 +111,7 @@ FloatingNavigationBarDefaults 对象提供了 FloatingNavigationBar 和 Floating
 | ItemSpacing              | Dp    | 项目间距                   | 8.dp   |
 | ItemMaxWidth             | Dp    | 项目宽度；放不下时等比缩小 | 70.dp  |
 | ItemHeight               | Dp    | 项目高度，在胶囊内垂直居中 | 48.dp  |
+| ItemMaskHorizontalOutset | Dp    | 导航项悬停 / 焦点蒙层向左右延伸的距离 | 8.dp |
 | IconSize                 | Dp    | 图标尺寸                   | 24.dp  |
 | IconTopPadding           | Dp    | 图标距项目顶部的距离       | 4.dp   |
 | LabelTopSpacing          | Dp    | 图标与标签的间距           | 2.dp   |

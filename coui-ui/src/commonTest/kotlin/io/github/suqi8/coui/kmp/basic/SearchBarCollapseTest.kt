@@ -9,8 +9,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Checks the collapse arithmetic against the values decompiled from
- * `COUISearchBar.setSearchViewAnimateHeightPercent`.
+ * Checks the collapse arithmetic against the values decompiled from the ColorOS 16
+ * `COUISearchBar.setSearchViewAnimateHeightPercent` (a deprecated no-op in COUI 17).
  */
 class SearchBarCollapseTest {
     private val normal = Color(0xFFEEEEEE)
@@ -91,10 +91,23 @@ class SearchBarCollapseTest {
 
     @Test
     fun extraWidth_isFullyGrownWhenCollapsed() {
-        val padding = SearchBarDefaults.LeadingIconStartPadding
+        // getInternalPaddingEnd(): the bar's own (compact responsive) padding, so the flattened line
+        // reaches the bar's edges.
+        val padding = SearchBarDefaults.HorizontalPaddingCompact
         assertEquals(padding.value, geometry(0f).extraHorizontalWidth.value, 1e-3f)
         // Halfway through the margin ramp.
         assertEquals(padding.value / 2f, geometry(0.15f).extraHorizontalWidth.value, 1e-3f)
+    }
+
+    @Test
+    fun widening_followsTheMarginRamp() {
+        assertEquals(1f, searchBarCollapseWidening(0f), 1e-6f)
+        assertEquals(0.5f, searchBarCollapseWidening(0.15f), 1e-6f)
+        assertEquals(0f, searchBarCollapseWidening(0.3f), 1e-6f)
+        assertEquals(0f, searchBarCollapseWidening(1f), 1e-6f)
+        // Clamped outside 0..1.
+        assertEquals(1f, searchBarCollapseWidening(-0.5f), 1e-6f)
+        assertEquals(0f, searchBarCollapseWidening(1.5f), 1e-6f)
     }
 
     // --- capsule color: lerp(divider, normal, min(1, p / 0.3)) ---

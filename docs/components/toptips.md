@@ -126,7 +126,7 @@ TopTips(
 
 ## Behavior
 
-- The action button is a `Widget.COUI.Button.Small.ButtonNew` primary capsule (14sp medium, 12/4dp padding, 52x28dp minimum) with the material effect forced off. The action and the close button can be shown together (12dp apart, the close button 12dp from the end).
+- The action button is a `Widget.COUI.Button.Small.ButtonNew` primary capsule (14sp medium, 12/4dp padding, 52x28dp minimum) with the material effect forced off. The action and the close button can be shown together (12dp apart, the close button 12dp from the end). Like the official close `ImageView` (no background, a plain vector without a pressed state), the close button shows no press feedback.
 - Without a title the start icon is 24dp and the buttons sit after the message, centred on it. Only when a start icon is shown and the message needs more than two lines next to the buttons does the action drop below the message, aligned with its start edge (8dp above, 12dp below), while the icon and the close button centre on the first two lines (`isNeedDefaultMultiTextWithoutTitle`).
 - With a title the start icon is 36dp (12dp gap) and the buttons are centred on the title + message block. When a start icon is shown and either text no longer fits on one line next to the buttons, the action drops below the message and the close button aligns with the title (`isNeedDefaultMultiTextWithTitle`).
 - With `marquee` the message is a single line that scrolls endlessly at 25dp/s with copies 80dp apart and 26dp fading edges when it does not fit (`COUIMarqueeTextView`); it never moves the action below it.

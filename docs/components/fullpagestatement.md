@@ -115,7 +115,7 @@ val content = buildAnnotatedString {
 
 ## Behavior
 
-- The statement body scrolls and shows 32dp vertical fading edges that ramp in with the scroll offset, like the COUIMaxHeightScrollView host.
+- The statement body scrolls and shows 32dp vertical fading edges that ramp in with the scroll offset, like the COUIMaxHeightScrollView host. A title or body that fits does not scroll or rubber-band when dragged, like the COUI title (`disableTitleScrollBeforeMaxHeight`) and `COUIScrollView` under `overScrollMode="ifContentScrolls"`.
 - Windows shorter than 300dp use the tighter values-h200dp margins (title 3dp, button 10dp above / 8dp below).
 - The primary button label is capped at two lines (COUIFullPageStatement `setMaxLines(2)`), with a fixed COUI bucket width: 174dp, 220dp from 300dp-wide windows and 280dp from 600dp-wide windows.
 - The exit button is a bare accent-colored text (16sp, medium) with no fill and no press overlay, matching the COUI `txt_exit` TextView.

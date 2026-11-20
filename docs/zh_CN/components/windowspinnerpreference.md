@@ -126,7 +126,7 @@ WindowSpinnerPreference(
 
 ### 独立使用下拉对话框
 
-对话框模式背后的对话框以 `WindowDropdownDialog`（`io.github.suqi8.coui.kmp.popup`）公开。需要由自己的触发控件（而不是偏好设置行）打开同样的选项对话框时直接使用它。它是窗口层级的 `WindowDialog`（无需 `Scaffold`），以 `DropdownEntry` 列表作为列表面板，底部是一个占满宽度、用于关闭对话框的按钮。点击选项会触发确认振动、调用 `DropdownItem.onClick`，并在 `collapseOnSelection` 为 true 时关闭对话框。
+对话框模式背后的对话框以 `WindowDropdownDialog`（`io.github.suqi8.coui.kmp.popup`）公开。需要由自己的触发控件（而不是偏好设置行）打开同样的选项对话框时直接使用它。它是窗口层级的 `WindowDialog`（无需 `Scaffold`），以 `DropdownEntry` 列表作为列表面板，底部是一个占满宽度、用于关闭对话框的按钮。点击选项会调用 `DropdownItem.onClick`，并在 `collapseOnSelection` 为 true 时关闭对话框；与 COUI 列表对话框一致，不触发振动。
 
 ```kotlin
 var show by remember { mutableStateOf(false) }
@@ -236,6 +236,17 @@ WindowSpinnerPreference(
     onSelectedIndexChange = { selectedIndex = it }
 )
 ```
+
+## 交互
+
+该行遵循 COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`：
+
+- **在手指处弹出**：记录按下点（`PreciseClickHelper`），菜单在该点处弹出，而不是贴着行的边缘。无障碍点击没有触点，退回以整行定位。
+- **软键盘**：键盘显示时，点击会先收起键盘，100ms 后（窗口高度不小于 840dp 时为 240ms）再弹出菜单，使菜单按最终窗口定位。
+- **锚点行**：菜单显示期间该行的悬停层保持锁定（`COUIPopupListWindow.setAnchorHoveredState`），菜单开始退出时即释放。
+- **箭头**：上下箭头为 `couiColorLabelTertiary`，行禁用时为 `couiColorLabelQuaternary`。
+- **选中值**：按 COUI 赋值文字（`TextAppearance.COUI.List.Assignment.End`）显示：13sp、body_s 行距、末端对齐、最多两行，与箭头间隔 4dp。
+- **振动与对话框模式**：与 COUI 一致，弹出菜单不触发振动。对话框模式下该行只播放正常的按下与抬起（COUI 列表对话框不锁定锚点状态），选择选项同样不振动。
 
 ## 属性
 

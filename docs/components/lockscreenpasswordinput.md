@@ -106,5 +106,6 @@ Without a blurred wallpaper behind it, give the desktop field a fill: `colors = 
 
 - The error line fades in over 217ms and out over 283ms (`COUIEaseInterpolator`) and the field shows its error state.
 - Desktop press: the button springs to the COUI press scale; its rim glows and a radial light reaches into the field, on response 0.3 springs (0.6 for the outer light on release). The press effect only runs while the button is active.
+- The eye toggle keeps the 34dp size of COUI's eye drawables and reaches 12dp into the field's end padding (`button_layout` marginEnd -12dp); it animates its slash like the `TextField` toggle.
 - An invalid `minCount` / `maxCount` pair falls back to 6 / 16.
 - The next button sits at the end of the row: on the left in right-to-left layouts.

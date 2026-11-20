@@ -28,6 +28,7 @@ import demo.framework.PlaygroundPreview
 import demo.framework.playground
 import demo.framework.variant
 import io.github.suqi8.coui.kmp.basic.BasicComponent
+import io.github.suqi8.coui.kmp.basic.CardListGroup
 import io.github.suqi8.coui.kmp.basic.SwipeAction
 import io.github.suqi8.coui.kmp.basic.SwipeActionItem
 import io.github.suqi8.coui.kmp.basic.SwipeActionItemDefaults
@@ -309,56 +310,66 @@ private fun RectMenuSample() {
     val deleteDescription = stringResource(Res.string.common_delete)
     val overSlideSummary = stringResource(Res.string.demo_swipe_action_item_summary_over_slide)
     val swipeSummary = stringResource(Res.string.demo_swipe_action_item_summary_swipe)
-    rows.forEachIndexed { index, id ->
-        // Key by id so a deleted row's state does not move to its neighbour.
-        key(id) {
-            val state = rememberSwipeActionItemState()
-            val actions = when (index % 3) {
-                0 -> listOf(SwipeAction(label = labels[0], color = COUITheme.colorScheme.primary))
+    val restoreTitle = stringResource(Res.string.demo_swipe_action_item_restore)
+    val disabledTitle = stringResource(Res.string.demo_swipe_action_item_disabled)
+    val disabledSummary = stringResource(Res.string.demo_swipe_action_item_disabled_summary)
+    // In a CardListGroup the rows get the COUI dividers, which hide around a row while its menu is out.
+    CardListGroup {
+        rows.forEachIndexed { index, id ->
+            // Key by id so a deleted row's state does not move to its neighbour.
+            item(key = id) {
+                val state = rememberSwipeActionItemState()
+                val actions = when (index % 3) {
+                    0 -> listOf(SwipeAction(label = labels[0], color = COUITheme.colorScheme.primary))
 
-                1 -> listOf(
-                    SwipeAction(label = labels[1], color = COUITheme.colorScheme.primary),
-                    SwipeAction(label = labels[2], color = COUITheme.colorScheme.labelSecondary),
-                )
+                    1 -> listOf(
+                        SwipeAction(label = labels[1], color = COUITheme.colorScheme.primary),
+                        SwipeAction(label = labels[2], color = COUITheme.colorScheme.labelSecondary),
+                    )
 
-                else -> emptyList()
+                    else -> emptyList()
+                }
+                SwipeActionItem(
+                    actions = actions,
+                    onActionClick = { scope.launch { state.close() } },
+                    state = state,
+                    onDelete = { rows.remove(id) },
+                    fastDeleteEnabled = index % 3 == 2,
+                    deleteContentDescription = deleteDescription,
+                ) {
+                    BasicComponent(
+                        modifier = Modifier.background(rowColor),
+                        title = titles[id],
+                        summary = if (index % 3 == 2) overSlideSummary else swipeSummary,
+                    )
+                }
             }
-            SwipeActionItem(
-                actions = actions,
-                onActionClick = { scope.launch { state.close() } },
-                state = state,
-                onDelete = { rows.remove(id) },
-                fastDeleteEnabled = index % 3 == 2,
-                deleteContentDescription = deleteDescription,
-            ) {
+        }
+        if (rows.size < titles.size) {
+            item(key = "restore") {
                 BasicComponent(
-                    modifier = Modifier.background(rowColor),
-                    title = titles[id],
-                    summary = if (index % 3 == 2) overSlideSummary else swipeSummary,
+                    title = restoreTitle,
+                    onClick = {
+                        rows.clear()
+                        rows.addAll(titles.indices.toList())
+                    },
                 )
             }
         }
-    }
-    if (rows.size < titles.size) {
-        BasicComponent(
-            title = stringResource(Res.string.demo_swipe_action_item_restore),
-            onClick = {
-                rows.clear()
-                rows.addAll(titles.indices.toList())
-            },
-        )
-    }
-    SwipeActionItem(
-        actions = emptyList(),
-        onActionClick = {},
-        enabled = false,
-        onDelete = {},
-    ) {
-        BasicComponent(
-            modifier = Modifier.background(rowColor),
-            title = stringResource(Res.string.demo_swipe_action_item_disabled),
-            summary = stringResource(Res.string.demo_swipe_action_item_disabled_summary),
-        )
+        item(key = "disabled") {
+            SwipeActionItem(
+                actions = emptyList(),
+                onActionClick = {},
+                enabled = false,
+                onDelete = {},
+            ) {
+                BasicComponent(
+                    modifier = Modifier.background(rowColor),
+                    title = disabledTitle,
+                    summary = disabledSummary,
+                )
+            }
+        }
     }
 }
 

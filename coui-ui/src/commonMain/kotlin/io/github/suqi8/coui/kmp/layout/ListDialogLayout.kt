@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.layout
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,10 +27,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.node.DelegatableNode
+import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +50,11 @@ import io.github.suqi8.coui.kmp.basic.RadioButton
 import io.github.suqi8.coui.kmp.basic.Text
 import io.github.suqi8.coui.kmp.effect.ContentButtonMaterialType
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
 /**
  * An item of a list, single-choice or multi-choice dialog.
@@ -120,11 +133,14 @@ internal fun ListDialogContentLayout(
         summaryMaxHeight = ListDialogDefaults.SummaryMaxHeight,
         customContent = {
             val material = LocalDialogMaterial.current
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = ListDialogDefaults.ListPanelMarginTop)
-                    .verticalScroll(rememberScrollState()),
+                    // coui_alert_dialog_list_layout: the COUIRecycleListView fades its scrolled edges.
+                    .dialogFadingEdges(scrollState, ListDialogDefaults.ScrollFadeLength)
+                    .verticalScroll(scrollState),
             ) {
                 items.forEachIndexed { index, item ->
                     ListDialogButtonItem(
@@ -271,10 +287,13 @@ internal fun ChoiceDialogContentLayout(
         customContentPaddingBottom = ListDialogDefaults.ChoiceListPaddingBottom,
         summaryMaxHeight = ListDialogDefaults.SummaryMaxHeight,
         customContent = {
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+                    // coui_alert_dialog_list_layout: the COUIRecycleListView fades its scrolled edges.
+                    .dialogFadingEdges(scrollState, ListDialogDefaults.ScrollFadeLength)
+                    .verticalScroll(scrollState),
             ) {
                 items.forEachIndexed { index, item ->
                     ChoiceDialogRow(
@@ -328,29 +347,28 @@ private fun ChoiceDialogRow(
     onClick: () -> Unit,
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
-    val hapticFeedback = LocalHapticFeedback.current
-    val currentHapticFeedback by rememberUpdatedState(hapticFeedback)
+    // The rows' android:listChoiceBackgroundIndicator (coui_list_selector_background).
+    val pressedColor = colors.pressedBackgroundColor.takeOrElse { COUITheme.colorScheme.pressBackground }
+    val indication = remember(pressedColor) { ListDialogChoiceIndication(pressedColor) }
+    // ChoiceListAdapter.getView toggles the row without any haptic feedback (COUICheckBox.setState
+    // plays none either).
     val interactionModifier = if (multiChoice) {
         Modifier.toggleable(
             value = checked,
+            interactionSource = null,
+            indication = indication,
             enabled = item.enabled,
             role = Role.Checkbox,
-            onValueChange = {
-                currentHapticFeedback.performHapticFeedback(
-                    if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff,
-                )
-                currentOnClick()
-            },
+            onValueChange = { currentOnClick() },
         )
     } else {
         Modifier.selectable(
             selected = checked,
+            interactionSource = null,
+            indication = indication,
             enabled = item.enabled,
             role = Role.RadioButton,
-            onClick = {
-                if (!checked) currentHapticFeedback.performHapticFeedback(HapticFeedbackType.ToggleOn)
-                currentOnClick()
-            },
+            onClick = { currentOnClick() },
         )
     }
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -416,12 +434,100 @@ private fun ChoiceDialogRow(
     }
 }
 
+/**
+ * The press feedback of a choice row: its `?android:listChoiceBackgroundIndicator`,
+ * `coui_list_selector_background`, a `StateListDrawable` that fades the
+ * `?couiColorPressBackground` fill in over 180ms (`enterFadeDuration`) and out over 360ms
+ * (`exitFadeDuration`), drawn behind the row content. A tap shorter than the list's pressed state
+ * duration (`ViewConfiguration.getPressedStateDuration`, 64ms, which `AbsListView` keeps a tapped
+ * row pressed for) still lights the row for that long.
+ */
+@Immutable
+private class ListDialogChoiceIndication(
+    private val color: Color,
+) : IndicationNodeFactory {
+    override fun create(interactionSource: InteractionSource): DelegatableNode = ListDialogChoiceIndicationNode(interactionSource, color)
+
+    override fun equals(other: Any?): Boolean = other is ListDialogChoiceIndication && other.color == color
+
+    override fun hashCode(): Int = color.hashCode()
+}
+
+private class ListDialogChoiceIndicationNode(
+    private val interactionSource: InteractionSource,
+    private val color: Color,
+) : Modifier.Node(),
+    DrawModifierNode {
+    private val alpha = Animatable(0f)
+    private var fadeJob: Job? = null
+    private var pressCount = 0
+    private var pressMark: TimeMark? = null
+
+    override fun onAttach() {
+        coroutineScope.launch {
+            interactionSource.interactions.collect { interaction ->
+                when (interaction) {
+                    is PressInteraction.Press -> {
+                        pressCount++
+                        if (pressCount == 1) fadeIn()
+                    }
+
+                    is PressInteraction.Release, is PressInteraction.Cancel -> {
+                        if (pressCount > 0) pressCount--
+                        if (pressCount == 0) fadeOut()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun fadeIn() {
+        pressMark = TimeSource.Monotonic.markNow()
+        fadeJob?.cancel()
+        fadeJob = coroutineScope.launch {
+            alpha.animateTo(1f, tween(CHOICE_ROW_PRESS_FADE_IN_MILLIS, easing = LinearEasing))
+        }
+    }
+
+    private fun fadeOut() {
+        val pressedMillis = pressMark?.elapsedNow()?.inWholeMilliseconds ?: CHOICE_ROW_MIN_PRESSED_MILLIS
+        val fadeInJob = fadeJob
+        fadeJob = coroutineScope.launch {
+            // Let the fade-in run on until the row has looked pressed for the minimum time.
+            if (pressedMillis < CHOICE_ROW_MIN_PRESSED_MILLIS) delay(CHOICE_ROW_MIN_PRESSED_MILLIS - pressedMillis)
+            fadeInJob?.cancel()
+            alpha.animateTo(0f, tween(CHOICE_ROW_PRESS_FADE_OUT_MILLIS, easing = LinearEasing))
+        }
+    }
+
+    override fun ContentDrawScope.draw() {
+        val value = alpha.value
+        if (value > 0f) drawRect(color = color, alpha = value.coerceAtMost(1f))
+        drawContent()
+    }
+}
+
+/** `coui_list_selector_background` `android:enterFadeDuration`. */
+private const val CHOICE_ROW_PRESS_FADE_IN_MILLIS = 180
+
+/** `coui_list_selector_background` `android:exitFadeDuration`. */
+private const val CHOICE_ROW_PRESS_FADE_OUT_MILLIS = 360
+
+/** `ViewConfiguration.getPressedStateDuration` (`PRESSED_STATE_DURATION`). */
+private const val CHOICE_ROW_MIN_PRESSED_MILLIS = 64L
+
 object ListDialogDefaults {
     /**
      * The top margin of the list of a list dialog. COUI `coui_list_dialog_list_panel_margin_top` on
      * the `listPanel` of `coui_center_list_alert_dialog_layout`.
      */
     val ListPanelMarginTop = 16.dp
+
+    /**
+     * The length of the fading edges of the dialog lists. COUI `coui_alert_dialog_list_layout`
+     * (`android:requiresFadingEdge="vertical"`, `coui_full_page_dialog_scroll_fade_length`).
+     */
+    val ScrollFadeLength = 46.dp
 
     /**
      * The max height of the message above a list. COUI
@@ -474,7 +580,8 @@ object ListDialogDefaults {
      * `coui_bottom_alert_dialog_button_text_color_selector` (`?couiColorPrimaryNeutral`), the
      * summaries `coui_bottom_alert_dialog_summary_text_color_selector` /
      * `coui_alert_dialog_summary_item` (`?couiColorSecondNeutral`), both `?couiColorDisabledNeutral`
-     * when disabled; the row dividers `?couiColorDivider`.
+     * when disabled; the row dividers `?couiColorDivider`; a pressed choice row fades in
+     * `?couiColorPressBackground` (`coui_list_selector_background`).
      */
     @Composable
     fun listDialogColors(
@@ -483,17 +590,37 @@ object ListDialogDefaults {
         summaryColor: Color = COUITheme.colorScheme.labelSecondary,
         disabledSummaryColor: Color = COUITheme.colorScheme.disabledNeutral,
         dividerColor: Color = COUITheme.colorScheme.divider,
-    ): ListDialogColors = remember(textColor, disabledTextColor, summaryColor, disabledSummaryColor, dividerColor) {
+        pressedBackgroundColor: Color = COUITheme.colorScheme.pressBackground,
+    ): ListDialogColors = remember(
+        textColor,
+        disabledTextColor,
+        summaryColor,
+        disabledSummaryColor,
+        dividerColor,
+        pressedBackgroundColor,
+    ) {
         ListDialogColors(
             textColor = textColor,
             disabledTextColor = disabledTextColor,
             summaryColor = summaryColor,
             disabledSummaryColor = disabledSummaryColor,
             dividerColor = dividerColor,
+            pressedBackgroundColor = pressedBackgroundColor,
         )
     }
 }
 
+/**
+ * The colors of the list, single-choice and multi-choice dialogs.
+ *
+ * @param textColor The choice row label.
+ * @param disabledTextColor The label of a disabled choice row.
+ * @param summaryColor The item summaries.
+ * @param disabledSummaryColor The summary of a disabled item.
+ * @param dividerColor The dividers between choice rows.
+ * @param pressedBackgroundColor The background a pressed choice row fades in.
+ *   [Color.Unspecified] takes `COUITheme.colorScheme.pressBackground`.
+ */
 @Immutable
 data class ListDialogColors(
     val textColor: Color,
@@ -501,6 +628,7 @@ data class ListDialogColors(
     val summaryColor: Color,
     val disabledSummaryColor: Color,
     val dividerColor: Color,
+    val pressedBackgroundColor: Color = Color.Unspecified,
 ) {
     @Stable
     internal fun textColor(enabled: Boolean): Color = if (enabled) textColor else disabledTextColor

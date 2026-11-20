@@ -36,9 +36,22 @@ Box(Modifier.fillMaxSize()) {
 
 - **布局**：宽度小于 600dp 时两侧留 16dp，小于 840dp 时 24dp，此后 40dp；胶囊在至少 76dp 的高度内垂直居中。两个分组贴两侧（`Spread`）或以 16dp 间距并排居中（`Packed`）；第三个分组居中。
 - **胶囊**：高 44dp，条目间距 4dp，首尾条目外侧各留 6dp 胶囊（单个条目时不留）。图标项 44 x 40dp、图标 24dp；没有图标的条目显示标题（16sp 中黑，宽 52-200dp，两侧内边距 16dp）。
-- **溢出**：每组最多显示六个条目；后面还有条目或放不下时，最后一位换成「更多」项，点击弹出其余条目的菜单。
+- **溢出**：每组最多显示六个条目；后面还有条目或放不下时，最后一位换成「更多」项，点击在胶囊上方 8dp 处弹出其余条目的菜单。
 - **红点**：直径 6dp，圆心距条目右上角各 12dp；禁用的条目不显示红点。
-- **触摸**：每个胶囊整体响应 COUI 按压形变与触摸聚光，条目本身没有按压蒙层。
+- **触摸**：每个胶囊整体响应 COUI 按压形变与触摸聚光，与条目是否启用无关；条目本身没有按压蒙层。只有一个条目的胶囊由材质画成正圆。
+- **条目变化**（`ItemViewAnimatorImpl`）：胶囊显示的条目变化时（增删条目、条目移入或移出溢出项），间距先「呼吸」200ms（胶囊将变宽时收拢 75%，将变窄时张开 75%），随后新条目绕中心缩放淡入、离开的条目缩放淡出（response 0.5 / bounce 0.4），胶囊宽度随之变化；动画中途撤销会倒放回去。图标、标题、描述无法区分条目时请提供 `key`。
+- **分组**：新出现的分组缩放进入（response 0.5 / bounce 0.4），移除的分组在原位缩放消失（response 0.25 / bounce 0），需要挪位的胶囊以弹簧移到新位置（response 0.5 / bounce 0.4）。工具栏宽度变化时直接到位。
+
+```kotlin
+var editing by remember { mutableStateOf(false) }
+FloatingToolbar(
+    items = buildList {
+        add(FloatingToolbarItem(onClick = { /* 分享 */ }, icon = COUIIcons.Share, title = "分享", key = "share"))
+        if (editing) add(FloatingToolbarItem(onClick = { /* 删除 */ }, icon = COUIIcons.Delete, title = "删除", key = "delete"))
+        add(FloatingToolbarItem(onClick = { editing = !editing }, title = if (editing) "完成" else "编辑", group = 1, key = "mode"))
+    },
+)
+```
 
 ## 内容胶囊
 
@@ -91,6 +104,7 @@ Scaffold(
 | group              | Int          | 条目所属分组（胶囊），按数值排序               | 0      |
 | enabled            | Boolean      | 是否启用                                       | true   |
 | showRedDot         | Boolean      | 是否显示红点                                   | false  |
+| key                | Any?         | 条目身份（`setId`），工具栏据此为增删的条目播放动画，组内唯一；为空时按图标、标题与描述区分 | null |
 
 ### FloatingToolbar（内容胶囊）属性
 

@@ -1,6 +1,7 @@
 // Copyright 2026, compose-coui-ui contributors
 // SPDX-License-Identifier: Apache-2.0
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -63,23 +64,30 @@ fun ContextMenuDemo() {
                         Card(modifier = Modifier.padding(horizontal = 16.dp)) {
                             CardListGroup {
                                 item {
+                                    // The row shares its interaction source, so it keeps its hover
+                                    // layer while the menu is showing.
+                                    val reportRow = remember { MutableInteractionSource() }
                                     OverlayContextMenu(
                                         entries = entries,
+                                        anchorInteractionSource = reportRow,
                                         onExpandedChange = { menuOpen = it },
                                     ) {
                                         BasicComponent(
                                             title = "Report.pdf",
                                             summary = "Long press or right click · last action: $lastAction",
                                             onClick = {},
+                                            interactionSource = reportRow,
                                         )
                                     }
                                 }
                                 item {
-                                    WindowContextMenu(entries = entries) {
+                                    val photoRow = remember { MutableInteractionSource() }
+                                    WindowContextMenu(entries = entries, anchorInteractionSource = photoRow) {
                                         BasicComponent(
                                             title = "Photo.jpg",
                                             summary = "Window-layer menu at the pointer",
                                             onClick = {},
+                                            interactionSource = photoRow,
                                         )
                                     }
                                 }

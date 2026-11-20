@@ -30,9 +30,9 @@ SidePaneLayout(
 
 - **Split mode** (`COUISidePaneUtils.isSplitMode`): when the layout is at least 600dp wide in a window at least 480dp tall, the pane (224dp, `coui_sliding_pane_width`) and the content sit side by side and the content width follows the pane: `width - paneWidth * progress`.
 - **Narrow layouts**: the content keeps the full width and is pushed aside by the pane. With `coverStyle = true` the pane covers the content instead; a `coui_color_mask` mask fades in with the pane over the content, and touching the content closes the pane (`touchContentEnabled`).
-- **Animation**: 483ms on `COUIMoveEaseInterpolator` (cubic-bezier 0.3, 0, 0.1, 1). An interrupted move only takes the remaining share of the duration.
+- **Animation**: 483ms on `COUIMoveEaseInterpolator` (cubic-bezier 0.3, 0, 0.1, 1) for both the pane slide and the content resize. An interrupted move continues from where the pane is and only takes the remaining share of the duration.
 - **Toggle icon**: 48dp, 45dp from the top and 12dp from the start edge (`coui_sliding_icon_layout`). Leave 72dp at the start of the content's title row (`coui_side_pane_layout_toolbar_margin_start`) so the icon does not overlap it.
-- `alwaysShowMask = true` draws the mask on the content in every mode and swallows touches on it while the pane is open, without closing the pane.
+- `alwaysShowMask = true` draws the mask on the content in every mode and swallows touches on it while the pane is open, without closing the pane; each swallowed touch calls `onMaskClick` (`setOnMaskClickListener`), where you can close the pane.
 
 A common pattern is to cover on narrow layouts only:
 
@@ -63,6 +63,7 @@ BoxWithConstraints {
 | alwaysShowMask      | Boolean                | Mask the content (and swallow its touches) while the pane is open  | false                            | No       |
 | touchContentEnabled | Boolean                | In cover style, touching the content closes the pane               | true                             | No       |
 | showToggleIcon      | Boolean                | Show the toggle icon                                               | true                             | No       |
+| onMaskClick         | (() -> Unit)?          | Called when the mask swallows a touch on the content (`alwaysShowMask`) | null                        | No       |
 | paneWidth           | Dp                     | Pane width                                                         | SidePaneLayoutDefaults.PaneWidth | No       |
 | maskColor           | Color                  | Mask color at full opening                                         | SidePaneLayoutDefaults.maskColor | No       |
 | toggleIconColor     | Color                  | Toggle icon tint                                                   | colorScheme.labelPrimary         | No       |
@@ -101,3 +102,4 @@ BoxWithConstraints {
 
 - The pane cannot be dragged: `COUISidePaneLayout` only drags it with a `ViewDragHelper` edge drag gated by its slideable flag, which Compose apps can do with their own gestures.
 - The split-mode check uses the layout width (COUI reads the activity's `screenWidthDp`) and ignores the multi-window exception, so the layout also adapts inside a desktop window or a docs iframe.
+- Reversing a move mid-way continues smoothly from the current position. `COUISidePaneLayout` restarts its animators at `setCurrentFraction(slideOffset)`, reading the eased offset as a time fraction, so its pane jumps when a move is reversed.

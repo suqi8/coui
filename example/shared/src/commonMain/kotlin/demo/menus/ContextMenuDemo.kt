@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package demo.menus
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -84,13 +85,26 @@ internal val ContextMenuDemo = Demo(
             val windowSummary = stringResource(Res.string.demo_context_menu_window_summary)
             CardListGroup {
                 item {
-                    OverlayContextMenu(entries = entries) {
-                        BasicComponent(title = overlayTitle, summary = lastActionText, onClick = {})
+                    // Sharing the row's interaction source keeps its hover layer on while the menu shows.
+                    val overlayRow = remember { MutableInteractionSource() }
+                    OverlayContextMenu(entries = entries, anchorInteractionSource = overlayRow) {
+                        BasicComponent(
+                            title = overlayTitle,
+                            summary = lastActionText,
+                            onClick = {},
+                            interactionSource = overlayRow,
+                        )
                     }
                 }
                 item {
-                    WindowContextMenu(entries = entries) {
-                        BasicComponent(title = windowTitle, summary = windowSummary, onClick = {})
+                    val windowRow = remember { MutableInteractionSource() }
+                    WindowContextMenu(entries = entries, anchorInteractionSource = windowRow) {
+                        BasicComponent(
+                            title = windowTitle,
+                            summary = windowSummary,
+                            onClick = {},
+                            interactionSource = windowRow,
+                        )
                     }
                 }
             }
@@ -132,6 +146,8 @@ private fun ColumnScope.ContextMenuPlayground() {
     )
     val title = stringResource(Res.string.demo_context_menu_hint)
     val summary = lastActionSummary(lastAction)
+    // The row shares its interaction source with the menu, which locks its hover layer while open.
+    val rowInteraction = remember { MutableInteractionSource() }
     PlaygroundPreview(contentPadding = PaddingValues(0.dp)) {
         CompositionLocalProvider(LocalCOUIMaterialEffectEnabled provides material) {
             if (hostIndex == 0) {
@@ -140,8 +156,15 @@ private fun ColumnScope.ContextMenuPlayground() {
                     enabled = enabled,
                     collapseOnSelection = collapse,
                     hapticFeedbackEnabled = haptic,
+                    anchorInteractionSource = rowInteraction,
                 ) {
-                    BasicComponent(title = title, summary = summary, enabled = enabled, onClick = {})
+                    BasicComponent(
+                        title = title,
+                        summary = summary,
+                        enabled = enabled,
+                        onClick = {},
+                        interactionSource = rowInteraction,
+                    )
                 }
             } else {
                 WindowContextMenu(
@@ -149,8 +172,15 @@ private fun ColumnScope.ContextMenuPlayground() {
                     enabled = enabled,
                     collapseOnSelection = collapse,
                     hapticFeedbackEnabled = haptic,
+                    anchorInteractionSource = rowInteraction,
                 ) {
-                    BasicComponent(title = title, summary = summary, enabled = enabled, onClick = {})
+                    BasicComponent(
+                        title = title,
+                        summary = summary,
+                        enabled = enabled,
+                        onClick = {},
+                        interactionSource = rowInteraction,
+                    )
                 }
             }
         }

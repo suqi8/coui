@@ -39,7 +39,9 @@ Card(modifier = Modifier.padding(horizontal = 16.dp)) {
   只为偏好项画线一致。
 - 起点对齐该行标题（有起始图标时越过图标），终点距卡片边缘 16dp（`DividerDefaults.CardInset`）。颜色
   `DividerDefaults.DividerColor`，粗细 `DividerDefaults.Thickness` 取整到像素、至少 1px。
-- 该行或下一行 `selected` 时隐藏；按压不隐藏。
+- 该行或下一行 `selected`，或展开了 [SwipeActionItem](./swipeactionitem.md) 的菜单时隐藏（`COUISlideView.drawDivider`）。
+- 按压某一行时，其上下两条分隔线按 response 0.15 / bounce 0 的弹簧淡出，松手后再淡入
+  （`COUIRecyclerDividerManager`，`COUIRecyclerView` 默认开启）。禁用的行不响应，`holdDownState` 的行保留分隔线。
 
 分组内的行之间不要再手工插入 `HorizontalDivider`。
 

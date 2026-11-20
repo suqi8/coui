@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +54,8 @@ import io.github.suqi8.coui.kmp.squircle.drawSquircleRect
 import io.github.suqi8.coui.kmp.squircle.isSquircleEnabled
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
 import io.github.suqi8.coui.kmp.theme.COUITheme
+import io.github.suqi8.coui.kmp.utils.CouiHapticEffect
+import io.github.suqi8.coui.kmp.utils.rememberCouiHaptic
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -104,8 +108,9 @@ enum class InstallLoadStyle {
  *
  * Pressing dims the fills (HSL lightness x 0.8), insets the capsule by 5% of its width and height on
  * every side and shrinks the label to 92%, over 200ms on press and 340ms on release with the move
- * ease curve. This feedback is specific to this control: it uses neither the COUI 17 material nor
- * the generic press-scale springs.
+ * ease curve. The inset is at least 0.5% from the moment the finger lands, so the press shows at
+ * once. This feedback is specific to this control: it uses neither the COUI 17 material nor the
+ * generic press-scale springs.
  *
  * @param text The label of the [InstallLoadProgress]; the content description of the
  *   [InstallLoadStyle.Circle] style, which draws no label.
@@ -117,6 +122,8 @@ enum class InstallLoadStyle {
  *   [InstallLoadState.Paused] states.
  * @param enabled Whether the [InstallLoadProgress] is enabled. A disabled button draws its fills in
  *   [InstallLoadProgressColors.disabledColor] and keeps its label colors, like the original.
+ * @param hapticFeedbackEnabled Whether pressing and releasing the button plays the COUI tap haptic
+ *   (`loadingButtonNeedVibrate` / `setIsNeedVibrate`, off by default like the original).
  * @param style The [InstallLoadStyle] of the [InstallLoadProgress].
  * @param colors The [InstallLoadProgressColors] of the [InstallLoadProgress].
  * @param textStyle The [TextStyle] of the label.
@@ -130,6 +137,7 @@ fun InstallLoadProgress(
     state: InstallLoadState = InstallLoadState.Idle,
     progress: Float = 0f,
     enabled: Boolean = true,
+    hapticFeedbackEnabled: Boolean = false,
     style: InstallLoadStyle = InstallLoadStyle.Small,
     colors: InstallLoadProgressColors = InstallLoadProgressDefaults.installLoadProgressColors(),
     textStyle: TextStyle = COUITheme.textStyles.buttonM,
@@ -145,6 +153,26 @@ fun InstallLoadProgress(
             pressFraction.animateTo(1f, tween(PressDurationMillis, easing = MoveEase))
         } else if (pressFraction.value != 0f) {
             pressFraction.animateTo(0f, tween(ReleaseDurationMillis, easing = MoveEase))
+        }
+    }
+    // performTouchStartAnim's update listener keeps the inset at DEFAULT_MIN_PRESS_FEEDBACK (0.5% of
+    // the size, a tenth of the full 5%) or more while the finger is down; the release runs unclamped.
+    val insetFraction: () -> Float = {
+        val fraction = pressFraction.value
+        if (isPressed && enabled) max(fraction, MinPressInsetFraction) else fraction
+    }
+    if (hapticFeedbackEnabled) {
+        val performHaptic by rememberUpdatedState(rememberCouiHaptic())
+        LaunchedEffect(source) {
+            // COUIInstallLoadProgress.onTouchEvent: performHapticFeedback(302) on ACTION_DOWN, and
+            // again from performTouchEndAnim on ACTION_UP and ACTION_CANCEL.
+            source.interactions.collect { interaction ->
+                when (interaction) {
+                    is PressInteraction.Press, is PressInteraction.Release, is PressInteraction.Cancel -> {
+                        performHaptic(CouiHapticEffect.Switch)
+                    }
+                }
+            }
         }
     }
 
@@ -190,7 +218,8 @@ fun InstallLoadProgress(
         val squircleEnabled = isSquircleEnabled()
         Canvas(modifier = Modifier.matchParentSize()) {
             val fraction = pressFraction.value
-            val inset = Offset(size.width * PressInsetFraction * fraction, size.height * PressInsetFraction * fraction)
+            val insetScale = PressInsetFraction * insetFraction()
+            val inset = Offset(size.width * insetScale, size.height * insetScale)
             val brightness = 1f - (1f - InstallLoadProgressDefaults.PressedBrightness) * fraction
             val progressFill = colors.fillColor(colors.progressColor, enabled, brightness)
             val trackFill = colors.fillColor(colors.trackColor, enabled, brightness)
@@ -224,7 +253,7 @@ fun InstallLoadProgress(
                 modifier = Modifier
                     .matchParentSize()
                     .drawWithContent {
-                        val inset = size.width * PressInsetFraction * pressFraction.value
+                        val inset = size.width * PressInsetFraction * insetFraction()
                         val (left, right) = progressClip(inset, visualProgress, isRtl)
                         clipRect(left = left, right = right) {
                             this@drawWithContent.drawContent()
@@ -262,13 +291,19 @@ private fun InstallLoadCircle(
     modifier: Modifier = Modifier,
 ) {
     val icon = if (state == InstallLoadState.Loading) CircleIcon.Pause else CircleIcon.Arrow
+    // The icon fading in and the one fading out; iconFade is the alpha of the former.
+    var currentIcon by remember { mutableStateOf(icon) }
     var previousIcon by remember { mutableStateOf(icon) }
     val iconFade = remember { Animatable(1f) }
     LaunchedEffect(icon) {
-        if (icon == previousIcon) return@LaunchedEffect
-        iconFade.snapTo(0f)
+        if (icon == currentIcon) return@LaunchedEffect
+        // Turning back to the icon that is still fading out continues from its current alpha
+        // instead of popping it back to full.
+        val start = if (icon == previousIcon) 1f - iconFade.value else 0f
+        previousIcon = currentIcon
+        currentIcon = icon
+        iconFade.snapTo(start)
         iconFade.animateTo(1f, tween(ReleaseDurationMillis, easing = MoveEase))
-        previousIcon = icon
     }
     // onDrawCircle: the accent fill except when idle, which uses the tinted fill.
     val accentFill = state != InstallLoadState.Idle
@@ -306,7 +341,7 @@ private fun InstallLoadCircle(
         if (fade < 1f) {
             drawCircleIcon(if (previousIcon == CircleIcon.Pause) pausePath else arrowPath, iconColor, 1f - fade)
         }
-        drawCircleIcon(if (icon == CircleIcon.Pause) pausePath else arrowPath, iconColor, fade)
+        drawCircleIcon(if (currentIcon == CircleIcon.Pause) pausePath else arrowPath, iconColor, fade)
     }
 }
 
@@ -384,6 +419,12 @@ private val ReleaseDurationMillis = 340
 
 /** COUIInstallLoadProgress DEFAULT_SCALE_PARAMETER: the press inset per side, as a fraction of the size. */
 private val PressInsetFraction = 0.05f
+
+/**
+ * COUIInstallLoadProgress DEFAULT_MIN_PRESS_FEEDBACK (0.005 of the size) as a fraction of the full
+ * [PressInsetFraction] inset.
+ */
+private val MinPressInsetFraction = 0.005f / 0.05f
 
 /** COUIInstallLoadProgress DEFAULT_NARROW_FINAL_VALUE: the pressed label scale. */
 private val PressedTextScale = 0.92f

@@ -71,6 +71,8 @@ Slider(
 
 `Slider`, `VerticalSlider` and `IntentSlider` vibrate like COUI 17 `COUISeekBar` (`VibrationFeedbackHandler`, on by default) whenever the integer progress changes: at either end (`EDGE_SHORT_VIBRATE`, 306), for every 1% a finger drags a continuous slider (`STEPPING_SHORT_VIBRATE`, 305) and for every section of a stepped one (`GRANULAR_SHORT_VIBRATE_SYNC`, 308). This is `SliderHapticEffect.Step`, their default. Pass `Edge` for the ends only or `None` to turn it off. See [SliderHapticEffect](../components/slider#sliderhapticeffect) for details.
 
+Like COUI, only a finger dragging the slider and a tap on a stepped slider vibrate: a tap or a fling of a continuous slider and the snap of a stepped slider after a release are silent, even when they land on an end (`startClickTransitionAnim`, `onPhysicsFlingUpdate` and `snapToNearestSection` run no feedback).
+
 ```kotlin
 var value by remember { mutableFloatStateOf(0.5f) }
 
@@ -88,8 +90,8 @@ Slider(
 - On touch down the track grows from 20dp to 28dp and the thumb from 6dp to 8dp with a slight bounce (springs of response 0.5; the thumb grows with bounce 0.3). A release before the track has grown halfway waits until it has, so a quick tap still shows the feedback.
 - A tap springs the progress to the tapped position (response 0.3); while dragging the progress follows the finger (response 0.15).
 - A fast release (at least 100px/s) keeps the progress gliding, slowed by a linear damping of 15/s. Sliders with `steps` do not fling, as `COUISectionSeekBar`.
-- Running into the maximum, by dragging or by a fling, flashes a white gradient over the progress (`GlitterEffectRenderer`). A fling stops at either end without overshooting, as the `FlingBehavior` frame spring is clamped to the track (`setFlingScale`).
-- With `steps` the slider is a `COUISectionSeekBar`: the section marks are always drawn, a drag anchors on the section it started in and the thumb follows 60% of the finger within a section, each new section is reached with a 100ms snap on (0, 0, 0.25, 1), a release settles on a section in 150ms and a tap moves there in 200ms (`SectionAnimationHandler`).
+- Running into the maximum, by dragging or by a fling, flashes a white gradient over the progress (`GlitterEffectRenderer`). The gradient stays laid over the progress as it was at the end, so backing off right away uncovers its dimmer part. A fling stops at either end without overshooting, as the `FlingBehavior` frame spring is clamped to the track (`setFlingScale`).
+- With `steps` the slider is a `COUISectionSeekBar`: the section marks are always drawn (except a mark the thumb covers whole, so none shows through the pressed glass thumb), a drag anchors on the section it started in and the thumb follows 60% of the finger within a section, each new section is reached with a 100ms snap on (0, 0, 0.25, 1), a release settles on a section in 150ms and a tap moves there in 200ms (`SectionAnimationHandler`).
 - With `startFromMiddle` (`couiSeekBarStartMiddle`, continuous sliders only) the progress grows from the middle of the track to the thumb, the middle value holds the thumb until the finger has moved 20px, and running into either end flashes the glitter.
 - While dragging, the whole slider follows the finger horizontally on the COUI 17 touch-motion rubber band (`TouchMotionEffectRenderer`: `(1 - 1 / (0.05·|dx| / 28dp + 1)) · 28dp`) and springs back on release (response 0.45, bounce 0.65).
 - The layout is 1.4x of the track height (28dp by default, `COUISeekBarCore.onMeasure`), so the enlarged track stays inside the bounds; touches register within Compose's minimum touch target (48dp on Android) around it.

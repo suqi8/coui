@@ -20,11 +20,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -368,8 +368,6 @@ internal fun DialogContent(
 ) {
     val resolvedCornerRadius = cornerRadius ?: DialogDefaults.CornerRadius
     val density = LocalDensity.current
-    val windowInfo = LocalWindowInfo.current
-    val windowHeight = windowInfo.containerDpSize.height
     val isCentered = forceCentered || (largeScreen ?: DialogDefaults.isLargeScreen())
     val contentAlignment = remember(isCentered) {
         if (isCentered) Alignment.Center else Alignment.BottomCenter
@@ -393,6 +391,11 @@ internal fun DialogContent(
     } else {
         dialogBottomGap(navigationBar = navigationBarBottom, margin = outsideMargin.height)
     }
+    // The part of the gap above the navigation bar: COUIAlertDialogMaxLinearLayout.updateDialogBottomMargin
+    // derives the panel inset from the navigation bar alone and the adjustResize window ends at
+    // the higher of the navigation bar and the IME, so an open keyboard keeps only this inset
+    // between itself and the panel.
+    val bottomInsetAboveBars = (bottomGap - navigationBarBottom).coerceAtLeast(0.dp)
     // Predictive-back translation pad (small-screen only). Pre-converted to px so the per-frame
     // graphicsLayer block does not call asPaddingValues() / toPx() each invalidation.
     val captionBarBottom = WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
@@ -402,13 +405,10 @@ internal fun DialogContent(
 
     val contentModifier = modifier
         .widthIn(max = maxWidth)
-        .heightIn(
-            max = if (isCentered) {
-                minOf(windowHeight * (2f / 3f), DialogDefaults.MaxHeight)
-            } else {
-                DialogDefaults.MaxHeight
-            },
-        )
+        // COUIAlertDialogMaxLinearLayout.resolveAvailableHeight caps every tier, the centered one
+        // included, at the visible window height and coui_dialog_max_height; the window bounds
+        // come from the paddings of the box below.
+        .heightIn(max = DialogDefaults.MaxHeight)
         .onGloballyPositioned { coordinates ->
             dialogHeightPx.intValue = coordinates.size.height
         }
@@ -450,8 +450,11 @@ internal fun DialogContent(
             .then(
                 if (defaultWindowInsetsPadding) {
                     Modifier
-                        .imePadding()
-                        // The bottom navigation inset is folded into the bottom gap below.
+                        // The adjustResize dialog window ends above the higher of the IME and the
+                        // navigation bar; the panel inset on top of it is added below.
+                        .windowInsetsPadding(
+                            WindowInsets.ime.union(WindowInsets.navigationBars).only(WindowInsetsSides.Bottom),
+                        )
                         .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
                         .captionBarPadding()
                 } else {
@@ -479,67 +482,101 @@ internal fun DialogContent(
             .padding(horizontal = outsideMargin.width)
             .padding(
                 top = calculatedTopInset,
-                bottom = if (defaultWindowInsetsPadding) bottomGap else outsideMargin.height,
+                bottom = if (defaultWindowInsetsPadding) bottomInsetAboveBars else outsideMargin.height,
             ),
     ) {
         Column(
             modifier = contentModifier.align(contentAlignment),
         ) {
             val summaryMultiline = remember { mutableStateOf(false) }
-            title?.let {
-                DialogTitle(
-                    text = it,
-                    color = titleColor,
-                    modifier = Modifier
-                        .padding(horizontal = insideMargin.width)
-                        .padding(
-                            top = insideMargin.height,
-                            // COUIAlertDialogBuilder.initContentSpacing: a dialog with no message,
-                            // custom view or list adds coui_alert_dialog_scroll_padding_bottom_message
-                            // below the title.
-                            bottom = if (summary == null && customContent == null) {
-                                TitleMarginBottom + MessagePaddingBottom
-                            } else {
-                                TitleMarginBottom
-                            },
-                        ),
-                )
+            // COUIAlertDialogBuilder.initContentSpacing: the message ends 16dp above the button bar,
+            // 4dp once a custom view or a list follows.
+            val summaryPaddingBottom = if (customContent != null) {
+                MessagePaddingBottomWithCustomContent
+            } else {
+                MessagePaddingBottom
             }
-            summary?.let {
-                // COUI keeps the message in a COUIMaxHeightNestedScrollView inside the weighted
-                // contentPanel, so a long message scrolls while the button bar stays in view.
-                Box(
+            if (title != null && summary != null && !summaryMaxHeight.isSpecified) {
+                // COUIAlertDialogMaxLinearLayout.onMeasure (mHasMessageMerge): once the title and the
+                // message outgrow the panel, COUI moves the message into the title's scroll view, so
+                // both scroll as one block (title margins and message paddings included) under the
+                // 32dp fading edges while the button bar stays put. Merging up front is the same
+                // layout whenever everything fits.
+                val scrollState = rememberScrollState()
+                Column(
                     modifier = Modifier
                         .weight(1f, fill = false)
-                        .then(
-                            if (summaryMaxHeight.isSpecified) Modifier.heightIn(max = summaryMaxHeight) else Modifier,
-                        )
-                        .verticalScroll(rememberScrollState()),
+                        .dialogFadingEdges(scrollState, DialogDefaults.ScrollFadeLength)
+                        .verticalScroll(scrollState)
+                        .padding(top = insideMargin.height, bottom = summaryPaddingBottom),
                 ) {
-                    Text(
+                    DialogTitleText(
+                        text = title,
+                        color = titleColor,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = insideMargin.width)
-                            // COUIAlertDialogMessageScrollViewStyle: 0dp above, 16dp below; 4dp below
-                            // once a custom view or a list follows (initContentSpacing). With no
+                            // The merged title keeps its template's bottom margin above the message
+                            // (plus the message's own top padding).
+                            .padding(bottom = TitleMarginBottom + MessagePaddingTop),
+                    )
+                    DialogSummaryText(
+                        text = summary,
+                        color = summaryColor,
+                        multiline = summaryMultiline.value,
+                        onMultilineChange = { summaryMultiline.value = it },
+                        modifier = Modifier.padding(horizontal = insideMargin.width),
+                    )
+                }
+            } else {
+                title?.let {
+                    DialogTitle(
+                        text = it,
+                        color = titleColor,
+                        modifier = Modifier
+                            .padding(horizontal = insideMargin.width)
+                            .padding(
+                                top = insideMargin.height,
+                                // COUIAlertDialogBuilder.initContentSpacing: a dialog with no message,
+                                // custom view or list adds coui_alert_dialog_scroll_padding_bottom_message
+                                // below the title.
+                                bottom = if (summary == null && customContent == null) {
+                                    TitleMarginBottom + MessagePaddingBottom
+                                } else {
+                                    TitleMarginBottom
+                                },
+                            ),
+                    )
+                }
+                summary?.let {
+                    // COUI keeps the message in a COUIMaxHeightNestedScrollView inside the weighted
+                    // contentPanel, so a long message scrolls while the button bar stays in view. The
+                    // paddings belong to the scroll view (COUIAlertDialogMessageScrollViewStyle), so
+                    // the text scrolls inside them and fades out at their inner edges.
+                    val scrollState = rememberScrollState()
+                    Box(
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .then(
+                                if (summaryMaxHeight.isSpecified) Modifier.heightIn(max = summaryMaxHeight) else Modifier,
+                            )
+                            // COUIAlertDialogMessageScrollViewStyle: 0dp above, 16dp below. With no
                             // title the message takes the title's top margin instead.
                             .padding(
                                 top = if (title == null) insideMargin.height else MessagePaddingTop,
-                                bottom = if (customContent != null) {
-                                    MessagePaddingBottomWithCustomContent
-                                } else {
-                                    MessagePaddingBottom
-                                },
-                            ),
-                        text = it,
-                        // COUIAlertDialogMessageStyle: couiTextBodyS (13sp).
-                        style = COUITheme.textStyles.bodyS,
-                        // COUIAlertDialogMessageView centers a single-line message and start-aligns
-                        // once it wraps.
-                        textAlign = if (summaryMultiline.value) TextAlign.Start else TextAlign.Center,
-                        color = summaryColor,
-                        onTextLayout = { summaryMultiline.value = it.lineCount > 1 },
-                    )
+                                bottom = summaryPaddingBottom,
+                            )
+                            .dialogFadingEdges(scrollState, DialogDefaults.ScrollFadeLength)
+                            .verticalScroll(scrollState),
+                    ) {
+                        DialogSummaryText(
+                            text = it,
+                            color = summaryColor,
+                            multiline = summaryMultiline.value,
+                            onMultilineChange = { multiline -> summaryMultiline.value = multiline },
+                            modifier = Modifier.padding(horizontal = insideMargin.width),
+                        )
+                    }
                 }
             }
             customContent?.let {
@@ -562,7 +599,8 @@ internal fun DialogContent(
 /**
  * The COUI dialog title (`COUIDialogTitle` inside the `alert_title_scroll_view`
  * `COUIMaxHeightScrollView`): centered `couiTextHeadlineS` text that scrolls once it outgrows
- * [DialogDefaults.titleMaxHeight].
+ * [DialogDefaults.titleMaxHeight], fading out at the scrolled edges
+ * (`COUIAlertDialogTitleScrollViewStyle`, `center_dialog_scroll_fading_edge_length`).
  */
 @Composable
 internal fun DialogTitle(
@@ -570,24 +608,60 @@ internal fun DialogTitle(
     color: Color,
     modifier: Modifier = Modifier,
 ) {
+    val scrollState = rememberScrollState()
     Box(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(max = DialogDefaults.titleMaxHeight())
-            .verticalScroll(rememberScrollState()),
+            .dialogFadingEdges(scrollState, DialogDefaults.ScrollFadeLength)
+            .verticalScroll(scrollState),
     ) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = text,
-            // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp). Its
-            // sans-serif-semibold family is overridden by the inherited
-            // android:textFontWeight 550.
-            style = COUITheme.textStyles.headlineS,
-            fontWeight = TitleFontWeight,
-            textAlign = TextAlign.Center,
-            color = color,
-        )
+        DialogTitleText(text = text, color = color, modifier = Modifier.fillMaxWidth())
     }
+}
+
+/** The text of [DialogTitle], without its scroll view. */
+@Composable
+internal fun DialogTitleText(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        // COUIDialogTextAppearance.Title: couiTextHeadlineS (18sp). Its
+        // sans-serif-semibold family is overridden by the inherited
+        // android:textFontWeight 550.
+        style = COUITheme.textStyles.headlineS,
+        fontWeight = TitleFontWeight,
+        textAlign = TextAlign.Center,
+        color = color,
+    )
+}
+
+/**
+ * The COUI dialog message (`COUIAlertDialogMessageView` with `COUIAlertDialogMessageStyle`):
+ * `couiTextBodyS` text, centered while it fits one line and start-aligned once it wraps.
+ */
+@Composable
+private fun DialogSummaryText(
+    text: String,
+    color: Color,
+    multiline: Boolean,
+    onMultilineChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        modifier = modifier.fillMaxWidth(),
+        text = text,
+        // COUIAlertDialogMessageStyle: couiTextBodyS (13sp).
+        style = COUITheme.textStyles.bodyS,
+        // COUIAlertDialogMessageView centers a single-line message and start-aligns once it wraps.
+        textAlign = if (multiline) TextAlign.Start else TextAlign.Center,
+        color = color,
+        onTextLayout = { onMultilineChange(it.lineCount > 1) },
+    )
 }
 
 object DialogDefaults {
@@ -638,6 +712,13 @@ object DialogDefaults {
      * `coui_center_alert_dialog_layout`.
      */
     val CustomContentPaddingBottom = 8.dp
+
+    /**
+     * The length of the fading edges of the title and message scroll views. COUI
+     * `center_dialog_scroll_fading_edge_length` (`COUIAlertDialogTitleScrollViewStyle`,
+     * `COUIAlertDialogMessageScrollViewStyle`).
+     */
+    val ScrollFadeLength = 32.dp
 
     /**
      * The default color of the title.

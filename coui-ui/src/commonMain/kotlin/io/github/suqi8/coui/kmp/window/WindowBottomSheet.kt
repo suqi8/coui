@@ -57,6 +57,8 @@ import io.github.suqi8.coui.kmp.utils.platformDialogProperties
  * @param showInMaxHeight Whether the panel takes the maximum height instead of wrapping its content
  *   (`setIsShowInMaxHeight`). The content then fills the space below the title.
  * @param allowDismiss Whether to allow dismissing the sheet via drag, back gesture or outside taps.
+ *   When false, a drag down follows the finger only until the 82dp peek height is left and the panel
+ *   then rests collapsed or springs back, as COUI does for a non-cancelable panel.
  * @param dismissOnClickOutside Whether tapping outside the panel dismisses it
  *   (`setCanceledOnTouchOutside`). Only applies while [allowDismiss] is true.
  * @param draggable Whether the panel follows drag gestures (`setDraggable`).

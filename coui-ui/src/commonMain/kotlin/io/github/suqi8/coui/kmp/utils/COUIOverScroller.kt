@@ -12,6 +12,7 @@ import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sinh
 import kotlin.math.sqrt
@@ -58,6 +59,34 @@ internal object COUIPhysicalAnimation {
 
     /** `OVERFLING_MAX_DISTANCE_SCREEN_FACTOR`. */
     private const val OVERFLING_MAX_DISTANCE_SCREEN_FACTOR = 0.3731f
+}
+
+/**
+ * What a release does with an overscroll, after `COUIRecyclerView.onTouchEvent` (`ACTION_UP`
+ * while overscrolling) and `dispatchTouchEvent`:
+ *
+ * - a fling faster than [FLING_THRESHOLD] back towards the content is an
+ *   `performOverScrollingReverseFling`: the overscroll flings back through the edge and the
+ *   content takes over the leftover speed ([COUIOverScrollAxis.flingBack]);
+ * - a fling faster than [FLING_THRESHOLD] further out sets the scroller velocity
+ *   (`setCurrVelocityY`) before the spring-back, so the content runs on past its position first;
+ * - anything slower springs back from rest (`performSpringBack`) and the content does not fling.
+ */
+internal object COUIOverScrollRelease {
+    /** `COUIRecyclerView.FLING_SCROLL_THRESHOLD_WHILE_OVER_SCROLLING`, px/s. */
+    const val FLING_THRESHOLD = 6000f
+
+    /**
+     * `COUIRecyclerView.isClickEvent` `OVER_SCROLL_TOUCH_OFFSET_THRESHOLD`, px: a release that
+     * moved less than this is a click and does not vibrate.
+     */
+    const val CLICK_OFFSET_THRESHOLD = 10f
+
+    /** Whether a release of [velocity] px/s flings an overscroll of [offset] px back into the content. */
+    fun isReverseFling(offset: Float, velocity: Float): Boolean = offset != 0f && abs(velocity) > FLING_THRESHOLD && sign(velocity) != sign(offset)
+
+    /** The speed a release of [velocity] px/s starts the spring-back of an overscroll of [offset] px with. */
+    fun springBackVelocity(offset: Float, velocity: Float): Float = if (abs(velocity) > FLING_THRESHOLD && sign(velocity) == sign(offset)) velocity else 0f
 }
 
 /**
@@ -128,11 +157,15 @@ internal class COUIOverScrollAxis(
     }
 
     /**
-     * `SpringOverScroller.springBack` (no [velocity]) or `notifyVerticalEdgeReached` (a fling
-     * reaching the edge at [velocity] px/s): runs the RK4 spring until the content rests at the
-     * edge. With [overFling] the spring starts at the edge and its position is shown through
-     * [COUIPhysicalAnimation.overFlingDisplayDistance] of [screenSize], as `onOverScrolled` does
-     * while flinging.
+     * `SpringOverScroller.springBack` (a release, from rest or carrying [velocity] px/s) or
+     * `notifyVerticalEdgeReached` (a fling reaching the edge at [velocity] px/s): runs the RK4
+     * spring until the content rests at the edge. With [overFling] the spring starts at the edge
+     * and its position is shown through [COUIPhysicalAnimation.overFlingDisplayDistance] of
+     * [screenSize], as `onOverScrolled` does while flinging.
+     *
+     * The first frame already steps the spring (by the scroller's minimum frame interval, as
+     * `calculateRefreshTime` does for the time since the release), so a fling that reaches the
+     * edge runs on past it without stopping there for a frame.
      */
     suspend fun springBack(velocity: Float, overFling: Boolean, screenSize: Float) {
         val start = if (overFling) 0f else offset
@@ -154,13 +187,9 @@ internal class COUIOverScrollAxis(
         var running = true
         while (running && currentCoroutineContext().isActive) {
             running = withFrameNanos { frameTimeNanos ->
-                if (lastFrameNanos < 0L) {
-                    lastFrameNanos = frameTimeNanos
-                    return@withFrameNanos true
-                }
-                val deltaSec = (frameTimeNanos - lastFrameNanos) / 1_000_000_000f
+                val deltaSec = if (lastFrameNanos < 0L) FIRST_FRAME_INTERVAL_SEC else (frameTimeNanos - lastFrameNanos) / NANOS_PER_SECOND
                 lastFrameNanos = frameTimeNanos
-                val stillRunning = scroller.update(frameTimeNanos / 1_000_000L, deltaSec)
+                val stillRunning = scroller.update(frameTimeNanos / NANOS_PER_MILLI, deltaSec)
                 val position = scroller.position.toFloat()
                 offset = if (overFling) COUIPhysicalAnimation.overFlingDisplayDistance(position, screenSize) else position
                 stillRunning
@@ -169,9 +198,95 @@ internal class COUIOverScrollAxis(
         if (!running) offset = 0f
     }
 
+    /**
+     * `COUIRecyclerView.performOverScrollingReverseFling`: a fast fling of [velocity] px/s back
+     * towards the content flings the overscroll on the `SpringOverScroller` curve from where it
+     * is. Once it crosses the edge `computeScroll` aborts it and hands its current speed to the
+     * content (`fling(getCurrVelocityX(), getCurrVelocityY())`); that speed is returned, in px/s.
+     * Should the fling die out before the edge, the rest springs back and 0 is returned.
+     *
+     * Cancelling the caller (a drag catching the overscroll) leaves the offset where it is.
+     */
+    suspend fun flingBack(velocity: Float): Float {
+        val start = offset
+        if (start == 0f) return velocity
+        if (velocity == 0f || sign(velocity) == sign(start)) {
+            springBack(velocity = 0f, overFling = false, screenSize = 0f)
+            return 0f
+        }
+        var leftover = 0f
+        var crossed = false
+        scroller.runFling(start = start.roundToInt(), velocity = velocity.roundToInt()) { position, speed ->
+            if (position == 0.0 || sign(position) != sign(start.toDouble())) {
+                // overScrollBy clamps the step that crosses the edge to the edge.
+                offset = 0f
+                leftover = speed.toFloat()
+                crossed = true
+                false
+            } else {
+                offset = position.toFloat()
+                true
+            }
+        }
+        if (!crossed) {
+            springBack(velocity = 0f, overFling = false, screenSize = 0f)
+            return 0f
+        }
+        return leftover
+    }
+
     private companion object {
         /** Keeps a drag back from an overscroll that reached the whole screen from stalling. */
         const val MIN_DRAG_FACTOR = 0.004f
+
+        /** `SpringOverScroller.MIN_FRAME_INTERVAL`, the step of the first spring frame. */
+        const val FIRST_FRAME_INTERVAL_SEC = 0.008f
+    }
+}
+
+/** Nanoseconds per second, for frame-time deltas. */
+private const val NANOS_PER_SECOND = 1_000_000_000f
+
+/** Nanoseconds per millisecond, for the millisecond clock of [COUIReboundOverScroller]. */
+private const val NANOS_PER_MILLI = 1_000_000L
+
+/** The shortest display frame interval a fling is simulated at (a 144Hz display), seconds. */
+private const val MIN_DISPLAY_FRAME_INTERVAL_SEC = 1f / 144f
+
+/** The longest display frame interval a fling is simulated at (a 60Hz display), seconds. */
+private const val MAX_DISPLAY_FRAME_INTERVAL_SEC = 1f / 60f
+
+/**
+ * Runs a [COUIReboundOverScroller.fling] of [velocity] px/s from [start] px on the frame clock,
+ * handing every frame's position (px) and velocity (px/s) to [onFrame], which returns whether to
+ * go on. Returns once the fling has stopped or [onFrame] returned `false`.
+ *
+ * `ReboundOverScroller.fling` simulates the whole fling up front at the display frame interval
+ * (`Choreographer.getFrameIntervalNanos`), which sets its duration. So the fling is timed from the
+ * first frame, where it has not moved yet, and set up on the second one from the interval between
+ * the two.
+ */
+internal suspend fun COUIReboundOverScroller.runFling(
+    start: Int,
+    velocity: Int,
+    onFrame: (position: Double, velocity: Double) -> Boolean,
+) {
+    val firstFrameNanos = withFrameNanos { it }
+    var lastFrameNanos = firstFrameNanos
+    var started = false
+    var running = true
+    while (running) {
+        running = withFrameNanos { frameTimeNanos ->
+            val deltaSec = (frameTimeNanos - lastFrameNanos) / NANOS_PER_SECOND
+            lastFrameNanos = frameTimeNanos
+            if (!started) {
+                started = true
+                val frameInterval = deltaSec.coerceIn(MIN_DISPLAY_FRAME_INTERVAL_SEC, MAX_DISPLAY_FRAME_INTERVAL_SEC)
+                fling(start, velocity, firstFrameNanos / NANOS_PER_MILLI, frameInterval)
+            }
+            val moving = update(frameTimeNanos / NANOS_PER_MILLI, deltaSec)
+            onFrame(position, this.velocity) && moving
+        }
     }
 }
 

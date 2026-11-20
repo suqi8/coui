@@ -35,12 +35,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
@@ -59,6 +63,8 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.Platform
 import io.github.suqi8.coui.kmp.utils.platform
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
@@ -86,6 +92,81 @@ import kotlin.math.roundToInt
 @Composable
 fun NavigationBar(
     modifier: Modifier = Modifier,
+    visible: Boolean = true,
+    color: Color = NavigationBarDefaults.color(),
+    showDivider: Boolean = true,
+    defaultWindowInsetsPadding: Boolean = true,
+    mode: NavigationBarDisplayMode = NavigationBarDisplayMode.IconAndText,
+    content: @Composable RowScope.() -> Unit,
+) {
+    NavigationBarContainer(
+        modifier = modifier,
+        visible = visible,
+        color = color,
+        showDivider = showDivider,
+        defaultWindowInsetsPadding = defaultWindowInsetsPadding,
+        mode = mode,
+        content = content,
+    )
+}
+
+/**
+ * A [NavigationBar] whose items follow [targetState], switched the way `COUINavigationView.switchToMenu`
+ * switches menus: when [targetState] changes, the items on show fade out over 100ms
+ * (`COUILinearInterpolator`), then the items of the new state rise from the bar's bottom edge over
+ * 350ms while fading in over the first 100ms (both `COUIInEaseInterpolator`). The bar itself, its
+ * background and its divider stay in place.
+ *
+ * Use it when the bar changes its set of items, for example from the tabs of a page to the tools of
+ * its edit mode. Everything else behaves as the [NavigationBar] without a state.
+ *
+ * @param targetState The state the items are built from. [content] receives the state on show,
+ *   which trails [targetState] while the old items fade out.
+ * @param modifier The modifier to be applied to the [NavigationBar].
+ * @param visible Whether the bar is shown. Changes animate with the COUI show / hide translation.
+ * @param color The color of the [NavigationBar]. COUI `coui_tab_navigation_view_bg` (`?couiColorBar`).
+ * @param showDivider Whether to show the divider line between the [NavigationBar] and the content.
+ * @param defaultWindowInsetsPadding whether to apply default window insets padding to the [NavigationBar].
+ * @param mode The mode for displaying items in the [NavigationBar]. It can show icons, text or both.
+ * @param content The items for a state, usually [NavigationBarItem]s.
+ */
+@Composable
+fun <T> NavigationBar(
+    targetState: T,
+    modifier: Modifier = Modifier,
+    visible: Boolean = true,
+    color: Color = NavigationBarDefaults.color(),
+    showDivider: Boolean = true,
+    defaultWindowInsetsPadding: Boolean = true,
+    mode: NavigationBarDisplayMode = NavigationBarDisplayMode.IconAndText,
+    content: @Composable RowScope.(T) -> Unit,
+) {
+    val menu = remember { NavigationBarMenuSwitch(targetState) }
+    LaunchedEffect(targetState) { menu.switchTo(targetState) }
+    NavigationBarContainer(
+        modifier = modifier,
+        // The view clips its menu: the rising items appear at the bar's bottom edge.
+        itemsModifier = Modifier
+            .clipToBounds()
+            .graphicsLayer {
+                alpha = menu.alpha.value
+                translationY = menu.offset.value * size.height
+            },
+        visible = visible,
+        color = color,
+        showDivider = showDivider,
+        defaultWindowInsetsPadding = defaultWindowInsetsPadding,
+        mode = mode,
+    ) {
+        content(menu.displayed)
+    }
+}
+
+/** The bar of both [NavigationBar] overloads; [itemsModifier] goes on the row of items. */
+@Composable
+private fun NavigationBarContainer(
+    modifier: Modifier = Modifier,
+    itemsModifier: Modifier = Modifier,
     visible: Boolean = true,
     color: Color = NavigationBarDefaults.color(),
     showDivider: Boolean = true,
@@ -147,6 +228,7 @@ fun NavigationBar(
             // COUINavigationMenuView.onMeasure: the edge padding, items divide the rest equally.
             modifier = Modifier
                 .fillMaxWidth()
+                .then(itemsModifier)
                 .padding(horizontal = horizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -183,6 +265,10 @@ fun NavigationBar(
 
 /**
  * A [NavigationBarItem] that is suitable for [NavigationBar].
+ *
+ * A pointer hovering the item or keyboard focus on it fades in COUI's hover / focus mask behind the
+ * icon and the label, an 8dp rounded rectangle over the whole cell
+ * (`COUINavigationItemView.configStateEffectBackground`); a tap shows no mask, as on COUI tab bars.
  *
  * @param selected Whether the item is selected.
  * @param onClick The callback when the item is clicked.
@@ -242,6 +328,12 @@ fun RowScope.NavigationBarItem(
         modifier = modifier
             .height(NavigationBarDefaults.ItemHeight)
             .weight(1f)
+            // COUIMaskEffectDrawable(MASK_EFFECT_TYPE_CONTAINER_WIDGET) over the item rect.
+            .navigationItemStateMask(
+                interactionSource = interactionSource,
+                enabled = enabled,
+                cornerRadius = NavigationBarDefaults.ItemMaskCornerRadius,
+            )
             .selectable(
                 selected = selected,
                 onClick = onClick,
@@ -374,9 +466,11 @@ fun RowScope.NavigationBarItem(
  * icon's top end corner, pushed out by `coui_navigation_red_dot_offset` (1dp) both ways; a number
  * badge's end edge lies `coui_navigation_red_dot_with_number_horizontal_offset` (8dp, -2dp under 10,
  * +1dp from 100 to 999) past the icon's end and its top `..._vertical_offset` (5dp) above the icon.
+ * `COUINavigationRailItemView.onLayout` places the rail's red dot the same way, with the equal
+ * `coui_side_navigation_red_dot_*` offsets.
  */
 @Composable
-private fun NavigationBarItemIcon(
+internal fun NavigationBarItemIcon(
     icon: ImageVector,
     tint: Color,
     label: String,
@@ -476,6 +570,23 @@ object NavigationBarDefaults {
     /** The show translation duration (`DEFAULT_SHOW_TRANSLATE_ANIMATION_DURATION`). */
     val ShowDurationMillis = 250
 
+    /** How long the items on show fade out when the menu switches (`switchToMenu` `mExitAnimation`). */
+    val MenuExitDurationMillis = 100
+
+    /** How long the items of a switched-in menu fade in (`switchToMenu` `mEnterAnimation`). */
+    val MenuEnterFadeDurationMillis = 100
+
+    /**
+     * How long the items of a switched-in menu rise from the bar's bottom edge
+     * (`DEFAULT_ENTER_TRANSLATE_ANIMATION_DURATION`).
+     */
+    val MenuEnterDurationMillis = 350
+
+    /**
+     * The corner radius of the hover / focus mask behind an item (coui_navigation_item_background_radius).
+     */
+    val ItemMaskCornerRadius = 8.dp
+
     /** How far a red dot sticks out of the icon's top end corner (coui_navigation_red_dot_offset). */
     val BadgeDotOffset = 1.dp
 
@@ -535,8 +646,53 @@ data class NavigationItem(
     val icon: ImageVector,
 )
 
+/**
+ * The items on show in a state-driven [NavigationBar] and the `switchToMenu` animation between
+ * two states: [alpha] is the menu view's alpha, [offset] its translation as a fraction of its height.
+ */
+@Stable
+private class NavigationBarMenuSwitch<T>(initial: T) {
+    var displayed by mutableStateOf(initial)
+        private set
+    val alpha = Animatable(1f, visibilityThreshold = 0.001f)
+    val offset = Animatable(0f, visibilityThreshold = 0.001f)
+
+    suspend fun switchTo(target: T) {
+        if (displayed == target) {
+            // The first state, or a switch back before the old items had gone: bring them back the
+            // way new items come in.
+            coroutineScope {
+                if (alpha.value != 1f) launch { alpha.animateTo(1f, NavigationBarMenuFadeInSpec) }
+                if (offset.value != 0f) launch { offset.animateTo(0f, NavigationBarMenuRiseSpec) }
+            }
+            return
+        }
+        // mExitAnimation: the menu view fades out (COUILinearInterpolator).
+        alpha.animateTo(0f, tween(durationMillis = NavigationBarDefaults.MenuExitDurationMillis, easing = LinearEasing))
+        displayed = target
+        // mEnterAnimation + mEnterTranslateAnimation, played together once the new menu is inflated.
+        offset.snapTo(1f)
+        coroutineScope {
+            launch { alpha.animateTo(1f, NavigationBarMenuFadeInSpec) }
+            launch { offset.animateTo(0f, NavigationBarMenuRiseSpec) }
+        }
+    }
+}
+
 /** COUIInEaseInterpolator, the show translation. */
 private val NavigationBarShowEasing = CubicBezierEasing(0f, 0f, 0.1f, 1f)
+
+/** `switchToMenu` `mEnterAnimation`: the new items fade in over 100ms on COUIInEaseInterpolator. */
+private val NavigationBarMenuFadeInSpec = tween<Float>(
+    durationMillis = NavigationBarDefaults.MenuEnterFadeDurationMillis,
+    easing = NavigationBarShowEasing,
+)
+
+/** `switchToMenu` `mEnterTranslateAnimation`: the new items rise over 350ms on COUIInEaseInterpolator. */
+private val NavigationBarMenuRiseSpec = tween<Float>(
+    durationMillis = NavigationBarDefaults.MenuEnterDurationMillis,
+    easing = NavigationBarShowEasing,
+)
 
 /** COUIOutEaseInterpolator, the hide translation. */
 private val NavigationBarHideEasing = CubicBezierEasing(0.3f, 0f, 1f, 1f)

@@ -33,6 +33,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.SeekableTransitionState
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.rememberTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -66,7 +67,7 @@ import androidx.compose.ui.util.fastForEachReversed
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.rememberLifecycleOwner
-import androidx.navigation3.animation.NavTransitionEasing
+import androidx.navigation3.animation.COUIPageTransition
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavEntryDecorator
 import androidx.navigation3.runtime.NavMetadataKey
@@ -98,6 +99,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
+import kotlin.math.roundToInt
 import kotlin.reflect.KClass
 
 /** Object that indicates the features that can be handled by the [NavDisplay] */
@@ -637,10 +639,10 @@ fun <T : Any> NavDisplay(
                             // Interrupting entry: A -> B
                             // Scale progress to match the partial entry state
                             val startPhysical =
-                                NavAnimationEasing.transform(entryInterruptionFraction)
+                                COUIPageTransition.OpenEnterEasing.transform(entryInterruptionFraction)
                             val targetPhysical = startPhysical * (1f - progress)
                             val targetFraction =
-                                NavAnimationEasing.inverseTransform(targetPhysical)
+                                COUIPageTransition.OpenEnterEasing.inverseTransform(targetPhysical)
                             transitionState.seekTo(targetFraction, scene)
                         } else {
                             // Standard back: B -> A
@@ -657,7 +659,13 @@ fun <T : Any> NavDisplay(
                     // so now we need to animate to the final state
                     transitionState.animateTo(
                         scene,
-                        animationSpec = tween(500, easing = NavAnimationEasing),
+                        // ColorOS predictive back commits on a critically damped spring
+                        // (CrossBackAnimationExt, stiffness 400).
+                        animationSpec = spring(
+                            dampingRatio = 1f,
+                            stiffness = COUIPageTransition.GESTURE_COMMIT_STIFFNESS,
+                            visibilityThreshold = 0.001f,
+                        ),
                     )
                 } else {
                     // We are animating to the final state for regular navigate forward
@@ -668,25 +676,23 @@ fun <T : Any> NavDisplay(
                 // Predictive Back has either been completed or cancelled
                 // so now we need to seekTo+snapTo the final state
 
-                // convert from nanoseconds to milliseconds
-                val totalDuration = transition.totalDurationNanos / 1000000
-                // Which way we have to seek depends on whether the
-                // Predictive Back was completed or cancelled
+                // Which way we have to seek depends on whether the Predictive Back was completed
+                // or cancelled; the ColorOS predictive back settles both on critically damped
+                // springs (CrossBackAnimationExt: 400 to commit, 450 to cancel).
                 val predictiveBackCompleted = transition.targetState == scene
-                val (finalFraction, remainingDuration) =
-                    if (predictiveBackCompleted) {
-                        // If it completed, animate to the state we were
-                        // already seeking to with the remaining duration
-                        1f to ((1f - transitionState.fraction) * totalDuration).toInt()
-                    } else {
-                        // It it got cancelled, animate back to the
-                        // initial state, reversing what we seeked to
-                        0f to (transitionState.fraction * totalDuration).toInt()
-                    }
+                val finalFraction = if (predictiveBackCompleted) 1f else 0f
                 animate(
                     transitionState.fraction,
                     finalFraction,
-                    animationSpec = tween(remainingDuration, easing = NavAnimationEasing),
+                    animationSpec = spring(
+                        dampingRatio = 1f,
+                        stiffness = if (predictiveBackCompleted) {
+                            COUIPageTransition.GESTURE_COMMIT_STIFFNESS
+                        } else {
+                            COUIPageTransition.GESTURE_CANCEL_STIFFNESS
+                        },
+                        visibilityThreshold = 0.001f,
+                    ),
                 ) { value, _ ->
                     this@LaunchedEffect.launch {
                         if (value != finalFraction) {
@@ -931,32 +937,38 @@ private fun <T : Any> Scene<T>.predictivePopSpec():
             AnimatedContentTransitionScope<Scene<T>>.(@NavigationEvent.SwipeEdge Int) -> ContentTransform?
 }
 
-/** Default [transitionSpec] for forward navigation to be used by [NavDisplay]. */
+/**
+ * Default [transitionSpec] for forward navigation to be used by [NavDisplay]: the COUI 17 page
+ * switch (`coui_open_slide_enter` / `coui_open_slide_exit`, 350ms, the covered page shifts 30%).
+ */
 fun <T : Any> defaultTransitionSpec():
         AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
     ContentTransform(
         slideInHorizontally(
             initialOffsetX = { it },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.OpenEnterEasing),
         ),
         slideOutHorizontally(
-            targetOffsetX = { -it / 4 },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            targetOffsetX = { -(it * COUIPageTransition.COVERED_SHIFT_FRACTION).roundToInt() },
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.OpenExitEasing),
         ),
     )
 }
 
-/** Default [transitionSpec] for pop navigation to be used by [NavDisplay]. */
+/**
+ * Default [transitionSpec] for pop navigation to be used by [NavDisplay]: `coui_close_slide_enter` /
+ * `coui_close_slide_exit`.
+ */
 fun <T : Any> defaultPopTransitionSpec():
         AnimatedContentTransitionScope<Scene<T>>.() -> ContentTransform = {
     ContentTransform(
         slideInHorizontally(
-            initialOffsetX = { -it / 4 },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            initialOffsetX = { -(it * COUIPageTransition.COVERED_SHIFT_FRACTION).roundToInt() },
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.CloseEnterEasing),
         ),
         slideOutHorizontally(
             targetOffsetX = { it },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.CloseExitEasing),
         ),
     )
 }
@@ -980,12 +992,12 @@ fun <T : Any> defaultPredictivePopTransitionSpec():
 private fun flippedPopTransitionSpec(): ContentTransform =
     ContentTransform(
         slideInHorizontally(
-            initialOffsetX = { it / 4 },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            initialOffsetX = { (it * COUIPageTransition.COVERED_SHIFT_FRACTION).roundToInt() },
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.CloseEnterEasing),
         ),
         slideOutHorizontally(
             targetOffsetX = { -it },
-            animationSpec = tween(durationMillis = 500, easing = NavAnimationEasing),
+            animationSpec = tween(durationMillis = COUIPageTransition.DURATION_MILLIS, easing = COUIPageTransition.CloseExitEasing),
         ),
     )
 
@@ -1001,9 +1013,6 @@ private fun flippedPredictivePopTransitionSpec(): ContentTransform =
             animationSpec = tween(durationMillis = 550, easing = LinearEasing),
         ),
     )
-
-/** Default easing for navigation animations. */
-private val NavAnimationEasing = NavTransitionEasing(0.8f, 0.95f)
 
 internal data class AnimatedSceneKey(val clazz: KClass<*>, val key: Any) {
     constructor(scene: Scene<*>) : this(scene::class, scene.key)

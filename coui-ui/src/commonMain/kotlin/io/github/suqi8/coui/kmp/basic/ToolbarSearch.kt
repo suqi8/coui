@@ -233,7 +233,9 @@ fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graph
  * flies out of the icon from 0.6 scale, merging with the capsule like a metaball. A flat capsule
  * (`InputField(material = false)`) skips that expansion, as COUI does without blur
  * (`mFadeInFadeOutAnimation`): the whole bar fades in in place while every toolbar child, the search
- * icon included, fades and shrinks on the same spring.
+ * icon included, fades and shrinks on the same spring. Until the expansion (or fade) settles, a
+ * touch on the capsule or the cancel button lights the spotlight but starts no press scale, rubber
+ * band or deformation (`updateSearchAndButtonTouchDeformation(false)`).
  *
  * @param state the [ToolbarSearchState] shared with the [ToolbarSearchAnchor].
  * @param modifier the [Modifier] to be applied to the search bar.
@@ -253,6 +255,9 @@ fun ToolbarFloatingSearchBar(
             progress = { state.iconExpandProgress.value },
             sourceCenterX = { state.entryCenterXPx },
             interactive = { state.expanded },
+            // showInToolBar / hideInToolBar: updateSearchAndButtonTouchDeformation(false) until the
+            // mIconExpandAnimation (or mFadeInFadeOutAnimation) end listener turns it back on.
+            touchMotionEnabled = { state.expanded && !state.iconExpandProgress.isRunning },
             onFadeChange = { state.fade = it },
         )
     }

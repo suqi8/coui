@@ -207,12 +207,26 @@ Scaffold(
             .overScrollVertical()
             // Bind TopAppBar scroll behavior
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
+        // Pass the scaffold's padding itself: the list then reads it while laying out and moves in
+        // the same frame as the collapsing bar. Copying calculateTopPadding() into a new
+        // PaddingValues reads it during composition and leaves the content a frame behind.
+        contentPadding = paddingValues
     ) {
         // List content
     }
 }
 ```
+
+### Motion
+
+`COUIScrollBehavior` moves the bar the way the COUI 17 collapsable app bar does:
+
+- **Follow spring**: each scroll step moves `TopAppBarState.heightOffset` at once, and the bar is drawn at `TopAppBarState.displayedHeightOffset`, which trails it with a critically damped spring (response 0.2s while collapsing, 0.1s while expanding). The content padded below the bar follows with it. Pass `followScroll = false` to draw the bar at the scroll position directly.
+- **Snap**: a bar left between expanded and collapsed when a scroll or fling ends springs to the nearer one (`TopAppBarDefaults.SnapAnimationSpec`, response 0.25, no bounce).
+- **Drag**: while the bar is not fully collapsed it can be dragged by the bar itself; it follows the finger with a 0.15s spring and snaps on release.
+- **Title change**: a new `title` / `largeTitle` cross-fades in (both alphas on a response 0.2 spring), on `SmallTopAppBar` too.
+
+Draw anything that should move with the bar from `displayedHeightOffset`, not `heightOffset`.
 
 ## Custom Styles
 
@@ -377,6 +391,7 @@ The TopAppBarDefaults object provides default values for TopAppBar and SmallTopA
 | ActionItemSpacing          | Dp   | Horizontal spacing between adjacent action icons | 10.dp     |
 | SearchSlotHeight           | Dp   | Height of the TopAppBarSearchSlot row             | 52.dp         |
 | SearchSlotInsideMargin     | PaddingValues | Horizontal page-side padding of the search capsule | PaddingValues(horizontal = 16.dp) |
+| SnapAnimationSpec          | AnimationSpec\<Float> | Spring that snaps the bar to expanded or collapsed when a scroll ends (`attachResponse`) | response 0.25, bounce 0 |
 
 #### Functions
 
@@ -403,8 +418,11 @@ val scrollBehavior = COUIScrollBehavior(
 | ------------------ | --------------------------- | -------------------------- | ------------------------------------------------ |
 | state              | TopAppBarState              | rememberTopAppBarState()   | State object controlling scroll state            |
 | canScroll          | () -> Boolean               | { true }                   | Callback to control whether scrolling is allowed |
-| snapAnimationSpec  | AnimationSpec\<Float>?      | 180ms decelerate tween     | Defines the snap to fully expanded/collapsed when scrolling stops midway |
-| flingAnimationSpec | DecayAnimationSpec\<Float>? | rememberSplineBasedDecay() | Defines decay animation for fling                |
+| snapAnimationSpec  | AnimationSpec\<Float>?      | TopAppBarDefaults.SnapAnimationSpec | Defines the snap to fully expanded/collapsed when scrolling stops midway; `null` disables it |
+| flingAnimationSpec | DecayAnimationSpec\<Float>? | rememberSplineBasedDecay() | Decay that flings the bar with the velocity a content fling leaves over; only used with `followScroll = false` |
+| followScroll       | Boolean                     | true                       | Draw the bar trailing each scroll step with the COUI 17 follow spring (see Motion) |
+
+`TopAppBarState.displayedHeightOffset` is the offset the bar is drawn at; it equals `heightOffset` once the bar has settled.
 
 ## Advanced Usage
 

@@ -72,11 +72,13 @@ reconciler 把每次变化分类为 `Push` / `Pop` / `MultiPush(n)` / `MultiPop(
 
 | 预设 | 描述 |
 | :-- | :-- |
-| `COUIDefault`（默认） | 全宽滑动 + 四分之一宽视差 + 被覆盖层轻微透明衰减 |
+| `COUIDefault`（默认） | COUI 17 页面切换：全宽滑动，被覆盖页位移 30% 宽度（返回手势驱动时 25%），COUI 曲线 350ms，手势松手为临界阻尼 400 / 450 弹簧 |
 | `Modal` | 上滑、下层保留可见 |
 | `None` | 瞬时无动画 |
 
-前缘平滑圆角裁剪与全屏调暗 scrim 不烘焙在任何预设内——它们由正交的 `NavDisplayEffects` 层提供（`enableCornerClip`、`dimAmount`，默认均开启）；转场本身只通过 `scrimFraction` 塑造调暗随运动的曲线。
+`COUIDefault` 取自官方实现：程序化 push / pop 即 `Animation.COUI.Activity`（`coui_open_slide_*` / `coui_close_slide_*`，`Theme.COUI` 的窗口动画，与 ColorOS 系统 shell 的 `oplus_*_slide_*` 一致）——cubic-bezier(0.3, 0.1, 0.3, 1) 上 350ms，被覆盖页移动 -30%。返回手势遵循 ColorOS 预测返回（`CrossBackAnimationExt`）：关闭页跟手，露出页以 `-(width - x) / 4` 跟随，松手后以临界阻尼弹簧收敛（提交刚度 400、取消刚度 450）。各组成部分公开供自定义转场复用：`NavTransitions.COUIPageEasing`、`COUIPageMotion`、`COUI_PAGE_DURATION_MILLIS`、`COUI_COVERED_SHIFT_FRACTION`、`COUI_GESTURE_COVERED_SHIFT_FRACTION`。
+
+前缘平滑圆角裁剪与全屏调暗 scrim 不烘焙在任何预设内——它们由正交的 `NavDisplayEffects` 层提供（`enableCornerClip`、`dimAmount`，默认均开启）；转场本身只通过 `scrimFraction` 塑造调暗随运动的曲线。默认值即还原官方页面切换：被覆盖页在黑色底上淡到 0.5（即 0.5 调暗遮罩），运动中的页面以屏幕圆角裁剪。
 
 在 `NavDisplay(transition = ...)` 上设全局默认，并用 `entry(transition = ...)` 按路由覆盖：
 
@@ -187,6 +189,8 @@ val snappy = navGraphicsTransition(
 
 宿主从**最顶 presented 条目**的有效转场解析 motion（per-route 覆写优先），因此 pop 期间由离场条目自己的 motion 驱动其退场。
 
+上表列的是 `NavMotion.Default`，即未声明 motion 的转场所用的引擎默认值。`NavTransitions.COUIDefault` 声明的是 `NavTransitions.COUIPageMotion`：程序化 push / pop 为 `COUIPageEasing` 上的 350ms tween，手势松手为临界阻尼弹簧（提交刚度 400、取消刚度 450），与 ColorOS 预测返回的收敛一致。
+
 过冲规则：
 
 - 默认情况下，commit settle 会把种子速度钳在精确的无过冲下界上，导航永不回弹。传 `clampOvershoot = false` 保留完整松手速度；欠阻尼弹簧（`dampingRatio < 1`）从结构上必然过冲，**必须**显式传该 opt-out（构造器会拒绝歧义组合）。
@@ -251,7 +255,7 @@ val platformLike = navDirectionalTransition(
 | 属性 | 默认值 | 描述 |
 | :-- | :-- | :-- |
 | `enableCornerClip` | `true` | 顶层 entry 在下层之上运动期间，以平滑圆角裁剪它 |
-| `cornerClipRadius` | `0.dp` | 裁剪半径；传 `rememberNavSystemCornerRadius()` 可跟随设备屏幕圆角（平台报告为 0 时同样不裁圆角） |
+| `cornerClipRadius` | `Dp.Unspecified` | 裁剪半径；未指定时跟随设备屏幕圆角（`rememberNavSystemCornerRadius()`），与 ColorOS 页面切换时以窗口圆角裁剪运动页面一致——平台不报告屏幕圆角时（Desktop、Web、iOS）仍不裁圆角。传入具体半径即可覆盖，例如窗格内传 `0.dp` |
 | `cornerClipMode` | `Leading` | 裁哪些角：`Leading` —— 与屏幕边缘相接的前缘角，适合滑动类转场；`All` —— 四角全裁，适合整页缩放的卡片类转场 |
 | `dimAmount` | `0.5f` | 最顶层之下全屏调暗遮罩的最大 alpha；随运动的曲线归转场所有（`scrimFraction`），此处只封顶暗度。`0f` 关闭 |
 | `blockInputDuringTransition` | `false` | 拦截转场中途 entry 上的触摸输入，点击不会落到半动画状态的页面 |
@@ -339,7 +343,7 @@ if (isWideScreen) {
 该模式的几条规则（均为实践验证）：
 
 - **窗格必须裁剪**（`clipToBounds`）：转场图层会平移出窗格边界（被覆盖页视差、飞出动画），不裁剪会画到旁边的侧栏上。
-- **窗格内屏幕圆角归零**（`cornerClipRadius = 0.dp`）：窗格边界在屏幕中间，设备圆角只属于物理屏幕边缘。
+- **窗格内屏幕圆角归零**（`cornerClipRadius = 0.dp`）：默认值跟随设备屏幕圆角，但窗格边界在屏幕中间，设备圆角只属于物理屏幕边缘。
 - **去掉侧栏已消费的边缘 insets**：紧贴 rail 右侧的窗格不应再叠加屏幕缺口的 start padding。
 - **同一父级下多个 display 受支持**：ViewModel 注册表按 display 隔离，每个 display 的返回处理器仅在自身栈超过一个条目时启用。
 - **详情窗格需要占位根路由**——空返回栈会被拒绝；且跨栈迁移 key 会丢失其状态（saveable/ViewModel 作用域按 display 隔离）；要在窗格形态切换时保住状态，请用 app 级 `movableContentOf` 移动**整个** `NavDisplay`，而不是迁移 key。

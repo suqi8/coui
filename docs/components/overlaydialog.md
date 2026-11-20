@@ -94,6 +94,7 @@ The DialogDefaults object provides default settings for the OverlayDialog compon
 | CornerRadius  | Dp     | Dialog panel corner radius (45.dp, `coui_round_corner_xxxxl_radius_large_16_1`) |
 | MaxWidth      | Dp     | Maximum visible panel width (360.dp: `coui_dialog_max_width` 392dp minus the two 16dp side insets) |
 | CustomContentPaddingBottom | Dp | Bottom padding of `customContent` (8.dp, `coui_alert_dialog_customer_layout_padding_bottom`) |
+| ScrollFadeLength | Dp | Fading edge length of the title / message scroll views (32.dp, `center_dialog_scroll_fading_edge_length`) |
 | MaxHeight     | Dp     | Maximum panel height (600.dp: `coui_dialog_max_height` 632dp minus the 32dp bottom margin) |
 | outsideMargin | DpSize | Default dialog external margin (16, 32); the height is the bottom gap without a navigation bar |
 | MarginBottomWithNavigationBar | Dp | Gap between a bottom-aligned dialog and the screen edge under three-button navigation (60.dp) |
@@ -144,7 +145,9 @@ OverlayDialog(
 
 ### Long Content
 
-The title scrolls once it outgrows 80 / 120 / 160dp (by window height, `coui_alert_dialog_builder_title_scroll_max_height`), and a long summary or `customContent` scrolls inside the 600dp panel, so the button bar in `content` always stays in view.
+With both a title and a summary, the two scroll as one block once they outgrow the panel, as COUI moves the message into the title's scroll view (`COUIAlertDialogMaxLinearLayout` message merge): the title scrolls away with a long message instead of staying pinned. A title alone scrolls once it outgrows 80 / 120 / 160dp (by window height, `coui_alert_dialog_builder_title_scroll_max_height`). A long summary or `customContent` scrolls inside the 600dp panel, so the button bar in `content` always stays in view. Every scrolled edge fades out over 32dp (`DialogDefaults.ScrollFadeLength`).
+
+With the keyboard open, the dialog sits on the keyboard with only the inset COUI keeps above the navigation bar (32dp minus the gesture bar, or 60dp minus the three-button bar), as the COUI `adjustResize` window ends at the keyboard.
 
 ### Centered Presentation (Large Screens)
 

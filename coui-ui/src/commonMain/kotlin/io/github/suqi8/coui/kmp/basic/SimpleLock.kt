@@ -4,6 +4,7 @@ package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -41,7 +42,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.max
 
 /** The number of dots of a [SimpleLock] (`couiCircleNum` / `setSimpleLockType`). */
@@ -236,8 +239,10 @@ private fun springIn(dot: SimpleLockDotState, scope: CoroutineScope) {
     dot.glowScale = 0f
     dot.glowAlpha = 0f
     dot.job = scope.launch {
+        // mGlowProgressAnimators: a plain 230ms ValueAnimator, so it runs on the default
+        // AccelerateDecelerateInterpolator.
         val glowProgress = Animatable(0f)
-        val glowJob = launch { glowProgress.animateTo(1f, tween(MORPH_DURATION_MS, easing = LinearEasing)) }
+        val glowJob = launch { glowProgress.animateTo(1f, tween(MORPH_DURATION_MS, easing = SimpleLockGlowEasing)) }
         var last = 0f
         Animatable(0f).animateTo(1f, AddSpring) {
             dot.scale = max(0f, value)
@@ -375,6 +380,9 @@ private const val FRAME_MS = 16f
 
 /** `COUIEaseInterpolator`: cubic-bezier(0.33, 0, 0.67, 1). */
 private val SimpleLockEase = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
+
+/** `ValueAnimator`'s default `AccelerateDecelerateInterpolator`. */
+private val SimpleLockGlowEasing = Easing { (cos((it + 1f) * PI.toFloat()) / 2f) + 0.5f }
 
 /** `SPRING_RESPONSE` 0.35 / `SPRING_BOUNCE` 0.5. */
 private val AddSpring = spring<Float>(dampingRatio = 0.5f, stiffness = 322.27f)
