@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.fail
 
 class LunarCalendarTest {
 
@@ -78,9 +79,11 @@ class LunarCalendarTest {
         for (epochDay in first..last) {
             val solar = epochDayToCivil(epochDay)
             val lunar = LunarCalendar.fromSolar(solar)
-            assertEquals(solar, LunarCalendar.toSolar(lunar), "round trip of $solar ($lunar)")
+            // Messages are built only on a failure: two per day for ~73k days made this test slow.
+            val back = LunarCalendar.toSolar(lunar)
+            if (back != solar) fail("round trip of $solar ($lunar) gave $back")
             // Consecutive days advance the lunar day by one or start a new month on day 1.
-            if (previous != null && lunar.day != 1) assertEquals(previous.day + 1, lunar.day, "day after $previous")
+            if (previous != null && lunar.day != 1 && lunar.day != previous.day + 1) fail("$lunar follows $previous")
             previous = lunar
         }
     }

@@ -47,13 +47,14 @@ object LunarCalendar {
      */
     fun leapMonth(year: Int): Int {
         if (year !in SupportedYears) return 0
-        return (LunarInfo[year - 1900] and 0xF).toInt()
+        return LunarInfo[year - 1900] and 0xF
     }
 
     /** The number of days (29 or 30) of the regular [month] of a lunar [year] (COUILunarUtil.daysOfALunarMonth). */
     fun daysInMonth(year: Int, month: Int): Int {
         if (year >= 1900 && year - 1900 < LunarInfo.size) {
-            if (((0x10000L shr month) and LunarInfo[year - 1900]) == 0L) return 29
+            // A Long shift as before: an Int shift wraps distances of 32 and more.
+            if (((0x10000L shr month) and LunarInfo[year - 1900].toLong()) == 0L) return 29
         }
         return 30
     }
@@ -61,7 +62,7 @@ object LunarCalendar {
     /** The number of days of the leap month of a lunar [year], or 0 without one (COUILunarUtil.daysOfLeapMonthInLunarYear). */
     fun daysInLeapMonth(year: Int): Int {
         if (leapMonth(year) == 0) return 0
-        return if ((LunarInfo[year - 1900] and 0x10000L) != 0L) 30 else 29
+        return if ((LunarInfo[year - 1900] and 0x10000) != 0) 30 else 29
     }
 
     /** The number of days of a lunar [year], leap month included (COUILunarUtil.daysOfLunarYear). */
@@ -70,7 +71,7 @@ object LunarCalendar {
         var bit = 0x8000
         while (bit > 8) {
             val index = year - 1900
-            if (index >= 0 && index < LunarInfo.size && (LunarInfo[index] and bit.toLong()) != 0L) days++
+            if (index >= 0 && index < LunarInfo.size && (LunarInfo[index] and bit) != 0) days++
             bit = bit shr 1
         }
         return days + daysInLeapMonth(year)
@@ -259,8 +260,12 @@ object LunarCalendar {
     /** Epoch day of 1900-01-30, the START_DATE lunarToSolar adds its day offset to. */
     private val EpochDayOf19000130: Long = civilToEpochDay(1900, 1, 30)
 
-    /** COUILunarUtil.LunarInfo, one entry per lunar year from 1900 to 2100. */
-    private val LunarInfo = longArrayOf(
+    /**
+     * COUILunarUtil.LunarInfo, one entry per lunar year from 1900 to 2100. Ints where COUI has
+     * longs: every entry fits in 17 bits, and Kotlin/JS emulates `Long` arithmetic, which made the
+     * year walks of [fromSolar] and [toSolar] slow in the browser.
+     */
+    private val LunarInfo = intArrayOf(
         0x04BD8, 0x04AE0, 0x0A570, 0x054D5, 0x0D260, 0x0D950, 0x16554, 0x056A0, 0x09AD0, 0x055D2,
         0x04AE0, 0x0A5B6, 0x0A4D0, 0x0D250, 0x1D255, 0x0B540, 0x0D6A0, 0x0ADA2, 0x095B0, 0x14977,
         0x04970, 0x0A4B0, 0x0B4B5, 0x06A50, 0x06D40, 0x1AB54, 0x02B60, 0x09570, 0x052F2, 0x04970,
