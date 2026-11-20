@@ -263,6 +263,13 @@ fun OverlaySpinnerPreference(
 /**
  * A [OverlaySpinnerPreference] component with COUI style, show Spinner as dialog. (Dialog Mode)
  *
+ * The row is a COUI `COUIListPreference` row (`Preference.COUI.DialogPreference`): the selected value
+ * as assignment text, then the `coui_btn_next` jump arrow. A click opens the COUI 17 single-choice
+ * dialog ([OverlayDropdownDialog], the one [ListPreference] opens): radio rows, a hairline between
+ * rows and a single [dialogButtonString] button in the capsule button bar. Picking an option plays
+ * no haptic and, with `collapseOnSelection`, dismisses the dialog with the radio left where it
+ * opened.
+ *
  * @param items the list of [DropdownItem] to be shown in the [OverlaySpinnerPreference].
  * @param selectedIndex the index of the selected item in the [OverlaySpinnerPreference].
  * @param title the title of the [OverlaySpinnerPreference].
@@ -272,6 +279,8 @@ fun OverlaySpinnerPreference(
  * @param titleColor the color of the title of the [OverlaySpinnerPreference].
  * @param summary the summary of the [OverlaySpinnerPreference].
  * @param summaryColor the color of the summary of the [OverlaySpinnerPreference].
+ * @param spinnerColors The colors of the dialog rows: label, summary, disabled row, checked radio
+ *   and group header ([DropdownDefaults.dialogDropdownColors] carries the COUI values).
  * @param startAction the action to be shown at the start side of the [OverlaySpinnerPreference].
  * @param bottomAction the action to be shown at the bottom of the [OverlaySpinnerPreference].
  * @param insideMargin the [PaddingValues] to be applied inside the [OverlaySpinnerPreference].
@@ -282,6 +291,7 @@ fun OverlaySpinnerPreference(
  * @param renderInRootScaffold Whether to render the dialog in the root (outermost) Scaffold.
  *   When true (default), the dialog covers the full screen. When false, it renders within the
  *   current Scaffold's bounds.
+ * @param collapseOnSelection Whether picking an option dismisses the dialog.
  * @param onExpandedChange the callback to be invoked when the expanded state of the [OverlaySpinnerPreference] changes.
  * @param onSelectedIndexChange the callback to be invoked when the selected index of the [OverlaySpinnerPreference] is changed.
  */
@@ -424,7 +434,6 @@ fun OverlaySpinnerPreference(
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
 
-    val actionColor = dropdownArrowColor(actualEnabled)
     val valueColor = dropdownValueColor(actualEnabled)
 
     // The row of a COUI list dialog (COUIListPreference) plays its normal press and release: a
@@ -459,9 +468,9 @@ fun OverlaySpinnerPreference(
             if (showValue && hasEntries && !selectedValueText.isNullOrBlank()) {
                 DropdownValueText(text = selectedValueText, color = valueColor)
             }
-            DropdownArrowEndAction(
-                actionColor = actionColor,
-            )
+            // Preference.COUI.DialogPreference: a row that opens a dialog ends in the coui_btn_next
+            // jump arrow, not the up-down arrow of a menu.
+            JumpArrowEndAction(enabled = actualEnabled)
             if (hasEntries) {
                 OverlayDropdownDialog(
                     entries = nonEmptyEntries,

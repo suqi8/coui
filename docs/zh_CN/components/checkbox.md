@@ -10,6 +10,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.Checkbox
+import io.github.suqi8.coui.kmp.basic.CheckboxStyle
 import androidx.compose.ui.state.ToggleableState
 ```
 
@@ -69,6 +70,14 @@ Checkbox(
 | modifier  | Modifier          | 应用于复选框的修饰符                              | Modifier                          | 否       |
 | colors    | CheckboxColors    | 复选框的颜色配置                                  | CheckboxDefaults.checkboxColors() | 否       |
 | enabled   | Boolean           | 复选框是否可交互                                  | true                              | 否       |
+| style     | CheckboxStyle     | COUI 资源样式：`Default`，或叠在图片上的 `Shape`   | CheckboxStyle.Default             | 否       |
+
+### CheckboxStyle
+
+| 值      | 说明                                                                                                        |
+| ------- | ----------------------------------------------------------------------------------------------------------- |
+| Default | 普通 COUI 复选框（`couiCheckBoxStyle`，`coui_checkbox_state`）                                               |
+| Shape   | 叠在图片上的 COUI Shape 复选框（`couiShapeCheckBoxStyle`，`coui_shape_checkbox_state`），配合 `shapeCheckboxColors()` 使用 |
 
 ### CheckboxDefaults 对象
 
@@ -108,13 +117,16 @@ CheckboxDefaults 对象提供了 Checkbox 组件的默认颜色配置。
 
 ### Shape 复选框
 
-叠在图片或彩色背景上时，使用 COUI Shape 复选框（`Widget.COUI.CompoundButton.COUICheckBox.Shape`）：未选中为 40% 黑色填充加 40% 白色外框（禁用时为 8% 黑色填充加 30% 白色外框），深浅色主题相同；选中与半选状态不变。
+叠在图片或彩色背景上时，使用 COUI Shape 复选框（`Widget.COUI.CompoundButton.COUICheckBox.Shape`）：传入 `style = CheckboxStyle.Shape`，并配合 `CheckboxDefaults.shapeCheckboxColors()`。未选中为 40% 黑色填充加 40% 白色外框（禁用时为 8% 黑色填充加 30% 白色外框），深浅色主题相同；选中与半选状态与默认样式一致。
+
+Shape 样式在与未选中状态之间切换时，播放 COUI 自己更快的 Shape AVD（`coui_shape_checkbox_*`）：方框在 20-33ms 内弹到 1.2 倍，再在随后 160-167ms 内回落；填充在几帧内淡入或淡出；1.5dp 的对勾在 33ms 后逐笔绘出或擦除；半选状态是一条圆头横线，从左端伸出（缩回时同样回到左端）。半选与选中之间沿用默认样式的 AVD，禁用的 Shape 复选框不播放动画。
 
 ```kotlin
 Checkbox(
     state = state,
     onClick = { state = if (state == ToggleableState.On) ToggleableState.Off else ToggleableState.On },
-    colors = CheckboxDefaults.shapeCheckboxColors()
+    colors = CheckboxDefaults.shapeCheckboxColors(),
+    style = CheckboxStyle.Shape
 )
 ```
 

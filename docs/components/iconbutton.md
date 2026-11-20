@@ -126,7 +126,7 @@ With `material = true` the button runs the `COUIViewTouchAnimator` that `Toolbar
 - **Press scale**: the 40dp circle springs to ~0.889 (jelly springs: press k 631.65 / ζ 1, release k 157.91 / ζ 0.4) and stays down while the finger is held, even outside the button.
 - **Drag follow**: past a 5px dead zone the button follows the finger on the rubber band `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp`, stretching up to 1.2x along the drag and squeezing across it (area-conserving), on a response 0.15 / bounce 0.15 spring.
 - **Release**: everything springs home on response 0.42 / bounce 0.65, seeded with the finger velocity.
-- **Masks**: the press mask (`couiColorPress`) fades as soon as the finger leaves the button; the hover mask (`couiColorHover`) follows the pointer on desktop and web.
+- **Masks**: there is no press mask, as on COUI 17 top-bar buttons (`ToolbarMaterialEffectDelegate.handleTouch` never touches the mask drawable): a press shows the touch motion and the spotlight. The hover mask (`couiColorHover`) follows the pointer on desktop and web.
 - A disabled button ignores touches.
 
 ## Properties

@@ -252,6 +252,13 @@ fun WindowSpinnerPreference(
 /**
  * A [WindowSpinnerPreference] component with COUI style, show Spinner as dialog, rendered at window level without `Scaffold`. (Dialog Mode)
  *
+ * The row is a COUI `COUIListPreference` row (`Preference.COUI.DialogPreference`): the selected value
+ * as assignment text, then the `coui_btn_next` jump arrow. A click opens the COUI 17 single-choice
+ * dialog ([WindowDropdownDialog], the dialog [ListPreference] opens): radio rows, a hairline between
+ * rows and a single [dialogButtonString] button in the capsule button bar. Picking an option plays
+ * no haptic and, with `collapseOnSelection`, dismisses the dialog with the radio left where it
+ * opened.
+ *
  * @param items the list of [DropdownItem] to be shown in the [WindowSpinnerPreference].
  * @param selectedIndex the index of the selected item in the [WindowSpinnerPreference].
  * @param title the title of the [WindowSpinnerPreference].
@@ -261,6 +268,8 @@ fun WindowSpinnerPreference(
  * @param titleColor the color of the title of the [WindowSpinnerPreference].
  * @param summary the summary of the [WindowSpinnerPreference].
  * @param summaryColor the color of the summary of the [WindowSpinnerPreference].
+ * @param spinnerColors The colors of the dialog rows: label, summary, disabled row, checked radio
+ *   and group header ([DropdownDefaults.dialogDropdownColors] carries the COUI values).
  * @param startAction the action to be shown at the start side of the [WindowSpinnerPreference].
  * @param bottomAction The [Composable] content at the bottom of the [WindowSpinnerPreference].
  * @param insideMargin the [PaddingValues] to be applied inside the [WindowSpinnerPreference].
@@ -268,6 +277,7 @@ fun WindowSpinnerPreference(
  *   [io.github.suqi8.coui.kmp.basic.CardListGroup] provides. Rounded outer edges receive extra padding.
  * @param enabled whether the [WindowSpinnerPreference] is enabled.
  * @param showValue whether to show the value of the [WindowSpinnerPreference].
+ * @param collapseOnSelection Whether picking an option dismisses the dialog.
  * @param onExpandedChange the callback to be invoked when the expanded state of the [WindowSpinnerPreference] changes.
  * @param onSelectedIndexChange the callback to be invoked when the selected index of the [WindowSpinnerPreference] is changed.
  */
@@ -405,7 +415,6 @@ fun WindowSpinnerPreference(
     val hasEntries = nonEmptyEntries.isNotEmpty()
     val actualEnabled = enabled && hasEntries
 
-    val actionColor = dropdownArrowColor(actualEnabled)
     val valueColor = dropdownValueColor(actualEnabled)
 
     // The row of a COUI list dialog (COUIListPreference) plays its normal press and release: a
@@ -440,9 +449,9 @@ fun WindowSpinnerPreference(
             if (showValue && hasEntries && !selectedValueText.isNullOrBlank()) {
                 DropdownValueText(text = selectedValueText, color = valueColor)
             }
-            DropdownArrowEndAction(
-                actionColor = actionColor,
-            )
+            // Preference.COUI.DialogPreference: a row that opens a dialog ends in the coui_btn_next
+            // jump arrow, not the up-down arrow of a menu.
+            JumpArrowEndAction(enabled = actualEnabled)
             if (hasEntries) {
                 WindowDropdownDialog(
                     entries = nonEmptyEntries,

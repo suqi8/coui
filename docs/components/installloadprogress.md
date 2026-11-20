@@ -56,7 +56,7 @@ InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.La
 InstallLoadProgress(text = "Download", onClick = {}, style = InstallLoadStyle.Circle)
 ```
 
-The circle style draws no label and no progress fill: a 30dp rounded square (7dp corners) holds a download arrow in the accent color on the tinted fill when idle, a white pause icon on the accent fill while loading, and a white arrow on the accent fill when paused or failed. The new icon cross-fades in over 340ms; a press shrinks the square to 90% in 200ms and dims it.
+The circle style draws no label and no progress fill: a 30dp rounded square (7dp corners) holds a download arrow in the accent color on the tinted fill when idle, a white pause icon on the accent fill while loading, and a white arrow on the accent fill when paused or failed. The new icon cross-fades in over 340ms; a press dims the square in 200ms without shrinking it: COUI computes a 90% press radius, but the circle path is never rebuilt with it, so on the device the square only dims.
 
 ## Properties
 

@@ -4,7 +4,6 @@ package demo.menus
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -369,11 +368,13 @@ private fun rememberSpinnerItems(showIcons: Boolean): List<DropdownItem> {
     val colorNames = SpinnerColorNames.map { stringResource(it) }
     return remember(labels, colorNames, showIcons) {
         SpinnerSwatches.mapIndexed { index, swatch ->
-            val swatchIcon: @Composable (Modifier) -> Unit = {
+            // The row hands the icon its slot: the 20dp icon and 12dp gap of a menu row, or the
+            // icon of a dialog row, which keeps its own 24dp size.
+            val swatchIcon: @Composable (Modifier) -> Unit = { iconModifier ->
                 Icon(
                     painter = RoundedRectanglePainter(),
                     contentDescription = null,
-                    modifier = Modifier.padding(end = 12.dp),
+                    modifier = iconModifier,
                     tint = swatch,
                 )
             }

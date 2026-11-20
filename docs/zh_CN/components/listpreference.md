@@ -126,7 +126,7 @@ MultiSelectListPreference(
 
 ## 行为
 
-- 点击偏好行会弹出以 `dialogTitle` 为标题的 `OverlayDialog`（COUI 17 底部对话框，大屏居中），对话框存续期间偏好行保持按压态。与 COUI 偏好行一致，不触发震动。
+- 点击偏好行会弹出以 `dialogTitle` 为标题的 `OverlayDialog`（COUI 17 底部对话框，大屏居中）。对话框显示期间偏好行不保持按压态（COUI 对话框不锁定锚点状态）；与 COUI 偏好行一致，不触发震动。
 - 对话框每一行横跨对话框全宽、整行可点：起始侧为条目文字（16sp medium）与可选摘要（14sp），行末为单选按钮 / 复选框，左右内边距 24dp，最小高度 48dp。
 - 单选：点击条目立即回调 `onSelectedIndexChange` 并关闭对话框，单选按钮不会先移动；取消按钮或点击外部关闭且不做修改（对应 COUIListPreferenceDialogFragment）。
 - 多选:切换条目只更新暂存选择;点击确定按钮才通过 `onSelectedIndicesChange` 提交,取消 / 点击外部会丢弃修改(对应 COUIMultiSelectListPreferenceDialogFragment)。

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.snap
@@ -34,6 +35,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.semantics.Role
@@ -62,13 +65,17 @@ import kotlin.math.min
  * 1 -> 1.08 -> 1 (the checkmark stays unscaled between indeterminate and checked). A disabled
  * checkbox jumps to its new state, except between indeterminate and checked
  * (`coui_checkbox_part_to_selected_for_disabled` and `coui_checkbox_selected_to_part_for_disabled`).
+ * [CheckboxStyle.Shape] swaps in the shape checkbox's own unchecked drawables and AVDs.
  *
  * @param state The current [ToggleableState] of the [Checkbox].
  * @param onClick The callback to be called when the [Checkbox] is clicked. The caller is
  *   responsible for updating the state. If `null`, the [Checkbox] is not interactive.
  * @param modifier The modifier to be applied to the [Checkbox].
- * @param colors The [CheckboxColors] of the [Checkbox].
+ * @param colors The [CheckboxColors] of the [Checkbox]. Use [CheckboxDefaults.shapeCheckboxColors]
+ *   with [CheckboxStyle.Shape].
  * @param enabled Whether the [Checkbox] is enabled.
+ * @param style The COUI drawable set: [CheckboxStyle.Default], or [CheckboxStyle.Shape] for the
+ *   shape checkbox laid over images.
  */
 @Composable
 fun Checkbox(
@@ -77,6 +84,7 @@ fun Checkbox(
     modifier: Modifier = Modifier,
     colors: CheckboxColors = CheckboxDefaults.checkboxColors(),
     enabled: Boolean = true,
+    style: CheckboxStyle = CheckboxStyle.Default,
 ) {
     val currentOnClickState = rememberUpdatedState(onClick)
 
@@ -85,7 +93,7 @@ fun Checkbox(
     // Fill alpha timeline from the COUI AVDs.
     val fillFractionState = transition.animateFloat(
         transitionSpec = {
-            if (!checkboxAnimates(enabled, initialState, targetState)) {
+            if (!checkboxPlaysDefaultAvd(style, enabled, initialState, targetState)) {
                 snap()
             } else if (targetState != ToggleableState.Off) {
                 tween(durationMillis = 150, easing = CouiCheckboxEasing)
@@ -102,7 +110,7 @@ fun Checkbox(
     // Checkmark trim: trimPathEnd runs 0 <-> 1 over the full 300ms.
     val checkFractionState = transition.animateFloat(
         transitionSpec = {
-            if (checkboxAnimates(enabled, initialState, targetState)) {
+            if (checkboxPlaysDefaultAvd(style, enabled, initialState, targetState)) {
                 tween(durationMillis = 300, easing = CouiCheckboxEasing)
             } else {
                 snap()
@@ -116,7 +124,7 @@ fun Checkbox(
     val barFractionState = transition.animateFloat(
         transitionSpec = {
             when {
-                !checkboxAnimates(enabled, initialState, targetState) -> snap()
+                !checkboxPlaysDefaultAvd(style, enabled, initialState, targetState) -> snap()
 
                 targetState == ToggleableState.Indeterminate && initialState == ToggleableState.On ->
                     keyframes {
@@ -139,6 +147,8 @@ fun Checkbox(
     val boxPop = remember { Animatable(1f) }
     val markPop = remember { Animatable(1f) }
     val barPop = remember { Animatable(1f) }
+    // The shape checkbox AVDs from and to unchecked run on their own timeline.
+    val shapeMotion = remember { CheckboxShapeMotion() }
     var skipInitialPop by remember { mutableStateOf(true) }
     // The state the last pop effect saw; only written from the effect.
     val previousState = remember { arrayOf(state) }
@@ -152,7 +162,12 @@ fun Checkbox(
         boxPop.snapTo(1f)
         markPop.snapTo(1f)
         barPop.snapTo(1f)
-        if (!checkboxAnimates(enabled, from, state)) return@LaunchedEffect
+        if (!checkboxAnimates(style, enabled, from, state)) return@LaunchedEffect
+        val shapeAvd = if (style == CheckboxStyle.Shape) checkboxShapeAvd(from, state) else null
+        if (shapeAvd != null) {
+            shapeMotion.play(shapeAvd)
+            return@LaunchedEffect
+        }
         launch { boxPop.checkboxPop(CouiCheckboxEasing, CouiCheckboxEasing) }
         when {
             // coui_checkbox_unselected_to_selected: the check settles on its own easing.
@@ -225,11 +240,12 @@ fun Checkbox(
                 val ringSize = Size(RingSizeFraction * d, RingSizeFraction * d)
                 val ringCornerRadius = CornerRadius(RingCornerRadiusFraction * d)
                 val ringStroke = Stroke(width = RingStrokeWidthFraction * d)
-                // The shape checkbox fills the ring's interior (coui_shape_btn_check_off_*).
+                // A colored unchecked fill drawn with the default style fills the ring's interior.
                 val ringHalfStroke = RingStrokeWidthFraction * d / 2f
                 val ringFillTopLeft = Offset(ringTopLeft.x + ringHalfStroke, ringTopLeft.y + ringHalfStroke)
                 val ringFillSize = Size(ringSize.width - 2f * ringHalfStroke, ringSize.height - 2f * ringHalfStroke)
                 val ringFillCornerRadius = CornerRadius(RingCornerRadiusFraction * d - ringHalfStroke)
+                val shape = if (style == CheckboxStyle.Shape) CheckboxShapeGeometry(d) else null
 
                 val checkCache = CheckmarkCache(
                     startPoint = Offset(CheckStartPoint.x * d, CheckStartPoint.y * d),
@@ -258,24 +274,46 @@ fun Checkbox(
                 val restFillTopLeft = fillTopLeft.copy(y = fillTopLeft.y + restOffset)
 
                 onDrawBehind {
+                    val shapeAvd = shapeMotion.avd
+                    if (shape != null && shapeAvd != null) {
+                        drawCheckboxShapeAvd(
+                            avd = shapeAvd,
+                            time = shapeMotion.elapsed.value,
+                            shape = shape,
+                            ringColor = ringColor,
+                            darkFillColor = ringFillColor,
+                            fillColor = fillColor,
+                            markColor = markColor,
+                            checkPath = checkPath,
+                        )
+                        return@onDrawBehind
+                    }
                     scale(scale = boxPop.value) {
                         val fillFraction = fillFractionState.value
                         if (fillFraction < 1f) {
-                            if (ringFillColor.alpha > 0f) {
+                            if (shape != null) {
+                                // coui_shape_btn_check_off_normal / _disabled: a dark fill inside a light ring.
+                                val restFill = if (enabled) shape.restFill else shape.restDisabledFill
+                                val restRing = if (enabled) shape.restRing else shape.restDisabledRing
+                                drawCheckboxRoundBox(restFill, ringFillColor)
+                                drawCheckboxRoundBox(restRing, ringColor, style = shape.ringStroke)
+                            } else {
+                                if (ringFillColor.alpha > 0f) {
+                                    drawRoundRect(
+                                        color = ringFillColor,
+                                        topLeft = ringFillTopLeft,
+                                        size = ringFillSize,
+                                        cornerRadius = ringFillCornerRadius,
+                                    )
+                                }
                                 drawRoundRect(
-                                    color = ringFillColor,
-                                    topLeft = ringFillTopLeft,
-                                    size = ringFillSize,
-                                    cornerRadius = ringFillCornerRadius,
+                                    color = ringColor,
+                                    topLeft = ringTopLeft,
+                                    size = ringSize,
+                                    cornerRadius = ringCornerRadius,
+                                    style = ringStroke,
                                 )
                             }
-                            drawRoundRect(
-                                color = ringColor,
-                                topLeft = ringTopLeft,
-                                size = ringSize,
-                                cornerRadius = ringCornerRadius,
-                                style = ringStroke,
-                            )
                         }
                         if (fillFraction > 0f) {
                             drawRoundRect(
@@ -309,6 +347,28 @@ fun Checkbox(
                 }
             },
     ) {}
+}
+
+/**
+ * The COUI drawable set a [Checkbox] draws and animates.
+ */
+enum class CheckboxStyle {
+    /** The regular COUI checkbox (`couiCheckBoxStyle`, drawable `coui_checkbox_state`). */
+    Default,
+
+    /**
+     * The COUI shape checkbox laid over images and colored backdrops
+     * (`Widget.COUI.CompoundButton.COUICheckBox.Shape`, theme attribute `couiShapeCheckBoxStyle`,
+     * drawable `coui_shape_checkbox_state`); draw it with [CheckboxDefaults.shapeCheckboxColors].
+     *
+     * Its unchecked box is a dark fill inside a light ring (`coui_shape_btn_check_off_*`), and its
+     * changes from and to unchecked play the shape AVDs (`coui_shape_checkbox_*`): the layers pop to
+     * 1.2 within 20-33ms and settle over the next 160-167ms, the fill fades in or out within a few
+     * frames, the 1.5dp checkmark draws or erases itself after 33ms, and the indeterminate state shows
+     * a round-capped dash that grows from or retracts to its left end. Indeterminate <-> checked reuse
+     * the default AVDs, and a disabled shape checkbox never animates.
+     */
+    Shape,
 }
 
 /** One AVD pop: 1 -> [PopPeakScale] on [rise], then back to 1 on [settle], 150ms each. */
@@ -361,6 +421,217 @@ private fun DrawScope.drawTrimmedCheckmark(
     )
 }
 
+/** The four `coui_shape_checkbox_*` AVDs; indeterminate <-> checked reuse the default ones. */
+private enum class CheckboxShapeAvd(val durationMillis: Int) {
+    /** `coui_shape_checkbox_unselected_to_selected`. */
+    UnselectedToSelected(200),
+
+    /** `coui_shape_checkbox_selected_to_unselected` (its time group runs on to 317ms). */
+    SelectedToUnselected(317),
+
+    /** `coui_shape_checkbox_unselected_to_part`. */
+    UnselectedToPart(200),
+
+    /** `coui_shape_checkbox_part_to_unselected`. */
+    PartToUnselected(200),
+}
+
+/** The shape checkbox AVD in flight and its clock, driven from the state effect. */
+private class CheckboxShapeMotion {
+    /** The AVD playing, `null` when the checkbox shows a static drawable or a default AVD. */
+    var avd by mutableStateOf<CheckboxShapeAvd?>(null)
+        private set
+
+    /** The time into [avd], in milliseconds. */
+    val elapsed = Animatable(0f)
+
+    private var plays = 0
+
+    suspend fun play(avd: CheckboxShapeAvd) {
+        val play = ++plays
+        try {
+            elapsed.snapTo(0f)
+            this.avd = avd
+            elapsed.animateTo(
+                targetValue = avd.durationMillis.toFloat(),
+                animationSpec = tween(durationMillis = avd.durationMillis, easing = LinearEasing),
+            )
+        } finally {
+            // A newer play owns the field once it started.
+            if (plays == play) this.avd = null
+        }
+    }
+}
+
+/** A rounded square of the 24-unit checkbox viewport, in pixels. */
+private class CheckboxRoundBox(unit: Float, inset: Float, side: Float, radius: Float) {
+    val topLeft = Offset(inset * unit, inset * unit)
+    val size = Size(side * unit, side * unit)
+    val cornerRadius = CornerRadius(radius * unit)
+}
+
+/**
+ * The shape checkbox drawables for a box of [d] pixels (the 24-unit viewport; the part AVDs use a
+ * 72-unit one, divided by 3 here).
+ */
+private class CheckboxShapeGeometry(d: Float) {
+    private val unit = d / ViewportSize
+
+    // coui_shape_btn_check_off_normal, centred: its 25 x 24 viewport would put the box 0.5 off
+    // the centre the other states share.
+    val restFill = CheckboxRoundBox(unit, 4.3f, 15.4f, 2.7f)
+    val restRing = CheckboxRoundBox(unit, 3.65f, 16.7f, 3.35f)
+
+    // coui_shape_btn_check_off_disabled.
+    val restDisabledFill = CheckboxRoundBox(unit, 4.5f, 15f, 3f)
+    val restDisabledRing = CheckboxRoundBox(unit, 3.7f, 16.6f, 3.8f)
+
+    val ringStroke = Stroke(width = 1.3f * unit)
+
+    // $coui_shape_checkbox_unselected_to_selected__0 / selected_to_unselected__0.
+    val avdRing = CheckboxRoundBox(unit, 3.7f, 16.6f, 3.8f)
+    val avdDarkFill = CheckboxRoundBox(unit, 4.5f, 15f, 3f)
+    val avdFill = CheckboxRoundBox(unit, 3f, 18f, 4f)
+
+    // The 72-unit check polyline scaled by 1/3 about (12, 12), 4.5 wide: 1.5dp.
+    val check = CheckmarkCache(
+        startPoint = Offset(7.2938f * unit, 11.6667f * unit),
+        middlePoint = Offset(10.8534f * unit, 15.2297f * unit),
+        endPoint = Offset(17.6561f * unit, 8.3637f * unit),
+    )
+    val checkStroke = Stroke(width = 1.5f * unit, cap = StrokeCap.Butt, join = StrokeJoin.Round)
+
+    // $coui_shape_checkbox_unselected_to_part__0 / part_to_unselected__0: a +-22 dark fill, a light
+    // band between +-22 and +-24 (drawn as its 0.667dp centre line), a +-24 fill and a 4-unit dash
+    // from -11 to 11.25 with round caps.
+    val partDarkFill = CheckboxRoundBox(unit, 4.6667f, 14.6667f, 2.6667f)
+    val partBand = CheckboxRoundBox(unit, 4.3333f, 15.3333f, 3.878f)
+    val partBandStroke = Stroke(width = 0.6667f * unit)
+    val partFill = CheckboxRoundBox(unit, 4f, 16f, 3.3333f)
+    val dashStart = Offset(8.3333f * unit, 12f * unit)
+    val dashLength = 7.4167f * unit
+    val dashWidth = 1.3333f * unit
+}
+
+private fun DrawScope.drawCheckboxRoundBox(
+    box: CheckboxRoundBox,
+    color: Color,
+    alpha: Float = 1f,
+    style: DrawStyle = Fill,
+) {
+    if (alpha <= 0f || color.alpha <= 0f) return
+    drawRoundRect(
+        color = color,
+        topLeft = box.topLeft,
+        size = box.size,
+        cornerRadius = box.cornerRadius,
+        alpha = alpha.coerceAtMost(1f),
+        style = style,
+    )
+}
+
+/**
+ * One frame of a shape checkbox AVD, [time] milliseconds in. The AVDs hard-code their translucent
+ * whites and blacks; they are applied as alphas relative to the colors' resting ones (0.4).
+ */
+private fun DrawScope.drawCheckboxShapeAvd(
+    avd: CheckboxShapeAvd,
+    time: Float,
+    shape: CheckboxShapeGeometry,
+    ringColor: Color,
+    darkFillColor: Color,
+    fillColor: Color,
+    markColor: Color,
+    checkPath: Path,
+) {
+    when (avd) {
+        CheckboxShapeAvd.UnselectedToSelected, CheckboxShapeAvd.SelectedToUnselected -> {
+            val selecting = avd == CheckboxShapeAvd.UnselectedToSelected
+            // The ring: strokeAlpha 0.3 that leaves at 67-84ms, or 0.05 that returns to 0.4 at 150-167ms.
+            val ringAlpha = if (selecting) {
+                checkboxAvdValue(time, 67f, 84f, ShapeSelectRingAlpha, 0f, CouiShapeCheckboxEasing)
+            } else {
+                checkboxAvdValue(time, 150f, 167f, ShapeDeselectRingAlpha, 1f, CouiShapeCheckboxEasing)
+            }
+            val fillAlpha = if (selecting) {
+                checkboxAvdValue(time, 33f, 66f, 0f, 1f, CouiShapeCheckboxEasing)
+            } else {
+                checkboxAvdValue(time, 167f, 200f, 1f, 0f, CouiShapeCheckboxEasing)
+            }
+            val mark = if (selecting) {
+                checkboxAvdValue(time, 33f, 200f, 0f, 1f, CouiShapeCheckboxEasing)
+            } else {
+                checkboxAvdValue(time, 33f, 200f, 1f, 0f, CouiShapeCheckboxEasing)
+            }
+            val pop = checkboxShapePop(time, 33f, 200f, CouiShapeCheckboxEasing, CouiShapeCheckboxEasing)
+            scale(scale = pop) {
+                drawCheckboxRoundBox(shape.avdRing, ringColor, ringAlpha, shape.ringStroke)
+                // #4D000000 while selecting, black at 0.4 while deselecting.
+                drawCheckboxRoundBox(shape.avdDarkFill, darkFillColor, if (selecting) ShapeAvdDarkFillAlpha else 1f)
+                drawCheckboxRoundBox(shape.avdFill, fillColor, fillAlpha)
+                drawTrimmedCheckmark(
+                    color = markColor,
+                    fraction = mark,
+                    path = checkPath,
+                    cache = shape.check,
+                    stroke = shape.checkStroke,
+                )
+            }
+        }
+
+        CheckboxShapeAvd.UnselectedToPart, CheckboxShapeAvd.PartToUnselected -> {
+            val toPart = avd == CheckboxShapeAvd.UnselectedToPart
+            val pop = if (toPart) {
+                checkboxShapePop(time, 20f, 180f, CouiShapeCheckboxEasing, CouiShapeCheckboxPartSettleEasing)
+            } else {
+                checkboxShapePop(time, 20f, 180f, CouiShapeCheckboxLeavePartRiseEasing, CouiShapeCheckboxLeavePartSettleEasing)
+            }
+            val fillAlpha = if (toPart) {
+                checkboxAvdValue(time, 20f, 80f, 0f, 1f, CouiShapeCheckboxEasing)
+            } else {
+                checkboxAvdValue(time, 60f, 180f, 1f, 0f, CouiShapeCheckboxEasing)
+            }
+            // trimPathStart 1 -> 0.5 (or back) on the dash's out-and-back path: it grows from, or
+            // retracts to, its left end.
+            val dash = if (toPart) {
+                checkboxAvdValue(time, 20f, 180f, 0f, 1f, CouiShapeCheckboxDashGrowEasing)
+            } else {
+                checkboxAvdValue(time, 20f, 180f, 1f, 0f, CouiCheckboxEasing)
+            }
+            scale(scale = pop) {
+                // #4D000000 and #4DFFFFFF.
+                drawCheckboxRoundBox(shape.partDarkFill, darkFillColor, ShapeAvdDarkFillAlpha)
+                drawCheckboxRoundBox(shape.partBand, ringColor, ShapePartBandAlpha, shape.partBandStroke)
+                drawCheckboxRoundBox(shape.partFill, fillColor, fillAlpha)
+            }
+            // The dash group has no pop.
+            if (dash > 0f) {
+                drawLine(
+                    color = markColor,
+                    start = shape.dashStart,
+                    end = shape.dashStart + Offset(shape.dashLength * dash, 0f),
+                    strokeWidth = shape.dashWidth,
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
+}
+
+/** A keyframed AVD value: [from] until [start] ms, eased to [to] by [end] ms, then [to]. */
+private fun checkboxAvdValue(time: Float, start: Float, end: Float, from: Float, to: Float, easing: Easing): Float = when {
+    time <= start -> from
+    time >= end -> to
+    else -> from + (to - from) * easing.transform((time - start) / (end - start))
+}
+
+/** The shape AVD pop: 1 -> [ShapePopPeakScale] by [riseEnd] ms on [rise], back to 1 by [settleEnd] ms on [settle]. */
+private fun checkboxShapePop(time: Float, riseEnd: Float, settleEnd: Float, rise: Easing, settle: Easing): Float = if (time < riseEnd) {
+    checkboxAvdValue(time, 0f, riseEnd, 1f, ShapePopPeakScale, rise)
+} else {
+    checkboxAvdValue(time, riseEnd, settleEnd, ShapePopPeakScale, 1f, settle)
+}
+
 object CheckboxDefaults {
     /**
      * The default checkbox colors (COUI `coui_btn_check_*.xml`).
@@ -407,7 +678,8 @@ object CheckboxDefaults {
     /**
      * The colors of the COUI shape checkbox, laid over images and colored backdrops
      * (`Widget.COUI.CompoundButton.COUICheckBox.Shape`, theme attribute `couiShapeCheckBoxStyle`,
-     * drawable `coui_shape_checkbox_state`). Only the unchecked state differs from
+     * drawable `coui_shape_checkbox_state`). Use them with `style = CheckboxStyle.Shape`, which
+     * draws the shape geometry and plays the shape AVDs. Only the unchecked state differs from
      * [checkboxColors]; the same in light and dark themes:
      *
      * - `coui_shape_btn_check_off_normal`: a black 40% fill inside a white 40% ring.
@@ -512,12 +784,26 @@ private val RestDisabledBarTopFraction = 11.5f / ViewportSize
 private val RestDisabledBarThicknessFraction = 1.5f / ViewportSize
 
 /**
- * Whether a [from] -> [to] change replays its AVD: always while enabled, and while disabled only
- * between indeterminate and checked (coui_checkbox_state.xml has no other disabled transitions).
+ * Whether a [from] -> [to] change replays an AVD. Default: always while enabled, and while disabled
+ * only between indeterminate and checked (coui_checkbox_state.xml has no other disabled
+ * transitions). Shape: only while enabled (coui_shape_checkbox_state.xml gives its disabled states
+ * no ids, so no transition reaches them).
  */
-private fun checkboxAnimates(enabled: Boolean, from: ToggleableState, to: ToggleableState): Boolean = enabled ||
-    (from == ToggleableState.Indeterminate && to == ToggleableState.On) ||
-    (from == ToggleableState.On && to == ToggleableState.Indeterminate)
+private fun checkboxAnimates(style: CheckboxStyle, enabled: Boolean, from: ToggleableState, to: ToggleableState): Boolean = enabled ||
+    (style == CheckboxStyle.Default && from == ToggleableState.Indeterminate && to == ToggleableState.On) ||
+    (style == CheckboxStyle.Default && from == ToggleableState.On && to == ToggleableState.Indeterminate)
+
+/** The shape AVD of a [from] -> [to] change, or `null` where the shape checkbox reuses a default AVD. */
+private fun checkboxShapeAvd(from: ToggleableState, to: ToggleableState): CheckboxShapeAvd? = when {
+    from == ToggleableState.Off && to == ToggleableState.On -> CheckboxShapeAvd.UnselectedToSelected
+    from == ToggleableState.On && to == ToggleableState.Off -> CheckboxShapeAvd.SelectedToUnselected
+    from == ToggleableState.Off && to == ToggleableState.Indeterminate -> CheckboxShapeAvd.UnselectedToPart
+    from == ToggleableState.Indeterminate && to == ToggleableState.Off -> CheckboxShapeAvd.PartToUnselected
+    else -> null
+}
+
+/** Whether the default AVD timelines run a [from] -> [to] change (the shape AVDs replace some). */
+private fun checkboxPlaysDefaultAvd(style: CheckboxStyle, enabled: Boolean, from: ToggleableState, to: ToggleableState): Boolean = checkboxAnimates(style, enabled, from, to) && (style == CheckboxStyle.Default || checkboxShapeAvd(from, to) == null)
 
 // Shared easing of the COUI checkbox AVDs: cubic-bezier(0.3, 0, 0.1, 1).
 private val CouiCheckboxEasing = CubicBezierEasing(0.3f, 0f, 0.1f, 1f)
@@ -540,6 +826,27 @@ private val CouiCheckboxBarGrowEasing = Easing { fraction -> min(CouiCheckboxEas
 // Every COUI checkbox AVD pops its layers 1 -> 1.08 -> 1 (150ms up + 150ms down).
 private val PopPeakScale = 1.08f
 private val PopHalfDurationMillis = 150
+
+// The shape AVDs: c0.33,0 0.67,1 (also written c0.333,0 0.667,1) for the pop, the fills and the check.
+private val CouiShapeCheckboxEasing = CubicBezierEasing(0.33f, 0f, 0.67f, 1f)
+
+// unselected_to_part: the pop settles on c0.333,0 0.25,1 and the dash grows on c0.654,0 0.58,1.
+private val CouiShapeCheckboxPartSettleEasing = CubicBezierEasing(0.333f, 0f, 0.25f, 1f)
+private val CouiShapeCheckboxDashGrowEasing = CubicBezierEasing(0.654f, 0f, 0.58f, 1f)
+
+// part_to_unselected: the pop rises on c0.167,0 0.833,1 and settles on c0.167,0 0.25,1.
+private val CouiShapeCheckboxLeavePartRiseEasing = CubicBezierEasing(0.167f, 0f, 0.833f, 1f)
+private val CouiShapeCheckboxLeavePartSettleEasing = CubicBezierEasing(0.167f, 0f, 0.25f, 1f)
+
+// Every shape AVD pops its box 1 -> 1.2 -> 1.
+private val ShapePopPeakScale = 1.2f
+
+// The AVD alphas relative to the resting 0.4 of the shape colors: the ring's strokeAlpha 0.3 while
+// selecting and 0.05 while deselecting; #4D000000 / #4DFFFFFF (0.3) for the dark fill and the band.
+private val ShapeSelectRingAlpha = 0.3f / 0.4f
+private val ShapeDeselectRingAlpha = 0.05f / 0.4f
+private val ShapeAvdDarkFillAlpha = 0x4D / 255f / 0.4f
+private val ShapePartBandAlpha = 0x4D / 255f / 0.4f
 
 // COUICheckBox press ripple: circle mask of checkbox_ripple_bg_radius.
 private val CheckboxPressRadius = 20.dp

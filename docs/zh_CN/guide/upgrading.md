@@ -32,7 +32,8 @@ Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
 - `NavDisplay`（coui-navigation3-ui）与 `NavTransitions.COUIDefault`（coui-nav）的默认翻页改为 COUI 曲线 350ms，被覆盖页平移
   30%，预测性返回用弹簧收尾。coui-nav 的 `NavDisplayEffects.cornerClipRadius` 默认跟随屏幕圆角。
 - `allowDismiss = false` 时，底部面板可以跟手下拉到 82dp 的收起态，遮罩随之变暗，与 COUI 一致。
-- `ListPreference` / `MultiSelectListPreference` 改为弹出 COUI 选择对话框，不再是底部面板；行末改为跳转箭头，打开时不再振动。
+- `ListPreference` / `MultiSelectListPreference` 改为弹出 COUI 选择对话框，不再是底部面板；行末改为跳转箭头，对话框显示期间行不再保持按下，
+  打开时不再振动。对话框模式的 Spinner 偏好、`OverlayDropdownDialog`、`WindowDropdownDialog` 也改用同一套 COUI 单选对话框（单选按钮行 + 胶囊按钮栏）。
   `ListPreferenceDefaults.CheckIconSize`、`ButtonBarTopPadding`、`ButtonBarBottomPadding` 不再被读取。
 - `SwitchLoadingPreference`：按在开关上即点击整行（开关不再单独点按或拖动），`checked` 翻转时才振动。`CheckboxPreference`
   在手指按下时振动。
@@ -41,6 +42,8 @@ Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
 - `searchBarCollapseGeometry` 的胶囊加宽量改为 16dp（原为 12dp）。
 - 日历选择器的箭头直接切换，不再旋转，与 COUI 的 rotate view 一致。
 - 禁用态的跳转箭头和下拉箭头改用 `labelQuaternary`。
+- 材质图标按钮和材质搜索胶囊不再显示按压蒙层，与 COUI 17 顶栏按钮一致（按下只有触摸动效和光点），悬停蒙层保留。
+  `InstallLoadProgress` 圆形样式按下只变暗、不缩小，与真机一致。
 - `NavigationRailItem` 改用 COUI 导航栏配色（`NavigationRailDefaults.itemColors()`），移除
   `NavigationRailDefaults.SelectedPressedAlpha`、`UnselectedPressedAlpha`、`UnselectedAlpha`。
 
@@ -57,6 +60,7 @@ Icon(imageVector = COUIIcons.Settings, contentDescription = "Settings")
   `NavigationRailItemColors`；`FloatingAccessoryNavigationBar(visible)`——`visible` 位于 `backgroundModifier`
   之后，请按名称传参。
 - `ChipTabContent`（COUI 胶囊标签切页转场）与 `ChipGroup(animationsEnabled)`。
+- `Checkbox(style = CheckboxStyle.Shape)` 播放 COUI 形状复选框动效，配合 `CheckboxDefaults.shapeCheckboxColors()` 使用。
 - 浮动工具栏的项可传 `key`；`ExpandableFloatingActionButton(collapseOnItemClick = true)` 点按项后收起菜单。
 - `IntentSlider(holdToSpeedUp, onDragHorizontalOffsetChange)`。
 - `OverlayContextMenu` / `WindowContextMenu(anchorInteractionSource)`。

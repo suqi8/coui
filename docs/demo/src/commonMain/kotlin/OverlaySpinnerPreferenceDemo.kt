@@ -82,22 +82,22 @@ fun OverlaySpinnerPreferenceDemo() {
                 )
                 val options2 = listOf(
                     DropdownItem(
-                        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFFFF5B29)) },
+                        icon = { Icon(RoundedRectanglePainter(), "Icon", it, Color(0xFFFF5B29)) },
                         text = "Red Theme",
                         summary = "Vibrant red",
                     ),
                     DropdownItem(
-                        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFF3482FF)) },
+                        icon = { Icon(RoundedRectanglePainter(), "Icon", it, Color(0xFF3482FF)) },
                         text = "Blue Theme",
                         summary = "Calm blue",
                     ),
                     DropdownItem(
-                        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFF36D167)) },
+                        icon = { Icon(RoundedRectanglePainter(), "Icon", it, Color(0xFF36D167)) },
                         text = "Green Theme",
                         summary = "Fresh green",
                     ),
                     DropdownItem(
-                        icon = { Icon(RoundedRectanglePainter(), "Icon", Modifier.padding(end = 12.dp), Color(0xFFFFB21D)) },
+                        icon = { Icon(RoundedRectanglePainter(), "Icon", it, Color(0xFFFFB21D)) },
                         text = "Yellow Theme",
                         summary = "Bright yellow",
                     ),

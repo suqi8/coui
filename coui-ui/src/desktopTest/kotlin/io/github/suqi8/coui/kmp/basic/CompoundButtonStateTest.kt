@@ -72,6 +72,68 @@ class CompoundButtonStateTest {
         assertTrue(early != settled, "the enabled checkbox replays the AVD: $early vs $settled")
     }
 
+    /** Returns the pixel at ([dx], [dy]) [millis] after [change] and once settled. */
+    private fun ComposeUiTest.sampleAfter(dx: Float, dy: Float, millis: Long, change: () -> Unit): Pair<Color, Color> {
+        mainClock.advanceTimeBy(1000)
+        change()
+        mainClock.advanceTimeBy(millis)
+        val early = sample(dx, dy)
+        mainClock.advanceTimeBy(1000)
+        return early to sample(dx, dy)
+    }
+
+    @Test
+    fun shapeCheckboxPopsToItsLargerScale() = runComposeUiTest {
+        var state by mutableStateOf(ToggleableState.Off)
+        host {
+            Checkbox(
+                state = state,
+                onClick = null,
+                colors = CheckboxDefaults.shapeCheckboxColors(),
+                style = CheckboxStyle.Shape,
+            )
+        }
+        // 10.4dp right of the centre: the fading-in fill, popped towards 1.2
+        // (coui_shape_checkbox_unselected_to_selected), covers it about 35-100ms into the AVD; the
+        // checked box at rest stops 9dp from the centre.
+        val (early, settled) = sampleAfter(dx = 10.4f, dy = 0f, millis = 80) { state = ToggleableState.On }
+        assertTrue(early != settled, "the shape checkbox pops to 1.2: $early vs $settled")
+    }
+
+    @Test
+    fun defaultCheckboxPopStaysSmaller() = runComposeUiTest {
+        var state by mutableStateOf(ToggleableState.Off)
+        host { Checkbox(state = state, onClick = null) }
+        // The default 1.08 pop never reaches 10.4dp from the centre.
+        val (early, settled) = sampleAfter(dx = 10.4f, dy = 0f, millis = 80) { state = ToggleableState.On }
+        assertEquals(settled, early, "the default checkbox pops to 1.08 only")
+    }
+
+    @Test
+    fun disabledCheckboxAnimatesIndeterminateToChecked() = runComposeUiTest {
+        var state by mutableStateOf(ToggleableState.Indeterminate)
+        host { Checkbox(state = state, onClick = null, enabled = false) }
+        // On the retracting dash of coui_checkbox_part_to_selected_for_disabled, clear of the checkmark.
+        val (early, settled) = sampleAfter(dx = -3.5f, dy = -0.5f, millis = 32) { state = ToggleableState.On }
+        assertTrue(early != settled, "COUI animates a disabled indeterminate -> checked change: $early vs $settled")
+    }
+
+    @Test
+    fun disabledShapeCheckboxNeverAnimates() = runComposeUiTest {
+        var state by mutableStateOf(ToggleableState.Indeterminate)
+        host {
+            Checkbox(
+                state = state,
+                onClick = null,
+                colors = CheckboxDefaults.shapeCheckboxColors(),
+                enabled = false,
+                style = CheckboxStyle.Shape,
+            )
+        }
+        val (early, settled) = sampleAfter(dx = -3.5f, dy = -0.5f, millis = 32) { state = ToggleableState.On }
+        assertEquals(settled, early, "coui_shape_checkbox_state.xml has no disabled transitions")
+    }
+
     @Test
     fun disabledRadioButtonJumpsToSelected() = runComposeUiTest {
         var selected by mutableStateOf(false)

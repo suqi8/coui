@@ -41,7 +41,9 @@ side; the points below change behaviour you may rely on, or add API.
 - With `allowDismiss = false` a bottom sheet follows the finger down to its 82dp peek and the scrim dims with
   it, as in COUI.
 - `ListPreference` and `MultiSelectListPreference` open the COUI choice dialog instead of a bottom sheet,
-  their rows end in the jump arrow, and opening no longer vibrates. `ListPreferenceDefaults.CheckIconSize`,
+  their rows end in the jump arrow and no longer stay pressed while the dialog shows, and opening no longer
+  vibrates. Spinner preferences in dialog mode, `OverlayDropdownDialog` and `WindowDropdownDialog` use the
+  same COUI single-choice dialog (radio rows, capsule button bar). `ListPreferenceDefaults.CheckIconSize`,
   `ButtonBarTopPadding` and `ButtonBarBottomPadding` are no longer read.
 - `SwitchLoadingPreference`: a touch on the switch clicks the row (the switch has no tap or drag of its own),
   and the haptic plays when `checked` flips. `CheckboxPreference` vibrates at touch-down.
@@ -51,6 +53,9 @@ side; the points below change behaviour you may rely on, or add API.
 - `searchBarCollapseGeometry` widens the capsule by 16dp (was 12dp).
 - The calendar picker arrow swaps without rotating, like the COUI rotate view.
 - Disabled jump and dropdown arrows use `labelQuaternary`.
+- Material icon buttons and the material search capsule show no press mask, as COUI 17 top-bar buttons
+  (the press is the touch motion and the spotlight); the hover mask stays. The `InstallLoadProgress` circle
+  style dims on press without shrinking, as on the device.
 - `NavigationRailItem` takes the COUI rail colours (`NavigationRailDefaults.itemColors()`);
   `NavigationRailDefaults.SelectedPressedAlpha`, `UnselectedPressedAlpha` and `UnselectedAlpha` are removed.
 
@@ -68,6 +73,8 @@ side; the points below change behaviour you may rely on, or add API.
   colors)` with `NavigationRailItemColors`; `FloatingAccessoryNavigationBar(visible)` — `visible` follows
   `backgroundModifier`, so pass it by name.
 - `ChipTabContent` (the COUI chip-tab page transition) and `ChipGroup(animationsEnabled)`.
+- `Checkbox(style = CheckboxStyle.Shape)` plays the COUI shape checkbox motion; use it with
+  `CheckboxDefaults.shapeCheckboxColors()`.
 - Floating toolbar items take a `key`; `ExpandableFloatingActionButton(collapseOnItemClick = true)` closes the
   menu after an item tap.
 - `IntentSlider(holdToSpeedUp, onDragHorizontalOffsetChange)`.

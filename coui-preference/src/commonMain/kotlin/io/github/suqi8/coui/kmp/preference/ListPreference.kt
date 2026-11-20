@@ -118,7 +118,6 @@ fun ListPreference(
     onExpandedChange: ((Boolean) -> Unit)? = null,
 ) {
     val isDialogShown = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     // COUIListPreferenceDialogFragment checks the radio of the value the dialog opened with and
     // dismisses on a click without moving it.
     val dialogSelectedIndex = remember { mutableIntStateOf(selectedIndex) }
@@ -142,7 +141,6 @@ fun ListPreference(
             if (actualEnabled) {
                 dialogSelectedIndex.intValue = currentSelectedIndex
                 setExpanded(true)
-                isHoldDown.value = true
             }
         }
     }
@@ -166,7 +164,8 @@ fun ListPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
+        // No held press while the dialog shows: COUIAlertDialogBuilder.create(View, …) locks no
+        // anchor state (unlike a popup menu anchored to the row).
         enabled = actualEnabled,
     )
 
@@ -175,7 +174,6 @@ fun ListPreference(
             show = isDialogShown.value,
             title = dialogTitle,
             onDismissRequest = { setExpanded(false) },
-            onDismissFinished = { isHoldDown.value = false },
             renderInRootScaffold = renderInRootScaffold,
             customContent = {
                 PreferenceChoiceList {
@@ -241,7 +239,8 @@ internal fun RowScope.PreferenceValueEndActions(
                 // the jump arrow keeps support_preference_image_margin_start 4dp.
                 .padding(end = 4.dp)
                 .weight(1f, fill = false),
-            fontSize = COUITheme.textStyles.bodyS.fontSize,
+            // The whole body S appearance, so two lines keep its line height.
+            style = COUITheme.textStyles.bodyS,
             color = valueColor,
             textAlign = TextAlign.End,
             // TextAppearance.COUI.List.Assignment.End: maxLines 2, ellipsize end.
@@ -283,6 +282,8 @@ internal fun PreferenceChoiceList(
  *
  * @param checked When null the row uses single-choice semantics ([Role.RadioButton]);
  *   otherwise it uses toggleable checkbox semantics with this checked value.
+ * @param icon Optional content drawn at the start of the row, before the texts (the
+ *   `alertdialog_choice_icon` that `ChoiceListAdapter.setIcons` / `setDrawables` fill), or null.
  */
 @Composable
 internal fun SelectPanelItem(
@@ -294,6 +295,7 @@ internal fun SelectPanelItem(
     colors: ListPreferenceColors,
     enabled: Boolean,
     onClick: () -> Unit,
+    icon: (@Composable () -> Unit)? = null,
     endContent: @Composable () -> Unit,
 ) {
     val currentOnClick by rememberUpdatedState(onClick)
@@ -322,6 +324,7 @@ internal fun SelectPanelItem(
                 .padding(horizontal = horizontalPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            icon?.invoke()
             Column(
                 modifier = Modifier
                     .weight(1f)

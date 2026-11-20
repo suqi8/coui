@@ -34,6 +34,7 @@ import demo.framework.playground
 import demo.framework.variant
 import io.github.suqi8.coui.kmp.basic.Checkbox
 import io.github.suqi8.coui.kmp.basic.CheckboxDefaults
+import io.github.suqi8.coui.kmp.basic.CheckboxStyle
 import io.github.suqi8.coui.kmp.preference.OverlayDropdownPreference
 import io.github.suqi8.coui.kmp.preference.SwitchPreference
 import io.github.suqi8.coui.kmp.shared.generated.resources.Res
@@ -91,6 +92,7 @@ private fun LazyListScope.checkboxPage() {
                     },
                     colors = if (shapeStyle) CheckboxDefaults.shapeCheckboxColors() else CheckboxDefaults.checkboxColors(),
                     enabled = enabled,
+                    style = if (shapeStyle) CheckboxStyle.Shape else CheckboxStyle.Default,
                 )
             }
             ValueCaption(text = stringResource(Res.string.common_value_format, state.name))
@@ -207,7 +209,7 @@ private fun ColumnScope.CheckboxStateRows() {
 
 /**
  * The shape checkbox (`couiShapeCheckBoxStyle`) over a photo, where its dark fill and light ring
- * keep it readable.
+ * keep it readable; [CheckboxStyle.Shape] gives it the shape drawables and their quicker AVDs.
  */
 @Composable
 private fun ShapeCheckboxes() {
@@ -223,23 +225,27 @@ private fun ShapeCheckboxes() {
                 state = ToggleableState(first),
                 onClick = { first = !first },
                 colors = CheckboxDefaults.shapeCheckboxColors(),
+                style = CheckboxStyle.Shape,
             )
             Checkbox(
                 state = ToggleableState(second),
                 onClick = { second = !second },
                 colors = CheckboxDefaults.shapeCheckboxColors(),
+                style = CheckboxStyle.Shape,
             )
             Checkbox(
                 state = ToggleableState.Off,
                 onClick = null,
                 colors = CheckboxDefaults.shapeCheckboxColors(),
                 enabled = false,
+                style = CheckboxStyle.Shape,
             )
             Checkbox(
                 state = ToggleableState.On,
                 onClick = null,
                 colors = CheckboxDefaults.shapeCheckboxColors(),
                 enabled = false,
+                style = CheckboxStyle.Shape,
             )
         }
     }

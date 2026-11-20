@@ -89,7 +89,7 @@ A row with an empty `entries` list is disabled as well. Single entries can be di
 
 ## Behavior
 
-- Clicking the row opens an `OverlayDialog` titled `dialogTitle` (the COUI 17 bottom dialog, centered on large screens) with a cancel and a confirm button, and keeps the row in the hold-down state until the dialog is dismissed. Like the COUI rows it plays no haptic.
+- Clicking the row opens an `OverlayDialog` titled `dialogTitle` (the COUI 17 bottom dialog, centered on large screens) with a cancel and a confirm button. The row does not stay pressed while the dialog shows, since the COUI dialog locks no anchor state, and like the COUI rows it plays no haptic.
 - Each time the dialog opens, the staged selection restarts from `selectedIndices`. Toggling a row only updates the staged selection.
 - The confirm button commits the staged selection via `onSelectedIndicesChange` and dismisses the dialog; the cancel button or an outside tap dismisses it without changes.
 - The trailing text lists the selected entries in entry order, separated by `", "`; indices outside `entries` are ignored.

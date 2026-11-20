@@ -8,7 +8,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,8 +59,10 @@ object COUIMaterialEffect {
      * - **Shadow**: `ShadowUtils` level 6 (16dp elevation, alpha 30/255, light 160dp above).
      * - **Edge lighting + inner shadow**: [ShadowEdgeShader].
      * - **Touch spotlight**: [SpotLightShader], following the finger.
-     * - **Press and hover**: the `COUIMaskEffectDrawable` (type 1) press mask, which fades out as
-     *   soon as the finger leaves the button, and its `?couiColorHover` hover mask.
+     * - **Hover**: the `?couiColorHover` hover mask of the `COUIMaskEffectDrawable` (type 1). Its
+     *   press layer only follows `setTouchEntered`, which the COUI 17 toolbar never calls
+     *   (`ToolbarMaterialEffectDelegate.handleTouch` feeds the spotlight and the touch animator
+     *   only), so a press shows the touch motion and the spotlight, no press mask.
      * - **Touch motion**: the `COUIViewTouchAnimator` press scale, rubber-band drag-follow
      *   translation and area-conserving drag deformation, with velocity-seeded release springs
      *   (see [couiTouchMotion]).
@@ -97,19 +98,9 @@ object COUIMaterialEffect {
         val isDark = COUITheme.colorScheme.isDark
         // ?couiColorBar, the non-blur fallback (ToolbarMaterialEffectResolver.getToolbarBackgroundColor).
         val fallbackFill = COUITheme.colorScheme.bar
-        val pressed by interactionSource.collectIsPressedAsState()
         val hovered by interactionSource.collectIsHoveredAsState()
 
-        // COUIMaskEffectDrawable press layer: ?couiColorPress on a response 0.3 / bounce 0 spring.
-        val maskProgress = remember { Animatable(0f) }
-        LaunchedEffect(pressed) {
-            maskProgress.animateTo(
-                targetValue = if (pressed) 1f else 0f,
-                animationSpec = spring(dampingRatio = 1f, stiffness = 438.65f),
-            )
-        }
-
-        // The hover layer of the same drawable: ?couiColorHover on the same spring.
+        // The COUIMaskEffectDrawable hover layer: ?couiColorHover on a response 0.3 / bounce 0 spring.
         val hoverProgress = remember { Animatable(0f) }
         LaunchedEffect(hovered, motionEnabled) {
             hoverProgress.animateTo(
@@ -132,7 +123,6 @@ object COUIMaterialEffect {
 
         val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
         val blendSupported = remember { BlendMode.ColorDodge.isSupported() && BlendMode.Luminosity.isSupported() }
-        val pressMaskColor = if (isDark) PressMaskDark else PressMaskLight
         val hoverMaskColor = if (isDark) HoverMaskDark else HoverMaskLight
 
         return this
@@ -209,8 +199,6 @@ object COUIMaterialEffect {
 
                         val hover = hoverProgress.value
                         if (hover > 0f) drawRect(hoverMaskColor, alpha = hover.coerceIn(0f, 1f))
-                        val mask = maskProgress.value
-                        if (mask > 0f) drawRect(pressMaskColor, alpha = mask.coerceIn(0f, 1f))
                     }
                     // The edge shader carries its own SDF mask. The inner shadow is drawn
                     // source-over, the edge light overlaid on what lies beneath it.
@@ -462,10 +450,6 @@ object COUIMaterialEffect {
     private val FilterLight2 = Color(0x99F5F5F5)
     private val FilterDark1 = Color(0xCC262626)
     private val FilterDark2 = Color(0xB37F7F7F)
-
-    // coui_color_press.
-    private val PressMaskLight = Color(0x1F000000)
-    private val PressMaskDark = Color(0x33FFFFFF)
 
     // coui_color_hover.
     internal val HoverMaskLight = Color(0x14000000)

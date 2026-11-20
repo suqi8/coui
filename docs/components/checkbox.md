@@ -10,6 +10,7 @@
 
 ```kotlin
 import io.github.suqi8.coui.kmp.basic.Checkbox
+import io.github.suqi8.coui.kmp.basic.CheckboxStyle
 import androidx.compose.ui.state.ToggleableState
 ```
 
@@ -69,6 +70,14 @@ Checkbox(
 | modifier      | Modifier            | Modifier applied to the Checkbox                               | Modifier                          | No       |
 | colors        | CheckboxColors      | Color configuration for the Checkbox                           | CheckboxDefaults.checkboxColors() | No       |
 | enabled       | Boolean             | Whether the Checkbox is interactive                            | true                              | No       |
+| style         | CheckboxStyle       | The COUI drawable set: `Default`, or `Shape` over images       | CheckboxStyle.Default             | No       |
+
+### CheckboxStyle
+
+| Value   | Description                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Default | The regular COUI checkbox (`couiCheckBoxStyle`, `coui_checkbox_state`)                                                              |
+| Shape   | The COUI shape checkbox laid over images (`couiShapeCheckBoxStyle`, `coui_shape_checkbox_state`); use it with `shapeCheckboxColors()` |
 
 ### CheckboxDefaults Object
 
@@ -108,13 +117,16 @@ State changes replay the COUI AVDs: the fill fades, the checkmark draws or erase
 
 ### Shape Checkbox
 
-Over images or colored backdrops, use the COUI shape checkbox (`Widget.COUI.CompoundButton.COUICheckBox.Shape`): the unchecked box is a black 40% fill inside a white 40% ring (black 8% inside a white 30% ring when disabled), the same in light and dark themes. The checked and indeterminate states are unchanged.
+Over images or colored backdrops, use the COUI shape checkbox (`Widget.COUI.CompoundButton.COUICheckBox.Shape`): pass `style = CheckboxStyle.Shape` together with `CheckboxDefaults.shapeCheckboxColors()`. The unchecked box is a black 40% fill inside a white 40% ring (black 8% inside a white 30% ring when disabled), the same in light and dark themes; the checked and indeterminate states look like the default ones.
+
+The shape style also plays COUI's own, quicker shape AVDs (`coui_shape_checkbox_*`) from and to unchecked: the box pops to 1.2 within 20-33ms and settles over the next 160-167ms, the fill fades in or out within a few frames, the 1.5dp checkmark draws or erases itself after 33ms, and the indeterminate state grows a round-capped dash from its left end (and retracts it the same way). Indeterminate <-> checked reuse the default AVDs, and a disabled shape checkbox never animates.
 
 ```kotlin
 Checkbox(
     state = state,
     onClick = { state = if (state == ToggleableState.On) ToggleableState.Off else ToggleableState.On },
-    colors = CheckboxDefaults.shapeCheckboxColors()
+    colors = CheckboxDefaults.shapeCheckboxColors(),
+    style = CheckboxStyle.Shape
 )
 ```
 

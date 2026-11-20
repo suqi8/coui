@@ -126,7 +126,7 @@ SmallTopAppBar(
 - **按压缩放**：40dp 圆形按钮缩到约 0.889（jelly 弹簧：按下 k 631.65 / ζ 1，松开 k 157.91 / ζ 0.4），手指按住期间保持，即使移出按钮。
 - **跟手拖动**：越过 5px 死区后按橡皮筋曲线 `(1 - 1 / (0.05·|d| / 28dp + 1)) · 28dp` 跟随手指，沿拖动方向最多拉伸 1.2 倍、垂直方向收窄（面积守恒），弹簧 response 0.15 / bounce 0.15。
 - **松手**：所有形变以 response 0.42 / bounce 0.65 弹回，并带入手指速度。
-- **蒙版**：按压蒙版（`couiColorPress`）在手指移出按钮后立即淡出；悬停蒙版（`couiColorHover`）在桌面端和 Web 上跟随指针。
+- **蒙版**：没有按压蒙版，与 COUI 17 顶栏按钮一致（`ToolbarMaterialEffectDelegate.handleTouch` 从不触达蒙版）：按下时只有触摸动效和光点。悬停蒙版（`couiColorHover`）在桌面端和 Web 上跟随指针。
 - 禁用的按钮不响应触摸。
 
 ## 属性

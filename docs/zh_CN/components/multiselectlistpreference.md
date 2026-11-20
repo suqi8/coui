@@ -89,7 +89,7 @@ MultiSelectListPreference(
 
 ## 行为
 
-- 点击偏好行会弹出以 `dialogTitle` 为标题、带取消与确定按钮的 `OverlayDialog`（COUI 17 底部对话框，大屏居中），对话框存续期间偏好行保持按压态。与 COUI 偏好行一致，不触发震动。
+- 点击偏好行会弹出以 `dialogTitle` 为标题、带取消与确定按钮的 `OverlayDialog`（COUI 17 底部对话框，大屏居中）。对话框显示期间偏好行不保持按压态（COUI 对话框不锁定锚点状态）；与 COUI 偏好行一致，不触发震动。
 - 每次打开对话框，暂存选择都从 `selectedIndices` 重新开始；切换条目只更新暂存选择。
 - 确定按钮通过 `onSelectedIndicesChange` 提交暂存选择并关闭对话框；取消按钮或点击外部关闭且不做修改。
 - 行末文字按条目顺序列出已选条目，以 `", "` 分隔；超出 `entries` 范围的索引会被忽略。

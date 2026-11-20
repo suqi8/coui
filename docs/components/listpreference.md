@@ -126,7 +126,7 @@ Additional / differing properties compared to `ListPreference`:
 
 ## Behavior
 
-- Clicking the row opens an `OverlayDialog` titled `dialogTitle` (the COUI 17 bottom dialog, centered on large screens) and keeps the row in the hold-down state until the dialog is dismissed. Like the COUI rows it plays no haptic.
+- Clicking the row opens an `OverlayDialog` titled `dialogTitle` (the COUI 17 bottom dialog, centered on large screens). The row does not stay pressed while the dialog shows, since the COUI dialog locks no anchor state, and like the COUI rows it plays no haptic.
 - Each dialog row spans the dialog width and is the touch target: label (16sp medium) and optional summary (14sp) on the start side, the radio button / checkbox at the end, 24dp side padding, a 48dp minimum height.
 - Single choice: tapping an entry invokes `onSelectedIndexChange` and dismisses the dialog immediately, without moving the radio button first; the cancel button or an outside tap dismisses without changes (COUIListPreferenceDialogFragment).
 - Multi choice: toggling rows only updates a pending selection; the confirm button commits it via `onSelectedIndicesChange`, while cancel / outside tap discards it (COUIMultiSelectListPreferenceDialogFragment).

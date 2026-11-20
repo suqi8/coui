@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package io.github.suqi8.coui.kmp.popup
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -12,17 +9,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.basic.DropdownColors
 import io.github.suqi8.coui.kmp.basic.DropdownEntry
 import io.github.suqi8.coui.kmp.basic.ListPopupColumn
 import io.github.suqi8.coui.kmp.basic.ListPopupDefaults
 import io.github.suqi8.coui.kmp.basic.PopupPositionProvider
 import io.github.suqi8.coui.kmp.basic.PreciseClickState
-import io.github.suqi8.coui.kmp.basic.TextButton
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
-import io.github.suqi8.coui.kmp.layout.DialogDefaults
+import io.github.suqi8.coui.kmp.layout.DialogButtonBar
+import io.github.suqi8.coui.kmp.layout.DialogButtonBarAction
 import io.github.suqi8.coui.kmp.overlay.OverlayDialog
 import io.github.suqi8.coui.kmp.overlay.OverlayListPopup
 
@@ -163,11 +158,21 @@ fun OverlayDropdownDialog(
 }
 
 /**
- * Overlay dialog for one or more [DropdownEntry] groups.
+ * Overlay dialog for one or more [DropdownEntry] groups: the COUI 17 single-choice dialog of a
+ * `COUIListPreference`, the one [io.github.suqi8.coui.kmp.preference.ListPreference] opens
+ * (`COUIListPreferenceDialogFragment`: `coui_select_dialog_singlechoice` rows with an end radio
+ * button and a hairline between rows, and a single [dialogButtonString] button in the COUI 17
+ * capsule button bar).
  *
- * Groups are separated by dividers. Item clicks call [io.github.suqi8.coui.kmp.basic.DropdownItem.onClick], and [collapseOnSelection]
- * controls whether the dialog is dismissed after a click. Like a COUI list dialog
- * (`COUIListPreferenceDialogFragment` / `ChoiceListAdapter`), a click plays no haptic.
+ * Groups follow one another, a [DropdownEntry.title] adds a header row. Item clicks call
+ * [io.github.suqi8.coui.kmp.basic.DropdownItem.onClick], and [collapseOnSelection] controls whether
+ * the dialog is dismissed after a click; when it is, the radios keep the selection the dialog
+ * opened with while it leaves, as COUI does. A click plays no haptic.
+ *
+ * @param dropdownColors The row colors: the label (`contentColor`), the summary (`summaryColor`), a
+ *   disabled row (`disabledContentColor`), a checked radio (`selectedIndicatorColor`) and the group
+ *   headers (`headerColor`). [io.github.suqi8.coui.kmp.basic.DropdownDefaults.dialogDropdownColors]
+ *   carries the COUI values.
  */
 @Composable
 fun OverlayDropdownDialog(
@@ -201,33 +206,21 @@ fun OverlayDropdownDialog(
         title = title,
         onDismissRequest = onDismiss,
         onDismissFinished = onDismissFinished,
-        insideMargin = DpSize(0.dp, 24.dp),
         renderInRootScaffold = renderInRootScaffold,
-        // The list is the dialog's list panel: the weighted slot shrinks it before the button.
         customContent = {
-            LazyColumn {
-                dropdownEntriesDialogItems(
-                    entries = entries,
-                    dropdownColors = dropdownColors,
-                    onItemClick = onItemClicked,
-                )
-            }
-        },
-        content = {
-            TextButton(
-                modifier = Modifier
-                    .padding(start = 24.dp, top = DropdownDialogButtonTopPadding, end = 24.dp)
-                    .fillMaxWidth(),
-                text = dialogButtonString,
-                minHeight = 50.dp,
-                onClick = onDismiss,
+            DropdownChoiceDialogList(
+                entries = entries,
+                show = show,
+                freezeSelection = collapseOnSelection,
+                dropdownColors = dropdownColors,
+                onItemClick = onItemClicked,
             )
         },
-    )
+    ) {
+        // COUIListPreferenceDialogFragment: only a negative button, in the COUI 17 button bar.
+        DialogButtonBar(
+            negative = DialogButtonBarAction(text = dialogButtonString, onClick = { currentOnDismiss() }),
+            positive = null,
+        )
+    }
 }
-
-/**
- * The space above the dialog button: a 12dp gap below the list, of which the custom content slot
- * already pads [DialogDefaults.CustomContentPaddingBottom].
- */
-internal val DropdownDialogButtonTopPadding = 12.dp - DialogDefaults.CustomContentPaddingBottom

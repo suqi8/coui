@@ -143,9 +143,11 @@ Scaffold {
 }
 ```
 
+In dialog mode the row is a COUI `COUIListPreference` row: the selected value, then the `coui_btn_next` jump arrow instead of the up-down arrow. A click opens the COUI 17 single-choice dialog, the same dialog `ListPreference` opens: `coui_select_dialog_singlechoice` rows (an optional icon, the label over an optional summary, an end radio button, a hairline between rows) and `dialogButtonString` as the only button in the COUI 17 capsule button bar. Picking an option calls its `onClick` and plays no haptic; with `collapseOnSelection` the dialog dismisses and the radio stays where it opened while the dialog leaves. A group `title` adds a header row; `hint`, `alert`, `stateIcon` and `children` do not apply, as a COUI list dialog has none of them.
+
 ### Standalone Dropdown Dialog
 
-The dialog behind dialog mode is public as `OverlayDropdownDialog` (`io.github.suqi8.coui.kmp.popup`). Use it to open the same option dialog from your own trigger instead of a preference row. It is a scaffold-hosted `OverlayDialog` with the `DropdownEntry` list as its list panel and one full-width button at the bottom that dismisses it. Item clicks call `DropdownItem.onClick` and close the dialog when `collapseOnSelection` is true; like a COUI list dialog, they play no haptic.
+The dialog behind dialog mode is public as `OverlayDropdownDialog` (`io.github.suqi8.coui.kmp.popup`). Use it to open the same option dialog from your own trigger instead of a preference row. It is a scaffold-hosted `OverlayDialog` with the same COUI single-choice list and one button in the COUI 17 button bar (`DialogButtonBar`) that dismisses it. Item clicks call `DropdownItem.onClick` and close the dialog when `collapseOnSelection` is true; like a COUI list dialog, they play no haptic.
 
 ```kotlin
 var show by remember { mutableStateOf(false) }
@@ -273,7 +275,7 @@ The row follows COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`:
 - **Anchor row**: while the menu is showing, the row keeps its hover layer locked (`COUIPopupListWindow.setAnchorHoveredState`); the layer is released as soon as the menu starts to leave.
 - **Arrow**: the up-down arrow is `couiColorLabelTertiary`, and `couiColorLabelQuaternary` while the row is disabled.
 - **Selected value**: shown as the COUI assignment text (`TextAppearance.COUI.List.Assignment.End`): 13sp with the body_s line spacing, end aligned, at most two lines, 4dp before the arrow.
-- **Haptics and dialog mode**: opening the menu plays no haptic, as in COUI. In dialog mode the row plays its normal press and release (a COUI list dialog locks no anchor state), and picking an option plays no haptic either.
+- **Haptics and dialog mode**: opening the menu plays no haptic, as in COUI. In dialog mode the row ends in the `coui_btn_next` jump arrow (the same tertiary / quaternary colors), plays its normal press and release (a COUI list dialog locks no anchor state), and picking an option plays no haptic either.
 
 ## Properties
 
@@ -328,7 +330,7 @@ The row follows COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`:
 | titleColor            | BasicComponentColors      | Title text color config              | BasicComponentDefaults.titleColor()     | No       |
 | summary               | String?                   | Selector description                 | null                                    | No       |
 | summaryColor          | BasicComponentColors      | Summary text color config            | BasicComponentDefaults.summaryColor()   | No       |
-| spinnerColors         | DropdownColors            | Color configuration for spinner      | DropdownDefaults.dialogDropdownColors() | No       |
+| spinnerColors         | DropdownColors            | Colors of the dialog rows: label, summary, disabled row, checked radio, group header      | DropdownDefaults.dialogDropdownColors() | No       |
 | startAction           | @Composable (() -> Unit)? | Custom start side content            | null                                    | No       |
 | bottomAction          | @Composable (() -> Unit)? | Custom bottom side content           | null                                    | No       |
 | insideMargin          | PaddingValues             | Internal content padding             | BasicComponentDefaults.InsideMargin     | No       |
@@ -362,13 +364,13 @@ The row follows COUI 17 `COUIMenuPreference` / `COUIClickSelectMenu`:
 
 | Property Name        | Type                 | Description                                                    | Default Value     | Required |
 | -------------------- | -------------------- | -------------------------------------------------------------- | ----------------- | -------- |
-| entries              | List\<DropdownEntry> | Option groups shown in the dialog list, separated by dividers  | -                 | Yes      |
+| entries              | List\<DropdownEntry> | Option groups shown as radio rows; a group title adds a header row  | -                 | Yes      |
 | title                | String               | Dialog title                                                   | -                 | Yes      |
 | dialogButtonString   | String               | Text of the bottom button, which dismisses the dialog          | -                 | Yes      |
 | show                 | Boolean              | Whether the dialog is shown                                    | -                 | Yes      |
 | onDismiss            | () -> Unit           | Called on the button, an outside tap, back, or a collapsing selection | -          | Yes      |
 | onDismissFinished    | () -> Unit           | Called after the exit animation finishes                       | -                 | Yes      |
-| dropdownColors       | DropdownColors       | Colors of the option rows                                      | -                 | Yes      |
+| dropdownColors       | DropdownColors       | Colors of the radio rows: label, summary, disabled row, checked radio, group header                                      | -                 | Yes      |
 | popupModifier        | Modifier             | Modifier applied to the dialog                                 | Modifier          | No       |
 | renderInRootScaffold | Boolean              | Whether to render the dialog in the root Scaffold              | true              | No       |
 | collapseOnSelection  | Boolean              | Whether to close the dialog after an item is clicked           | entries.size <= 1 | No       |

@@ -91,8 +91,8 @@ enum class InstallLoadStyle {
      * `LOAD_STYLE_CIRCLE`: a 33dp icon button without a label or a progress fill. A 30dp rounded
      * square (7dp corners) holds a download arrow: accent on the tinted fill when idle, a white
      * pause icon on the accent fill while loading, and a white arrow on the accent fill when
-     * paused or failed. The new icon cross-fades in over 340ms, and a press shrinks the square to
-     * 90% in 200ms.
+     * paused or failed. The new icon cross-fades in over 340ms, and a press dims the square in
+     * 200ms without shrinking it, as on the device.
      */
     Circle,
 }
@@ -325,8 +325,10 @@ private fun InstallLoadCircle(
     ) {
         val fraction = pressFraction()
         val brightness = 1f - (1f - InstallLoadProgressDefaults.PressedBrightness) * fraction
-        // getDefaultSize(16.5dp, 1.5dp): a 15dp half side, pressed to 90%.
-        val halfSide = InstallLoadProgressDefaults.CircleRadius.toPx() * (1f - (1f - CirclePressedScale) * fraction)
+        // getDefaultSize(16.5dp, 1.5dp): a 15dp half side. The press animator computes a 90% radius
+        // (COUIInstallLoadProgress.java:426-437), but only the non-circle animators and onSizeChanged
+        // rebuild mRoundRectPath (:355, :420, :444-450, :695), so on the device the square only dims.
+        val halfSide = InstallLoadProgressDefaults.CircleRadius.toPx()
         val fill = colors.fillColor(if (accentFill) colors.progressColor else colors.trackColor, enabled, brightness)
         drawSquircleRect(
             color = fill,
@@ -379,9 +381,6 @@ private val CircleIconWidth = 12.dp
 private val CircleIconHeight = 14.dp
 private val CircleIconViewportWidth = 36f
 private val CircleIconViewportHeight = 42f
-
-/** COUIInstallLoadProgress: the pressed circle radius is `mDefaultCircleRadius * 0.9`. */
-private val CirclePressedScale = 0.9f
 
 /**
  * Draws the button capsule inset by [inset] on each side. COUIInstallLoadProgress adds a smooth round

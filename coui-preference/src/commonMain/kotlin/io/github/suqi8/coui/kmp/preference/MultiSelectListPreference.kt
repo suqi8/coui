@@ -86,7 +86,6 @@ fun MultiSelectListPreference(
     onExpandedChange: ((Boolean) -> Unit)? = null,
 ) {
     val isDialogShown = remember { mutableStateOf(false) }
-    val isHoldDown = remember { mutableStateOf(false) }
     val pendingSelection = remember { mutableStateOf(selectedIndices) }
     val currentSelectedIndices by rememberUpdatedState(selectedIndices)
     val currentOnSelectedIndicesChange by rememberUpdatedState(onSelectedIndicesChange)
@@ -110,7 +109,6 @@ fun MultiSelectListPreference(
                 // committed values every time the dialog opens.
                 pendingSelection.value = currentSelectedIndices
                 setExpanded(true)
-                isHoldDown.value = true
             }
         }
     }
@@ -140,7 +138,7 @@ fun MultiSelectListPreference(
         bottomAction = bottomAction,
         onClick = handleClick,
         role = Role.DropdownList,
-        holdDownState = isHoldDown.value,
+        // No held press while the dialog shows: the COUI dialog locks no anchor state.
         enabled = actualEnabled,
     )
 
@@ -149,7 +147,6 @@ fun MultiSelectListPreference(
             show = isDialogShown.value,
             title = dialogTitle,
             onDismissRequest = { setExpanded(false) },
-            onDismissFinished = { isHoldDown.value = false },
             renderInRootScaffold = renderInRootScaffold,
             customContent = {
                 PreferenceChoiceList {

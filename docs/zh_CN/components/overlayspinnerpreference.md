@@ -143,9 +143,11 @@ Scaffold {
 }
 ```
 
+对话框模式下该行是 COUI `COUIListPreference` 行：选中值之后是 `coui_btn_next` 跳转箭头，而不是上下箭头。点击会打开 COUI 17 单选对话框，与 `ListPreference` 打开的对话框相同：`coui_select_dialog_singlechoice` 行（可选图标、标题与可选摘要、末端单选按钮、行间细分割线），`dialogButtonString` 是 COUI 17 胶囊按钮栏里唯一的按钮。选择选项会调用其 `onClick`，不触发振动；`collapseOnSelection` 时对话框随即关闭，退出过程中单选按钮停留在打开时的位置。分组 `title` 显示为标题行；`hint`、`alert`、`stateIcon` 与 `children` 不生效（COUI 列表对话框没有这些）。
+
 ### 独立使用下拉对话框
 
-对话框模式背后的对话框以 `OverlayDropdownDialog`（`io.github.suqi8.coui.kmp.popup`）公开。需要由自己的触发控件（而不是偏好设置行）打开同样的选项对话框时直接使用它。它是一个由 Scaffold 承载的 `OverlayDialog`，以 `DropdownEntry` 列表作为列表面板，底部是一个占满宽度、用于关闭对话框的按钮。点击选项会调用 `DropdownItem.onClick`，并在 `collapseOnSelection` 为 true 时关闭对话框；与 COUI 列表对话框一致，不触发振动。
+对话框模式背后的对话框以 `OverlayDropdownDialog`（`io.github.suqi8.coui.kmp.popup`）公开。需要由自己的触发控件（而不是偏好设置行）打开同样的选项对话框时直接使用它。它是一个由 Scaffold 承载的 `OverlayDialog`，列表同样是 COUI 单选列表，COUI 17 按钮栏（`DialogButtonBar`）里只有一个用于关闭对话框的按钮。点击选项会调用 `DropdownItem.onClick`，并在 `collapseOnSelection` 为 true 时关闭对话框；与 COUI 列表对话框一致，不触发振动。
 
 ```kotlin
 var show by remember { mutableStateOf(false) }
@@ -273,7 +275,7 @@ Scaffold {
 - **锚点行**：菜单显示期间该行的悬停层保持锁定（`COUIPopupListWindow.setAnchorHoveredState`），菜单开始退出时即释放。
 - **箭头**：上下箭头为 `couiColorLabelTertiary`，行禁用时为 `couiColorLabelQuaternary`。
 - **选中值**：按 COUI 赋值文字（`TextAppearance.COUI.List.Assignment.End`）显示：13sp、body_s 行距、末端对齐、最多两行，与箭头间隔 4dp。
-- **振动与对话框模式**：与 COUI 一致，弹出菜单不触发振动。对话框模式下该行只播放正常的按下与抬起（COUI 列表对话框不锁定锚点状态），选择选项同样不振动。
+- **振动与对话框模式**：与 COUI 一致，弹出菜单不触发振动。对话框模式下该行末尾是 `coui_btn_next` 跳转箭头（颜色同样为 tertiary / 禁用时 quaternary），只播放正常的按下与抬起（COUI 列表对话框不锁定锚点状态），选择选项同样不振动。
 
 ## 属性
 
@@ -328,7 +330,7 @@ Scaffold {
 | titleColor            | BasicComponentColors      | 标题文本的颜色配置       | BasicComponentDefaults.titleColor()     | 否       |
 | summary               | String?                   | 选择器的摘要说明         | null                                    | 否       |
 | summaryColor          | BasicComponentColors      | 摘要文本的颜色配置       | BasicComponentDefaults.summaryColor()   | 否       |
-| spinnerColors         | DropdownColors            | 选择器的颜色配置         | DropdownDefaults.dialogDropdownColors() | 否       |
+| spinnerColors         | DropdownColors            | 对话框行的颜色：文字、摘要、禁用行、选中的单选按钮、分组标题         | DropdownDefaults.dialogDropdownColors() | 否       |
 | startAction           | @Composable (() -> Unit)? | 左侧显示的自定义内容     | null                                    | 否       |
 | bottomAction          | @Composable (() -> Unit)? | 底部显示的自定义内容     | null                                    | 否       |
 | insideMargin          | PaddingValues             | 组件内部内容的边距       | BasicComponentDefaults.InsideMargin     | 否       |
@@ -362,13 +364,13 @@ Scaffold {
 
 | 属性名               | 类型                 | 说明                                         | 默认值            | 是否必须 |
 | -------------------- | -------------------- | -------------------------------------------- | ----------------- | -------- |
-| entries              | List\<DropdownEntry> | 对话框列表中的选项分组，分组之间以分割线隔开 | -                 | 是       |
+| entries              | List\<DropdownEntry> | 以单选行显示的选项分组；分组标题显示为标题行 | -                 | 是       |
 | title                | String               | 对话框标题                                   | -                 | 是       |
 | dialogButtonString   | String               | 底部按钮的文本，点击即关闭对话框             | -                 | 是       |
 | show                 | Boolean              | 是否显示对话框                               | -                 | 是       |
 | onDismiss            | () -> Unit           | 点击按钮、点击外部、返回或选中后收起时调用   | -                 | 是       |
 | onDismissFinished    | () -> Unit           | 退出动画结束后调用                           | -                 | 是       |
-| dropdownColors       | DropdownColors       | 选项行的颜色配置                             | -                 | 是       |
+| dropdownColors       | DropdownColors       | 单选行的颜色：文字、摘要、禁用行、选中的单选按钮、分组标题                             | -                 | 是       |
 | popupModifier        | Modifier             | 应用于对话框的修饰符                         | Modifier          | 否       |
 | renderInRootScaffold | Boolean              | 是否在根 Scaffold 中渲染对话框               | true              | 否       |
 | collapseOnSelection  | Boolean              | 点击选项后是否关闭对话框                     | entries.size <= 1 | 否       |

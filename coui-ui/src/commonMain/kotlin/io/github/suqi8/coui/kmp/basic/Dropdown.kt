@@ -754,15 +754,26 @@ object DropdownDefaults {
         submenuIndicatorColor = submenuIndicatorColor,
     )
 
+    /**
+     * Colors of a dropdown shown as a dialog. The dropdown dialogs (`OverlayDropdownDialog`,
+     * `WindowDropdownDialog` and the dialog mode of the spinner preferences) are the COUI 17
+     * single-choice dialog and read the COUI values of its `coui_select_dialog_singlechoice` rows:
+     * [contentColor] for the label (`coui_bottom_alert_dialog_button_text_color_selector`,
+     * couiColorPrimaryNeutral), [summaryColor] for the summary
+     * (`coui_bottom_alert_dialog_summary_text_color_selector`, couiColorSecondNeutral),
+     * [disabledContentColor] for a disabled row (couiColorDisabledNeutral), [selectedIndicatorColor]
+     * for the checked radio (couiColorPrimary) and [headerColor] for a group header. The other
+     * selected colors only style a [DropdownImpl] row in dialog mode.
+     */
     @Composable
     fun dialogDropdownColors(
         contentColor: Color = COUITheme.colorScheme.labelPrimary,
-        summaryColor: Color = COUITheme.colorScheme.labelSecondaryVariant,
+        summaryColor: Color = COUITheme.colorScheme.labelSecondary,
         containerColor: Color = Color.Transparent,
         selectedContentColor: Color = COUITheme.colorScheme.primaryText,
         selectedSummaryColor: Color = COUITheme.colorScheme.primaryText,
         selectedContainerColor: Color = COUITheme.colorScheme.secondary,
-        selectedIndicatorColor: Color = COUITheme.colorScheme.primaryText,
+        selectedIndicatorColor: Color = COUITheme.colorScheme.primary,
         disabledContentColor: Color = COUITheme.colorScheme.disabledNeutral,
         alertContentColor: Color = COUITheme.colorScheme.error,
         headerColor: Color = COUITheme.colorScheme.labelSecondary,
