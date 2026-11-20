@@ -116,6 +116,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
+import io.github.suqi8.coui.kmp.effect.LocalMaterialOffscreenBase
 import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.icon.COUIIcons
 import io.github.suqi8.coui.kmp.icon.basic.Search
@@ -241,6 +242,32 @@ fun SearchBar(
         capsuleInfo.stateProgress = if (capsuleResizes) stateProgressReader else null
     }
 
+    // The blur and fade layers below render the capsule and the buttons offscreen, where their glass
+    // material has no page beneath to blend with; while one is in effect the material lays down the
+    // page colour the bar sits on first, so the glass keeps its resting look instead of turning grey.
+    val offscreenBaseColor = COUITheme.colorScheme.backgroundWithCard
+    val capsuleOffscreenBase: () -> Color = remember(expandMotion, offscreenBaseColor) {
+        {
+            val p = expandMotion?.progress()
+            if (p != null && capsuleInfo.material && iconExpandCapsuleBlurPx(p) > 0f) offscreenBaseColor else Color.Unspecified
+        }
+    }
+    val actionOffscreenBase: () -> Color = remember(expandMotion, offscreenBaseColor) {
+        {
+            val offscreen = if (expandMotion == null) {
+                val frame = searchBarActionFrame(progress.value, blurred = capsuleInfo.material)
+                frame.blurPx > 0f || frame.alpha < 1f
+            } else {
+                val p = expandMotion.progress()
+                (capsuleInfo.material && iconExpandActionBlurPx(p) > 0f) || iconExpandActionAlpha(p) < 1f
+            }
+            if (offscreen) offscreenBaseColor else Color.Unspecified
+        }
+    }
+    val outerOffscreenBase: () -> Color = remember(offscreenBaseColor) {
+        { if (outerProgress.value > 0f) offscreenBaseColor else Color.Unspecified }
+    }
+
     Column(
         modifier = modifier,
     ) {
@@ -345,6 +372,7 @@ fun SearchBar(
                 CompositionLocalProvider(
                     LocalSearchBarCapsuleInfo provides capsuleInfo,
                     LocalSearchBarInnerAction provides innerAction,
+                    LocalMaterialOffscreenBase provides capsuleOffscreenBase,
                 ) {
                     inputField()
                 }
@@ -410,7 +438,9 @@ fun SearchBar(
                             .layerOverflowInner(outerOverflow),
                         contentAlignment = Alignment.Center,
                     ) {
-                        instantOuterButton()
+                        CompositionLocalProvider(LocalMaterialOffscreenBase provides outerOffscreenBase) {
+                            instantOuterButton()
+                        }
                     }
                 }
             }
@@ -489,6 +519,7 @@ fun SearchBar(
                         CompositionLocalProvider(
                             LocalSearchBarActionTextAlpha provides actionTextAlpha,
                             LocalSearchBarStateAnimating provides stateAnimating,
+                            LocalMaterialOffscreenBase provides actionOffscreenBase,
                         ) {
                             outsideAction()
                         }

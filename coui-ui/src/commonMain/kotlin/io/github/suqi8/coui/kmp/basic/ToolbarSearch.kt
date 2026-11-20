@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
@@ -199,14 +200,16 @@ fun Modifier.toolbarSearchEntry(state: ToolbarSearchState): Modifier = this
             }
         }
     }
-    // The fade renders the icon offscreen: the layer reaches past a material icon button so its
-    // shadow is not cut off.
+    // The layer reaches past a material icon button so its shadow is not cut off. The fade is
+    // applied to each draw instead of an offscreen copy, so the button's glass keeps blending with
+    // the bar beneath it rather than turning grey on the empty layer.
     .graphicsLayerWithOverflow(COUIMaterialEffect.ShadowOverflow) {
         val scale = state.toolbarScale()
         scaleX = scale
         scaleY = scale
         // The fade path leaves the icon to fade with the other toolbar children.
         alpha = if (state.barVisible && !state.fade) 0f else state.toolbarAlpha()
+        compositingStrategy = CompositingStrategy.ModulateAlpha
     }
 
 /**
@@ -220,6 +223,9 @@ fun Modifier.toolbarSearchItem(state: ToolbarSearchState): Modifier = this.graph
     scaleX = scale
     scaleY = scale
     alpha = state.toolbarAlpha()
+    // Applied per draw, not through an offscreen copy, so a material icon button's glass keeps
+    // blending with the bar beneath it instead of turning grey.
+    compositingStrategy = CompositingStrategy.ModulateAlpha
 }
 
 /**

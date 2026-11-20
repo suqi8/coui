@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.dropShadow
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.isSupported
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.changedToUp
@@ -42,6 +44,18 @@ import io.github.suqi8.coui.kmp.utils.layerOverflow
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.min
+
+/**
+ * The colour a [COUIMaterialEffect.materialPanel] lays down under its filters while an ancestor
+ * layer renders it offscreen (a blur or a fade), read in the draw phase.
+ *
+ * The filters are colour-dodge and luminosity blends of whatever lies beneath the panel. An
+ * offscreen layer starts out transparent, so inside one they blend with nothing and the glass turns
+ * a flat grey. COUI's view blur keeps sampling the window behind a blurred or faded view; laying
+ * down the page colour the panel sits on keeps the glass looking as it does at rest. The provider
+ * returns [Color.Unspecified] while the panel is drawn in place, so the real backdrop shows.
+ */
+internal val LocalMaterialOffscreenBase = staticCompositionLocalOf<(() -> Color)?> { null }
 
 /**
  * COUI 17 top-bar button material, after `ToolbarMaterialEffectDelegate` (default path:
@@ -99,6 +113,7 @@ object COUIMaterialEffect {
         // ?couiColorBar, the non-blur fallback (ToolbarMaterialEffectResolver.getToolbarBackgroundColor).
         val fallbackFill = COUITheme.colorScheme.bar
         val hovered by interactionSource.collectIsHoveredAsState()
+        val offscreenBase = LocalMaterialOffscreenBase.current
 
         // The COUIMaskEffectDrawable hover layer: ?couiColorHover on a response 0.3 / bounce 0 spring.
         val hoverProgress = remember { Animatable(0f) }
@@ -168,6 +183,9 @@ object COUIMaterialEffect {
 
                 onDrawWithContent {
                     clipPath(outline) {
+                        // Inside an offscreen ancestor layer the filters need the page beneath.
+                        val base = offscreenBase?.invoke() ?: Color.Unspecified
+                        if (base.isSpecified) drawRect(base)
                         if (blendSupported) {
                             if (isDark) {
                                 drawRect(FilterDark1, blendMode = BlendMode.SrcOver)
