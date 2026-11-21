@@ -135,6 +135,14 @@ internal fun ListPopupLayout(
     var popupContentSize by remember { mutableStateOf(IntSize.Zero) }
     var hostPositionInWindow by remember { mutableStateOf(Offset.Zero) }
 
+    // The recorded touch point is taken once per opening, so a touch that lands while the menu
+    // shows or leaves does not move it.
+    val opening = remember { PopupOpening() }
+    if (show != opening.shown) {
+        opening.shown = show
+        if (show) opening.touchPoint = preciseClickState?.takeForOpening() ?: Offset.Unspecified
+    }
+
     LaunchedEffect(show) {
         if (show) {
             internalVisible.value = true
@@ -193,7 +201,7 @@ internal fun ListPopupLayout(
     // COUI PopupMenuLocateHelper.setAnchor collapses the anchor to the recorded touch point, so both
     // the horizontal centring and the below/above test run against that point. The point is already
     // in window coordinates, the same space parentBounds uses.
-    val touchPoint = preciseClickState?.touchPoint ?: Offset.Unspecified
+    val touchPoint = opening.touchPoint
     val anchorBounds = if (touchPoint.isSpecified) {
         val x = touchPoint.x.toInt()
         val y = touchPoint.y.toInt()
@@ -364,4 +372,10 @@ internal fun ListPopupLayout(
             }
         }
     }
+}
+
+/** The opening a [ListPopupLayout] is showing, with the touch point it was taken at. */
+private class PopupOpening {
+    var shown: Boolean = false
+    var touchPoint: Offset = Offset.Unspecified
 }

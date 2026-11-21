@@ -795,9 +795,33 @@ class PreciseClickState {
      */
     internal var anchorCoordinates: LayoutCoordinates? = null
 
-    /** Discards the recorded point, restoring anchor-centred positioning. */
+    /** Counts the recorded touches, so [clear] can tell a newer touch from the one a popup used. */
+    private var touchSerial = 0
+
+    /** The [touchSerial] of the point the last popup opened at, or -1 before any popup opened. */
+    private var openedSerial = -1
+
+    internal fun record(point: Offset) {
+        touchPoint = point
+        touchSerial++
+    }
+
+    /** The point a popup opens at, remembered so [clear] keeps any touch recorded after it. */
+    internal fun takeForOpening(): Offset {
+        openedSerial = touchSerial
+        return touchPoint
+    }
+
+    /**
+     * Discards the point the last popup opened at, restoring anchor-centred positioning (for an
+     * opening without a touch, such as an accessibility click).
+     *
+     * A touch recorded after that popup opened is kept: it belongs to the next opening. A tap that
+     * lands while the menu is still leaving reaches [clear] (called once the exit has finished)
+     * between its down and its click, and dropping its point would open the menu on the anchor.
+     */
     fun clear() {
-        touchPoint = Offset.Unspecified
+        if (openedSerial == -1 || openedSerial == touchSerial) touchPoint = Offset.Unspecified
     }
 }
 
@@ -821,11 +845,13 @@ fun Modifier.preciseClickAnchor(state: PreciseClickState): Modifier = this
             while (true) {
                 val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                 val anchor = state.anchorCoordinates
-                state.touchPoint = if (anchor != null && anchor.isAttached) {
-                    anchor.localToWindow(down.position)
-                } else {
-                    Offset.Unspecified
-                }
+                state.record(
+                    if (anchor != null && anchor.isAttached) {
+                        anchor.localToWindow(down.position)
+                    } else {
+                        Offset.Unspecified
+                    },
+                )
             }
         }
     }
