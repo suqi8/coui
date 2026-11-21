@@ -14,11 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
@@ -574,4 +576,54 @@ internal fun Modifier.couiTouchMotion(
             translationX = state.translationX.value
             translationY = state.translationY.value
         }
+}
+
+/**
+ * Lets a touch target keep its gesture from a dragging ancestor, as a COUI 17 top-bar button does
+ * with `requestDisallowInterceptTouchEvent(true)` on `ACTION_DOWN`
+ * (`ToolbarMaterialEffectDelegate.handleTouch`): the button then keeps every move, so its touch
+ * motion stretches it along a vertical drag too instead of the app bar taking the drag.
+ *
+ * The ancestor provides one through [LocalGestureHold] and leaves its drag disabled while [held].
+ */
+@Stable
+internal class GestureHold {
+    private var holders by mutableIntStateOf(0)
+
+    /** Whether a touch target below is holding the current gesture. */
+    val held: Boolean get() = holders > 0
+
+    internal fun acquire() {
+        holders++
+    }
+
+    internal fun release() {
+        holders = max(holders - 1, 0)
+    }
+}
+
+/** The [GestureHold] of the dragging ancestor, or `null` when none takes drags. */
+internal val LocalGestureHold = staticCompositionLocalOf<GestureHold?> { null }
+
+/**
+ * Holds [hold] from a touch down on this element until every pointer is up. The down is observed
+ * in [PointerEventPass.Initial], before any ancestor sees it; nothing is consumed, so the element's
+ * own click and press handling are unaffected.
+ */
+internal fun Modifier.holdGesture(hold: GestureHold?): Modifier = if (hold == null) {
+    this
+} else {
+    pointerInput(hold) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            hold.acquire()
+            try {
+                do {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                } while (event.changes.any { it.pressed })
+            } finally {
+                hold.release()
+            }
+        }
+    }
 }

@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect
 import io.github.suqi8.coui.kmp.effect.COUIMaterialEffect.materialPanel
 import io.github.suqi8.coui.kmp.effect.LocalCOUIMaterialEffectEnabled
+import io.github.suqi8.coui.kmp.effect.LocalGestureHold
+import io.github.suqi8.coui.kmp.effect.holdGesture
 import io.github.suqi8.coui.kmp.interfaces.HoldDownObserver
 import io.github.suqi8.coui.kmp.squircle.squircleSurface
 import io.github.suqi8.coui.kmp.theme.COUIRoundCorner
@@ -230,9 +232,13 @@ private fun IconButtonContainer(
     // (the soft capsule when fully rounded, default_g2_weight 2.45 otherwise), a square one a plain
     // circle (weight 2.0).
     var isCapsule by remember { mutableStateOf(false) }
+    // ToolbarMaterialEffectDelegate.handleTouch asks the parents not to intercept on ACTION_DOWN, so
+    // a drag on the button moves the button (rubber band and deformation) and not the app bar.
+    val gestureHold = if (material && enabled) LocalGestureHold.current else null
 
     Box(
         modifier = modifier
+            .holdGesture(gestureHold)
             .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
             .onSizeChanged { isCapsule = it.width != it.height }
             .materialPanel(

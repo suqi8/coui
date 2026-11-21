@@ -91,6 +91,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastFirst
 import androidx.compose.ui.util.lerp
 import io.github.suqi8.coui.kmp.basic.TopAppBarState.Companion.Saver
+import io.github.suqi8.coui.kmp.effect.GestureHold
+import io.github.suqi8.coui.kmp.effect.LocalGestureHold
 import io.github.suqi8.coui.kmp.effect.TouchMotion
 import io.github.suqi8.coui.kmp.theme.COUITheme
 import io.github.suqi8.coui.kmp.utils.COUILayoutGrid
@@ -1132,6 +1134,9 @@ private fun TopAppBarLayout(
     // decided when it starts (canDragView, read on ACTION_DOWN).
     val barDragBehavior = scrollBehavior as? ExitUntilCollapsedScrollBehavior
     val barDragAllowed = remember { mutableStateOf(false) }
+    // A top-bar button keeps its own drags (ToolbarMaterialEffectDelegate asks the parents not to
+    // intercept on ACTION_DOWN), so the bar does not drag while one is touched.
+    val gestureHold = remember { GestureHold() }
     val barDragState = rememberDraggableState { delta ->
         if (barDragAllowed.value) barDragBehavior?.dragBar(delta)
     }
@@ -1195,7 +1200,7 @@ private fun TopAppBarLayout(
                 )
             }
             Box(Modifier.layoutId("navigationIcon")) {
-                navigationIcon()
+                CompositionLocalProvider(LocalGestureHold provides gestureHold, content = navigationIcon)
             }
             // Collapsed title: only shown once the bar is fully collapsed; until then the
             // large title morphs into it. In fade mode the large title fades away instead, so
@@ -1216,7 +1221,7 @@ private fun TopAppBarLayout(
                 }
             }
             Box(Modifier.layoutId("actionIcons")) {
-                actions()
+                CompositionLocalProvider(LocalGestureHold provides gestureHold, content = actions)
             }
             // Expanded title: position and scale are driven by the collapse fraction in the
             // placement pass (CollapsingTextHelper SCALE mode).
@@ -1275,6 +1280,7 @@ private fun TopAppBarLayout(
                     Modifier.draggable(
                         state = barDragState,
                         orientation = Orientation.Vertical,
+                        enabled = !gestureHold.held,
                         onDragStarted = {
                             barDragAllowed.value = searchState?.isActive != true && barDragBehavior.canDragBar()
                         },

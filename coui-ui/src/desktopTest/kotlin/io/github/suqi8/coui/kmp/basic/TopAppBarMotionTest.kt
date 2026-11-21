@@ -3,6 +3,7 @@
 package io.github.suqi8.coui.kmp.basic
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -10,6 +11,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -115,6 +117,45 @@ class TopAppBarMotionTest {
             assertEquals(limit, behavior.state.heightOffset)
             assertEquals(limit, behavior.state.displayedHeightOffset)
         }
+    }
+
+    @Test
+    fun aVerticalDragOnABarButtonStretchesTheButtonAndLeavesTheBar() = runComposeUiTest {
+        lateinit var behavior: ScrollBehavior
+        setContent {
+            COUITheme {
+                behavior = COUIScrollBehavior()
+                Box(Modifier.width(360.dp)) {
+                    TopAppBar(
+                        title = "Title",
+                        scrollBehavior = behavior,
+                        defaultWindowInsetsPadding = false,
+                        navigationIcon = {
+                            IconButton(onClick = {}, modifier = Modifier.testTag("button")) {
+                                Box(Modifier.size(24.dp))
+                            }
+                        },
+                    )
+                }
+            }
+        }
+        mainClock.advanceTimeBy(500)
+        val restTop = onNodeWithTag("button").getBoundsInRoot().top
+        mainClock.autoAdvance = false
+        // ToolbarMaterialEffectDelegate keeps the gesture (requestDisallowInterceptTouchEvent), so a
+        // drag up on the button moves the button, not the bar.
+        onNodeWithTag("button").performTouchInput { down(center) }
+        repeat(8) {
+            onNodeWithTag("button").performTouchInput { moveBy(Offset(0f, -12f)) }
+            mainClock.advanceTimeByFrame()
+        }
+        mainClock.advanceTimeBy(300)
+        val draggedTop = onNodeWithTag("button").getBoundsInRoot().top
+        runOnUiThread { assertEquals(0f, behavior.state.heightOffset, "the bar must not take the drag") }
+        assertTrue(draggedTop < restTop, "the button must follow the drag: top $restTop -> $draggedTop")
+        onNodeWithTag("button").performTouchInput { up() }
+        mainClock.advanceTimeBy(1500)
+        runOnUiThread { assertEquals(0f, behavior.state.heightOffset) }
     }
 
     private fun ComposeUiTest.setBehavior(followScroll: Boolean): ScrollBehavior {
