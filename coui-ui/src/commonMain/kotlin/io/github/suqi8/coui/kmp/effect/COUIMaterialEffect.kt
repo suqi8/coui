@@ -289,12 +289,42 @@ object COUIMaterialEffect {
             isDark -> ShadowEdgePresets.CircleDark
             else -> ShadowEdgePresets.CircleLight
         }
-        configureShadowEdge(shader, width, height, cornerRadius, weight = if (isCapsule) 1f else 2f, isCapsule, params)
+        configureShadowEdge(
+            shader = shader,
+            width = width,
+            height = height,
+            cornerRadius = cornerRadius,
+            weight = if (isCapsule) 1f else 2f,
+            isCapsule = isCapsule,
+            params = params,
+            edgeAlphaGain = TopBarEdgeAlphaGain,
+            edgeAngleOffset = TopBarEdgeAngleOffset,
+        )
     }
 
     /**
+     * How much stronger the top-bar edge light is on a ColorOS 17 device than its
+     * `FRAMEWORK_*_PARAMS_1` line alpha drawn by [ShadowEdgeShader]. The framework stroke is drawn
+     * by the native renderer, whose code is not available; this is measured from a light-scheme
+     * screenshot of an official back button over a near-white page: the rim reaches 254-255 over
+     * a 249 fill at the top (far line, alpha 1.0 x 0.2) and 245 over a 233 backdrop at the bottom
+     * (near line, 0.7 x 0.2), which both fit an edge alpha of 0.2 x 4. At the plain 0.2 the rim
+     * stayed within 1-3 levels of the fill and the button read as a flat disc.
+     */
+    private const val TopBarEdgeAlphaGain = 4f
+
+    /**
+     * Half a turn added to the edge-light angle of the top-bar stroke: on the device the stronger
+     * (far) line lies along the top of the button and the weaker (near) one along the bottom, the
+     * other way round from the AGSL drawable mapping [ShadowEdgeShader] follows (same screenshot as
+     * [TopBarEdgeAlphaGain]).
+     */
+    private const val TopBarEdgeAngleOffset = 0.5f
+
+    /**
      * Feeds [ShadowEdgeShader] a stroke effect of [params] on a [width] x [height] pixel shape:
-     * edge style 0 and shadow style 0 for a capsule, style 1 for a circle.
+     * edge style 0 and shadow style 0 for a capsule, style 1 for a circle. [edgeAlphaGain] scales
+     * the edge alpha and [edgeAngleOffset] (in turns) rotates the edge light.
      */
     private fun Density.configureShadowEdge(
         shader: RuntimeShader,
@@ -304,6 +334,8 @@ object COUIMaterialEffect {
         weight: Float,
         isCapsule: Boolean,
         params: StrokeEffectParams,
+        edgeAlphaGain: Float = 1f,
+        edgeAngleOffset: Float = 0f,
     ) {
         shader.setFloatUniform(
             "u_commonArray",
@@ -330,8 +362,8 @@ object COUIMaterialEffect {
                 width = width,
                 height = height,
                 lineWidth = params.edgeWidth.dp.toPx(),
-                lineAlpha = params.edgeAlpha,
-                lineAngle = params.edgeAngle,
+                lineAlpha = params.edgeAlpha * edgeAlphaGain,
+                lineAngle = params.edgeAngle + edgeAngleOffset,
                 density = density,
             ),
         )
